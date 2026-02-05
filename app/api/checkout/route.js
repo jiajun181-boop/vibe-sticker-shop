@@ -1,6 +1,9 @@
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 
+// 这一行是 Cloudflare 的强制要求，必须加上！
+export const runtime = 'edge';
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(request) {
