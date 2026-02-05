@@ -1,4 +1,5 @@
 import './globals.css'
+import "@uploadthing/react/styles.css";
 import { Inter } from 'next/font/google'
 import Link from 'next/link' // 引入 Link 组件实现无刷新跳转
 
