@@ -8,7 +8,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
 
-  // 价格计算
   const calculatePrice = () => {
     const area = width * height;
     let price = area * 0.15 * quantity; 
@@ -16,14 +15,13 @@ export default function Home() {
     return price.toFixed(2);
   };
 
-  // 处理文件选择
-  const handleFileChange = (e) => {
+  // 这里的 (e: any) 就是为了通过 .tsx 的严格检查
+  const handleFileChange = (e: any) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
   };
 
-  // 支付点击处理 (连接 Stripe)
   const handleCheckout = async () => {
     if (!file) {
       alert("Please upload an image first!");
@@ -33,7 +31,6 @@ export default function Home() {
     setLoading(true);
 
     try {
-      // 呼叫后端 API
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
@@ -50,7 +47,7 @@ export default function Home() {
       const data = await response.json();
 
       if (data.url) {
-        window.location.href = data.url; // 跳转支付
+        window.location.href = data.url; 
       } else {
         alert("Payment initiation failed. Please try again.");
       }
@@ -65,14 +62,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-black relative overflow-hidden pb-20">
-      
-      {/* 背景装饰 */}
       <div className="absolute top-20 left-10 w-72 h-72 bg-purple-600/20 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
 
       <div className="flex flex-col md:flex-row gap-12 items-start max-w-6xl w-full z-10 mt-10">
-        
-        {/* 左侧：文字介绍 */}
         <div className="flex-1 text-center md:text-left pt-10">
           <span className="text-purple-400 font-bold tracking-wider text-sm uppercase mb-2 block">Custom Printing</span>
           <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
@@ -83,21 +76,16 @@ export default function Home() {
             Turn your designs into premium die-cut vinyl stickers. 
             <br/>Waterproof, scratch-resistant, and ready for the streets.
           </p>
-          
           <div className="flex gap-6 justify-center md:justify-start text-gray-500 font-bold text-sm uppercase tracking-widest">
             <span>✓ Fast Turnaround</span>
             <span>✓ Free Proofs</span>
           </div>
         </div>
 
-        {/* 右侧：下单卡片 */}
         <div className="flex-1 w-full max-w-md bg-neutral-900/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative">
-          
           <div className="absolute inset-0 rounded-3xl border border-purple-500/20 pointer-events-none"></div>
-
           <h2 className="text-2xl font-bold text-white mb-6">Configure Order</h2>
           
-          {/* 1. 文件上传区 */}
           <div className="mb-8">
             <label className="text-xs text-gray-500 font-bold uppercase block mb-2">1. Upload Design</label>
             <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer group relative overflow-hidden ${file ? 'border-green-500/50 bg-green-900/10' : 'border-gray-700 hover:border-purple-500 hover:bg-white/5'}`}>
@@ -122,25 +110,23 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 2. 尺寸输入 */}
           <div className="flex gap-4 mb-6">
             <div className="flex-1">
               <label className="text-xs text-gray-500 font-bold uppercase block mb-2">2. Width (in)</label>
               <input 
-                type="number" value={width} onChange={(e) => setWidth(Number(e.target.value))}
+                type="number" value={width} onChange={(e: any) => setWidth(Number(e.target.value))}
                 className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white text-lg focus:border-purple-500 focus:outline-none transition-colors"
               />
             </div>
             <div className="flex-1">
               <label className="text-xs text-gray-500 font-bold uppercase block mb-2">Height (in)</label>
               <input 
-                type="number" value={height} onChange={(e) => setHeight(Number(e.target.value))}
+                type="number" value={height} onChange={(e: any) => setHeight(Number(e.target.value))}
                 className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white text-lg focus:border-purple-500 focus:outline-none transition-colors"
               />
             </div>
           </div>
 
-          {/* 3. 数量 */}
           <div className="mb-8">
             <div className="flex justify-between mb-2">
               <label className="text-xs text-gray-500 font-bold uppercase">3. Quantity</label>
@@ -148,19 +134,16 @@ export default function Home() {
             </div>
             <input 
               type="range" min="10" max="1000" step="10" value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
+              onChange={(e: any) => setQuantity(Number(e.target.value))}
               className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
             />
           </div>
 
-          {/* 价格底栏 */}
           <div className="border-t border-white/10 pt-6 flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-xs uppercase tracking-wider">Total Price</p>
               <p className="text-3xl font-black text-white">${calculatePrice()}</p>
             </div>
-            
-            {/* 修复后的按钮部分 */}
             <button 
               onClick={handleCheckout}
               disabled={loading}
@@ -170,7 +153,6 @@ export default function Home() {
             </button>
           </div>
         </div>
-
       </div>
     </main>
   );
