@@ -6,84 +6,135 @@ export default function Home() {
   const [height, setHeight] = useState(3);
   const [quantity, setQuantity] = useState(50);
   const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState(null); // 新增：用来存文件
 
-  // 简单的报价公式：面积 * 单价 (这里假设 $0.15/sq inch)
+  // 价格计算
   const calculatePrice = () => {
     const area = width * height;
     let price = area * 0.15 * quantity; 
-    if (price < 30) price = 30; // 最低起做 $30
+    if (price < 30) price = 30; 
     return price.toFixed(2);
   };
 
+  // 处理文件选择
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
   const handleCheckout = async () => {
+    if (!file) {
+      alert("请先上传您的贴纸设计图！(Please upload an image first)");
+      return;
+    }
     setLoading(true);
-    // 这里先模拟一下，后面我们会接真的 Stripe
-    alert("正在跳转支付... (Stripe API 即将接入)");
+    // 这里以后接上传逻辑
+    alert(`准备处理订单：\n尺寸: ${width}x${height}\n数量: ${quantity}\n文件: ${file.name}`);
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center font-sans selection:bg-purple-500 selection:text-white">
-      {/* 背景光晕 */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-900/30 blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-900/30 blur-[120px]"></div>
-      </div>
+    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-black relative overflow-hidden pb-20">
+      
+      {/* 背景装饰 */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-purple-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-      <main className="w-full max-w-lg p-6">
-        <h1 className="text-5xl font-bold text-center mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 tracking-tighter">
-          VIBE STICKERS
-        </h1>
-        <p className="text-gray-400 text-center mb-10 text-sm tracking-widest uppercase">Premium Custom Prints</p>
+      <div className="flex flex-col md:flex-row gap-12 items-start max-w-6xl w-full z-10 mt-10">
+        
+        {/* 左侧：文字介绍 */}
+        <div className="flex-1 text-center md:text-left pt-10">
+          <span className="text-purple-400 font-bold tracking-wider text-sm uppercase mb-2 block">Custom Printing</span>
+          <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
+            UPLOAD YOUR <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">ARTWORK</span>
+          </h1>
+          <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto md:mx-0">
+            Turn your designs into premium die-cut vinyl stickers. 
+            <br/>Waterproof, scratch-resistant, and ready for the streets.
+          </p>
+          
+          {/* 这里可以加几个信任图标 */}
+          <div className="flex gap-6 justify-center md:justify-start text-gray-500 font-bold text-sm uppercase tracking-widest">
+            <span>✓ Fast Turnaround</span>
+            <span>✓ Free Proofs</span>
+          </div>
+        </div>
 
-        <div className="bg-gray-900/60 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl shadow-purple-900/20">
-          {/* 尺寸输入 */}
+        {/* 右侧：下单卡片 (带上传功能) */}
+        <div className="flex-1 w-full max-w-md bg-neutral-900/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative">
+          
+          {/* 发光边框效果 */}
+          <div className="absolute inset-0 rounded-3xl border border-purple-500/20 pointer-events-none"></div>
+
+          <h2 className="text-2xl font-bold text-white mb-6">Configure Order</h2>
+          
+          {/* 1. 文件上传区 (重点新增) */}
+          <div className="mb-8">
+            <label className="text-xs text-gray-500 font-bold uppercase block mb-2">1. Upload Design</label>
+            <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer group relative overflow-hidden ${file ? 'border-green-500/50 bg-green-900/10' : 'border-gray-700 hover:border-purple-500 hover:bg-white/5'}`}>
+              <input 
+                type="file" 
+                onChange={handleFileChange} 
+                accept="image/*"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              {file ? (
+                <div className="flex items-center justify-center gap-2 text-green-400">
+                  <span>✓</span>
+                  <span className="font-bold truncate max-w-[200px]">{file.name}</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="text-4xl group-hover:scale-110 transition-transform">📤</div>
+                  <p className="text-sm text-gray-400 font-medium group-hover:text-white">Click to upload image</p>
+                  <p className="text-xs text-gray-600">JPG, PNG, AI, PDF</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 2. 尺寸输入 */}
           <div className="flex gap-4 mb-6">
             <div className="flex-1">
-              <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Width (in)</label>
+              <label className="text-xs text-gray-500 font-bold uppercase block mb-2">2. Width (in)</label>
               <input 
-                type="number" value={width}
-                onChange={(e) => setWidth(Number(e.target.value))}
-                className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-xl font-bold focus:outline-none focus:border-purple-500 transition-colors"
+                type="number" value={width} onChange={(e) => setWidth(Number(e.target.value))}
+                className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white text-lg focus:border-purple-500 focus:outline-none transition-colors"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Height (in)</label>
+              <label className="text-xs text-gray-500 font-bold uppercase block mb-2">Height (in)</label>
               <input 
-                type="number" value={height}
-                onChange={(e) => setHeight(Number(e.target.value))}
-                className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-xl font-bold focus:outline-none focus:border-purple-500 transition-colors"
+                type="number" value={height} onChange={(e) => setHeight(Number(e.target.value))}
+                className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white text-lg focus:border-purple-500 focus:outline-none transition-colors"
               />
             </div>
           </div>
 
-          {/* 数量滑块 */}
+          {/* 3. 数量 */}
           <div className="mb-8">
-            <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Quantity: {quantity}</label>
+            <div className="flex justify-between mb-2">
+              <label className="text-xs text-gray-500 font-bold uppercase">3. Quantity</label>
+              <span className="text-white font-bold">{quantity} pcs</span>
+            </div>
             <input 
-              type="range" min="10" max="1000" step="10"
-              value={quantity}
+              type="range" min="10" max="1000" step="10" value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500 mt-2"
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
             />
           </div>
 
-          {/* 价格与按钮 */}
-          <div className="border-t border-white/10 pt-6">
-            <div className="flex justify-between items-end mb-6">
-              <span className="text-gray-400">Estimated Total</span>
-              <span className="text-4xl font-black text-white tracking-tight">${calculatePrice()}</span>
+          {/* 价格底栏 */}
+          <div className="border-t border-white/10 pt-6 flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-xs uppercase tracking-wider">Total Price</p>
+              <p className="text-3xl font-black text-white">${calculatePrice()}</p>
             </div>
             <button 
               onClick={handleCheckout}
               disabled={loading}
-              className="w-full py-4 bg-white text-black font-bold text-lg rounded-xl hover:bg-purple-400 hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+              className={`px-8 py-3 rounded-xl font-bold transition-all shadow-lg ${file ? 'bg-white text-black hover:bg-purple-400 hover:scale-105' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}
             >
-              {loading ? "Processing..." : "Pay Now →"}
-            </button>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
+              {loading ? "..." : "Add
