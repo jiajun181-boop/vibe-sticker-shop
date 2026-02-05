@@ -19,9 +19,8 @@ export async function POST(request) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 👇👇👇 重点在这里！直接把 'Bearer re_...' 写进去！
-          // 注意：Bearer 后面有一个空格，然后才是你的 re_xxxx
-          'Authorization': re_Bg32y2Wh_EBgaLvA9RFX3ARyKG1GyLai5, 
+          // 👇 修正了这里：加上了引号 ' ' 和 Bearer 前缀
+          'Authorization': 'Bearer re_Bg32y2Wh_EBgaLvA9RFX3ARyKG1GyLai5', 
         },
         body: JSON.stringify({
           from: 'onboarding@resend.dev',
