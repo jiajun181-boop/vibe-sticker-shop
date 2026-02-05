@@ -6,7 +6,7 @@ export default function Home() {
   const [height, setHeight] = useState(3);
   const [quantity, setQuantity] = useState(50);
   const [loading, setLoading] = useState(false);
-  const [file, setFile] = useState(null); // 新增：用来存文件
+  const [file, setFile] = useState(null);
 
   // 价格计算
   const calculatePrice = () => {
@@ -23,15 +23,44 @@ export default function Home() {
     }
   };
 
+  // 支付点击处理 (连接 Stripe)
   const handleCheckout = async () => {
     if (!file) {
-      alert("请先上传您的贴纸设计图！(Please upload an image first)");
+      alert("Please upload an image first!");
       return;
     }
+    
     setLoading(true);
-    // 这里以后接上传逻辑
-    alert(`准备处理订单：\n尺寸: ${width}x${height}\n数量: ${quantity}\n文件: ${file.name}`);
-    setLoading(false);
+
+    try {
+      // 呼叫后端 API
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          width,
+          height,
+          quantity,
+          filename: file.name
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url; // 跳转支付
+      } else {
+        alert("Payment initiation failed. Please try again.");
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert("Failed to connect to server.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,22 +84,20 @@ export default function Home() {
             <br/>Waterproof, scratch-resistant, and ready for the streets.
           </p>
           
-          {/* 这里可以加几个信任图标 */}
           <div className="flex gap-6 justify-center md:justify-start text-gray-500 font-bold text-sm uppercase tracking-widest">
             <span>✓ Fast Turnaround</span>
             <span>✓ Free Proofs</span>
           </div>
         </div>
 
-        {/* 右侧：下单卡片 (带上传功能) */}
+        {/* 右侧：下单卡片 */}
         <div className="flex-1 w-full max-w-md bg-neutral-900/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative">
           
-          {/* 发光边框效果 */}
           <div className="absolute inset-0 rounded-3xl border border-purple-500/20 pointer-events-none"></div>
 
           <h2 className="text-2xl font-bold text-white mb-6">Configure Order</h2>
           
-          {/* 1. 文件上传区 (重点新增) */}
+          {/* 1. 文件上传区 */}
           <div className="mb-8">
             <label className="text-xs text-gray-500 font-bold uppercase block mb-2">1. Upload Design</label>
             <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer group relative overflow-hidden ${file ? 'border-green-500/50 bg-green-900/10' : 'border-gray-700 hover:border-purple-500 hover:bg-white/5'}`}>
@@ -132,9 +159,19 @@ export default function Home() {
               <p className="text-gray-400 text-xs uppercase tracking-wider">Total Price</p>
               <p className="text-3xl font-black text-white">${calculatePrice()}</p>
             </div>
+            
+            {/* 修复后的按钮部分 */}
             <button 
               onClick={handleCheckout}
               disabled={loading}
               className={`px-8 py-3 rounded-xl font-bold transition-all shadow-lg ${file ? 'bg-white text-black hover:bg-purple-400 hover:scale-105' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}
             >
-              {loading ? "..." : "Add
+              {loading ? "..." : "Pay Now"}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  );
+}
