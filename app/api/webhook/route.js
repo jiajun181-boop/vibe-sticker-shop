@@ -21,7 +21,7 @@ export async function POST(request) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // ✅ 这里已经填入了你的新密钥！
+          // ✅ 你的新密钥
           'Authorization': 'Bearer re_3aNFJG9U_VrMPFAKrt9jTqmm4bBebWjEc', 
         },
         body: JSON.stringify({
@@ -43,7 +43,7 @@ export async function POST(request) {
 
       const data = await res.json();
 
-      // 🔍 诊断逻辑：如果 Resend 报错，直接返回给 Stripe，方便我们在后台查看
+      // 🔍 诊断逻辑：如果 Resend 报错，直接返回给 Stripe
       if (!res.ok) {
         console.error('Resend Failed:', data);
         return NextResponse.json({ error: 'Email Failed', details: data }, { status: 500 });
@@ -51,3 +51,10 @@ export async function POST(request) {
 
       return NextResponse.json({ success: true, emailId: data.id });
     }
+
+    return NextResponse.json({ received: true });
+  } catch (err) {
+    console.error("Webhook Error:", err);
+    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
+  }
+}
