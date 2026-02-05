@@ -15,17 +15,17 @@ export async function POST(request) {
 
       console.log(`💰 New order: $${amount}`);
 
-      // 🌟 核心修改：不引入 Resend 库，直接用 fetch 发邮件
-      // 没有任何依赖，绝对兼容 Edge！
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          // 👇👇👇 重点在这里！直接把 'Bearer re_...' 写进去！
+          // 注意：Bearer 后面有一个空格，然后才是你的 re_xxxx
+          'Authorization': re_Bg32y2Wh_EBgaLvA9RFX3ARyKG1GyLai5, 
         },
         body: JSON.stringify({
           from: 'onboarding@resend.dev',
-          to: 'jiajun181@gmail.com', // 🔴 确保这是你的邮箱
+          to: 'jiajun181@gmail.com', 
           subject: `🔥 新订单！$${amount} - ${customerName}`,
           html: `
             <h1>🎉 恭喜！你的贴纸店开张了！</h1>
