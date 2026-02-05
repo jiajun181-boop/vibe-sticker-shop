@@ -26,11 +26,32 @@ export default function Home() {
       alert("Please upload an image first!");
       return;
     }
+    
     setLoading(true);
-    setTimeout(() => {
-        alert("跳转支付成功 (Stripe API Pending...)");
-        setLoading(false);
-    }, 1000);
+
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          width, height, quantity, filename: file.name
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error("Error:", data);
+        alert("Payment setup failed.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Failed to connect to server.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
