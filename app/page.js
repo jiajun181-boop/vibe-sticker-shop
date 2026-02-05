@@ -1,12 +1,16 @@
 "use client";
 import { useState } from 'react';
+import { UploadButton } from "../utils/uploadthing"; 
 
 export default function Home() {
   const [width, setWidth] = useState(3);
   const [height, setHeight] = useState(3);
   const [quantity, setQuantity] = useState(50);
   const [loading, setLoading] = useState(false);
-  const [file, setFile] = useState(null);
+  
+  // 两个状态：文件名(给你看的) 和 文件链接(给Stripe用的)
+  const [fileName, setFileName] = useState(""); 
+  const [fileUrl, setFileUrl] = useState("");
 
   const calculatePrice = () => {
     const area = width * height;
@@ -15,15 +19,9 @@ export default function Home() {
     return price.toFixed(2);
   };
 
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
-
   const handleCheckout = async () => {
-    if (!file) {
-      alert("Please upload an image first!");
+    if (!fileUrl) {
+      alert("Please upload an image first! (请先上传图片)");
       return;
     }
     
@@ -34,16 +32,18 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          width, height, quantity, filename: file.name
+          width, 
+          height, 
+          quantity, 
+          filename: fileName,
+          imageUrl: fileUrl // 把真的链接发给后端
         }),
       });
 
       const data = await response.json();
-
       if (data.url) {
         window.location.href = data.url;
       } else {
-        console.error("Error:", data);
         alert("Payment setup failed.");
       }
     } catch (error) {
@@ -74,29 +74,60 @@ export default function Home() {
 
         <div className="flex-1 w-full max-w-md bg-neutral-900/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative">
           <h2 className="text-2xl font-bold text-white mb-6">Configure Order</h2>
+          
+          {/* === 上传区域 === */}
           <div className="mb-8">
             <label className="text-xs text-gray-500 font-bold uppercase block mb-2">1. Upload Design</label>
-            <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer group relative overflow-hidden ${file ? 'border-green-500/50 bg-green-900/10' : 'border-gray-700 hover:border-purple-500 hover:bg-white/5'}`}>
-              <input type="file" onChange={handleFileChange} accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"/>
-              {file ? <span className="text-green-400 font-bold">{file.name}</span> : <span className="text-gray-400">Click to upload</span>}
+            <div className="border-2 border-dashed border-gray-700 hover:border-purple-500 rounded-xl p-6 bg-black/40 flex flex-col items-center justify-center min-h-[150px]">
+              
+              {fileUrl ? (
+                <div className="text-center">
+                   <div className="text-green-400 text-4xl mb-2">✓</div>
+                   <p className="text-white font-bold truncate max-w-[200px]">{fileName}</p>
+                   <p className="text-xs text-green-500 mt-1">Ready to print</p>
+                </div>
+              ) : (
+                <UploadButton
+                  endpoint="imageUploader"
+                  appearance={{
+                    button: "bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-full text-sm",
+                    allowedContent: "text-gray-400 text-xs"
+                  }}
+                  onClientUploadComplete={(res) => {
+                    console.log("Files: ", res);
+                    setFileName(res[0].name);
+                    setFileUrl(res[0].url);
+                    alert("Upload Success!");
+                  }}
+                  onUploadError={(error) => {
+                    alert(`ERROR! ${error.message}`);
+                  }}
+                />
+              )}
             </div>
           </div>
+
           <div className="flex gap-4 mb-6">
             <div className="flex-1">
               <label className="text-xs text-gray-500 font-bold uppercase block mb-2">Width</label>
-              <input type="number" value={width} onChange={(e) => setWidth(Number(e.target.value))} className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white"/>
+              <input type="number" value={width} onChange={(e) => setWidth(Number(e.target.value))} className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white text-lg"/>
             </div>
             <div className="flex-1">
               <label className="text-xs text-gray-500 font-bold uppercase block mb-2">Height</label>
-              <input type="number" value={height} onChange={(e) => setHeight(Number(e.target.value))} className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white"/>
+              <input type="number" value={height} onChange={(e) => setHeight(Number(e.target.value))} className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white text-lg"/>
             </div>
           </div>
+
           <div className="border-t border-white/10 pt-6 flex justify-between items-center">
              <div>
                 <p className="text-gray-400 text-xs uppercase">Total</p>
                 <p className="text-3xl font-black text-white">${calculatePrice()}</p>
              </div>
-             <button onClick={handleCheckout} disabled={loading} className="px-8 py-3 bg-white text-black rounded-xl font-bold hover:bg-purple-400 transition-all">
+             <button 
+                onClick={handleCheckout} 
+                disabled={loading || !fileUrl} 
+                className={`px-8 py-3 rounded-xl font-bold transition-all ${fileUrl ? 'bg-white text-black hover:bg-purple-400' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}
+             >
                 {loading ? "..." : "Pay Now"}
              </button>
           </div>
