@@ -1,10 +1,12 @@
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 
-// 这一行是 Cloudflare 的强制要求，必须加上！
 export const runtime = 'edge';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// 👇 关键修改：强制 Stripe 使用 fetch 模式，兼容 Cloudflare Edge
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  httpClient: Stripe.createFetchHttpClient(),
+});
 
 export async function POST(request) {
   try {
