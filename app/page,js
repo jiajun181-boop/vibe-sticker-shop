@@ -8,7 +8,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
 
-  // 价格计算
   const calculatePrice = () => {
     const area = width * height;
     let price = area * 0.15 * quantity; 
@@ -16,8 +15,7 @@ export default function Home() {
     return price.toFixed(2);
   };
 
-  // 这里的 (e: any) 是为了防止部分 TS 报错，但在 JS 里也没事
-  const handleFileChange = (e: any) => {
+  const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
@@ -28,38 +26,11 @@ export default function Home() {
       alert("Please upload an image first!");
       return;
     }
-    
     setLoading(true);
-
-    try {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          width,
-          height,
-          quantity,
-          // @ts-ignore - 这一行告诉 TS 闭嘴，忽略 file.name 的检查
-          filename: file.name
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.url) {
-        window.location.href = data.url; 
-      } else {
-        alert("Payment initiation failed. Please try again.");
-      }
-
-    } catch (error) {
-      console.error(error);
-      alert("Failed to connect to server.");
-    } finally {
-      setLoading(false);
-    }
+    setTimeout(() => {
+        alert("跳转支付成功 (Stripe API Pending...)");
+        setLoading(false);
+    }, 1000);
   };
 
   return (
@@ -78,82 +49,35 @@ export default function Home() {
             Turn your designs into premium die-cut vinyl stickers. 
             <br/>Waterproof, scratch-resistant, and ready for the streets.
           </p>
-          <div className="flex gap-6 justify-center md:justify-start text-gray-500 font-bold text-sm uppercase tracking-widest">
-            <span>✓ Fast Turnaround</span>
-            <span>✓ Free Proofs</span>
-          </div>
         </div>
 
         <div className="flex-1 w-full max-w-md bg-neutral-900/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative">
-          <div className="absolute inset-0 rounded-3xl border border-purple-500/20 pointer-events-none"></div>
           <h2 className="text-2xl font-bold text-white mb-6">Configure Order</h2>
-          
           <div className="mb-8">
             <label className="text-xs text-gray-500 font-bold uppercase block mb-2">1. Upload Design</label>
             <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer group relative overflow-hidden ${file ? 'border-green-500/50 bg-green-900/10' : 'border-gray-700 hover:border-purple-500 hover:bg-white/5'}`}>
-              <input 
-                type="file" 
-                onChange={handleFileChange} 
-                accept="image/*"
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-              {file ? (
-                <div className="flex items-center justify-center gap-2 text-green-400">
-                  <span>✓</span>
-                  // @ts-ignore
-                  <span className="font-bold truncate max-w-[200px]">{file.name}</span>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="text-4xl group-hover:scale-110 transition-transform">📤</div>
-                  <p className="text-sm text-gray-400 font-medium group-hover:text-white">Click to upload image</p>
-                  <p className="text-xs text-gray-600">JPG, PNG, AI, PDF</p>
-                </div>
-              )}
+              <input type="file" onChange={handleFileChange} accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"/>
+              {file ? <span className="text-green-400 font-bold">{file.name}</span> : <span className="text-gray-400">Click to upload</span>}
             </div>
           </div>
-
           <div className="flex gap-4 mb-6">
             <div className="flex-1">
-              <label className="text-xs text-gray-500 font-bold uppercase block mb-2">2. Width (in)</label>
-              <input 
-                type="number" value={width} onChange={(e: any) => setWidth(Number(e.target.value))}
-                className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white text-lg focus:border-purple-500 focus:outline-none transition-colors"
-              />
+              <label className="text-xs text-gray-500 font-bold uppercase block mb-2">Width</label>
+              <input type="number" value={width} onChange={(e) => setWidth(Number(e.target.value))} className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white"/>
             </div>
             <div className="flex-1">
-              <label className="text-xs text-gray-500 font-bold uppercase block mb-2">Height (in)</label>
-              <input 
-                type="number" value={height} onChange={(e: any) => setHeight(Number(e.target.value))}
-                className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white text-lg focus:border-purple-500 focus:outline-none transition-colors"
-              />
+              <label className="text-xs text-gray-500 font-bold uppercase block mb-2">Height</label>
+              <input type="number" value={height} onChange={(e) => setHeight(Number(e.target.value))} className="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white"/>
             </div>
           </div>
-
-          <div className="mb-8">
-            <div className="flex justify-between mb-2">
-              <label className="text-xs text-gray-500 font-bold uppercase">3. Quantity</label>
-              <span className="text-white font-bold">{quantity} pcs</span>
-            </div>
-            <input 
-              type="range" min="10" max="1000" step="10" value={quantity}
-              onChange={(e: any) => setQuantity(Number(e.target.value))}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-            />
-          </div>
-
-          <div className="border-t border-white/10 pt-6 flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-xs uppercase tracking-wider">Total Price</p>
-              <p className="text-3xl font-black text-white">${calculatePrice()}</p>
-            </div>
-            <button 
-              onClick={handleCheckout}
-              disabled={loading}
-              className={`px-8 py-3 rounded-xl font-bold transition-all shadow-lg ${file ? 'bg-white text-black hover:bg-purple-400 hover:scale-105' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}
-            >
-              {loading ? "..." : "Pay Now"}
-            </button>
+          <div className="border-t border-white/10 pt-6 flex justify-between items-center">
+             <div>
+                <p className="text-gray-400 text-xs uppercase">Total</p>
+                <p className="text-3xl font-black text-white">${calculatePrice()}</p>
+             </div>
+             <button onClick={handleCheckout} disabled={loading} className="px-8 py-3 bg-white text-black rounded-xl font-bold hover:bg-purple-400 transition-all">
+                {loading ? "..." : "Pay Now"}
+             </button>
           </div>
         </div>
       </div>
