@@ -1,41 +1,44 @@
-import { NextResponse } from 'next/server';
-
 export const runtime = 'edge';
 
-export async function POST(request) {
+import Stripe from "stripe";
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+
+// 这里的 STRIPE_SECRET_KEY 是必须的，WEBHOOK_SECRET 是可选的（本地测试没有也没关系）
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+export async function POST(req) {
+  const body = await req.text();
+  const sig = headers().get("stripe-signature");
+
+  let event;
+
   try {
-    const body = await request.text();
-    const event = JSON.parse(body);
-
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      
-      // 这里的 fetch 必须用 await，否则 Edge 函数会提前关机
-      const emailResponse = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer re_3aNFJG9U_VrMPFAKrt9jTqmm4bBebWjEc', // 确认是你最新的 Key
-        },
-        body: JSON.stringify({
-          from: 'onboarding@resend.dev',
-          to: 'jiajun181@gmail.com',
-          subject: `Order Success - $${session.amount_total / 100}`,
-          html: `<h1>Order Received!</h1><p>Customer: ${session.customer_details?.name}</p>`
-        }),
-      });
-
-      const resData = await emailResponse.json();
-      console.log("Resend debug:", resData);
-
-      if (!emailResponse.ok) {
-        return NextResponse.json({ error: "Email rejected", details: resData }, { status: 500 });
+    if (endpointSecret && sig) {
+      event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
+    } else {
+      // 如果没有配置 webhook secret，或者在本地/测试环境，暂时先信任
+      // 注意：生产环境建议配置 STRIPE_WEBHOOK_SECRET 以确保安全
+      try {
+        event = JSON.parse(body);
+      } catch (e) {
+        return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
       }
-      return NextResponse.json({ success: true, id: resData.id });
     }
-
-    return NextResponse.json({ received: true });
   } catch (err) {
-    return NextResponse.json({ error: "System error", message: err.message }, { status: 500 });
+    console.error(`Webhook Error: ${err.message}`);
+    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
   }
+
+  // 打印一下，方便调试
+  console.log("🔔 Webhook received:", event.type);
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    // 这里是你未来写“发邮件”或“存数据库”逻辑的地方
+    console.log("✅ Order paid!", session.id);
+  }
+
+  return NextResponse.json({ received: true });
 }
