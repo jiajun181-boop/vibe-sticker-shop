@@ -1,70 +1,98 @@
 import Link from "next/link";
-// 👇 修复点：把 @ 改成了 .. (物理路径)
 import { PRODUCTS } from "../config/products";
 
-export default function Home() {
-  return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      {/* 顶部导航 */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="text-2xl font-black tracking-tighter">VIBE.</div>
-          <div className="text-sm font-medium text-gray-500">Professional Printing Service</div>
-        </div>
-      </header>
+export default function HomePage() {
+  // 1. 自动把产品按类别分组
+  const stickers = PRODUCTS.filter((p) => p.category === "stickers");
+  const signs = PRODUCTS.filter((p) => p.category === "signs");
 
-      {/* Hero 区域 */}
-      <div className="bg-black text-white py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight">
-            Print Anything, <br/> Anywhere.
+  return (
+    <div className="min-h-screen bg-[#fafafa] pb-20">
+      {/* 顶部 Hero 区域 */}
+      <div className="bg-black text-white pt-24 pb-16 px-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="inline-block bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase backdrop-blur-sm">
+            Toronto Printing Shop
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black tracking-tighter">
+            PRINT. <span className="text-gray-500">SHIP.</span> DONE.
           </h1>
-          <p className="text-gray-400 text-xl max-w-2xl mx-auto">
-            High quality stickers, banners, and signs directly from the factory.
+          <p className="text-gray-400 max-w-xl text-lg">
+            The easiest way to order custom stickers & signs in the GTA. 
+            Industrial quality, factory direct pricing.
           </p>
         </div>
       </div>
 
-      {/* 产品列表区 */}
-      <main className="max-w-6xl mx-auto px-6 py-16">
-        <h2 className="text-2xl font-bold mb-8">Featured Products</h2>
+      <div className="max-w-7xl mx-auto px-6 -mt-8">
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {PRODUCTS.map((product) => (
-            <Link 
-              key={product.product} 
-              href={`/shop/${product.category}/${product.product}`}
-              className="group block bg-white rounded-2xl border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
-            >
-              <div className="h-48 bg-gray-100 flex items-center justify-center text-4xl group-hover:scale-105 transition-transform duration-500">
-                {/* 根据不同品类显示不同 emoji 图标 */}
-                {product.category === 'stickers' ? '🏷️' : 
-                 product.category === 'banners' ? '🚩' : 
-                 product.category === 'signs' ? '🪧' : '📦'}
-              </div>
-              <div className="p-6">
-                <div className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-2">
-                  {product.category}
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600">
-                  {product.name}
-                </h3>
-                <p className="text-gray-500 text-sm line-clamp-2">
-                  Start from ${product.config.minimumPrice}. Professional grade quality.
-                </p>
-                <div className="mt-4 font-medium text-sm flex items-center text-gray-900 group-hover:underline">
-                  Configure Now &rarr;
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </main>
+        {/* --- 分区 1: Stickers --- */}
+        <section className="mb-16">
+          <div className="flex items-end gap-4 mb-8">
+            <h2 className="text-3xl font-black tracking-tight">Stickers & Labels</h2>
+            <div className="h-px bg-gray-200 flex-1 mb-2"></div>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {stickers.map((product) => (
+              <ProductCard key={product.product} item={product} />
+            ))}
+          </div>
+        </section>
 
-      {/* 页脚 */}
-      <footer className="bg-gray-900 text-gray-400 py-12 text-center text-sm">
-        <p>&copy; 2026 Vibe Sticker Shop. All rights reserved.</p>
-      </footer>
+        {/* --- 分区 2: Signs --- */}
+        <section>
+          <div className="flex items-end gap-4 mb-8">
+            <h2 className="text-3xl font-black tracking-tight">Rigid Signs & Banners</h2>
+            <div className="h-px bg-gray-200 flex-1 mb-2"></div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {signs.map((product) => (
+              <ProductCard key={product.product} item={product} />
+            ))}
+          </div>
+        </section>
+
+      </div>
     </div>
+  );
+}
+
+// 📦 小组件：产品卡片
+function ProductCard({ item }) {
+  // 简单的价格展示逻辑
+  const startPrice = item.config?.minimumPrice || 0;
+  
+  return (
+    <Link 
+      href={`/shop/${item.category}/${item.product}`}
+      className="group bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full"
+    >
+      <div className="space-y-4">
+        {/* 模拟一个产品图标占位符 */}
+        <div className="aspect-square bg-gray-50 rounded-2xl flex items-center justify-center text-4xl group-hover:scale-105 transition-transform duration-500">
+          {item.category === 'stickers' ? '✨' : '🪧'}
+        </div>
+        
+        <div>
+          <h3 className="font-bold text-lg leading-tight mb-1 group-hover:text-blue-600 transition-colors">
+            {item.name}
+          </h3>
+          <p className="text-xs text-gray-400 line-clamp-2">
+            {item.description}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 pt-4 border-t border-gray-50 flex justify-between items-center">
+        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          From
+        </div>
+        <div className="text-sm font-black">
+          ${startPrice}
+        </div>
+      </div>
+    </Link>
   );
 }
