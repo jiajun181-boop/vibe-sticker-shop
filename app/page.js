@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { PRODUCTS } from "../config/products";
+// 👇 改成相对路径 "../"
+import { PRODUCTS } from "../config/products"; 
+import TestCartButton from "../components/cart/TestCartButton"; 
 
 export default function HomePage() {
   // 1. 自动把产品按类别分组
@@ -7,7 +9,10 @@ export default function HomePage() {
   const signs = PRODUCTS.filter((p) => p.category === "signs");
 
   return (
-    <div className="min-h-screen bg-[#fafafa] pb-20">
+    <div className="min-h-screen bg-[#fafafa] pb-20 relative">
+      {/* ⚠️ 测试按钮 (悬浮在右下角) */}
+      <TestCartButton />
+
       {/* 顶部 Hero 区域 */}
       <div className="bg-black text-white pt-24 pb-16 px-6">
         <div className="max-w-7xl mx-auto space-y-6">
@@ -61,7 +66,6 @@ export default function HomePage() {
 
 // 📦 小组件：产品卡片
 function ProductCard({ item }) {
-  // 简单的价格展示逻辑
   const startPrice = item.config?.minimumPrice || 0;
   
   return (
@@ -70,7 +74,6 @@ function ProductCard({ item }) {
       className="group bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full"
     >
       <div className="space-y-4">
-        {/* 模拟一个产品图标占位符 */}
         <div className="aspect-square bg-gray-50 rounded-2xl flex items-center justify-center text-4xl group-hover:scale-105 transition-transform duration-500">
           {item.category === 'stickers' ? '✨' : '🪧'}
         </div>

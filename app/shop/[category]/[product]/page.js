@@ -1,6 +1,5 @@
 "use client";
 
-// 1. 关键修复：告诉 Cloudflare 在边缘节点运行此页面
 export const runtime = 'edge';
 
 import { useEffect, useMemo, useState } from "react";
@@ -8,12 +7,25 @@ import { useParams, useRouter } from "next/navigation";
 import { PRODUCTS } from "../../../../config/products";
 import { calculatePrice } from "../../../../lib/pricing/calculatePrice";
 import { UploadButton } from "../../../../utils/uploadthing";
+import { useCartStore } from "../../../../app/store/useCartStore";
+
+// 定义预设选项
+const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
+const PRESET_SIZES = [
+  { w: 2, h: 2, label: '2" x 2"' },
+  { w: 3, h: 3, label: '3" x 3"' },
+  { w: 4, h: 4, label: '4" x 4"' },
+  { w: 5, h: 5, label: '5" x 5"' },
+];
 
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
   const category = String(params?.category || "");
   const productSlug = String(params?.product || "");
+
+  const addItem = useCartStore((state) => state.addItem);
+  const openCart = useCartStore((state) => state.openCart);
 
   const product = useMemo(() => {
     return PRODUCTS.find((p) => p.category === category && p.product === productSlug);
@@ -25,14 +37,17 @@ export default function ProductPage() {
   const [sizeLabel, setSizeLabel] = useState("");
   const [addons, setAddons] = useState([]);
   
+  // ⭐ 新增：控制是否显示自定义输入框的状态
+  const [isCustomSize, setIsCustomSize] = useState(false);
+  const [isCustomQty, setIsCustomQty] = useState(false);
+  
   const [fileKey, setFileKey] = useState(""); 
   const [fileName, setFileName] = useState("");
   const [fileType, setFileType] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
-  
   const [priceData, setPriceData] = useState(null);
-  const [loading, setLoading] = useState(false);
 
+  // 初始化：如果是固定尺寸产品，默认选第一个
   useEffect(() => {
     if (product?.pricingModel === "fixed_size_tier") {
       setSizeLabel(product.config?.sizes?.[0]?.label || "");
@@ -71,68 +86,31 @@ export default function ProductPage() {
     return { width: `${boxW}%`, height: `${boxH}%` };
   }, [width, height, sizeLabel, product]);
 
-  const copyToClipboard = async (text) => {
-    const s = String(text || "");
-    if (!s) return;
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(s);
-        return;
-      }
-    } catch (err) {}
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = s;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "absolute";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-    } catch (err) {}
+  const handleAddToCart = () => {
+    if (!fileKey || !priceData) return;
+    const cartItem = {
+      productId: productSlug,
+      name: product.name,
+      price: Math.round(priceData.total * 100), 
+      quantity: Number(quantity),
+      width: Number(width),
+      height: Number(height),
+      sizeLabel: sizeLabel,
+      addons: addons,
+      fileKey: fileKey,
+      fileUrl: previewUrl,
+      fileName: fileName,
+      fileType: fileType,
+    };
+    addItem(cartItem);
+    openCart();
   };
 
-  async function handleCheckout() {
-    if (!fileKey || !priceData || loading) return;
-    setLoading(true);
-    let isRedirecting = false;
-
-    try {
-      const cleanInputs = {
-        quantity: Number(quantity),
-        addons,
-        ...(product.pricingModel === "fixed_size_tier" ? { sizeLabel } : { width: Number(width), height: Number(height) })
-      };
-
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          category, product: productSlug, fileKey, fileName, fileType, inputs: cleanInputs
-        }),
-      });
-
-      if (!res.ok) {
-        const msg = await res.text();
-        throw new Error(msg || `Checkout failed (${res.status})`);
-      }
-
-      const data = await res.json();
-      if (!data?.url) throw new Error("Missing Stripe checkout url");
-      isRedirecting = true;
-      window.location.href = data.url;
-    } catch (e) {
-      alert(`Error: ${String(e?.message || e)}`);
-    } finally {
-      if (!isRedirecting) setLoading(false);
-    }
-  }
+  const copyToClipboard = async (text) => { /* 省略 */ };
 
   if (!product) return null;
 
   return (
-    // 修改点：去掉了 min-h-screen，因为 layout 已经有了
     <div className="pb-20 pt-10">
       <div className="max-w-7xl mx-auto px-6 mb-8 text-[10px] text-gray-400 uppercase tracking-[0.2em]">
         Shop / {category} / <span className="text-black font-bold">{product.name}</span>
@@ -142,7 +120,7 @@ export default function ProductPage() {
         {/* 左侧预览 */}
         <div className="lg:col-span-7 space-y-4">
           <div className="aspect-square bg-white rounded-3xl border border-gray-100 shadow-sm flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+             <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
             {previewUrl ? (
               <div className="relative z-10 w-full h-full flex items-center justify-center p-12">
                 <img src={previewUrl} className="max-w-full max-h-full object-contain shadow-2xl" alt="Preview" />
@@ -184,37 +162,129 @@ export default function ProductPage() {
           </header>
 
           <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-2xl shadow-gray-200/40 space-y-8">
-            {/* 输入 */}
+            
+            {/* ⭐ 1. 尺寸选择区 */}
             {product.pricingModel === "area_tier" ? (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-300">Width (in)</label>
-                  <input type="number" value={width} onChange={(e)=>setWidth(e.target.value)} className="w-full bg-gray-50 rounded-2xl p-4 text-xl font-bold outline-none" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-300">Height (in)</label>
-                  <input type="number" value={height} onChange={(e)=>setHeight(e.target.value)} className="w-full bg-gray-50 rounded-2xl p-4 text-xl font-bold outline-none" />
-                </div>
+              <div className="space-y-4">
+                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-300">Size (Inches)</label>
+                 
+                 {/* 尺寸按钮组 */}
+                 <div className="flex flex-wrap gap-2">
+                    {PRESET_SIZES.map(s => (
+                      <button 
+                        key={s.label}
+                        onClick={() => { 
+                          setWidth(s.w); 
+                          setHeight(s.h); 
+                          setIsCustomSize(false); // 关掉自定义框
+                        }}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                          !isCustomSize && Number(width) === s.w && Number(height) === s.h 
+                          ? "bg-black text-white border-black ring-2 ring-offset-2 ring-black" 
+                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                    
+                    {/* Custom 按钮 */}
+                    <button 
+                      onClick={() => setIsCustomSize(true)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                        isCustomSize
+                        ? "bg-black text-white border-black ring-2 ring-offset-2 ring-black" 
+                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                      }`}
+                    >
+                      Custom Size
+                    </button>
+                 </div>
+
+                 {/* 自定义尺寸输入框 (只在 isCustomSize 为 true 时显示) */}
+                 {isCustomSize && (
+                   <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 fade-in duration-300">
+                      <div className="relative">
+                        <input type="number" value={width} onChange={(e)=>setWidth(e.target.value)} className="w-full bg-gray-50 rounded-2xl p-4 text-xl font-bold outline-none focus:ring-2 focus:ring-black/5" />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-300 pointer-events-none">W</span>
+                      </div>
+                      <div className="relative">
+                        <input type="number" value={height} onChange={(e)=>setHeight(e.target.value)} className="w-full bg-gray-50 rounded-2xl p-4 text-xl font-bold outline-none focus:ring-2 focus:ring-black/5" />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-300 pointer-events-none">H</span>
+                      </div>
+                   </div>
+                 )}
               </div>
             ) : (
+              // 固定尺寸下拉框 (Sign类产品)
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-300">Select Standard Size</label>
-                <select value={sizeLabel} onChange={(e)=>setSizeLabel(e.target.value)} className="w-full bg-gray-50 rounded-2xl p-4 font-bold appearance-none">
+                <select value={sizeLabel} onChange={(e)=>setSizeLabel(e.target.value)} className="w-full bg-gray-50 rounded-2xl p-4 font-bold appearance-none outline-none focus:ring-2 focus:ring-black/5">
                   {product.config?.sizes?.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
                 </select>
               </div>
             )}
 
-            {/* 数量 */}
+            {/* ⭐ 2. 数量选择区 */}
             <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-300">Quantity</label>
-                <span className="text-2xl font-black">{quantity} <span className="text-xs text-gray-300 font-normal">PCS</span></span>
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-300">Quantity</label>
+              
+              {/* 数量按钮组 */}
+              <div className="flex flex-wrap gap-2">
+                 {PRESET_QUANTITIES.map(q => (
+                   <button 
+                     key={q} 
+                     onClick={() => {
+                       setQuantity(q);
+                       setIsCustomQty(false); // 关掉自定义框
+                     }}
+                     className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                       !isCustomQty && quantity === q 
+                       ? "bg-black text-white border-black ring-2 ring-offset-2 ring-black" 
+                       : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                     }`}
+                   >
+                     {q} pcs
+                   </button>
+                 ))}
+
+                 {/* Custom 按钮 */}
+                 <button 
+                    onClick={() => setIsCustomQty(true)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      isCustomQty
+                      ? "bg-black text-white border-black ring-2 ring-offset-2 ring-black" 
+                      : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                    }`}
+                  >
+                    Custom Qty
+                  </button>
               </div>
-              <input type="range" min="1" max="500" step="1" value={quantity} onChange={(e)=>setQuantity(Number(e.target.value))} className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-black" />
+
+              {/* 自定义数量输入 + 滑块 (只在 isCustomQty 为 true 时显示) */}
+              {isCustomQty && (
+                <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-2xl animate-in slide-in-from-top-2 fade-in duration-300">
+                   <input 
+                     type="range" 
+                     min="1" max="5000" step="1" 
+                     value={quantity} 
+                     onChange={(e)=>setQuantity(Number(e.target.value))} 
+                     className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black ml-2" 
+                   />
+                   <div className="bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        value={quantity} 
+                        onChange={(e)=>setQuantity(Number(e.target.value))}
+                        className="w-16 text-right font-black outline-none"
+                      />
+                      <span className="text-[10px] font-bold text-gray-400">PCS</span>
+                   </div>
+                </div>
+              )}
             </div>
 
-            {/* Addons */}
+            {/* Addons (保持不变) */}
             <div className="space-y-3 pt-4 border-t border-gray-50">
               {product.options?.addons?.map(addon => {
                 const unitLabel = addon.type === 'flat' ? 'flat' : addon.type === 'per_area' ? 'in²' : 'unit';
@@ -238,10 +308,10 @@ export default function ProductPage() {
             </div>
           </div>
 
-          {/* 价格明细 */}
+          {/* 价格明细 & 底部按钮 */}
           {priceData && (
             <div className="bg-black text-white rounded-[2.5rem] p-8 space-y-6 shadow-2xl shadow-black/30">
-              <div className="space-y-4">
+               <div className="space-y-4">
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-1">Total Estimate</p>
@@ -260,33 +330,14 @@ export default function ProductPage() {
                     </div>
                   )}
                 </div>
-
-                {priceData.breakdown.qtyBillable > Number(quantity) && (
-                  <div className="bg-yellow-900/30 border border-yellow-600/50 rounded-xl p-3 flex items-start gap-3">
-                    <div className="text-xl">⚠️</div>
-                    <div>
-                      <div className="text-xs font-bold text-yellow-500 uppercase tracking-wide">MOQ Adjustment</div>
-                      <div className="text-[10px] text-yellow-200/80 font-mono mt-0.5 leading-relaxed">
-                        Requested: {quantity} pcs<br/>Billed: <span className="text-white font-bold">{priceData.breakdown.qtyBillable} pcs</span>
-                      </div>
-                      <div className="text-[10px] text-yellow-200/70 font-mono mt-1">Pricing is tier-based. This tier minimum is {priceData.breakdown.tierMinQty} pcs.</div>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="pt-4 border-t border-gray-800">
-                   <div onClick={() => copyToClipboard(priceData.breakdown.tierApplied)} title="Click to copy spec" className="text-[9px] text-gray-600 font-mono truncate opacity-60 cursor-pointer hover:opacity-100 hover:text-white transition-all">
-                      SPEC: {priceData.breakdown.tierApplied || "Standard"}
-                   </div>
-                </div>
-              </div>
+               </div>
 
               <button 
-                onClick={handleCheckout}
-                disabled={!fileKey || !priceData || loading}
+                onClick={handleAddToCart}
+                disabled={!fileKey || !priceData}
                 className={`w-full py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition-all ${(fileKey && priceData) ? "bg-white text-black hover:invert active:scale-[0.98]" : "bg-gray-900 text-gray-700 cursor-not-allowed"}`}
               >
-                {loading ? "Processing..." : "Proceed to Checkout"}
+                {!fileKey ? "Upload Image First" : "Add to Cart"}
               </button>
             </div>
           )}
