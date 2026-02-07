@@ -1,12 +1,16 @@
+// app/api/webhook/route.js
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+
+// 👈 关键：Cloudflare 必须声明 edge
+export const runtime = "edge";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(req) {
-  const body = await req.text(); // ✅ 必须用 text() 验证签名
+  const body = await req.text();
   const sig = req.headers.get("stripe-signature");
 
   let event;
@@ -20,7 +24,6 @@ export async function POST(req) {
     const session = event.data.object;
     const orderId = session.metadata.orderId;
 
-    // ✅ 幂等更新：回填支付信息和配送地址
     await prisma.order.update({
       where: { id: orderId },
       data: {

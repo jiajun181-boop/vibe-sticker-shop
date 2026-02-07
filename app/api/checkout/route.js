@@ -1,10 +1,12 @@
+// app/api/checkout/route.js
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { PRODUCTS } from "@/config/products";
 import { calculatePrice } from "@/lib/pricing/calculatePrice";
 
-export const runtime = "nodejs";
+// 👈 修改这里：从 nodejs 改为 edge
+export const runtime = "edge";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -13,14 +15,13 @@ export async function POST(req) {
     const { items } = await req.json();
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
-    // 1. 先在数据库创建 "Pending" 订单
     const draft = await prisma.order.create({
       data: {
         status: "pending",
         items: {
           create: items.map(item => {
             const product = PRODUCTS.find(p => p.product === item.productId);
-            const priceData = calculatePrice(product, item); // 复算
+            const priceData = calculatePrice(product, item);
             return {
               productId: item.productId,
               name: item.name,
@@ -39,7 +40,6 @@ export async function POST(req) {
       }
     });
 
-    // 2. 创建 Stripe 会话，带上 orderId
     const session = await stripe.checkout.sessions.create({
       line_items: items.map(item => ({
         price_data: {
@@ -50,7 +50,7 @@ export async function POST(req) {
         quantity: item.cartQuantity || 1,
       })),
       mode: "payment",
-      metadata: { orderId: draft.id }, // 👈 关键：关联数据库订单
+      metadata: { orderId: draft.id },
       success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/checkout/cancel`,
       shipping_address_collection: { allowed_countries: ["CA", "US"] },

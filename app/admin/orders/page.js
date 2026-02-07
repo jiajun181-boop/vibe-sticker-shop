@@ -1,21 +1,15 @@
 // app/admin/orders/page.js
-import { prisma } from "../../../lib/prisma";
+import { prisma } from "@/lib/prisma";
 
-// 设置页面不缓存，确保每次打开都是最新订单
+// 👈 关键：告诉 Cloudflare 在边缘网络运行
+export const runtime = "edge"; 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOrders() {
-  // 1. 从数据库读取所有已支付的订单，并包含其中的商品明细
   const orders = await prisma.order.findMany({
-    where: {
-      status: "paid", // 只看付过钱的
-    },
-    include: {
-      items: true,    // 连带读出 OrderItem 表里的数据
-    },
-    orderBy: {
-      createdAt: "desc", // 按时间倒序，最新的在上面
-    },
+    where: { status: "paid" },
+    include: { items: true },
+    orderBy: { createdAt: "desc" },
   });
 
   return (
@@ -40,7 +34,6 @@ export default async function AdminOrders() {
           <div className="space-y-6">
             {orders.map((order) => (
               <div key={order.id} className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-sm hover:shadow-md transition-shadow">
-                {/* 订单头部信息 */}
                 <div className="flex flex-wrap justify-between items-start border-b border-gray-50 pb-6 mb-6 gap-4">
                   <div className="space-y-1">
                     <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-1 rounded">Order #{order.id.slice(-6)}</span>
@@ -53,32 +46,22 @@ export default async function AdminOrders() {
                   </div>
                 </div>
 
-                {/* 订单内的商品列表 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {order.items.map((item) => (
                     <div key={item.id} className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                      {/* 缩略图预览（如果是图片的话） */}
                       <div className="w-16 h-16 bg-white rounded-xl border border-gray-100 flex-shrink-0 overflow-hidden">
                         {item.fileUrl && (
                           <img src={item.fileUrl} alt="Artwork" className="w-full h-full object-contain" />
                         )}
                       </div>
-                      
                       <div className="flex-grow min-w-0">
                         <p className="font-bold text-sm truncate">{item.name}</p>
                         <p className="text-[10px] text-gray-400 uppercase font-medium">
                           {item.sizeLabel ? item.sizeLabel : `${item.width}x${item.height} in`} · {item.printQuantity} pcs
                         </p>
                       </div>
-
-                      {/* 下载按钮 */}
                       {item.fileUrl && (
-                        <a 
-                          href={item.fileUrl} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="bg-black text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all"
-                        >
+                        <a href={item.fileUrl} target="_blank" rel="noreferrer" className="bg-black text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all">
                           Download
                         </a>
                       )}
