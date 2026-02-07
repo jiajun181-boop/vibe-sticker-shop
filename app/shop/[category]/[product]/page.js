@@ -1,5 +1,8 @@
 "use client";
 
+// 1. 关键修复：告诉 Cloudflare 在边缘节点运行此页面
+export const runtime = 'edge';
+
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PRODUCTS } from "../../../../config/products";
@@ -68,7 +71,6 @@ export default function ProductPage() {
     return { width: `${boxW}%`, height: `${boxH}%` };
   }, [width, height, sizeLabel, product]);
 
-  // 剪贴板复制 (Safari 兼容版)
   const copyToClipboard = async (text) => {
     const s = String(text || "");
     if (!s) return;
@@ -130,8 +132,9 @@ export default function ProductPage() {
   if (!product) return null;
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-slate-900 pb-20">
-      <div className="max-w-7xl mx-auto px-6 py-4 text-[10px] text-gray-400 uppercase tracking-[0.2em]">
+    // 修改点：去掉了 min-h-screen，因为 layout 已经有了
+    <div className="pb-20 pt-10">
+      <div className="max-w-7xl mx-auto px-6 mb-8 text-[10px] text-gray-400 uppercase tracking-[0.2em]">
         Shop / {category} / <span className="text-black font-bold">{product.name}</span>
       </div>
 
@@ -273,7 +276,7 @@ export default function ProductPage() {
                 
                 <div className="pt-4 border-t border-gray-800">
                    <div onClick={() => copyToClipboard(priceData.breakdown.tierApplied)} title="Click to copy spec" className="text-[9px] text-gray-600 font-mono truncate opacity-60 cursor-pointer hover:opacity-100 hover:text-white transition-all">
-                     SPEC: {priceData.breakdown.tierApplied || "Standard"}
+                      SPEC: {priceData.breakdown.tierApplied || "Standard"}
                    </div>
                 </div>
               </div>
