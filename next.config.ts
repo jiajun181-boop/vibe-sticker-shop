@@ -5,11 +5,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "utfs.io", // 允许 UploadThing 的图片
+        hostname: "placehold.co",
       },
       {
         protocol: "https",
-        hostname: "img.clerk.com", // 预留给 Clerk 登录头像
+        hostname: "utfs.io",
       },
     ],
   },
