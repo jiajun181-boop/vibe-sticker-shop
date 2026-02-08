@@ -4,6 +4,7 @@ import FeaturedBanner from "@/components/home/FeaturedBanner";
 import QuoteCalculator from "@/components/home/QuoteCalculator";
 import TrustSignals from "@/components/home/TrustSignals";
 import BundlesSection from "@/components/home/BundlesSection";
+import HowItWorks from "@/components/home/HowItWorks";
 
 export const dynamic = "force-dynamic";
 
@@ -121,6 +122,9 @@ export default async function HomePage() {
 
         {/* Trust Signals */}
         <TrustSignals />
+
+        {/* How It Works */}
+        <HowItWorks />
 
         {/* Category sections */}
         {CATEGORIES.map((cat) => {

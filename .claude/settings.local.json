@@ -14,7 +14,9 @@
       "Bash(node prisma/seed.mjs:*)",
       "Bash(npx next build:*)",
       "Bash(npx next dev --turbopack)",
-      "Bash(node scripts/add-display-products.mjs:*)"
+      "Bash(node scripts/add-display-products.mjs:*)",
+      "Bash(git -C \"C:\\\\Users\\\\Lilian\\\\vibe-sticker-shop\" add -A)",
+      "Bash(git -C \"C:\\\\Users\\\\Lilian\\\\vibe-sticker-shop\" status)"
     ]
   }
 }

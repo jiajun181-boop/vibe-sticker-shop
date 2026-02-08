@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
+import Toast from "@/components/Toast";
 import PromoBar from "@/components/home/PromoBar";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -17,6 +18,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${inter.className} min-h-screen flex flex-col bg-[#fafafa]`}>
         <CartDrawer />
+        <Toast />
         <PromoBar />
         <Navbar />
 
