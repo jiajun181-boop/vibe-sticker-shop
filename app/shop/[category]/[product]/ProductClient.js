@@ -1,511 +1,345 @@
-"use client";
+﻿"use client";
 
-import { useMemo, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useCartStore } from "@/lib/store";
+import { showSuccessToast } from "@/components/Toast";
 
-// --- Constants ---
 const HST_RATE = 0.13;
 const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
-const PRESET_SIZES = [
-  { w: 2, h: 2, label: '2" x 2"' },
-  { w: 3, h: 3, label: '3" x 3"' },
-  { w: 4, h: 4, label: '4" x 4"' },
-  { w: 5, h: 5, label: '5" x 5"' },
-];
+const INCH_TO_CM = 2.54;
 
-const cad = (cents) =>
+const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-// --- File specs helper ---
-function getAcceptString(formats) {
-  if (!formats || !Array.isArray(formats) || formats.length === 0) return undefined;
-  const mimeMap = {
-    ai: ".ai", eps: ".eps", pdf: ".pdf", svg: ".svg",
-    tiff: ".tiff,.tif", jpg: ".jpg,.jpeg", png: ".png",
-  };
-  return formats.map((f) => mimeMap[f] || `.${f}`).join(",");
+function parseMaterials(optionsConfig) {
+  if (!optionsConfig || typeof optionsConfig !== "object") return [];
+  const direct = Array.isArray(optionsConfig.materials) ? optionsConfig.materials : [];
+  const flattened = direct
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object" && typeof item.label === "string") return item.label;
+      return null;
+    })
+    .filter(Boolean);
+  return flattened;
 }
 
-function formatFileSize(bytes) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function quantityMultiplier(qty) {
+  if (qty >= 1000) return 0.82;
+  if (qty >= 500) return 0.88;
+  if (qty >= 250) return 0.93;
+  if (qty >= 100) return 0.97;
+  return 1;
 }
 
-// ============================================================
-export default function ProductClient({ product }) {
-  const router = useRouter();
+export default function ProductClient({ product, relatedProducts }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
 
-  const isPricePerSqft = product.pricingUnit === "per_sqft";
+  const isPerSqft = product.pricingUnit === "per_sqft";
+  const materials = parseMaterials(product.optionsConfig);
 
-  // --- Form state ---
-  const [width, setWidth] = useState(3);
-  const [height, setHeight] = useState(3);
-  const [quantity, setQuantity] = useState(50);
-  const [isCustomSize, setIsCustomSize] = useState(false);
-  const [isCustomQty, setIsCustomQty] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
+  const [quantity, setQuantity] = useState(100);
+  const [material, setMaterial] = useState(materials[0] || "Standard Vinyl");
+  const [unit, setUnit] = useState("in");
+  const [widthIn, setWidthIn] = useState(product.minWidthIn || 3);
+  const [heightIn, setHeightIn] = useState(product.minHeightIn || 3);
+  const [file, setFile] = useState(null);
+  const [filePreview, setFilePreview] = useState("");
+  const [added, setAdded] = useState(false);
 
-  // --- File state ---
-  const [file, setFile] = useState(null);      // { name, size, type }
-  const [fileUrl, setFileUrl] = useState("");   // object URL for preview
-  const [addedToCart, setAddedToCart] = useState(false);
+  const imageList = product.images?.length ? product.images : [];
 
-  // --- Dimension validation ---
-  const dimErrors = useMemo(() => {
-    if (!isPricePerSqft) return {};
-    const errs = {};
-    const w = Number(width);
-    const h = Number(height);
-    if (product.minWidthIn && w < product.minWidthIn)
-      errs.width = `Min width is ${product.minWidthIn}"`;
-    if (product.maxWidthIn && w > product.maxWidthIn)
-      errs.width = `Max width is ${product.maxWidthIn}"`;
-    if (product.minHeightIn && h < product.minHeightIn)
-      errs.height = `Min height is ${product.minHeightIn}"`;
-    if (product.maxHeightIn && h > product.maxHeightIn)
-      errs.height = `Max height is ${product.maxHeightIn}"`;
-    if (w <= 0) errs.width = "Width must be > 0";
-    if (h <= 0) errs.height = "Height must be > 0";
-    return errs;
-  }, [width, height, product, isPricePerSqft]);
+  const widthDisplay = unit === "in" ? widthIn : Number((widthIn * INCH_TO_CM).toFixed(2));
+  const heightDisplay = unit === "in" ? heightIn : Number((heightIn * INCH_TO_CM).toFixed(2));
 
-  const hasDimErrors = Object.keys(dimErrors).length > 0;
-
-  // --- Price calculation ---
   const priceData = useMemo(() => {
-    const qty = Number(quantity);
-    if (qty <= 0) return null;
+    const qty = Number(quantity) || 1;
+    const baseUnitCents = product.basePrice;
+    const tier = quantityMultiplier(qty);
 
-    const baseDollars = product.basePrice / 100;
-
-    if (isPricePerSqft) {
-      const w = Number(width);
-      const h = Number(height);
-      if (w <= 0 || h <= 0) return null;
-      const sqft = (w * h) / 144;
-      const unitPrice = baseDollars * sqft;
-      const subtotal = unitPrice * qty;
-      const tax = subtotal * HST_RATE;
-      return { subtotal, tax, total: subtotal + tax, unitPrice, sqft, rate: baseDollars };
+    if (isPerSqft) {
+      const sqft = (Number(widthIn) * Number(heightIn)) / 144;
+      const unitAmount = Math.max(1, Math.round(baseUnitCents * sqft * tier));
+      const subtotal = unitAmount * qty;
+      const tax = Math.round(subtotal * HST_RATE);
+      return { unitAmount, subtotal, tax, total: subtotal + tax, sqft, tier };
     }
 
-    const subtotal = baseDollars * qty;
-    const tax = subtotal * HST_RATE;
-    return { subtotal, tax, total: subtotal + tax, unitPrice: baseDollars, sqft: null, rate: null };
-  }, [product, width, height, quantity, isPricePerSqft]);
+    const unitAmount = Math.max(1, Math.round(baseUnitCents * tier));
+    const subtotal = unitAmount * qty;
+    const tax = Math.round(subtotal * HST_RATE);
+    return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, tier };
+  }, [product.basePrice, quantity, widthIn, heightIn, isPerSqft]);
 
-  // --- Cut-line preview box ---
-  const boxStyles = useMemo(() => {
-    const w = Number(width) || 3;
-    const h = Number(height) || 3;
-    const ratio = w / h;
-    const bw = ratio >= 1 ? 75 : 75 * ratio;
-    const bh = ratio >= 1 ? 75 / ratio : 75;
-    return { width: `${bw}%`, height: `${bh}%` };
-  }, [width, height]);
+  const tierRows = useMemo(
+    () =>
+      PRESET_QUANTITIES.map((q) => ({
+        qty: q,
+        unitAmount: Math.max(1, Math.round((isPerSqft ? product.basePrice * ((widthIn * heightIn) / 144 || 1) : product.basePrice) * quantityMultiplier(q))),
+      })),
+    [product.basePrice, isPerSqft, widthIn, heightIn]
+  );
 
-  // --- File handler ---
-  const handleFileChange = useCallback((e) => {
+  const specs = [
+    ["Product Type", product.type],
+    ["Pricing Unit", product.pricingUnit === "per_sqft" ? "Per Square Foot" : "Per Piece"],
+    ["Min Size", product.minWidthIn && product.minHeightIn ? `${product.minWidthIn}" x ${product.minHeightIn}"` : "N/A"],
+    ["Max Size", product.maxWidthIn && product.maxHeightIn ? `${product.maxWidthIn}" x ${product.maxHeightIn}"` : "N/A"],
+    ["Min DPI", product.minDpi ? String(product.minDpi) : "N/A"],
+    ["Bleed", product.requiresBleed ? `${product.bleedIn || 0.125}" required` : "Not required"],
+  ];
+
+  function onFileChange(e) {
     const f = e.target.files?.[0];
     if (!f) return;
-    setFile({ name: f.name, size: f.size, type: f.type });
+    setFile(f);
     if (f.type.startsWith("image/")) {
-      setFileUrl(URL.createObjectURL(f));
+      setFilePreview(URL.createObjectURL(f));
     } else {
-      setFileUrl("");
+      setFilePreview("");
     }
-  }, []);
+  }
 
-  // --- Add to cart ---
-  const canAddToCart = priceData && !hasDimErrors && Number(quantity) > 0;
+  function setSizeValue(type, value) {
+    const n = Math.max(0.5, Number(value) || 0.5);
+    const inValue = unit === "in" ? n : n / INCH_TO_CM;
+    if (type === "w") setWidthIn(Number(inValue.toFixed(2)));
+    if (type === "h") setHeightIn(Number(inValue.toFixed(2)));
+  }
 
-  const handleAddToCart = () => {
-    if (!canAddToCart) return;
-    addItem({
-      id: product.id,
+  function handleAddToCart() {
+    const item = {
+      productId: product.id,
+      slug: product.slug,
       name: product.name,
-      price: Math.round(priceData.unitPrice * 100), // unit price in cents
+      unitAmount: priceData.unitAmount,
       quantity: Number(quantity),
-      image: null,
-      options: {
-        ...(isPricePerSqft ? { width: Number(width), height: Number(height), sqft: priceData.sqft } : {}),
-        pricingUnit: product.pricingUnit,
+      image: imageList[0]?.url || null,
+      meta: {
+        width: isPerSqft ? widthIn : null,
+        height: isPerSqft ? heightIn : null,
+        material,
         fileName: file?.name || null,
+        pricingUnit: product.pricingUnit,
       },
-    });
+      id: product.id,
+      price: priceData.unitAmount,
+      options: {
+        width: isPerSqft ? widthIn : null,
+        height: isPerSqft ? heightIn : null,
+        material,
+        fileName: file?.name || null,
+        pricingUnit: product.pricingUnit,
+      },
+    };
+
+    addItem(item);
     openCart();
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
-  };
+    showSuccessToast("Added to cart!");
+    setAdded(true);
+    setTimeout(() => setAdded(false), 700);
+  }
 
-  // --- Accepted formats ---
-  const formats = Array.isArray(product.acceptedFormats) ? product.acceptedFormats : [];
-  const acceptStr = getAcceptString(formats);
-
-  // ============================================================
-  // RENDER
-  // ============================================================
   return (
-    <div className="pb-20 pt-10">
-      {/* Breadcrumbs */}
-      <div className="max-w-7xl mx-auto px-6 mb-8 text-[10px] text-gray-400 uppercase tracking-[0.2em]">
-        <span onClick={() => router.push("/shop")} className="cursor-pointer hover:text-black transition-colors">
-          Shop
-        </span>
-        {" / "}
-        {product.category}
-        {" / "}
-        <span className="text-black font-bold">{product.name}</span>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
-        {/* ======== LEFT: Preview ======== */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="aspect-square bg-white rounded-3xl border border-gray-100 shadow-sm flex items-center justify-center relative overflow-hidden">
-            <div
-              className="absolute inset-0 opacity-[0.05] pointer-events-none"
-              style={{ backgroundImage: "radial-gradient(#000 1px, transparent 1px)", backgroundSize: "24px 24px" }}
-            />
-            {fileUrl ? (
-              <div className="relative z-10 w-full h-full flex items-center justify-center p-12">
-                <img src={fileUrl} className="max-w-full max-h-full object-contain shadow-2xl" alt="Preview" />
-                {isPricePerSqft && (
-                  <div
-                    className="absolute border-2 border-red-500 shadow-[0_0_0_9999px_rgba(255,255,255,0.85)] transition-all duration-500"
-                    style={boxStyles}
-                  >
-                    <div className="absolute -top-6 left-0 text-[10px] font-mono text-red-500 bg-white px-1 whitespace-nowrap">
-                      CUT_LINE: {width}&quot; x {height}&quot;
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center space-y-4 p-8">
-                <div className="text-6xl opacity-20">🖨️</div>
-                <p className="text-gray-400 text-sm font-medium">Upload your artwork to preview</p>
-                <label className="inline-block cursor-pointer bg-black text-white px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-800 transition-all">
-                  Choose File
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept={acceptStr}
-                    onChange={handleFileChange}
-                  />
-                </label>
-                {formats.length > 0 && (
-                  <p className="text-[10px] text-gray-300 uppercase tracking-wider">
-                    Accepted: {formats.join(", ")}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* File info + preflight warnings */}
-          {file && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-400 flex-shrink-0">
-                    {file.name.split(".").pop()?.toUpperCase() || "?"}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold truncate">{file.name}</p>
-                    <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => { setFile(null); setFileUrl(""); }}
-                  className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors px-2"
-                >
-                  Remove
-                </button>
-              </div>
-
-              {/* Preflight warnings */}
-              {(product.minDpi || product.requiresBleed) && (
-                <div className="space-y-1.5 pt-2 border-t border-gray-50">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">Preflight Notes</p>
-                  {product.minDpi && (
-                    <p className="text-xs text-gray-500">
-                      <span className="font-bold text-amber-600">DPI:</span> Minimum {product.minDpi} DPI required for print quality
-                    </p>
-                  )}
-                  {product.requiresBleed && (
-                    <p className="text-xs text-gray-500">
-                      <span className="font-bold text-amber-600">Bleed:</span> Add {product.bleedIn || 0.125}&quot; bleed on all sides
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+    <main className="bg-gray-50 pb-20 pt-10 text-gray-900">
+      <div className="mx-auto max-w-6xl space-y-10 px-6">
+        <div className="text-xs uppercase tracking-[0.2em] text-gray-500">
+          <Link href="/shop" className="hover:text-gray-900">Shop</Link> / <span>{product.category}</span> / <span className="text-gray-900">{product.name}</span>
         </div>
 
-        {/* ======== RIGHT: Config ======== */}
-        <div className="lg:col-span-5 space-y-8">
-          <header>
-            <h1 className="text-4xl font-black tracking-tighter mb-2 italic">{product.name}</h1>
-            <p className="text-gray-400 text-sm tracking-tight">{product.description}</p>
-            <div className="mt-3 flex items-center gap-2">
-              <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full uppercase">
-                {product.type}
-              </span>
-              {isPricePerSqft ? (
-                <span className="text-xs font-mono font-bold text-gray-500">
-                  From {cad(product.basePrice)}/sqft
-                </span>
+        <section className="grid gap-10 lg:grid-cols-12">
+          <div className="space-y-4 lg:col-span-7">
+            <div className="relative aspect-square overflow-hidden rounded-3xl border border-gray-200 bg-white">
+              {imageList[activeImage]?.url ? (
+                <Image
+                  src={imageList[activeImage].url}
+                  alt={imageList[activeImage].alt || product.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 58vw"
+                />
               ) : (
-                <span className="text-xs font-mono font-bold text-gray-500">
-                  {cad(product.basePrice)}/ea
-                </span>
+                <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">No image available</div>
               )}
             </div>
-          </header>
 
-          <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-2xl shadow-gray-200/40 space-y-8">
-            {/* === 1. SIZE (only for per_sqft) === */}
-            {isPricePerSqft && (
-              <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-300">
-                  Size (Inches)
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {PRESET_SIZES.map((s) => (
-                    <button
-                      key={s.label}
-                      onClick={() => { setWidth(s.w); setHeight(s.h); setIsCustomSize(false); }}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                        !isCustomSize && Number(width) === s.w && Number(height) === s.h
-                          ? "bg-black text-white border-black ring-2 ring-offset-2 ring-black"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
+            {imageList.length > 1 && (
+              <div className="grid grid-cols-5 gap-2">
+                {imageList.map((img, idx) => (
                   <button
-                    onClick={() => setIsCustomSize(true)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                      isCustomSize
-                        ? "bg-black text-white border-black ring-2 ring-offset-2 ring-black"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-                    }`}
+                    key={img.id}
+                    onClick={() => setActiveImage(idx)}
+                    className={`relative aspect-square overflow-hidden rounded-xl border ${activeImage === idx ? "border-gray-900" : "border-gray-200"}`}
                   >
-                    Custom Size
-                  </button>
-                </div>
-
-                {isCustomSize && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          value={width}
-                          min={product.minWidthIn || 0.5}
-                          max={product.maxWidthIn || 999}
-                          step="0.5"
-                          onChange={(e) => setWidth(e.target.value)}
-                          className={`w-full bg-gray-50 rounded-2xl p-4 text-xl font-bold outline-none focus:ring-2 ${
-                            dimErrors.width ? "focus:ring-red-500/30 border border-red-300" : "focus:ring-black/5"
-                          }`}
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-300 pointer-events-none">
-                          W
-                        </span>
-                      </div>
-                      {dimErrors.width && (
-                        <p className="text-[11px] text-red-500 mt-1 pl-1">{dimErrors.width}</p>
-                      )}
-                    </div>
-                    <div>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          value={height}
-                          min={product.minHeightIn || 0.5}
-                          max={product.maxHeightIn || 999}
-                          step="0.5"
-                          onChange={(e) => setHeight(e.target.value)}
-                          className={`w-full bg-gray-50 rounded-2xl p-4 text-xl font-bold outline-none focus:ring-2 ${
-                            dimErrors.height ? "focus:ring-red-500/30 border border-red-300" : "focus:ring-black/5"
-                          }`}
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-300 pointer-events-none">
-                          H
-                        </span>
-                      </div>
-                      {dimErrors.height && (
-                        <p className="text-[11px] text-red-500 mt-1 pl-1">{dimErrors.height}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Sqft readout */}
-                {priceData?.sqft != null && !hasDimErrors && (
-                  <div className="text-xs text-gray-400 font-mono bg-gray-50 px-4 py-2 rounded-xl">
-                    {Number(width)}&quot; &times; {Number(height)}&quot; = {priceData.sqft.toFixed(3)} sqft per piece
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* === 2. QUANTITY === */}
-            <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-300">
-                Quantity
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {PRESET_QUANTITIES.map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => { setQuantity(q); setIsCustomQty(false); }}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                      !isCustomQty && quantity === q
-                        ? "bg-black text-white border-black ring-2 ring-offset-2 ring-black"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-                    }`}
-                  >
-                    {q} pcs
+                    <Image src={img.url} alt={img.alt || product.name} fill className="object-cover" sizes="20vw" />
                   </button>
                 ))}
-                <button
-                  onClick={() => setIsCustomQty(true)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                    isCustomQty
-                      ? "bg-black text-white border-black ring-2 ring-offset-2 ring-black"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-                  }`}
-                >
-                  Custom Qty
-                </button>
-              </div>
-
-              {isCustomQty && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 bg-gray-50 px-3 py-2 rounded-2xl">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, Number(quantity) - 1))}
-                      className="w-10 h-10 rounded-xl bg-white border border-gray-200 font-black text-lg hover:bg-gray-100 transition-colors flex items-center justify-center"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-                      className="flex-1 text-center text-xl font-black bg-transparent outline-none"
-                    />
-                    <button
-                      onClick={() => setQuantity(Number(quantity) + 1)}
-                      className="w-10 h-10 rounded-xl bg-white border border-gray-200 font-black text-lg hover:bg-gray-100 transition-colors flex items-center justify-center"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="5000"
-                    step="1"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
-                    className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* === 3. FILE UPLOAD (if no file yet, show inline) === */}
-            {!file && (
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-300">
-                  Upload Artwork
-                </label>
-                <label className="flex items-center justify-center gap-3 p-6 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
-                  </svg>
-                  <span className="text-sm text-gray-500 font-medium">
-                    {formats.length > 0 ? `Accepts: ${formats.join(", ").toUpperCase()}` : "Choose a file"}
-                  </span>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept={acceptStr}
-                    onChange={handleFileChange}
-                  />
-                </label>
               </div>
             )}
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-5">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">Product Specifications</h3>
+              <div className="mt-3 divide-y divide-gray-100">
+                {specs.map(([k, v]) => (
+                  <div key={k} className="flex items-center justify-between py-2 text-sm">
+                    <span className="text-gray-500">{k}</span>
+                    <span className="font-medium text-gray-900">{v}</span>
+                  </div>
+                ))}
+              </div>
+              {product.templateUrl && (
+                <a href={product.templateUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:text-gray-900">
+                  Installation Guide
+                </a>
+              )}
+            </div>
           </div>
 
-          {/* === 4. PRICE BREAKDOWN === */}
-          {priceData && !hasDimErrors && (
-            <div className="bg-black text-white rounded-[2.5rem] p-8 space-y-6 shadow-2xl shadow-black/30">
-              {/* Price lines */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase tracking-widest text-gray-500">
-                    {isPricePerSqft ? `${cad(Math.round(priceData.unitPrice * 100))}/pc` : `${cad(product.basePrice)}/ea`}
-                    {" "}&times; {quantity}
-                  </span>
-                  <span className="text-sm font-mono font-bold">{cad(Math.round(priceData.subtotal * 100))}</span>
-                </div>
-                {isPricePerSqft && priceData.rate && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] uppercase tracking-widest text-gray-500">Rate</span>
-                    <span className="inline-block bg-gray-800 rounded px-2 py-0.5 text-[10px] font-mono text-gray-300 border border-gray-700">
-                      {cad(Math.round(priceData.rate * 100))}/sqft
-                    </span>
+          <div className="space-y-6 lg:col-span-5">
+            <header>
+              <h1 className="text-4xl font-semibold tracking-tight">{product.name}</h1>
+              <p className="mt-3 text-sm text-gray-600">{product.description || "Professional-grade custom print product for business applications."}</p>
+            </header>
+
+            <div className="rounded-3xl border border-gray-200 bg-white p-6">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Realtime Pricing</p>
+                <p className="text-sm font-semibold text-gray-900">{formatCad(priceData.unitAmount)} / unit</p>
+              </div>
+
+              {isPerSqft && (
+                <div className="mt-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Size Unit</p>
+                    <div className="rounded-full border border-gray-300 p-1 text-xs">
+                      <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-gray-900 text-white" : "text-gray-600"}`}>Inches</button>
+                      <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-gray-900 text-white" : "text-gray-600"}`}>CM</button>
+                    </div>
                   </div>
-                )}
-                <div className="border-t border-gray-800 pt-3 flex justify-between items-center">
-                  <span className="text-[10px] uppercase tracking-widest text-gray-500">Subtotal</span>
-                  <span className="text-sm font-mono font-bold">{cad(Math.round(priceData.subtotal * 100))}</span>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="text-xs text-gray-600">
+                      Width ({unit})
+                      <input
+                        type="number"
+                        value={widthDisplay}
+                        onChange={(e) => setSizeValue("w", e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs text-gray-600">
+                      Height ({unit})
+                      <input
+                        type="number"
+                        value={heightDisplay}
+                        onChange={(e) => setSizeValue("h", e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500">Area per unit: {priceData.sqft?.toFixed(3)} sqft</p>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase tracking-widest text-gray-500">HST (13%)</span>
-                  <span className="text-sm font-mono text-gray-400">{cad(Math.round(priceData.tax * 100))}</span>
+              )}
+
+              {materials.length > 0 && (
+                <div className="mt-5">
+                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Material</label>
+                  <select value={material} onChange={(e) => setMaterial(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+                    {materials.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="border-t border-gray-700 pt-3 flex justify-between items-start">
-                  <span className="text-[9px] uppercase tracking-[0.3em] text-gray-500">Total (CAD)</span>
-                  <div className="text-4xl font-black tracking-tighter">{cad(Math.round(priceData.total * 100))}</div>
+              )}
+
+              <div className="mt-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Quantity</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="h-9 w-9 rounded-full border border-gray-300">-</button>
+                  <input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))} className="w-20 rounded-xl border border-gray-300 px-3 py-2 text-center text-sm" />
+                  <button onClick={() => setQuantity((q) => q + 1)} className="h-9 w-9 rounded-full border border-gray-300">+</button>
                 </div>
               </div>
 
-              {/* Add to cart */}
+              <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Tier Pricing</p>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                  {tierRows.map((row) => (
+                    <div key={row.qty} className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
+                      <span>{row.qty}+ pcs</span>
+                      <span className="font-semibold">{formatCad(row.unitAmount)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Artwork Upload</label>
+                <input type="file" onChange={onFileChange} className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm" />
+                <p className="text-xs text-gray-500">Optional. You can also upload after checkout.</p>
+                {filePreview && (
+                  <div className="relative mt-2 aspect-video overflow-hidden rounded-xl border border-gray-200">
+                    <Image src={filePreview} alt="Upload preview" fill className="object-contain" sizes="50vw" />
+                  </div>
+                )}
+                {file && !filePreview && <p className="text-xs text-gray-600">File attached: {file.name}</p>}
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-gray-200 p-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Subtotal</span>
+                  <span className="font-semibold">{formatCad(priceData.subtotal)}</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-sm">
+                  <span>Tax (13% HST)</span>
+                  <span className="font-semibold">{formatCad(priceData.tax)}</span>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-gray-200 pt-3 text-base font-semibold">
+                  <span>Total</span>
+                  <span>{formatCad(priceData.total)} CAD</span>
+                </div>
+              </div>
+
               <button
                 onClick={handleAddToCart}
-                disabled={!canAddToCart}
-                className={`w-full py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition-all ${
-                  canAddToCart
-                    ? addedToCart
-                      ? "bg-green-500 text-white"
-                      : "bg-white text-black hover:invert active:scale-[0.98]"
-                    : "bg-gray-900 text-gray-700 cursor-not-allowed"
+                className={`mt-6 w-full rounded-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-all duration-200 ${
+                  added ? "bg-emerald-600" : "bg-gray-900 hover:bg-black"
                 }`}
               >
-                {addedToCart ? "Added to Cart!" : "Add to Cart"}
+                {added ? "Added" : "Add to Cart"}
               </button>
             </div>
-          )}
+          </div>
+        </section>
 
-          {/* Dim error state — show message instead of price */}
-          {hasDimErrors && (
-            <div className="bg-gray-100 rounded-[2.5rem] p-8 text-center">
-              <p className="text-sm text-gray-400">Fix dimension errors above to see pricing</p>
-            </div>
-          )}
-        </div>
+        <section>
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-2xl font-semibold">Related Products</h2>
+            <Link href={`/shop?category=${product.category}`} className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 hover:text-gray-900">View Category</Link>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedProducts.map((item) => (
+              <Link key={item.id} href={`/shop/${item.category}/${item.slug}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                <div className="relative aspect-[4/3] bg-gray-100">
+                  {item.images[0]?.url ? (
+                    <Image src={item.images[0].url} alt={item.images[0].alt || item.name} fill className="object-cover" sizes="25vw" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">No image</div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <p className="text-sm font-semibold">{item.name}</p>
+                  <p className="mt-1 text-xs text-gray-600">From {formatCad(item.basePrice)}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

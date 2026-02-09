@@ -1,34 +1,35 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+
+const STORAGE_KEY = "vibe-promo-dismissed";
 
 export default function PromoBar() {
-  const [visible, setVisible] = useState(false);
+  const [hidden, setHidden] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(STORAGE_KEY) === "true";
+  });
 
-  useEffect(() => {
-    const dismissed = localStorage.getItem("vibe-promo-dismissed");
-    if (!dismissed) setVisible(true);
-  }, []);
-
-  const dismiss = () => {
-    setVisible(false);
-    localStorage.setItem("vibe-promo-dismissed", "1");
+  const handleClose = () => {
+    localStorage.setItem(STORAGE_KEY, "true");
+    setHidden(true);
   };
 
-  if (!visible) return null;
+  if (hidden) return null;
 
   return (
-    <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-teal-500 text-white text-center py-2.5 px-10 text-xs md:text-sm font-bold tracking-wide z-[60]">
-      <span className="opacity-80">&#127881;</span>
-      {" "}New Customer Special: <span className="underline decoration-white/40">15% OFF</span> Your First Order
-      {" "}&middot; Code: <span className="bg-white/20 px-2 py-0.5 rounded font-black tracking-widest ml-1">FIRST15</span>
-      <button
-        onClick={dismiss}
-        className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors text-white/60 hover:text-white"
-        aria-label="Dismiss"
-      >
-        &#10005;
-      </button>
+    <div className="sticky top-0 z-[60] w-full bg-gray-900 text-white">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-2 text-xs sm:text-sm">
+        <p className="font-medium">New Customer Special: 15% OFF Your First Order | Use Code: FIRST15</p>
+        <button
+          type="button"
+          onClick={handleClose}
+          className="ml-4 rounded-full border border-white/30 px-2 py-0.5 text-xs transition-colors duration-200 hover:border-white/70"
+          aria-label="Dismiss promo"
+        >
+          x
+        </button>
+      </div>
     </div>
   );
 }

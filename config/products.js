@@ -5,7 +5,7 @@
 // ==========================================
 
 // --- A. STICKERS: Die-Cut Singles (Premium) ---
-// 卖点: "Individually cut", "Hand sorted", "Premium Vinyl"
+// Selling points: "Individually cut", "Hand sorted", "Premium Vinyl"
 const TPL_STICKER_SINGLE = {
   pricingModel: "area_tier",
   config: {
@@ -27,7 +27,7 @@ const TPL_STICKER_SINGLE = {
 };
 
 // --- B. STICKERS: Sheets (Budget) ---
-// 卖点: "Budget friendly", "Peel & Stick", "Fast turnaround"
+// Selling points: "Budget friendly", "Peel & Stick", "Fast turnaround"
 const TPL_STICKER_SHEET = {
   pricingModel: "unit_flat",
   config: {
@@ -260,7 +260,224 @@ export const PRODUCTS = [
     const p = buildProduct(item);
     p.category = "signs"; 
     return p;
-  })
+  }),
+
+  // =========================
+  // BULK PRODUCTS (DRAFT) - appended
+  // =========================
+
+  // ===== STICKERS =====
+  { category:"stickers", product:"kiss-cut-sticker-sheets", name:"Kiss-Cut Sticker Sheets", description:"Easy-peel sheets for merch packs and giveaways.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"die-cut-stickers", name:"Die-Cut Stickers", description:"Precision cut to your artwork shape for premium branding.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"clear-labels", name:"Clear Labels", description:"Transparent labels for bottles, jars, and clean packaging.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"white-bopp-labels", name:"White BOPP Labels", description:"Waterproof white label film for product packaging.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"holographic-stickers", name:"Holographic Stickers", description:"Eye-catching rainbow holographic finish.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"foil-stickers", name:"Foil Stickers", description:"Metallic foil stamping for luxury branding.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"kraft-paper-labels", name:"Kraft Paper Labels", description:"Natural kraft look for artisan packaging.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"freezer-labels", name:"Freezer Labels", description:"Cold-resistant labels for frozen and refrigerated goods.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"removable-stickers", name:"Removable Stickers", description:"Peel clean—great for temporary promos and events.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"heavy-duty-vinyl-stickers", name:"Heavy Duty Outdoor Vinyl Stickers", description:"UV and water resistant for outdoor use.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"floor-decals", name:"Floor Decals", description:"Slip-rated floor graphics for wayfinding and promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"wall-decals", name:"Wall Decals", description:"Wall graphics for offices, studios, and retail interiors.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"window-decals", name:"Window Decals", description:"Storefront window stickers for branding and promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"perforated-window-film", name:"Perforated Window Film", description:"One-way vision film—graphics outside, visibility inside.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"transfer-vinyl-lettering", name:"Transfer Vinyl Lettering", description:"Perfect for vehicles, windows, and wall lettering.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"barcode-labels", name:"Barcode Labels", description:"Scan-ready labels for inventory and logistics.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"qr-code-labels", name:"QR Code Labels", description:"QR labels for menus, payments, links, and reviews.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"roll-labels", name:"Roll Labels", description:"Roll labels for high-volume packaging and fulfillment.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers", product:"sticker-packs", name:"Sticker Packs", description:"Curated sticker sets packed and ready to sell.", status:"draft", config:{ minimumPrice:0 } },
+
+  // ===== SIGNS =====
+  { category:"signs", product:"coroplast-signs", name:"Coroplast Signs", description:"Durable outdoor coroplast signs for promos and notices.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"lawn-signs-h-stake", name:"Lawn Signs + H-Stake", description:"Outdoor lawn signs with metal H-stake included.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"double-sided-lawn-signs", name:"Double-Sided Lawn Signs", description:"Two-sided lawn signs for maximum visibility.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"directional-arrow-signs", name:"Directional Arrow Signs", description:"Arrow signs to guide traffic and visitors.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"foam-board-prints", name:"Foam Board Prints", description:"Crisp indoor display boards for presentations and retail.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"foam-board-easel", name:"Foam Board + Easel Back", description:"Foam board with easel backing—ready to display.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"gatorboard-signs", name:"Gatorboard Signs", description:"Premium rigid board—stronger than foam board.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"pvc-sintra-signs", name:"PVC Sintra Signs", description:"Durable PVC board signage for indoor/outdoor use.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"acrylic-signs", name:"Acrylic Signs", description:"Premium acrylic signage for offices and lobbies.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"clear-acrylic-signs", name:"Clear Acrylic Signs", description:"Modern clear acrylic signs with sharp print.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"frosted-acrylic-signs", name:"Frosted Acrylic Signs", description:"Frosted acrylic signs for privacy and branding.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"acm-dibond-signs", name:"ACM / Dibond Signs", description:"Outdoor-ready aluminum composite signs.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"aluminum-signs", name:"Aluminum Signs", description:"Metal signs for long-term outdoor durability.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"magnetic-car-signs", name:"Magnetic Car Signs", description:"Removable car magnets for services and branding.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"handheld-signs", name:"Handheld Signs", description:"Lightweight handheld signs for events and queues.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"parking-property-signs", name:"Parking & Property Signs", description:"Property and parking signage with mounting options.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"safety-signs", name:"Safety Signs", description:"Warning, hazard, PPE and compliance signage.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"construction-site-signs", name:"Construction Site Signs", description:"Jobsite signage for permits, safety, and directions.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"wayfinding-signs", name:"Wayfinding Signs", description:"Directional signage systems for buildings and venues.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"menu-boards", name:"Menu Boards", description:"Restaurant menu boards and wall-mounted price boards.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"tabletop-signs", name:"Tabletop Signs", description:"Counter and tabletop signs for QR menus and promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"signs", product:"standoff-mounted-signs", name:"Standoff Mounted Signs", description:"Premium standoff-mounted signs for offices and lobbies.", status:"draft", config:{ minimumPrice:0 } },
+
+  // ===== BANNERS =====
+  { category:"banners", product:"vinyl-banners", name:"Vinyl Banners", description:"Heavy-duty vinyl banners for outdoor promotions.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners", product:"mesh-banners", name:"Mesh Banners", description:"Wind-resistant mesh banners for fences and scaffolds.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners", product:"double-sided-banners", name:"Double-Sided Banners", description:"High-impact double-sided banners for storefronts.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners", product:"blockout-banners", name:"Blockout Banners", description:"No show-through banners for bright double-sided look.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners", product:"pole-banners", name:"Pole Banners", description:"Street pole banners for districts and events.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners", product:"feather-flags", name:"Feather Flags", description:"Tall feather flags for storefront visibility.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners", product:"teardrop-flags", name:"Teardrop Flags", description:"Teardrop flags with stable shape and strong impact.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners", product:"x-banner-prints", name:"X-Banner Prints", description:"X-stand banner prints (print only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners", product:"roll-up-banners", name:"Roll-Up Banners", description:"Retractable roll-up banners for events and trade shows.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners", product:"step-repeat-backdrops", name:"Step & Repeat Backdrops", description:"Brand wall backdrops for media photos and events.", status:"draft", config:{ minimumPrice:0 } },
+
+  // ===== MARKETING PRINTS =====
+  { category:"marketing", product:"business-cards", name:"Business Cards", description:"Premium cards with optional finishes and coatings.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing", product:"flyers", name:"Flyers", description:"High-quality flyers for promotions and menus.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing", product:"postcards", name:"Postcards", description:"Direct mail postcards and handouts.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing", product:"brochures", name:"Brochures", description:"Tri-fold and bi-fold brochures for marketing.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing", product:"booklets", name:"Booklets", description:"Saddle-stitched booklets for catalogs and programs.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing", product:"rack-cards", name:"Rack Cards", description:"Perfect for brochure racks and counters.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing", product:"door-hangers", name:"Door Hangers", description:"Door hangers for local marketing and offers.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing", product:"presentation-folders", name:"Presentation Folders", description:"Folders for proposals and brand kits.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing", product:"posters", name:"Posters", description:"Posters for storefronts, events, and announcements.", status:"draft", config:{ minimumPrice:0 } },
+
+  // ===== PACKAGING =====
+  { category:"packaging", product:"thank-you-cards", name:"Thank You Cards", description:"Insert cards for orders and customer retention.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"packaging", product:"packaging-inserts", name:"Packaging Inserts", description:"Custom inserts for boxes, mailers, and shipments.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"packaging", product:"hang-tags", name:"Hang Tags", description:"Retail hang tags for apparel and products.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"packaging", product:"label-sets", name:"Product Label Sets", description:"Label kits for product lines and variants.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"packaging", product:"sticker-seals", name:"Sticker Seals", description:"Round seals for packaging and branding.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"packaging", product:"packing-slips", name:"Packing Slips", description:"Branded packing slips and inserts.", status:"draft", config:{ minimumPrice:0 } },
+
+  // ===== WINDOW GRAPHICS =====
+  { category:"window-graphics", product:"frosted-privacy-film", name:"Frosted Privacy Film", description:"Frosted window film for privacy and branding.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"window-graphics", product:"full-window-graphics", name:"Full Window Graphics", description:"Full coverage storefront window graphics.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"window-graphics", product:"one-way-vision-graphics", name:"One-Way Vision Graphics", description:"Perforated graphics with visibility from inside.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"window-graphics", product:"wall-murals", name:"Wall Murals", description:"Large wall graphics for offices and retail interiors.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"window-graphics", product:"floor-graphics", name:"Floor Graphics", description:"Durable floor graphics for wayfinding and promos.", status:"draft", config:{ minimumPrice:0 } },
+
+  // ===== DISPLAYS (hardware/kits) =====
+  { category:"displays", product:"a-frame-stand", name:"A-Frame Stand", description:"Sidewalk A-frame sign hardware (frame only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"x-stand-hardware", name:"X-Stand Hardware", description:"X-banner stand hardware (frame only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"roll-up-stand-hardware", name:"Roll-Up Stand Hardware", description:"Retractable banner stand hardware (cassette only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"backdrop-stand-hardware", name:"Backdrop Stand Hardware", description:"Adjustable backdrop stand hardware (frame only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"step-and-repeat-stand-kit", name:"Step & Repeat Stand Kit", description:"Complete stand kit for step & repeat backdrops (hardware only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"tent-frame-10x10", name:"10x10 Canopy Tent Frame", description:"Pop-up canopy frame (hardware only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"tent-walls-set", name:"Canopy Tent Side Walls Set", description:"Side walls add-on set for canopy tents.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"feather-flag-pole-set", name:"Feather Flag Pole Set", description:"Pole set for feather flags (hardware only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"teardrop-flag-pole-set", name:"Teardrop Flag Pole Set", description:"Pole set for teardrop flags (hardware only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"flag-bases-cross", name:"Flag Cross Base", description:"Cross base for feather/teardrop flags.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"flag-base-ground-stake", name:"Flag Ground Stake", description:"Ground stake base for outdoor flag installs.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"flag-base-water-bag", name:"Flag Water Bag", description:"Water weight bag for cross base stability.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"banner-stand-x", name:"X-Stand (Hardware)", description:"X-banner stand hardware (frame only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"banner-stand-rollup", name:"Roll-Up Stand (Hardware)", description:"Retractable roll-up stand hardware (cassette only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"banner-stand-l-base", name:"L-Base Banner Stand (Hardware)", description:"L-base banner stand hardware (frame only).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"a-frame-sign-stand", name:"A-Frame Sidewalk Stand", description:"Sidewalk A-frame sign stand hardware (frame only).", status:"draft", config:{ minimumPrice:0 } },
+
+  // ===== HARDWARE & FINISHING (accessories/services) =====
+  { category:"displays", product:"h-stakes", name:"H-Stakes", description:"Metal H-stakes for coroplast lawn signs.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"grommets-service", name:"Grommets (Service)", description:"Add metal grommets to banners and signage.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"banner-hems", name:"Banner Hems (Service)", description:"Reinforced hems for vinyl and mesh banners.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"pole-pockets", name:"Pole Pockets (Service)", description:"Pole pockets for hanging and street pole banners.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"drilled-holes-service", name:"Drilled Holes (Service)", description:"Drill holes for rigid signs (mount-ready).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"standoff-hardware-set", name:"Standoff Hardware Set", description:"Standoff hardware sets for mounting acrylic/metal signs.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"double-sided-tape", name:"Double-Sided Tape (Add-on)", description:"High-tack double-sided tape for mounting lightweight signage.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"velcro-strips", name:"Velcro Strips (Add-on)", description:"Velcro mounting strips for removable displays.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"displays", product:"installation-service", name:"Installation Service", description:"On-site installation for window graphics and signage (quote required).", status:"draft", config:{ minimumPrice:0 } },
+
+  // =========================
+  // marketing-prints (draft stubs)
+  // =========================
+  { category:"marketing-prints", product:"business-cards", name:"Business Cards 名片", description:"Premium business cards with optional lamination and finishes.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"flyers", name:"Flyers 传单", description:"Flyers for promotions, menus, and events. Multiple paper options.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"brochures", name:"Brochures 折页", description:"Tri-fold / bi-fold brochures with crisp color and clean folds.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"catalog-booklets", name:"Catalog / Booklets 产品目录", description:"Saddle-stitched booklets for catalogs, menus, and programs.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"product-inserts", name:"Product Inserts 产品插页", description:"Packaging inserts to boost brand and repeat purchase.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"order-forms-single", name:"Order Form 订单表（单张）", description:"Simple order forms for in-store or delivery orders.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"release-forms", name:"Release / Waiver Form 免责声明", description:"Release forms, waiver forms, consent forms.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"certificates", name:"Certificates 证书", description:"Certificates for training, awards, authenticity, completion.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"coupons", name:"Coupons 优惠券", description:"Coupons for promos, discounts, and direct-mail campaigns.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"menus", name:"Menus 菜单", description:"Restaurant menus (single, folded, booklet).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"postcards", name:"Postcards 明信片", description:"Postcards for direct mail and handouts.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"bookmarks", name:"Bookmarks 书签", description:"Bookmarks for schools, bookstores, and events.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"door-hangers", name:"Door Hangers 门挂牌", description:"Door hangers for local marketing and service promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"table-display-cards", name:"Table Display Cards 桌面牌", description:"Table tents and countertop display cards.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"tags-hang-tags", name:"Tags / Hang Tags 挂牌", description:"Product tags for apparel and retail items.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"tickets", name:"Tickets 门票", description:"Event tickets with optional numbering and perforation.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"calendars", name:"Calendars 台历 / 挂历", description:"Desk calendars and wall calendars.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"box-sleeves", name:"Box Sleeves 包装盒套", description:"Printed sleeves for product packaging and gift boxes.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"presentation-folders", name:"Presentation Folders 展示文件夹", description:"Folders for proposals, sales kits, and brand presentations.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"invitation-cards", name:"Invitation Cards 请柬", description:"Invitations for weddings, events, and grand openings.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"greeting-cards", name:"Greeting Cards 贺卡", description:"Greeting cards with optional envelopes.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"envelopes", name:"Envelopes 信封", description:"Custom printed envelopes for business and events.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"ncr-invoices", name:"NCR Invoice 收据本", description:"2-part / 3-part NCR invoice books with numbering.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"letterhead", name:"Letterhead 信纸", description:"Business letterhead for professional documents.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"notepads", name:"Notepads 记事本", description:"Branded notepads for office and retail use.", status:"draft", config:{ minimumPrice:0 } },
+
+  // =========================
+  // stickers-labels (draft stubs)
+  // =========================
+  { category:"stickers-labels", product:"stickers-single-diecut", name:"Die-Cut Stickers 单张", description:"Custom shape cut singles for branding and merch.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers-labels", product:"stickers-sheet-kisscut", name:"Sticker Sheets 大张（Kiss-Cut）", description:"Kiss-cut sheets for easy peel and pack inserts.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers-labels", product:"stickers-multi-on-sheet", name:"Multi on Sheet 异型多图拼版", description:"Multiple designs on one sheet for efficient production.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers-labels", product:"labels-clear", name:"Clear Labels 透明标签", description:"Transparent labels for bottles, jars, and packaging.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers-labels", product:"labels-white-bopp", name:"White BOPP Labels 白BOPP标签", description:"Waterproof white film labels for product packaging.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers-labels", product:"labels-roll-quote", name:"Roll Labels 卷装标签（报价）", description:"High-volume roll labels. Quote required for setup.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers-labels", product:"vinyl-lettering", name:"Vinyl Lettering 刻字贴", description:"Transfer vinyl lettering for windows, walls, vehicles.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers-labels", product:"magnets-flexible", name:"Magnets 磁吸", description:"Flexible magnets for vehicles, fridges, promo giveaways.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers-labels", product:"stickers-color-on-white", name:"Color on White Stickers 彩白贴", description:"Full color on white vinyl for bold, opaque labels.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"stickers-labels", product:"stickers-color-on-clear", name:"Color on Clear Stickers 彩透明贴", description:"Full color on transparent film for clean, floating look.", status:"draft", config:{ minimumPrice:0 } },
+
+  // =========================
+  // rigid-signs (draft stubs)
+  // =========================
+  { category:"rigid-signs", product:"foam-board-prints", name:"Foam Board / KT Board 泡沫板/KT板", description:"Lightweight rigid boards for indoor displays and presentations.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"rigid-signs", product:"backdrop-board", name:"Backdrop Board 背景板", description:"Large rigid backdrop boards for events and photo ops.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"rigid-signs", product:"yard-sign-h-frame", name:"Yard Sign + H-Frame 草地牌（含H架）", description:"Outdoor lawn signs with H-frame stake included.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"rigid-signs", product:"yard-sign-panel-only", name:"Yard Sign Panel 草地牌（仅板）", description:"Coroplast yard sign panels for outdoor use.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"rigid-signs", product:"real-estate-agent-sign", name:"Real Estate Agent Sign 房产经纪牌", description:"Realtor signs for listings, open house, directional needs.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"rigid-signs", product:"a-frame-insert-prints", name:"A-Frame Inserts A型展架画面", description:"Printed inserts for A-frame sidewalk stands.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"rigid-signs", product:"tabletop-signs", name:"Tabletop Signs 桌面牌", description:"Countertop signs for QR menus, pricing, promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"rigid-signs", product:"tags-tickets-rigid", name:"Rigid Tags / Tickets 硬卡挂牌/门票", description:"Rigid tags and tickets for retail and events.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"rigid-signs", product:"calendars-wall-desk", name:"Calendars 挂历/台历", description:"Wall calendars and desk calendars.", status:"draft", config:{ minimumPrice:0 } },
+
+  // =========================
+  // banners-displays (draft stubs)
+  // =========================
+  { category:"banners-displays", product:"pull-up-banner", name:"Pull Up Banner 易拉宝", description:"Retractable roll-up banners for events and storefronts.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"x-banner-frame-print", name:"X-Banner Frame + Print X展架（含画面）", description:"X-stand kit with print for quick event setup.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"pillowcase-display-frame", name:"Pillowcase Display 拉链布展架", description:"Stretch fabric display with zipper pillowcase cover.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"telescopic-backdrop", name:"Telescopic Backdrop 伸缩背景架", description:"Adjustable backdrop stand for step & repeat banners.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"media-wall-pop-up", name:"Media Wall Pop-Up Frame 背景墙展架", description:"Pop-up media wall frame for trade shows and events.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"feather-flag", name:"Feather Flag 羽毛旗", description:"Feather flags for storefront visibility.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"teardrop-flag", name:"Teardrop Flag 水滴旗", description:"Teardrop flags for stable shape and outdoor branding.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"table-cloth", name:"Table Cloth 桌布", description:"Printed tablecloths for events and trade shows.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"canvas-prints", name:"Canvas Prints 油画布", description:"Gallery-style canvas prints for decor and retail.", status:"draft", config:{ minimumPrice:0 } },
+
+  // =========================
+  // business-forms (draft stubs)
+  // =========================
+  { category:"business-forms", product:"ncr-invoice-books", name:"NCR Invoice Books 收据本", description:"2-part / 3-part NCR invoice books with numbering.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"business-forms", product:"order-form-pads", name:"Order Form Pads 订单表（本）", description:"Order forms in pads for shops and service businesses.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"business-forms", product:"release-waiver-forms", name:"Release / Waiver Forms 免责声明", description:"Waivers, releases, and consent forms.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"business-forms", product:"certificates", name:"Certificates 证书", description:"Certificates for awards, authenticity, and completion.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"business-forms", product:"letterhead", name:"Letterhead 信纸", description:"Professional letterhead for business documents.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"business-forms", product:"notepads", name:"Notepads 记事本", description:"Branded notepads for office and retail use.", status:"draft", config:{ minimumPrice:0 } },
+
+  // =========================
+  // retail-promo (draft stubs)
+  // =========================
+  { category:"retail-promo", product:"wobblers", name:"Wobbler 摆动展示牌", description:"Shelf wobblers for retail promotions and price highlights.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"retail-promo", product:"danglers", name:"Dangler 吊牌/摆动吊牌", description:"Hanging danglers for aisle visibility and promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"retail-promo", product:"shelf-talkers", name:"Shelf Talkers 货架挂牌", description:"Shelf talkers and shelf strips for product callouts.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"retail-promo", product:"menus", name:"Menus 菜单", description:"Restaurant menus for counters and tables.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"retail-promo", product:"coupons", name:"Coupons 优惠券", description:"Promo coupons for retail and direct marketing.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"retail-promo", product:"tickets", name:"Tickets 门票", description:"Event tickets with optional numbering/perforation.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"retail-promo", product:"table-tent-cards", name:"Table Tent Cards 桌面牌", description:"Table tents for QR menus, promos, and pricing.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"retail-promo", product:"hang-tags", name:"Hang Tags 挂牌", description:"Hang tags for apparel, gifts, and retail items.", status:"draft", config:{ minimumPrice:0 } },
+
+  // =========================
+  // large-format-graphics (draft stubs)
+  // =========================
+  { category:"large-format-graphics", product:"window-graphics", name:"Window Graphics 窗贴", description:"Storefront window graphics for branding and promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"large-format-graphics", product:"window-frosted", name:"Frosted Film 磨砂膜", description:"Frosted privacy film with optional cut lettering.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"large-format-graphics", product:"window-perforated", name:"Perforated Window Film 单透窗贴", description:"One-way vision window film for storefront campaigns.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"large-format-graphics", product:"floor-graphics", name:"Floor Graphics 地面贴", description:"Durable floor decals for wayfinding and promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"large-format-graphics", product:"wall-graphics", name:"Wall Graphics 墙贴", description:"Wall decals and murals for offices and retail interiors.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"large-format-graphics", product:"car-graphics", name:"Car Graphics 车贴", description:"Vehicle graphics for branding, fleets, and wraps (quote for full wrap).", status:"draft", config:{ minimumPrice:0 } },
 ];
 
 const seen = new Set();
@@ -269,3 +486,4 @@ PRODUCTS.forEach(p => {
   if (seen.has(key)) throw new Error(`Duplicate Product ID: ${key}`);
   seen.add(key);
 });
+

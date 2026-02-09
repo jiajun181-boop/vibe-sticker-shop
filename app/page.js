@@ -1,241 +1,133 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import FeaturedBanner from "@/components/home/FeaturedBanner";
-import QuoteCalculator from "@/components/home/QuoteCalculator";
-import TrustSignals from "@/components/home/TrustSignals";
-import BundlesSection from "@/components/home/BundlesSection";
-import HowItWorks from "@/components/home/HowItWorks";
+import { PRODUCTS } from "@/config/products";
 
-export const dynamic = "force-dynamic";
+const CATEGORY_META = {
+  stickers: { title: "Stickers & Labels", icon: "✨" },
+  signs: { title: "Rigid Signs & Boards", icon: "🪧" },
+  banners: { title: "Banners & Flags", icon: "🏳️" },
+  marketing: { title: "Marketing Prints", icon: "🗞️" },
+  packaging: { title: "Packaging Inserts", icon: "📦" },
+  "window-graphics": { title: "Window & Wall Graphics", icon: "🪟" },
+  displays: { title: "Display Hardware", icon: "🧱" },
+  "marketing-prints": { title: "Marketing Prints", icon: "🗞️" },
+  "stickers-labels": { title: "Stickers & Labels", icon: "✨" },
+  "rigid-signs": { title: "Rigid Signs", icon: "🪧" },
+  "banners-displays": { title: "Banners & Displays", icon: "🏳️" },
+  "business-forms": { title: "Business Forms", icon: "🧾" },
+  "retail-promo": { title: "Retail Promo", icon: "🏷️" },
+  "large-format-graphics": { title: "Large Format Graphics", icon: "🪟" },
+};
 
-const CATEGORIES = [
-  {
-    slug: "display-stands",
-    label: "Display Stands",
-    description: "Retractable banners, X-frame stands, and tabletop displays",
-    tags: ["Portable", "Trade Show Ready", "Includes Case"],
-  },
-  {
-    slug: "fleet-compliance-id",
-    label: "Fleet Compliance & ID",
-    description: "TSSA, CVOR, DOT numbers and fleet identification decals",
-    tags: ["TSSA Certified", "Outdoor Rated", "Cut Vinyl"],
-  },
-  {
-    slug: "vehicle-branding-advertising",
-    label: "Vehicle Branding & Advertising",
-    description: "Custom wraps, door lettering, and promotional graphics",
-    tags: ["Full Color", "UV Laminated", "Removable"],
-  },
-  {
-    slug: "safety-warning-decals",
-    label: "Safety & Warning Decals",
-    description: "Reflective safety markings, hazard labels, and compliance decals",
-    tags: ["Reflective", "High-Vis", "GHS Compliant"],
-  },
-  {
-    slug: "facility-asset-labels",
-    label: "Facility & Asset Labels",
-    description: "Floor graphics, wayfinding, asset tags, and window films",
-    tags: ["Anti-Slip", "QR/Barcode", "Frosted Film"],
-  },
-];
-
-const FEATURED_SLUGS = [
-  "retractable-banner-stand-premium",
-  "x-banner-stand-standard",
-  "x-banner-stand-large",
-  "tabletop-banner-a4",
-  "tabletop-banner-a3",
-  "deluxe-tabletop-retractable-a3",
-];
-
-const cad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
-
-function getDeliveryDate() {
-  const d = new Date();
-  d.setDate(d.getDate() + 2);
-  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
-  return d.toLocaleDateString("en-CA", { weekday: "long", month: "short", day: "numeric" });
+function groupByCategory(products) {
+  const map = new Map();
+  for (const p of products) {
+    const cat = p.category || "other";
+    if (!map.has(cat)) map.set(cat, []);
+    map.get(cat).push(p);
+  }
+  // Optional: sort each category by name
+  for (const [cat, items] of map) {
+    items.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  }
+  return Array.from(map.entries());
 }
 
-export default async function HomePage() {
-  const [products, featuredProducts] = await Promise.all([
-    prisma.product.findMany({
-      where: { isActive: true },
-      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
-    }),
-    prisma.product.findMany({
-      where: { slug: { in: FEATURED_SLUGS }, isActive: true },
-      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
-    }),
-  ]);
-
-  const sortedFeatured = FEATURED_SLUGS
-    .map((slug) => featuredProducts.find((p) => p.slug === slug))
-    .filter(Boolean);
-
-  const deliveryDate = getDeliveryDate();
+export default function HomePage() {
+  const grouped = groupByCategory(PRODUCTS);
 
   return (
-    <div className="min-h-screen bg-[#fafafa] pb-20">
+    <div className="min-h-screen bg-[#fafafa] pb-20 relative">
       {/* Hero */}
-      <div className="bg-black text-white pt-16 pb-14 px-6">
+      <div className="bg-black text-white pt-24 pb-16 px-6">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="inline-block bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase backdrop-blur-sm">
-            Toronto&apos;s #1 Fleet &amp; Commercial Printing
+            Toronto Printing Shop
           </div>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9]">
+          <h1 className="text-5xl md:text-7xl font-black tracking-tighter">
             PRINT. <span className="text-gray-500">SHIP.</span> DONE.
           </h1>
           <p className="text-gray-400 max-w-xl text-lg">
-            The easiest way to order custom stickers, decals, signs &amp; display stands in the GTA.
+            The easiest way to order custom stickers & signs in the GTA.
             Industrial quality, factory direct pricing.
-          </p>
-          <div className="flex flex-wrap gap-3 items-center">
-            <Link
-              href="/shop"
-              className="inline-block bg-white text-black px-8 py-4 rounded-full font-black uppercase text-xs tracking-widest hover:bg-gray-100 transition-colors"
-            >
-              Browse All Products
-            </Link>
-            <a
-              href="#quote"
-              className="inline-block border border-white/30 text-white px-8 py-4 rounded-full font-black uppercase text-xs tracking-widest hover:bg-white/10 transition-colors"
-            >
-              Get Instant Quote
-            </a>
-          </div>
-          <p className="text-xs text-gray-500">
-            Order now for delivery by <span className="text-gray-300 font-bold">{deliveryDate}</span>
           </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 space-y-16">
-        {/* Featured Display Solutions */}
-        <div className="-mt-8">
-          <FeaturedBanner products={sortedFeatured} />
-        </div>
-
-        {/* Trust Signals */}
-        <TrustSignals />
-
-        {/* How It Works */}
-        <HowItWorks />
-
-        {/* Category sections */}
-        {CATEGORIES.map((cat) => {
-          const catProducts = products.filter((p) => p.category === cat.slug);
-          if (catProducts.length === 0) return null;
+      <div className="max-w-7xl mx-auto px-6 -mt-8">
+        {grouped.map(([category, items]) => {
+          const meta = CATEGORY_META[category] || {
+            title: category,
+            icon: "🧩",
+          };
 
           return (
-            <section key={cat.slug}>
-              <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-4 mb-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-2xl md:text-3xl font-black tracking-tight">{cat.label}</h2>
-                    <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2.5 py-1 rounded-full">
-                      {catProducts.length}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-400 mt-1">{cat.description}</p>
-                </div>
-                <Link
-                  href={`/shop?category=${cat.slug}`}
-                  className="text-xs font-bold text-gray-400 hover:text-black transition-colors uppercase tracking-widest whitespace-nowrap self-start sm:self-auto"
-                >
-                  View All &rarr;
-                </Link>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mb-6">
-                {cat.tags.map((tag) => (
-                  <span key={tag} className="bg-gray-100 text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full">
-                    {tag}
-                  </span>
-                ))}
+            <section key={category} className="mb-16">
+              <div className="flex items-end gap-4 mb-8">
+                <h2 className="text-3xl font-black tracking-tight flex items-center gap-3">
+                  <span className="text-2xl">{meta.icon}</span>
+                  {meta.title}
+                </h2>
+                <div className="h-px bg-gray-200 flex-1 mb-2"></div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {catProducts.slice(0, 4).map((product, idx) => (
-                  <ProductCard key={product.id} product={product} isPopular={idx === 0} />
+                {items.map((product) => (
+                  <ProductCard key={`${product.category}-${product.product}`} item={product} />
                 ))}
               </div>
             </section>
           );
         })}
-
-        {/* Quote Calculator */}
-        <QuoteCalculator />
-
-        {/* Bundles */}
-        <BundlesSection />
       </div>
     </div>
   );
 }
 
-function ProductCard({ product, isPopular }) {
-  const img = product.images?.[0]?.url;
-  const unit = product.pricingUnit === "per_sqft" ? "/sqft" : "";
-  const madeToOrder = product.pricingUnit === "per_sqft" || product.type === "sign";
+// Product card: live -> /shop, draft -> /quote
+function ProductCard({ item }) {
+  const startPrice = item.config?.minimumPrice || 0;
+
+  const href =
+    item.status === "live"
+      ? `/shop/${item.category}/${item.product}`
+      : `/quote?sku=${item.category}/${item.product}`;
+
+  const icon =
+    CATEGORY_META[item.category]?.icon || (item.category === "stickers" ? "✨" : "🪧");
 
   return (
     <Link
-      href={`/shop/${product.category}/${product.slug}`}
-      className="group bg-white rounded-2xl md:rounded-3xl p-4 md:p-5 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden"
+      href={href}
+      className="group bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full"
     >
-      {/* Hover glow */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-      {/* Badges */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
-        {isPopular && (
-          <span className="bg-orange-500 text-white text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
-            Popular
-          </span>
-        )}
-      </div>
-
-      <div className="relative space-y-3">
-        <div className="aspect-square bg-gray-50 rounded-xl md:rounded-2xl flex items-center justify-center overflow-hidden group-hover:scale-[1.03] transition-transform duration-500">
-          {img ? (
-            <img src={img} alt={product.name} className="w-full h-full object-cover rounded-xl md:rounded-2xl" />
-          ) : (
-            <span className="text-3xl md:text-4xl opacity-20">
-              {product.type === "sign" ? "🪧" : product.type === "label" ? "🏷️" : "✨"}
-            </span>
-          )}
+      <div className="space-y-4">
+        <div className="aspect-square bg-gray-50 rounded-2xl flex items-center justify-center text-4xl group-hover:scale-105 transition-transform duration-500">
+          {icon}
         </div>
 
         <div>
-          <h3 className="font-bold text-xs md:text-sm leading-tight mb-1 group-hover:text-blue-600 transition-colors">
-            {product.name}
-          </h3>
-          {product.description && (
-            <p className="text-[10px] md:text-[11px] text-gray-400 line-clamp-2">{product.description}</p>
-          )}
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-bold text-lg leading-tight mb-1 group-hover:text-blue-600 transition-colors">
+              {item.name}
+            </h3>
+
+            {item.status !== "live" && (
+              <span className="text-[10px] font-black px-2 py-1 rounded-full bg-black text-white uppercase tracking-widest">
+                Quote
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs text-gray-400 line-clamp-2">{item.description}</p>
         </div>
       </div>
 
-      <div className="relative mt-4 pt-3 border-t border-gray-50 flex justify-between items-center">
-        <div>
-          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block">From</span>
-          <span className="text-sm font-black">
-            {cad(product.basePrice)}
-            {unit && <span className="text-[10px] text-gray-400 font-normal">{unit}</span>}
-          </span>
+      <div className="mt-6 pt-4 border-t border-gray-50 flex justify-between items-center">
+        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          {item.status === "live" ? "From" : "Starting"}
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <span className="text-[9px] text-gray-400">
-            {madeToOrder ? "Made to Order" : "In Stock"}
-          </span>
-          <span className="bg-gray-100 text-gray-500 text-[9px] md:text-[10px] font-bold px-2.5 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-            View &rarr;
-          </span>
+        <div className="text-sm font-black">
+          {item.status === "live" ? `$${startPrice}` : "Get Quote"}
         </div>
       </div>
     </Link>
