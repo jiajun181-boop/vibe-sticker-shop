@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
 import { validateDimensions } from "@/lib/materialLimits";
@@ -27,14 +27,6 @@ function parseMaterials(optionsConfig) {
   return flattened;
 }
 
-function quantityMultiplier(qty) {
-  if (qty >= 1000) return 0.82;
-  if (qty >= 500) return 0.88;
-  if (qty >= 250) return 0.93;
-  if (qty >= 100) return 0.97;
-  return 1;
-}
-
 export default function ProductClient({ product, relatedProducts }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
@@ -52,6 +44,11 @@ export default function ProductClient({ product, relatedProducts }) {
   const [filePreview, setFilePreview] = useState("");
   const [added, setAdded] = useState(false);
 
+  // Server-driven pricing state
+  const [quote, setQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const debounceRef = useRef(null);
+
   const imageList = product.images?.length ? product.images : [];
 
   const widthDisplay = unit === "in" ? widthIn : Number((widthIn * INCH_TO_CM).toFixed(2));
@@ -62,31 +59,84 @@ export default function ProductClient({ product, relatedProducts }) {
     return validateDimensions(widthIn, heightIn, material, product);
   }, [widthIn, heightIn, material, product, isPerSqft]);
 
+  // Debounced /api/quote fetch (300ms)
+  const fetchQuote = useCallback(
+    async (slug, qty, w, h, mat) => {
+      const body = { slug, quantity: qty };
+      if (isPerSqft) {
+        body.widthIn = w;
+        body.heightIn = h;
+      }
+      if (mat) body.material = mat;
+
+      try {
+        setQuoteLoading(true);
+        const res = await fetch("/api/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) return; // silently fail — sizeValidation shows dimension errors
+        const data = await res.json();
+        setQuote(data);
+      } catch {
+        // network error — keep previous quote
+      } finally {
+        setQuoteLoading(false);
+      }
+    },
+    [isPerSqft]
+  );
+
+  useEffect(() => {
+    if (!sizeValidation.valid) return;
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchQuote(product.slug, quantity, widthIn, heightIn, material);
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [product.slug, quantity, widthIn, heightIn, material, sizeValidation.valid, fetchQuote]);
+
+  // Derive display prices from quote (fallback to basePrice estimate)
   const priceData = useMemo(() => {
     const qty = Number(quantity) || 1;
+    if (quote) {
+      const subtotal = quote.totalCents;
+      const tax = Math.round(subtotal * HST_RATE);
+      const unitAmount = quote.unitCents || Math.round(subtotal / qty);
+      const sqft = quote.meta?.sqftPerUnit ?? null;
+      return { unitAmount, subtotal, tax, total: subtotal + tax, sqft, breakdown: quote.breakdown };
+    }
+    // Fallback while loading
     const baseUnitCents = product.basePrice;
-    const tier = quantityMultiplier(qty);
-
     if (isPerSqft) {
       const sqft = (Number(widthIn) * Number(heightIn)) / 144;
-      const unitAmount = Math.max(1, Math.round(baseUnitCents * sqft * tier));
+      const unitAmount = Math.max(1, Math.round(baseUnitCents * sqft));
       const subtotal = unitAmount * qty;
       const tax = Math.round(subtotal * HST_RATE);
-      return { unitAmount, subtotal, tax, total: subtotal + tax, sqft, tier };
+      return { unitAmount, subtotal, tax, total: subtotal + tax, sqft, breakdown: null };
     }
-
-    const unitAmount = Math.max(1, Math.round(baseUnitCents * tier));
+    const unitAmount = Math.max(1, baseUnitCents);
     const subtotal = unitAmount * qty;
     const tax = Math.round(subtotal * HST_RATE);
-    return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, tier };
-  }, [product.basePrice, quantity, widthIn, heightIn, isPerSqft]);
+    return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, breakdown: null };
+  }, [quote, quantity, product.basePrice, widthIn, heightIn, isPerSqft]);
 
+  // Tier rows — quick client estimates for the tier table
   const tierRows = useMemo(
     () =>
-      PRESET_QUANTITIES.map((q) => ({
-        qty: q,
-        unitAmount: Math.max(1, Math.round((isPerSqft ? product.basePrice * ((widthIn * heightIn) / 144 || 1) : product.basePrice) * quantityMultiplier(q))),
-      })),
+      PRESET_QUANTITIES.map((q) => {
+        const base = isPerSqft
+          ? product.basePrice * ((widthIn * heightIn) / 144 || 1)
+          : product.basePrice;
+        // Simple volume discount estimate
+        let disc = 1;
+        if (q >= 1000) disc = 0.82;
+        else if (q >= 500) disc = 0.88;
+        else if (q >= 250) disc = 0.93;
+        else if (q >= 100) disc = 0.97;
+        return { qty: q, unitAmount: Math.max(1, Math.round(base * disc)) };
+      }),
     [product.basePrice, isPerSqft, widthIn, heightIn]
   );
 
@@ -216,8 +266,11 @@ export default function ProductClient({ product, relatedProducts }) {
 
             <div className="rounded-3xl border border-gray-200 bg-white p-6">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Realtime Pricing</p>
-                <p className="text-sm font-semibold text-gray-900">{formatCad(priceData.unitAmount)} / unit</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                  Realtime Pricing
+                  {quoteLoading && <span className="ml-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />}
+                </p>
+                <p className={`text-sm font-semibold ${quoteLoading ? "text-gray-400" : "text-gray-900"}`}>{formatCad(priceData.unitAmount)} / unit</p>
               </div>
 
               {isPerSqft && (
@@ -306,6 +359,16 @@ export default function ProductClient({ product, relatedProducts }) {
               </div>
 
               <div className="mt-6 rounded-2xl border border-gray-200 p-4">
+                {priceData.breakdown && priceData.breakdown.length > 0 && (
+                  <div className="mb-3 space-y-1 border-b border-gray-100 pb-3">
+                    {priceData.breakdown.map((line, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{line.label}</span>
+                        <span>{formatCad(line.amount)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-sm">
                   <span>Subtotal</span>
                   <span className="font-semibold">{formatCad(priceData.subtotal)}</span>
