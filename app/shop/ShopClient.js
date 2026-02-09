@@ -15,6 +15,20 @@ const CATEGORY_LABELS = {
   "safety-warning-decals": "Safety & Warning Decals",
   "facility-asset-labels": "Facility & Asset Labels",
   "display-stands": "Display Stands",
+  stickers: "Stickers & Labels",
+  signs: "Rigid Signs & Boards",
+  banners: "Banners & Flags",
+  marketing: "Marketing Prints",
+  packaging: "Packaging Inserts",
+  "window-graphics": "Window & Wall Graphics",
+  displays: "Display Hardware",
+  "marketing-prints": "Marketing Prints",
+  "stickers-labels": "Stickers & Labels",
+  "rigid-signs": "Rigid Signs",
+  "banners-displays": "Banners & Displays",
+  "business-forms": "Business Forms",
+  "retail-promo": "Retail Promo",
+  "large-format-graphics": "Large Format Graphics",
 };
 
 const formatCad = (cents) =>

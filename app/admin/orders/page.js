@@ -73,11 +73,28 @@ function OrdersContent() {
 
     try {
       const res = await fetch(`/api/admin/orders?${params}`);
-      const data = await res.json();
+      const text = await res.text();
+      if (!res.ok) {
+        console.error("Orders API error:", res.status, text);
+        setOrders([]);
+        setPagination(null);
+        return;
+      }
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error("Orders API returned invalid JSON:", text.slice(0, 200));
+        setOrders([]);
+        setPagination(null);
+        return;
+      }
       setOrders(data.orders || []);
       setPagination(data.pagination || null);
     } catch (err) {
       console.error("Failed to load orders:", err);
+      setOrders([]);
+      setPagination(null);
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
+import { validateDimensions } from "@/lib/materialLimits";
 
 const HST_RATE = 0.13;
 const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
@@ -55,6 +56,11 @@ export default function ProductClient({ product, relatedProducts }) {
 
   const widthDisplay = unit === "in" ? widthIn : Number((widthIn * INCH_TO_CM).toFixed(2));
   const heightDisplay = unit === "in" ? heightIn : Number((heightIn * INCH_TO_CM).toFixed(2));
+
+  const sizeValidation = useMemo(() => {
+    if (!isPerSqft) return { valid: true, errors: [] };
+    return validateDimensions(widthIn, heightIn, material, product);
+  }, [widthIn, heightIn, material, product, isPerSqft]);
 
   const priceData = useMemo(() => {
     const qty = Number(quantity) || 1;
@@ -111,7 +117,10 @@ export default function ProductClient({ product, relatedProducts }) {
     if (type === "h") setHeightIn(Number(inValue.toFixed(2)));
   }
 
+  const canAddToCart = sizeValidation.valid;
+
   function handleAddToCart() {
+    if (!canAddToCart) return;
     const item = {
       productId: product.id,
       slug: product.slug,
@@ -242,6 +251,13 @@ export default function ProductClient({ product, relatedProducts }) {
                     </label>
                   </div>
                   <p className="text-xs text-gray-500">Area per unit: {priceData.sqft?.toFixed(3)} sqft</p>
+                  {!sizeValidation.valid && (
+                    <div className="mt-1 space-y-1">
+                      {sizeValidation.errors.map((err, i) => (
+                        <p key={i} className="text-xs text-red-500">{err}</p>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -306,11 +322,16 @@ export default function ProductClient({ product, relatedProducts }) {
 
               <button
                 onClick={handleAddToCart}
+                disabled={!canAddToCart}
                 className={`mt-6 w-full rounded-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-all duration-200 ${
-                  added ? "bg-emerald-600" : "bg-gray-900 hover:bg-black"
+                  !canAddToCart
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : added
+                      ? "bg-emerald-600"
+                      : "bg-gray-900 hover:bg-black"
                 }`}
               >
-                {added ? "Added" : "Add to Cart"}
+                {!canAddToCart ? "Fix size errors" : added ? "Added" : "Add to Cart"}
               </button>
             </div>
           </div>

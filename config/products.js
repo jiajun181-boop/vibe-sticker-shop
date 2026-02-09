@@ -381,31 +381,31 @@ export const PRODUCTS = [
   // =========================
   // marketing-prints (draft stubs)
   // =========================
-  { category:"marketing-prints", product:"business-cards", name:"Business Cards 名片", description:"Premium business cards with optional lamination and finishes.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"marketing-prints", product:"flyers", name:"Flyers 传单", description:"Flyers for promotions, menus, and events. Multiple paper options.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"marketing-prints", product:"brochures", name:"Brochures 折页", description:"Tri-fold / bi-fold brochures with crisp color and clean folds.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-business-cards", name:"Business Cards 名片", description:"Premium business cards with optional lamination and finishes.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-flyers", name:"Flyers 传单", description:"Flyers for promotions, menus, and events. Multiple paper options.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-brochures", name:"Brochures 折页", description:"Tri-fold / bi-fold brochures with crisp color and clean folds.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"catalog-booklets", name:"Catalog / Booklets 产品目录", description:"Saddle-stitched booklets for catalogs, menus, and programs.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"product-inserts", name:"Product Inserts 产品插页", description:"Packaging inserts to boost brand and repeat purchase.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"order-forms-single", name:"Order Form 订单表（单张）", description:"Simple order forms for in-store or delivery orders.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"release-forms", name:"Release / Waiver Form 免责声明", description:"Release forms, waiver forms, consent forms.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"marketing-prints", product:"certificates", name:"Certificates 证书", description:"Certificates for training, awards, authenticity, completion.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"marketing-prints", product:"coupons", name:"Coupons 优惠券", description:"Coupons for promos, discounts, and direct-mail campaigns.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"marketing-prints", product:"menus", name:"Menus 菜单", description:"Restaurant menus (single, folded, booklet).", status:"draft", config:{ minimumPrice:0 } },
-  { category:"marketing-prints", product:"postcards", name:"Postcards 明信片", description:"Postcards for direct mail and handouts.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-certificates", name:"Certificates 证书", description:"Certificates for training, awards, authenticity, completion.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-coupons", name:"Coupons 优惠券", description:"Coupons for promos, discounts, and direct-mail campaigns.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-menus", name:"Menus 菜单", description:"Restaurant menus (single, folded, booklet).", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-postcards", name:"Postcards 明信片", description:"Postcards for direct mail and handouts.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"bookmarks", name:"Bookmarks 书签", description:"Bookmarks for schools, bookstores, and events.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"marketing-prints", product:"door-hangers", name:"Door Hangers 门挂牌", description:"Door hangers for local marketing and service promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-door-hangers", name:"Door Hangers 门挂牌", description:"Door hangers for local marketing and service promos.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"table-display-cards", name:"Table Display Cards 桌面牌", description:"Table tents and countertop display cards.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"tags-hang-tags", name:"Tags / Hang Tags 挂牌", description:"Product tags for apparel and retail items.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"marketing-prints", product:"tickets", name:"Tickets 门票", description:"Event tickets with optional numbering and perforation.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-tickets", name:"Tickets 门票", description:"Event tickets with optional numbering and perforation.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"calendars", name:"Calendars 台历 / 挂历", description:"Desk calendars and wall calendars.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"box-sleeves", name:"Box Sleeves 包装盒套", description:"Printed sleeves for product packaging and gift boxes.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"marketing-prints", product:"presentation-folders", name:"Presentation Folders 展示文件夹", description:"Folders for proposals, sales kits, and brand presentations.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-presentation-folders", name:"Presentation Folders 展示文件夹", description:"Folders for proposals, sales kits, and brand presentations.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"invitation-cards", name:"Invitation Cards 请柬", description:"Invitations for weddings, events, and grand openings.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"greeting-cards", name:"Greeting Cards 贺卡", description:"Greeting cards with optional envelopes.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"envelopes", name:"Envelopes 信封", description:"Custom printed envelopes for business and events.", status:"draft", config:{ minimumPrice:0 } },
   { category:"marketing-prints", product:"ncr-invoices", name:"NCR Invoice 收据本", description:"2-part / 3-part NCR invoice books with numbering.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"marketing-prints", product:"letterhead", name:"Letterhead 信纸", description:"Business letterhead for professional documents.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"marketing-prints", product:"notepads", name:"Notepads 记事本", description:"Branded notepads for office and retail use.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-letterhead", name:"Letterhead 信纸", description:"Business letterhead for professional documents.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"mp-notepads", name:"Notepads 记事本", description:"Branded notepads for office and retail use.", status:"draft", config:{ minimumPrice:0 } },
 
   // =========================
   // stickers-labels (draft stubs)
@@ -424,13 +424,13 @@ export const PRODUCTS = [
   // =========================
   // rigid-signs (draft stubs)
   // =========================
-  { category:"rigid-signs", product:"foam-board-prints", name:"Foam Board / KT Board 泡沫板/KT板", description:"Lightweight rigid boards for indoor displays and presentations.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"rigid-signs", product:"rigid-foam-board-prints", name:"Foam Board / KT Board 泡沫板/KT板", description:"Lightweight rigid boards for indoor displays and presentations.", status:"draft", config:{ minimumPrice:0 } },
   { category:"rigid-signs", product:"backdrop-board", name:"Backdrop Board 背景板", description:"Large rigid backdrop boards for events and photo ops.", status:"draft", config:{ minimumPrice:0 } },
   { category:"rigid-signs", product:"yard-sign-h-frame", name:"Yard Sign + H-Frame 草地牌（含H架）", description:"Outdoor lawn signs with H-frame stake included.", status:"draft", config:{ minimumPrice:0 } },
   { category:"rigid-signs", product:"yard-sign-panel-only", name:"Yard Sign Panel 草地牌（仅板）", description:"Coroplast yard sign panels for outdoor use.", status:"draft", config:{ minimumPrice:0 } },
   { category:"rigid-signs", product:"real-estate-agent-sign", name:"Real Estate Agent Sign 房产经纪牌", description:"Realtor signs for listings, open house, directional needs.", status:"draft", config:{ minimumPrice:0 } },
   { category:"rigid-signs", product:"a-frame-insert-prints", name:"A-Frame Inserts A型展架画面", description:"Printed inserts for A-frame sidewalk stands.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"rigid-signs", product:"tabletop-signs", name:"Tabletop Signs 桌面牌", description:"Countertop signs for QR menus, pricing, promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"rigid-signs", product:"rigid-tabletop-signs", name:"Tabletop Signs 桌面牌", description:"Countertop signs for QR menus, pricing, promos.", status:"draft", config:{ minimumPrice:0 } },
   { category:"rigid-signs", product:"tags-tickets-rigid", name:"Rigid Tags / Tickets 硬卡挂牌/门票", description:"Rigid tags and tickets for retail and events.", status:"draft", config:{ minimumPrice:0 } },
   { category:"rigid-signs", product:"calendars-wall-desk", name:"Calendars 挂历/台历", description:"Wall calendars and desk calendars.", status:"draft", config:{ minimumPrice:0 } },
 
@@ -453,9 +453,9 @@ export const PRODUCTS = [
   { category:"business-forms", product:"ncr-invoice-books", name:"NCR Invoice Books 收据本", description:"2-part / 3-part NCR invoice books with numbering.", status:"draft", config:{ minimumPrice:0 } },
   { category:"business-forms", product:"order-form-pads", name:"Order Form Pads 订单表（本）", description:"Order forms in pads for shops and service businesses.", status:"draft", config:{ minimumPrice:0 } },
   { category:"business-forms", product:"release-waiver-forms", name:"Release / Waiver Forms 免责声明", description:"Waivers, releases, and consent forms.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"business-forms", product:"certificates", name:"Certificates 证书", description:"Certificates for awards, authenticity, and completion.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"business-forms", product:"letterhead", name:"Letterhead 信纸", description:"Professional letterhead for business documents.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"business-forms", product:"notepads", name:"Notepads 记事本", description:"Branded notepads for office and retail use.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"business-forms", product:"bf-certificates", name:"Certificates 证书", description:"Certificates for awards, authenticity, and completion.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"business-forms", product:"bf-letterhead", name:"Letterhead 信纸", description:"Professional letterhead for business documents.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"business-forms", product:"bf-notepads", name:"Notepads 记事本", description:"Branded notepads for office and retail use.", status:"draft", config:{ minimumPrice:0 } },
 
   // =========================
   // retail-promo (draft stubs)
@@ -463,11 +463,11 @@ export const PRODUCTS = [
   { category:"retail-promo", product:"wobblers", name:"Wobbler 摆动展示牌", description:"Shelf wobblers for retail promotions and price highlights.", status:"draft", config:{ minimumPrice:0 } },
   { category:"retail-promo", product:"danglers", name:"Dangler 吊牌/摆动吊牌", description:"Hanging danglers for aisle visibility and promos.", status:"draft", config:{ minimumPrice:0 } },
   { category:"retail-promo", product:"shelf-talkers", name:"Shelf Talkers 货架挂牌", description:"Shelf talkers and shelf strips for product callouts.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"retail-promo", product:"menus", name:"Menus 菜单", description:"Restaurant menus for counters and tables.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"retail-promo", product:"coupons", name:"Coupons 优惠券", description:"Promo coupons for retail and direct marketing.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"retail-promo", product:"tickets", name:"Tickets 门票", description:"Event tickets with optional numbering/perforation.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"retail-promo", product:"rp-menus", name:"Menus 菜单", description:"Restaurant menus for counters and tables.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"retail-promo", product:"rp-coupons", name:"Coupons 优惠券", description:"Promo coupons for retail and direct marketing.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"retail-promo", product:"rp-tickets", name:"Tickets 门票", description:"Event tickets with optional numbering/perforation.", status:"draft", config:{ minimumPrice:0 } },
   { category:"retail-promo", product:"table-tent-cards", name:"Table Tent Cards 桌面牌", description:"Table tents for QR menus, promos, and pricing.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"retail-promo", product:"hang-tags", name:"Hang Tags 挂牌", description:"Hang tags for apparel, gifts, and retail items.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"retail-promo", product:"rp-hang-tags", name:"Hang Tags 挂牌", description:"Hang tags for apparel, gifts, and retail items.", status:"draft", config:{ minimumPrice:0 } },
 
   // =========================
   // large-format-graphics (draft stubs)
@@ -475,7 +475,7 @@ export const PRODUCTS = [
   { category:"large-format-graphics", product:"window-graphics", name:"Window Graphics 窗贴", description:"Storefront window graphics for branding and promos.", status:"draft", config:{ minimumPrice:0 } },
   { category:"large-format-graphics", product:"window-frosted", name:"Frosted Film 磨砂膜", description:"Frosted privacy film with optional cut lettering.", status:"draft", config:{ minimumPrice:0 } },
   { category:"large-format-graphics", product:"window-perforated", name:"Perforated Window Film 单透窗贴", description:"One-way vision window film for storefront campaigns.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"large-format-graphics", product:"floor-graphics", name:"Floor Graphics 地面贴", description:"Durable floor decals for wayfinding and promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"large-format-graphics", product:"lf-floor-graphics", name:"Floor Graphics 地面贴", description:"Durable floor decals for wayfinding and promos.", status:"draft", config:{ minimumPrice:0 } },
   { category:"large-format-graphics", product:"wall-graphics", name:"Wall Graphics 墙贴", description:"Wall decals and murals for offices and retail interiors.", status:"draft", config:{ minimumPrice:0 } },
   { category:"large-format-graphics", product:"car-graphics", name:"Car Graphics 车贴", description:"Vehicle graphics for branding, fleets, and wraps (quote for full wrap).", status:"draft", config:{ minimumPrice:0 } },
 ];
