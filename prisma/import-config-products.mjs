@@ -32,13 +32,9 @@ function inferBasePrice(p) {
 // ─── Placeholder images (colored per category) ──────────
 
 const CAT_COLORS = {
-  stickers: "F59E0B/FFFFFF",
   "stickers-labels": "F97316/FFFFFF",
-  signs: "3B82F6/FFFFFF",
   "rigid-signs": "0EA5E9/FFFFFF",
-  banners: "EF4444/FFFFFF",
   "banners-displays": "DC2626/FFFFFF",
-  marketing: "8B5CF6/FFFFFF",
   "marketing-prints": "EC4899/FFFFFF",
   packaging: "10B981/FFFFFF",
   "window-graphics": "06B6D4/FFFFFF",
@@ -46,6 +42,10 @@ const CAT_COLORS = {
   "business-forms": "7C3AED/FFFFFF",
   "retail-promo": "D946EF/FFFFFF",
   "large-format-graphics": "14B8A6/FFFFFF",
+  "vehicle-branding-advertising": "F59E0B/FFFFFF",
+  "safety-warning-decals": "EF4444/FFFFFF",
+  "fleet-compliance-id": "3B82F6/FFFFFF",
+  "facility-asset-labels": "8B5CF6/FFFFFF",
 };
 
 function placeholderUrl(name, category) {
@@ -94,13 +94,9 @@ const TAG_RULES = [
 
 // Category-level default tags
 const CATEGORY_TAGS = {
-  "stickers": ["retail"],
   "stickers-labels": ["retail"],
-  "signs": ["construction", "retail"],
-  "rigid-signs": ["real-estate", "retail"],
-  "banners": ["event"],
+  "rigid-signs": ["real-estate", "construction", "retail"],
   "banners-displays": ["event"],
-  "marketing": ["retail"],
   "marketing-prints": ["retail"],
   "packaging": ["retail"],
   "window-graphics": ["retail", "restaurants"],
@@ -108,6 +104,10 @@ const CATEGORY_TAGS = {
   "business-forms": ["finance"],
   "retail-promo": ["retail", "restaurants"],
   "large-format-graphics": ["retail", "facility"],
+  "vehicle-branding-advertising": ["fleet", "automotive"],
+  "safety-warning-decals": ["safety", "construction"],
+  "fleet-compliance-id": ["fleet"],
+  "facility-asset-labels": ["facility"],
 };
 
 function inferTags(product) {

@@ -5,84 +5,59 @@ import { INDUSTRY_TAGS, INDUSTRY_LABELS } from "@/lib/industryTags";
 
 export const dynamic = "force-dynamic";
 
+// ── Canonical category metadata (merged, no duplicates) ──
 const CATEGORY_META = {
-  // Existing 5 categories
-  "fleet-compliance-id": { title: "Fleet Compliance & ID", icon: "🚛" },
-  "vehicle-branding-advertising": { title: "Vehicle Branding & Advertising", icon: "🚐" },
-  "safety-warning-decals": { title: "Safety & Warning Decals", icon: "⚠️" },
-  "facility-asset-labels": { title: "Facility & Asset Labels", icon: "🏭" },
-  "display-stands": { title: "Display Stands", icon: "🖼️" },
-  // New 14 categories
-  stickers: { title: "Stickers & Labels", icon: "✨" },
-  signs: { title: "Rigid Signs & Boards", icon: "🪧" },
-  banners: { title: "Banners & Flags", icon: "🏳️" },
-  marketing: { title: "Marketing Prints", icon: "🗞️" },
-  packaging: { title: "Packaging Inserts", icon: "📦" },
-  "window-graphics": { title: "Window & Wall Graphics", icon: "🪟" },
-  displays: { title: "Display Hardware", icon: "🧱" },
-  "marketing-prints": { title: "Marketing Prints", icon: "🗞️" },
   "stickers-labels": { title: "Stickers & Labels", icon: "✨" },
-  "rigid-signs": { title: "Rigid Signs", icon: "🪧" },
+  "rigid-signs": { title: "Signs & Boards", icon: "🪧" },
   "banners-displays": { title: "Banners & Displays", icon: "🏳️" },
-  "business-forms": { title: "Business Forms", icon: "🧾" },
+  "marketing-prints": { title: "Marketing Prints", icon: "🗞️" },
+  displays: { title: "Display Hardware", icon: "🧱" },
+  "vehicle-branding-advertising": { title: "Vehicle Branding", icon: "🚐" },
+  "safety-warning-decals": { title: "Safety & Warning Decals", icon: "⚠️" },
+  "fleet-compliance-id": { title: "Fleet Compliance & ID", icon: "🚛" },
+  "facility-asset-labels": { title: "Facility & Asset Labels", icon: "🏭" },
   "retail-promo": { title: "Retail Promo", icon: "🏷️" },
+  packaging: { title: "Packaging Inserts", icon: "📦" },
+  "business-forms": { title: "Business Forms", icon: "🧾" },
   "large-format-graphics": { title: "Large Format Graphics", icon: "🪟" },
+  "window-graphics": { title: "Window & Wall Graphics", icon: "🪟" },
 };
 
-// Preferred display order — categories not listed sort alphabetically at the end
-const CATEGORY_ORDER = [
-  "fleet-compliance-id",
+// Top 8 categories shown on homepage (curated order)
+const HOMEPAGE_CATEGORIES = [
+  "stickers-labels",
+  "rigid-signs",
+  "banners-displays",
+  "marketing-prints",
   "vehicle-branding-advertising",
   "safety-warning-decals",
+  "fleet-compliance-id",
   "facility-asset-labels",
-  "display-stands",
-  "stickers",
-  "stickers-labels",
-  "signs",
-  "rigid-signs",
-  "banners",
-  "banners-displays",
-  "marketing",
-  "marketing-prints",
-  "packaging",
-  "window-graphics",
-  "large-format-graphics",
-  "displays",
-  "business-forms",
-  "retail-promo",
 ];
+
+const MAX_PER_CATEGORY = 4;
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-function groupByCategory(products) {
-  const map = new Map();
-  for (const p of products) {
-    const cat = p.category || "other";
-    if (!map.has(cat)) map.set(cat, []);
-    map.get(cat).push(p);
-  }
-  for (const [, items] of map) {
-    items.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
-  }
-  // Sort categories by preferred order
-  const entries = Array.from(map.entries());
-  entries.sort((a, b) => {
-    const ia = CATEGORY_ORDER.indexOf(a[0]);
-    const ib = CATEGORY_ORDER.indexOf(b[0]);
-    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-  });
-  return entries;
-}
-
 export default async function HomePage() {
+  // Only fetch products in the featured homepage categories
   const products = await prisma.product.findMany({
-    where: { isActive: true },
+    where: { isActive: true, category: { in: HOMEPAGE_CATEGORIES } },
     include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
 
-  const grouped = groupByCategory(products);
+  const totalCount = await prisma.product.count({ where: { isActive: true } });
+
+  // Group by category and cap at MAX_PER_CATEGORY
+  const grouped = [];
+  for (const cat of HOMEPAGE_CATEGORIES) {
+    const items = products
+      .filter((p) => p.category === cat)
+      .slice(0, MAX_PER_CATEGORY);
+    if (items.length > 0) grouped.push([cat, items]);
+  }
 
   return (
     <div className="min-h-screen bg-[#fafafa] pb-20 relative">
@@ -120,7 +95,7 @@ export default async function HomePage() {
       <div className="max-w-7xl mx-auto px-6 -mt-5 mb-8">
         <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-gray-100 text-xs font-bold text-gray-500">
           <span className="w-2 h-2 rounded-full bg-green-500" />
-          {products.length} Products Available
+          {totalCount} Products Available
         </div>
       </div>
 
@@ -144,27 +119,29 @@ export default async function HomePage() {
         </div>
       </div>
 
+      {/* Featured categories — 8 categories, 4 products each */}
       <div className="max-w-7xl mx-auto px-6">
         {grouped.map(([category, items]) => {
           const meta = CATEGORY_META[category] || { title: category, icon: "🧩" };
+          const totalInCat = products.filter((p) => p.category === category).length;
 
           return (
-            <section key={category} className="mb-16">
-              <div className="flex items-end gap-4 mb-8">
-                <h2 className="text-3xl font-black tracking-tight flex items-center gap-3">
-                  <span className="text-2xl">{meta.icon}</span>
+            <section key={category} className="mb-14">
+              <div className="flex items-end gap-4 mb-6">
+                <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
+                  <span className="text-xl">{meta.icon}</span>
                   {meta.title}
                 </h2>
-                <div className="h-px bg-gray-200 flex-1 mb-2" />
+                <div className="h-px bg-gray-200 flex-1 mb-1" />
                 <Link
                   href={`/shop?category=${category}`}
-                  className="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-black transition-colors whitespace-nowrap mb-2"
+                  className="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-black transition-colors whitespace-nowrap mb-1"
                 >
-                  View All &rarr;
+                  {totalInCat > MAX_PER_CATEGORY ? `All ${totalInCat}` : "View All"} &rarr;
                 </Link>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {items.map((product) => (
                   <ProductCard key={product.id} item={product} />
                 ))}
@@ -172,6 +149,16 @@ export default async function HomePage() {
             </section>
           );
         })}
+
+        {/* Browse all CTA */}
+        <div className="text-center pt-4 pb-8">
+          <Link
+            href="/shop"
+            className="inline-block bg-gray-900 text-white px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-black transition-colors"
+          >
+            Browse All {totalCount} Products
+          </Link>
+        </div>
       </div>
     </div>
   );
