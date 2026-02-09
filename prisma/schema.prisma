@@ -40,10 +40,10 @@ model Address {
 }
 
 model Product {
-  id              String         @id @default(cuid())
-  type            ProductType    @default(sticker)
+  id              String          @id @default(cuid())
+  type            ProductType     @default(sticker)
   category        String
-  slug            String         @unique
+  slug            String          @unique
   name            String
   description     String?
   basePrice       Int
@@ -54,23 +54,40 @@ model Product {
   maxHeightIn     Float?
   acceptedFormats Json?
   minDpi          Int?
-  requiresBleed   Boolean        @default(false)
+  requiresBleed   Boolean         @default(false)
   bleedIn         Float?
   templateUrl     String?
   pricingConfig   Json?
   optionsConfig   Json?
-  isActive        Boolean        @default(true)
-  sortOrder       Int            @default(0)
+  pricingPresetId String?
+  pricingPreset   PricingPreset?  @relation(fields: [pricingPresetId], references: [id])
+  isActive        Boolean         @default(true)
+  sortOrder       Int             @default(0)
   metaTitle       String?
   metaDescription String?
   keywords        String[]
-  tags            String[]       @default([])
-  isFeatured      Boolean        @default(false)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  tags            String[]        @default([])
+  isFeatured      Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
   images          ProductImage[]
 
   @@index([category, isActive, sortOrder])
+  @@index([pricingPresetId])
+}
+
+model PricingPreset {
+  id        String       @id @default(cuid())
+  key       String       @unique
+  name      String
+  model     PricingModel
+  config    Json
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  products  Product[]
+
+  @@index([model, isActive])
 }
 
 model ProductImage {
@@ -313,6 +330,12 @@ enum ProductType {
 enum PricingUnit {
   per_sqft
   per_piece
+}
+
+enum PricingModel {
+  AREA_TIERED
+  QTY_TIERED
+  QTY_OPTIONS
 }
 
 enum ColorMode {
