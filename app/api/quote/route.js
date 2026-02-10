@@ -55,6 +55,47 @@ export async function POST(req) {
       });
     }
 
+    // Fallback: optionsConfig size pricing (useful for fixed-size SKUs like stamps)
+    if (input.sizeLabel && product.optionsConfig && typeof product.optionsConfig === "object") {
+      const sizes = Array.isArray(product.optionsConfig.sizes) ? product.optionsConfig.sizes : [];
+      const match =
+        sizes.find((s) => s && typeof s === "object" && s.label === input.sizeLabel) ||
+        sizes.find((s) => s && typeof s === "object" && s.id === input.sizeLabel);
+
+      const unitCents =
+        match && typeof match.unitCents === "number"
+          ? Math.round(match.unitCents)
+          : match && typeof match.unitPriceCents === "number"
+            ? Math.round(match.unitPriceCents)
+            : null;
+
+      if (unitCents != null && Number.isFinite(unitCents) && unitCents > 0) {
+        const qty = input.quantity;
+        const totalCents = unitCents * qty;
+
+        return NextResponse.json({
+          totalCents,
+          currency: "CAD",
+          breakdown: [
+            {
+              label: `${qty} pcs @ ${(unitCents / 100).toFixed(2)}/ea (size: ${input.sizeLabel})`,
+              amount: totalCents,
+            },
+          ],
+          meta: { model: "OPTIONS_SIZE", sizeLabel: input.sizeLabel },
+          unitCents,
+        });
+      }
+
+      // If this product is meant to be priced by size and there's no basePrice, surface a clear error.
+      if (!product.basePrice || product.basePrice <= 0) {
+        return NextResponse.json(
+          { error: "Price not configured for selected size", details: { sizeLabel: input.sizeLabel } },
+          { status: 422 }
+        );
+      }
+    }
+
     // Fallback: use legacy basePrice + simple tier discounts
     const qty = input.quantity;
     let discount = 1;

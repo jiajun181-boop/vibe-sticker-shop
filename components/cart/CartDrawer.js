@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { PaymentBadges } from "@/components/TrustBadges";
+import { trackBeginCheckout } from "@/lib/analytics";
+import useFocusTrap from "@/lib/useFocusTrap";
 
 const FREE_SHIPPING_THRESHOLD = 15000;
 const SHIPPING_COST = 1500;
@@ -64,6 +66,8 @@ export default function CartDrawer() {
   const [promoCode, setPromoCode] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState(null);
+  const asideRef = useRef(null);
+  useFocusTrap(asideRef, isOpen);
 
   useEffect(() => setMounted(true), []);
 
@@ -167,6 +171,7 @@ export default function CartDrawer() {
         throw new Error("Checkout failed");
       }
 
+      trackBeginCheckout({ value: total });
       showSuccessToast(t("cart.redirecting"));
       window.location.href = data.url;
     } catch (err) {
@@ -190,6 +195,7 @@ export default function CartDrawer() {
       />
 
       <aside
+        ref={asideRef}
         className={`relative h-full w-full max-w-md bg-white shadow-2xl transition-transform duration-[230ms] ease-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 const VALID_CATEGORIES = [
   "fleet-compliance-id",
@@ -32,6 +33,9 @@ interface ProductInput {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   try {
     const body = await request.json();
     const { products } = body as { products: ProductInput[] };

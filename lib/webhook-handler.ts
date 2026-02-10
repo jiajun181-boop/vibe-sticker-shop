@@ -2,6 +2,8 @@ import { prisma } from "./prisma";
 import Stripe from "stripe";
 import { validateAmountReconciliation } from "./calculate-order-totals";
 import { applyAssignmentRules } from "./assignment-rules";
+import { sendEmail } from "./email/resend";
+import { buildOrderConfirmationHtml } from "./email/templates/order-confirmation";
 
 function toNumberOrNull(v: unknown) {
   if (typeof v === "number" && Number.isFinite(v)) return v;
@@ -150,6 +152,26 @@ export async function handleCheckoutCompleted(
   } catch (jobError) {
     // Don't fail the webhook if job creation fails
     console.error(`[Webhook] Failed to create production jobs:`, jobError);
+  }
+
+  // 7. Send order confirmation email (non-blocking)
+  try {
+    const orderWithItems = await prisma.order.findUnique({
+      where: { id: order.id },
+      include: { items: true },
+    });
+    if (orderWithItems && session.customer_email) {
+      const html = buildOrderConfirmationHtml(orderWithItems, orderWithItems.items);
+      await sendEmail({
+        to: session.customer_email,
+        subject: `Order Confirmed — ${order.id.slice(0, 8)}`,
+        html,
+        template: "order-confirmation",
+        orderId: order.id,
+      });
+    }
+  } catch (emailError) {
+    console.error("[Webhook] Failed to send confirmation email:", emailError);
   }
 
   console.log(`[Webhook] Order created: ${order.id}`);

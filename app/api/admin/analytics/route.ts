@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 type Period = "7d" | "30d" | "90d" | "12m";
 
@@ -84,6 +85,9 @@ interface StatusBreakdown {
 }
 
 export async function GET(request: NextRequest) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   try {
     const { searchParams } = new URL(request.url);
     const period = (searchParams.get("period") || "30d") as Period;

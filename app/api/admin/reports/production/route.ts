@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 interface OnTimeRow {
   total_completed: bigint;
@@ -30,6 +31,9 @@ interface FactoryPerfRow {
 }
 
 export async function GET(request: NextRequest) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   try {
     const { searchParams } = new URL(request.url);
     const fromParam = searchParams.get("from");

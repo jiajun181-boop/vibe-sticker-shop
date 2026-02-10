@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   const { id } = await params;
 
   const images = await prisma.productImage.findMany({
@@ -19,6 +23,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   const { id } = await params;
   const body = await request.json();
 
@@ -50,6 +57,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   const { id } = await params;
   const body = await request.json();
 
@@ -79,6 +89,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   const { id } = await params;
   const { searchParams } = new URL(request.url);
   const imageId = searchParams.get("imageId");

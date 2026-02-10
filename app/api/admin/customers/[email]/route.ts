@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ email: string }> }
 ) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   const { email: rawEmail } = await params;
   const email = decodeURIComponent(rawEmail);
 

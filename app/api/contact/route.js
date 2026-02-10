@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import { sendEmail } from "@/lib/email/resend";
+import { buildContactReceivedHtml, buildContactNotifyHtml } from "@/lib/email/templates/contact-received";
+
+const NOTIFY_EMAIL = process.env.CONTACT_NOTIFY_EMAIL || "support@vibestickers.com";
 
 export async function POST(req) {
   try {
@@ -9,15 +13,24 @@ export async function POST(req) {
       return NextResponse.json({ error: "Required fields missing" }, { status: 400 });
     }
 
-    // Log for now — integrate with email service (SendGrid, Resend) later
-    console.log("[Contact Form]", {
-      name,
-      email,
-      phone: body.phone || "",
-      company: body.company || "",
-      message,
-      timestamp: new Date().toISOString(),
-    });
+    const phone = body.phone || "";
+    const company = body.company || "";
+
+    // Send confirmation to customer
+    sendEmail({
+      to: email,
+      subject: "We received your message — Vibe Sticker Shop",
+      html: buildContactReceivedHtml({ name, message }),
+      template: "contact-received",
+    }).catch((err) => console.error("[Contact] Customer email failed:", err));
+
+    // Send notification to shop
+    sendEmail({
+      to: NOTIFY_EMAIL,
+      subject: `New Contact: ${name} — ${company || email}`,
+      html: buildContactNotifyHtml({ name, email, phone, company, message }),
+      template: "contact-notify",
+    }).catch((err) => console.error("[Contact] Notify email failed:", err));
 
     return NextResponse.json({ success: true });
   } catch (err) {

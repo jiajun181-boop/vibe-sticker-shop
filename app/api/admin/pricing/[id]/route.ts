@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 // GET /api/admin/pricing/[id] — single preset with products
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   try {
     const { id } = await params;
     const preset = await prisma.pricingPreset.findUnique({
@@ -32,6 +36,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -66,9 +73,12 @@ export async function PUT(
 
 // DELETE /api/admin/pricing/[id] — delete preset (nullifies product refs)
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   try {
     const { id } = await params;
 

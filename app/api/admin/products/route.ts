@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 export async function GET(request: NextRequest) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   const { searchParams } = new URL(request.url);
 
   const page = parseInt(searchParams.get("page") || "1");

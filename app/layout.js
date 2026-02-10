@@ -5,6 +5,8 @@ import CartDrawer from "@/components/cart/CartDrawer";
 import { Toaster } from "@/components/Toast";
 import PromoBar from "@/components/home/PromoBar";
 import { getServerLocale } from "@/lib/i18n/server";
+import Analytics from "@/components/Analytics";
+import SkipLink from "@/components/SkipLink";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
 
@@ -36,6 +38,7 @@ export async function generateMetadata() {
       description,
       images: ["/og-image.png"],
     },
+    manifest: "/manifest.json",
   };
 }
 
@@ -44,12 +47,14 @@ export default async function RootLayout({ children }) {
   return (
     <html lang={locale}>
       <body className="antialiased">
+        <SkipLink />
         <PromoBar />
         <Navbar />
-        <div className="min-h-screen">{children}</div>
+        <div id="main-content" className="min-h-screen">{children}</div>
         <Footer locale={locale} />
         <CartDrawer />
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );

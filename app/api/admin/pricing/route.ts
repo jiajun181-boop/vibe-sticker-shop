@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 // GET /api/admin/pricing — list all presets with product count
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   try {
     const presets = await prisma.pricingPreset.findMany({
       orderBy: { key: "asc" },
@@ -20,6 +24,9 @@ export async function GET() {
 
 // POST /api/admin/pricing — create a new preset
 export async function POST(request: NextRequest) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   try {
     const body = await request.json();
     const { key, name, model, config } = body;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCatalogConfig, CATALOG_DEFAULTS } from "@/lib/catalogConfig";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 const MERGE_EDGES = [
   { from: "stickers", to: "stickers-labels" },
@@ -12,7 +13,10 @@ const MERGE_EDGES = [
   { from: "safety-warning-decals", to: "facility-asset-labels" },
 ];
 
-export async function GET() {
+export async function GET(request) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   const [catGroups, products, totalCount, activeCount, catalogConfig] = await Promise.all([
     prisma.product.groupBy({
       by: ["category"],
@@ -67,6 +71,9 @@ export async function GET() {
 }
 
 export async function PUT(request) {
+  const auth = requireAdminAuth(request);
+  if (!auth.authenticated) return auth.response;
+
   try {
     const body = await request.json();
     if (!body || typeof body !== "object" || Array.isArray(body)) {

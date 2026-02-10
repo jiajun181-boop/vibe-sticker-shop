@@ -12,6 +12,9 @@ import { UploadButton } from "@/utils/uploadthing";
 import { GuaranteeBadge } from "@/components/TrustBadges";
 import GuaranteeInfo from "@/components/product/GuaranteeInfo";
 import ReviewsSection from "@/components/product/ReviewsSection";
+import { trackAddToCart } from "@/lib/analytics";
+import RecentlyViewed from "@/components/RecentlyViewed";
+import { useRecentlyViewedStore } from "@/lib/recently-viewed";
 
 const HST_RATE = 0.13;
 const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
@@ -53,6 +56,29 @@ export default function ProductClient({ product, relatedProducts }) {
   const materials = parseMaterials(product.optionsConfig);
   const editorConfig = product.optionsConfig?.editor || null;
   const isTextEditor = editorConfig?.type === "text";
+  const editorMode = editorConfig?.mode || "lettering"; // "lettering" | "box"
+  const editorSizes = useMemo(() => {
+    const sizes = Array.isArray(editorConfig?.sizes)
+      ? editorConfig.sizes
+      : Array.isArray(product.optionsConfig?.sizes)
+        ? product.optionsConfig.sizes
+        : [];
+
+    return sizes
+      .filter((s) => s && typeof s === "object" && typeof s.label === "string")
+      .map((s) => ({
+        label: s.label,
+        shape: s.shape || "rect", // rect | round
+        widthIn: typeof s.widthIn === "number" ? s.widthIn : null,
+        heightIn: typeof s.heightIn === "number" ? s.heightIn : null,
+        diameterIn: typeof s.diameterIn === "number" ? s.diameterIn : null,
+        mm: s.mm || null,
+        details: s.details || null,
+        type: s.type || null,
+        replacementPad: s.replacementPad || null,
+      }));
+  }, [editorConfig, product.optionsConfig]);
+  const [editorSizeLabel, setEditorSizeLabel] = useState(editorSizes[0]?.label || "");
   const dimensionsEnabled = isPerSqft || isTextEditor;
 
   const [activeImage, setActiveImage] = useState(0);
@@ -74,6 +100,10 @@ export default function ProductClient({ product, relatedProducts }) {
   const [editorText, setEditorText] = useState(editorConfig?.defaultText || "YOUR TEXT");
   const [editorFont, setEditorFont] = useState(editorFonts[0] || "sans-serif");
   const [editorColor, setEditorColor] = useState(editorConfig?.defaultColor || "#111111");
+  const selectedEditorSize = useMemo(
+    () => editorSizes.find((s) => s.label === editorSizeLabel) || null,
+    [editorSizes, editorSizeLabel]
+  );
 
   // Server-driven pricing state
   const [quote, setQuote] = useState(null);
@@ -81,6 +111,17 @@ export default function ProductClient({ product, relatedProducts }) {
   const debounceRef = useRef(null);
 
   const imageList = product.images?.length ? product.images : [];
+
+  // Track recently viewed
+  useEffect(() => {
+    useRecentlyViewedStore.getState().addViewed({
+      slug: product.slug,
+      category: product.category,
+      name: product.name,
+      image: product.images?.[0]?.url || null,
+      basePrice: product.basePrice,
+    });
+  }, [product.slug]);
 
   const widthDisplay = unit === "in" ? widthIn : Number((widthIn * INCH_TO_CM).toFixed(2));
   const heightDisplay = unit === "in" ? heightIn : Number((heightIn * INCH_TO_CM).toFixed(2));
@@ -92,13 +133,14 @@ export default function ProductClient({ product, relatedProducts }) {
 
   // Debounced /api/quote fetch (300ms)
   const fetchQuote = useCallback(
-    async (slug, qty, w, h, mat) => {
+    async (slug, qty, w, h, mat, sizeLabel) => {
       const body = { slug, quantity: qty };
       if (dimensionsEnabled) {
         body.widthIn = w;
         body.heightIn = h;
       }
       if (mat) body.material = mat;
+      if (sizeLabel) body.sizeLabel = sizeLabel;
 
       try {
         setQuoteLoading(true);
@@ -123,14 +165,16 @@ export default function ProductClient({ product, relatedProducts }) {
     if (!sizeValidation.valid) return;
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchQuote(product.slug, quantity, widthIn, heightIn, material);
+      const sizeLabel = isTextEditor && editorMode === "box" ? editorSizeLabel : null;
+      fetchQuote(product.slug, quantity, widthIn, heightIn, material, sizeLabel);
     }, 300);
     return () => clearTimeout(debounceRef.current);
-  }, [product.slug, quantity, widthIn, heightIn, material, sizeValidation.valid, fetchQuote]);
+  }, [product.slug, quantity, widthIn, heightIn, material, editorSizeLabel, isTextEditor, editorMode, sizeValidation.valid, fetchQuote]);
 
   // If the product uses a text editor, derive width from text + letter height.
   useEffect(() => {
     if (!isTextEditor) return;
+    if (editorMode !== "lettering") return;
     const text = String(editorText || "").trim();
     if (!text) return;
 
@@ -150,6 +194,24 @@ export default function ProductClient({ product, relatedProducts }) {
       // keep previous widthIn
     }
   }, [isTextEditor, editorText, editorFont, heightIn]);
+
+  // If "box" mode (stamps), dimensions come from a fixed size selection.
+  useEffect(() => {
+    if (!isTextEditor) return;
+    if (editorMode !== "box") return;
+    if (!editorSizeLabel) return;
+
+    const size = editorSizes.find((s) => s.label === editorSizeLabel) || null;
+    if (!size) return;
+
+    const w = size.shape === "round" ? size.diameterIn : size.widthIn;
+    const h = size.shape === "round" ? size.diameterIn : size.heightIn;
+    if (typeof w === "number" && typeof h === "number") {
+      setUnit("in");
+      setWidthIn(Number(w.toFixed(3)));
+      setHeightIn(Number(h.toFixed(3)));
+    }
+  }, [isTextEditor, editorMode, editorSizeLabel, editorSizes]);
 
   // Derive display prices from quote (fallback to basePrice estimate)
   const priceData = useMemo(() => {
@@ -245,12 +307,16 @@ export default function ProductClient({ product, relatedProducts }) {
     const editorMeta = isTextEditor
       ? {
           editorType: "text",
+          editorMode,
+          editorSizeLabel: editorMode === "box" ? editorSizeLabel : null,
           editorText: String(editorText || "").trim(),
           editorFont: String(editorFont || ""),
           editorColor: String(editorColor || ""),
         }
       : {
           editorType: null,
+          editorMode: null,
+          editorSizeLabel: null,
           editorText: null,
           editorFont: null,
           editorColor: null,
@@ -287,6 +353,7 @@ export default function ProductClient({ product, relatedProducts }) {
 
     addItem(item);
     openCart();
+    trackAddToCart({ name: product.name, value: priceData.subtotal });
     showSuccessToast(t("product.addedToCart"));
     setAdded(true);
     setTimeout(() => setAdded(false), 700);
@@ -370,104 +437,220 @@ export default function ProductClient({ product, relatedProducts }) {
                 <p className={`text-sm font-semibold ${quoteLoading ? "text-gray-400" : "text-gray-900"}`}>{formatCad(priceData.unitAmount)} {t("product.unit")}</p>
               </div>
 
-              {isTextEditor && (
-                <div className="mt-5 space-y-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.textEditor")}</p>
+                {isTextEditor && (
+                  <div className="mt-5 space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.textEditor")}</p>
 
-                  <label className="text-xs text-gray-600">
-                    {t("product.text")}
-                    <input
-                      type="text"
-                      value={editorText}
-                      onChange={(e) => setEditorText(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                      placeholder="ABC"
-                    />
-                  </label>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="text-xs text-gray-600">
-                      {t("product.font")}
-                      <select
-                        value={editorFont}
-                        onChange={(e) => setEditorFont(e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"
-                      >
-                        {editorFonts.map((f) => (
-                          <option key={f} value={f}>{f}</option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="text-xs text-gray-600">
-                      {t("product.color")}
-                      <input
-                        type="color"
-                        value={editorColor}
-                        onChange={(e) => setEditorColor(e.target.value)}
-                        className="mt-1 h-[42px] w-full rounded-xl border border-gray-300 bg-white px-2 py-2"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.sizeUnit")}</p>
-                    <div className="rounded-full border border-gray-300 p-1 text-xs">
-                      <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
-                      <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="text-xs text-gray-600">
-                      {t("product.letterHeight", { unit })}
-                      <input
-                        type="number"
-                        value={heightDisplay}
-                        onChange={(e) => setSizeValue("h", e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                      />
-                    </label>
-                    <label className="text-xs text-gray-600">
-                      {t("product.width", { unit })}
-                      <input
-                        type="number"
-                        value={widthDisplay}
-                        readOnly
-                        className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700"
-                      />
-                    </label>
-                  </div>
-
-                  <p className="text-xs text-gray-500">{t("product.estimatedSize", { w: widthIn?.toFixed(2), h: heightIn?.toFixed(2) })}</p>
-
-                  <div className="rounded-2xl border border-gray-200 bg-white p-3">
-                    <div className="aspect-[3/1] w-full overflow-hidden rounded-xl bg-gray-50">
-                      <svg viewBox="0 0 1000 300" className="h-full w-full">
-                        <rect x="0" y="0" width="1000" height="300" fill="white" />
-                        <text
-                          x="40"
-                          y="200"
-                          fill={editorColor}
-                          fontFamily={editorFont}
-                          fontSize="160"
-                          style={{ letterSpacing: "2px" }}
+                    {editorMode === "box" && editorSizes.length > 0 && (
+                      <label className="text-xs text-gray-600">
+                        {t("product.model")}
+                        <select
+                          value={editorSizeLabel}
+                          onChange={(e) => setEditorSizeLabel(e.target.value)}
+                          className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"
                         >
-                          {String(editorText || "").trim() || " "}
-                        </text>
-                      </svg>
-                    </div>
-                  </div>
+                          {editorSizes.map((s) => (
+                            <option key={s.label} value={s.label}>{s.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
 
-                  {!sizeValidation.valid && (
-                    <div className="mt-1 space-y-1">
-                      {sizeValidation.errors.map((err, i) => (
-                        <p key={i} className="text-xs text-red-500">{err}</p>
-                      ))}
+                    {editorMode === "box" && selectedEditorSize && (
+                      <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.modelDetails")}</p>
+                          <p className="text-xs font-semibold text-gray-900">{selectedEditorSize.label}</p>
+                        </div>
+                        <div className="mt-3 space-y-1 text-xs text-gray-700">
+                          {selectedEditorSize.type && (
+                            <p>
+                              <span className="font-semibold text-gray-900">{t("product.stampType")}: </span>
+                              <span>{selectedEditorSize.type}</span>
+                            </p>
+                          )}
+                          {selectedEditorSize.shape === "round" ? (
+                            typeof selectedEditorSize.diameterIn === "number" && (
+                              <p>
+                                <span className="font-semibold text-gray-900">{t("product.size")}: </span>
+                                <span>
+                                  {t("product.diameter")}: {selectedEditorSize.diameterIn}"{selectedEditorSize.mm?.d ? ` (${selectedEditorSize.mm.d}mm)` : ""}
+                                </span>
+                              </p>
+                            )
+                          ) : (
+                            typeof selectedEditorSize.widthIn === "number" &&
+                            typeof selectedEditorSize.heightIn === "number" && (
+                              <p>
+                                <span className="font-semibold text-gray-900">{t("product.size")}: </span>
+                                <span>
+                                  {selectedEditorSize.widthIn}" x {selectedEditorSize.heightIn}"{selectedEditorSize.mm?.w && selectedEditorSize.mm?.h ? ` (${selectedEditorSize.mm.w} x ${selectedEditorSize.mm.h}mm)` : ""}
+                                </span>
+                              </p>
+                            )
+                          )}
+                          {selectedEditorSize.details && (
+                            <p>
+                              <span className="font-semibold text-gray-900">{t("product.details")}: </span>
+                              <span>{selectedEditorSize.details}</span>
+                            </p>
+                          )}
+                          {selectedEditorSize.replacementPad && (
+                            <p>
+                              <span className="font-semibold text-gray-900">{t("product.replacementPad")}: </span>
+                              <span>{selectedEditorSize.replacementPad}</span>
+                            </p>
+                          )}
+                        </div>
+                        <p className="mt-3 text-[11px] text-gray-500">{t("product.previewNote")}</p>
+                      </div>
+                    )}
+
+                    <label className="text-xs text-gray-600">
+                      {t("product.text")}
+                      <textarea
+                        rows={editorMode === "box" ? 3 : 1}
+                        value={editorText}
+                        onChange={(e) => setEditorText(e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                        placeholder="ABC"
+                      />
+                    </label>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="text-xs text-gray-600">
+                        {t("product.font")}
+                        <select
+                          value={editorFont}
+                          onChange={(e) => setEditorFont(e.target.value)}
+                          className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"
+                        >
+                          {editorFonts.map((f) => (
+                            <option key={f} value={f}>{f}</option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="text-xs text-gray-600">
+                        {t("product.color")}
+                        <input
+                          type="color"
+                          value={editorColor}
+                          onChange={(e) => setEditorColor(e.target.value)}
+                          className="mt-1 h-[42px] w-full rounded-xl border border-gray-300 bg-white px-2 py-2"
+                        />
+                      </label>
                     </div>
-                  )}
-                </div>
-              )}
+
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.sizeUnit")}</p>
+                      <div className="rounded-full border border-gray-300 p-1 text-xs">
+                        <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
+                        <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
+                      </div>
+                    </div>
+
+                    {editorMode === "lettering" ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="text-xs text-gray-600">
+                          {t("product.letterHeight", { unit })}
+                          <input
+                            type="number"
+                            value={heightDisplay}
+                            onChange={(e) => setSizeValue("h", e.target.value)}
+                            className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                          />
+                        </label>
+                        <label className="text-xs text-gray-600">
+                          {t("product.width", { unit })}
+                          <input
+                            type="number"
+                            value={widthDisplay}
+                            readOnly
+                            className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="text-xs text-gray-600">
+                          {t("product.width", { unit })}
+                          <input
+                            type="number"
+                            value={widthDisplay}
+                            readOnly
+                            className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                          />
+                        </label>
+                        <label className="text-xs text-gray-600">
+                          {t("product.height", { unit })}
+                          <input
+                            type="number"
+                            value={heightDisplay}
+                            readOnly
+                            className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                          />
+                        </label>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-500">{t("product.estimatedSize", { w: widthIn?.toFixed(2), h: heightIn?.toFixed(2) })}</p>
+
+                    <div className="rounded-2xl border border-gray-200 bg-white p-3">
+                      <div className="aspect-[3/1] w-full overflow-hidden rounded-xl bg-gray-50">
+                        <svg viewBox="0 0 1000 300" className="h-full w-full">
+                          <rect x="0" y="0" width="1000" height="300" fill="white" />
+                          {editorMode === "box" ? (
+                            <>
+                              <rect x="60" y="40" width="880" height="220" rx="26" fill="none" stroke="#e5e7eb" strokeWidth="6" />
+                              <text
+                                x="500"
+                                y="150"
+                                fill={editorColor}
+                                fontFamily={editorFont}
+                                fontSize="92"
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                              >
+                                {(String(editorText || "").trim() || " ").split("\n")[0]}
+                              </text>
+                              <text
+                                x="500"
+                                y="210"
+                                fill={editorColor}
+                                fontFamily={editorFont}
+                                fontSize="72"
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                              >
+                                {(String(editorText || "").trim() || " ").split("\n")[1] || " "}
+                              </text>
+                            </>
+                          ) : (
+                            <text
+                              x="40"
+                              y="200"
+                              fill={editorColor}
+                              fontFamily={editorFont}
+                              fontSize="160"
+                              style={{ letterSpacing: "2px" }}
+                            >
+                              {String(editorText || "").trim() || " "}
+                            </text>
+                          )}
+                        </svg>
+                      </div>
+                    </div>
+
+                    {!sizeValidation.valid && (
+                      <div className="mt-1 space-y-1">
+                        {sizeValidation.errors.map((err, i) => (
+                          <p key={i} className="text-xs text-red-500">{err}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
               {isPerSqft && !isTextEditor && (
                 <div className="mt-5 space-y-3">
@@ -666,6 +849,7 @@ export default function ProductClient({ product, relatedProducts }) {
         </section>
 
         <ReviewsSection />
+        <RecentlyViewed excludeSlug={product.slug} />
       </div>
     </main>
   );
