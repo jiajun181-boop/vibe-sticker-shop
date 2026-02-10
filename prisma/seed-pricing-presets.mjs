@@ -83,14 +83,11 @@ const CATEGORY_TO_PRESET = {
   // AREA_TIERED — large format, roll-based products
   "vehicle-branding-advertising": "largeformat_roll_default",
   "facility-asset-labels": "largeformat_roll_default",
-  "window-graphics": "largeformat_roll_default",
   "large-format-graphics": "largeformat_roll_default",
   "banners-displays": "largeformat_roll_default",
 
   // QTY_TIERED — stickers, labels, safety decals
   "stickers-labels": "stickers_default",
-  "safety-warning-decals": "stickers_default",
-  "fleet-compliance-id": "stickers_default",
 
   // QTY_OPTIONS — paper goods, marketing prints
   "marketing-prints": "business_cards_default",

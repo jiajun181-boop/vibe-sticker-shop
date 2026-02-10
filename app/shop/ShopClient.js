@@ -16,18 +16,21 @@ const CATEGORY_LABELS = {
   "marketing-prints": "Marketing Prints",
   displays: "Display Hardware",
   "vehicle-branding-advertising": "Vehicle Branding",
-  "safety-warning-decals": "Safety & Warning Decals",
-  "fleet-compliance-id": "Fleet Compliance & ID",
   "facility-asset-labels": "Facility & Asset Labels",
   "retail-promo": "Retail Promo",
   packaging: "Packaging Inserts",
   "business-forms": "Business Forms",
   "large-format-graphics": "Large Format Graphics",
-  "window-graphics": "Window & Wall Graphics",
 };
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+
+const HIDDEN_CATEGORIES = new Set([
+  "window-graphics",
+  "fleet-compliance-id",
+  "safety-warning-decals",
+]);
 
 function sortProducts(list, sortBy) {
   const arr = [...list];
@@ -50,7 +53,8 @@ export default function ShopClient({ products, initialCategory }) {
 
   const categories = useMemo(() => {
     const set = new Set(products.map((p) => p.category));
-    return ["all", ...Array.from(set)];
+    const visible = Array.from(set).filter((cat) => !HIDDEN_CATEGORIES.has(cat));
+    return ["all", ...visible];
   }, [products]);
 
   const filtered = useMemo(() => {

@@ -13,14 +13,11 @@ const CATEGORY_META = {
   "marketing-prints": { title: "Marketing Prints", icon: "🗞️" },
   displays: { title: "Display Hardware", icon: "🧱" },
   "vehicle-branding-advertising": { title: "Vehicle Branding", icon: "🚐" },
-  "safety-warning-decals": { title: "Safety & Warning Decals", icon: "⚠️" },
-  "fleet-compliance-id": { title: "Fleet Compliance & ID", icon: "🚛" },
   "facility-asset-labels": { title: "Facility & Asset Labels", icon: "🏭" },
   "retail-promo": { title: "Retail Promo", icon: "🏷️" },
   packaging: { title: "Packaging Inserts", icon: "📦" },
   "business-forms": { title: "Business Forms", icon: "🧾" },
   "large-format-graphics": { title: "Large Format Graphics", icon: "🪟" },
-  "window-graphics": { title: "Window & Wall Graphics", icon: "🪟" },
 };
 
 // Top 8 categories shown on homepage (curated order)
@@ -29,10 +26,10 @@ const HOMEPAGE_CATEGORIES = [
   "rigid-signs",
   "banners-displays",
   "marketing-prints",
+  "large-format-graphics",
   "vehicle-branding-advertising",
-  "safety-warning-decals",
-  "fleet-compliance-id",
   "facility-asset-labels",
+  "retail-promo",
 ];
 
 const MAX_PER_CATEGORY = 4;

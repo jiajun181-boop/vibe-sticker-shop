@@ -37,14 +37,11 @@ const CAT_COLORS = {
   "banners-displays": "DC2626/FFFFFF",
   "marketing-prints": "EC4899/FFFFFF",
   packaging: "10B981/FFFFFF",
-  "window-graphics": "06B6D4/FFFFFF",
   displays: "6366F1/FFFFFF",
   "business-forms": "7C3AED/FFFFFF",
   "retail-promo": "D946EF/FFFFFF",
   "large-format-graphics": "14B8A6/FFFFFF",
   "vehicle-branding-advertising": "F59E0B/FFFFFF",
-  "safety-warning-decals": "EF4444/FFFFFF",
-  "fleet-compliance-id": "3B82F6/FFFFFF",
   "facility-asset-labels": "8B5CF6/FFFFFF",
 };
 
@@ -99,15 +96,12 @@ const CATEGORY_TAGS = {
   "banners-displays": ["event"],
   "marketing-prints": ["retail"],
   "packaging": ["retail"],
-  "window-graphics": ["retail", "restaurants"],
   "displays": ["event", "retail"],
   "business-forms": ["finance"],
   "retail-promo": ["retail", "restaurants"],
   "large-format-graphics": ["retail", "facility"],
   "vehicle-branding-advertising": ["fleet", "automotive"],
-  "safety-warning-decals": ["safety", "construction"],
-  "fleet-compliance-id": ["fleet"],
-  "facility-asset-labels": ["facility"],
+  "facility-asset-labels": ["facility", "safety", "construction"],
 };
 
 function inferTags(product) {

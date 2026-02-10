@@ -343,11 +343,11 @@ export const PRODUCTS = [
   { category:"packaging", product:"packing-slips", name:"Packing Slips", description:"Branded packing slips and inserts.", status:"draft", config:{ minimumPrice:0 } },
 
   // ===== WINDOW GRAPHICS =====
-  { category:"window-graphics", product:"frosted-privacy-film", name:"Frosted Privacy Film", description:"Frosted window film for privacy and branding.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"window-graphics", product:"full-window-graphics", name:"Full Window Graphics", description:"Full coverage storefront window graphics.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"window-graphics", product:"one-way-vision-graphics", name:"One-Way Vision Graphics", description:"Perforated graphics with visibility from inside.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"window-graphics", product:"wall-murals", name:"Wall Murals", description:"Large wall graphics for offices and retail interiors.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"window-graphics", product:"floor-graphics", name:"Floor Graphics", description:"Durable floor graphics for wayfinding and promos.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"large-format-graphics", product:"frosted-privacy-film", name:"Frosted Privacy Film", description:"Frosted window film for privacy and branding.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"large-format-graphics", product:"full-window-graphics", name:"Full Window Graphics", description:"Full coverage storefront window graphics.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"large-format-graphics", product:"one-way-vision-graphics", name:"One-Way Vision Graphics", description:"Perforated graphics with visibility from inside.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"large-format-graphics", product:"wall-murals", name:"Wall Murals", description:"Large wall graphics for offices and retail interiors.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"large-format-graphics", product:"floor-graphics", name:"Floor Graphics", description:"Durable floor graphics for wayfinding and promos.", status:"draft", config:{ minimumPrice:0 } },
 
   // ===== DISPLAYS (hardware/kits) =====
   { category:"displays", product:"a-frame-stand", name:"A-Frame Stand", description:"Sidewalk A-frame sign hardware (frame only).", status:"draft", config:{ minimumPrice:0 } },
