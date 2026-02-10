@@ -26,7 +26,7 @@ export default function Footer({ locale = "en" }) {
       links: [
         { label: t("footer.templates"), href: "/about" },
         { label: t("footer.specs"), href: "/about" },
-        { label: t("footer.faq"), href: "/about" },
+        { label: t("footer.faq"), href: "/faq" },
       ],
     },
     {

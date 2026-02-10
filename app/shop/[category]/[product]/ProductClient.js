@@ -9,6 +9,9 @@ import { showSuccessToast } from "@/components/Toast";
 import { validateDimensions } from "@/lib/materialLimits";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
+import { GuaranteeBadge } from "@/components/TrustBadges";
+import GuaranteeInfo from "@/components/product/GuaranteeInfo";
+import ReviewsSection from "@/components/product/ReviewsSection";
 
 const HST_RATE = 0.13;
 const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
@@ -628,7 +631,13 @@ export default function ProductClient({ product, relatedProducts }) {
               >
                 {!canAddToCart ? t("product.fixSizeErrors") : added ? t("product.added") : t("product.addToCart")}
               </button>
+
+              <div className="mt-4">
+                <GuaranteeBadge />
+              </div>
             </div>
+
+            <GuaranteeInfo />
           </div>
         </section>
 
@@ -655,6 +664,8 @@ export default function ProductClient({ product, relatedProducts }) {
             ))}
           </div>
         </section>
+
+        <ReviewsSection />
       </div>
     </main>
   );

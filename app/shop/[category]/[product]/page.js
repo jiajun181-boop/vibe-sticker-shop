@@ -1,8 +1,35 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ProductClient from "./ProductClient";
+import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
 
 export const dynamic = "force-dynamic";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+
+export async function generateMetadata({ params }) {
+  const { category, product: slug } = await params;
+  const p = await prisma.product.findFirst({
+    where: { slug: decodeURIComponent(slug), isActive: true },
+    include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+  });
+  if (!p) return {};
+  const title = `${p.name} - Vibe Sticker Shop`;
+  const description = p.description || `Order custom ${p.name} online. Fast turnaround, professional quality.`;
+  const image = p.images[0]?.url || `${SITE_URL}/og-image.png`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${SITE_URL}/shop/${category}/${slug}`,
+      images: [{ url: image, width: 1200, height: 630, alt: p.name }],
+      type: "website",
+    },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
+  };
+}
 
 export default async function ProductPage({ params }) {
   const { category, product: slug } = await params;
@@ -45,5 +72,11 @@ export default async function ProductPage({ params }) {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
-  return <ProductClient product={product} relatedProducts={relatedProducts} />;
+  return (
+    <>
+      <ProductSchema product={product} />
+      <BreadcrumbSchema category={product.category} productName={product.name} />
+      <ProductClient product={product} relatedProducts={relatedProducts} />
+    </>
+  );
 }

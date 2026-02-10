@@ -4,6 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import { INDUSTRY_TAGS, INDUSTRY_LABELS } from "@/lib/industryTags";
 import { getServerT } from "@/lib/i18n/server";
+import { OrganizationSchema } from "@/components/JsonLd";
+import HowItWorks from "@/components/home/HowItWorks";
+import FeaturedBanner from "@/components/home/FeaturedBanner";
+import TrustSignals from "@/components/home/TrustSignals";
+import BundlesSection from "@/components/home/BundlesSection";
+import QuoteCalculator from "@/components/home/QuoteCalculator";
 
 export const dynamic = "force-dynamic";
 
@@ -15,13 +21,19 @@ export default async function HomePage() {
   const config = await getCatalogConfig();
   const { homepageCategories, maxPerCategory, categoryMeta } = config;
 
-  const [products, totalCount] = await Promise.all([
+  const [products, totalCount, displayProducts] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true, category: { in: homepageCategories } },
       include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     }),
     prisma.product.count({ where: { isActive: true } }),
+    prisma.product.findMany({
+      where: { isActive: true, category: "display-stands" },
+      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      take: 6,
+    }),
   ]);
 
   const grouped = [];
@@ -33,6 +45,8 @@ export default async function HomePage() {
   }
 
   return (
+    <>
+    <OrganizationSchema />
     <div className="min-h-screen bg-[#fafafa] pb-20 relative">
       {/* Hero */}
       <div className="bg-black text-white pt-24 pb-16 px-6">
@@ -91,6 +105,11 @@ export default async function HomePage() {
         </div>
       </div>
 
+      {/* How It Works */}
+      <div className="max-w-7xl mx-auto px-6 mb-14">
+        <HowItWorks />
+      </div>
+
       {/* Featured categories — 8 categories, 4 products each */}
       <div className="max-w-7xl mx-auto px-6">
         {grouped.map(([category, items]) => {
@@ -132,7 +151,30 @@ export default async function HomePage() {
           </Link>
         </div>
       </div>
+
+      {/* Featured Display Products */}
+      {displayProducts.length > 0 && (
+        <div className="max-w-7xl mx-auto px-6 mb-14">
+          <FeaturedBanner products={displayProducts} />
+        </div>
+      )}
+
+      {/* Trust Signals */}
+      <div className="max-w-7xl mx-auto px-6 mb-14">
+        <TrustSignals />
+      </div>
+
+      {/* Bundles */}
+      <div className="max-w-7xl mx-auto px-6 mb-14">
+        <BundlesSection />
+      </div>
+
+      {/* Quote Calculator */}
+      <div className="max-w-7xl mx-auto px-6 mb-14">
+        <QuoteCalculator />
+      </div>
     </div>
+    </>
   );
 }
 

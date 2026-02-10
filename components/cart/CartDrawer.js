@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { PaymentBadges } from "@/components/TrustBadges";
 
 const FREE_SHIPPING_THRESHOLD = 15000;
 const SHIPPING_COST = 1500;
@@ -61,6 +62,8 @@ export default function CartDrawer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [promoCode, setPromoCode] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState(null);
 
   useEffect(() => setMounted(true), []);
 
@@ -83,14 +86,16 @@ export default function CartDrawer() {
     [cart]
   );
 
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const taxableBase = subtotal + shipping;
+  const discountAmount = promoDiscount ? promoDiscount.discountAmount : 0;
+  const afterDiscount = Math.max(0, subtotal - discountAmount);
+  const shipping = afterDiscount >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const taxableBase = afterDiscount + shipping;
   const tax = Math.round(taxableBase * HST_RATE);
-  const total = subtotal + shipping + tax;
+  const total = afterDiscount + shipping + tax;
 
-  const freeShippingRemaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-  const freeShippingProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
-  const qualifiesForFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const freeShippingRemaining = Math.max(0, FREE_SHIPPING_THRESHOLD - afterDiscount);
+  const freeShippingProgress = Math.min(100, (afterDiscount / FREE_SHIPPING_THRESHOLD) * 100);
+  const qualifiesForFreeShipping = afterDiscount >= FREE_SHIPPING_THRESHOLD;
 
   const cartItems = useMemo(
     () =>
@@ -112,6 +117,30 @@ export default function CartDrawer() {
     [cart]
   );
 
+  async function handleApplyPromo() {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    try {
+      const res = await fetch("/api/promo/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: promoCode.trim(), subtotal }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showErrorToast(data.error || t("cart.promoInvalid"));
+        setPromoDiscount(null);
+        return;
+      }
+      setPromoDiscount(data);
+      showSuccessToast(t("cart.promoApplied", { code: data.code }));
+    } catch {
+      showErrorToast(t("cart.networkError"));
+    } finally {
+      setPromoLoading(false);
+    }
+  }
+
   async function handleCheckout() {
     if (cartItems.length === 0) {
       showErrorToast(t("cart.emptyError"));
@@ -125,7 +154,7 @@ export default function CartDrawer() {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cartItems }),
+        body: JSON.stringify({ items: cartItems, promoCode: promoDiscount?.code || null }),
       });
 
       const data = await response.json();
@@ -294,8 +323,13 @@ export default function CartDrawer() {
                     placeholder={t("cart.enterCode")}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
                   />
-                  <button type="button" className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-gray-600">
-                    {t("cart.apply")}
+                  <button
+                    type="button"
+                    onClick={handleApplyPromo}
+                    disabled={promoLoading || !promoCode.trim()}
+                    className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-gray-600 disabled:opacity-50"
+                  >
+                    {promoLoading ? "..." : t("cart.apply")}
                   </button>
                 </div>
               </div>
@@ -309,6 +343,22 @@ export default function CartDrawer() {
                   <span>{t("cart.subtotal")}</span>
                   <span className="font-semibold text-gray-900">{formatCad(subtotal)}</span>
                 </div>
+                {promoDiscount && (
+                  <div className="flex items-center justify-between text-emerald-600">
+                    <span className="flex items-center gap-1">
+                      {t("cart.discount")} ({promoDiscount.code})
+                      <button
+                        type="button"
+                        onClick={() => { setPromoDiscount(null); setPromoCode(""); }}
+                        className="text-[10px] text-gray-400 hover:text-gray-600"
+                        aria-label={t("cart.removePromo")}
+                      >
+                        x
+                      </button>
+                    </span>
+                    <span className="font-semibold">-{formatCad(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <span>{t("cart.shipping")}</span>
                   <span className="font-semibold text-gray-900">{shipping === 0 ? t("cart.free") : formatCad(shipping)}</span>
@@ -339,6 +389,8 @@ export default function CartDrawer() {
               >
                 {t("cart.continueShopping")}
               </button>
+
+              <PaymentBadges />
 
               {error && <p className="text-xs text-red-600">{error}</p>}
             </div>
