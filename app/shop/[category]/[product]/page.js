@@ -1,4 +1,4 @@
-﻿import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ProductClient from "./ProductClient";
 
@@ -6,11 +6,13 @@ export const dynamic = "force-dynamic";
 
 export default async function ProductPage({ params }) {
   const { category, product: slug } = await params;
+  const decodedSlug = decodeURIComponent(slug);
+  const decodedCategory = decodeURIComponent(category);
 
   const product = await prisma.product.findFirst({
     where: {
-      slug: decodeURIComponent(slug),
-      category: decodeURIComponent(category),
+      slug: decodedSlug,
+      category: decodedCategory,
       isActive: true,
     },
     include: {
@@ -19,6 +21,13 @@ export default async function ProductPage({ params }) {
   });
 
   if (!product) {
+    const fallback = await prisma.product.findUnique({
+      where: { slug: decodedSlug },
+      include: { images: { orderBy: { sortOrder: "asc" } } },
+    });
+    if (fallback?.isActive) {
+      redirect(`/shop/${fallback.category}/${fallback.slug}`);
+    }
     notFound();
   }
 
