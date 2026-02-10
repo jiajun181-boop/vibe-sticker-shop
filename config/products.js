@@ -118,6 +118,124 @@ const TPL_BANNER = {
 
 // ==========================================
 // 2. PRODUCT LISTS
+
+// --- Stamps: Self-Inking (size-based, with text editor preview) ---
+// Pricing is intended to be configured per size via options.sizes[].unitCents.
+// Until unitCents is filled in, the storefront will show "Quote" and /api/quote will return 422 for this SKU.
+const PROD_SELF_INKING_STAMPS = {
+  category: "marketing-prints",
+  product: "self-inking-stamps",
+  name: "Self-Inking Stamps (S/R Series)",
+  description: "Fast, clean, and consistent self-inking stamps. Choose a model/size, enter your text (multi-line supported), and optionally upload a logo. Replacement pads available by model.",
+  status: "draft",
+  pricingUnit: "per_piece",
+  config: { minimumPrice: 0 },
+  options: {
+    editor: {
+      type: "text",
+      mode: "box",
+      defaultText: "YOUR COMPANY\nPHONE",
+      defaultColor: "#111111",
+      fonts: ["Helvetica", "Arial", "sans-serif"],
+      sizes: [
+        {
+          label: "S-827",
+          shape: "rect",
+          widthIn: 1.1875,
+          heightIn: 2.0,
+          mm: { w: 30, h: 50 },
+          type: "Rectangular Self-Inking Stamp (Printer Line)",
+          replacementPad: "S-827-7",
+          unitCents: 3999,
+        },
+        {
+          label: "S-510",
+          shape: "rect",
+          widthIn: 0.5,
+          heightIn: 0.5,
+          mm: { w: 12, h: 12 },
+          type: "Square Self-Inking Stamp (Printer Line)",
+          details: "Black top, clear bottom",
+          replacementPad: "S-510-7",
+          unitCents: 1999,
+        },
+        {
+          label: "S-520",
+          shape: "rect",
+          widthIn: 0.75,
+          heightIn: 0.75,
+          mm: { w: 20, h: 20 },
+          type: "Square Self-Inking Stamp",
+          details: "Black top, clear bottom",
+          replacementPad: "S-520-7",
+          unitCents: 2499,
+        },
+        {
+          label: "S-542",
+          shape: "rect",
+          widthIn: 1.625,
+          heightIn: 1.625,
+          mm: { w: 42, h: 42 },
+          type: "Square Self-Inking Stamp",
+          details: "Black top",
+          replacementPad: "S-542-7",
+          unitCents: 4499,
+        },
+        {
+          label: "R-512",
+          shape: "round",
+          diameterIn: 0.5,
+          mm: { d: 12 },
+          type: "Round Self-Inking Stamp",
+          details: "Black top",
+          replacementPad: "R-512-7",
+          unitCents: 1999,
+        },
+        {
+          label: "R-524",
+          shape: "round",
+          diameterIn: 1.0,
+          mm: { d: 24 },
+          type: "Round Self-Inking Stamp",
+          details: "Black top, clear bottom",
+          replacementPad: "R-524-7",
+          unitCents: 2799,
+        },
+        {
+          label: "R-532",
+          shape: "round",
+          diameterIn: 1.25,
+          mm: { d: 32 },
+          type: "Round Self-Inking Stamp",
+          details: "Black top",
+          replacementPad: "R-532-7",
+          unitCents: 3499,
+        },
+        {
+          label: "R-552",
+          shape: "round",
+          diameterIn: 2.0,
+          mm: { d: 52 },
+          type: "Round Self-Inking Stamp",
+          details: "Black top",
+          replacementPad: "R-552-7",
+          unitCents: 5999,
+        },
+      ],
+    },
+    // Mirror sizes at top-level so /api/quote fallback can find them even if editor wrapper changes.
+    sizes: [
+      { label: "S-827", unitCents: 3999 },
+      { label: "S-510", unitCents: 1999 },
+      { label: "S-520", unitCents: 2499 },
+      { label: "S-542", unitCents: 4499 },
+      { label: "R-512", unitCents: 1999 },
+      { label: "R-524", unitCents: 2799 },
+      { label: "R-532", unitCents: 3499 },
+      { label: "R-552", unitCents: 5999 },
+    ],
+  },
+};
 // ==========================================
 
 const stickerList = [
@@ -153,6 +271,7 @@ const stickerList = [
       config: { tiers: [{ upTo: 500, rate: 0.055 }, { upTo: 99999, rate: 0.035 }] }
     }
   }
+
 ];
 
 const signList = [
@@ -478,6 +597,9 @@ export const PRODUCTS = [
   { category:"large-format-graphics", product:"lf-floor-graphics", name:"Floor Graphics 地面贴", description:"Durable floor decals for wayfinding and promos.", status:"draft", config:{ minimumPrice:0 } },
   { category:"large-format-graphics", product:"wall-graphics", name:"Wall Graphics 墙贴", description:"Wall decals and murals for offices and retail interiors.", status:"draft", config:{ minimumPrice:0 } },
   { category:"large-format-graphics", product:"car-graphics", name:"Car Graphics 车贴", description:"Vehicle graphics for branding, fleets, and wraps (quote for full wrap).", status:"draft", config:{ minimumPrice:0 } },
+
+  // ===== STAMPS (marketing-prints) =====
+  PROD_SELF_INKING_STAMPS,
 ];
 
 const seen = new Set();

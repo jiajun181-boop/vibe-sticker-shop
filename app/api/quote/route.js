@@ -1,12 +1,59 @@
 // app/api/quote/route.js
 // POST /api/quote — compute a price quote for a product.
-// Input:  { slug, quantity, widthIn?, heightIn?, material?, sizeLabel?, addons? }
+// Input:  { slug, quantity, widthIn?, heightIn?, material?, sizeLabel?, addons?, finishings? }
 // Output: { totalCents, currency, breakdown[], meta, unitCents }
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { computeQuote, normalizeInput } from "@/lib/pricing";
 import { validateDimensions } from "@/lib/materialLimits";
+
+function getOptionsMaterialMultiplier(optionsConfig, materialId) {
+  if (!materialId || !optionsConfig || typeof optionsConfig !== "object") return 1.0;
+  const mats = Array.isArray(optionsConfig.materials) ? optionsConfig.materials : [];
+  const lower = materialId.toLowerCase();
+  const mat = mats.find(
+    (m) => m && typeof m === "object" && (m.id === materialId || m.name?.toLowerCase() === lower)
+  );
+  return mat && typeof mat.multiplier === "number" ? mat.multiplier : 1.0;
+}
+
+function getLegacyDiscount(qty) {
+  if (qty >= 1000) return 0.82;
+  if (qty >= 500) return 0.88;
+  if (qty >= 250) return 0.93;
+  if (qty >= 100) return 0.97;
+  return 1;
+}
+
+function computeAddonsCents(product, input) {
+  // add-ons (flat/per_unit) for options-based products
+  let addonsCents = 0;
+  const qty = input.quantity;
+  const selectedAddons = Array.isArray(input.addons) ? input.addons : [];
+  const addonDefs =
+    product.optionsConfig && typeof product.optionsConfig === "object" && Array.isArray(product.optionsConfig.addons)
+      ? product.optionsConfig.addons
+      : [];
+
+  for (const addonId of selectedAddons) {
+    const def = addonDefs.find((a) => a && typeof a === "object" && a.id === addonId);
+    if (!def) continue;
+    const cents =
+      typeof def.unitCents === "number"
+        ? Math.round(def.unitCents)
+        : typeof def.priceCents === "number"
+          ? Math.round(def.priceCents)
+          : typeof def.price === "number"
+            ? Math.round(def.price * 100)
+            : 0;
+    const type = def.type || "per_unit";
+    if (type === "flat") addonsCents += cents;
+    else addonsCents += cents * qty;
+  }
+
+  return addonsCents;
+}
 
 export async function POST(req) {
   try {
@@ -62,16 +109,80 @@ export async function POST(req) {
         sizes.find((s) => s && typeof s === "object" && s.label === input.sizeLabel) ||
         sizes.find((s) => s && typeof s === "object" && s.id === input.sizeLabel);
 
-      const unitCents =
-        match && typeof match.unitCents === "number"
-          ? Math.round(match.unitCents)
-          : match && typeof match.unitPriceCents === "number"
-            ? Math.round(match.unitPriceCents)
-            : null;
+      let unitCents = null;
+      const qty = input.quantity;
+
+      // 0) Exact total pricing by quantity (avoids rounding issues for per-unit cents)
+      if (match && match.priceByQty && typeof match.priceByQty === "object") {
+        const baseTotalRaw = match.priceByQty[String(qty)];
+        const baseTotalCents =
+          typeof baseTotalRaw === "number" && Number.isFinite(baseTotalRaw) ? Math.round(baseTotalRaw) : null;
+
+        if (baseTotalCents != null && baseTotalCents > 0) {
+          const addonsCents = computeAddonsCents(product, input);
+          const totalCents = baseTotalCents + addonsCents;
+          const displayUnitCents = Math.round(totalCents / qty);
+
+          return NextResponse.json({
+            totalCents,
+            currency: "CAD",
+            breakdown: [
+              {
+                label: `${qty} pcs @ ${(displayUnitCents / 100).toFixed(2)}/ea (size: ${input.sizeLabel})`,
+                amount: baseTotalCents,
+              },
+              ...(addonsCents > 0 ? [{ label: "Selected add-ons", amount: addonsCents }] : []),
+            ],
+            meta: { model: "OPTIONS_EXACT_QTY", sizeLabel: input.sizeLabel, addonsCents },
+            unitCents: displayUnitCents,
+          });
+        }
+      }
+
+      // 1) Tiered size pricing (qty-based)
+      if (match && Array.isArray(match.tiers) && match.tiers.length > 0) {
+        const tiers = [...match.tiers]
+          .filter((tier) => tier && typeof tier === "object")
+          .map((tier) => ({
+            minQty: Number(tier.minQty ?? tier.qty ?? 0),
+            unitCents:
+              typeof tier.unitCents === "number"
+                ? Math.round(tier.unitCents)
+                : typeof tier.unitPriceCents === "number"
+                  ? Math.round(tier.unitPriceCents)
+                  : null,
+          }))
+          .filter((tier) => Number.isFinite(tier.minQty) && tier.unitCents != null && tier.unitCents > 0)
+          .sort((a, b) => a.minQty - b.minQty);
+
+        if (tiers.length > 0) {
+          let selected = tiers[0];
+          for (const tier of tiers) {
+            if (qty >= tier.minQty) selected = tier;
+          }
+          unitCents = selected.unitCents;
+        }
+      }
+
+      // 2) Flat per-size unit
+      if (unitCents == null) {
+        unitCents =
+          match && typeof match.unitCents === "number"
+            ? Math.round(match.unitCents)
+            : match && typeof match.unitPriceCents === "number"
+              ? Math.round(match.unitPriceCents)
+              : null;
+      }
+
+      // 3) Size multiplier on legacy basePrice
+      if (unitCents == null && match && typeof match.sizeMultiplier === "number" && product.basePrice > 0) {
+        const discount = getLegacyDiscount(qty);
+        unitCents = Math.max(1, Math.round(product.basePrice * Number(match.sizeMultiplier) * discount));
+      }
 
       if (unitCents != null && Number.isFinite(unitCents) && unitCents > 0) {
-        const qty = input.quantity;
-        const totalCents = unitCents * qty;
+        const addonsCents = computeAddonsCents(product, input);
+        const totalCents = unitCents * qty + addonsCents;
 
         return NextResponse.json({
           totalCents,
@@ -79,10 +190,11 @@ export async function POST(req) {
           breakdown: [
             {
               label: `${qty} pcs @ ${(unitCents / 100).toFixed(2)}/ea (size: ${input.sizeLabel})`,
-              amount: totalCents,
+              amount: unitCents * qty,
             },
+            ...(addonsCents > 0 ? [{ label: "Selected add-ons", amount: addonsCents }] : []),
           ],
-          meta: { model: "OPTIONS_SIZE", sizeLabel: input.sizeLabel },
+          meta: { model: "OPTIONS_SIZE", sizeLabel: input.sizeLabel, addonsCents },
           unitCents,
         });
       }
@@ -96,35 +208,37 @@ export async function POST(req) {
       }
     }
 
-    // Fallback: use legacy basePrice + simple tier discounts
+    // Fallback: use legacy basePrice + simple tier discounts + material multiplier
     const qty = input.quantity;
-    let discount = 1;
-    if (qty >= 1000) discount = 0.82;
-    else if (qty >= 500) discount = 0.88;
-    else if (qty >= 250) discount = 0.93;
-    else if (qty >= 100) discount = 0.97;
+    const discount = getLegacyDiscount(qty);
+    const matMul = getOptionsMaterialMultiplier(product.optionsConfig, input.material);
 
     const isPerSqft = product.pricingUnit === "per_sqft";
     let unitCents;
     if (isPerSqft && input.widthIn && input.heightIn) {
       const sqft = (input.widthIn * input.heightIn) / 144;
-      unitCents = Math.max(1, Math.round(product.basePrice * sqft * discount));
+      unitCents = Math.max(1, Math.round(product.basePrice * matMul * sqft * discount));
     } else {
-      unitCents = Math.max(1, Math.round(product.basePrice * discount));
+      unitCents = Math.max(1, Math.round(product.basePrice * matMul * discount));
     }
 
     const totalCents = unitCents * qty;
+    const breakdown = [
+      {
+        label: `${qty} pcs @ ${(unitCents / 100).toFixed(2)}/ea (legacy pricing)`,
+        amount: totalCents,
+      },
+    ];
+
+    if (matMul !== 1.0) {
+      breakdown.push({ label: `Material: ${input.material} (${matMul}x)`, amount: 0 });
+    }
 
     return NextResponse.json({
       totalCents,
       currency: "CAD",
-      breakdown: [
-        {
-          label: `${qty} pcs @ ${(unitCents / 100).toFixed(2)}/ea (legacy pricing)`,
-          amount: totalCents,
-        },
-      ],
-      meta: { model: "LEGACY", discount },
+      breakdown,
+      meta: { model: "LEGACY", discount, materialMultiplier: matMul },
       unitCents,
     });
   } catch (err) {

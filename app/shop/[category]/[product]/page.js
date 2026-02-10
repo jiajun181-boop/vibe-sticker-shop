@@ -44,6 +44,7 @@ export default async function ProductPage({ params }) {
     },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
+      pricingPreset: true,
     },
   });
 

@@ -43,7 +43,7 @@ const PRESETS = [
   },
   {
     key: "business_cards_default",
-    name: "Business Cards — Default",
+    name: "Paper Prints — Default",
     model: "QTY_OPTIONS",
     config: {
       sizes: [
@@ -93,6 +93,9 @@ const CATEGORY_TO_PRESET = {
   "marketing-prints": "business_cards_default",
   "business-forms": "business_cards_default",
   "retail-promo": "business_cards_default",
+
+  // AREA_TIERED — rigid substrate boards
+  "signs-boards": "rigid_sheets_default",
 };
 
 // ─── Main ───────────────────────────────────────────────

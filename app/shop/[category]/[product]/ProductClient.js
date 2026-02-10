@@ -24,17 +24,39 @@ const INCH_TO_CM = 2.54;
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-function parseMaterials(optionsConfig) {
+function parseMaterials(optionsConfig, presetConfig) {
+  // Priority: pricingPreset materials > optionsConfig materials
+  if (presetConfig && Array.isArray(presetConfig.materials) && presetConfig.materials.length > 0) {
+    return presetConfig.materials
+      .filter((m) => m && typeof m === "object" && m.id)
+      .map((m) => ({
+        id: m.id,
+        name: m.name || m.id,
+        multiplier: typeof m.multiplier === "number" ? m.multiplier : 1.0,
+      }));
+  }
   if (!optionsConfig || typeof optionsConfig !== "object") return [];
   const direct = Array.isArray(optionsConfig.materials) ? optionsConfig.materials : [];
-  const flattened = direct
+  return direct
     .map((item) => {
-      if (typeof item === "string") return item;
-      if (item && typeof item === "object" && typeof item.label === "string") return item.label;
+      if (typeof item === "string") return { id: item, name: item, multiplier: 1.0 };
+      if (item && typeof item === "object" && typeof item.label === "string")
+        return { id: item.id || item.label, name: item.label, multiplier: typeof item.multiplier === "number" ? item.multiplier : 1.0 };
       return null;
     })
     .filter(Boolean);
-  return flattened;
+}
+
+function parseFinishings(presetConfig) {
+  if (!presetConfig || !Array.isArray(presetConfig.finishings)) return [];
+  return presetConfig.finishings
+    .filter((f) => f && typeof f === "object" && f.id)
+    .map((f) => ({
+      id: f.id,
+      name: f.name || f.id,
+      type: f.type || "flat",
+      price: typeof f.price === "number" ? f.price : 0,
+    }));
 }
 
 function parseAddons(optionsConfig) {
@@ -65,6 +87,35 @@ function parseScenes(optionsConfig) {
     }));
 }
 
+function parseSizeOptions(optionsConfig) {
+  if (!optionsConfig || typeof optionsConfig !== "object") return [];
+  const sizes = Array.isArray(optionsConfig.sizes) ? optionsConfig.sizes : [];
+  return sizes
+    .filter((item) => item && typeof item === "object" && typeof item.label === "string")
+    .map((item) => ({
+      id: typeof item.id === "string" ? item.id : item.label,
+      label: item.label,
+      widthIn: typeof item.widthIn === "number" ? item.widthIn : null,
+      heightIn: typeof item.heightIn === "number" ? item.heightIn : null,
+      notes: typeof item.notes === "string" ? item.notes : "",
+      quantityChoices: Array.isArray(item.quantityChoices)
+        ? item.quantityChoices.map((q) => Number(q)).filter((q) => Number.isFinite(q) && q > 0)
+        : [],
+      priceByQty: item.priceByQty && typeof item.priceByQty === "object" ? item.priceByQty : null,
+    }));
+}
+
+function parseQuantityRange(optionsConfig) {
+  if (!optionsConfig || typeof optionsConfig !== "object") return null;
+  const q = optionsConfig.quantityRange;
+  if (!q || typeof q !== "object") return null;
+  const min = Number(q.min);
+  const max = Number(q.max);
+  const step = Number(q.step || 1);
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min <= 0 || max < min) return null;
+  return { min, max, step: Number.isFinite(step) && step > 0 ? step : 1 };
+}
+
 export default function ProductClient({ product, relatedProducts }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
@@ -82,9 +133,33 @@ export default function ProductClient({ product, relatedProducts }) {
   }, [movedFrom]);
 
   const isPerSqft = product.pricingUnit === "per_sqft";
-  const materials = parseMaterials(product.optionsConfig);
+  const presetConfig = product.pricingPreset?.config || null;
+  const materials = parseMaterials(product.optionsConfig, presetConfig);
+  const finishings = parseFinishings(presetConfig);
   const addons = parseAddons(product.optionsConfig);
   const scenes = parseScenes(product.optionsConfig);
+  const sizeOptions = parseSizeOptions(product.optionsConfig);
+  const quantityRange = parseQuantityRange(product.optionsConfig);
+  const envelopeVariantConfig = useMemo(() => {
+    const regex = /^(?<base>.+) - (?<color>Black Ink|Color)$/;
+    const variants = sizeOptions
+      .map((s) => {
+        const m = typeof s.label === "string" ? s.label.match(regex) : null;
+        if (!m?.groups?.base || !m?.groups?.color) return null;
+        return { base: m.groups.base, color: m.groups.color, option: s };
+      })
+      .filter(Boolean);
+
+    if (!variants.length) return { enabled: false, bases: [], byBase: {} };
+
+    const byBase = {};
+    for (const v of variants) {
+      if (!byBase[v.base]) byBase[v.base] = {};
+      byBase[v.base][v.color] = v.option;
+    }
+    const bases = Object.keys(byBase).sort((a, b) => a.localeCompare(b));
+    return { enabled: true, bases, byBase };
+  }, [sizeOptions]);
   const editorConfig = product.optionsConfig?.editor || null;
   const isTextEditor = editorConfig?.type === "text";
   const editorMode = editorConfig?.mode || "lettering"; // "lettering" | "box"
@@ -113,10 +188,14 @@ export default function ProductClient({ product, relatedProducts }) {
   const dimensionsEnabled = isPerSqft || isTextEditor;
 
   const [activeImage, setActiveImage] = useState(0);
-  const [quantity, setQuantity] = useState(100);
-  const [material, setMaterial] = useState(materials[0] || "Standard Vinyl");
+  const [quantity, setQuantity] = useState(quantityRange?.min || 100);
+  const [material, setMaterial] = useState(materials[0]?.id || "");
   const [sceneId, setSceneId] = useState(scenes[0]?.id || "");
   const [selectedAddons, setSelectedAddons] = useState([]);
+  const [selectedFinishings, setSelectedFinishings] = useState([]);
+  const [selectedSizeLabel, setSelectedSizeLabel] = useState(sizeOptions[0]?.label || "");
+  const [envelopeBaseLabel, setEnvelopeBaseLabel] = useState("");
+  const [envelopeColor, setEnvelopeColor] = useState("");
   const [unit, setUnit] = useState("in");
   const [widthIn, setWidthIn] = useState(product.minWidthIn || 3);
   const [heightIn, setHeightIn] = useState(product.minHeightIn || 3);
@@ -141,6 +220,64 @@ export default function ProductClient({ product, relatedProducts }) {
     () => scenes.find((scene) => scene.id === sceneId) || null,
     [scenes, sceneId]
   );
+  const selectedSize = useMemo(
+    () => sizeOptions.find((s) => s.label === selectedSizeLabel) || null,
+    [sizeOptions, selectedSizeLabel]
+  );
+  const envelopeColorOptions = useMemo(() => {
+    if (!envelopeVariantConfig.enabled) return [];
+    const options = envelopeVariantConfig.byBase[envelopeBaseLabel] || {};
+    return Object.keys(options).sort((a, b) => a.localeCompare(b));
+  }, [envelopeVariantConfig, envelopeBaseLabel]);
+
+  useEffect(() => {
+    if (!envelopeVariantConfig.enabled) return;
+
+    // Initialize base/color from current selected label when possible, else fallback to first available.
+    const regex = /^(?<base>.+) - (?<color>Black Ink|Color)$/;
+    const m = selectedSizeLabel ? selectedSizeLabel.match(regex) : null;
+    const nextBase =
+      m?.groups?.base && envelopeVariantConfig.byBase[m.groups.base]
+        ? m.groups.base
+        : envelopeVariantConfig.bases[0] || "";
+    const availableColors = nextBase ? Object.keys(envelopeVariantConfig.byBase[nextBase] || {}) : [];
+    const nextColor =
+      m?.groups?.color && availableColors.includes(m.groups.color)
+        ? m.groups.color
+        : availableColors.includes("Black Ink")
+          ? "Black Ink"
+          : availableColors[0] || "";
+
+    if (nextBase && envelopeBaseLabel !== nextBase) setEnvelopeBaseLabel(nextBase);
+    if (nextColor && envelopeColor !== nextColor) setEnvelopeColor(nextColor);
+
+    const resolved = nextBase && nextColor ? envelopeVariantConfig.byBase[nextBase]?.[nextColor]?.label : null;
+    if (resolved && selectedSizeLabel !== resolved) setSelectedSizeLabel(resolved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [envelopeVariantConfig.enabled, envelopeVariantConfig.bases.length]);
+
+  useEffect(() => {
+    if (!envelopeVariantConfig.enabled) return;
+    if (!envelopeBaseLabel || !envelopeColor) return;
+    const resolved = envelopeVariantConfig.byBase[envelopeBaseLabel]?.[envelopeColor]?.label || "";
+    if (resolved && selectedSizeLabel !== resolved) setSelectedSizeLabel(resolved);
+  }, [envelopeVariantConfig, envelopeBaseLabel, envelopeColor, selectedSizeLabel]);
+  const activeQuantityChoices = useMemo(() => {
+    const fromSize = selectedSize?.quantityChoices || [];
+    if (Array.isArray(fromSize) && fromSize.length > 0) return [...new Set(fromSize)].sort((a, b) => a - b);
+
+    const global = Array.isArray(product.optionsConfig?.quantityChoices)
+      ? product.optionsConfig.quantityChoices.map((q) => Number(q)).filter((q) => Number.isFinite(q) && q > 0)
+      : [];
+
+    return [...new Set(global)].sort((a, b) => a - b);
+  }, [product.optionsConfig, selectedSize]);
+
+  useEffect(() => {
+    if (!activeQuantityChoices.length) return;
+    if (activeQuantityChoices.includes(quantity)) return;
+    setQuantity(activeQuantityChoices[0]);
+  }, [activeQuantityChoices, quantity]);
 
   // Server-driven pricing state
   const [quote, setQuote] = useState(null);
@@ -183,7 +320,7 @@ export default function ProductClient({ product, relatedProducts }) {
 
   // Debounced /api/quote fetch (300ms)
   const fetchQuote = useCallback(
-    async (slug, qty, w, h, mat, sizeLabel, addonIds) => {
+    async (slug, qty, w, h, mat, sizeLabel, addonIds, finishingIds) => {
       const body = { slug, quantity: qty };
       if (dimensionsEnabled) {
         body.widthIn = w;
@@ -192,6 +329,7 @@ export default function ProductClient({ product, relatedProducts }) {
       if (mat) body.material = mat;
       if (sizeLabel) body.sizeLabel = sizeLabel;
       if (Array.isArray(addonIds) && addonIds.length > 0) body.addons = addonIds;
+      if (Array.isArray(finishingIds) && finishingIds.length > 0) body.finishings = finishingIds;
 
       try {
         setQuoteLoading(true);
@@ -216,11 +354,15 @@ export default function ProductClient({ product, relatedProducts }) {
     if (!sizeValidation.valid) return;
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      const sizeLabel = isTextEditor && editorMode === "box" ? editorSizeLabel : null;
-      fetchQuote(product.slug, quantity, widthIn, heightIn, material, sizeLabel, selectedAddons);
+      const sizeLabel = isTextEditor && editorMode === "box"
+        ? editorSizeLabel
+        : sizeOptions.length > 0
+          ? selectedSizeLabel
+          : null;
+      fetchQuote(product.slug, quantity, widthIn, heightIn, material, sizeLabel, selectedAddons, selectedFinishings);
     }, 300);
     return () => clearTimeout(debounceRef.current);
-  }, [product.slug, quantity, widthIn, heightIn, material, selectedAddons, editorSizeLabel, isTextEditor, editorMode, sizeValidation.valid, fetchQuote]);
+  }, [product.slug, quantity, widthIn, heightIn, material, selectedAddons, selectedFinishings, editorSizeLabel, selectedSizeLabel, sizeOptions.length, isTextEditor, editorMode, sizeValidation.valid, fetchQuote]);
 
   // Scene presets for banner families (material + common size + addon defaults).
   useEffect(() => {
@@ -307,7 +449,7 @@ export default function ProductClient({ product, relatedProducts }) {
   }, [quote, quantity, product.basePrice, widthIn, heightIn, isPerSqft]);
 
   // Tier rows — quick client estimates for the tier table
-  const tierRows = useMemo(
+  const estimateTierRows = useMemo(
     () =>
       PRESET_QUANTITIES.map((q) => {
         const base = dimensionsEnabled
@@ -323,6 +465,45 @@ export default function ProductClient({ product, relatedProducts }) {
       }),
     [product.basePrice, dimensionsEnabled, widthIn, heightIn]
   );
+
+  const bulkRows = useMemo(() => {
+    const choices = selectedSize?.quantityChoices || [];
+    const priceByQty = selectedSize?.priceByQty;
+    if (priceByQty && typeof priceByQty === "object" && Array.isArray(choices) && choices.length > 0) {
+      const rows = [...new Set(choices)]
+        .filter((q) => Number.isFinite(q) && q > 0)
+        .sort((a, b) => a - b)
+        .map((qty) => {
+          const total = priceByQty[String(qty)];
+          const totalCents = typeof total === "number" && Number.isFinite(total) ? Math.round(total) : null;
+          if (totalCents == null || totalCents <= 0) return null;
+          return {
+            qty,
+            unitAmount: Math.round(totalCents / qty),
+            totalAmount: totalCents,
+            exact: true,
+          };
+        })
+        .filter(Boolean);
+
+      if (rows.length > 0) return rows;
+    }
+
+    return estimateTierRows.map((r) => ({ ...r, exact: false }));
+  }, [selectedSize, estimateTierRows]);
+
+  const bulkExample = useMemo(() => {
+    if (!bulkRows.length) return null;
+    const first = bulkRows[0];
+    const last = bulkRows[bulkRows.length - 1];
+    if (!first || !last || first.qty === last.qty) return null;
+    return {
+      minQty: first.qty,
+      minUnit: formatCad(first.unitAmount),
+      maxQty: last.qty,
+      maxUnit: formatCad(last.unitAmount),
+    };
+  }, [bulkRows]);
 
   const specs = [
     [t("product.spec.productType"), product.type],
@@ -349,6 +530,42 @@ export default function ProductClient({ product, relatedProducts }) {
     const inValue = unit === "in" ? n : n / INCH_TO_CM;
     if (type === "w") setWidthIn(Number(inValue.toFixed(2)));
     if (type === "h") setHeightIn(Number(inValue.toFixed(2)));
+  }
+
+  function setQuantityValue(next) {
+    const choices = activeQuantityChoices;
+    if (Array.isArray(choices) && choices.length > 0) {
+      const numeric = Number(next);
+      if (!Number.isFinite(numeric)) {
+        setQuantity(choices[0]);
+        return;
+      }
+      if (choices.includes(numeric)) {
+        setQuantity(numeric);
+        return;
+      }
+      let nearest = choices[0];
+      let best = Math.abs(numeric - nearest);
+      for (const q of choices) {
+        const d = Math.abs(numeric - q);
+        if (d < best) {
+          best = d;
+          nearest = q;
+        }
+      }
+      setQuantity(nearest);
+      return;
+    }
+
+    const range = quantityRange;
+    if (!range) {
+      setQuantity(Math.max(1, Number(next) || 1));
+      return;
+    }
+    const numeric = Number(next) || range.min;
+    const clamped = Math.min(range.max, Math.max(range.min, numeric));
+    const stepped = Math.round(clamped / range.step) * range.step;
+    setQuantity(Math.min(range.max, Math.max(range.min, stepped)));
   }
 
   const canAddToCart = sizeValidation.valid;
@@ -401,9 +618,11 @@ export default function ProductClient({ product, relatedProducts }) {
         width: dimensionsEnabled ? widthIn : null,
         height: dimensionsEnabled ? heightIn : null,
         material,
+        sizeLabel: selectedSize?.label || null,
         sceneId: selectedScene?.id || null,
         sceneLabel: selectedScene?.label || null,
         addons: selectedAddons,
+        finishings: selectedFinishings,
         fileName: file?.name || null,
         pricingUnit: product.pricingUnit,
         ...artworkMeta,
@@ -415,9 +634,11 @@ export default function ProductClient({ product, relatedProducts }) {
         width: dimensionsEnabled ? widthIn : null,
         height: dimensionsEnabled ? heightIn : null,
         material,
+        sizeLabel: selectedSize?.label || null,
         sceneId: selectedScene?.id || null,
         sceneLabel: selectedScene?.label || null,
         addons: selectedAddons,
+        finishings: selectedFinishings,
         fileName: file?.name || null,
         pricingUnit: product.pricingUnit,
         ...artworkMeta,
@@ -779,12 +1000,63 @@ export default function ProductClient({ product, relatedProducts }) {
                 </div>
               )}
 
+              {!isTextEditor && sizeOptions.length > 0 && (
+                <div className="mt-5 space-y-4">
+                  {envelopeVariantConfig.enabled ? (
+                    <>
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.size")}</label>
+                        <select
+                          value={envelopeBaseLabel}
+                          onChange={(e) => setEnvelopeBaseLabel(e.target.value)}
+                          className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                        >
+                          {envelopeVariantConfig.bases.map((base) => (
+                            <option key={base} value={base}>
+                              {base}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.color")}</label>
+                        <select
+                          value={envelopeColor}
+                          onChange={(e) => setEnvelopeColor(e.target.value)}
+                          className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                        >
+                          {envelopeColorOptions.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.size")}</label>
+                      <select value={selectedSizeLabel} onChange={(e) => setSelectedSizeLabel(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+                        {sizeOptions.map((s) => (
+                          <option key={s.id} value={s.label}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {selectedSize?.notes && <p className="text-xs text-gray-500">{selectedSize.notes}</p>}
+                </div>
+              )}
+
               {materials.length > 0 && (
                 <div className="mt-5">
                   <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.material")}</label>
                   <select value={material} onChange={(e) => setMaterial(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
                     {materials.map((m) => (
-                      <option key={m} value={m}>{m}</option>
+                      <option key={m.id} value={m.id}>
+                        {m.name}{m.multiplier !== 1.0 ? ` (+${Math.round((m.multiplier - 1) * 100)}%)` : ""}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -818,20 +1090,110 @@ export default function ProductClient({ product, relatedProducts }) {
                 </div>
               )}
 
+              {finishings.length > 0 && (
+                <div className="mt-5 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.finishing")}</p>
+                  <div className="space-y-2">
+                    {finishings.map((f) => (
+                      <label key={f.id} className="flex cursor-pointer items-start gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedFinishings.includes(f.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedFinishings((prev) => [...prev, f.id]);
+                            } else {
+                              setSelectedFinishings((prev) => prev.filter((id) => id !== f.id));
+                            }
+                          }}
+                          className="mt-0.5"
+                        />
+                        <span className="flex-1">
+                          <span className="font-medium text-gray-900">{f.name}</span>
+                          <span className="block text-xs text-gray-500">
+                            {f.type === "flat" ? `$${f.price.toFixed(2)} flat` : f.type === "per_unit" ? `$${f.price.toFixed(2)}/unit` : `$${f.price.toFixed(2)}/sqft`}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.quantity")}</p>
-                <div className="mt-2 flex items-center gap-2">
-                  <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="h-9 w-9 rounded-full border border-gray-300">-</button>
-                  <input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))} className="w-20 rounded-xl border border-gray-300 px-3 py-2 text-center text-sm" />
-                  <button onClick={() => setQuantity((q) => q + 1)} className="h-9 w-9 rounded-full border border-gray-300">+</button>
-                </div>
+                {activeQuantityChoices.length > 0 ? (
+                  <div className="mt-2 flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        const idx = activeQuantityChoices.indexOf(quantity);
+                        const next = idx > 0 ? activeQuantityChoices[idx - 1] : activeQuantityChoices[0];
+                        setQuantityValue(next);
+                      }}
+                      className="h-9 w-9 rounded-full border border-gray-300"
+                    >
+                      -
+                    </button>
+                    <select
+                      value={String(quantity)}
+                      onChange={(e) => setQuantityValue(Number(e.target.value))}
+                      className="w-32 rounded-xl border border-gray-300 px-3 py-2 text-center text-sm"
+                    >
+                      {activeQuantityChoices.map((q) => (
+                        <option key={q} value={q}>
+                          {q}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        const idx = activeQuantityChoices.indexOf(quantity);
+                        const next =
+                          idx >= 0 && idx < activeQuantityChoices.length - 1
+                            ? activeQuantityChoices[idx + 1]
+                            : activeQuantityChoices[activeQuantityChoices.length - 1];
+                        setQuantityValue(next);
+                      }}
+                      className="h-9 w-9 rounded-full border border-gray-300"
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-2 flex items-center gap-2">
+                    <button onClick={() => setQuantityValue(quantity - (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-gray-300">-</button>
+                    <input type="number" value={quantity} onChange={(e) => setQuantityValue(e.target.value)} className="w-24 rounded-xl border border-gray-300 px-3 py-2 text-center text-sm" />
+                    <button onClick={() => setQuantityValue(quantity + (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-gray-300">+</button>
+                  </div>
+                )}
+                {activeQuantityChoices.length > 0 ? (
+                  <p className="mt-2 text-xs text-gray-500">
+                    {t("product.qtyChoices", { list: activeQuantityChoices.join(", ") })}
+                  </p>
+                ) : quantityRange ? (
+                  <p className="mt-2 text-xs text-gray-500">{t("product.qtyRange", { min: quantityRange.min, max: quantityRange.max })}</p>
+                ) : null}
               </div>
 
               <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.tierPricing")}</p>
+                <p className="mt-2 text-xs text-gray-600">{t("product.bulkDiscountHint")}</p>
+                {bulkExample && (
+                  <p className="mt-1 text-xs text-gray-600">
+                    {t("product.bulkDiscountExample", {
+                      minQty: bulkExample.minQty,
+                      minUnit: bulkExample.minUnit,
+                      maxQty: bulkExample.maxQty,
+                      maxUnit: bulkExample.maxUnit,
+                    })}
+                  </p>
+                )}
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  {tierRows.map((row) => (
-                    <div key={row.qty} className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
+                  {bulkRows.map((row) => (
+                    <div
+                      key={row.qty}
+                      className={`flex items-center justify-between rounded-lg px-3 py-2 ${row.qty === quantity ? "bg-gray-900 text-white" : "bg-white"}`}
+                    >
                       <span>{row.qty}{t("product.pcs")}</span>
                       <span className="font-semibold">{formatCad(row.unitAmount)}</span>
                     </div>

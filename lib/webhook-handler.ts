@@ -106,7 +106,9 @@ export async function handleCheckoutCompleted(
           widthIn,
           heightIn,
           material: meta?.material || null,
-          finishing: meta?.finishing || null,
+          finishing: Array.isArray(meta?.finishings)
+            ? meta.finishings.join(", ")
+            : (meta?.finishing || null),
           meta,
           specsJson,
           fileKey,

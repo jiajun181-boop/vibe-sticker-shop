@@ -9,9 +9,6 @@ const BAR_COLORS = [
   "bg-teal-500", "bg-pink-500", "bg-lime-500",
 ];
 
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
-
 function formatCategoryName(slug) {
   return slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
@@ -20,7 +17,6 @@ export default function CatalogPage() {
   const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState(null);
 
@@ -70,13 +66,9 @@ export default function CatalogPage() {
 
   const { categories, mergeEdges, totals, catalogConfig } = data;
 
-  function toggle(name) {
-    setExpanded((prev) => ({ ...prev, [name]: !prev[name] }));
-  }
-
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-gray-900">{t("admin.catalog.title")}</h1>
+      <h1 className="text-lg font-semibold text-gray-900">{t("admin.nav.catalogSettings")}</h1>
 
       {/* Summary Cards */}
       <SummaryCards totals={totals} t={t} />
@@ -99,91 +91,6 @@ export default function CatalogPage() {
         />
       )}
 
-      {/* Per-category tables */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-900">{t("admin.catalog.productsByCategory")}</h2>
-        {categories.map((cat) => {
-          const isOpen = expanded[cat.name];
-          return (
-            <div key={cat.name} className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-              <button
-                type="button"
-                onClick={() => toggle(cat.name)}
-                className="flex w-full items-center justify-between px-5 py-4 hover:bg-gray-50"
-              >
-                <div className="flex items-center gap-3">
-                  <svg
-                    className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? "rotate-90" : ""}`}
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {formatCategoryName(cat.name)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-                    {t("admin.catalog.products", { count: cat.count })}
-                  </span>
-                  <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-                    {t("admin.catalog.activeCount", { count: cat.activeCount })}
-                  </span>
-                </div>
-              </button>
-
-              {isOpen && (
-                <div className="border-t border-gray-200">
-                  {/* Desktop table */}
-                  <div className="hidden overflow-x-auto lg:block">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-200 bg-gray-50">
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">{t("admin.catalog.slug")}</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">{t("admin.catalog.name")}</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">{t("admin.catalog.status")}</th>
-                          <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">{t("admin.catalog.basePrice")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {cat.products.map((p) => (
-                          <tr key={p.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 font-mono text-xs text-gray-500">{p.slug}</td>
-                            <td className="px-4 py-3 font-medium text-gray-900">{p.name}</td>
-                            <td className="px-4 py-3">
-                              <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${p.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
-                                {p.isActive ? t("admin.catalog.activeStatus") : t("admin.catalog.inactiveStatus")}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              <span className="font-semibold text-gray-900">{formatCad(p.basePrice)}</span>
-                              <span className="ml-1 text-xs text-gray-400">/{p.pricingUnit === "per_sqft" ? "sqft" : "pc"}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {/* Mobile cards */}
-                  <div className="divide-y divide-gray-100 lg:hidden">
-                    {cat.products.map((p) => (
-                      <div key={p.id} className="px-4 py-3">
-                        <p className="text-sm font-medium text-gray-900">{p.name}</p>
-                        <div className="mt-1 flex items-center gap-2 text-xs">
-                          <span className="font-semibold text-gray-900">{formatCad(p.basePrice)}</span>
-                          <span className={`rounded-full px-2 py-0.5 font-medium ${p.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
-                            {p.isActive ? t("admin.catalog.activeStatus") : t("admin.catalog.inactiveStatus")}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }

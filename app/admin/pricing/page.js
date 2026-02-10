@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const MODEL_LABELS = {
   AREA_TIERED: "Area Tiered ($/sqft)",
@@ -8,7 +9,130 @@ const MODEL_LABELS = {
   QTY_OPTIONS: "Qty + Options",
 };
 
+const FINISHING_TYPES = ["flat", "per_unit", "per_sqft"];
+
+function MaterialsEditor({ materials, onChange, t }) {
+  function addRow() {
+    onChange([...materials, { id: "", name: "", multiplier: 1.0 }]);
+  }
+  function removeRow(idx) {
+    onChange(materials.filter((_, i) => i !== idx));
+  }
+  function updateRow(idx, field, value) {
+    const next = [...materials];
+    next[idx] = { ...next[idx], [field]: field === "multiplier" ? (Number(value) || 1) : value };
+    onChange(next);
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="text-xs font-semibold text-gray-600 uppercase tracking-widest">{t("pricing.materials")}</span>
+          <p className="text-[11px] text-gray-400 mt-0.5">{t("pricing.materialsDesc")}</p>
+        </div>
+        <button type="button" onClick={addRow} className="text-xs text-blue-600 hover:underline">{t("pricing.addMaterial")}</button>
+      </div>
+      {materials.length > 0 && (
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="text-left text-gray-500">
+              <th className="pb-1 pr-2">ID</th>
+              <th className="pb-1 pr-2">{t("pricing.materialName")}</th>
+              <th className="pb-1 pr-2">{t("pricing.materialMultiplier")}</th>
+              <th className="pb-1 w-8"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {materials.map((m, i) => (
+              <tr key={i} className="border-t border-gray-100">
+                <td className="py-1 pr-2">
+                  <input value={m.id || ""} onChange={(e) => updateRow(i, "id", e.target.value)} className="w-full rounded border border-gray-300 px-2 py-1 text-xs" placeholder="e.g. vinyl_13oz" />
+                </td>
+                <td className="py-1 pr-2">
+                  <input value={m.name || ""} onChange={(e) => updateRow(i, "name", e.target.value)} className="w-full rounded border border-gray-300 px-2 py-1 text-xs" placeholder="13oz Vinyl" />
+                </td>
+                <td className="py-1 pr-2">
+                  <input type="number" step="0.01" min="0.1" value={m.multiplier ?? 1} onChange={(e) => updateRow(i, "multiplier", e.target.value)} className="w-20 rounded border border-gray-300 px-2 py-1 text-xs" />
+                </td>
+                <td className="py-1 text-center">
+                  <button type="button" onClick={() => removeRow(i)} className="text-red-400 hover:text-red-600 text-sm leading-none">&times;</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+function FinishingsEditor({ finishings, onChange, t }) {
+  function addRow() {
+    onChange([...finishings, { id: "", name: "", type: "flat", price: 0 }]);
+  }
+  function removeRow(idx) {
+    onChange(finishings.filter((_, i) => i !== idx));
+  }
+  function updateRow(idx, field, value) {
+    const next = [...finishings];
+    next[idx] = { ...next[idx], [field]: field === "price" ? (Number(value) || 0) : value };
+    onChange(next);
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="text-xs font-semibold text-gray-600 uppercase tracking-widest">{t("pricing.finishings")}</span>
+          <p className="text-[11px] text-gray-400 mt-0.5">{t("pricing.finishingsDesc")}</p>
+        </div>
+        <button type="button" onClick={addRow} className="text-xs text-blue-600 hover:underline">{t("pricing.addFinishing")}</button>
+      </div>
+      {finishings.length > 0 && (
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="text-left text-gray-500">
+              <th className="pb-1 pr-2">ID</th>
+              <th className="pb-1 pr-2">{t("pricing.finishingName")}</th>
+              <th className="pb-1 pr-2">{t("pricing.finishingType")}</th>
+              <th className="pb-1 pr-2">{t("pricing.finishingPrice")}</th>
+              <th className="pb-1 w-8"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {finishings.map((f, i) => (
+              <tr key={i} className="border-t border-gray-100">
+                <td className="py-1 pr-2">
+                  <input value={f.id || ""} onChange={(e) => updateRow(i, "id", e.target.value)} className="w-full rounded border border-gray-300 px-2 py-1 text-xs" placeholder="e.g. lamination" />
+                </td>
+                <td className="py-1 pr-2">
+                  <input value={f.name || ""} onChange={(e) => updateRow(i, "name", e.target.value)} className="w-full rounded border border-gray-300 px-2 py-1 text-xs" placeholder="Gloss Lamination" />
+                </td>
+                <td className="py-1 pr-2">
+                  <select value={f.type || "flat"} onChange={(e) => updateRow(i, "type", e.target.value)} className="w-full rounded border border-gray-300 px-2 py-1 text-xs bg-white">
+                    {FINISHING_TYPES.map((tp) => (
+                      <option key={tp} value={tp}>{t(`pricing.type${tp.charAt(0).toUpperCase()}${tp.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase())}`)}</option>
+                    ))}
+                  </select>
+                </td>
+                <td className="py-1 pr-2">
+                  <input type="number" step="0.01" min="0" value={f.price ?? 0} onChange={(e) => updateRow(i, "price", e.target.value)} className="w-20 rounded border border-gray-300 px-2 py-1 text-xs" />
+                </td>
+                <td className="py-1 text-center">
+                  <button type="button" onClick={() => removeRow(i)} className="text-red-400 hover:text-red-600 text-sm leading-none">&times;</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 export default function PricingPresetsPage() {
+  const { t } = useTranslation();
   const [presets, setPresets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // preset id being edited
@@ -16,6 +140,17 @@ export default function PricingPresetsPage() {
   const [editName, setEditName] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+
+  // Parsed config for structured editors (derived from editJson)
+  const parsedConfig = useMemo(() => {
+    try { return JSON.parse(editJson); } catch { return null; }
+  }, [editJson]);
+
+  function updateConfigField(field, value) {
+    if (!parsedConfig) return;
+    const next = { ...parsedConfig, [field]: value };
+    setEditJson(JSON.stringify(next, null, 2));
+  }
 
   useEffect(() => {
     fetchPresets();
@@ -186,7 +321,7 @@ export default function PricingPresetsPage() {
 
               {/* Editor */}
               {isEditing && (
-                <div className="border-t border-gray-200 px-5 py-4 space-y-3 bg-gray-50">
+                <div className="border-t border-gray-200 px-5 py-4 space-y-4 bg-gray-50">
                   <label className="block">
                     <span className="text-xs font-semibold text-gray-600 uppercase tracking-widest">
                       Preset Name
@@ -198,6 +333,24 @@ export default function PricingPresetsPage() {
                       className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                     />
                   </label>
+
+                  {/* Structured editors for materials & finishings */}
+                  {parsedConfig && (
+                    <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">
+                      <MaterialsEditor
+                        materials={Array.isArray(parsedConfig.materials) ? parsedConfig.materials : []}
+                        onChange={(mats) => updateConfigField("materials", mats)}
+                        t={t}
+                      />
+                      <div className="border-t border-gray-100" />
+                      <FinishingsEditor
+                        finishings={Array.isArray(parsedConfig.finishings) ? parsedConfig.finishings : []}
+                        onChange={(fins) => updateConfigField("finishings", fins)}
+                        t={t}
+                      />
+                    </div>
+                  )}
+
                   <label className="block">
                     <span className="text-xs font-semibold text-gray-600 uppercase tracking-widest">
                       Config JSON

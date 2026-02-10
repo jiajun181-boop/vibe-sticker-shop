@@ -5,27 +5,55 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
-const mainNav = [
-  { key: "admin.nav.dashboard", href: "/admin", icon: "grid" },
-  { key: "admin.nav.orders", href: "/admin/orders", icon: "package" },
-  { key: "admin.nav.products", href: "/admin/products", icon: "tag" },
-  { key: "admin.nav.production", href: "/admin/production", icon: "printer" },
-  { key: "admin.nav.factories", href: "/admin/factories", icon: "factory" },
-  { key: "admin.nav.customers", href: "/admin/customers", icon: "users" },
+const navGroups = [
+  {
+    labelKey: "admin.navGroup.overview",
+    items: [
+      { key: "admin.nav.dashboard", href: "/admin", icon: "grid" },
+    ],
+  },
+  {
+    labelKey: "admin.navGroup.orders",
+    items: [
+      { key: "admin.nav.orders", href: "/admin/orders", icon: "package" },
+      { key: "admin.nav.customers", href: "/admin/customers", icon: "users" },
+      { key: "admin.nav.coupons", href: "/admin/coupons", icon: "ticket" },
+    ],
+  },
+  {
+    labelKey: "admin.navGroup.products",
+    items: [
+      { key: "admin.nav.allProducts", href: "/admin/products", icon: "tag" },
+      { key: "admin.nav.catalogSettings", href: "/admin/catalog", icon: "catalog" },
+      { key: "admin.nav.pricing", href: "/admin/pricing", icon: "pricing" },
+    ],
+  },
+  {
+    labelKey: "admin.navGroup.fulfillment",
+    items: [
+      { key: "admin.nav.production", href: "/admin/production", icon: "printer" },
+      { key: "admin.nav.factories", href: "/admin/factories", icon: "factory" },
+    ],
+  },
+  {
+    labelKey: "admin.navGroup.insights",
+    items: [
+      { key: "admin.nav.analytics", href: "/admin/analytics", icon: "chart" },
+      { key: "admin.nav.salesReport", href: "/admin/reports/sales", icon: "report" },
+      { key: "admin.nav.productionReport", href: "/admin/reports/production", icon: "report" },
+    ],
+  },
+  {
+    labelKey: "admin.navGroup.system",
+    items: [
+      { key: "admin.nav.media", href: "/admin/media", icon: "image" },
+      { key: "admin.nav.activityLog", href: "/admin/logs", icon: "clock" },
+      { key: "admin.nav.settings", href: "/admin/settings", icon: "cog" },
+    ],
+  },
 ];
 
-const toolsNav = [
-  { key: "admin.nav.analytics", href: "/admin/analytics", icon: "chart" },
-  { key: "admin.nav.reports", href: "/admin/reports/sales", icon: "report" },
-  { key: "admin.nav.catalog", href: "/admin/catalog", icon: "catalog" },
-  { key: "admin.nav.pricing", href: "/admin/pricing", icon: "pricing" },
-  { key: "admin.nav.coupons", href: "/admin/coupons", icon: "ticket" },
-  { key: "admin.nav.media", href: "/admin/media", icon: "image" },
-  { key: "admin.nav.activityLog", href: "/admin/logs", icon: "clock" },
-  { key: "admin.nav.settings", href: "/admin/settings", icon: "cog" },
-];
-
-const allNav = [...mainNav, ...toolsNav];
+const allNav = navGroups.flatMap((g) => g.items);
 
 function NavIcon({ name, className }) {
   const icons = {
@@ -149,43 +177,30 @@ export default function AdminLayout({ children }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <div className="space-y-1">
-            {mainNav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive(item.href)
-                    ? "bg-gray-800 text-white"
-                    : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-200"
-                }`}
-              >
-                <NavIcon name={item.icon} className="h-5 w-5" />
-                {t(item.key)}
-              </Link>
-            ))}
-          </div>
-
-          <div className="my-3 border-t border-gray-800" />
-
-          <div className="space-y-1">
-            {toolsNav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive(item.href)
-                    ? "bg-gray-800 text-white"
-                    : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-200"
-                }`}
-              >
-                <NavIcon name={item.icon} className="h-4.5 w-4.5" />
-                {t(item.key)}
-              </Link>
-            ))}
-          </div>
+          {navGroups.map((group, gi) => (
+            <div key={group.labelKey}>
+              <p className={`px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 ${gi === 0 ? "pt-0" : "pt-4"}`}>
+                {t(group.labelKey)}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      isActive(item.href)
+                        ? "bg-gray-800 text-white"
+                        : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-200"
+                    }`}
+                  >
+                    <NavIcon name={item.icon} className="h-4.5 w-4.5" />
+                    {t(item.key)}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
         </nav>
 
         <div className="border-t border-gray-800 p-3">
