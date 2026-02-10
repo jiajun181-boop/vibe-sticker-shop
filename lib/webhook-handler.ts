@@ -3,6 +3,15 @@ import Stripe from "stripe";
 import { validateAmountReconciliation } from "./calculate-order-totals";
 import { applyAssignmentRules } from "./assignment-rules";
 
+function toNumberOrNull(v: unknown) {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string") {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
 export async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session
 ) {
@@ -61,20 +70,46 @@ export async function handleCheckoutCompleted(
 
     // Create order items
     for (const item of items) {
+      const meta = item?.meta && typeof item.meta === "object" ? item.meta : null;
+      const widthIn = toNumberOrNull(meta?.width);
+      const heightIn = toNumberOrNull(meta?.height);
+
+      const fileUrl = meta?.artworkUrl || meta?.fileUrl || null;
+      const fileKey = meta?.artworkKey || meta?.fileKey || null;
+      const fileName = meta?.artworkName || meta?.fileName || null;
+
+      const specsJson =
+        meta?.editorType === "text"
+          ? {
+              editor: {
+                type: "text",
+                text: meta?.editorText || "",
+                font: meta?.editorFont || "",
+                color: meta?.editorColor || "",
+                widthIn,
+                heightIn,
+              },
+            }
+          : null;
+
       await tx.orderItem.create({
         data: {
           orderId: newOrder.id,
           productId: item.productId || null,
-          productName: item.name,
-          productType: "custom",
+          productName: item.name || item.productName || "Item",
+          productType: item.productType || "custom",
           quantity: item.quantity,
           unitPrice: item.unitAmount,
           totalPrice: item.unitAmount * item.quantity,
-          widthIn: item.meta?.width || null,
-          heightIn: item.meta?.height || null,
-          material: item.meta?.material || null,
-          finishing: item.meta?.finishing || null,
-          meta: item.meta || null,
+          widthIn,
+          heightIn,
+          material: meta?.material || null,
+          finishing: meta?.finishing || null,
+          meta,
+          specsJson,
+          fileKey,
+          fileUrl,
+          fileName,
         },
       });
     }

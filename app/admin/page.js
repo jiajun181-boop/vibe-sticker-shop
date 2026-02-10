@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -17,6 +18,7 @@ const statusColors = {
 };
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,7 +33,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-sm text-gray-500">Loading...</div>
+        <div className="text-sm text-gray-500">{t("admin.dashboard.loading")}</div>
       </div>
     );
   }
@@ -39,34 +41,34 @@ export default function AdminDashboard() {
   if (!stats) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-sm text-red-500">Failed to load dashboard data</div>
+        <div className="text-sm text-red-500">{t("admin.dashboard.loadFailed")}</div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
+      <h1 className="text-xl font-semibold text-gray-900">{t("admin.dashboard.title")}</h1>
 
       {/* Stats cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Today's Orders"
+          label={t("admin.dashboard.todayOrders")}
           value={stats.todayOrders}
           color="blue"
         />
         <StatCard
-          label="Pending Orders"
+          label={t("admin.dashboard.pendingOrders")}
           value={stats.pendingOrders}
           color="yellow"
         />
         <StatCard
-          label="Monthly Revenue"
+          label={t("admin.dashboard.monthRevenue")}
           value={formatCad(stats.monthRevenue)}
           color="green"
         />
         <StatCard
-          label="Total Orders"
+          label={t("admin.dashboard.totalOrders")}
           value={stats.totalOrders}
           color="gray"
         />
@@ -75,18 +77,18 @@ export default function AdminDashboard() {
       {/* Recent orders */}
       <div className="rounded-xl border border-gray-200 bg-white">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-          <h2 className="text-sm font-semibold text-gray-900">Recent Orders</h2>
+          <h2 className="text-sm font-semibold text-gray-900">{t("admin.dashboard.recentOrders")}</h2>
           <Link
             href="/admin/orders"
             className="text-xs font-medium text-blue-600 hover:text-blue-800"
           >
-            View All
+            {t("admin.dashboard.viewAll")}
           </Link>
         </div>
 
         {stats.recentOrders.length === 0 ? (
           <div className="px-5 py-8 text-center text-sm text-gray-500">
-            No orders yet
+            {t("admin.dashboard.noOrders")}
           </div>
         ) : (
           <div className="divide-y divide-gray-100">

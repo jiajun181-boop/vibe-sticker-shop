@@ -1,14 +1,21 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const STORAGE_KEY = "vibe-promo-dismissed";
 
 export default function PromoBar() {
-  const [hidden, setHidden] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(STORAGE_KEY) === "true";
-  });
+  const { t } = useTranslation();
+
+  // Hydration-safe: always start false (matching SSR), then check localStorage in useEffect
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem(STORAGE_KEY) === "true") {
+      setHidden(true);
+    }
+  }, []);
 
   const handleClose = () => {
     localStorage.setItem(STORAGE_KEY, "true");
@@ -20,7 +27,7 @@ export default function PromoBar() {
   return (
     <div className="sticky top-0 z-[60] w-full bg-gray-900 text-white">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-2 text-xs sm:text-sm">
-        <p className="font-medium">New Customer Special: 15% OFF Your First Order | Use Code: FIRST15</p>
+        <p className="font-medium">{t("promo.text")}</p>
         <button
           type="button"
           onClick={handleClose}

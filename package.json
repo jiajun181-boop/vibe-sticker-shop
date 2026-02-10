@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "export:catalog-map": "node scripts/export-catalog-map.mjs",
+    "export:catalog": "node scripts/export-catalog.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",

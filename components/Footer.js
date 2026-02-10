@@ -1,49 +1,52 @@
-﻿import Link from "next/link";
+import Link from "next/link";
+import { createT } from "@/lib/i18n";
 
-const columns = [
-  {
-    title: "About",
-    links: [
-      { label: "Company", href: "/about" },
-      { label: "Our Story", href: "/about" },
-      { label: "Careers", href: "/about" },
-    ],
-  },
-  {
-    title: "Products",
-    links: [
-      { label: "Stickers", href: "/shop" },
-      { label: "Labels", href: "/shop" },
-      { label: "Signage", href: "/shop" },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
-      { label: "Templates", href: "/about" },
-      { label: "Specs", href: "/about" },
-      { label: "FAQ", href: "/about" },
-    ],
-  },
-  {
-    title: "Support",
-    links: [
-      { label: "Contact", href: "/contact" },
-      { label: "Order Status", href: "/contact" },
-      { label: "Shipping", href: "/contact" },
-    ],
-  },
-  {
-    title: "Contact",
-    links: [
-      { label: "support@vibestickers.com", href: "mailto:support@vibestickers.com" },
-      { label: "+1 (416) 555-0199", href: "tel:+14165550199" },
-      { label: "Toronto, ON", href: "/about" },
-    ],
-  },
-];
+export default function Footer({ locale = "en" }) {
+  const t = createT(locale);
 
-export default function Footer() {
+  const columns = [
+    {
+      title: t("footer.about"),
+      links: [
+        { label: t("footer.company"), href: "/about" },
+        { label: t("footer.ourStory"), href: "/about" },
+        { label: t("footer.careers"), href: "/about" },
+      ],
+    },
+    {
+      title: t("footer.products"),
+      links: [
+        { label: t("footer.stickers"), href: "/shop" },
+        { label: t("footer.labels"), href: "/shop" },
+        { label: t("footer.signage"), href: "/shop" },
+      ],
+    },
+    {
+      title: t("footer.resources"),
+      links: [
+        { label: t("footer.templates"), href: "/about" },
+        { label: t("footer.specs"), href: "/about" },
+        { label: t("footer.faq"), href: "/about" },
+      ],
+    },
+    {
+      title: t("footer.support"),
+      links: [
+        { label: t("footer.contact"), href: "/contact" },
+        { label: t("footer.orderStatus"), href: "/contact" },
+        { label: t("footer.shipping"), href: "/contact" },
+      ],
+    },
+    {
+      title: t("footer.contact"),
+      links: [
+        { label: "support@vibestickers.com", href: "mailto:support@vibestickers.com" },
+        { label: "+1 (416) 555-0199", href: "tel:+14165550199" },
+        { label: "Toronto, ON", href: "/about" },
+      ],
+    },
+  ];
+
   return (
     <footer className="bg-gray-900 text-gray-200">
       <div className="mx-auto w-full max-w-6xl px-6 py-12">
@@ -73,7 +76,7 @@ export default function Footer() {
             <span className="rounded-md border border-gray-700 px-2 py-1">Amex</span>
             <span className="rounded-md border border-gray-700 px-2 py-1">PayPal</span>
           </div>
-          <p>© {new Date().getFullYear()} Vibe Sticker Shop. All rights reserved.</p>
+          <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
         </div>
       </div>
     </footer>

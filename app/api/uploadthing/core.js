@@ -10,4 +10,14 @@ export const ourFileRouter = {
       console.log("file url", file.url);
       return { uploadedBy: metadata?.userId };
     }),
+
+  // Artwork upload (image/pdf) for quotes & orders.
+  artworkUploader: f({
+    image: { maxFileSize: "16MB", maxFileCount: 1 },
+    pdf: { maxFileSize: "16MB", maxFileCount: 1 },
+  }).onUploadComplete(async ({ metadata, file }) => {
+    console.log("Artwork upload complete for userId:", metadata?.userId);
+    console.log("file url", file.url);
+    return { uploadedBy: metadata?.userId };
+  }),
 };

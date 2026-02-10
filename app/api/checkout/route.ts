@@ -6,18 +6,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-01-28.clover",
 });
 
+const MetaSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
+
 const CartItemSchema = z.object({
   productId: z.string(),
   slug: z.string(),
   name: z.string(),
   unitAmount: z.number().int().nonnegative(),
   quantity: z.number().int().positive(),
-  meta: z.object({
-    width: z.number().optional(),
-    height: z.number().optional(),
-    material: z.string().optional(),
-    finishing: z.string().optional(),
-  }).optional(),
+  meta: MetaSchema.optional(),
 });
 
 const CheckoutSchema = z.object({
@@ -69,22 +66,29 @@ export async function POST(req: Request) {
 
     // 3. Prepare Line Items for Stripe
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map(
-      (item) => ({
-        price_data: {
-          currency: "cad",
-          product_data: {
-            name: item.name,
-            metadata: {
-              productId: item.productId,
-              slug: item.slug,
-              ...item.meta,
+      (item) => {
+        const meta = item.meta || {};
+        const stripeMeta: Record<string, string> = Object.fromEntries(
+          Object.entries(meta).map(([k, v]) => [k, String(v)])
+        );
+
+        return {
+          price_data: {
+            currency: "cad",
+            product_data: {
+              name: item.name,
+              metadata: {
+                productId: String(item.productId),
+                slug: String(item.slug),
+                ...stripeMeta,
+              },
             },
+            unit_amount: item.unitAmount,
+            tax_behavior: "exclusive", // Tax is added on top
           },
-          unit_amount: item.unitAmount,
-          tax_behavior: "exclusive", // Tax is added on top
-        },
-        quantity: item.quantity,
-      })
+          quantity: item.quantity,
+        };
+      }
     );
 
     // 4. Create Stripe Checkout Session
@@ -128,10 +132,16 @@ export async function POST(req: Request) {
         items: JSON.stringify(
           items.map((item) => ({
             productId: item.productId,
+            slug: item.slug,
+            name: item.name,
             quantity: item.quantity,
             unitAmount: item.unitAmount,
+            meta: item.meta || null,
           }))
         ),
+        subtotalAmount: subtotal.toString(),
+        shippingAmount: shippingCost.toString(),
+        taxAmount: estimatedTax.toString(),
         totalAmount: estimatedTotal.toString(),
       },
     });

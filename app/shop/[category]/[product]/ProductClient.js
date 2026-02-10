@@ -3,9 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
 import { validateDimensions } from "@/lib/materialLimits";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import { UploadButton } from "@/utils/uploadthing";
 
 const HST_RATE = 0.13;
 const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
@@ -30,9 +33,24 @@ function parseMaterials(optionsConfig) {
 export default function ProductClient({ product, relatedProducts }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
+  const { t } = useTranslation();
+  const searchParams = useSearchParams();
+  const moved = searchParams?.get("moved") === "1";
+  const movedFrom = searchParams?.get("from") || "";
+  const movedFromLabel = useMemo(() => {
+    if (!movedFrom) return "";
+    try {
+      return decodeURIComponent(movedFrom);
+    } catch {
+      return movedFrom;
+    }
+  }, [movedFrom]);
 
   const isPerSqft = product.pricingUnit === "per_sqft";
   const materials = parseMaterials(product.optionsConfig);
+  const editorConfig = product.optionsConfig?.editor || null;
+  const isTextEditor = editorConfig?.type === "text";
+  const dimensionsEnabled = isPerSqft || isTextEditor;
 
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(100);
@@ -42,7 +60,17 @@ export default function ProductClient({ product, relatedProducts }) {
   const [heightIn, setHeightIn] = useState(product.minHeightIn || 3);
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState("");
+  const [uploadedArtwork, setUploadedArtwork] = useState(null); // { url, key, name, mime, size }
   const [added, setAdded] = useState(false);
+
+  // Text editor state (vinyl lettering etc.)
+  const editorFonts = useMemo(() => {
+    const fonts = Array.isArray(editorConfig?.fonts) ? editorConfig.fonts : null;
+    return fonts && fonts.length ? fonts : ["Montserrat", "Helvetica", "Arial", "sans-serif"];
+  }, [editorConfig]);
+  const [editorText, setEditorText] = useState(editorConfig?.defaultText || "YOUR TEXT");
+  const [editorFont, setEditorFont] = useState(editorFonts[0] || "sans-serif");
+  const [editorColor, setEditorColor] = useState(editorConfig?.defaultColor || "#111111");
 
   // Server-driven pricing state
   const [quote, setQuote] = useState(null);
@@ -55,15 +83,15 @@ export default function ProductClient({ product, relatedProducts }) {
   const heightDisplay = unit === "in" ? heightIn : Number((heightIn * INCH_TO_CM).toFixed(2));
 
   const sizeValidation = useMemo(() => {
-    if (!isPerSqft) return { valid: true, errors: [] };
+    if (!dimensionsEnabled) return { valid: true, errors: [] };
     return validateDimensions(widthIn, heightIn, material, product);
-  }, [widthIn, heightIn, material, product, isPerSqft]);
+  }, [widthIn, heightIn, material, product, dimensionsEnabled]);
 
   // Debounced /api/quote fetch (300ms)
   const fetchQuote = useCallback(
     async (slug, qty, w, h, mat) => {
       const body = { slug, quantity: qty };
-      if (isPerSqft) {
+      if (dimensionsEnabled) {
         body.widthIn = w;
         body.heightIn = h;
       }
@@ -85,7 +113,7 @@ export default function ProductClient({ product, relatedProducts }) {
         setQuoteLoading(false);
       }
     },
-    [isPerSqft]
+    [dimensionsEnabled]
   );
 
   useEffect(() => {
@@ -96,6 +124,29 @@ export default function ProductClient({ product, relatedProducts }) {
     }, 300);
     return () => clearTimeout(debounceRef.current);
   }, [product.slug, quantity, widthIn, heightIn, material, sizeValidation.valid, fetchQuote]);
+
+  // If the product uses a text editor, derive width from text + letter height.
+  useEffect(() => {
+    if (!isTextEditor) return;
+    const text = String(editorText || "").trim();
+    if (!text) return;
+
+    try {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const basePx = 200;
+      ctx.font = `${basePx}px ${editorFont}`;
+      const pxWidth = ctx.measureText(text).width;
+      const ratio = pxWidth / basePx;
+
+      const nextWidth = Math.max(0.5, Number((ratio * Number(heightIn || 1)).toFixed(2)));
+      setWidthIn(nextWidth);
+    } catch {
+      // keep previous widthIn
+    }
+  }, [isTextEditor, editorText, editorFont, heightIn]);
 
   // Derive display prices from quote (fallback to basePrice estimate)
   const priceData = useMemo(() => {
@@ -109,7 +160,7 @@ export default function ProductClient({ product, relatedProducts }) {
     }
     // Fallback while loading
     const baseUnitCents = product.basePrice;
-    if (isPerSqft) {
+    if (dimensionsEnabled) {
       const sqft = (Number(widthIn) * Number(heightIn)) / 144;
       const unitAmount = Math.max(1, Math.round(baseUnitCents * sqft));
       const subtotal = unitAmount * qty;
@@ -126,7 +177,7 @@ export default function ProductClient({ product, relatedProducts }) {
   const tierRows = useMemo(
     () =>
       PRESET_QUANTITIES.map((q) => {
-        const base = isPerSqft
+        const base = dimensionsEnabled
           ? product.basePrice * ((widthIn * heightIn) / 144 || 1)
           : product.basePrice;
         // Simple volume discount estimate
@@ -137,16 +188,16 @@ export default function ProductClient({ product, relatedProducts }) {
         else if (q >= 100) disc = 0.97;
         return { qty: q, unitAmount: Math.max(1, Math.round(base * disc)) };
       }),
-    [product.basePrice, isPerSqft, widthIn, heightIn]
+    [product.basePrice, dimensionsEnabled, widthIn, heightIn]
   );
 
   const specs = [
-    ["Product Type", product.type],
-    ["Pricing Unit", product.pricingUnit === "per_sqft" ? "Per Square Foot" : "Per Piece"],
-    ["Min Size", product.minWidthIn && product.minHeightIn ? `${product.minWidthIn}" x ${product.minHeightIn}"` : "N/A"],
-    ["Max Size", product.maxWidthIn && product.maxHeightIn ? `${product.maxWidthIn}" x ${product.maxHeightIn}"` : "N/A"],
-    ["Min DPI", product.minDpi ? String(product.minDpi) : "N/A"],
-    ["Bleed", product.requiresBleed ? `${product.bleedIn || 0.125}" required` : "Not required"],
+    [t("product.spec.productType"), product.type],
+    [t("product.spec.pricingUnit"), product.pricingUnit === "per_sqft" ? t("product.spec.perSqft") : t("product.spec.perPiece")],
+    [t("product.spec.minSize"), product.minWidthIn && product.minHeightIn ? `${product.minWidthIn}" x ${product.minHeightIn}"` : t("product.spec.na")],
+    [t("product.spec.maxSize"), product.maxWidthIn && product.maxHeightIn ? `${product.maxWidthIn}" x ${product.maxHeightIn}"` : t("product.spec.na")],
+    [t("product.spec.minDpi"), product.minDpi ? String(product.minDpi) : t("product.spec.na")],
+    [t("product.spec.bleed"), product.requiresBleed ? t("product.spec.bleedRequired", { inches: product.bleedIn || 0.125 }) : t("product.spec.bleedNotRequired")],
   ];
 
   function onFileChange(e) {
@@ -171,6 +222,37 @@ export default function ProductClient({ product, relatedProducts }) {
 
   function handleAddToCart() {
     if (!canAddToCart) return;
+
+    const artworkMeta = uploadedArtwork
+      ? {
+          artworkUrl: uploadedArtwork.url,
+          artworkKey: uploadedArtwork.key,
+          artworkName: uploadedArtwork.name,
+          artworkMime: uploadedArtwork.mime,
+          artworkSize: uploadedArtwork.size,
+        }
+      : {
+          artworkUrl: null,
+          artworkKey: null,
+          artworkName: null,
+          artworkMime: null,
+          artworkSize: null,
+        };
+
+    const editorMeta = isTextEditor
+      ? {
+          editorType: "text",
+          editorText: String(editorText || "").trim(),
+          editorFont: String(editorFont || ""),
+          editorColor: String(editorColor || ""),
+        }
+      : {
+          editorType: null,
+          editorText: null,
+          editorFont: null,
+          editorColor: null,
+        };
+
     const item = {
       productId: product.id,
       slug: product.slug,
@@ -179,26 +261,30 @@ export default function ProductClient({ product, relatedProducts }) {
       quantity: Number(quantity),
       image: imageList[0]?.url || null,
       meta: {
-        width: isPerSqft ? widthIn : null,
-        height: isPerSqft ? heightIn : null,
+        width: dimensionsEnabled ? widthIn : null,
+        height: dimensionsEnabled ? heightIn : null,
         material,
         fileName: file?.name || null,
         pricingUnit: product.pricingUnit,
+        ...artworkMeta,
+        ...editorMeta,
       },
       id: product.id,
       price: priceData.unitAmount,
       options: {
-        width: isPerSqft ? widthIn : null,
-        height: isPerSqft ? heightIn : null,
+        width: dimensionsEnabled ? widthIn : null,
+        height: dimensionsEnabled ? heightIn : null,
         material,
         fileName: file?.name || null,
         pricingUnit: product.pricingUnit,
+        ...artworkMeta,
+        ...editorMeta,
       },
     };
 
     addItem(item);
     openCart();
-    showSuccessToast("Added to cart!");
+    showSuccessToast(t("product.addedToCart"));
     setAdded(true);
     setTimeout(() => setAdded(false), 700);
   }
@@ -207,8 +293,16 @@ export default function ProductClient({ product, relatedProducts }) {
     <main className="bg-gray-50 pb-20 pt-10 text-gray-900">
       <div className="mx-auto max-w-6xl space-y-10 px-6">
         <div className="text-xs uppercase tracking-[0.2em] text-gray-500">
-          <Link href="/shop" className="hover:text-gray-900">Shop</Link> / <span>{product.category}</span> / <span className="text-gray-900">{product.name}</span>
+          <Link href="/shop" className="hover:text-gray-900">{t("product.shop")}</Link> /{" "}
+          <Link href={`/shop?category=${product.category}`} className="hover:text-gray-900">{product.category}</Link> /{" "}
+          <span className="text-gray-900">{product.name}</span>
         </div>
+
+        {moved && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {movedFromLabel ? t("product.movedCategoryFrom", { from: movedFromLabel }) : t("product.movedCategory")}
+          </div>
+        )}
 
         <section className="grid gap-10 lg:grid-cols-12">
           <div className="space-y-4 lg:col-span-7">
@@ -222,7 +316,7 @@ export default function ProductClient({ product, relatedProducts }) {
                   sizes="(max-width: 1024px) 100vw, 58vw"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">No image available</div>
+                <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">{t("product.noImage")}</div>
               )}
             </div>
 
@@ -241,7 +335,7 @@ export default function ProductClient({ product, relatedProducts }) {
             )}
 
             <div className="rounded-2xl border border-gray-200 bg-white p-5">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">Product Specifications</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">{t("product.specifications")}</h3>
               <div className="mt-3 divide-y divide-gray-100">
                 {specs.map(([k, v]) => (
                   <div key={k} className="flex items-center justify-between py-2 text-sm">
@@ -252,7 +346,7 @@ export default function ProductClient({ product, relatedProducts }) {
               </div>
               {product.templateUrl && (
                 <a href={product.templateUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:text-gray-900">
-                  Installation Guide
+                  {t("product.installationGuide")}
                 </a>
               )}
             </div>
@@ -261,31 +355,130 @@ export default function ProductClient({ product, relatedProducts }) {
           <div className="space-y-6 lg:col-span-5">
             <header>
               <h1 className="text-4xl font-semibold tracking-tight">{product.name}</h1>
-              <p className="mt-3 text-sm text-gray-600">{product.description || "Professional-grade custom print product for business applications."}</p>
+              <p className="mt-3 text-sm text-gray-600">{product.description || t("product.defaultDescription")}</p>
             </header>
 
             <div className="rounded-3xl border border-gray-200 bg-white p-6">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                  Realtime Pricing
-                  {quoteLoading && <span className="ml-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />}
+                  {t("product.realtimePricing")}
+              {quoteLoading && <span className="ml-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />}
                 </p>
-                <p className={`text-sm font-semibold ${quoteLoading ? "text-gray-400" : "text-gray-900"}`}>{formatCad(priceData.unitAmount)} / unit</p>
+                <p className={`text-sm font-semibold ${quoteLoading ? "text-gray-400" : "text-gray-900"}`}>{formatCad(priceData.unitAmount)} {t("product.unit")}</p>
               </div>
 
-              {isPerSqft && (
+              {isTextEditor && (
                 <div className="mt-5 space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.textEditor")}</p>
+
+                  <label className="text-xs text-gray-600">
+                    {t("product.text")}
+                    <input
+                      type="text"
+                      value={editorText}
+                      onChange={(e) => setEditorText(e.target.value)}
+                      className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                      placeholder="ABC"
+                    />
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="text-xs text-gray-600">
+                      {t("product.font")}
+                      <select
+                        value={editorFont}
+                        onChange={(e) => setEditorFont(e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"
+                      >
+                        {editorFonts.map((f) => (
+                          <option key={f} value={f}>{f}</option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="text-xs text-gray-600">
+                      {t("product.color")}
+                      <input
+                        type="color"
+                        value={editorColor}
+                        onChange={(e) => setEditorColor(e.target.value)}
+                        className="mt-1 h-[42px] w-full rounded-xl border border-gray-300 bg-white px-2 py-2"
+                      />
+                    </label>
+                  </div>
+
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Size Unit</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.sizeUnit")}</p>
                     <div className="rounded-full border border-gray-300 p-1 text-xs">
-                      <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-gray-900 text-white" : "text-gray-600"}`}>Inches</button>
-                      <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-gray-900 text-white" : "text-gray-600"}`}>CM</button>
+                      <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
+                      <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <label className="text-xs text-gray-600">
-                      Width ({unit})
+                      {t("product.letterHeight", { unit })}
+                      <input
+                        type="number"
+                        value={heightDisplay}
+                        onChange={(e) => setSizeValue("h", e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs text-gray-600">
+                      {t("product.width", { unit })}
+                      <input
+                        type="number"
+                        value={widthDisplay}
+                        readOnly
+                        className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                      />
+                    </label>
+                  </div>
+
+                  <p className="text-xs text-gray-500">{t("product.estimatedSize", { w: widthIn?.toFixed(2), h: heightIn?.toFixed(2) })}</p>
+
+                  <div className="rounded-2xl border border-gray-200 bg-white p-3">
+                    <div className="aspect-[3/1] w-full overflow-hidden rounded-xl bg-gray-50">
+                      <svg viewBox="0 0 1000 300" className="h-full w-full">
+                        <rect x="0" y="0" width="1000" height="300" fill="white" />
+                        <text
+                          x="40"
+                          y="200"
+                          fill={editorColor}
+                          fontFamily={editorFont}
+                          fontSize="160"
+                          style={{ letterSpacing: "2px" }}
+                        >
+                          {String(editorText || "").trim() || " "}
+                        </text>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {!sizeValidation.valid && (
+                    <div className="mt-1 space-y-1">
+                      {sizeValidation.errors.map((err, i) => (
+                        <p key={i} className="text-xs text-red-500">{err}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {isPerSqft && !isTextEditor && (
+                <div className="mt-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.sizeUnit")}</p>
+                    <div className="rounded-full border border-gray-300 p-1 text-xs">
+                      <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
+                      <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="text-xs text-gray-600">
+                      {t("product.width", { unit })}
                       <input
                         type="number"
                         value={widthDisplay}
@@ -294,7 +487,7 @@ export default function ProductClient({ product, relatedProducts }) {
                       />
                     </label>
                     <label className="text-xs text-gray-600">
-                      Height ({unit})
+                      {t("product.height", { unit })}
                       <input
                         type="number"
                         value={heightDisplay}
@@ -303,7 +496,7 @@ export default function ProductClient({ product, relatedProducts }) {
                       />
                     </label>
                   </div>
-                  <p className="text-xs text-gray-500">Area per unit: {priceData.sqft?.toFixed(3)} sqft</p>
+                  <p className="text-xs text-gray-500">{t("product.areaPerUnit", { sqft: priceData.sqft?.toFixed(3) })}</p>
                   {!sizeValidation.valid && (
                     <div className="mt-1 space-y-1">
                       {sizeValidation.errors.map((err, i) => (
@@ -316,7 +509,7 @@ export default function ProductClient({ product, relatedProducts }) {
 
               {materials.length > 0 && (
                 <div className="mt-5">
-                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Material</label>
+                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.material")}</label>
                   <select value={material} onChange={(e) => setMaterial(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
                     {materials.map((m) => (
                       <option key={m} value={m}>{m}</option>
@@ -326,7 +519,7 @@ export default function ProductClient({ product, relatedProducts }) {
               )}
 
               <div className="mt-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Quantity</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.quantity")}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="h-9 w-9 rounded-full border border-gray-300">-</button>
                   <input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))} className="w-20 rounded-xl border border-gray-300 px-3 py-2 text-center text-sm" />
@@ -335,11 +528,11 @@ export default function ProductClient({ product, relatedProducts }) {
               </div>
 
               <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Tier Pricing</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.tierPricing")}</p>
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                   {tierRows.map((row) => (
                     <div key={row.qty} className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
-                      <span>{row.qty}+ pcs</span>
+                      <span>{row.qty}{t("product.pcs")}</span>
                       <span className="font-semibold">{formatCad(row.unitAmount)}</span>
                     </div>
                   ))}
@@ -347,15 +540,54 @@ export default function ProductClient({ product, relatedProducts }) {
               </div>
 
               <div className="mt-5 space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Artwork Upload</label>
+                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.artworkUpload")}</label>
+
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
+                  <p className="mb-2 text-xs text-gray-600">{t("product.uploadHint")}</p>
+                  <UploadButton
+                    endpoint="artworkUploader"
+                    onClientUploadComplete={(res) => {
+                      const first = Array.isArray(res) ? res[0] : null;
+                      if (!first) return;
+                      setUploadedArtwork({
+                        url: first.url || null,
+                        key: first.key || null,
+                        name: first.name || null,
+                        mime: first.type || first.mime || null,
+                        size: first.size || null,
+                      });
+                    }}
+                    onUploadError={(e) => {
+                      console.error("[uploadthing]", e);
+                    }}
+                  />
+
+                  {uploadedArtwork?.url && (
+                    <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold text-gray-900">{t("product.uploaded", { name: uploadedArtwork.name || "File" })}</p>
+                        <a href={uploadedArtwork.url} target="_blank" rel="noreferrer" className="truncate text-[11px] text-gray-500 underline">
+                          {uploadedArtwork.url}
+                        </a>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setUploadedArtwork(null)}
+                        className="rounded-full border border-gray-300 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-700"
+                      >
+                        {t("product.removeUpload")}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <input type="file" onChange={onFileChange} className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm" />
-                <p className="text-xs text-gray-500">Optional. You can also upload after checkout.</p>
                 {filePreview && (
                   <div className="relative mt-2 aspect-video overflow-hidden rounded-xl border border-gray-200">
                     <Image src={filePreview} alt="Upload preview" fill className="object-contain" sizes="50vw" />
                   </div>
                 )}
-                {file && !filePreview && <p className="text-xs text-gray-600">File attached: {file.name}</p>}
+                {file && !filePreview && <p className="text-xs text-gray-600">{t("product.fileAttached", { name: file.name })}</p>}
               </div>
 
               <div className="mt-6 rounded-2xl border border-gray-200 p-4">
@@ -370,16 +602,16 @@ export default function ProductClient({ product, relatedProducts }) {
                   </div>
                 )}
                 <div className="flex items-center justify-between text-sm">
-                  <span>Subtotal</span>
+                  <span>{t("product.subtotal")}</span>
                   <span className="font-semibold">{formatCad(priceData.subtotal)}</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-sm">
-                  <span>Tax (13% HST)</span>
+                  <span>{t("product.tax")}</span>
                   <span className="font-semibold">{formatCad(priceData.tax)}</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between border-t border-gray-200 pt-3 text-base font-semibold">
-                  <span>Total</span>
-                  <span>{formatCad(priceData.total)} CAD</span>
+                  <span>{t("product.total")}</span>
+                  <span>{formatCad(priceData.total)} {t("product.cad")}</span>
                 </div>
               </div>
 
@@ -394,7 +626,7 @@ export default function ProductClient({ product, relatedProducts }) {
                       : "bg-gray-900 hover:bg-black"
                 }`}
               >
-                {!canAddToCart ? "Fix size errors" : added ? "Added" : "Add to Cart"}
+                {!canAddToCart ? t("product.fixSizeErrors") : added ? t("product.added") : t("product.addToCart")}
               </button>
             </div>
           </div>
@@ -402,8 +634,8 @@ export default function ProductClient({ product, relatedProducts }) {
 
         <section>
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">Related Products</h2>
-            <Link href={`/shop?category=${product.category}`} className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 hover:text-gray-900">View Category</Link>
+            <h2 className="text-2xl font-semibold">{t("product.relatedProducts")}</h2>
+            <Link href={`/shop?category=${product.category}`} className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 hover:text-gray-900">{t("product.viewCategory")}</Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {relatedProducts.map((item) => (
@@ -412,12 +644,12 @@ export default function ProductClient({ product, relatedProducts }) {
                   {item.images[0]?.url ? (
                     <Image src={item.images[0].url} alt={item.images[0].alt || item.name} fill className="object-cover" sizes="25vw" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">No image</div>
+                    <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">{t("product.noImageSmall")}</div>
                   )}
                 </div>
                 <div className="p-4">
                   <p className="text-sm font-semibold">{item.name}</p>
-                  <p className="mt-1 text-xs text-gray-600">From {formatCad(item.basePrice)}</p>
+                  <p className="mt-1 text-xs text-gray-600">{t("product.from", { price: formatCad(item.basePrice) })}</p>
                 </div>
               </Link>
             ))}

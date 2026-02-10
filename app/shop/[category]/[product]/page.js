@@ -26,7 +26,8 @@ export default async function ProductPage({ params }) {
       include: { images: { orderBy: { sortOrder: "asc" } } },
     });
     if (fallback?.isActive) {
-      redirect(`/shop/${fallback.category}/${fallback.slug}`);
+      const from = encodeURIComponent(decodedCategory);
+      redirect(`/shop/${fallback.category}/${fallback.slug}?moved=1&from=${from}`);
     }
     notFound();
   }
