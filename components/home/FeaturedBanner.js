@@ -2,17 +2,18 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const cad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 const BADGE_MAP = {
-  "retractable-banner-stand-premium": { label: "BEST SELLER", color: "from-amber-500 to-orange-500" },
-  "x-banner-stand-standard": { label: "BUDGET FRIENDLY", color: "from-green-500 to-emerald-500" },
-  "x-banner-stand-large": { label: "HIGH IMPACT", color: "from-blue-500 to-indigo-500" },
-  "tabletop-banner-a4": { label: "COMPACT", color: "from-violet-500 to-purple-500" },
-  "tabletop-banner-a3": { label: "POPULAR", color: "from-rose-500 to-pink-500" },
-  "deluxe-tabletop-retractable-a3": { label: "PREMIUM", color: "from-gray-700 to-gray-900" },
+  "retractable-banner-stand-premium": { labelKey: "featured.badge.bestSeller", color: "from-amber-500 to-orange-500" },
+  "x-banner-stand-standard": { labelKey: "featured.badge.budgetFriendly", color: "from-green-500 to-emerald-500" },
+  "x-banner-stand-large": { labelKey: "featured.badge.highImpact", color: "from-blue-500 to-indigo-500" },
+  "tabletop-banner-a4": { labelKey: "featured.badge.compact", color: "from-violet-500 to-purple-500" },
+  "tabletop-banner-a3": { labelKey: "featured.badge.popular", color: "from-rose-500 to-pink-500" },
+  "deluxe-tabletop-retractable-a3": { labelKey: "featured.badge.premium", color: "from-gray-700 to-gray-900" },
 };
 
 const SIZE_LABELS = {
@@ -27,6 +28,7 @@ const SIZE_LABELS = {
 export default function FeaturedBanner({ products }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const { t } = useTranslation();
 
   const next = useCallback(() => {
     setActive((i) => (i + 1) % Math.max(1, Math.ceil((products?.length || 1) / 2)));
@@ -63,14 +65,14 @@ export default function FeaturedBanner({ products }) {
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
             <h2 className="text-white text-xs font-black uppercase tracking-[0.2em]">
-              Popular Display Solutions
+              {t("featured.title")}
             </h2>
           </div>
           <Link
             href="/shop?category=display-stands"
             className="text-[10px] font-bold text-gray-400 hover:text-white uppercase tracking-widest transition-colors"
           >
-            View All &rarr;
+            {t("featured.viewAll")} &rarr;
           </Link>
         </div>
 
@@ -117,6 +119,7 @@ export default function FeaturedBanner({ products }) {
 }
 
 function FeaturedCard({ product, compact }) {
+  const { t } = useTranslation();
   const badge = BADGE_MAP[product.slug];
   const sizeLabel = SIZE_LABELS[product.slug];
   const img = product.images?.[0]?.url;
@@ -129,7 +132,7 @@ function FeaturedCard({ product, compact }) {
       {/* Badge */}
       {badge && (
         <div className={`inline-block bg-gradient-to-r ${badge.color} text-white text-[8px] md:text-[9px] font-black uppercase tracking-wider px-2 py-0.5 md:px-2.5 md:py-1 rounded-full mb-3`}>
-          {badge.label}
+          {t(badge.labelKey)}
         </div>
       )}
 
@@ -161,13 +164,13 @@ function FeaturedCard({ product, compact }) {
 
       <div className="flex items-end justify-between mt-auto">
         <div>
-          <span className="text-[9px] text-gray-500 uppercase tracking-widest block">From</span>
+          <span className="text-[9px] text-gray-500 uppercase tracking-widest block">{t("home.from")}</span>
           <p className="text-white font-black text-base md:text-lg tracking-tight">
             {cad(product.basePrice)}
           </p>
         </div>
-        <span className="bg-white/10 text-white text-[9px] md:text-[10px] font-bold px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-          Customize &rarr;
+        <span className="bg-white/10 text-white text-[9px] md:text-[10px] font-bold px-3 py-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          {t("featured.customize")} &rarr;
         </span>
       </div>
     </Link>

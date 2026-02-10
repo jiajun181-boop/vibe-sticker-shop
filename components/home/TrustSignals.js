@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const STATS = [
-  { value: 15000, suffix: "+", label: "Orders Delivered", icon: "check" },
-  { value: 0, suffix: "", label: "Same-Day Printing", icon: "bolt", text: "Available" },
-  { value: 150, suffix: "", label: "Free Shipping Over", icon: "truck", prefix: "$" },
-  { value: 100, suffix: "%", label: "Satisfaction Guarantee", icon: "shield" },
+  { value: 15000, suffix: "+", labelKey: "trust.ordersDelivered", icon: "check" },
+  { value: 0, suffix: "", labelKey: "trust.sameDayPrinting", icon: "bolt", textKey: "trust.sameDayAvailable" },
+  { value: 150, suffix: "", labelKey: "trust.freeShippingOver", icon: "truck", prefix: "$" },
+  { value: 100, suffix: "%", labelKey: "trust.satisfactionGuarantee", icon: "shield" },
 ];
 
 const REVIEWS = [
@@ -78,6 +79,7 @@ const STAT_ICONS = {
 };
 
 export default function TrustSignals() {
+  const { t } = useTranslation();
   const [reviewIdx, setReviewIdx] = useState(0);
 
   useEffect(() => {
@@ -93,16 +95,16 @@ export default function TrustSignals() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {STATS.map((stat) => (
           <div
-            key={stat.label}
+            key={stat.labelKey}
             className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 text-center hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
           >
             <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-gray-900 text-white flex items-center justify-center">
               {STAT_ICONS[stat.icon]}
             </div>
             <div className="text-2xl md:text-3xl font-black tracking-tight text-gray-900">
-              <AnimatedCounter value={stat.value} suffix={stat.suffix} prefix={stat.prefix} text={stat.text} />
+              <AnimatedCounter value={stat.value} suffix={stat.suffix} prefix={stat.prefix} text={stat.textKey ? t(stat.textKey) : undefined} />
             </div>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1.5">{stat.label}</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1.5">{t(stat.labelKey)}</p>
           </div>
         ))}
       </div>
@@ -118,7 +120,7 @@ export default function TrustSignals() {
             ))}
           </div>
           <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-            What Our Customers Say
+            {t("trust.customersSay")}
           </span>
         </div>
 

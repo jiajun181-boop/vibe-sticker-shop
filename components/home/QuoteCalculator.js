@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const PRODUCT_TYPES = [
   { id: "retractable-stand", label: "Retractable Banner Stand", slug: "retractable-banner-stand-premium", category: "display-stands", basePrice: 14500, unit: "per_piece" },
@@ -30,6 +31,7 @@ const cad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 export default function QuoteCalculator() {
+  const { t } = useTranslation();
   const [productId, setProductId] = useState(PRODUCT_TYPES[0].id);
   const [sizeIdx, setSizeIdx] = useState(0);
   const [qty, setQty] = useState(1);
@@ -63,17 +65,17 @@ export default function QuoteCalculator() {
             <div className="flex items-center gap-2 mb-1">
               <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-                Instant Quote
+                {t("quote.badge")}
               </span>
             </div>
             <h2 className="text-2xl md:text-3xl font-black tracking-tight">
-              Get Your Price in Seconds
+              {t("quote.title")}
             </h2>
           </div>
 
           {/* Product type */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Product Type</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{t("quote.productType")}</label>
             <select
               value={productId}
               onChange={(e) => handleProductChange(e.target.value)}
@@ -81,7 +83,7 @@ export default function QuoteCalculator() {
             >
               {PRODUCT_TYPES.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.label} — from {cad(p.basePrice)}{p.unit === "per_sqft" ? "/sqft" : ""}
+                  {p.label} — {t("quote.from")} {cad(p.basePrice)}{p.unit === "per_sqft" ? "/sqft" : ""}
                 </option>
               ))}
             </select>
@@ -90,7 +92,7 @@ export default function QuoteCalculator() {
           {/* Size — only for per_sqft */}
           {product.unit === "per_sqft" && (
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Size</label>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{t("quote.size")}</label>
               <div className="flex flex-wrap gap-2">
                 {SIZES_SQFT.map((s, i) => (
                   <button
@@ -111,7 +113,7 @@ export default function QuoteCalculator() {
 
           {/* Quantity */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Quantity</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{t("quote.quantity")}</label>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setQty(Math.max(1, qty - 1))}
@@ -154,8 +156,8 @@ export default function QuoteCalculator() {
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${rush ? "left-[18px]" : "left-0.5"}`} />
             </div>
             <div>
-              <span className="text-sm font-bold group-hover:text-black transition-colors">Rush Production</span>
-              <span className="text-[10px] text-gray-400 block">+30% for 24h turnaround</span>
+              <span className="text-sm font-bold group-hover:text-black transition-colors">{t("quote.rush")}</span>
+              <span className="text-[10px] text-gray-400 block">{t("quote.rushDesc")}</span>
             </div>
           </label>
         </div>
@@ -164,16 +166,16 @@ export default function QuoteCalculator() {
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-8 md:p-10 flex flex-col justify-between border-t md:border-t-0 md:border-l border-gray-100">
           <div className="space-y-6">
             <div>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Estimated Price</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t("quote.estimatedPrice")}</span>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-5xl md:text-6xl font-black tracking-tighter">
                   {cad(estimate)}
                 </span>
-                <span className="text-gray-400 text-sm">CAD</span>
+                <span className="text-gray-400 text-sm">{t("quote.cad")}</span>
               </div>
               {rush && (
                 <div className="inline-flex items-center gap-1.5 mt-2 bg-orange-50 text-orange-600 text-[10px] font-bold px-3 py-1 rounded-full">
-                  <span>&#9889;</span> Rush +30% included
+                  <span>&#9889;</span> {t("quote.rushIncluded")}
                 </div>
               )}
               {product.unit === "per_sqft" && (
@@ -199,18 +201,18 @@ export default function QuoteCalculator() {
                 </span>
               )}
               <span className="bg-white px-3 py-1.5 rounded-full text-[10px] font-bold text-gray-500 border border-gray-200">
-                Qty: {qty}
+                {t("quote.qty")}: {qty}
               </span>
               {rush && (
                 <span className="bg-orange-50 px-3 py-1.5 rounded-full text-[10px] font-bold text-orange-600 border border-orange-200">
-                  Rush 24h
+                  {t("quote.rush24h")}
                 </span>
               )}
             </div>
 
             <div className="space-y-1.5 text-xs text-gray-400">
-              <p>+ HST (13%) calculated at checkout</p>
-              <p>Final pricing confirmed on product page</p>
+              <p>{t("quote.hstNote")}</p>
+              <p>{t("quote.finalNote")}</p>
             </div>
           </div>
 
@@ -219,10 +221,10 @@ export default function QuoteCalculator() {
               href={`/shop/${product.category}/${product.slug}`}
               className="block w-full bg-black text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest text-center hover:bg-gray-800 transition-colors"
             >
-              Continue to Customize
+              {t("quote.cta")}
             </Link>
             <p className="text-center text-[10px] text-gray-400">
-              No obligation &middot; Free design review included
+              {t("quote.noObligation")}
             </p>
           </div>
         </div>

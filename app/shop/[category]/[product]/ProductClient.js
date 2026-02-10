@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -15,6 +15,7 @@ import ReviewsSection from "@/components/product/ReviewsSection";
 import { trackAddToCart } from "@/lib/analytics";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { useRecentlyViewedStore } from "@/lib/recently-viewed";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 const HST_RATE = 0.13;
 const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
@@ -36,6 +37,34 @@ function parseMaterials(optionsConfig) {
   return flattened;
 }
 
+function parseAddons(optionsConfig) {
+  if (!optionsConfig || typeof optionsConfig !== "object") return [];
+  const list = Array.isArray(optionsConfig.addons) ? optionsConfig.addons : [];
+  return list
+    .filter((addon) => addon && typeof addon === "object" && typeof addon.id === "string")
+    .map((addon) => ({
+      id: addon.id,
+      name: typeof addon.name === "string" ? addon.name : addon.id,
+      description: typeof addon.description === "string" ? addon.description : "",
+    }));
+}
+
+function parseScenes(optionsConfig) {
+  if (!optionsConfig || typeof optionsConfig !== "object") return [];
+  const scenes = Array.isArray(optionsConfig.scenes) ? optionsConfig.scenes : [];
+  return scenes
+    .filter((scene) => scene && typeof scene === "object" && typeof scene.id === "string")
+    .map((scene) => ({
+      id: scene.id,
+      label: typeof scene.label === "string" ? scene.label : scene.id,
+      description: typeof scene.description === "string" ? scene.description : "",
+      defaultMaterial: typeof scene.defaultMaterial === "string" ? scene.defaultMaterial : null,
+      defaultWidthIn: typeof scene.defaultWidthIn === "number" ? scene.defaultWidthIn : null,
+      defaultHeightIn: typeof scene.defaultHeightIn === "number" ? scene.defaultHeightIn : null,
+      defaultAddons: Array.isArray(scene.defaultAddons) ? scene.defaultAddons.filter((id) => typeof id === "string") : [],
+    }));
+}
+
 export default function ProductClient({ product, relatedProducts }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
@@ -54,6 +83,8 @@ export default function ProductClient({ product, relatedProducts }) {
 
   const isPerSqft = product.pricingUnit === "per_sqft";
   const materials = parseMaterials(product.optionsConfig);
+  const addons = parseAddons(product.optionsConfig);
+  const scenes = parseScenes(product.optionsConfig);
   const editorConfig = product.optionsConfig?.editor || null;
   const isTextEditor = editorConfig?.type === "text";
   const editorMode = editorConfig?.mode || "lettering"; // "lettering" | "box"
@@ -84,6 +115,8 @@ export default function ProductClient({ product, relatedProducts }) {
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(100);
   const [material, setMaterial] = useState(materials[0] || "Standard Vinyl");
+  const [sceneId, setSceneId] = useState(scenes[0]?.id || "");
+  const [selectedAddons, setSelectedAddons] = useState([]);
   const [unit, setUnit] = useState("in");
   const [widthIn, setWidthIn] = useState(product.minWidthIn || 3);
   const [heightIn, setHeightIn] = useState(product.minHeightIn || 3);
@@ -104,11 +137,17 @@ export default function ProductClient({ product, relatedProducts }) {
     () => editorSizes.find((s) => s.label === editorSizeLabel) || null,
     [editorSizes, editorSizeLabel]
   );
+  const selectedScene = useMemo(
+    () => scenes.find((scene) => scene.id === sceneId) || null,
+    [scenes, sceneId]
+  );
 
   // Server-driven pricing state
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const debounceRef = useRef(null);
+  const addToCartRef = useRef(null);
+  const [stickyVisible, setStickyVisible] = useState(false);
 
   const imageList = product.images?.length ? product.images : [];
 
@@ -123,6 +162,17 @@ export default function ProductClient({ product, relatedProducts }) {
     });
   }, [product.slug]);
 
+  // Sticky mobile ATC bar – show when original button scrolls out of view
+  useEffect(() => {
+    if (!addToCartRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(addToCartRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const widthDisplay = unit === "in" ? widthIn : Number((widthIn * INCH_TO_CM).toFixed(2));
   const heightDisplay = unit === "in" ? heightIn : Number((heightIn * INCH_TO_CM).toFixed(2));
 
@@ -133,7 +183,7 @@ export default function ProductClient({ product, relatedProducts }) {
 
   // Debounced /api/quote fetch (300ms)
   const fetchQuote = useCallback(
-    async (slug, qty, w, h, mat, sizeLabel) => {
+    async (slug, qty, w, h, mat, sizeLabel, addonIds) => {
       const body = { slug, quantity: qty };
       if (dimensionsEnabled) {
         body.widthIn = w;
@@ -141,6 +191,7 @@ export default function ProductClient({ product, relatedProducts }) {
       }
       if (mat) body.material = mat;
       if (sizeLabel) body.sizeLabel = sizeLabel;
+      if (Array.isArray(addonIds) && addonIds.length > 0) body.addons = addonIds;
 
       try {
         setQuoteLoading(true);
@@ -166,10 +217,27 @@ export default function ProductClient({ product, relatedProducts }) {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       const sizeLabel = isTextEditor && editorMode === "box" ? editorSizeLabel : null;
-      fetchQuote(product.slug, quantity, widthIn, heightIn, material, sizeLabel);
+      fetchQuote(product.slug, quantity, widthIn, heightIn, material, sizeLabel, selectedAddons);
     }, 300);
     return () => clearTimeout(debounceRef.current);
-  }, [product.slug, quantity, widthIn, heightIn, material, editorSizeLabel, isTextEditor, editorMode, sizeValidation.valid, fetchQuote]);
+  }, [product.slug, quantity, widthIn, heightIn, material, selectedAddons, editorSizeLabel, isTextEditor, editorMode, sizeValidation.valid, fetchQuote]);
+
+  // Scene presets for banner families (material + common size + addon defaults).
+  useEffect(() => {
+    if (!selectedScene) return;
+
+    if (selectedScene.defaultMaterial) {
+      setMaterial(selectedScene.defaultMaterial);
+    }
+    if (dimensionsEnabled && selectedScene.defaultWidthIn && selectedScene.defaultHeightIn) {
+      setUnit("in");
+      setWidthIn(selectedScene.defaultWidthIn);
+      setHeightIn(selectedScene.defaultHeightIn);
+    }
+    if (selectedScene.defaultAddons.length > 0) {
+      setSelectedAddons(selectedScene.defaultAddons);
+    }
+  }, [selectedScene, dimensionsEnabled]);
 
   // If the product uses a text editor, derive width from text + letter height.
   useEffect(() => {
@@ -333,6 +401,9 @@ export default function ProductClient({ product, relatedProducts }) {
         width: dimensionsEnabled ? widthIn : null,
         height: dimensionsEnabled ? heightIn : null,
         material,
+        sceneId: selectedScene?.id || null,
+        sceneLabel: selectedScene?.label || null,
+        addons: selectedAddons,
         fileName: file?.name || null,
         pricingUnit: product.pricingUnit,
         ...artworkMeta,
@@ -344,6 +415,9 @@ export default function ProductClient({ product, relatedProducts }) {
         width: dimensionsEnabled ? widthIn : null,
         height: dimensionsEnabled ? heightIn : null,
         material,
+        sceneId: selectedScene?.id || null,
+        sceneLabel: selectedScene?.label || null,
+        addons: selectedAddons,
         fileName: file?.name || null,
         pricingUnit: product.pricingUnit,
         ...artworkMeta,
@@ -362,11 +436,11 @@ export default function ProductClient({ product, relatedProducts }) {
   return (
     <main className="bg-gray-50 pb-20 pt-10 text-gray-900">
       <div className="mx-auto max-w-6xl space-y-10 px-6">
-        <div className="text-xs uppercase tracking-[0.2em] text-gray-500">
-          <Link href="/shop" className="hover:text-gray-900">{t("product.shop")}</Link> /{" "}
-          <Link href={`/shop?category=${product.category}`} className="hover:text-gray-900">{product.category}</Link> /{" "}
-          <span className="text-gray-900">{product.name}</span>
-        </div>
+        <Breadcrumbs items={[
+          { label: t("product.shop"), href: "/shop" },
+          { label: product.category.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()), href: `/shop?category=${product.category}` },
+          { label: product.name }
+        ]} />
 
         {moved && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -693,6 +767,18 @@ export default function ProductClient({ product, relatedProducts }) {
                 </div>
               )}
 
+              {scenes.length > 0 && (
+                <div className="mt-5">
+                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.scene")}</label>
+                  <select value={sceneId} onChange={(e) => setSceneId(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+                    {scenes.map((scene) => (
+                      <option key={scene.id} value={scene.id}>{scene.label}</option>
+                    ))}
+                  </select>
+                  {selectedScene?.description && <p className="mt-2 text-xs text-gray-500">{selectedScene.description}</p>}
+                </div>
+              )}
+
               {materials.length > 0 && (
                 <div className="mt-5">
                   <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.material")}</label>
@@ -701,6 +787,34 @@ export default function ProductClient({ product, relatedProducts }) {
                       <option key={m} value={m}>{m}</option>
                     ))}
                   </select>
+                </div>
+              )}
+
+              {addons.length > 0 && (
+                <div className="mt-5 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.addons")}</p>
+                  <div className="space-y-2">
+                    {addons.map((addon) => (
+                      <label key={addon.id} className="flex cursor-pointer items-start gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedAddons.includes(addon.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedAddons((prev) => (prev.includes(addon.id) ? prev : [...prev, addon.id]));
+                            } else {
+                              setSelectedAddons((prev) => prev.filter((id) => id !== addon.id));
+                            }
+                          }}
+                          className="mt-0.5"
+                        />
+                        <span className="flex-1">
+                          <span className="font-medium text-gray-900">{addon.name}</span>
+                          {addon.description && <span className="block text-xs text-gray-500">{addon.description}</span>}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -801,19 +915,21 @@ export default function ProductClient({ product, relatedProducts }) {
                 </div>
               </div>
 
-              <button
-                onClick={handleAddToCart}
-                disabled={!canAddToCart}
-                className={`mt-6 w-full rounded-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-all duration-200 ${
-                  !canAddToCart
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : added
-                      ? "bg-emerald-600"
-                      : "bg-gray-900 hover:bg-black"
-                }`}
-              >
-                {!canAddToCart ? t("product.fixSizeErrors") : added ? t("product.added") : t("product.addToCart")}
-              </button>
+              <div ref={addToCartRef}>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!canAddToCart}
+                  className={`mt-6 w-full rounded-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-all duration-200 ${
+                    !canAddToCart
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : added
+                        ? "bg-emerald-600"
+                        : "bg-gray-900 hover:bg-black"
+                  }`}
+                >
+                  {!canAddToCart ? t("product.fixSizeErrors") : added ? t("product.added") : t("product.addToCart")}
+                </button>
+              </div>
 
               <div className="mt-4">
                 <GuaranteeBadge />
@@ -851,6 +967,26 @@ export default function ProductClient({ product, relatedProducts }) {
         <ReviewsSection />
         <RecentlyViewed excludeSlug={product.slug} />
       </div>
+
+        {/* Sticky mobile Add to Cart bar */}
+        {stickyVisible && (
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 md:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs text-gray-500">{t("product.total")}</p>
+                <p className="text-lg font-black">{formatCad(priceData.total)}</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={!canAddToCart}
+                className={`flex-1 max-w-[200px] rounded-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-all duration-200 ${!canAddToCart ? "bg-gray-300 cursor-not-allowed" : added ? "bg-emerald-600" : "bg-gray-900 hover:bg-black"}`}
+              >
+                {!canAddToCart ? t("product.fixSizeErrors") : added ? t("product.added") : t("product.addToCart")}
+              </button>
+            </div>
+          </div>
+        )}
     </main>
   );
 }

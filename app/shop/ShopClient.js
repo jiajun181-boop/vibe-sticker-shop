@@ -8,6 +8,7 @@ import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
 import { INDUSTRY_LABELS, INDUSTRY_TAGS } from "@/lib/industryTags";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 const PAGE_SIZE_OPTIONS = [12, 24, 36];
 
@@ -144,6 +145,12 @@ export default function ShopClient({
   return (
     <main className="min-h-screen bg-gray-50 px-4 pb-16 pt-10 text-gray-900">
       <div className="mx-auto max-w-7xl">
+        <Breadcrumbs items={
+          category && category !== "all"
+            ? [{ label: t("shop.header"), href: "/shop" }, { label: categoryLabels[category] || category }]
+            : [{ label: t("shop.header") }]
+        } />
+
         <header className="mb-8">
           <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("shop.header")}</p>
           <h1 className="mt-2 text-4xl font-semibold tracking-tight">{t("shop.title")}</h1>
@@ -309,13 +316,18 @@ export default function ShopClient({
                 const rangeText = product.pricingUnit === "per_sqft" ? `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 3.5))}` : `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 2.2))}`;
 
                 return (
-                  <article key={product.id} className={`group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:shadow-lg ${view === "list" ? "flex" : ""}`}>
+                  <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:shadow-lg ${view === "list" ? "flex" : ""}`}>
                     <Link href={href} className={`relative block bg-gray-100 ${view === "list" ? "h-44 w-52 flex-shrink-0" : "aspect-[4/3]"}`}>
                       {product.images[0]?.url ? (
                         <Image src={product.images[0].url} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">{t("shop.noImage")}</div>
                       )}
+                      {product.sortOrder != null && product.sortOrder <= 2 && (
+                      <span className="absolute top-3 right-3 bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full z-10">
+                        {t("shop.popular")}
+                      </span>
+                    )}
                       {isOutOfStock && <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2 py-1 text-[10px] font-semibold text-white">{t("shop.outOfStock")}</span>}
                     </Link>
 
