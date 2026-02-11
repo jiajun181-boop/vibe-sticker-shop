@@ -7,6 +7,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { PaymentBadges } from "@/components/TrustBadges";
 import { trackBeginCheckout } from "@/lib/analytics";
 import useFocusTrap from "@/lib/useFocusTrap";
+import CartUpsell from "@/components/cart/CartUpsell";
 
 const FREE_SHIPPING_THRESHOLD = 15000;
 const SHIPPING_COST = 1500;
@@ -314,6 +315,8 @@ export default function CartDrawer() {
               </div>
             )}
           </div>
+
+          {cart.length > 0 && <CartUpsell />}
 
           {cart.length > 0 && (
             <div className="space-y-3 border-t border-gray-200 px-5 py-4">

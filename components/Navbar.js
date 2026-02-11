@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCartStore } from "@/lib/store";
+import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const linkKeys = [
@@ -16,6 +17,8 @@ export default function Navbar() {
   const storeCount = useCartStore((state) => state.getCartCount());
   const openCart = useCartStore((state) => state.openCart);
   const { t, locale, setLocale, hydrated } = useTranslation();
+  const authUser = useAuthStore((s) => s.user);
+  const authLoading = useAuthStore((s) => s.loading);
 
   const [cartCount, setCartCount] = useState(0);
   useEffect(() => {
@@ -101,6 +104,24 @@ export default function Navbar() {
             >
               {locale === "en" ? "中文" : "EN"}
             </button>
+          )}
+
+          {!authLoading && (
+            authUser ? (
+              <Link
+                href="/account"
+                className="hidden md:inline-flex rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900"
+              >
+                {t("nav.account")}
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden md:inline-flex rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900"
+              >
+                {t("nav.login")}
+              </Link>
+            )
           )}
 
           <button

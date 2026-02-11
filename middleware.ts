@@ -40,6 +40,16 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Protect /account routes (redirect to login if no session)
+  if (path.startsWith("/account")) {
+    const sessionCookie = request.cookies.get("session");
+    if (!sessionCookie?.value) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", path);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   return response;
 }
 

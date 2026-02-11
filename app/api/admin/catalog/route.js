@@ -6,8 +6,10 @@ import { requireAdminAuth } from "@/lib/admin-auth";
 const MERGE_EDGES = [
   { from: "stickers", to: "stickers-labels" },
   { from: "signs", to: "rigid-signs" },
+  { from: "signs-boards", to: "rigid-signs" },
   { from: "banners", to: "banners-displays" },
   { from: "marketing", to: "marketing-prints" },
+  { from: "displays", to: "display-stands" },
   { from: "window-graphics", to: "large-format-graphics" },
   { from: "fleet-compliance-id", to: "vehicle-branding-advertising" },
   { from: "safety-warning-decals", to: "facility-asset-labels" },

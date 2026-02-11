@@ -9,6 +9,7 @@ import { showSuccessToast } from "@/components/Toast";
 import { INDUSTRY_LABELS, INDUSTRY_TAGS } from "@/lib/industryTags";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 
 const PAGE_SIZE_OPTIONS = [12, 24, 36];
 
@@ -309,11 +310,28 @@ export default function ShopClient({
               </div>
             </div>
 
+            {visible.length === 0 && (
+              <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center">
+                <p className="text-sm font-medium text-gray-500">{t("shop.noResults")}</p>
+                <button
+                  type="button"
+                  onClick={() => { navigate("all", ""); setQuery && router.replace("/shop", { scroll: false }); }}
+                  className="mt-3 rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:border-gray-900"
+                >
+                  {t("shop.clearFilters")}
+                </button>
+              </div>
+            )}
+
             <div className={view === "grid" ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3" : "space-y-3"}>
               {visible.map((product) => {
                 const href = `/shop/${product.category}/${product.slug}`;
                 const isOutOfStock = !product.isActive;
-                const rangeText = product.pricingUnit === "per_sqft" ? `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 3.5))}` : `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 2.2))}`;
+                const showFromPrice = product.optionsConfig?.ui?.showFromPrice === true;
+                const isLandingPage = product.optionsConfig?.ui?.isLandingPage === true;
+                const rangeText = showFromPrice
+                  ? t("product.from", { price: formatCad(product.basePrice) })
+                  : product.pricingUnit === "per_sqft" ? `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 3.5))}` : `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 2.2))}`;
 
                 return (
                   <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:shadow-lg ${view === "list" ? "flex" : ""}`}>
@@ -332,18 +350,35 @@ export default function ShopClient({
                     </Link>
 
                     <div className="flex flex-1 flex-col p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-gray-500">{categoryLabels[product.category] || product.category}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs uppercase tracking-[0.2em] text-gray-500">{categoryLabels[product.category] || product.category}</p>
+                        {(() => {
+                          const tk = getTurnaround(product);
+                          return (
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${turnaroundColor(tk)}`}>
+                              {t(turnaroundI18nKey(tk))}
+                            </span>
+                          );
+                        })()}
+                      </div>
                       <h3 className="mt-2 text-base font-semibold text-gray-900">{product.name}</h3>
+                      {isLandingPage && product.description && (
+                        <p className="mt-1 text-xs text-gray-500">{product.description}</p>
+                      )}
                       <p className="mt-1 text-sm text-gray-600">{rangeText}</p>
-                      <p className="mt-1 text-xs text-gray-500">{product.pricingUnit === "per_sqft" ? t("shop.perSqft") : t("shop.perPiece")}</p>
+                      {!showFromPrice && (
+                        <p className="mt-1 text-xs text-gray-500">{product.pricingUnit === "per_sqft" ? t("shop.perSqft") : t("shop.perPiece")}</p>
+                      )}
 
                       <div className="mt-4 flex gap-2">
                         <Link href={href} className="rounded-full border border-gray-300 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900">
-                          {t("shop.view")}
+                          {isLandingPage ? t("bc.landing.viewAll") : t("shop.view")}
                         </Link>
-                        <button onClick={() => quickAdd(product)} className="rounded-full bg-gray-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-black">
-                          {t("shop.quickAdd")}
-                        </button>
+                        {!isLandingPage && (
+                          <button onClick={() => quickAdd(product)} className="rounded-full bg-gray-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-black">
+                            {t("shop.quickAdd")}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </article>

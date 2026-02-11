@@ -7,6 +7,8 @@ import PromoBar from "@/components/home/PromoBar";
 import { getServerLocale } from "@/lib/i18n/server";
 import Analytics from "@/components/Analytics";
 import SkipLink from "@/components/SkipLink";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
+import AuthInit from "@/components/AuthInit";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
 
@@ -54,6 +56,8 @@ export default async function RootLayout({ children }) {
         <Footer locale={locale} />
         <CartDrawer />
         <Toaster />
+        <ExitIntentPopup />
+        <AuthInit />
         <Analytics />
       </body>
     </html>

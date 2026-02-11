@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { computeQuote, normalizeInput } from "@/lib/pricing";
+import { computeFinishings } from "@/lib/pricing/shared.js";
 import { validateDimensions } from "@/lib/materialLimits";
 
 function getOptionsMaterialMultiplier(optionsConfig, materialId) {
@@ -55,6 +56,49 @@ function computeAddonsCents(product, input) {
   return addonsCents;
 }
 
+function tryExactOptionsPriceByQtyQuote(product, input) {
+  if (!input.sizeLabel) return null;
+  if (!product.optionsConfig || typeof product.optionsConfig !== "object") return null;
+
+  const sizes = Array.isArray(product.optionsConfig.sizes) ? product.optionsConfig.sizes : [];
+  const match =
+    sizes.find((s) => s && typeof s === "object" && s.label === input.sizeLabel) ||
+    sizes.find((s) => s && typeof s === "object" && s.id === input.sizeLabel);
+  if (!match || !match.priceByQty || typeof match.priceByQty !== "object") return null;
+
+  const qty = input.quantity;
+  const baseTotalRaw = match.priceByQty[String(qty)];
+  const baseTotalCents =
+    typeof baseTotalRaw === "number" && Number.isFinite(baseTotalRaw) ? Math.round(baseTotalRaw) : null;
+  if (baseTotalCents == null || baseTotalCents <= 0) return null;
+
+  const addonsCents = computeAddonsCents(product, input);
+  const fin = product.pricingPreset?.config
+    ? computeFinishings(product.pricingPreset.config, input.finishings, { quantity: qty, sqftPerUnit: 0 })
+    : { totalDollars: 0, lines: [] };
+  const finishingsCents = Math.round(Number(fin.totalDollars || 0) * 100);
+  const totalCents = baseTotalCents + addonsCents + finishingsCents;
+  const displayUnitCents = Math.round(totalCents / qty);
+
+  return {
+    totalCents,
+    currency: "CAD",
+    breakdown: [
+      {
+        label: `${qty} pcs @ ${(displayUnitCents / 100).toFixed(2)}/ea (size: ${input.sizeLabel})`,
+        amount: baseTotalCents,
+      },
+      ...(addonsCents > 0 ? [{ label: "Selected add-ons", amount: addonsCents }] : []),
+      ...((fin.lines || []).map((l) => ({
+        label: l.label,
+        amount: typeof l.amount === "number" ? Math.round(l.amount) : 0,
+      }))),
+    ],
+    meta: { model: "OPTIONS_EXACT_QTY", sizeLabel: input.sizeLabel, addonsCents, finishingsCents },
+    unitCents: displayUnitCents,
+  };
+}
+
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -91,6 +135,13 @@ export async function POST(req) {
           { status: 422 }
         );
       }
+    }
+
+    // Prefer exact per-qty totals from optionsConfig (avoids rounding + supports fixed-size SKUs)
+    // This takes precedence even if a pricingPreset exists.
+    const exact = tryExactOptionsPriceByQtyQuote(product, input);
+    if (exact) {
+      return NextResponse.json(exact);
     }
 
     // If product has a pricing preset, use the engine

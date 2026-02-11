@@ -95,7 +95,7 @@ const CATEGORY_TO_PRESET = {
   "retail-promo": "business_cards_default",
 
   // AREA_TIERED — rigid substrate boards
-  "signs-boards": "rigid_sheets_default",
+  "rigid-signs": "rigid_sheets_default",
 };
 
 // ─── Main ───────────────────────────────────────────────

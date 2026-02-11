@@ -42,7 +42,7 @@ const PRESET = {
 // ─── Shared fields ──────────────────────────────────────
 
 const SHARED = {
-  category: "signs-boards",
+  category: "rigid-signs",
   type: "sign",
   acceptedFormats: ["ai", "pdf", "eps", "tiff", "jpg", "png"],
   minDpi: 150,

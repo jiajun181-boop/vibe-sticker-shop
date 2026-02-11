@@ -17,6 +17,7 @@ const navGroups = [
     items: [
       { key: "admin.nav.orders", href: "/admin/orders", icon: "package" },
       { key: "admin.nav.customers", href: "/admin/customers", icon: "users" },
+      { key: "admin.nav.b2b", href: "/admin/b2b", icon: "briefcase" },
       { key: "admin.nav.coupons", href: "/admin/coupons", icon: "ticket" },
     ],
   },

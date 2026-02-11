@@ -9,13 +9,17 @@ import { showSuccessToast } from "@/components/Toast";
 import { validateDimensions } from "@/lib/materialLimits";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
-import { GuaranteeBadge } from "@/components/TrustBadges";
+import { GuaranteeBadge, PaymentBadges } from "@/components/TrustBadges";
 import GuaranteeInfo from "@/components/product/GuaranteeInfo";
 import ReviewsSection from "@/components/product/ReviewsSection";
+import ImageGallery from "@/components/product/ImageGallery";
+import SizeSelector from "@/components/product/SizeSelector";
 import { trackAddToCart } from "@/lib/analytics";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { useRecentlyViewedStore } from "@/lib/recently-viewed";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import TemplateGallery from "@/components/product/TemplateGallery";
+import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 
 const HST_RATE = 0.13;
 const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
@@ -23,6 +27,13 @@ const INCH_TO_CM = 2.54;
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+
+function applyAllowlist(items, allowIds) {
+  if (!Array.isArray(items)) return [];
+  if (!Array.isArray(allowIds)) return items;
+  const allow = new Set(allowIds.map(String));
+  return items.filter((x) => x && typeof x === "object" && allow.has(String(x.id)));
+}
 
 function parseMaterials(optionsConfig, presetConfig) {
   // Priority: pricingPreset materials > optionsConfig materials
@@ -59,7 +70,19 @@ function parseFinishings(presetConfig) {
     }));
 }
 
-function parseAddons(optionsConfig) {
+function parseAddons(optionsConfig, presetConfig) {
+  // Priority: pricingPreset addons > optionsConfig addons
+  if (presetConfig && Array.isArray(presetConfig.addons) && presetConfig.addons.length > 0) {
+    return presetConfig.addons
+      .filter((a) => a && typeof a === "object" && a.id)
+      .map((a) => ({
+        id: a.id,
+        name: a.name || a.id,
+        description: typeof a.description === "string" ? a.description : "",
+        price: typeof a.price === "number" ? a.price : 0,
+        type: a.type || "per_unit",
+      }));
+  }
   if (!optionsConfig || typeof optionsConfig !== "object") return [];
   const list = Array.isArray(optionsConfig.addons) ? optionsConfig.addons : [];
   return list
@@ -68,6 +91,8 @@ function parseAddons(optionsConfig) {
       id: addon.id,
       name: typeof addon.name === "string" ? addon.name : addon.id,
       description: typeof addon.description === "string" ? addon.description : "",
+      price: typeof addon.price === "number" ? addon.price : 0,
+      type: addon.type || "per_unit",
     }));
 }
 
@@ -95,6 +120,7 @@ function parseSizeOptions(optionsConfig) {
     .map((item) => ({
       id: typeof item.id === "string" ? item.id : item.label,
       label: item.label,
+      displayLabel: typeof item.displayLabel === "string" ? item.displayLabel : null,
       widthIn: typeof item.widthIn === "number" ? item.widthIn : null,
       heightIn: typeof item.heightIn === "number" ? item.heightIn : null,
       notes: typeof item.notes === "string" ? item.notes : "",
@@ -134,9 +160,15 @@ export default function ProductClient({ product, relatedProducts }) {
 
   const isPerSqft = product.pricingUnit === "per_sqft";
   const presetConfig = product.pricingPreset?.config || null;
-  const materials = parseMaterials(product.optionsConfig, presetConfig);
-  const finishings = parseFinishings(presetConfig);
-  const addons = parseAddons(product.optionsConfig);
+  const uiConfig = product.optionsConfig && typeof product.optionsConfig === "object" ? product.optionsConfig.ui || null : null;
+  const hideTierPricing = uiConfig?.hideTierPricing === true;
+  const hideMaterials = uiConfig?.hideMaterials === true;
+  const hideAddons = uiConfig?.hideAddons === true;
+  const hideFinishings = uiConfig?.hideFinishings === true;
+
+  const materials = applyAllowlist(parseMaterials(product.optionsConfig, presetConfig), uiConfig?.allowedMaterials);
+  const finishings = applyAllowlist(parseFinishings(presetConfig), uiConfig?.allowedFinishings);
+  const addons = applyAllowlist(parseAddons(product.optionsConfig, presetConfig), uiConfig?.allowedAddons);
   const scenes = parseScenes(product.optionsConfig);
   const sizeOptions = parseSizeOptions(product.optionsConfig);
   const quantityRange = parseQuantityRange(product.optionsConfig);
@@ -187,9 +219,12 @@ export default function ProductClient({ product, relatedProducts }) {
   const [editorSizeLabel, setEditorSizeLabel] = useState(editorSizes[0]?.label || "");
   const dimensionsEnabled = isPerSqft || isTextEditor;
 
-  const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(quantityRange?.min || 100);
-  const [material, setMaterial] = useState(materials[0]?.id || "");
+  const [material, setMaterial] = useState(() => {
+    const candidate = typeof uiConfig?.defaultMaterialId === "string" ? uiConfig.defaultMaterialId : "";
+    if (candidate && materials.some((m) => m.id === candidate)) return candidate;
+    return materials[0]?.id || candidate || "";
+  });
   const [sceneId, setSceneId] = useState(scenes[0]?.id || "");
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [selectedFinishings, setSelectedFinishings] = useState([]);
@@ -203,6 +238,48 @@ export default function ProductClient({ product, relatedProducts }) {
   const [filePreview, setFilePreview] = useState("");
   const [uploadedArtwork, setUploadedArtwork] = useState(null); // { url, key, name, mime, size }
   const [added, setAdded] = useState(false);
+
+  // Business card state
+  const optionsConfig = product.optionsConfig && typeof product.optionsConfig === "object" ? product.optionsConfig : {};
+  const cardTypes = optionsConfig.cardTypes || [];
+  const isBusinessCard = cardTypes.length > 0;
+  const sidesOptions = optionsConfig.sidesOptions || [];
+  const thickLayers = optionsConfig.thickLayers || [];
+  const addonRules = optionsConfig.addonRules || {};
+  const multiNameConfig = optionsConfig.multiName || null;
+  const showMultiName = multiNameConfig?.enabled === true;
+  const productSpecs = optionsConfig.specs && typeof optionsConfig.specs === "object" ? optionsConfig.specs : null;
+  const templateGallery = Array.isArray(optionsConfig.templateGallery) ? optionsConfig.templateGallery : null;
+  const [cardType, setCardType] = useState(cardTypes[0]?.id || "");
+  const [sides, setSides] = useState("double");
+  const [thickLayer, setThickLayer] = useState(thickLayers[0]?.id || "double-layer");
+  const [names, setNames] = useState(1);
+
+  const bcSizeLabel = useMemo(() => {
+    if (!isBusinessCard) return null;
+    return cardType === "thick" ? `thick-${thickLayer}` : `${cardType}-${sides}`;
+  }, [isBusinessCard, cardType, sides, thickLayer]);
+
+  const visibleAddons = useMemo(() => {
+    if (!isBusinessCard) return addons;
+    const allowed = addonRules[cardType];
+    if (!Array.isArray(allowed)) return addons;
+    const set = new Set(allowed);
+    return addons.filter((a) => set.has(a.id));
+  }, [isBusinessCard, addons, addonRules, cardType]);
+
+  // Clear invalid addons when card type changes
+  useEffect(() => {
+    if (!isBusinessCard) return;
+    const allowed = addonRules[cardType];
+    if (!Array.isArray(allowed)) return;
+    const validIds = new Set(allowed);
+    setSelectedAddons((prev) => {
+      const next = prev.filter((id) => validIds.has(id));
+      return next.length === prev.length ? prev : next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBusinessCard, cardType]);
 
   // Text editor state (vinyl lettering etc.)
   const editorFonts = useMemo(() => {
@@ -299,6 +376,17 @@ export default function ProductClient({ product, relatedProducts }) {
     });
   }, [product.slug]);
 
+  // Apply product-level default material when switching products
+  useEffect(() => {
+    const candidate = typeof uiConfig?.defaultMaterialId === "string" ? uiConfig.defaultMaterialId : "";
+    const next =
+      candidate && materials.some((m) => m.id === candidate)
+        ? candidate
+        : materials[0]?.id || candidate || "";
+    if (next && next !== material) setMaterial(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
+
   // Sticky mobile ATC bar – show when original button scrolls out of view
   useEffect(() => {
     if (!addToCartRef.current) return;
@@ -320,7 +408,7 @@ export default function ProductClient({ product, relatedProducts }) {
 
   // Debounced /api/quote fetch (300ms)
   const fetchQuote = useCallback(
-    async (slug, qty, w, h, mat, sizeLabel, addonIds, finishingIds) => {
+    async (slug, qty, w, h, mat, sizeLabel, addonIds, finishingIds, namesCount) => {
       const body = { slug, quantity: qty };
       if (dimensionsEnabled) {
         body.widthIn = w;
@@ -330,6 +418,7 @@ export default function ProductClient({ product, relatedProducts }) {
       if (sizeLabel) body.sizeLabel = sizeLabel;
       if (Array.isArray(addonIds) && addonIds.length > 0) body.addons = addonIds;
       if (Array.isArray(finishingIds) && finishingIds.length > 0) body.finishings = finishingIds;
+      if (namesCount && namesCount > 1) body.names = namesCount;
 
       try {
         setQuoteLoading(true);
@@ -354,15 +443,17 @@ export default function ProductClient({ product, relatedProducts }) {
     if (!sizeValidation.valid) return;
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      const sizeLabel = isTextEditor && editorMode === "box"
-        ? editorSizeLabel
-        : sizeOptions.length > 0
-          ? selectedSizeLabel
-          : null;
-      fetchQuote(product.slug, quantity, widthIn, heightIn, material, sizeLabel, selectedAddons, selectedFinishings);
+      const sizeLabel = isBusinessCard
+        ? bcSizeLabel
+        : isTextEditor && editorMode === "box"
+          ? editorSizeLabel
+          : sizeOptions.length > 0
+            ? selectedSizeLabel
+            : null;
+      fetchQuote(product.slug, quantity, widthIn, heightIn, material, sizeLabel, selectedAddons, selectedFinishings, showMultiName && names > 1 ? names : undefined);
     }, 300);
     return () => clearTimeout(debounceRef.current);
-  }, [product.slug, quantity, widthIn, heightIn, material, selectedAddons, selectedFinishings, editorSizeLabel, selectedSizeLabel, sizeOptions.length, isTextEditor, editorMode, sizeValidation.valid, fetchQuote]);
+  }, [product.slug, quantity, widthIn, heightIn, material, selectedAddons, selectedFinishings, editorSizeLabel, selectedSizeLabel, sizeOptions.length, isTextEditor, editorMode, sizeValidation.valid, fetchQuote, isBusinessCard, bcSizeLabel, showMultiName, names]);
 
   // Scene presets for banner families (material + common size + addon defaults).
   useEffect(() => {
@@ -433,6 +524,12 @@ export default function ProductClient({ product, relatedProducts }) {
       const sqft = quote.meta?.sqftPerUnit ?? null;
       return { unitAmount, subtotal, tax, total: subtotal + tax, sqft, breakdown: quote.breakdown };
     }
+
+    // If no quote and basePrice is missing, avoid showing misleading $0.01 pricing.
+    if (!product.basePrice || product.basePrice <= 0) {
+      return { unitAmount: null, subtotal: null, tax: null, total: null, sqft: null, breakdown: null, unpriced: true };
+    }
+
     // Fallback while loading
     const baseUnitCents = product.basePrice;
     if (dimensionsEnabled) {
@@ -568,7 +665,7 @@ export default function ProductClient({ product, relatedProducts }) {
     setQuantity(Math.min(range.max, Math.max(range.min, stepped)));
   }
 
-  const canAddToCart = sizeValidation.valid;
+  const canAddToCart = sizeValidation.valid && !priceData.unpriced;
 
   function handleAddToCart() {
     if (!canAddToCart) return;
@@ -607,6 +704,23 @@ export default function ProductClient({ product, relatedProducts }) {
           editorColor: null,
         };
 
+    const bcMeta = isBusinessCard
+      ? {
+          cardType,
+          sides: cardType === "thick" ? null : sides,
+          thickLayer: cardType === "thick" ? thickLayer : null,
+          names,
+          totalQty: names * Number(quantity),
+          sizeLabel: bcSizeLabel,
+        }
+      : showMultiName && names > 1
+        ? { names, totalQty: names * Number(quantity) }
+        : {};
+
+    const effectiveSizeLabel = isBusinessCard
+      ? bcSizeLabel
+      : selectedSize?.label || null;
+
     const item = {
       productId: product.id,
       slug: product.slug,
@@ -618,7 +732,7 @@ export default function ProductClient({ product, relatedProducts }) {
         width: dimensionsEnabled ? widthIn : null,
         height: dimensionsEnabled ? heightIn : null,
         material,
-        sizeLabel: selectedSize?.label || null,
+        sizeLabel: effectiveSizeLabel,
         sceneId: selectedScene?.id || null,
         sceneLabel: selectedScene?.label || null,
         addons: selectedAddons,
@@ -627,6 +741,7 @@ export default function ProductClient({ product, relatedProducts }) {
         pricingUnit: product.pricingUnit,
         ...artworkMeta,
         ...editorMeta,
+        ...bcMeta,
       },
       id: product.id,
       price: priceData.unitAmount,
@@ -634,7 +749,7 @@ export default function ProductClient({ product, relatedProducts }) {
         width: dimensionsEnabled ? widthIn : null,
         height: dimensionsEnabled ? heightIn : null,
         material,
-        sizeLabel: selectedSize?.label || null,
+        sizeLabel: effectiveSizeLabel,
         sceneId: selectedScene?.id || null,
         sceneLabel: selectedScene?.label || null,
         addons: selectedAddons,
@@ -643,6 +758,7 @@ export default function ProductClient({ product, relatedProducts }) {
         pricingUnit: product.pricingUnit,
         ...artworkMeta,
         ...editorMeta,
+        ...bcMeta,
       },
     };
 
@@ -671,55 +787,82 @@ export default function ProductClient({ product, relatedProducts }) {
 
         <section className="grid gap-10 lg:grid-cols-12">
           <div className="space-y-4 lg:col-span-7">
-            <div className="relative aspect-square overflow-hidden rounded-3xl border border-gray-200 bg-white">
-              {imageList[activeImage]?.url ? (
-                <Image
-                  src={imageList[activeImage].url}
-                  alt={imageList[activeImage].alt || product.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 58vw"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">{t("product.noImage")}</div>
-              )}
-            </div>
+            <ImageGallery images={imageList} productName={product.name} />
 
-            {imageList.length > 1 && (
-              <div className="grid grid-cols-5 gap-2">
-                {imageList.map((img, idx) => (
-                  <button
-                    key={img.id}
-                    onClick={() => setActiveImage(idx)}
-                    className={`relative aspect-square overflow-hidden rounded-xl border ${activeImage === idx ? "border-gray-900" : "border-gray-200"}`}
-                  >
-                    <Image src={img.url} alt={img.alt || product.name} fill className="object-cover" sizes="20vw" />
-                  </button>
-                ))}
+            {templateGallery && <TemplateGallery templates={templateGallery} />}
+
+            {productSpecs ? (
+              <div className="rounded-2xl border border-gray-200 bg-white p-5">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">{t("bc.specs")}</h3>
+                <div className="mt-3 divide-y divide-gray-100">
+                  {productSpecs.dimensions && (
+                    <div className="flex items-center justify-between py-2 text-sm">
+                      <span className="text-gray-500">{t("bc.specs.dimensions")}</span>
+                      <span className="font-medium text-gray-900">{productSpecs.dimensions}</span>
+                    </div>
+                  )}
+                  {productSpecs.paper && (
+                    <div className="flex items-center justify-between py-2 text-sm">
+                      <span className="text-gray-500">{t("bc.specs.paper")}</span>
+                      <span className="font-medium text-gray-900">{productSpecs.paper}</span>
+                    </div>
+                  )}
+                  {productSpecs.finish && (
+                    <div className="flex items-center justify-between py-2 text-sm">
+                      <span className="text-gray-500">{t("bc.specs.finish")}</span>
+                      <span className="font-medium text-gray-900">{productSpecs.finish}</span>
+                    </div>
+                  )}
+                  {productSpecs.corners && (
+                    <div className="flex items-center justify-between py-2 text-sm">
+                      <span className="text-gray-500">{t("bc.specs.corners")}</span>
+                      <span className="font-medium text-gray-900">{productSpecs.corners}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
+                  <span>{t("bc.specs.customSize")}</span>
+                  <a href="/quote" className="font-semibold text-gray-700 underline hover:text-gray-900">{t("bc.specs.contactUs")}</a>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-gray-200 bg-white p-5">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">{t("product.specifications")}</h3>
+                <div className="mt-3 divide-y divide-gray-100">
+                  {specs.map(([k, v]) => (
+                    <div key={k} className="flex items-center justify-between py-2 text-sm">
+                      <span className="text-gray-500">{k}</span>
+                      <span className="font-medium text-gray-900">{v}</span>
+                    </div>
+                  ))}
+                </div>
+                {product.templateUrl && (
+                  <a href={product.templateUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:text-gray-900">
+                    {t("product.installationGuide")}
+                  </a>
+                )}
               </div>
             )}
-
-            <div className="rounded-2xl border border-gray-200 bg-white p-5">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">{t("product.specifications")}</h3>
-              <div className="mt-3 divide-y divide-gray-100">
-                {specs.map(([k, v]) => (
-                  <div key={k} className="flex items-center justify-between py-2 text-sm">
-                    <span className="text-gray-500">{k}</span>
-                    <span className="font-medium text-gray-900">{v}</span>
-                  </div>
-                ))}
-              </div>
-              {product.templateUrl && (
-                <a href={product.templateUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:text-gray-900">
-                  {t("product.installationGuide")}
-                </a>
-              )}
-            </div>
           </div>
 
           <div className="space-y-6 lg:col-span-5">
             <header>
               <h1 className="text-4xl font-semibold tracking-tight">{product.name}</h1>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {(() => {
+                  const tk = getTurnaround(product);
+                  return (
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${turnaroundColor(tk)}`}>
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      {t(turnaroundI18nKey(tk))}
+                    </span>
+                  );
+                })()}
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  {t("trust.madeToOrder")}
+                </span>
+              </div>
               <p className="mt-3 text-sm text-gray-600">{product.description || t("product.defaultDescription")}</p>
             </header>
 
@@ -729,7 +872,16 @@ export default function ProductClient({ product, relatedProducts }) {
                   {t("product.realtimePricing")}
               {quoteLoading && <span className="ml-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />}
                 </p>
-                <p className={`text-sm font-semibold ${quoteLoading ? "text-gray-400" : "text-gray-900"}`}>{formatCad(priceData.unitAmount)} {t("product.unit")}</p>
+                {priceData.unpriced ? (
+                  <a
+                    href={`/quote?product=${product.slug}&name=${encodeURIComponent(product.name)}`}
+                    className="text-sm font-semibold text-gray-900 underline"
+                  >
+                    {t("product.priceOnRequest")}
+                  </a>
+                ) : (
+                  <p className={`text-sm font-semibold ${quoteLoading ? "text-gray-400" : "text-gray-900"}`}>{formatCad(priceData.unitAmount)} {t("product.unit")}</p>
+                )}
               </div>
 
                 {isTextEditor && (
@@ -1000,7 +1152,175 @@ export default function ProductClient({ product, relatedProducts }) {
                 </div>
               )}
 
-              {!isTextEditor && sizeOptions.length > 0 && (
+              {isBusinessCard && (
+                <div className="mt-5 space-y-5">
+                  {/* Card Type Grid */}
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.cardType")}</p>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {cardTypes.map((ct) => (
+                        <button
+                          key={ct.id}
+                          type="button"
+                          onClick={() => setCardType(ct.id)}
+                          className={`rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
+                            cardType === ct.id
+                              ? "border-gray-900 bg-gray-900 text-white"
+                              : "border-gray-200 bg-white text-gray-900 hover:border-gray-400"
+                          }`}
+                        >
+                          <span className="block text-sm font-semibold">{t("bc.type." + ct.id) !== "bc.type." + ct.id ? t("bc.type." + ct.id) : ct.label}</span>
+                          <span className={`block text-[11px] ${cardType === ct.id ? "text-gray-300" : "text-gray-500"}`}>{t("bc.desc." + ct.id) !== "bc.desc." + ct.id ? t("bc.desc." + ct.id) : ct.desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Sides Radio (hidden for "thick" type) */}
+                  {cardType !== "thick" && sidesOptions.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.sides")}</p>
+                      <div className="mt-2 flex gap-2">
+                        {sidesOptions.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setSides(s.id)}
+                            className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
+                              sides === s.id
+                                ? "border-gray-900 bg-gray-900 text-white"
+                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                            }`}
+                          >
+                            {t("bc.side." + s.id) !== "bc.side." + s.id ? t("bc.side." + s.id) : s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Thick Layer Selector */}
+                  {cardType === "thick" && thickLayers.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.layers")}</p>
+                      <div className="mt-2 flex gap-2">
+                        {thickLayers.map((l) => (
+                          <button
+                            key={l.id}
+                            type="button"
+                            onClick={() => setThickLayer(l.id)}
+                            className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
+                              thickLayer === l.id
+                                ? "border-gray-900 bg-gray-900 text-white"
+                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                            }`}
+                          >
+                            {t("bc.layer." + l.id) !== "bc.layer." + l.id ? t("bc.layer." + l.id) : l.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Names Stepper */}
+                  {multiNameConfig?.enabled && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.names")}</p>
+                      <p className="mt-1 text-xs text-gray-500">{t("bc.namesHint")}</p>
+                      <div className="mt-2 flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setNames((n) => Math.max(1, n - 1))}
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          value={names}
+                          min={1}
+                          max={multiNameConfig.maxNames || 20}
+                          onChange={(e) => {
+                            const v = Math.max(1, Math.min(multiNameConfig.maxNames || 20, Math.floor(Number(e.target.value) || 1)));
+                            setNames(v);
+                          }}
+                          className="w-16 rounded-xl border border-gray-300 px-2 py-2 text-center text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setNames((n) => Math.min(multiNameConfig.maxNames || 20, n + 1))}
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      {names > 1 && (
+                        <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                          <p className="text-sm font-semibold text-emerald-800">
+                            {t("bc.totalCards", { names, qty: quantity, total: names * quantity })}
+                          </p>
+                          {quote?.meta?.savingsVsIndividual > 0 && (
+                            <p className="mt-1 text-sm font-semibold text-emerald-600">
+                              {t("bc.savings", { amount: formatCad(quote.meta.savingsVsIndividual) })}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Multi-name stepper (for split products that have multiName but aren't the old combined card) */}
+              {!isBusinessCard && showMultiName && (
+                <div className="mt-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.names")}</p>
+                  <p className="mt-1 text-xs text-gray-500">{t("bc.namesHint")}</p>
+                  <div className="mt-2 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setNames((n) => Math.max(1, n - 1))}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      value={names}
+                      min={1}
+                      max={multiNameConfig.maxNames || 20}
+                      onChange={(e) => {
+                        const v = Math.max(1, Math.min(multiNameConfig.maxNames || 20, Math.floor(Number(e.target.value) || 1)));
+                        setNames(v);
+                      }}
+                      className="w-16 rounded-xl border border-gray-300 px-2 py-2 text-center text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setNames((n) => Math.min(multiNameConfig.maxNames || 20, n + 1))}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  {names > 1 && (
+                    <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                      <p className="text-sm font-semibold text-emerald-800">
+                        {t("bc.totalCards", { names, qty: quantity, total: names * quantity })}
+                      </p>
+                      {quote?.meta?.savingsVsIndividual > 0 && (
+                        <p className="mt-1 text-sm font-semibold text-emerald-600">
+                          {t("bc.savings", { amount: formatCad(quote.meta.savingsVsIndividual) })}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!isBusinessCard && !isTextEditor && sizeOptions.length > 0 && (
                 <div className="mt-5 space-y-4">
                   {envelopeVariantConfig.enabled ? (
                     <>
@@ -1035,21 +1355,20 @@ export default function ProductClient({ product, relatedProducts }) {
                       </div>
                     </>
                   ) : (
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.size")}</label>
-                      <select value={selectedSizeLabel} onChange={(e) => setSelectedSizeLabel(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
-                        {sizeOptions.map((s) => (
-                          <option key={s.id} value={s.label}>{s.label}</option>
-                        ))}
-                      </select>
-                    </div>
+                    <SizeSelector
+                      label={uiConfig?.sizeToggleLabel || t("product.size")}
+                      options={sizeOptions}
+                      value={selectedSizeLabel}
+                      onChange={setSelectedSizeLabel}
+                      placeholder={uiConfig?.sizeToggleLabel || t("product.size")}
+                    />
                   )}
 
                   {selectedSize?.notes && <p className="text-xs text-gray-500">{selectedSize.notes}</p>}
                 </div>
               )}
 
-              {materials.length > 0 && (
+              {!hideMaterials && materials.length > 0 && (
                 <div className="mt-5">
                   <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.material")}</label>
                   <select value={material} onChange={(e) => setMaterial(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
@@ -1062,11 +1381,11 @@ export default function ProductClient({ product, relatedProducts }) {
                 </div>
               )}
 
-              {addons.length > 0 && (
+              {!hideAddons && visibleAddons.length > 0 && (
                 <div className="mt-5 space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.addons")}</p>
                   <div className="space-y-2">
-                    {addons.map((addon) => (
+                    {visibleAddons.map((addon) => (
                       <label key={addon.id} className="flex cursor-pointer items-start gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
                         <input
                           type="checkbox"
@@ -1081,8 +1400,13 @@ export default function ProductClient({ product, relatedProducts }) {
                           className="mt-0.5"
                         />
                         <span className="flex-1">
-                          <span className="font-medium text-gray-900">{addon.name}</span>
+                          <span className="font-medium text-gray-900">{t("bc.addon." + addon.id) !== "bc.addon." + addon.id ? t("bc.addon." + addon.id) : addon.name}</span>
                           {addon.description && <span className="block text-xs text-gray-500">{addon.description}</span>}
+                          {addon.price > 0 && (
+                            <span className="block text-xs text-gray-500">
+                              {addon.type === "flat" ? `$${addon.price.toFixed(2)} flat` : `$${addon.price.toFixed(2)}/unit`}
+                            </span>
+                          )}
                         </span>
                       </label>
                     ))}
@@ -1090,7 +1414,7 @@ export default function ProductClient({ product, relatedProducts }) {
                 </div>
               )}
 
-              {finishings.length > 0 && (
+              {!hideFinishings && finishings.length > 0 && (
                 <div className="mt-5 space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.finishing")}</p>
                   <div className="space-y-2">
@@ -1175,31 +1499,33 @@ export default function ProductClient({ product, relatedProducts }) {
                 ) : null}
               </div>
 
-              <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.tierPricing")}</p>
-                <p className="mt-2 text-xs text-gray-600">{t("product.bulkDiscountHint")}</p>
-                {bulkExample && (
-                  <p className="mt-1 text-xs text-gray-600">
-                    {t("product.bulkDiscountExample", {
-                      minQty: bulkExample.minQty,
-                      minUnit: bulkExample.minUnit,
-                      maxQty: bulkExample.maxQty,
-                      maxUnit: bulkExample.maxUnit,
-                    })}
-                  </p>
-                )}
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  {bulkRows.map((row) => (
-                    <div
-                      key={row.qty}
-                      className={`flex items-center justify-between rounded-lg px-3 py-2 ${row.qty === quantity ? "bg-gray-900 text-white" : "bg-white"}`}
-                    >
-                      <span>{row.qty}{t("product.pcs")}</span>
-                      <span className="font-semibold">{formatCad(row.unitAmount)}</span>
-                    </div>
-                  ))}
+              {!hideTierPricing && (
+                <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.tierPricing")}</p>
+                  <p className="mt-2 text-xs text-gray-600">{t("product.bulkDiscountHint")}</p>
+                  {bulkExample && (
+                    <p className="mt-1 text-xs text-gray-600">
+                      {t("product.bulkDiscountExample", {
+                        minQty: bulkExample.minQty,
+                        minUnit: bulkExample.minUnit,
+                        maxQty: bulkExample.maxQty,
+                        maxUnit: bulkExample.maxUnit,
+                      })}
+                    </p>
+                  )}
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                    {bulkRows.map((row) => (
+                      <div
+                        key={row.qty}
+                        className={`flex items-center justify-between rounded-lg px-3 py-2 ${row.qty === quantity ? "bg-gray-900 text-white" : "bg-white"}`}
+                      >
+                        <span>{row.qty}{t("product.pcs")}</span>
+                        <span className="font-semibold">{formatCad(row.unitAmount)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="mt-5 space-y-2">
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.artworkUpload")}</label>
@@ -1265,7 +1591,12 @@ export default function ProductClient({ product, relatedProducts }) {
                 )}
                 <div className="flex items-center justify-between text-sm">
                   <span>{t("product.subtotal")}</span>
-                  <span className="font-semibold">{formatCad(priceData.subtotal)}</span>
+                  <div className="text-right">
+                    <span className="font-semibold">{formatCad(priceData.subtotal)}</span>
+                    {priceData.unitAmount != null && Number(quantity) > 1 && (
+                      <span className="ml-2 text-xs text-gray-400">{t("bc.unitPrice", { price: formatCad(priceData.unitAmount) })}</span>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-sm">
                   <span>{t("product.tax")}</span>
@@ -1289,13 +1620,36 @@ export default function ProductClient({ product, relatedProducts }) {
                         : "bg-gray-900 hover:bg-black"
                   }`}
                 >
-                  {!canAddToCart ? t("product.fixSizeErrors") : added ? t("product.added") : t("product.addToCart")}
+                  {!canAddToCart
+                    ? priceData.unpriced
+                      ? t("product.priceOnRequest")
+                      : t("product.fixSizeErrors")
+                    : added
+                      ? t("product.added")
+                      : t("product.addToCart")}
                 </button>
               </div>
 
-              <div className="mt-4">
+              <div className="mt-4 space-y-3">
                 <GuaranteeBadge />
+                <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-600">
+                  <svg className="h-4 w-4 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-semibold">{t("trust.ordersCompleted")}</span>
+                </div>
+                <PaymentBadges />
               </div>
+
+              <Link
+                href={`/quote?product=${product.slug}&name=${encodeURIComponent(product.name)}`}
+                className="mt-4 flex items-center justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 transition-colors hover:bg-gray-100"
+              >
+                <span className="text-xs text-gray-600">{t("quote.stickyLabel")}</span>
+                <span className="rounded-full bg-gray-900 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white">
+                  {t("quote.stickyCta")}
+                </span>
+              </Link>
             </div>
 
             <GuaranteeInfo />
@@ -1344,7 +1698,13 @@ export default function ProductClient({ product, relatedProducts }) {
                 disabled={!canAddToCart}
                 className={`flex-1 max-w-[200px] rounded-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-all duration-200 ${!canAddToCart ? "bg-gray-300 cursor-not-allowed" : added ? "bg-emerald-600" : "bg-gray-900 hover:bg-black"}`}
               >
-                {!canAddToCart ? t("product.fixSizeErrors") : added ? t("product.added") : t("product.addToCart")}
+                {!canAddToCart
+                  ? priceData.unpriced
+                    ? t("product.priceOnRequest")
+                    : t("product.fixSizeErrors")
+                  : added
+                    ? t("product.added")
+                    : t("product.addToCart")}
               </button>
             </div>
           </div>

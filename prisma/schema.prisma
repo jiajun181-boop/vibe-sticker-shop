@@ -7,14 +7,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AccountType {
+  B2C
+  B2B
+}
+
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  name      String?
-  phone     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  addresses Address[]
+  id                   String      @id @default(cuid())
+  email                String      @unique
+  name                 String?
+  phone                String?
+  password             String?
+  accountType          AccountType @default(B2C)
+  emailVerified        Boolean     @default(false)
+  emailVerifyToken     String?     @unique
+  emailVerifyExpires   DateTime?
+  passwordResetToken   String?     @unique
+  passwordResetExpires DateTime?
+  companyName          String?
+  companyRole          String?
+  b2bApproved          Boolean     @default(false)
+  b2bApprovedAt        DateTime?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  addresses            Address[]
+  orders               Order[]
+
+  @@index([accountType, b2bApproved])
 }
 
 model Address {
@@ -113,6 +132,8 @@ model Order {
   customerEmail         String
   customerName          String?
   customerPhone         String?
+  userId                String?
+  user                  User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   // Amounts (cents)
   subtotalAmount        Int              @default(0)
@@ -150,6 +171,7 @@ model Order {
 
   @@index([status, paymentStatus])
   @@index([customerEmail])
+  @@index([userId])
   @@index([isArchived])
 }
 

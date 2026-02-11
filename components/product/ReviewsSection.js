@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import StarRating from "@/components/product/StarRating";
 
 const REVIEWS = [
   { id: 1, name: "Mike R.", company: "GTA Logistics", text: "Fast turnaround on our fleet lettering. 50 trucks done in a week.", rating: 5, date: "2025-12-15" },
@@ -11,23 +12,6 @@ const REVIEWS = [
   { id: 5, name: "Carlos M.", company: "QuickShip Couriers", text: "CVOR and DOT numbers done same day. Exactly what we needed.", rating: 5, date: "2025-08-14" },
   { id: 6, name: "Lisa W.", company: "Bloom Event Co.", text: "Tabletop banners are perfect for pop-up events. Compact and premium feel.", rating: 4, date: "2025-07-30" },
 ];
-
-function Stars({ count }) {
-  return (
-    <div className="flex gap-0.5">
-      {Array.from({ length: 5 }, (_, i) => (
-        <svg
-          key={i}
-          className={`h-4 w-4 ${i < count ? "text-amber-400" : "text-gray-200"}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      ))}
-    </div>
-  );
-}
 
 export default function ReviewsSection() {
   const { t } = useTranslation();
@@ -43,7 +27,7 @@ export default function ReviewsSection() {
           <p className="mt-1 text-xs text-gray-500">{t("reviews.count", { count: REVIEWS.length })}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Stars count={Math.round(Number(avgRating))} />
+          <StarRating value={Number(avgRating)} size={16} />
           <span className="text-sm font-semibold text-gray-900">{t("reviews.avgRating", { rating: avgRating })}</span>
         </div>
       </div>
@@ -57,7 +41,7 @@ export default function ReviewsSection() {
                 <p className="text-xs text-gray-500">{review.company}</p>
               </div>
               <div className="text-right">
-                <Stars count={review.rating} />
+                <StarRating value={review.rating} size={16} />
                 <p className="mt-0.5 text-[10px] text-gray-400">{t("reviews.verified")}</p>
               </div>
             </div>

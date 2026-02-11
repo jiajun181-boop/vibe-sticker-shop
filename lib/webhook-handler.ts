@@ -131,7 +131,25 @@ export async function handleCheckoutCompleted(
     return newOrder;
   });
 
-  // 6. Auto-create production jobs for each order item
+  // 6. Link order to existing user account (by email)
+  try {
+    if (session.customer_email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email: session.customer_email.toLowerCase() },
+      });
+      if (existingUser) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { userId: existingUser.id },
+        });
+        console.log(`[Webhook] Linked order ${order.id} to user ${existingUser.id}`);
+      }
+    }
+  } catch (linkError) {
+    console.error("[Webhook] Failed to link order to user:", linkError);
+  }
+
+  // 7. Auto-create production jobs for each order item
   try {
     const orderItems = await prisma.orderItem.findMany({
       where: { orderId: order.id },

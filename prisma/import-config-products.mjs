@@ -96,7 +96,7 @@ const CATEGORY_TAGS = {
   "banners-displays": ["event"],
   "marketing-prints": ["retail"],
   "packaging": ["retail"],
-  "displays": ["event", "retail"],
+  "display-stands": ["event", "retail"],
   "business-forms": ["finance"],
   "retail-promo": ["retail", "restaurants"],
   "large-format-graphics": ["retail", "facility"],
