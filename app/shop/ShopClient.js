@@ -54,6 +54,7 @@ export default function ShopClient({
   const [view, setView] = useState("grid");
   const [pageSize, setPageSize] = useState(12);
   const [page, setPage] = useState(1);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const hiddenSet = useMemo(() => new Set(hiddenCategories), [hiddenCategories]);
 
@@ -177,8 +178,119 @@ export default function ShopClient({
           <h1 className="mt-2 text-4xl font-semibold tracking-tight">{t("shop.title")}</h1>
         </header>
 
+        {/* Mobile filters: compact search + category chips + toggle */}
+        <div className="lg:hidden space-y-3 mb-4">
+          <input
+            value={query}
+            onChange={(e) => {
+              const nextQ = e.target.value;
+              setQuery(nextQ);
+              setPage(1);
+              syncUrl({ query: nextQ });
+            }}
+            placeholder={t("shop.searchPlaceholder")}
+            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"
+          />
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setCategory(cat);
+                  setPage(1);
+                  syncUrl({ category: cat });
+                }}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${
+                  category === cat ? "bg-gray-900 text-white" : "border border-gray-200 text-gray-700 hover:border-gray-400"
+                }`}
+              >
+                {categoryLabels[cat] || cat}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+              className="flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:border-gray-400"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+              </svg>
+              {t("shop.filters")}
+              {(useCase || tag) && <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[9px] text-white">!</span>}
+            </button>
+            {(useCase || tag) && (
+              <button
+                onClick={() => { setUseCase(""); setTag(""); setPage(1); syncUrl({ useCase: "", tag: "" }); }}
+                className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400 hover:text-gray-700"
+              >
+                {t("shop.clear")}
+              </button>
+            )}
+          </div>
+          {mobileFiltersOpen && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.useCase")}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {USE_CASES.map((uc) => {
+                    const active = useCase === uc.slug;
+                    return (
+                      <button
+                        key={uc.slug}
+                        onClick={() => {
+                          const next = active ? "" : uc.slug;
+                          setUseCase(next);
+                          setPage(1);
+                          syncUrl({ useCase: next });
+                        }}
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          active ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {uc.icon} {t(`useCase.${uc.slug}.title`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {availableIndustryTags.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.industry")}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {availableIndustryTags.map((tg) => {
+                      const meta = INDUSTRY_LABELS[tg];
+                      const label = meta?.label || tg;
+                      const icon = meta?.icon || "";
+                      const active = tag === tg;
+                      return (
+                        <button
+                          key={tg}
+                          onClick={() => {
+                            const nextTag = active ? "" : tg;
+                            setTag(nextTag);
+                            setPage(1);
+                            syncUrl({ tag: nextTag });
+                          }}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            active ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {icon} {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-          <aside className="space-y-4 rounded-3xl border border-gray-200 bg-white p-5 lg:sticky lg:top-24 lg:h-fit">
+          {/* Desktop sidebar — hidden on mobile */}
+          <aside className="hidden lg:block space-y-4 rounded-3xl border border-gray-200 bg-white p-5 lg:sticky lg:top-24 lg:h-fit">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.search")}</p>
               <input
@@ -268,16 +380,16 @@ export default function ShopClient({
                 {availableIndustryTags.length === 0 ? (
                   <span className="text-xs text-gray-400">{t("shop.noIndustryTags")}</span>
                 ) : (
-                  availableIndustryTags.map((t) => {
-                    const meta = INDUSTRY_LABELS[t];
-                    const label = meta?.label || t;
-                    const icon = meta?.icon || "🏷️";
-                    const active = tag === t;
+                  availableIndustryTags.map((tg) => {
+                    const meta = INDUSTRY_LABELS[tg];
+                    const label = meta?.label || tg;
+                    const icon = meta?.icon || "";
+                    const active = tag === tg;
                     return (
                       <button
-                        key={t}
+                        key={tg}
                         onClick={() => {
-                          const nextTag = active ? "" : t;
+                          const nextTag = active ? "" : tg;
                           setTag(nextTag);
                           setPage(1);
                           syncUrl({ tag: nextTag });
