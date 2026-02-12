@@ -126,6 +126,31 @@ export default async function HomePage() {
         <UseCaseSection />
       </div>
 
+      {/* Popular Products — quick links */}
+      <div className="max-w-7xl mx-auto px-6 mb-10">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-400 text-center mb-4">
+          {t("home.popularProducts")}
+        </h3>
+        <div className="flex flex-wrap justify-center gap-2">
+          {[
+            { label: t("mp.sub.businessCards.title"), href: "/shop/business-cards" },
+            { label: t("mp.sub.flyers.title"), href: "/shop/marketing-prints/flyers" },
+            { label: "Stickers & Labels", href: "/shop?category=stickers-labels" },
+            { label: t("mp.sub.postcards.title"), href: "/shop/marketing-prints/postcards" },
+            { label: t("mp.sub.brochures.title"), href: "/shop/marketing-prints/brochures" },
+            { label: "Banners", href: "/shop?category=banners-displays" },
+          ].map((chip) => (
+            <Link
+              key={chip.href}
+              href={chip.href}
+              className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-all hover:border-gray-900 hover:bg-gray-900 hover:text-white"
+            >
+              {chip.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Shop by Category — visual cards */}
       <div className="max-w-7xl mx-auto px-6 mb-14">
         <h2 className="text-2xl md:text-3xl font-black tracking-tight text-center mb-8">

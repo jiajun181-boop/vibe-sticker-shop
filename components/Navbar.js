@@ -54,7 +54,57 @@ export default function Navbar() {
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-gray-600 md:flex">
           <Link href="/" className="transition-colors duration-200 hover:text-gray-900">{t("nav.home")}</Link>
-          <Link href="/shop" className="transition-colors duration-200 hover:text-gray-900">{t("nav.shop")}</Link>
+
+          {/* Shop mega-menu dropdown */}
+          <div className="relative group">
+            <Link href="/shop" className="transition-colors duration-200 hover:text-gray-900">
+              {t("nav.shop")}
+            </Link>
+            <div className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
+              <div className="w-[480px] rounded-xl border border-gray-200 bg-white p-5 shadow-xl">
+                <div className="grid grid-cols-3 gap-6">
+                  {/* Column 1: Popular */}
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">{t("nav.shopPopular")}</p>
+                    <div className="mt-2 space-y-1">
+                      <Link href="/shop/business-cards" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.businessCards.title")}</Link>
+                      <Link href="/shop/marketing-prints/flyers" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.flyers.title")}</Link>
+                      <Link href="/shop?category=stickers-labels" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Stickers & Labels</Link>
+                      <Link href="/shop/marketing-prints/postcards" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.postcards.title")}</Link>
+                    </div>
+                  </div>
+                  {/* Column 2: Marketing Prints */}
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">{t("nav.shopMarketing")}</p>
+                    <div className="mt-2 space-y-1">
+                      <Link href="/shop/marketing-prints/brochures" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.brochures.title")}</Link>
+                      <Link href="/shop/marketing-prints/booklets" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.booklets.title")}</Link>
+                      <Link href="/shop/marketing-prints/menus" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.menus.title")}</Link>
+                      <Link href="/shop/marketing-prints/stationery" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.stationery.title")}</Link>
+                    </div>
+                  </div>
+                  {/* Column 3: Signage */}
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">{t("nav.shopSignage")}</p>
+                    <div className="mt-2 space-y-1">
+                      <Link href="/shop?category=banners-displays" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Banners & Flags</Link>
+                      <Link href="/shop?category=rigid-signs" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Rigid Signs</Link>
+                      <Link href="/shop?category=display-stands" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Display Stands</Link>
+                      <Link href="/shop?category=large-format-graphics" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Large Format</Link>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 border-t border-gray-100 pt-3">
+                  <Link href="/shop" className="flex items-center gap-1 text-xs font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+                    {t("nav.shopAll")}
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Ideas dropdown */}
           <div className="relative group">
@@ -178,15 +228,23 @@ export default function Navbar() {
           ))}
         </div>
       </div>
-      {/* Mobile use-case chips */}
+      {/* Mobile category chips */}
       <div className="flex gap-2 overflow-x-auto px-6 pb-3 md:hidden scrollbar-hide">
-        {USE_CASES.map((uc) => (
+        {[
+          { label: t("mp.sub.businessCards.title"), href: "/shop/business-cards" },
+          { label: t("mp.sub.flyers.title"), href: "/shop/marketing-prints/flyers" },
+          { label: "Stickers", href: "/shop?category=stickers-labels" },
+          { label: t("mp.sub.postcards.title"), href: "/shop/marketing-prints/postcards" },
+          { label: t("mp.sub.brochures.title"), href: "/shop/marketing-prints/brochures" },
+          { label: "Banners", href: "/shop?category=banners-displays" },
+          { label: "Signs", href: "/shop?category=rigid-signs" },
+        ].map((chip) => (
           <Link
-            key={uc.slug}
-            href={`/shop?useCase=${uc.slug}`}
+            key={chip.href}
+            href={chip.href}
             className="shrink-0 rounded-full border border-gray-200 px-3 py-1 text-[11px] font-medium text-gray-600 hover:border-gray-400 whitespace-nowrap"
           >
-            {uc.icon} {t(`useCase.${uc.slug}.title`)}
+            {chip.label}
           </Link>
         ))}
       </div>

@@ -22,33 +22,40 @@ export async function generateMetadata() {
   };
 }
 
+// Slug groups matching MarketingPrintsClient SUB_CATEGORIES
+const SLUG_GROUPS = {
+  flyers: ["flyers", "mp-flyers"],
+  brochures: ["brochures", "mp-brochures"],
+  postcards: ["postcards", "mp-postcards"],
+  booklets: ["booklets", "catalog-booklets"],
+  menus: ["menus", "mp-menus"],
+  stationery: ["letterhead", "envelopes", "ncr-invoices", "order-forms-single", "release-forms", "notepads", "presentation-folders"],
+  marketing: ["rack-cards", "door-hangers", "tags-hang-tags", "calendars", "product-inserts", "box-sleeves"],
+  cards: ["invitation-cards", "certificates", "coupons", "bookmarks", "tickets", "greeting-cards", "table-display-cards"],
+};
+
 export default async function MarketingPrintsPage() {
+  // Fetch all active marketing-prints slugs for counting
   const products = await prisma.product.findMany({
-    where: {
-      category: "marketing-prints",
-      isActive: true,
-      AND: [
-        { slug: { not: { startsWith: "business-cards-" } } },
-        { slug: { not: { startsWith: "stamps-" } } },
-      ],
-    },
-    include: {
-      images: { take: 1, orderBy: { sortOrder: "asc" } },
-    },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    where: { category: "marketing-prints", isActive: true },
+    select: { slug: true },
   });
 
-  // Count business cards and stamps for the featured links
+  const slugSet = new Set(products.map((p) => p.slug));
+
+  // Count products per sub-category
+  const counts = {};
+  for (const [key, slugs] of Object.entries(SLUG_GROUPS)) {
+    counts[key] = slugs.filter((s) => slugSet.has(s)).length;
+  }
+
+  // Business cards and stamps use prefix-based counting
   const [bcCount, stampsCount] = await Promise.all([
     prisma.product.count({ where: { isActive: true, slug: { startsWith: "business-cards-" } } }),
     prisma.product.count({ where: { isActive: true, slug: { startsWith: "stamps-" } } }),
   ]);
+  counts.businessCards = bcCount;
+  counts.stamps = stampsCount;
 
-  return (
-    <MarketingPrintsClient
-      products={products}
-      bcCount={bcCount}
-      stampsCount={stampsCount}
-    />
-  );
+  return <MarketingPrintsClient counts={counts} />;
 }
