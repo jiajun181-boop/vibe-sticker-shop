@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSubProducts } from "@/lib/subProductConfig";
-import ProductLandingClient from "./ProductLandingClient";
+import ProductClient from "../../[category]/[product]/ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
 
@@ -142,7 +142,7 @@ export default async function MarketingPrintProductPage({ params }) {
       <ProductSchema product={safeProduct} />
       <BreadcrumbSchema category={safeProduct.category} productName={safeProduct.name} />
       <Suspense>
-        <ProductLandingClient product={safeProduct} relatedProducts={safeRelated} />
+        <ProductClient product={safeProduct} relatedProducts={safeRelated} />
       </Suspense>
     </>
   );
