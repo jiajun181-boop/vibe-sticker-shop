@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
@@ -51,10 +51,17 @@ export default function ShopClient({
   const [tag, setTag] = useState(initialTag || "");
   const [useCase, setUseCase] = useState(initialUseCase || "");
   const [sortBy, setSortBy] = useState("popular");
-  const [view, setView] = useState("grid");
+  const [view, setView] = useState(() =>
+    typeof window !== "undefined" && window.innerWidth < 1024 ? "list" : "grid"
+  );
   const [pageSize, setPageSize] = useState(12);
   const [page, setPage] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Sync view default after hydration for SSR safety
+  useEffect(() => {
+    if (window.innerWidth < 1024 && view === "grid") setView("list");
+  }, []);
 
   const hiddenSet = useMemo(() => new Set(hiddenCategories), [hiddenCategories]);
 
