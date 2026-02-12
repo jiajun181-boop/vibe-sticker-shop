@@ -437,9 +437,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 
-  // Sticky mobile ATC bar – show when original button scrolls out of view
+  // Sticky mobile ATC bar - show when original button scrolls out of view
   useEffect(() => {
     if (!addToCartRef.current) return;
+    if (typeof window === "undefined" || typeof window.IntersectionObserver === "undefined") {
+      setStickyVisible(false);
+      return;
+    }
     const observer = new IntersectionObserver(
       ([entry]) => setStickyVisible(!entry.isIntersecting),
       { threshold: 0 }

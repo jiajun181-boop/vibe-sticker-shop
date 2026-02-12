@@ -80,12 +80,16 @@ export default async function MarketingPrintProductPage({ params }) {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
+  // Ensure only plain JSON reaches client components (strip Prisma metadata/Date objects)
+  const safeProduct = JSON.parse(JSON.stringify(product));
+  const safeRelated = JSON.parse(JSON.stringify(relatedProducts));
+
   return (
     <>
-      <ProductSchema product={product} />
-      <BreadcrumbSchema category={product.category} productName={product.name} />
+      <ProductSchema product={safeProduct} />
+      <BreadcrumbSchema category={safeProduct.category} productName={safeProduct.name} />
       <Suspense>
-        <ProductLandingClient product={product} relatedProducts={relatedProducts} />
+        <ProductLandingClient product={safeProduct} relatedProducts={safeRelated} />
       </Suspense>
     </>
   );
