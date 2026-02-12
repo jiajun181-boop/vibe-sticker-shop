@@ -28,6 +28,7 @@ function ProductCard({ product, t }) {
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            unoptimized={image.url.endsWith(".svg")}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">

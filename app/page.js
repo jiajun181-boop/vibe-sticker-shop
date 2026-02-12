@@ -105,6 +105,7 @@ export default async function HomePage() {
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 768px) 50vw, 25vw"
+                    unoptimized={p.images[0].url.endsWith(".svg")}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

@@ -4,9 +4,9 @@ export function OrganizationSchema() {
   const data = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Vibe Sticker Shop",
+    name: "La Lunar Printing Inc.",
     url: SITE_URL,
-    logo: `${SITE_URL}/og-image.png`,
+    logo: `${SITE_URL}/logo.svg`,
     contactPoint: {
       "@type": "ContactPoint",
       telephone: "+1-416-555-0199",
@@ -38,7 +38,7 @@ export function ProductSchema({ product }) {
     description: product.description || `Custom ${product.name}`,
     image,
     url: `${SITE_URL}/shop/${product.category}/${product.slug}`,
-    brand: { "@type": "Brand", name: "Vibe Sticker Shop" },
+    brand: { "@type": "Brand", name: "La Lunar Printing Inc." },
     offers: {
       "@type": "Offer",
       priceCurrency: "CAD",

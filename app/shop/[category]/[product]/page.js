@@ -8,10 +8,28 @@ export const dynamic = "force-dynamic";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
 
+function safeDecode(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function toClientSafe(value) {
+  return JSON.parse(
+    JSON.stringify(value, (_key, v) => {
+      if (typeof v === "bigint") return v.toString();
+      return v;
+    })
+  );
+}
+
 export async function generateMetadata({ params }) {
   const { category, product: slug } = await params;
+  const decodedSlug = safeDecode(slug);
   const p = await prisma.product.findFirst({
-    where: { slug: decodeURIComponent(slug), isActive: true },
+    where: { slug: decodedSlug, isActive: true },
     include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
   });
   if (!p) return {};
@@ -34,8 +52,8 @@ export async function generateMetadata({ params }) {
 
 export default async function ProductPage({ params }) {
   const { category, product: slug } = await params;
-  const decodedSlug = decodeURIComponent(slug);
-  const decodedCategory = decodeURIComponent(category);
+  const decodedSlug = safeDecode(slug);
+  const decodedCategory = safeDecode(category);
 
   const product = await prisma.product.findFirst({
     where: {
@@ -75,8 +93,8 @@ export default async function ProductPage({ params }) {
   });
 
   // Ensure only plain JSON reaches client components (strip Prisma metadata/Date objects)
-  const safeProduct = JSON.parse(JSON.stringify(product));
-  const safeRelated = JSON.parse(JSON.stringify(relatedProducts));
+  const safeProduct = toClientSafe(product);
+  const safeRelated = toClientSafe(relatedProducts);
 
   return (
     <>

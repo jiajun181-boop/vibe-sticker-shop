@@ -78,6 +78,7 @@ export default function ImageGallery({ images, productName }) {
             className="object-cover"
             sizes="(max-width: 1024px) 100vw, 58vw"
             priority
+            unoptimized={activeImage.url.endsWith(".svg")}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
@@ -135,6 +136,7 @@ export default function ImageGallery({ images, productName }) {
                 fill
                 className="object-cover"
                 sizes="64px"
+                unoptimized={img.url.endsWith(".svg")}
               />
             </button>
           ))}

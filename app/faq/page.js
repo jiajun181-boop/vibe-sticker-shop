@@ -21,7 +21,7 @@ const FAQ_ITEMS_EN = [
 
 export async function generateMetadata() {
   return {
-    title: "FAQ - Vibe Sticker Shop",
+    title: "FAQ - La Lunar Printing Inc.",
     description: "Frequently asked questions about ordering, file requirements, shipping, and returns.",
   };
 }

@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
-import Stripe from "stripe";
 import SuccessClient from "./SuccessClient";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-01-28.clover",
-});
+async function getStripe() {
+  const Stripe = (await import("stripe")).default;
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2026-01-28.clover" as const,
+  });
+}
 
 interface SuccessPageProps {
   searchParams: {
@@ -20,6 +22,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   }
 
   try {
+    const stripe = await getStripe();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (session.status !== "complete" && session.payment_status !== "paid") {

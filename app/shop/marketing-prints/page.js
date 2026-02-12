@@ -25,12 +25,17 @@ export async function generateMetadata() {
 // Slug groups matching MarketingPrintsClient SUB_CATEGORIES
 const SLUG_GROUPS = {
   flyers: ["flyers", "mp-flyers"],
-  brochures: ["brochures", "mp-brochures"],
   postcards: ["postcards", "mp-postcards"],
+  brochures: ["brochures", "mp-brochures"],
+  posters: ["posters"],
   booklets: ["booklets", "catalog-booklets"],
   menus: ["menus", "mp-menus"],
-  stationery: ["letterhead", "envelopes", "ncr-invoices", "order-forms-single", "release-forms", "notepads", "presentation-folders"],
-  marketing: ["rack-cards", "door-hangers", "tags-hang-tags", "calendars", "product-inserts", "box-sleeves"],
+  envelopes: ["envelopes"],
+  rackCards: ["rack-cards"],
+  doorHangers: ["door-hangers"],
+  presentationFolders: ["presentation-folders"],
+  stationery: ["letterhead", "ncr-invoices", "order-forms-single", "release-forms", "notepads"],
+  marketing: ["tags-hang-tags", "calendars", "product-inserts", "box-sleeves"],
   cards: ["invitation-cards", "certificates", "coupons", "bookmarks", "tickets", "greeting-cards", "table-display-cards"],
 };
 

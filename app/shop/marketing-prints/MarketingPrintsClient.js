@@ -5,14 +5,21 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
 const SUB_CATEGORIES = [
+  // ── 10 core product categories (with sub-product pages) ──
   { key: "flyers", href: "/shop/marketing-prints/flyers", icon: "\uD83D\uDCC4" },
-  { key: "brochures", href: "/shop/marketing-prints/brochures", icon: "\uD83D\uDCF0" },
   { key: "postcards", href: "/shop/marketing-prints/postcards", icon: "\uD83D\uDC8C" },
+  { key: "brochures", href: "/shop/marketing-prints/brochures", icon: "\uD83D\uDCF0" },
+  { key: "posters", href: "/shop/marketing-prints/posters", icon: "\uD83D\uDDBC\uFE0F" },
   { key: "booklets", href: "/shop/marketing-prints/booklets", icon: "\uD83D\uDCD6" },
+  { key: "menus", href: "/shop/marketing-prints/menus", icon: "\uD83C\uDF7D\uFE0F" },
+  { key: "envelopes", href: "/shop/marketing-prints/envelopes", icon: "\u2709\uFE0F" },
+  { key: "rackCards", href: "/shop/marketing-prints/rack-cards", icon: "\uD83D\uDCCB" },
+  { key: "doorHangers", href: "/shop/marketing-prints/door-hangers", icon: "\uD83D\uDEAA" },
+  { key: "presentationFolders", href: "/shop/marketing-prints/presentation-folders", icon: "\uD83D\uDCC2" },
+  // ── other categories ──
   { key: "businessCards", href: "/shop/business-cards", icon: "\uD83D\uDCB3" },
   { key: "stamps", href: "/shop/marketing-prints/stamps", icon: "\uD83D\uDD16" },
-  { key: "menus", href: "/shop/marketing-prints/menus", icon: "\uD83C\uDF7D\uFE0F" },
-  { key: "stationery", href: "/shop/marketing-prints/stationery", icon: "\u2709\uFE0F" },
+  { key: "stationery", href: "/shop/marketing-prints/stationery", icon: "\uD83D\uDCDD" },
   { key: "marketing", href: "/shop/marketing-prints/marketing", icon: "\uD83D\uDCE3" },
   { key: "cards", href: "/shop/marketing-prints/cards", icon: "\uD83C\uDCB4" },
 ];

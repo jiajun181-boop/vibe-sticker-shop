@@ -432,7 +432,7 @@ export default function ShopClient({
                     >
                       <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-white border border-gray-200">
                         {p.images?.[0]?.url ? (
-                          <Image src={p.images[0].url} alt={p.name} fill className="object-cover" sizes="56px" />
+                          <Image src={p.images[0].url} alt={p.name} fill className="object-cover" sizes="56px" unoptimized={p.images[0].url.endsWith(".svg")} />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-400">{t("shop.noImage")}</div>
                         )}
@@ -511,7 +511,7 @@ export default function ShopClient({
                   <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:shadow-lg ${view === "list" ? "flex" : ""}`}>
                     <Link href={href} className={`relative block bg-gray-100 ${view === "list" ? "h-44 w-52 flex-shrink-0" : "aspect-[4/3]"}`}>
                       {product.images[0]?.url ? (
-                        <Image src={product.images[0].url} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" />
+                        <Image src={product.images[0].url} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" unoptimized={product.images[0].url.endsWith(".svg")} />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">{t("shop.noImage")}</div>
                       )}

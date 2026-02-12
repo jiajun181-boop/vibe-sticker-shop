@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   return {
-    title: "Contact Us - Vibe Sticker Shop",
+    title: "Contact Us - La Lunar Printing Inc.",
     description: "Get in touch with our team for quotes, support, or questions about custom printing services.",
   };
 }

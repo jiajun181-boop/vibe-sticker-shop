@@ -49,7 +49,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-[50] w-full border-b border-gray-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-900">
-          Vibe Sticker Shop
+          La Lunar Printing Inc.
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-gray-600 md:flex">

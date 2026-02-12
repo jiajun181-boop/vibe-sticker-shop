@@ -1,0 +1,30 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer Ring (Deep Ink Black) -->
+  <circle cx="100" cy="100" r="95" fill="none" stroke="#1A1A1A" stroke-width="2"/>
+  
+  <!-- Inner Ring (Deep Ink Black) -->
+  <circle cx="100" cy="100" r="80" fill="none" stroke="#1A1A1A" stroke-width="1.5"/>
+  
+  <!-- Lunar Crescent (Paper White background with Deep Ink Black stroke) -->
+  <defs>
+    <mask id="crescent-mask">
+      <rect width="200" height="200" fill="white"/>
+      <circle cx="115" cy="100" r="50" fill="black"/>
+    </mask>
+  </defs>
+  
+  <!-- Crescent shape -->
+  <circle cx="100" cy="100" r="50" fill="#1A1A1A" mask="url(#crescent-mask)"/>
+  
+  <!-- Decorative dots representing printing precision -->
+  <circle cx="100" cy="55" r="3" fill="#1A1A1A"/>
+  <circle cx="130" cy="100" r="3" fill="#1A1A1A"/>
+  <circle cx="100" cy="145" r="3" fill="#1A1A1A"/>
+  <circle cx="70" cy="100" r="3" fill="#1A1A1A"/>
+  
+  <!-- Center dot -->
+  <circle cx="100" cy="100" r="2" fill="#1A1A1A"/>
+  
+  <!-- Text -->
+  <text x="100" y="165" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#1A1A1A" text-anchor="middle" letter-spacing="1" font-weight="300">LA LUNAR</text>
+</svg>

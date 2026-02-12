@@ -9,9 +9,7 @@ import { showSuccessToast } from "@/components/Toast";
 import { validateDimensions } from "@/lib/materialLimits";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
-import { GuaranteeBadge, PaymentBadges } from "@/components/TrustBadges";
-import GuaranteeInfo from "@/components/product/GuaranteeInfo";
-import ReviewsSection from "@/components/product/ReviewsSection";
+import { PaymentBadges } from "@/components/TrustBadges";
 import ImageGallery from "@/components/product/ImageGallery";
 import { trackAddToCart } from "@/lib/analytics";
 import RecentlyViewed from "@/components/RecentlyViewed";
@@ -256,15 +254,15 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [selectedFinishings, setSelectedFinishings] = useState([]);
   const [wantsFinishing, setWantsFinishing] = useState(false);
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(true);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 768 : true
+  );
   const [selectedSizeLabel, setSelectedSizeLabel] = useState(sizeOptions[0]?.label || "");
   const [variantBase, setVariantBase] = useState("");
   const [variantValue, setVariantValue] = useState("");
   const [unit, setUnit] = useState("in");
   const [widthIn, setWidthIn] = useState(product.minWidthIn || 3);
   const [heightIn, setHeightIn] = useState(product.minHeightIn || 3);
-  const [file, setFile] = useState(null);
-  const [filePreview, setFilePreview] = useState("");
   const [uploadedArtwork, setUploadedArtwork] = useState(null); // { url, key, name, mime, size }
   const [added, setAdded] = useState(false);
 
@@ -389,6 +387,41 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     return () => window.removeEventListener("landing-select-size", handler);
   }, [variantConfig, sizeOptions]);
 
+  // Listen for landing page preset selection (flyers playbook cards)
+  useEffect(() => {
+    const handler = (e) => {
+      const detail = e.detail || {};
+      const sizeHint = typeof detail.size === "string" ? detail.size.trim().toLowerCase() : "";
+      const quantityHint = Number(detail.quantity);
+      const materialHint = typeof detail.material === "string" ? detail.material.trim().toLowerCase() : "";
+
+      if (sizeHint) {
+        if (variantConfig.enabled) {
+          const base = variantConfig.bases.find((b) => String(b).toLowerCase().includes(sizeHint));
+          if (base) setVariantBase(base);
+        } else {
+          const exact = sizeOptions.find((s) => String(s.label).toLowerCase() === sizeHint);
+          const fuzzy = sizeOptions.find((s) => String(s.label).toLowerCase().includes(sizeHint));
+          const match = exact || fuzzy;
+          if (match) setSelectedSizeLabel(match.label);
+        }
+      }
+
+      if (Number.isFinite(quantityHint) && quantityHint > 0) {
+        setQuantityValue(quantityHint);
+      }
+
+      if (materialHint) {
+        const exact = materials.find((m) => String(m.id).toLowerCase() === materialHint);
+        const byName = materials.find((m) => String(m.name).toLowerCase().includes(materialHint));
+        const match = exact || byName;
+        if (match) setMaterial(match.id);
+      }
+    };
+    window.addEventListener("landing-apply-preset", handler);
+    return () => window.removeEventListener("landing-apply-preset", handler);
+  }, [materials, sizeOptions, variantConfig]);
+
   const activeQuantityChoices = useMemo(() => {
     const fromSize = selectedSize?.quantityChoices || [];
     if (Array.isArray(fromSize) && fromSize.length > 0) return [...new Set(fromSize)].sort((a, b) => a - b);
@@ -444,12 +477,17 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       setStickyVisible(false);
       return;
     }
-    const observer = new IntersectionObserver(
-      ([entry]) => setStickyVisible(!entry.isIntersecting),
-      { threshold: 0 }
-    );
-    observer.observe(addToCartRef.current);
-    return () => observer.disconnect();
+    try {
+      const observer = new IntersectionObserver(
+        ([entry]) => setStickyVisible(!entry.isIntersecting),
+        { threshold: 0 }
+      );
+      observer.observe(addToCartRef.current);
+      return () => observer.disconnect();
+    } catch {
+      setStickyVisible(false);
+      return undefined;
+    }
   }, []);
 
   const widthDisplay = unit === "in" ? widthIn : Number((widthIn * INCH_TO_CM).toFixed(2));
@@ -656,25 +694,14 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     };
   }, [bulkRows]);
 
+  // Only include specs that have real values (not N/A)
   const specs = [
-    [t("product.spec.productType"), product.type],
-    [t("product.spec.pricingUnit"), product.pricingUnit === "per_sqft" ? t("product.spec.perSqft") : t("product.spec.perPiece")],
-    [t("product.spec.minSize"), product.minWidthIn && product.minHeightIn ? `${product.minWidthIn}" x ${product.minHeightIn}"` : t("product.spec.na")],
-    [t("product.spec.maxSize"), product.maxWidthIn && product.maxHeightIn ? `${product.maxWidthIn}" x ${product.maxHeightIn}"` : t("product.spec.na")],
-    [t("product.spec.minDpi"), product.minDpi ? String(product.minDpi) : t("product.spec.na")],
-    [t("product.spec.bleed"), product.requiresBleed ? t("product.spec.bleedRequired", { inches: product.bleedIn || 0.125 }) : t("product.spec.bleedNotRequired")],
-  ];
-
-  function onFileChange(e) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setFile(f);
-    if (f.type.startsWith("image/")) {
-      setFilePreview(URL.createObjectURL(f));
-    } else {
-      setFilePreview("");
-    }
-  }
+    product.type && [t("product.spec.productType"), product.type],
+    product.minWidthIn && product.minHeightIn && [t("product.spec.minSize"), `${product.minWidthIn}" x ${product.minHeightIn}"`],
+    product.maxWidthIn && product.maxHeightIn && [t("product.spec.maxSize"), `${product.maxWidthIn}" x ${product.maxHeightIn}"`],
+    product.minDpi && [t("product.spec.minDpi"), String(product.minDpi)],
+    product.requiresBleed && [t("product.spec.bleed"), t("product.spec.bleedRequired", { inches: product.bleedIn || 0.125 })],
+  ].filter(Boolean);
 
   function setSizeValue(type, value) {
     const n = Math.max(0.5, Number(value) || 0.5);
@@ -798,7 +825,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         sceneLabel: selectedScene?.label || null,
         addons: selectedAddons,
         finishings: selectedFinishings,
-        fileName: file?.name || null,
+        fileName: uploadedArtwork?.name || null,
         pricingUnit: product.pricingUnit,
         ...artworkMeta,
         ...editorMeta,
@@ -815,7 +842,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         sceneLabel: selectedScene?.label || null,
         addons: selectedAddons,
         finishings: selectedFinishings,
-        fileName: file?.name || null,
+        fileName: uploadedArtwork?.name || null,
         pricingUnit: product.pricingUnit,
         ...artworkMeta,
         ...editorMeta,
@@ -913,8 +940,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   <a href="/quote" className="font-semibold text-gray-700 underline hover:text-gray-900">{t("bc.specs.contactUs")}</a>
                 </div>
               </div>
-            ) : (
-              <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
+            ) : specs.length > 0 ? (
+              <div className="hidden lg:block rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">{t("product.specifications")}</h3>
                 <div className="mt-3 divide-y divide-gray-100">
                   {specs.map(([k, v]) => (
@@ -924,13 +951,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     </div>
                   ))}
                 </div>
-                {product.templateUrl && (
-                  <a href={product.templateUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:text-gray-900">
-                    {t("product.installationGuide")}
-                  </a>
-                )}
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="space-y-6 lg:col-span-5">
@@ -957,23 +979,117 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               </header>
             )}
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                  {t("product.realtimePricing")}
-              {quoteLoading && <span className="ml-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />}
-                </p>
-                {priceData.unpriced ? (
-                  <a
-                    href={`/quote?product=${product.slug}&name=${encodeURIComponent(product.name)}`}
-                    className="text-sm font-semibold text-gray-900 underline"
-                  >
-                    {t("product.priceOnRequest")}
-                  </a>
-                ) : (
-                  <p className={`text-sm font-semibold ${quoteLoading ? "text-gray-400" : "text-gray-900"}`}>{formatCad(priceData.unitAmount)} {t("product.unit")}</p>
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 flex flex-col">
+              {/* ── PRICE + QUANTITY + ATC (always visible, order-1) ── */}
+              <div className="order-1">
+                {/* Price display */}
+                <div className="flex items-baseline justify-between">
+                  {priceData.unpriced ? (
+                    <a
+                      href={`/quote?product=${product.slug}&name=${encodeURIComponent(product.name)}`}
+                      className="text-lg font-bold text-gray-900 underline"
+                    >
+                      {t("product.priceOnRequest")}
+                    </a>
+                  ) : (
+                    <div>
+                      <span className={`text-2xl font-bold ${quoteLoading ? "text-gray-400" : "text-gray-900"}`}>
+                        {formatCad(priceData.total)}
+                      </span>
+                      <span className="ml-1 text-xs text-gray-500">{t("product.cad")}</span>
+                      {quoteLoading && <span className="ml-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />}
+                    </div>
+                  )}
+                  {!priceData.unpriced && priceData.unitAmount != null && (
+                    <span className="text-xs text-gray-500">{formatCad(priceData.unitAmount)} {t("product.unit")}</span>
+                  )}
+                </div>
+
+                {!priceData.unpriced && (
+                  <p className="mt-1 text-xs text-gray-400">
+                    {t("product.subtotal")}: {formatCad(priceData.subtotal)} + {t("product.tax")}: {formatCad(priceData.tax)}
+                  </p>
                 )}
+
+                {/* Quantity — always visible */}
+                <div className="mt-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.quantity")}</p>
+                  {activeQuantityChoices.length > 0 ? (
+                    <div className="mt-2 flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          const idx = activeQuantityChoices.indexOf(quantity);
+                          const next = idx > 0 ? activeQuantityChoices[idx - 1] : activeQuantityChoices[0];
+                          setQuantityValue(next);
+                        }}
+                        className="h-9 w-9 rounded-full border border-gray-300"
+                      >
+                        -
+                      </button>
+                      <select
+                        value={String(quantity)}
+                        onChange={(e) => setQuantityValue(Number(e.target.value))}
+                        className="w-32 rounded-xl border border-gray-300 px-3 py-2 text-center text-sm"
+                      >
+                        {activeQuantityChoices.map((q) => (
+                          <option key={q} value={q}>{q}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          const idx = activeQuantityChoices.indexOf(quantity);
+                          const next =
+                            idx >= 0 && idx < activeQuantityChoices.length - 1
+                              ? activeQuantityChoices[idx + 1]
+                              : activeQuantityChoices[activeQuantityChoices.length - 1];
+                          setQuantityValue(next);
+                        }}
+                        className="h-9 w-9 rounded-full border border-gray-300"
+                      >
+                        +
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="mt-2 flex items-center gap-2">
+                      <button onClick={() => setQuantityValue(quantity - (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-gray-300">-</button>
+                      <input type="number" value={quantity} onChange={(e) => setQuantityValue(e.target.value)} className="w-24 rounded-xl border border-gray-300 px-3 py-2 text-center text-sm" />
+                      <button onClick={() => setQuantityValue(quantity + (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-gray-300">+</button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Add to Cart button */}
+                <div ref={addToCartRef} className="mt-4">
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={!canAddToCart}
+                    className={`w-full rounded-full px-4 py-3.5 text-sm font-semibold uppercase tracking-[0.15em] text-white transition-all duration-200 ${
+                      !canAddToCart
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : added
+                          ? "bg-emerald-600"
+                          : "bg-gray-900 hover:bg-black"
+                    }`}
+                  >
+                    {!canAddToCart
+                      ? priceData.unpriced
+                        ? t("product.priceOnRequest")
+                        : t("product.fixSizeErrors")
+                      : added
+                        ? t("product.added")
+                        : t("product.addToCart")}
+                  </button>
+                </div>
+
+                <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-gray-400">
+                  <span>{t("trust.madeToOrder")}</span>
+                  <span>•</span>
+                  <span>{t("trust.ordersCompleted")}</span>
+                </div>
               </div>
+
+              {/* ── OPTIONS (collapsed on mobile, order-2) ── */}
+              <div className="order-2 mt-5 border-t border-gray-100 pt-4">
 
                 {isTextEditor && (
                   <div className="mt-5 space-y-3">
@@ -1623,88 +1739,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     </div>
                   )}
 
-              <div className="mt-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.quantity")}</p>
-                {activeQuantityChoices.length > 0 ? (
-                  <div className="mt-2 flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        const idx = activeQuantityChoices.indexOf(quantity);
-                        const next = idx > 0 ? activeQuantityChoices[idx - 1] : activeQuantityChoices[0];
-                        setQuantityValue(next);
-                      }}
-                      className="h-9 w-9 rounded-full border border-gray-300"
-                    >
-                      -
-                    </button>
-                    <select
-                      value={String(quantity)}
-                      onChange={(e) => setQuantityValue(Number(e.target.value))}
-                      className="w-32 rounded-xl border border-gray-300 px-3 py-2 text-center text-sm"
-                    >
-                      {activeQuantityChoices.map((q) => (
-                        <option key={q} value={q}>
-                          {q}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={() => {
-                        const idx = activeQuantityChoices.indexOf(quantity);
-                        const next =
-                          idx >= 0 && idx < activeQuantityChoices.length - 1
-                            ? activeQuantityChoices[idx + 1]
-                            : activeQuantityChoices[activeQuantityChoices.length - 1];
-                        setQuantityValue(next);
-                      }}
-                      className="h-9 w-9 rounded-full border border-gray-300"
-                    >
-                      +
-                    </button>
-                  </div>
-                ) : (
-                  <div className="mt-2 flex items-center gap-2">
-                    <button onClick={() => setQuantityValue(quantity - (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-gray-300">-</button>
-                    <input type="number" value={quantity} onChange={(e) => setQuantityValue(e.target.value)} className="w-24 rounded-xl border border-gray-300 px-3 py-2 text-center text-sm" />
-                    <button onClick={() => setQuantityValue(quantity + (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-gray-300">+</button>
-                  </div>
-                )}
-                {activeQuantityChoices.length > 0 ? (
-                  <p className="mt-2 text-xs text-gray-500">
-                    {t("product.qtyChoices", { list: activeQuantityChoices.join(", ") })}
-                  </p>
-                ) : quantityRange ? (
-                  <p className="mt-2 text-xs text-gray-500">{t("product.qtyRange", { min: quantityRange.min, max: quantityRange.max })}</p>
-                ) : null}
-              </div>
-
-              {!hideTierPricing && (
-                <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.tierPricing")}</p>
-                  <p className="mt-2 text-xs text-gray-600">{t("product.bulkDiscountHint")}</p>
-                  {bulkExample && (
-                    <p className="mt-1 text-xs text-gray-600">
-                      {t("product.bulkDiscountExample", {
-                        minQty: bulkExample.minQty,
-                        minUnit: bulkExample.minUnit,
-                        maxQty: bulkExample.maxQty,
-                        maxUnit: bulkExample.maxUnit,
-                      })}
-                    </p>
-                  )}
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                    {bulkRows.map((row) => (
-                      <div
-                        key={row.qty}
-                        className={`flex items-center justify-between rounded-lg px-3 py-2 ${row.qty === quantity ? "bg-gray-900 text-white" : "bg-white"}`}
-                      >
-                        <span>{row.qty}{t("product.pcs")}</span>
-                        <span className="font-semibold">{formatCad(row.unitAmount)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
                   <div className="space-y-2">
                     <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.artworkUpload")}</label>
@@ -1748,92 +1782,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   )}
                 </div>
 
-                <input type="file" onChange={onFileChange} className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm" />
-                {filePreview && (
-                  <div className="relative mt-2 aspect-video overflow-hidden rounded-xl border border-gray-200">
-                    <Image src={filePreview} alt="Upload preview" fill className="object-contain" sizes="50vw" />
-                  </div>
-                )}
-                {file && !filePreview && <p className="text-xs text-gray-600">{t("product.fileAttached", { name: file.name })}</p>}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 rounded-2xl border border-gray-200 p-4">
-                {priceData.breakdown && priceData.breakdown.length > 0 && (
-                  <div className="mb-3 space-y-1 border-b border-gray-100 pb-3">
-                    {priceData.breakdown.map((line, i) => (
-                      <div key={i} className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{line.label}</span>
-                        <span>{formatCad(line.amount)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className="flex items-center justify-between text-sm">
-                  <span>{t("product.subtotal")}</span>
-                  <div className="text-right">
-                    <span className="font-semibold">{formatCad(priceData.subtotal)}</span>
-                    {priceData.unitAmount != null && Number(quantity) > 1 && (
-                      <span className="ml-2 text-xs text-gray-400">{t("bc.unitPrice", { price: formatCad(priceData.unitAmount) })}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="mt-2 flex items-center justify-between text-sm">
-                  <span>{t("product.tax")}</span>
-                  <span className="font-semibold">{formatCad(priceData.tax)}</span>
-                </div>
-                <div className="mt-3 flex items-center justify-between border-t border-gray-200 pt-3 text-base font-semibold">
-                  <span>{t("product.total")}</span>
-                  <span>{formatCad(priceData.total)} {t("product.cad")}</span>
-                </div>
-              </div>
-
-              <div ref={addToCartRef}>
-                <button
-                  onClick={handleAddToCart}
-                  disabled={!canAddToCart}
-                  className={`mt-6 w-full rounded-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-all duration-200 ${
-                    !canAddToCart
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : added
-                        ? "bg-emerald-600"
-                        : "bg-gray-900 hover:bg-black"
-                  }`}
-                >
-                  {!canAddToCart
-                    ? priceData.unpriced
-                      ? t("product.priceOnRequest")
-                      : t("product.fixSizeErrors")
-                    : added
-                      ? t("product.added")
-                      : t("product.addToCart")}
-                </button>
-              </div>
-
-              <div className="mt-4 space-y-3">
-                <GuaranteeBadge />
-                <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-600">
-                  <svg className="h-4 w-4 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="font-semibold">{t("trust.ordersCompleted")}</span>
-                </div>
-                <PaymentBadges />
-              </div>
-
-              <Link
-                href={`/quote?product=${product.slug}&name=${encodeURIComponent(product.name)}`}
-                className="mt-4 flex items-center justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 transition-colors hover:bg-gray-100"
-              >
-                <span className="text-xs text-gray-600">{t("quote.stickyLabel")}</span>
-                <span className="rounded-full bg-gray-900 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white">
-                  {t("quote.stickyCta")}
-                </span>
-              </Link>
             </div>
 
-            {!embedded && <GuaranteeInfo />}
+          </div>
           </div>
         </section>
 
@@ -1848,7 +1803,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               <Link key={item.id} href={`/shop/${item.category}/${item.slug}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                 <div className="relative aspect-[4/3] bg-gray-100">
                   {item.images[0]?.url ? (
-                    <Image src={item.images[0].url} alt={item.images[0].alt || item.name} fill className="object-cover" sizes="25vw" />
+                    <Image src={item.images[0].url} alt={item.images[0].alt || item.name} fill className="object-cover" sizes="25vw" unoptimized={item.images[0].url.endsWith(".svg")} />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">{t("product.noImageSmall")}</div>
                   )}
@@ -1863,7 +1818,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         </section>
         )}
 
-        {!embedded && <ReviewsSection />}
         {!embedded && <RecentlyViewed excludeSlug={product.slug} />}
       </div>
 
