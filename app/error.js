@@ -1,10 +1,15 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function ErrorPage({ error, reset }) {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    console.error("[ErrorBoundary]", error);
+  }, [error]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-6 text-center text-gray-900">
@@ -17,6 +22,11 @@ export default function ErrorPage({ error, reset }) {
         </div>
         <h1 className="text-2xl font-semibold">{t("error.generic.title")}</h1>
         <p className="mt-3 text-sm text-gray-600">{t("error.generic.message")}</p>
+        {error?.message && (
+          <p className="mt-3 rounded-lg bg-gray-100 px-3 py-2 text-left text-xs text-gray-500 break-words">
+            {error.message}
+          </p>
+        )}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button
             onClick={reset}

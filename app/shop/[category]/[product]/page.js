@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ProductClient from "./ProductClient";
@@ -77,7 +78,9 @@ export default async function ProductPage({ params }) {
     <>
       <ProductSchema product={product} />
       <BreadcrumbSchema category={product.category} productName={product.name} />
-      <ProductClient product={product} relatedProducts={relatedProducts} />
+      <Suspense>
+        <ProductClient product={product} relatedProducts={relatedProducts} />
+      </Suspense>
     </>
   );
 }

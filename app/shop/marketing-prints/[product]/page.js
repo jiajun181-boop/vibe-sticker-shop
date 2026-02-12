@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ProductLandingClient from "./ProductLandingClient";
@@ -83,7 +84,9 @@ export default async function MarketingPrintProductPage({ params }) {
     <>
       <ProductSchema product={product} />
       <BreadcrumbSchema category={product.category} productName={product.name} />
-      <ProductLandingClient product={product} relatedProducts={relatedProducts} />
+      <Suspense>
+        <ProductLandingClient product={product} relatedProducts={relatedProducts} />
+      </Suspense>
     </>
   );
 }
