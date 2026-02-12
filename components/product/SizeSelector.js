@@ -58,7 +58,12 @@ export default function SizeSelector({
                   : "border-gray-200 bg-white text-gray-900 hover:bg-gray-50"
               }`}
             >
-              <div className="font-semibold leading-snug">{o.displayLabel || o.label}</div>
+              <div className="font-semibold leading-snug">
+                {o.displayLabel || o.label}
+                {o.recommended && (
+                  <span className={`ml-1.5 inline-block rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${selected ? "bg-white/20 text-white" : "bg-amber-100 text-amber-700"}`}>Popular</span>
+                )}
+              </div>
               {(o.widthIn && o.heightIn) && (
                 <div className={`mt-0.5 text-xs ${selected ? "text-gray-200" : "text-gray-500"}`}>
                   {o.widthIn}" × {o.heightIn}"

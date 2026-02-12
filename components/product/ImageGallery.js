@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
@@ -41,11 +41,35 @@ export default function ImageGallery({ images, productName }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [canNav, go]);
 
+  // Touch swipe support
+  const touchRef = useRef({ startX: 0, startY: 0 });
+  const handleTouchStart = useCallback((e) => {
+    const touch = e.touches[0];
+    touchRef.current = { startX: touch.clientX, startY: touch.clientY };
+  }, []);
+  const handleTouchEnd = useCallback(
+    (e) => {
+      if (!canNav) return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchRef.current.startX;
+      const dy = touch.clientY - touchRef.current.startY;
+      // Only trigger if horizontal swipe > 50px and mostly horizontal
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        go(dx < 0 ? 1 : -1);
+      }
+    },
+    [canNav, go]
+  );
+
   const thumbs = useMemo(() => list.slice(0, 20), [list]);
 
   return (
     <div className="space-y-3">
-      <div className="relative aspect-square overflow-hidden rounded-3xl border border-gray-200 bg-white">
+      <div
+        className="relative aspect-square overflow-hidden rounded-2xl border border-gray-200 bg-white"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {activeImage?.url ? (
           <Image
             src={activeImage.url}
@@ -67,17 +91,21 @@ export default function ImageGallery({ images, productName }) {
               type="button"
               onClick={() => go(-1)}
               aria-label="Previous image"
-              className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-gray-200 bg-white/90 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 backdrop-blur hover:bg-white"
+              className="absolute left-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white/90 text-gray-700 backdrop-blur hover:bg-white"
             >
-              Prev
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
             </button>
             <button
               type="button"
               onClick={() => go(1)}
               aria-label="Next image"
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-gray-200 bg-white/90 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 backdrop-blur hover:bg-white"
+              className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white/90 text-gray-700 backdrop-blur hover:bg-white"
             >
-              Next
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
             </button>
           </>
         )}
@@ -90,14 +118,14 @@ export default function ImageGallery({ images, productName }) {
       </div>
 
       {list.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1">
           {thumbs.map((img, idx) => (
             <button
               key={img.id || img.url}
               type="button"
               onClick={() => setActive(idx)}
               aria-label={`Select image ${idx + 1}`}
-              className={`relative h-16 w-16 flex-none overflow-hidden rounded-xl border ${
+              className={`relative h-16 w-16 flex-none snap-start overflow-hidden rounded-xl border ${
                 idx === active ? "border-gray-900" : "border-gray-200"
               }`}
             >
@@ -115,4 +143,3 @@ export default function ImageGallery({ images, productName }) {
     </div>
   );
 }
-

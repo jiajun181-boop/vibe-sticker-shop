@@ -13,13 +13,18 @@ import { GuaranteeBadge, PaymentBadges } from "@/components/TrustBadges";
 import GuaranteeInfo from "@/components/product/GuaranteeInfo";
 import ReviewsSection from "@/components/product/ReviewsSection";
 import ImageGallery from "@/components/product/ImageGallery";
-import SizeSelector from "@/components/product/SizeSelector";
 import { trackAddToCart } from "@/lib/analytics";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { useRecentlyViewedStore } from "@/lib/recently-viewed";
+import dynamic from "next/dynamic";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import TemplateGallery from "@/components/product/TemplateGallery";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
+
+const StampEditor = dynamic(() => import("@/components/product/StampEditor"), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-gray-100 rounded-2xl h-64" />,
+});
 
 const HST_RATE = 0.13;
 const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
@@ -33,6 +38,17 @@ function applyAllowlist(items, allowIds) {
   if (!Array.isArray(allowIds)) return items;
   const allow = new Set(allowIds.map(String));
   return items.filter((x) => x && typeof x === "object" && allow.has(String(x.id)));
+}
+
+function getStartingUnitPrice(option) {
+  const pbq = option?.priceByQty;
+  if (!pbq || typeof pbq !== "object") return null;
+  const entries = Object.entries(pbq)
+    .map(([q, t]) => [Number(q), Number(t)])
+    .filter(([q, t]) => q > 0 && t > 0)
+    .sort((a, b) => a[0] - b[0]);
+  if (entries.length === 0) return null;
+  return Math.round(entries[0][1] / entries[0][0]);
 }
 
 function parseMaterials(optionsConfig, presetConfig) {
@@ -128,6 +144,7 @@ function parseSizeOptions(optionsConfig) {
         ? item.quantityChoices.map((q) => Number(q)).filter((q) => Number.isFinite(q) && q > 0)
         : [],
       priceByQty: item.priceByQty && typeof item.priceByQty === "object" ? item.priceByQty : null,
+      recommended: item.recommended === true,
     }));
 }
 
@@ -142,7 +159,7 @@ function parseQuantityRange(optionsConfig) {
   return { min, max, step: Number.isFinite(step) && step > 0 ? step : 1 };
 }
 
-export default function ProductClient({ product, relatedProducts }) {
+export default function ProductClient({ product, relatedProducts, embedded = false }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
   const { t } = useTranslation();
@@ -172,25 +189,35 @@ export default function ProductClient({ product, relatedProducts }) {
   const scenes = parseScenes(product.optionsConfig);
   const sizeOptions = parseSizeOptions(product.optionsConfig);
   const quantityRange = parseQuantityRange(product.optionsConfig);
-  const envelopeVariantConfig = useMemo(() => {
-    const regex = /^(?<base>.+) - (?<color>Black Ink|Color)$/;
-    const variants = sizeOptions
+  const variantConfig = useMemo(() => {
+    const regex = /^(.+)\s+-\s+(.+)$/;
+    const parsed = sizeOptions
       .map((s) => {
         const m = typeof s.label === "string" ? s.label.match(regex) : null;
-        if (!m?.groups?.base || !m?.groups?.color) return null;
-        return { base: m.groups.base, color: m.groups.color, option: s };
+        if (!m) return null;
+        return { base: m[1], variant: m[2], option: s };
       })
       .filter(Boolean);
 
-    if (!variants.length) return { enabled: false, bases: [], byBase: {} };
+    if (parsed.length < 2 || parsed.length !== sizeOptions.length)
+      return { enabled: false, bases: [], variants: [], byBase: {}, recommendedBases: new Set() };
+
+    const variantSet = new Set(parsed.map((p) => p.variant));
+    if (variantSet.size < 2)
+      return { enabled: false, bases: [], variants: [], byBase: {}, recommendedBases: new Set() };
 
     const byBase = {};
-    for (const v of variants) {
-      if (!byBase[v.base]) byBase[v.base] = {};
-      byBase[v.base][v.color] = v.option;
+    const recommendedBases = new Set();
+    const seenBases = new Set();
+    const bases = [];
+    for (const p of parsed) {
+      if (!seenBases.has(p.base)) { bases.push(p.base); seenBases.add(p.base); }
+      if (!byBase[p.base]) byBase[p.base] = {};
+      byBase[p.base][p.variant] = p.option;
+      if (p.option.recommended) recommendedBases.add(p.base);
     }
-    const bases = Object.keys(byBase).sort((a, b) => a.localeCompare(b));
-    return { enabled: true, bases, byBase };
+    const variants = [...variantSet];
+    return { enabled: true, bases, variants, byBase, recommendedBases };
   }, [sizeOptions]);
   const editorConfig = product.optionsConfig?.editor || null;
   const isTextEditor = editorConfig?.type === "text";
@@ -228,9 +255,11 @@ export default function ProductClient({ product, relatedProducts }) {
   const [sceneId, setSceneId] = useState(scenes[0]?.id || "");
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [selectedFinishings, setSelectedFinishings] = useState([]);
+  const [wantsFinishing, setWantsFinishing] = useState(false);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(true);
   const [selectedSizeLabel, setSelectedSizeLabel] = useState(sizeOptions[0]?.label || "");
-  const [envelopeBaseLabel, setEnvelopeBaseLabel] = useState("");
-  const [envelopeColor, setEnvelopeColor] = useState("");
+  const [variantBase, setVariantBase] = useState("");
+  const [variantValue, setVariantValue] = useState("");
   const [unit, setUnit] = useState("in");
   const [widthIn, setWidthIn] = useState(product.minWidthIn || 3);
   const [heightIn, setHeightIn] = useState(product.minHeightIn || 3);
@@ -289,6 +318,7 @@ export default function ProductClient({ product, relatedProducts }) {
   const [editorText, setEditorText] = useState(editorConfig?.defaultText || "YOUR TEXT");
   const [editorFont, setEditorFont] = useState(editorFonts[0] || "sans-serif");
   const [editorColor, setEditorColor] = useState(editorConfig?.defaultColor || "#111111");
+  const editorExtrasRef = useRef({});
   const selectedEditorSize = useMemo(
     () => editorSizes.find((s) => s.label === editorSizeLabel) || null,
     [editorSizes, editorSizeLabel]
@@ -301,44 +331,64 @@ export default function ProductClient({ product, relatedProducts }) {
     () => sizeOptions.find((s) => s.label === selectedSizeLabel) || null,
     [sizeOptions, selectedSizeLabel]
   );
-  const envelopeColorOptions = useMemo(() => {
-    if (!envelopeVariantConfig.enabled) return [];
-    const options = envelopeVariantConfig.byBase[envelopeBaseLabel] || {};
-    return Object.keys(options).sort((a, b) => a.localeCompare(b));
-  }, [envelopeVariantConfig, envelopeBaseLabel]);
+  const variantValueOptions = useMemo(() => {
+    if (!variantConfig.enabled) return [];
+    const options = variantConfig.byBase[variantBase] || {};
+    return Object.keys(options);
+  }, [variantConfig, variantBase]);
 
   useEffect(() => {
-    if (!envelopeVariantConfig.enabled) return;
+    if (!variantConfig.enabled) return;
 
-    // Initialize base/color from current selected label when possible, else fallback to first available.
-    const regex = /^(?<base>.+) - (?<color>Black Ink|Color)$/;
+    // Initialize base/variant from current selected label when possible, else fallback to first available.
+    const regex = /^(.+)\s+-\s+(.+)$/;
     const m = selectedSizeLabel ? selectedSizeLabel.match(regex) : null;
     const nextBase =
-      m?.groups?.base && envelopeVariantConfig.byBase[m.groups.base]
-        ? m.groups.base
-        : envelopeVariantConfig.bases[0] || "";
-    const availableColors = nextBase ? Object.keys(envelopeVariantConfig.byBase[nextBase] || {}) : [];
-    const nextColor =
-      m?.groups?.color && availableColors.includes(m.groups.color)
-        ? m.groups.color
-        : availableColors.includes("Black Ink")
-          ? "Black Ink"
-          : availableColors[0] || "";
+      m?.[1] && variantConfig.byBase[m[1]]
+        ? m[1]
+        : variantConfig.bases[0] || "";
+    const available = nextBase ? Object.keys(variantConfig.byBase[nextBase] || {}) : [];
+    const nextVariant =
+      m?.[2] && available.includes(m[2])
+        ? m[2]
+        : available[0] || "";
 
-    if (nextBase && envelopeBaseLabel !== nextBase) setEnvelopeBaseLabel(nextBase);
-    if (nextColor && envelopeColor !== nextColor) setEnvelopeColor(nextColor);
+    if (nextBase && variantBase !== nextBase) setVariantBase(nextBase);
+    if (nextVariant && variantValue !== nextVariant) setVariantValue(nextVariant);
 
-    const resolved = nextBase && nextColor ? envelopeVariantConfig.byBase[nextBase]?.[nextColor]?.label : null;
+    const resolved = nextBase && nextVariant ? variantConfig.byBase[nextBase]?.[nextVariant]?.label : null;
     if (resolved && selectedSizeLabel !== resolved) setSelectedSizeLabel(resolved);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [envelopeVariantConfig.enabled, envelopeVariantConfig.bases.length]);
+  }, [variantConfig.enabled, variantConfig.bases.length]);
 
   useEffect(() => {
-    if (!envelopeVariantConfig.enabled) return;
-    if (!envelopeBaseLabel || !envelopeColor) return;
-    const resolved = envelopeVariantConfig.byBase[envelopeBaseLabel]?.[envelopeColor]?.label || "";
+    if (!variantConfig.enabled) return;
+    if (!variantBase || !variantValue) return;
+    const resolved = variantConfig.byBase[variantBase]?.[variantValue]?.label || "";
     if (resolved && selectedSizeLabel !== resolved) setSelectedSizeLabel(resolved);
-  }, [envelopeVariantConfig, envelopeBaseLabel, envelopeColor, selectedSizeLabel]);
+  }, [variantConfig, variantBase, variantValue, selectedSizeLabel]);
+
+  // Listen for landing page size selection (custom event from ProductLandingClient)
+  useEffect(() => {
+    const handler = (e) => {
+      const size = e.detail?.size;
+      if (!size) return;
+      if (variantConfig.enabled) {
+        const regex = /^(.+)\s+-\s+(.+)$/;
+        const m = size.match(regex);
+        if (m?.[1] && variantConfig.byBase[m[1]]) {
+          setVariantBase(m[1]);
+          if (m[2]) setVariantValue(m[2]);
+        }
+      } else {
+        const match = sizeOptions.find((s) => s.label === size);
+        if (match) setSelectedSizeLabel(size);
+      }
+    };
+    window.addEventListener("landing-select-size", handler);
+    return () => window.removeEventListener("landing-select-size", handler);
+  }, [variantConfig, sizeOptions]);
+
   const activeQuantityChoices = useMemo(() => {
     const fromSize = selectedSize?.quantityChoices || [];
     if (Array.isArray(fromSize) && fromSize.length > 0) return [...new Set(fromSize)].sort((a, b) => a - b);
@@ -686,6 +736,7 @@ export default function ProductClient({ product, relatedProducts }) {
           artworkSize: null,
         };
 
+    const stampExtras = editorExtrasRef.current || {};
     const editorMeta = isTextEditor
       ? {
           editorType: "text",
@@ -694,6 +745,12 @@ export default function ProductClient({ product, relatedProducts }) {
           editorText: String(editorText || "").trim(),
           editorFont: String(editorFont || ""),
           editorColor: String(editorColor || ""),
+          ...(editorMode === "box" ? {
+            stampLogoUrl: stampExtras.logoFile?.url || null,
+            stampLogoKey: stampExtras.logoFile?.key || null,
+            stampCurveAmount: stampExtras.curveAmount || 0,
+            stampTemplate: stampExtras.template || null,
+          } : {}),
         }
       : {
           editorType: null,
@@ -770,29 +827,56 @@ export default function ProductClient({ product, relatedProducts }) {
     setTimeout(() => setAdded(false), 700);
   }
 
-  return (
-    <main className="bg-gray-50 pb-20 pt-10 text-gray-900">
-      <div className="mx-auto max-w-6xl space-y-10 px-6">
-        <Breadcrumbs items={[
-          { label: t("product.shop"), href: "/shop" },
-          { label: product.category.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()), href: `/shop?category=${product.category}` },
-          { label: product.name }
-        ]} />
+  const Wrapper = embedded ? "section" : "main";
 
-        {moved && (
+  return (
+    <Wrapper className={embedded ? "text-gray-900" : "bg-gray-50 pb-20 pt-10 text-gray-900"}>
+      <div className={embedded ? "mx-auto max-w-6xl space-y-6 lg:space-y-10 px-4 sm:px-6" : "mx-auto max-w-6xl space-y-6 lg:space-y-8 px-4 sm:px-6"}>
+        {!embedded && (
+          <Breadcrumbs items={[
+            { label: t("product.shop"), href: "/shop" },
+            { label: product.category.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()), href: `/shop?category=${product.category}` },
+            { label: product.name }
+          ]} />
+        )}
+
+        {!embedded && moved && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             {movedFromLabel ? t("product.movedCategoryFrom", { from: movedFromLabel }) : t("product.movedCategory")}
           </div>
         )}
 
-        <section className="grid gap-10 lg:grid-cols-12">
+        {/* Mobile-only header — shows title before gallery on small screens */}
+        {!embedded && (
+          <header className="lg:hidden">
+            <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {(() => {
+                const tk = getTurnaround(product);
+                return (
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${turnaroundColor(tk)}`}>
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    {t(turnaroundI18nKey(tk))}
+                  </span>
+                );
+              })()}
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {t("trust.madeToOrder")}
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-gray-600">{product.description || t("product.defaultDescription")}</p>
+          </header>
+        )}
+
+        <section className="grid gap-6 lg:gap-10 lg:grid-cols-12">
           <div className="space-y-4 lg:col-span-7">
             <ImageGallery images={imageList} productName={product.name} />
 
             {templateGallery && <TemplateGallery templates={templateGallery} />}
 
             {productSpecs ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-5">
+              <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">{t("bc.specs")}</h3>
                 <div className="mt-3 divide-y divide-gray-100">
                   {productSpecs.dimensions && (
@@ -826,7 +910,7 @@ export default function ProductClient({ product, relatedProducts }) {
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border border-gray-200 bg-white p-5">
+              <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">{t("product.specifications")}</h3>
                 <div className="mt-3 divide-y divide-gray-100">
                   {specs.map(([k, v]) => (
@@ -846,27 +930,30 @@ export default function ProductClient({ product, relatedProducts }) {
           </div>
 
           <div className="space-y-6 lg:col-span-5">
-            <header>
-              <h1 className="text-4xl font-semibold tracking-tight">{product.name}</h1>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {(() => {
-                  const tk = getTurnaround(product);
-                  return (
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${turnaroundColor(tk)}`}>
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      {t(turnaroundI18nKey(tk))}
-                    </span>
-                  );
-                })()}
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  {t("trust.madeToOrder")}
-                </span>
-              </div>
-              <p className="mt-3 text-sm text-gray-600">{product.description || t("product.defaultDescription")}</p>
-            </header>
+            {/* Desktop-only header — hidden on mobile where it appears above the grid */}
+            {!embedded && (
+              <header className="hidden lg:block">
+                <h1 className="text-4xl font-semibold tracking-tight">{product.name}</h1>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {(() => {
+                    const tk = getTurnaround(product);
+                    return (
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${turnaroundColor(tk)}`}>
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        {t(turnaroundI18nKey(tk))}
+                      </span>
+                    );
+                  })()}
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    {t("trust.madeToOrder")}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm text-gray-600">{product.description || t("product.defaultDescription")}</p>
+              </header>
+            )}
 
-            <div className="rounded-3xl border border-gray-200 bg-white p-6">
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                   {t("product.realtimePricing")}
@@ -978,7 +1065,7 @@ export default function ProductClient({ product, relatedProducts }) {
                         </select>
                       </label>
 
-                      <label className="text-xs text-gray-600">
+                      {editorMode !== "box" && <label className="text-xs text-gray-600">
                         {t("product.color")}
                         <input
                           type="color"
@@ -986,7 +1073,7 @@ export default function ProductClient({ product, relatedProducts }) {
                           onChange={(e) => setEditorColor(e.target.value)}
                           className="mt-1 h-[42px] w-full rounded-xl border border-gray-300 bg-white px-2 py-2"
                         />
-                      </label>
+                      </label>}
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -1043,37 +1130,31 @@ export default function ProductClient({ product, relatedProducts }) {
 
                     <p className="text-xs text-gray-500">{t("product.estimatedSize", { w: widthIn?.toFixed(2), h: heightIn?.toFixed(2) })}</p>
 
-                    <div className="rounded-2xl border border-gray-200 bg-white p-3">
-                      <div className="aspect-[3/1] w-full overflow-hidden rounded-xl bg-gray-50">
-                        <svg viewBox="0 0 1000 300" className="h-full w-full">
-                          <rect x="0" y="0" width="1000" height="300" fill="white" />
-                          {editorMode === "box" ? (
-                            <>
-                              <rect x="60" y="40" width="880" height="220" rx="26" fill="none" stroke="#e5e7eb" strokeWidth="6" />
-                              <text
-                                x="500"
-                                y="150"
-                                fill={editorColor}
-                                fontFamily={editorFont}
-                                fontSize="92"
-                                textAnchor="middle"
-                                dominantBaseline="middle"
-                              >
-                                {(String(editorText || "").trim() || " ").split("\n")[0]}
-                              </text>
-                              <text
-                                x="500"
-                                y="210"
-                                fill={editorColor}
-                                fontFamily={editorFont}
-                                fontSize="72"
-                                textAnchor="middle"
-                                dominantBaseline="middle"
-                              >
-                                {(String(editorText || "").trim() || " ").split("\n")[1] || " "}
-                              </text>
-                            </>
-                          ) : (
+                    {editorMode === "box" ? (
+                      <StampEditor
+                        shape={selectedEditorSize?.shape || "rect"}
+                        widthIn={selectedEditorSize?.widthIn}
+                        heightIn={selectedEditorSize?.heightIn}
+                        diameterIn={selectedEditorSize?.diameterIn}
+                        text={editorText}
+                        font={editorFont}
+                        color={editorColor}
+                        onChange={(patch) => {
+                          if (patch.color) setEditorColor(patch.color);
+                          if (patch.text !== undefined) setEditorText(patch.text);
+                          if (patch.font) setEditorFont(patch.font);
+                          editorExtrasRef.current = {
+                            curveAmount: patch.curveAmount,
+                            logoFile: patch.logoFile,
+                            template: patch.template,
+                          };
+                        }}
+                      />
+                    ) : (
+                      <div className="rounded-2xl border border-gray-200 bg-white p-3">
+                        <div className="aspect-[3/1] w-full overflow-hidden rounded-xl bg-gray-50">
+                          <svg viewBox="0 0 1000 300" className="h-full w-full">
+                            <rect x="0" y="0" width="1000" height="300" fill="white" />
                             <text
                               x="40"
                               y="200"
@@ -1084,10 +1165,10 @@ export default function ProductClient({ product, relatedProducts }) {
                             >
                               {String(editorText || "").trim() || " "}
                             </text>
-                          )}
-                        </svg>
+                          </svg>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {!sizeValidation.valid && (
                       <div className="mt-1 space-y-1">
@@ -1140,17 +1221,32 @@ export default function ProductClient({ product, relatedProducts }) {
                 </div>
               )}
 
-              {scenes.length > 0 && (
-                <div className="mt-5">
-                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.scene")}</label>
-                  <select value={sceneId} onChange={(e) => setSceneId(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
-                    {scenes.map((scene) => (
-                      <option key={scene.id} value={scene.id}>{scene.label}</option>
-                    ))}
-                  </select>
-                  {selectedScene?.description && <p className="mt-2 text-xs text-gray-500">{selectedScene.description}</p>}
-                </div>
-              )}
+              <div className="mt-5 border-t border-gray-100 pt-4 md:border-0 md:pt-0">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedOptions((prev) => !prev)}
+                  className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-left md:hidden"
+                >
+                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-600">
+                    {t("product.moreOptions")}
+                  </span>
+                  <span className="text-sm font-semibold text-gray-700">
+                    {showAdvancedOptions ? "−" : "+"}
+                  </span>
+                </button>
+
+                <div className={`${showAdvancedOptions ? "mt-4 block" : "hidden"} space-y-5 md:mt-5 md:block`}>
+                  {scenes.length > 0 && (
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.scene")}</label>
+                      <select value={sceneId} onChange={(e) => setSceneId(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+                        {scenes.map((scene) => (
+                          <option key={scene.id} value={scene.id}>{scene.label}</option>
+                        ))}
+                      </select>
+                      {selectedScene?.description && <p className="mt-2 text-xs text-gray-500">{selectedScene.description}</p>}
+                    </div>
+                  )}
 
               {isBusinessCard && (
                 <div className="mt-5 space-y-5">
@@ -1322,46 +1418,99 @@ export default function ProductClient({ product, relatedProducts }) {
 
               {!isBusinessCard && !isTextEditor && sizeOptions.length > 0 && (
                 <div className="mt-5 space-y-4">
-                  {envelopeVariantConfig.enabled ? (
+                  {variantConfig.enabled ? (
                     <>
                       <div>
-                        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.size")}</label>
-                        <select
-                          value={envelopeBaseLabel}
-                          onChange={(e) => setEnvelopeBaseLabel(e.target.value)}
-                          className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                        >
-                          {envelopeVariantConfig.bases.map((base) => (
-                            <option key={base} value={base}>
-                              {base}
-                            </option>
-                          ))}
-                        </select>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.size")}</p>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          {variantConfig.bases.map((base) => {
+                            const anyOpt = Object.values(variantConfig.byBase[base])[0];
+                            const dims = anyOpt?.widthIn && anyOpt?.heightIn ? `${anyOpt.widthIn}" × ${anyOpt.heightIn}"` : (anyOpt?.notes || null);
+                            let minPrice = Infinity;
+                            for (const opt of Object.values(variantConfig.byBase[base])) {
+                              const p = getStartingUnitPrice(opt);
+                              if (p !== null) minPrice = Math.min(minPrice, p);
+                            }
+                            const isRec = variantConfig.recommendedBases.has(base);
+                            const selected = variantBase === base;
+                            return (
+                              <button
+                                key={base}
+                                type="button"
+                                onClick={() => setVariantBase(base)}
+                                className={`relative rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
+                                  selected
+                                    ? "border-gray-900 bg-gray-900 text-white"
+                                    : "border-gray-200 bg-white text-gray-900 hover:border-gray-400"
+                                }`}
+                              >
+                                {isRec && (
+                                  <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                                    selected ? "bg-white text-gray-900" : "bg-gray-900 text-white"
+                                  }`}>★</span>
+                                )}
+                                <span className="block text-sm font-semibold">{base}</span>
+                                {dims && <span className={`mt-0.5 block text-[11px] ${selected ? "text-gray-300" : "text-gray-500"}`}>{dims}</span>}
+                                {minPrice < Infinity && <span className={`mt-1 block text-xs font-bold ${selected ? "text-gray-200" : "text-gray-700"}`}>{t("product.from", { price: formatCad(minPrice) })}/ea</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       <div>
-                        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.color")}</label>
-                        <select
-                          value={envelopeColor}
-                          onChange={(e) => setEnvelopeColor(e.target.value)}
-                          className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                        >
-                          {envelopeColorOptions.map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{uiConfig?.variantLabel || t("product.color")}</p>
+                        <div className="mt-2 flex gap-2">
+                          {variantValueOptions.map((v) => (
+                            <button
+                              key={v}
+                              type="button"
+                              onClick={() => setVariantValue(v)}
+                              className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
+                                variantValue === v
+                                  ? "border-gray-900 bg-gray-900 text-white"
+                                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                              }`}
+                            >
+                              {v}
+                            </button>
                           ))}
-                        </select>
+                        </div>
                       </div>
                     </>
                   ) : (
-                    <SizeSelector
-                      label={uiConfig?.sizeToggleLabel || t("product.size")}
-                      options={sizeOptions}
-                      value={selectedSizeLabel}
-                      onChange={setSelectedSizeLabel}
-                      placeholder={uiConfig?.sizeToggleLabel || t("product.size")}
-                    />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{uiConfig?.sizeToggleLabel || t("product.size")}</p>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {sizeOptions.map((o) => {
+                          const dims = o.widthIn && o.heightIn ? `${o.widthIn}" × ${o.heightIn}"` : null;
+                          const subtitle = dims || o.notes || null;
+                          const unitPrice = getStartingUnitPrice(o);
+                          const selected = selectedSizeLabel === o.label;
+                          return (
+                            <button
+                              key={o.label}
+                              type="button"
+                              onClick={() => setSelectedSizeLabel(o.label)}
+                              className={`relative rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
+                                selected
+                                  ? "border-gray-900 bg-gray-900 text-white"
+                                  : "border-gray-200 bg-white text-gray-900 hover:border-gray-400"
+                              }`}
+                            >
+                              {o.recommended && (
+                                <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                                  selected ? "bg-white text-gray-900" : "bg-gray-900 text-white"
+                                }`}>★</span>
+                              )}
+                              <span className="block text-sm font-semibold">{o.displayLabel || o.label}</span>
+                              {subtitle && <span className={`mt-0.5 block text-[11px] ${selected ? "text-gray-300" : "text-gray-500"}`}>{subtitle}</span>}
+                              {unitPrice && <span className={`mt-1 block text-xs font-bold ${selected ? "text-gray-200" : "text-gray-700"}`}>{t("product.from", { price: formatCad(unitPrice) })}/ea</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
 
                   {selectedSize?.notes && <p className="text-xs text-gray-500">{selectedSize.notes}</p>}
@@ -1381,8 +1530,8 @@ export default function ProductClient({ product, relatedProducts }) {
                 </div>
               )}
 
-              {!hideAddons && visibleAddons.length > 0 && (
-                <div className="mt-5 space-y-2">
+                  {!hideAddons && visibleAddons.length > 0 && (
+                    <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.addons")}</p>
                   <div className="space-y-2">
                     {visibleAddons.map((addon) => (
@@ -1411,38 +1560,64 @@ export default function ProductClient({ product, relatedProducts }) {
                       </label>
                     ))}
                   </div>
-                </div>
-              )}
+                    </div>
+                  )}
 
-              {!hideFinishings && finishings.length > 0 && (
-                <div className="mt-5 space-y-2">
+                  {!hideFinishings && finishings.length > 0 && (
+                    <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.finishing")}</p>
-                  <div className="space-y-2">
-                    {finishings.map((f) => (
-                      <label key={f.id} className="flex cursor-pointer items-start gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={selectedFinishings.includes(f.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedFinishings((prev) => [...prev, f.id]);
-                            } else {
-                              setSelectedFinishings((prev) => prev.filter((id) => id !== f.id));
-                            }
-                          }}
-                          className="mt-0.5"
-                        />
-                        <span className="flex-1">
-                          <span className="font-medium text-gray-900">{f.name}</span>
-                          <span className="block text-xs text-gray-500">
-                            {f.type === "flat" ? `$${f.price.toFixed(2)} flat` : f.type === "per_unit" ? `$${f.price.toFixed(2)}/unit` : `$${f.price.toFixed(2)}/sqft`}
-                          </span>
-                        </span>
-                      </label>
+                  <div className="flex gap-2">
+                    {[false, true].map((val) => (
+                      <button
+                        key={String(val)}
+                        type="button"
+                        onClick={() => {
+                          setWantsFinishing(val);
+                          if (!val) setSelectedFinishings([]);
+                        }}
+                        className={`flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+                          wantsFinishing === val
+                            ? "border-gray-900 bg-gray-900 text-white"
+                            : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {val ? t("product.finishingYes") : t("product.finishingNo")}
+                      </button>
                     ))}
                   </div>
-                </div>
-              )}
+                  {wantsFinishing && (
+                    <div className="space-y-2">
+                      {finishings.map((f) => {
+                        const isMulti = uiConfig?.finishingMode === "multi";
+                        const checked = selectedFinishings.includes(f.id);
+                        return (
+                          <label key={f.id} className="flex cursor-pointer items-start gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
+                            <input
+                              type={isMulti ? "checkbox" : "radio"}
+                              name="finishing"
+                              checked={checked}
+                              onChange={() => {
+                                if (isMulti) {
+                                  setSelectedFinishings((prev) => checked ? prev.filter((id) => id !== f.id) : [...prev, f.id]);
+                                } else {
+                                  setSelectedFinishings([f.id]);
+                                }
+                              }}
+                              className="mt-0.5"
+                            />
+                            <span className="flex-1">
+                              <span className="font-medium text-gray-900">{f.name}</span>
+                              <span className="block text-xs text-gray-500">
+                                {f.type === "flat" ? `$${f.price.toFixed(2)} flat` : f.type === "per_unit" ? `$${f.price.toFixed(2)}/unit` : `$${f.price.toFixed(2)}/sqft`}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                    </div>
+                  )}
 
               <div className="mt-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.quantity")}</p>
@@ -1527,8 +1702,8 @@ export default function ProductClient({ product, relatedProducts }) {
                 </div>
               )}
 
-              <div className="mt-5 space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.artworkUpload")}</label>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.artworkUpload")}</label>
 
                 <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
                   <p className="mb-2 text-xs text-gray-600">{t("product.uploadHint")}</p>
@@ -1576,6 +1751,8 @@ export default function ProductClient({ product, relatedProducts }) {
                   </div>
                 )}
                 {file && !filePreview && <p className="text-xs text-gray-600">{t("product.fileAttached", { name: file.name })}</p>}
+                  </div>
+                </div>
               </div>
 
               <div className="mt-6 rounded-2xl border border-gray-200 p-4">
@@ -1652,10 +1829,11 @@ export default function ProductClient({ product, relatedProducts }) {
               </Link>
             </div>
 
-            <GuaranteeInfo />
+            {!embedded && <GuaranteeInfo />}
           </div>
         </section>
 
+        {!embedded && (
         <section>
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-2xl font-semibold">{t("product.relatedProducts")}</h2>
@@ -1679,17 +1857,18 @@ export default function ProductClient({ product, relatedProducts }) {
             ))}
           </div>
         </section>
+        )}
 
-        <ReviewsSection />
-        <RecentlyViewed excludeSlug={product.slug} />
+        {!embedded && <ReviewsSection />}
+        {!embedded && <RecentlyViewed excludeSlug={product.slug} />}
       </div>
 
         {/* Sticky mobile Add to Cart bar */}
         {stickyVisible && (
           <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 md:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
             <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs text-gray-500">{t("product.total")}</p>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-medium text-gray-700">{product.name}</p>
                 <p className="text-lg font-black">{formatCad(priceData.total)}</p>
               </div>
               <button
@@ -1709,6 +1888,6 @@ export default function ProductClient({ product, relatedProducts }) {
             </div>
           </div>
         )}
-    </main>
+    </Wrapper>
   );
 }

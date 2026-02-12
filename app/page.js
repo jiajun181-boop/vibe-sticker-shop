@@ -9,6 +9,7 @@ import FeaturedBanner from "@/components/home/FeaturedBanner";
 import TrustSignals from "@/components/home/TrustSignals";
 import BundlesSection from "@/components/home/BundlesSection";
 import QuoteCalculator from "@/components/home/QuoteCalculator";
+import UseCaseSection from "@/components/home/UseCaseSection";
 
 export const dynamic = "force-dynamic";
 
@@ -52,9 +53,8 @@ export default async function HomePage() {
   const heroProducts = grouped.slice(0, 4).map(([, items]) => items[0]).filter(Boolean);
 
   return (
-    <>
-    <OrganizationSchema />
     <div className="min-h-screen bg-[#fafafa] pb-20 relative">
+      <OrganizationSchema />
       {/* Hero — dual column with product preview */}
       <div className="bg-black text-white pt-20 pb-16 px-6">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-10 items-center">
@@ -121,8 +121,13 @@ export default async function HomePage() {
         </div>
       </div>
 
+      {/* Shop by Use Case — quick entry */}
+      <div className="max-w-7xl mx-auto px-6 mt-14 mb-10">
+        <UseCaseSection />
+      </div>
+
       {/* Shop by Category — visual cards */}
-      <div className="max-w-7xl mx-auto px-6 mt-14 mb-14">
+      <div className="max-w-7xl mx-auto px-6 mb-14">
         <h2 className="text-2xl md:text-3xl font-black tracking-tight text-center mb-8">
           {t("home.shopByCategory")}
         </h2>
@@ -210,6 +215,5 @@ export default async function HomePage() {
         <BundlesSection />
       </div>
     </div>
-    </>
   );
 }

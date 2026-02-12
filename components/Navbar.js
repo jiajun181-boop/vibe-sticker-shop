@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { USE_CASES } from "@/lib/useCases";
 
 const linkKeys = [
   { key: "nav.home", href: "/" },
@@ -52,11 +53,32 @@ export default function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-gray-600 md:flex">
-          {linkKeys.map((link) => (
-            <Link key={link.href} href={link.href} className="transition-colors duration-200 hover:text-gray-900">
-              {t(link.key)}
-            </Link>
-          ))}
+          <Link href="/" className="transition-colors duration-200 hover:text-gray-900">{t("nav.home")}</Link>
+          <Link href="/shop" className="transition-colors duration-200 hover:text-gray-900">{t("nav.shop")}</Link>
+
+          {/* Ideas dropdown */}
+          <div className="relative group">
+            <button type="button" className="transition-colors duration-200 hover:text-gray-900">
+              {t("nav.ideas")}
+            </button>
+            <div className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
+              <div className="min-w-[180px] rounded-xl border border-gray-200 bg-white p-2 shadow-xl">
+                {USE_CASES.map((uc) => (
+                  <Link
+                    key={uc.slug}
+                    href={`/shop?useCase=${uc.slug}`}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                  >
+                    <span>{uc.icon}</span>
+                    <span>{t(`useCase.${uc.slug}.title`)}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <Link href="/about" className="transition-colors duration-200 hover:text-gray-900">{t("nav.about")}</Link>
+          <Link href="/contact" className="transition-colors duration-200 hover:text-gray-900">{t("nav.contact")}</Link>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -138,7 +160,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile nav row with search */}
-      <div className="flex items-center gap-3 px-6 pb-3 md:hidden">
+      <div className="flex items-center gap-3 px-6 pb-2 md:hidden">
         <form onSubmit={handleSearch} className="flex-1">
           <input
             type="text"
@@ -155,6 +177,18 @@ export default function Navbar() {
             </Link>
           ))}
         </div>
+      </div>
+      {/* Mobile use-case chips */}
+      <div className="flex gap-2 overflow-x-auto px-6 pb-3 md:hidden scrollbar-hide">
+        {USE_CASES.map((uc) => (
+          <Link
+            key={uc.slug}
+            href={`/shop?useCase=${uc.slug}`}
+            className="shrink-0 rounded-full border border-gray-200 px-3 py-1 text-[11px] font-medium text-gray-600 hover:border-gray-400 whitespace-nowrap"
+          >
+            {uc.icon} {t(`useCase.${uc.slug}.title`)}
+          </Link>
+        ))}
       </div>
     </header>
   );

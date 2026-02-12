@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
 import { INDUSTRY_LABELS, INDUSTRY_TAGS } from "@/lib/industryTags";
+import { USE_CASES, USE_CASE_PRODUCTS } from "@/lib/useCases";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
@@ -16,12 +17,17 @@ const PAGE_SIZE_OPTIONS = [12, 24, 36];
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-function sortProducts(list, sortBy) {
+function sortProducts(list, sortBy, catOrder) {
   const arr = [...list];
   if (sortBy === "price-asc") arr.sort((a, b) => a.basePrice - b.basePrice);
   if (sortBy === "price-desc") arr.sort((a, b) => b.basePrice - a.basePrice);
   if (sortBy === "name") arr.sort((a, b) => a.name.localeCompare(b.name));
-  if (sortBy === "popular") arr.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  if (sortBy === "popular") arr.sort((a, b) => {
+    const catA = catOrder?.get(a.category) ?? 9999;
+    const catB = catOrder?.get(b.category) ?? 9999;
+    if (catA !== catB) return catA - catB;
+    return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+  });
   return arr;
 }
 
@@ -30,6 +36,7 @@ export default function ShopClient({
   initialCategory,
   initialQuery = "",
   initialTag = "",
+  initialUseCase = "",
   hiddenCategories = [],
   categoryMeta = {},
 }) {
@@ -42,6 +49,7 @@ export default function ShopClient({
   const [category, setCategory] = useState(initialCategory || "all");
   const [query, setQuery] = useState(initialQuery || "");
   const [tag, setTag] = useState(initialTag || "");
+  const [useCase, setUseCase] = useState(initialUseCase || "");
   const [sortBy, setSortBy] = useState("popular");
   const [view, setView] = useState("grid");
   const [pageSize, setPageSize] = useState(12);
@@ -90,6 +98,7 @@ export default function ShopClient({
     const nextCategory = next?.category ?? category;
     const nextQuery = next?.query ?? query;
     const nextTag = next?.tag ?? tag;
+    const nextUseCase = next?.useCase ?? useCase;
 
     if (nextCategory && nextCategory !== "all") sp.set("category", nextCategory);
     else sp.delete("category");
@@ -100,14 +109,25 @@ export default function ShopClient({
     if (nextTag && nextTag.trim()) sp.set("tag", nextTag.trim());
     else sp.delete("tag");
 
+    if (nextUseCase && nextUseCase.trim()) sp.set("useCase", nextUseCase.trim());
+    else sp.delete("useCase");
+
     const qs = sp.toString();
     router.replace(qs ? `/shop?${qs}` : "/shop", { scroll: false });
   }
+
+  const useCaseSlugs = useMemo(() => {
+    if (!useCase || !USE_CASE_PRODUCTS[useCase]) return null;
+    return new Set(USE_CASE_PRODUCTS[useCase]);
+  }, [useCase]);
 
   const filtered = useMemo(() => {
     let base = category === "all" ? products : products.filter((p) => p.category === category);
     if (tag) {
       base = base.filter((p) => Array.isArray(p.tags) && p.tags.includes(tag));
+    }
+    if (useCaseSlugs) {
+      base = base.filter((p) => useCaseSlugs.has(p.slug));
     }
     const q = (query || "").trim().toLowerCase();
     if (q) {
@@ -118,13 +138,13 @@ export default function ShopClient({
         return name.includes(q) || slug.includes(q) || tags.some((t) => (t || "").toLowerCase().includes(q));
       });
     }
-    return sortProducts(base, sortBy);
-  }, [products, category, tag, query, sortBy]);
+    return sortProducts(base, sortBy, categoryOrder);
+  }, [products, category, tag, useCase, useCaseSlugs, query, sortBy, categoryOrder]);
 
   const visible = useMemo(() => filtered.slice(0, page * pageSize), [filtered, page, pageSize]);
   const hasMore = visible.length < filtered.length;
 
-  const featured = useMemo(() => sortProducts(products, "popular").slice(0, 6), [products]);
+  const featured = useMemo(() => sortProducts(products, "popular", categoryOrder).slice(0, 6), [products, categoryOrder]);
 
   function quickAdd(product) {
     addItem({
@@ -172,6 +192,41 @@ export default function ShopClient({
                 placeholder={t("shop.searchPlaceholder")}
                 className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"
               />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.useCase")}</p>
+                {useCase && (
+                  <button
+                    onClick={() => { setUseCase(""); setPage(1); syncUrl({ useCase: "" }); }}
+                    className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400 hover:text-gray-700"
+                  >
+                    {t("shop.clear")}
+                  </button>
+                )}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {USE_CASES.map((uc) => {
+                  const active = useCase === uc.slug;
+                  return (
+                    <button
+                      key={uc.slug}
+                      onClick={() => {
+                        const next = active ? "" : uc.slug;
+                        setUseCase(next);
+                        setPage(1);
+                        syncUrl({ useCase: next });
+                      }}
+                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        active ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {uc.icon} {t(`useCase.${uc.slug}.title`)}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.categories")}</p>
@@ -253,7 +308,7 @@ export default function ShopClient({
                   {featured.map((p) => (
                     <Link
                       key={p.id}
-                      href={`/shop/${p.category}/${p.slug}`}
+                      href={p.optionsConfig?.ui?.href || `/shop/${p.category}/${p.slug}`}
                       className="group flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-3 hover:bg-white hover:shadow-sm transition-all"
                     >
                       <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-white border border-gray-200">
@@ -315,7 +370,7 @@ export default function ShopClient({
                 <p className="text-sm font-medium text-gray-500">{t("shop.noResults")}</p>
                 <button
                   type="button"
-                  onClick={() => { navigate("all", ""); setQuery && router.replace("/shop", { scroll: false }); }}
+                  onClick={() => { setCategory("all"); setTag(""); setUseCase(""); setQuery(""); setPage(1); router.replace("/shop", { scroll: false }); }}
                   className="mt-3 rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:border-gray-900"
                 >
                   {t("shop.clearFilters")}
@@ -325,7 +380,7 @@ export default function ShopClient({
 
             <div className={view === "grid" ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3" : "space-y-3"}>
               {visible.map((product) => {
-                const href = `/shop/${product.category}/${product.slug}`;
+                const href = product.optionsConfig?.ui?.href || `/shop/${product.category}/${product.slug}`;
                 const isOutOfStock = !product.isActive;
                 const showFromPrice = product.optionsConfig?.ui?.showFromPrice === true;
                 const isLandingPage = product.optionsConfig?.ui?.isLandingPage === true;
