@@ -19,10 +19,13 @@ const FAQ_ITEMS_EN = [
   { question: "Are prices in Canadian dollars?", answer: "Yes, all prices are in CAD. Ontario HST (13%) is added at checkout." },
 ];
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+
 export async function generateMetadata() {
   return {
-    title: "FAQ - La Lunar Printing Inc.",
-    description: "Frequently asked questions about ordering, file requirements, shipping, and returns.",
+    title: "FAQ | La Lunar Printing Inc.",
+    description: "Frequently asked questions about ordering, file requirements, shipping, and returns at La Lunar Printing.",
+    alternates: { canonical: `${SITE_URL}/faq` },
   };
 }
 

@@ -4,6 +4,33 @@ import ShopClient from "./ShopClient";
 
 export const dynamic = "force-dynamic";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const BRAND = "La Lunar Printing Inc.";
+
+export async function generateMetadata({ searchParams }) {
+  const params = (await searchParams) || {};
+  const title = `Shop All Products | ${BRAND}`;
+  const description = "Browse our full catalog of custom printing products — business cards, banners, vehicle wraps, stickers, signs, and more. Competitive pricing, fast turnaround.";
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `${SITE_URL}/shop` },
+    openGraph: {
+      title,
+      description,
+      url: `${SITE_URL}/shop`,
+      siteName: BRAND,
+      type: "website",
+    },
+    twitter: { card: "summary_large_image", title, description },
+    // Prevent parameter variations from being indexed
+    ...(params.q || params.tag || params.useCase
+      ? { robots: { index: false, follow: true } }
+      : {}),
+  };
+}
+
 export default async function ShopPage({ searchParams }) {
   const params = (await searchParams) || {};
   const initialQuery = typeof params.q === "string" ? params.q : "";

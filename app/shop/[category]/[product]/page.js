@@ -39,7 +39,7 @@ export async function generateMetadata({ params }) {
     const subLabel = decodedSlug
       .replace(/-/g, " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
-    const title = `${subLabel} — Vibe Sticker Shop`;
+    const title = `${subLabel} | La Lunar Printing Inc.`;
     const description = `Custom ${subLabel.toLowerCase()} printing — ${subCfg.dbSlugs.length} options available. Professional quality, fast turnaround in Toronto & the GTA.`;
     const url = `${SITE_URL}/shop/${category}/${slug}`;
     return {
@@ -56,18 +56,21 @@ export async function generateMetadata({ params }) {
     include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
   });
   if (!p) return {};
-  const title = `${p.name} - Vibe Sticker Shop`;
+  const title = `${p.name} | La Lunar Printing Inc.`;
   const description =
-    p.description ||
-    `Order custom ${p.name} online. Fast turnaround, professional quality.`;
+    p.metaDescription || p.description ||
+    `Order custom ${p.name} online. Professional quality, fast turnaround in Toronto & the GTA.`;
   const image = p.images[0]?.url || `${SITE_URL}/og-image.png`;
+  const canonical = `${SITE_URL}/shop/${category}/${slug}`;
   return {
     title,
     description,
+    alternates: { canonical },
     openGraph: {
       title,
       description,
-      url: `${SITE_URL}/shop/${category}/${slug}`,
+      url: canonical,
+      siteName: "La Lunar Printing Inc.",
       images: [{ url: image, width: 1200, height: 630, alt: p.name }],
       type: "website",
     },

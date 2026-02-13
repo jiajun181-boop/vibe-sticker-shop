@@ -3,10 +3,13 @@ import ContactForm from "./ContactForm";
 
 export const dynamic = "force-dynamic";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+
 export async function generateMetadata() {
   return {
-    title: "Contact Us - La Lunar Printing Inc.",
-    description: "Get in touch with our team for quotes, support, or questions about custom printing services.",
+    title: "Contact Us | La Lunar Printing Inc.",
+    description: "Get in touch with our team for quotes, support, or questions about custom printing services in Toronto.",
+    alternates: { canonical: `${SITE_URL}/contact` },
   };
 }
 

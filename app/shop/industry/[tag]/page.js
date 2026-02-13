@@ -81,7 +81,7 @@ export default async function IndustryPage({ params }) {
         items={[
           { name: "Home", url: SITE_URL },
           { name: "Shop", url: `${SITE_URL}/shop` },
-          { name: "Industry", url: `${SITE_URL}/ideas` },
+          { name: "Industry Solutions" },
           { name: meta.title },
         ]}
       />
@@ -95,7 +95,7 @@ export default async function IndustryPage({ params }) {
             <span>/</span>
             <Link href="/shop" className="hover:text-white transition-colors">Shop</Link>
             <span>/</span>
-            <Link href="/ideas" className="hover:text-white transition-colors">Industry</Link>
+            <span>Industry</span>
             <span>/</span>
             <span className="text-gray-300">{meta.title}</span>
           </nav>

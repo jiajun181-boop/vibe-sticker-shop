@@ -2,6 +2,25 @@ import Link from "next/link";
 import Image from "next/image";
 import { getServerT } from "@/lib/i18n/server";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const BRAND = "La Lunar Printing Inc.";
+
+export async function generateMetadata() {
+  return {
+    title: `About Us | ${BRAND}`,
+    description: "Toronto-based custom printing company since 2018. Professional-grade equipment, FSC-certified materials, and 48-hour rush capability. Serving Ontario businesses.",
+    alternates: { canonical: `${SITE_URL}/about` },
+    openGraph: {
+      title: `About ${BRAND}`,
+      description: "Toronto-based custom printing company since 2018. Professional-grade equipment, FSC-certified materials, and 48-hour rush capability.",
+      url: `${SITE_URL}/about`,
+      siteName: BRAND,
+      type: "website",
+    },
+    twitter: { card: "summary_large_image" },
+  };
+}
+
 export default async function AboutPage() {
   const t = await getServerT();
 

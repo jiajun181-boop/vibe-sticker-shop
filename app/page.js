@@ -3,7 +3,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import { getServerT } from "@/lib/i18n/server";
-import { OrganizationSchema } from "@/components/JsonLd";
+import { OrganizationSchema, WebSiteSchema } from "@/components/JsonLd";
 import HowItWorks from "@/components/home/HowItWorks";
 import FeaturedBanner from "@/components/home/FeaturedBanner";
 import TrustSignals from "@/components/home/TrustSignals";
@@ -12,6 +12,30 @@ import QuoteCalculator from "@/components/home/QuoteCalculator";
 import UseCaseSection from "@/components/home/UseCaseSection";
 
 export const dynamic = "force-dynamic";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const BRAND = "La Lunar Printing Inc.";
+
+export async function generateMetadata() {
+  const t = await getServerT();
+  const title = `${BRAND} — Custom Printing & Vehicle Graphics in Toronto`;
+  const description = "Professional custom printing for business cards, banners, vehicle wraps, signs, stickers & labels. Fast turnaround, competitive pricing. Toronto & GTA delivery.";
+
+  return {
+    title,
+    description,
+    alternates: { canonical: SITE_URL },
+    openGraph: {
+      title,
+      description,
+      url: SITE_URL,
+      siteName: BRAND,
+      type: "website",
+      images: [{ url: `${SITE_URL}/og-image.png`, width: 1200, height: 630, alt: BRAND }],
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 function SectionDivider() {
   return (
@@ -55,6 +79,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-[#fafafa] pb-20 relative">
       <OrganizationSchema />
+      <WebSiteSchema />
       {/* Hero — dual column with product preview */}
       <div className="bg-black text-white pt-20 pb-16 px-6 relative overflow-hidden">
         {/* Brand watermark */}

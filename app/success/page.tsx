@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import SuccessClient from "./SuccessClient";
+
+export const metadata: Metadata = {
+  title: "Order Confirmed | La Lunar Printing Inc.",
+  robots: { index: false, follow: false },
+};
 
 async function getStripe() {
   const Stripe = (await import("stripe")).default;

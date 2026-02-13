@@ -23,7 +23,10 @@ export async function generateMetadata() {
     : "Professional custom printing for fleet compliance, vehicle graphics, and business signage in Ontario, Canada.";
 
   return {
-    title,
+    title: {
+      default: title,
+      template: "%s | La Lunar Printing Inc.",
+    },
     description,
     metadataBase: new URL(SITE_URL),
     openGraph: {

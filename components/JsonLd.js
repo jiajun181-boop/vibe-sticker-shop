@@ -1,5 +1,24 @@
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
 
+// Category slug → display name mapping for breadcrumbs
+const CATEGORY_DISPLAY_NAMES = {
+  "marketing-prints": "Marketing Prints",
+  "business-cards": "Business Cards",
+  stamps: "Self-Inking Stamps",
+  "rigid-signs": "Signs & Boards",
+  "banners-displays": "Banners & Displays",
+  "display-stands": "Display Stands",
+  "large-format-graphics": "Large Format Graphics",
+  "vehicle-branding-advertising": "Vehicle Branding",
+  "fleet-compliance-id": "Fleet Compliance",
+  "stickers-labels": "Stickers & Labels",
+  "safety-warning-decals": "Safety & Warning",
+  "facility-asset-labels": "Facility & Asset Labels",
+  "business-forms": "Business Forms",
+  "retail-promo": "Retail Promo",
+  packaging: "Packaging Inserts",
+};
+
 export function OrganizationSchema() {
   const data = {
     "@context": "https://schema.org",
@@ -29,27 +48,19 @@ export function OrganizationSchema() {
   );
 }
 
-export function ProductSchema({ product }) {
-  const image = product.images?.[0]?.url || `${SITE_URL}/og-image.png`;
+export function WebSiteSchema() {
   const data = {
     "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    description: product.description || `Custom ${product.name}`,
-    image,
-    url: `${SITE_URL}/shop/${product.category}/${product.slug}`,
-    brand: { "@type": "Brand", name: "La Lunar Printing Inc." },
-    offers: {
-      "@type": "Offer",
-      priceCurrency: "CAD",
-      price: (product.basePrice / 100).toFixed(2),
-      availability: "https://schema.org/InStock",
-      url: `${SITE_URL}/shop/${product.category}/${product.slug}`,
-    },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      reviewCount: "127",
+    "@type": "WebSite",
+    name: "La Lunar Printing Inc.",
+    url: SITE_URL,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/shop?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
     },
   };
   return (
@@ -60,13 +71,52 @@ export function ProductSchema({ product }) {
   );
 }
 
+export function ProductSchema({ product }) {
+  const image = product.images?.[0]?.url || `${SITE_URL}/og-image.png`;
+  const url = `${SITE_URL}/shop/${product.category}/${product.slug}`;
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description || `Custom ${product.name}`,
+    image,
+    url,
+    brand: { "@type": "Brand", name: "La Lunar Printing Inc." },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "CAD",
+      price: (product.basePrice / 100).toFixed(2),
+      availability: product.isActive
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      url,
+      priceValidUntil: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
+    },
+    // Only include aggregateRating if product has real review data
+    ...(product.reviewCount > 0 ? {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: String(product.ratingValue),
+        reviewCount: String(product.reviewCount),
+      },
+    } : {}),
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
 export function BreadcrumbSchema({ category, productName }) {
+  const categoryName = CATEGORY_DISPLAY_NAMES[category] || category.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const data = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Shop", item: `${SITE_URL}/shop` },
-      { "@type": "ListItem", position: 2, name: category, item: `${SITE_URL}/shop/${category}` },
+      { "@type": "ListItem", position: 2, name: categoryName, item: `${SITE_URL}/shop/${category}` },
       { "@type": "ListItem", position: 3, name: productName },
     ],
   };
