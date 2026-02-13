@@ -10,7 +10,12 @@ const formatCad = (cents) =>
     cents / 100
   );
 
-export default function SubProductLandingClient({ parentSlug, products }) {
+export default function SubProductLandingClient({
+  parentSlug,
+  category,
+  categoryTitle,
+  products,
+}) {
   const { t } = useTranslation();
   const i18nBase = `sp.${parentSlug}`;
 
@@ -20,7 +25,7 @@ export default function SubProductLandingClient({ parentSlug, products }) {
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: t("mp.landing.title"), href: "/shop/marketing-prints" },
+            { label: categoryTitle, href: `/shop/${category}` },
             { label: t(`${i18nBase}.title`) },
           ]}
         />
@@ -114,9 +119,32 @@ export default function SubProductLandingClient({ parentSlug, products }) {
 
         {products.length === 0 && (
           <p className="mt-8 text-center text-sm text-gray-500">
-            {t("mp.landing.customText")}
+            No products available yet.
           </p>
         )}
+
+        {/* Back to category */}
+        <div className="mt-10 text-center">
+          <Link
+            href={`/shop/${category}`}
+            className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <svg
+              className="h-4 w-4 rotate-180"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8.25 4.5l7.5 7.5-7.5 7.5"
+              />
+            </svg>
+            {categoryTitle}
+          </Link>
+        </div>
 
         {/* Info Footer */}
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
@@ -127,8 +155,18 @@ export default function SubProductLandingClient({ parentSlug, products }) {
             <ul className="mt-3 space-y-2 text-sm text-gray-700">
               {["quality1", "quality2", "quality3", "quality4"].map((k) => (
                 <li key={k} className="flex items-start gap-2">
-                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   {t(`mp.landing.${k}`)}
                 </li>

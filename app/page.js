@@ -134,12 +134,12 @@ export default async function HomePage() {
         </h3>
         <div className="flex flex-wrap justify-center gap-2">
           {[
-            { label: t("mp.sub.businessCards.title"), href: "/shop/business-cards" },
-            { label: t("mp.sub.flyers.title"), href: "/shop/marketing-prints/flyers" },
-            { label: "Stickers & Labels", href: "/shop?category=stickers-labels" },
-            { label: t("mp.sub.postcards.title"), href: "/shop/marketing-prints/postcards" },
-            { label: t("mp.sub.brochures.title"), href: "/shop/marketing-prints/brochures" },
-            { label: "Banners", href: "/shop?category=banners-displays" },
+            { label: "Marketing Prints", href: "/shop/marketing-prints" },
+            { label: "Business Cards", href: "/shop/business-cards" },
+            { label: "Stickers & Labels", href: "/shop/stickers-labels" },
+            { label: "Banners & Displays", href: "/shop/banners-displays" },
+            { label: "Signs & Boards", href: "/shop/rigid-signs" },
+            { label: "Self-Inking Stamps", href: "/shop/stamps" },
           ].map((chip) => (
             <Link
               key={chip.href}
@@ -165,7 +165,7 @@ export default async function HomePage() {
             return (
               <Link
                 key={category}
-                href={`/shop?category=${category}`}
+                href={`/shop/${category}`}
                 className="group overflow-hidden rounded-2xl border border-gray-200 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="aspect-[4/3] bg-gray-100 overflow-hidden flex items-center justify-center">

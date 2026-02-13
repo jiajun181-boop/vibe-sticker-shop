@@ -9,6 +9,7 @@ import Analytics from "@/components/Analytics";
 import SkipLink from "@/components/SkipLink";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
 import AuthInit from "@/components/AuthInit";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
 
@@ -53,6 +54,7 @@ export default async function RootLayout({ children }) {
         <PromoBar />
         <Navbar />
         <div id="main-content" className="min-h-screen">{children}</div>
+        <MobileBottomNav />
         <Footer locale={locale} />
         <CartDrawer />
         <Toaster />

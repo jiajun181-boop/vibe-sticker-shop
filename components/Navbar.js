@@ -61,40 +61,49 @@ export default function Navbar() {
               {t("nav.shop")}
             </Link>
             <div className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-              <div className="w-[480px] rounded-xl border border-gray-200 bg-white p-5 shadow-xl">
-                <div className="grid grid-cols-3 gap-6">
-                  {/* Column 1: Popular */}
+              <div className="w-[640px] rounded-xl border border-gray-200 bg-white p-5 shadow-xl">
+                <div className="grid grid-cols-4 gap-5">
+                  {/* Column 1: Print & Marketing */}
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">{t("nav.shopPopular")}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Print & Marketing</p>
                     <div className="mt-2 space-y-1">
-                      <Link href="/shop/business-cards" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.businessCards.title")}</Link>
-                      <Link href="/shop/marketing-prints/flyers" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.flyers.title")}</Link>
-                      <Link href="/shop?category=stickers-labels" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Stickers & Labels</Link>
-                      <Link href="/shop/marketing-prints/postcards" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.postcards.title")}</Link>
+                      <Link href="/shop/marketing-prints" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Marketing Prints</Link>
+                      <Link href="/shop/business-cards" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Business Cards</Link>
+                      <Link href="/shop/stamps" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Self-Inking Stamps</Link>
+                      <Link href="/shop/business-forms" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Business Forms</Link>
                     </div>
                   </div>
-                  {/* Column 2: Marketing Prints */}
+                  {/* Column 2: Signs & Displays */}
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">{t("nav.shopMarketing")}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Signs & Displays</p>
                     <div className="mt-2 space-y-1">
-                      <Link href="/shop/marketing-prints/brochures" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.brochures.title")}</Link>
-                      <Link href="/shop/marketing-prints/booklets" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.booklets.title")}</Link>
-                      <Link href="/shop/marketing-prints/menus" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.menus.title")}</Link>
-                      <Link href="/shop/marketing-prints/stationery" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">{t("mp.sub.stationery.title")}</Link>
+                      <Link href="/shop/banners-displays" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Banners & Displays</Link>
+                      <Link href="/shop/display-stands" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Display Stands</Link>
+                      <Link href="/shop/rigid-signs" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Signs & Boards</Link>
+                      <Link href="/shop/large-format-graphics" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Large Format</Link>
                     </div>
                   </div>
-                  {/* Column 3: Signage */}
+                  {/* Column 3: Vehicle & Fleet */}
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">{t("nav.shopSignage")}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Vehicle & Fleet</p>
                     <div className="mt-2 space-y-1">
-                      <Link href="/shop?category=banners-displays" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Banners & Flags</Link>
-                      <Link href="/shop?category=rigid-signs" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Rigid Signs</Link>
-                      <Link href="/shop?category=display-stands" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Display Stands</Link>
-                      <Link href="/shop?category=large-format-graphics" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Large Format</Link>
+                      <Link href="/shop/vehicle-branding-advertising" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Vehicle Branding</Link>
+                      <Link href="/shop/fleet-compliance-id" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Fleet Compliance</Link>
+                      <Link href="/shop/retail-promo" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Retail & Promo</Link>
+                      <Link href="/shop/packaging" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Packaging Inserts</Link>
+                    </div>
+                  </div>
+                  {/* Column 4: Labels & Safety */}
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Labels & Safety</p>
+                    <div className="mt-2 space-y-1">
+                      <Link href="/shop/stickers-labels" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Stickers & Labels</Link>
+                      <Link href="/shop/safety-warning-decals" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Safety & Warning</Link>
+                      <Link href="/shop/facility-asset-labels" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Facility & Asset Labels</Link>
                     </div>
                   </div>
                 </div>
-                <div className="mt-4 border-t border-gray-100 pt-3">
+                <div className="mt-4 border-t border-gray-100 pt-3 flex items-center justify-between">
                   <Link href="/shop" className="flex items-center gap-1 text-xs font-semibold text-gray-600 hover:text-gray-900 transition-colors">
                     {t("nav.shopAll")}
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -231,13 +240,14 @@ export default function Navbar() {
       {/* Mobile category chips */}
       <div className="flex gap-2 overflow-x-auto px-6 pb-3 md:hidden scrollbar-hide">
         {[
-          { label: t("mp.sub.businessCards.title"), href: "/shop/business-cards" },
-          { label: t("mp.sub.flyers.title"), href: "/shop/marketing-prints/flyers" },
-          { label: "Stickers", href: "/shop?category=stickers-labels" },
-          { label: t("mp.sub.postcards.title"), href: "/shop/marketing-prints/postcards" },
-          { label: t("mp.sub.brochures.title"), href: "/shop/marketing-prints/brochures" },
-          { label: "Banners", href: "/shop?category=banners-displays" },
-          { label: "Signs", href: "/shop?category=rigid-signs" },
+          { label: "Marketing Prints", href: "/shop/marketing-prints" },
+          { label: "Business Cards", href: "/shop/business-cards" },
+          { label: "Stickers", href: "/shop/stickers-labels" },
+          { label: "Banners", href: "/shop/banners-displays" },
+          { label: "Signs", href: "/shop/rigid-signs" },
+          { label: "Vehicle", href: "/shop/vehicle-branding-advertising" },
+          { label: "Stamps", href: "/shop/stamps" },
+          { label: "Safety", href: "/shop/safety-warning-decals" },
         ].map((chip) => (
           <Link
             key={chip.href}

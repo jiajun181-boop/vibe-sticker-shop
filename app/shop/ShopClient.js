@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
@@ -31,14 +31,65 @@ function sortProducts(list, sortBy, catOrder) {
   return arr;
 }
 
+/* ── Category Card Grid ─────────────────────────────────────────── */
+
+function CategoryGrid({ departments, departmentMeta, categoryMeta, categoryCounts, t }) {
+  return (
+    <div className="space-y-10">
+      {departments.map((dept) => {
+        const deptMeta = departmentMeta?.[dept.key];
+        return (
+          <section key={dept.key}>
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900">
+              {deptMeta?.title || dept.key}
+            </h2>
+            <div className="mt-4 grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {dept.categories.map((catSlug) => {
+                const meta = categoryMeta?.[catSlug];
+                const count = categoryCounts?.[catSlug] || 0;
+                return (
+                  <Link
+                    key={catSlug}
+                    href={`/shop/${catSlug}`}
+                    className="group flex flex-col rounded-2xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-gray-400"
+                  >
+                    <span className="text-2xl">{meta?.icon || ""}</span>
+                    <h3 className="mt-2 text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      {meta?.title || catSlug}
+                    </h3>
+                    {count > 0 && (
+                      <p className="mt-1 text-[11px] text-gray-400">
+                        {count} {t("mp.landing.products")}
+                      </p>
+                    )}
+                    <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-500 group-hover:text-gray-900 transition-colors">
+                      {t("mp.landing.browse")}
+                      <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Main ShopClient ────────────────────────────────────────────── */
+
 export default function ShopClient({
   products,
-  initialCategory,
   initialQuery = "",
   initialTag = "",
   initialUseCase = "",
-  hiddenCategories = [],
   categoryMeta = {},
+  departments = [],
+  departmentMeta = {},
+  categoryCounts = {},
 }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
@@ -46,7 +97,6 @@ export default function ShopClient({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [category, setCategory] = useState(initialCategory || "all");
   const [query, setQuery] = useState(initialQuery || "");
   const [tag, setTag] = useState(initialTag || "");
   const [useCase, setUseCase] = useState(initialUseCase || "");
@@ -57,16 +107,29 @@ export default function ShopClient({
   const [pageSize, setPageSize] = useState(12);
   const [page, setPage] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const isInternalUrlUpdate = useRef(false);
 
-  // Sync view default after hydration for SSR safety
   useEffect(() => {
     if (window.innerWidth < 1024 && view === "grid") setView("list");
   }, []);
 
-  const hiddenSet = useMemo(() => new Set(hiddenCategories), [hiddenCategories]);
+  // Sync state from URL on external navigation (browser back, link click)
+  useEffect(() => {
+    if (isInternalUrlUpdate.current) {
+      isInternalUrlUpdate.current = false;
+      return;
+    }
+    setQuery(searchParams?.get("q") || "");
+    setTag(searchParams?.get("tag") || "");
+    setUseCase(searchParams?.get("useCase") || "");
+    setPage(1);
+  }, [searchParams]);
+
+  // Show product grid when any filter is active
+  const isFiltering = !!(query.trim() || tag || useCase);
 
   const categoryLabels = useMemo(() => {
-    const labels = { all: "All Products" };
+    const labels = {};
     for (const [slug, meta] of Object.entries(categoryMeta)) {
       labels[slug] = meta.title || slug;
     }
@@ -79,19 +142,6 @@ export default function ShopClient({
     return m;
   }, [categoryMeta]);
 
-  const categories = useMemo(() => {
-    const set = new Set(products.map((p) => p.category));
-    const visible = Array.from(set)
-      .filter((cat) => !hiddenSet.has(cat))
-      .sort((a, b) => {
-        const ai = categoryOrder.has(a) ? categoryOrder.get(a) : 9999;
-        const bi = categoryOrder.has(b) ? categoryOrder.get(b) : 9999;
-        if (ai !== bi) return ai - bi;
-        return a.localeCompare(b);
-      });
-    return ["all", ...visible];
-  }, [products, hiddenSet, categoryOrder]);
-
   const availableIndustryTags = useMemo(() => {
     const present = new Set();
     for (const p of products) {
@@ -102,14 +152,11 @@ export default function ShopClient({
   }, [products]);
 
   function syncUrl(next) {
+    isInternalUrlUpdate.current = true;
     const sp = new URLSearchParams(searchParams?.toString() || "");
-    const nextCategory = next?.category ?? category;
     const nextQuery = next?.query ?? query;
     const nextTag = next?.tag ?? tag;
     const nextUseCase = next?.useCase ?? useCase;
-
-    if (nextCategory && nextCategory !== "all") sp.set("category", nextCategory);
-    else sp.delete("category");
 
     if (nextQuery && nextQuery.trim()) sp.set("q", nextQuery.trim());
     else sp.delete("q");
@@ -130,7 +177,7 @@ export default function ShopClient({
   }, [useCase]);
 
   const filtered = useMemo(() => {
-    let base = category === "all" ? products : products.filter((p) => p.category === category);
+    let base = [...products];
     if (tag) {
       base = base.filter((p) => Array.isArray(p.tags) && p.tags.includes(tag));
     }
@@ -142,17 +189,16 @@ export default function ShopClient({
       base = base.filter((p) => {
         const name = (p.name || "").toLowerCase();
         const slug = (p.slug || "").toLowerCase();
+        const desc = (p.description || "").toLowerCase();
         const tags = Array.isArray(p.tags) ? p.tags : [];
-        return name.includes(q) || slug.includes(q) || tags.some((t) => (t || "").toLowerCase().includes(q));
+        return name.includes(q) || slug.includes(q) || desc.includes(q) || tags.some((t) => (t || "").toLowerCase().includes(q));
       });
     }
     return sortProducts(base, sortBy, categoryOrder);
-  }, [products, category, tag, useCase, useCaseSlugs, query, sortBy, categoryOrder]);
+  }, [products, tag, useCase, useCaseSlugs, query, sortBy, categoryOrder]);
 
   const visible = useMemo(() => filtered.slice(0, page * pageSize), [filtered, page, pageSize]);
   const hasMore = visible.length < filtered.length;
-
-  const featured = useMemo(() => sortProducts(products, "popular", categoryOrder).slice(0, 6), [products, categoryOrder]);
 
   function quickAdd(product) {
     addItem({
@@ -171,295 +217,117 @@ export default function ShopClient({
     showSuccessToast(t("shop.addedToCart"));
   }
 
+  function clearAllFilters() {
+    setQuery("");
+    setTag("");
+    setUseCase("");
+    setPage(1);
+    router.replace("/shop", { scroll: false });
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 px-4 pb-16 pt-10 text-gray-900">
       <div className="mx-auto max-w-7xl">
-        <Breadcrumbs items={
-          category && category !== "all"
-            ? [{ label: t("shop.header"), href: "/shop" }, { label: categoryLabels[category] || category }]
-            : [{ label: t("shop.header") }]
-        } />
+        <Breadcrumbs items={[{ label: t("shop.header") }]} />
 
-        <header className="mb-8">
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("shop.header")}</p>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight">{t("shop.title")}</h1>
+        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("shop.header")}</p>
+            <h1 className="mt-2 text-4xl font-semibold tracking-tight">{t("shop.title")}</h1>
+          </div>
+          {/* Compact search */}
+          <div className="relative w-full sm:w-72">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              value={query}
+              onChange={(e) => {
+                const nextQ = e.target.value;
+                setQuery(nextQ);
+                setPage(1);
+                syncUrl({ query: nextQ });
+              }}
+              placeholder={t("shop.searchPlaceholder")}
+              className="w-full rounded-full border border-gray-300 bg-white pl-9 pr-4 py-2 text-sm focus:border-gray-900 focus:outline-none"
+            />
+          </div>
         </header>
 
-        {/* Mobile filters: compact search + category chips + toggle */}
-        <div className="lg:hidden space-y-3 mb-4">
-          <input
-            value={query}
-            onChange={(e) => {
-              const nextQ = e.target.value;
-              setQuery(nextQ);
-              setPage(1);
-              syncUrl({ query: nextQ });
-            }}
-            placeholder={t("shop.searchPlaceholder")}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"
-          />
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {categories.map((cat) => (
+        {/* Filter chips */}
+        {!isFiltering && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            {USE_CASES.map((uc) => (
               <button
-                key={cat}
+                key={uc.slug}
                 onClick={() => {
-                  setCategory(cat);
+                  setUseCase(uc.slug);
                   setPage(1);
-                  syncUrl({ category: cat });
+                  syncUrl({ useCase: uc.slug });
                 }}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${
-                  category === cat ? "bg-gray-900 text-white" : "border border-gray-200 text-gray-700 hover:border-gray-400"
-                }`}
+                className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-400 transition-colors"
               >
-                {categoryLabels[cat] || cat}
+                {uc.icon} {t(`useCase.${uc.slug}.title`)}
               </button>
             ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-              className="flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:border-gray-400"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-              </svg>
-              {t("shop.filters")}
-              {(useCase || tag) && <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[9px] text-white">!</span>}
-            </button>
-            {(useCase || tag) && (
-              <button
-                onClick={() => { setUseCase(""); setTag(""); setPage(1); syncUrl({ useCase: "", tag: "" }); }}
-                className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400 hover:text-gray-700"
-              >
-                {t("shop.clear")}
-              </button>
-            )}
-          </div>
-          {mobileFiltersOpen && (
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.useCase")}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {USE_CASES.map((uc) => {
-                    const active = useCase === uc.slug;
-                    return (
-                      <button
-                        key={uc.slug}
-                        onClick={() => {
-                          const next = active ? "" : uc.slug;
-                          setUseCase(next);
-                          setPage(1);
-                          syncUrl({ useCase: next });
-                        }}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                          active ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {uc.icon} {t(`useCase.${uc.slug}.title`)}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              {availableIndustryTags.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.industry")}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {availableIndustryTags.map((tg) => {
-                      const meta = INDUSTRY_LABELS[tg];
-                      const label = meta?.label || tg;
-                      const icon = meta?.icon || "";
-                      const active = tag === tg;
-                      return (
-                        <button
-                          key={tg}
-                          onClick={() => {
-                            const nextTag = active ? "" : tg;
-                            setTag(nextTag);
-                            setPage(1);
-                            syncUrl({ tag: nextTag });
-                          }}
-                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                            active ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                          }`}
-                        >
-                          {icon} {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-          {/* Desktop sidebar — hidden on mobile */}
-          <aside className="hidden lg:block space-y-4 rounded-3xl border border-gray-200 bg-white p-5 lg:sticky lg:top-24 lg:h-fit">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.search")}</p>
-              <input
-                value={query}
-                onChange={(e) => {
-                  const nextQ = e.target.value;
-                  setQuery(nextQ);
-                  setPage(1);
-                  syncUrl({ query: nextQ });
-                }}
-                placeholder={t("shop.searchPlaceholder")}
-                className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.useCase")}</p>
-                {useCase && (
-                  <button
-                    onClick={() => { setUseCase(""); setPage(1); syncUrl({ useCase: "" }); }}
-                    className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400 hover:text-gray-700"
-                  >
-                    {t("shop.clear")}
-                  </button>
-                )}
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {USE_CASES.map((uc) => {
-                  const active = useCase === uc.slug;
-                  return (
-                    <button
-                      key={uc.slug}
-                      onClick={() => {
-                        const next = active ? "" : uc.slug;
-                        setUseCase(next);
-                        setPage(1);
-                        syncUrl({ useCase: next });
-                      }}
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                        active ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      {uc.icon} {t(`useCase.${uc.slug}.title`)}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.categories")}</p>
-            <div className="space-y-2">
-              {categories.map((cat) => (
+            {availableIndustryTags.slice(0, 6).map((tg) => {
+              const meta = INDUSTRY_LABELS[tg];
+              return (
                 <button
-                  key={cat}
+                  key={tg}
                   onClick={() => {
-                    setCategory(cat);
+                    setTag(tg);
                     setPage(1);
-                    syncUrl({ category: cat });
+                    syncUrl({ tag: tg });
                   }}
-                  className={`w-full rounded-xl px-3 py-2 text-left text-sm transition-colors ${
-                    category === cat ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                  }`}
+                  className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-400 transition-colors"
                 >
-                  {categoryLabels[cat] || cat}
+                  {meta?.icon || ""} {meta?.label || tg}
                 </button>
-              ))}
-            </div>
+              );
+            })}
+          </div>
+        )}
 
-            <div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.industry")}</p>
-                {tag && (
-                  <button
-                    onClick={() => {
-                      setTag("");
-                      setPage(1);
-                      syncUrl({ tag: "" });
-                    }}
-                    className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400 hover:text-gray-700"
-                  >
-                    {t("shop.clear")}
-                  </button>
-                )}
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {availableIndustryTags.length === 0 ? (
-                  <span className="text-xs text-gray-400">{t("shop.noIndustryTags")}</span>
-                ) : (
-                  availableIndustryTags.map((tg) => {
-                    const meta = INDUSTRY_LABELS[tg];
-                    const label = meta?.label || tg;
-                    const icon = meta?.icon || "";
-                    const active = tag === tg;
-                    return (
-                      <button
-                        key={tg}
-                        onClick={() => {
-                          const nextTag = active ? "" : tg;
-                          setTag(nextTag);
-                          setPage(1);
-                          syncUrl({ tag: nextTag });
-                        }}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                          active ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {icon} {label}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          </aside>
+        {/* Active filter indicator */}
+        {isFiltering && (
+          <div className="mb-4 flex items-center gap-3">
+            <button
+              onClick={clearAllFilters}
+              className="inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-black transition-colors"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+              {t("shop.backToCategories")}
+            </button>
+            <p className="text-sm text-gray-500">
+              {t("shop.showing", { visible: visible.length, total: filtered.length })}
+            </p>
+          </div>
+        )}
 
+        {/* Default: Category Grid grouped by department */}
+        {!isFiltering && (
+          <CategoryGrid
+            departments={departments}
+            departmentMeta={departmentMeta}
+            categoryMeta={categoryMeta}
+            categoryCounts={categoryCounts}
+            t={t}
+          />
+        )}
+
+        {/* Filtering: Product Grid */}
+        {isFiltering && (
           <section className="space-y-4">
-            {category === "all" && !tag && !(query || "").trim() && featured.length > 0 && (
-              <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("shop.featuredPicks")}</p>
-                  <Link href="/shop" className="text-xs font-semibold text-gray-600 hover:text-gray-900">
-                    {t("shop.viewAll")}
-                  </Link>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {featured.map((p) => (
-                    <Link
-                      key={p.id}
-                      href={p.optionsConfig?.ui?.href || `/shop/${p.category}/${p.slug}`}
-                      className="group flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-3 hover:bg-white hover:shadow-sm transition-all"
-                    >
-                      <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-white border border-gray-200">
-                        {p.images?.[0]?.url ? (
-                          <Image src={p.images[0].url} alt={p.name} fill className="object-cover" sizes="56px" unoptimized={p.images[0].url.endsWith(".svg")} />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-400">{t("shop.noImage")}</div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{p.name}</p>
-                        <p className="mt-0.5 truncate text-xs text-gray-500">{categoryLabels[p.category] || p.category}</p>
-                      </div>
-                      <div className="text-xs font-semibold text-gray-700">{p.basePrice > 0 ? formatCad(p.basePrice) : "Quote"}</div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
+            {/* Sort + View controls */}
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                {t("shop.showing", { visible: visible.length, total: filtered.length })}
-              </div>
               <div className="flex items-center gap-3">
                 <label className="text-xs uppercase tracking-[0.2em] text-gray-500">{t("shop.sort")}</label>
                 <select
                   value={sortBy}
-                  onChange={(e) => {
-                    setSortBy(e.target.value);
-                    setPage(1);
-                  }}
+                  onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
                   className="rounded-lg border border-gray-300 px-2 py-1 text-sm"
                 >
                   <option value="popular">{t("shop.sortPopular")}</option>
@@ -489,7 +357,7 @@ export default function ShopClient({
                 <p className="text-sm font-medium text-gray-500">{t("shop.noResults")}</p>
                 <button
                   type="button"
-                  onClick={() => { setCategory("all"); setTag(""); setUseCase(""); setQuery(""); setPage(1); router.replace("/shop", { scroll: false }); }}
+                  onClick={clearAllFilters}
                   className="mt-3 rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:border-gray-900"
                 >
                   {t("shop.clearFilters")}
@@ -499,13 +367,11 @@ export default function ShopClient({
 
             <div className={view === "grid" ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3" : "space-y-3"}>
               {visible.map((product) => {
-                const href = product.optionsConfig?.ui?.href || `/shop/${product.category}/${product.slug}`;
+                const href = `/shop/${product.category}/${product.slug}`;
                 const isOutOfStock = !product.isActive;
-                const showFromPrice = product.optionsConfig?.ui?.showFromPrice === true;
-                const isLandingPage = product.optionsConfig?.ui?.isLandingPage === true;
-                const rangeText = showFromPrice
-                  ? t("product.from", { price: formatCad(product.basePrice) })
-                  : product.pricingUnit === "per_sqft" ? `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 3.5))}` : `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 2.2))}`;
+                const rangeText = product.pricingUnit === "per_sqft"
+                  ? `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 3.5))}`
+                  : `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 2.2))}`;
 
                 return (
                   <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:shadow-lg ${view === "list" ? "flex" : ""}`}>
@@ -516,10 +382,10 @@ export default function ShopClient({
                         <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">{t("shop.noImage")}</div>
                       )}
                       {product.sortOrder != null && product.sortOrder <= 2 && (
-                      <span className="absolute top-3 right-3 bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full z-10">
-                        {t("shop.popular")}
-                      </span>
-                    )}
+                        <span className="absolute top-3 right-3 bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full z-10">
+                          {t("shop.popular")}
+                        </span>
+                      )}
                       {isOutOfStock && <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2 py-1 text-[10px] font-semibold text-white">{t("shop.outOfStock")}</span>}
                     </Link>
 
@@ -536,23 +402,16 @@ export default function ShopClient({
                         })()}
                       </div>
                       <h3 className="mt-2 text-base font-semibold text-gray-900">{product.name}</h3>
-                      {isLandingPage && product.description && (
-                        <p className="mt-1 text-xs text-gray-500">{product.description}</p>
-                      )}
                       <p className="mt-1 text-sm text-gray-600">{rangeText}</p>
-                      {!showFromPrice && (
-                        <p className="mt-1 text-xs text-gray-500">{product.pricingUnit === "per_sqft" ? t("shop.perSqft") : t("shop.perPiece")}</p>
-                      )}
+                      <p className="mt-1 text-xs text-gray-500">{product.pricingUnit === "per_sqft" ? t("shop.perSqft") : t("shop.perPiece")}</p>
 
                       <div className="mt-4 flex gap-2">
                         <Link href={href} className="rounded-full border border-gray-300 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900">
-                          {isLandingPage ? t("bc.landing.viewAll") : t("shop.view")}
+                          {t("shop.view")}
                         </Link>
-                        {!isLandingPage && (
-                          <button onClick={() => quickAdd(product)} className="rounded-full bg-gray-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-black">
-                            {t("shop.quickAdd")}
-                          </button>
-                        )}
+                        <button onClick={() => quickAdd(product)} className="rounded-full bg-gray-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-black">
+                          {t("shop.quickAdd")}
+                        </button>
                       </div>
                     </div>
                   </article>
@@ -568,7 +427,7 @@ export default function ShopClient({
               </div>
             )}
           </section>
-        </div>
+        )}
       </div>
     </main>
   );

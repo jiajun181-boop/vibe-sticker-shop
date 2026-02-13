@@ -66,7 +66,7 @@ export function BreadcrumbSchema({ category, productName }) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Shop", item: `${SITE_URL}/shop` },
-      { "@type": "ListItem", position: 2, name: category, item: `${SITE_URL}/shop?category=${category}` },
+      { "@type": "ListItem", position: 2, name: category, item: `${SITE_URL}/shop/${category}` },
       { "@type": "ListItem", position: 3, name: productName },
     ],
   };
