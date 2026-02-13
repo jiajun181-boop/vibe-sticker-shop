@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { adminLoginLimiter, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const { success } = adminLoginLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { email, password } = await request.json();
 
     // ── New path: email + password login (AdminUser table) ──

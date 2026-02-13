@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { setSessionCookie } from "@/lib/auth";
+import { authLimiter, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const { success } = authLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json({ error: "Too many login attempts. Please try again later." }, { status: 429 });
+    }
+
     const { email, password } = await request.json();
 
     if (!email || !password) {

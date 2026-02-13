@@ -98,6 +98,11 @@ export default function Footer({ locale = "en" }) {
             <span className="rounded-md border border-gray-700 px-2 py-1">Amex</span>
             <span className="rounded-md border border-gray-700 px-2 py-1">PayPal</span>
           </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/returns" className="hover:text-white transition-colors">Return Policy</Link>
+          </div>
           <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
         </div>
       </div>

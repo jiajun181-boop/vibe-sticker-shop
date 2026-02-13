@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email/resend";
 import { buildContactReceivedHtml, buildContactNotifyHtml } from "@/lib/email/templates/contact-received";
+import { contactLimiter, getClientIp } from "@/lib/rate-limit";
 
 const NOTIFY_EMAIL = process.env.CONTACT_NOTIFY_EMAIL || "support@vibestickers.com";
 
 export async function POST(req) {
   try {
+    const ip = getClientIp(req);
+    const { success } = contactLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json({ error: "Too many messages sent. Please try again later." }, { status: 429 });
+    }
+
     const body = await req.json();
     const { name, email, message } = body;
 

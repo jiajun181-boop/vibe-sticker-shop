@@ -3,11 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { generateToken } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildPasswordResetHtml } from "@/lib/email/templates/password-reset";
+import { forgotPasswordLimiter, getClientIp } from "@/lib/rate-limit";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const { success } = forgotPasswordLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json({ success: true }); // Silent rate limit to prevent enumeration
+    }
+
     const { email } = await request.json();
 
     // Always return success to prevent email enumeration

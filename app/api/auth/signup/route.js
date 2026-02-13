@@ -5,11 +5,18 @@ import { setSessionCookie, generateToken } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildVerifyEmailHtml } from "@/lib/email/templates/verify-email";
 import { buildB2bPendingHtml } from "@/lib/email/templates/b2b-pending";
+import { authLimiter, getClientIp } from "@/lib/rate-limit";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const { success } = authLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json({ error: "Too many signup attempts. Please try again later." }, { status: 429 });
+    }
+
     const body = await request.json();
     const { name, email, password, accountType, companyName, companyRole } = body;
 

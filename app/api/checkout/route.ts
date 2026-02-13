@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import Stripe from "stripe";
+import { checkoutLimiter, getClientIp } from "@/lib/rate-limit";
 
 let _stripe: Stripe | null = null;
 function getStripe() {
@@ -31,6 +32,15 @@ const CheckoutSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    const { success } = checkoutLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many checkout attempts. Please try again shortly.", code: "RATE_LIMIT" },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
 
     // 1. Validate Request Body
