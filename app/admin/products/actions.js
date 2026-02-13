@@ -2,10 +2,11 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { slugify, validateSlug } from "@/lib/slugify";
 
 export async function createProduct(formData) {
   const name = formData.get("name");
-  const slug = formData.get("slug");
+  let slug = formData.get("slug");
   const category = formData.get("category") || "fleet-compliance-id";
   const type = formData.get("type") || "sticker";
   const description = formData.get("description") || null;
@@ -13,9 +14,18 @@ export async function createProduct(formData) {
   const pricingUnit = formData.get("pricingUnit") || "per_piece";
   const imageUrl = formData.get("imageUrl") || null;
 
-  if (!name || !slug || isNaN(basePrice) || basePrice < 0) {
-    return { error: "Name, slug, and a valid base price are required." };
+  if (!name || isNaN(basePrice) || basePrice < 0) {
+    return { error: "Name and a valid base price are required." };
   }
+
+  // Auto-generate slug from name if not provided, then validate
+  slug = slug ? slugify(slug) : slugify(name);
+  const slugError = validateSlug(slug);
+  if (slugError) return { error: slugError };
+
+  // Check uniqueness
+  const existing = await prisma.product.findUnique({ where: { slug } });
+  if (existing) return { error: `Slug "${slug}" is already taken.` };
 
   await prisma.product.create({
     data: {
@@ -31,7 +41,7 @@ export async function createProduct(formData) {
 export async function updateProduct(formData) {
   const id = formData.get("id");
   const name = formData.get("name");
-  const slug = formData.get("slug");
+  let slug = formData.get("slug");
   const category = formData.get("category") || "fleet-compliance-id";
   const type = formData.get("type") || "sticker";
   const description = formData.get("description") || null;
@@ -41,6 +51,15 @@ export async function updateProduct(formData) {
   if (!id || !name || !slug || isNaN(basePrice) || basePrice < 0) {
     return { error: "ID, name, slug, and a valid base price are required." };
   }
+
+  // Sanitize and validate slug
+  slug = slugify(slug);
+  const slugError = validateSlug(slug);
+  if (slugError) return { error: slugError };
+
+  // Check slug uniqueness (excluding current product)
+  const existing = await prisma.product.findFirst({ where: { slug, NOT: { id } } });
+  if (existing) return { error: `Slug "${slug}" is already taken by another product.` };
 
   await prisma.product.update({
     where: { id },

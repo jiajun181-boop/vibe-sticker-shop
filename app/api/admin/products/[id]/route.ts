@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/admin-auth";
+import { slugify, validateSlug } from "@/lib/slugify";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "products", "view");
   if (!auth.authenticated) return auth.response;
 
   const { id } = await params;
@@ -29,7 +30,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "products", "edit");
   if (!auth.authenticated) return auth.response;
 
   const { id } = await params;
@@ -68,6 +69,22 @@ export async function PATCH(
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
+  // Validate slug if being updated
+  if (data.slug) {
+    data.slug = slugify(data.slug as string);
+    const slugError = validateSlug(data.slug as string);
+    if (slugError) {
+      return NextResponse.json({ error: slugError }, { status: 400 });
+    }
+    // Check uniqueness (excluding current product)
+    const existing = await prisma.product.findFirst({
+      where: { slug: data.slug as string, NOT: { id } },
+    });
+    if (existing) {
+      return NextResponse.json({ error: `Slug "${data.slug}" is already taken` }, { status: 409 });
+    }
+  }
+
   const product = await prisma.product.update({
     where: { id },
     data,
@@ -81,7 +98,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "products", "edit");
   if (!auth.authenticated) return auth.response;
 
   const { id } = await params;

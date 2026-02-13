@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/admin-auth";
 
 // GET /api/admin/pricing — list all presets with product count
 export async function GET(request: NextRequest) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "pricing", "view");
   if (!auth.authenticated) return auth.response;
 
   try {
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/admin/pricing — create a new preset
 export async function POST(request: NextRequest) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "pricing", "edit");
   if (!auth.authenticated) return auth.response;
 
   try {

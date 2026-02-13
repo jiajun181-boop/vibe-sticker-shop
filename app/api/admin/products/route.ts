@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/admin-auth";
 
 export async function GET(request: NextRequest) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "products", "view");
   if (!auth.authenticated) return auth.response;
 
   const { searchParams } = new URL(request.url);

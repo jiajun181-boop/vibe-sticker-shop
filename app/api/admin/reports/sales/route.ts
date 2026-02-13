@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/admin-auth";
 
 interface TotalRow {
   total_revenue: bigint;
@@ -31,7 +31,7 @@ interface CategorySalesRow {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "reports", "view");
   if (!auth.authenticated) return auth.response;
 
   try {

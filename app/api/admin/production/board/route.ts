@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/admin-auth";
 
 const PRIORITY_ORDER: Record<string, number> = {
   urgent: 0,
@@ -9,7 +9,7 @@ const PRIORITY_ORDER: Record<string, number> = {
 };
 
 export async function GET(request: NextRequest) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "production", "view");
   if (!auth.authenticated) return auth.response;
 
   try {

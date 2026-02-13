@@ -577,3 +577,52 @@ model AssignmentRule {
 
   @@index([isActive, priority])
 }
+
+// ── Quality Control ──
+
+enum DefectSeverity {
+  minor       // Cosmetic, customer may accept
+  major       // Significant deviation from spec
+  critical    // Unusable, must reprint
+}
+
+enum QCResolution {
+  pending     // Awaiting decision
+  accepted    // Ship as-is (minor defects)
+  reprint     // Reprint the item
+  refund      // Refund the customer
+  discounted  // Ship with partial refund
+}
+
+model QCReport {
+  id            String         @id @default(cuid())
+  orderId       String
+  orderItemId   String?
+  jobId         String?
+
+  // Defect details
+  defectType    String         // color_mismatch, cut_error, print_defect, material_defect, damage, other
+  severity      DefectSeverity
+  description   String
+  photoUrls     String[]       @default([])
+
+  // Resolution
+  resolution    QCResolution   @default(pending)
+  resolvedBy    String?
+  resolvedAt    DateTime?
+  resolutionNote String?
+
+  // Reprint tracking
+  reprintJobId  String?        // New ProductionJob if reprinted
+
+  // Audit
+  reportedBy    String         // AdminUser id or name
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([orderId])
+  @@index([orderItemId])
+  @@index([resolution])
+  @@index([severity])
+  @@index([createdAt])
+}

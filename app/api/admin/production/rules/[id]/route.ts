@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/admin-auth";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "production", "view");
   if (!auth.authenticated) return auth.response;
 
   try {
@@ -38,7 +38,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "production", "edit");
   if (!auth.authenticated) return auth.response;
 
   try {
@@ -90,7 +90,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "production", "edit");
   if (!auth.authenticated) return auth.response;
 
   try {

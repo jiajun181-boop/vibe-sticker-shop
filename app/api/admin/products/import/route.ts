@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/admin-auth";
 
 const VALID_CATEGORIES = [
   "fleet-compliance-id",
@@ -33,7 +33,7 @@ interface ProductInput {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "products", "edit");
   if (!auth.authenticated) return auth.response;
 
   try {

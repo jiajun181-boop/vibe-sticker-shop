@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/admin-auth";
 
 /**
  * GET /api/admin/assets/[id] — Single asset with all links.
@@ -10,7 +10,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "media", "view");
   if (!auth.authenticated) return auth.response;
 
   const { id } = await params;
@@ -52,7 +52,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "media", "edit");
   if (!auth.authenticated) return auth.response;
 
   const { id } = await params;
@@ -121,7 +121,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "media", "edit");
   if (!auth.authenticated) return auth.response;
 
   const { id } = await params;

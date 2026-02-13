@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/admin-auth";
 
 /**
  * POST /api/admin/assets/check-hash — Check if an asset with this SHA256 already exists.
@@ -9,7 +9,7 @@ import { requireAdminAuth } from "@/lib/admin-auth";
  * Used by the frontend to check for duplicates before uploading.
  */
 export async function POST(request: NextRequest) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "media", "edit");
   if (!auth.authenticated) return auth.response;
 
   try {

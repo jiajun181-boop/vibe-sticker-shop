@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/admin-auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildB2bApprovedHtml } from "@/lib/email/templates/b2b-approved";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = requireAdminAuth(request as any);
+  const auth = await requirePermission(request as any, "b2b", "edit");
   if (!auth.authenticated) return auth.response;
 
   const { id } = await params;

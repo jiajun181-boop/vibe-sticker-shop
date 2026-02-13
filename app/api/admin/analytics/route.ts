@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/admin-auth";
 
 type Period = "7d" | "30d" | "90d" | "12m";
 
@@ -85,7 +85,7 @@ interface StatusBreakdown {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = requireAdminAuth(request);
+  const auth = await requirePermission(request, "analytics", "view");
   if (!auth.authenticated) return auth.response;
 
   try {
