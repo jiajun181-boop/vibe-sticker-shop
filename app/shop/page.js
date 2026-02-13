@@ -36,6 +36,7 @@ export default async function ShopPage({ searchParams }) {
   const initialQuery = typeof params.q === "string" ? params.q : "";
   const initialTag = typeof params.tag === "string" ? params.tag : "";
   const initialUseCase = typeof params.useCase === "string" ? params.useCase : "";
+  const initialView = typeof params.view === "string" ? params.view : "";
 
   const [products, config] = await Promise.all([
     prisma.product.findMany({
@@ -52,16 +53,27 @@ export default async function ShopPage({ searchParams }) {
     categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
   }
 
+  // Build thumbnail previews (first 3 product images per category)
+  const categoryPreviews = {};
+  for (const p of products) {
+    if (!categoryPreviews[p.category]) categoryPreviews[p.category] = [];
+    if (categoryPreviews[p.category].length < 3 && p.images?.[0]?.url) {
+      categoryPreviews[p.category].push(p.images[0].url);
+    }
+  }
+
   return (
     <ShopClient
       products={products}
       initialQuery={initialQuery}
       initialTag={initialTag}
       initialUseCase={initialUseCase}
+      initialView={initialView}
       categoryMeta={config.categoryMeta}
       departments={config.departments}
       departmentMeta={config.departmentMeta}
       categoryCounts={categoryCounts}
+      categoryPreviews={categoryPreviews}
     />
   );
 }

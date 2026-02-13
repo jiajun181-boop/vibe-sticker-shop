@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { useCartStore } from "@/lib/store";
+import { showSuccessToast, showErrorToast } from "@/components/Toast";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -23,6 +25,29 @@ export default function AccountDashboard() {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState({ total: 0, spent: 0 });
   const [loading, setLoading] = useState(true);
+  const [reordering, setReordering] = useState(null);
+  const addItem = useCartStore((s) => s.addItem);
+  const openCart = useCartStore((s) => s.openCart);
+
+  async function handleReorder(e, orderId) {
+    e.preventDefault();
+    e.stopPropagation();
+    setReordering(orderId);
+    try {
+      const res = await fetch(`/api/account/orders/${orderId}/reorder`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to reorder");
+      for (const item of data.items || []) {
+        addItem(item);
+      }
+      openCart();
+      showSuccessToast(t("orders.reorderSuccess") || "Items added to cart!");
+    } catch (err) {
+      showErrorToast(err.message);
+    } finally {
+      setReordering(null);
+    }
+  }
 
   useEffect(() => {
     fetch("/api/account/orders?limit=5")
@@ -127,12 +152,11 @@ export default function AccountDashboard() {
         ) : (
           <div className="mt-4 space-y-3">
             {orders.map((order) => (
-              <Link
+              <div
                 key={order.id}
-                href={`/account/orders/${order.id}`}
                 className="flex items-center justify-between rounded-xl border border-gray-200 p-4 transition-colors hover:bg-gray-50"
               >
-                <div>
+                <Link href={`/account/orders/${order.id}`} className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900">#{order.id.slice(0, 8)}</p>
                   <p className="mt-0.5 text-xs text-gray-500">
                     {new Date(order.createdAt).toLocaleDateString("en-CA", {
@@ -141,18 +165,30 @@ export default function AccountDashboard() {
                       day: "numeric",
                     })}
                   </p>
+                </Link>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-gray-900">{formatCad(order.totalAmount)}</p>
+                    <span
+                      className={`inline-block mt-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${
+                        STATUS_COLORS[order.status] || "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {order.status}
+                    </span>
+                  </div>
+                  {order.status === "paid" && (
+                    <button
+                      type="button"
+                      onClick={(e) => handleReorder(e, order.id)}
+                      disabled={reordering === order.id}
+                      className="shrink-0 rounded-full border border-gray-300 px-3 py-1.5 text-[11px] font-semibold text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900 disabled:opacity-50"
+                    >
+                      {reordering === order.id ? t("orders.reordering") : t("orders.reorder")}
+                    </button>
+                  )}
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">{formatCad(order.totalAmount)}</p>
-                  <span
-                    className={`inline-block mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
-                      STATUS_COLORS[order.status] || "bg-gray-100 text-gray-500"
-                    }`}
-                  >
-                    {order.status}
-                  </span>
-                </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}

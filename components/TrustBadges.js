@@ -12,7 +12,7 @@ export function PaymentBadges() {
         </svg>
         {t("trust.secureCheckout")}
       </div>
-      <div className="flex items-center justify-center gap-2 text-[10px] font-bold tracking-wider text-gray-300">
+      <div className="flex items-center justify-center gap-2 text-[11px] font-bold tracking-wider text-gray-300">
         <span>VISA</span>
         <span>MC</span>
         <span>AMEX</span>

@@ -63,35 +63,30 @@ export default async function CategoryPage({ params }) {
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
 
-  // Check for sub-product groups in this category
+  // Build filter groups from sub-product config (for filter chips, not section headers)
   const subGroupEntries = getSubProductsForCategory(decoded);
-
-  const subGroups = [];
-  const groupedSlugs = new Set();
+  const filterGroups = [];
 
   for (const [parentSlug, cfg] of subGroupEntries) {
     const slugSet = new Set(cfg.dbSlugs);
-    const groupProducts = products.filter((p) => slugSet.has(p.slug));
-    for (const s of cfg.dbSlugs) groupedSlugs.add(s);
-
-    if (groupProducts.length > 0) {
-      subGroups.push({
-        parentSlug,
-        products: toClientSafe(groupProducts),
+    const count = products.filter((p) => slugSet.has(p.slug)).length;
+    if (count > 0) {
+      filterGroups.push({
+        slug: parentSlug,
+        label: parentSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        dbSlugs: cfg.dbSlugs,
+        count,
       });
     }
   }
-
-  // Products not in any sub-group
-  const standalone = products.filter((p) => !groupedSlugs.has(p.slug));
 
   return (
     <CategoryLandingClient
       category={decoded}
       categoryTitle={meta?.title || decoded}
       categoryIcon={meta?.icon || ""}
-      subGroups={subGroups}
-      standaloneProducts={toClientSafe(standalone)}
+      products={toClientSafe(products)}
+      filterGroups={filterGroups}
     />
   );
 }

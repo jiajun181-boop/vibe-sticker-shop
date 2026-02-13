@@ -8,6 +8,7 @@ import {
   USE_CASE_SLUGS,
   USE_CASE_PRODUCTS,
   USE_CASE_META,
+  SOLUTION_BUNDLES,
 } from "@/lib/useCases";
 import { INDUSTRY_LABELS } from "@/lib/industryTags";
 import {
@@ -186,6 +187,45 @@ export default async function UseCasePage({ params }) {
         </div>
       )}
 
+      {/* Solution Bundles */}
+      {(SOLUTION_BUNDLES[slug] || []).length > 0 && (
+        <div className="max-w-7xl mx-auto px-6 mb-12">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-black" />
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+              {t("solutions.bundlesTitle")}
+            </h2>
+          </div>
+          <p className="text-xs text-gray-500 mb-4">{t("solutions.bundlesSubtitle")}</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {SOLUTION_BUNDLES[slug].map((bundle) => (
+              <div key={bundle.id} className="rounded-2xl border border-gray-200 bg-white p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-sm">{bundle.name}</h3>
+                  <span className="text-sm font-black text-gray-900">{bundle.priceHint}</span>
+                </div>
+                <ul className="space-y-1.5 mb-4">
+                  {bundle.items.map((item, i) => (
+                    <li key={i} className="flex items-center gap-2 text-xs text-gray-600">
+                      <svg className="h-3.5 w-3.5 flex-shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={`/quote?sku=${encodeURIComponent(bundle.id)}`}
+                  className="block w-full rounded-full bg-gray-900 py-2 text-center text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-black"
+                >
+                  {t("solutions.getPackage")}
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Products grid */}
       <div className="max-w-7xl mx-auto px-6 mb-14">
         <div className="text-center mb-8">
@@ -314,7 +354,7 @@ export default async function UseCasePage({ params }) {
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
-              href="/contact"
+              href="/quote"
               className="bg-white text-black px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-colors"
             >
               Get a Free Quote

@@ -10,14 +10,25 @@ import TrustSignals from "@/components/home/TrustSignals";
 import BundlesSection from "@/components/home/BundlesSection";
 import QuoteCalculator from "@/components/home/QuoteCalculator";
 import UseCaseSection from "@/components/home/UseCaseSection";
+import DualEntryHero from "@/components/home/DualEntryHero";
+import QuickOrderStrip from "@/components/home/QuickOrderStrip";
+import ReorderStrip from "@/components/home/ReorderStrip";
 
 export const dynamic = "force-dynamic";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
 const BRAND = "La Lunar Printing Inc.";
 
+const QUICK_ORDER_SLUGS = [
+  "business-cards-standard",
+  "custom-diecut-stickers",
+  "vinyl-banners",
+  "coroplast-signs",
+  "custom-printed-vehicle-logo-decals",
+  "self-inking-stamp-standard",
+];
+
 export async function generateMetadata() {
-  const t = await getServerT();
   const title = "Custom Stickers, Labels & Signs | La Lunar Printing";
   const description = "Toronto's trusted custom printing shop. Stickers, labels, banners, vehicle wraps, business cards & more. Fast turnaround, free shipping on orders $150+.";
 
@@ -50,7 +61,7 @@ export default async function HomePage() {
   const config = await getCatalogConfig();
   const { homepageCategories, maxPerCategory, categoryMeta } = config;
 
-  const [products, totalCount, displayProducts] = await Promise.all([
+  const [products, totalCount, displayProducts, quickOrderProducts] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true, category: { in: homepageCategories } },
       include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
@@ -63,7 +74,21 @@ export default async function HomePage() {
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       take: 6,
     }),
+    prisma.product.findMany({
+      where: { isActive: true, slug: { in: QUICK_ORDER_SLUGS } },
+      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+    }),
   ]);
+
+  // Sort quick-order products by the original slug order
+  const sortedQuickOrder = QUICK_ORDER_SLUGS
+    .map((slug) => quickOrderProducts.find((p) => p.slug === slug))
+    .filter(Boolean);
+
+  // If not enough quick-order products found by slug, fill with popular products
+  const quickProducts = sortedQuickOrder.length >= 4
+    ? sortedQuickOrder
+    : products.slice(0, 6);
 
   const grouped = [];
   for (const cat of homepageCategories) {
@@ -73,127 +98,53 @@ export default async function HomePage() {
     if (items.length > 0) grouped.push([cat, items]);
   }
 
-  // Pick first product from each of the first 4 categories for hero preview
-  const heroProducts = grouped.slice(0, 4).map(([, items]) => items[0]).filter(Boolean);
+  // Serialize dates for client components
+  const serializedQuickProducts = quickProducts.map((p) => ({
+    ...p,
+    createdAt: p.createdAt?.toISOString?.() || p.createdAt,
+    updatedAt: p.updatedAt?.toISOString?.() || p.updatedAt,
+    images: p.images?.map((img) => ({
+      ...img,
+      createdAt: img.createdAt?.toISOString?.() || img.createdAt,
+    })),
+  }));
 
   return (
     <div className="min-h-screen bg-[#fafafa] pb-20 relative">
       <OrganizationSchema />
       <WebSiteSchema />
-      {/* Hero — dual column with product preview */}
-      <div className="bg-black text-white pt-20 pb-16 px-6 relative overflow-hidden">
-        {/* Brand watermark */}
-        <div className="absolute -right-20 -top-20 opacity-[0.03] pointer-events-none">
-          <Image src="/logo.svg" alt="" width={400} height={400} className="invert" />
-        </div>
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-10 items-center relative">
-          {/* Left: text + CTAs */}
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase backdrop-blur-sm">
-              <Image src="/logo.svg" alt="" width={16} height={16} className="h-4 w-4 invert opacity-80" />
-              {t("home.badge")}
-            </div>
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter">
-              {t("home.headline")}
-            </h1>
-            <p className="text-gray-400 max-w-xl text-lg">
-              {t("home.subheadline")}
-            </p>
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-gray-600">
-              Business Essential &mdash; From Concept to Delivery
-            </p>
-            {/* Inline product count */}
-            <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 text-xs font-bold text-gray-300">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              {t("home.productsAvailable", { count: totalCount })}
-            </div>
-            <div className="flex gap-3 pt-2">
-              <Link
-                href="/shop"
-                className="bg-white text-black px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-colors"
-              >
-                {t("home.cta.shop")}
-              </Link>
-              <Link
-                href="/contact"
-                className="border border-white/30 text-white px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:border-white/70 transition-colors"
-              >
-                {t("home.cta.quote")}
-              </Link>
-            </div>
-          </div>
 
-          {/* Right: product preview grid (desktop only) */}
-          <div className="hidden md:grid grid-cols-2 gap-3">
-            {heroProducts.map((p) => (
-              <Link
-                key={p.id}
-                href={`/shop/${p.category}/${p.slug}`}
-                className="group relative aspect-square rounded-2xl overflow-hidden border border-white/10 bg-white/5"
-              >
-                {p.images?.[0]?.url ? (
-                  <Image
-                    src={p.images[0].url}
-                    alt={p.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    unoptimized={p.images[0].url.endsWith(".svg")}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-3xl opacity-30">{categoryMeta[p.category]?.icon || "🧩"}</span>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <p className="absolute bottom-3 left-3 right-3 text-white text-xs font-bold truncate">
-                  {p.name}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </div>
+      {/* 1. Dual-Entry Hero */}
+      <DualEntryHero totalCount={totalCount} />
+
+      {/* 2. Reorder Strip (logged-in users only, client-fetched) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10">
+        <ReorderStrip />
       </div>
 
-      {/* Shop by Use Case — quick entry */}
-      <div className="max-w-7xl mx-auto px-6 mt-14 mb-10">
+      {/* 3. Quick Order Strip */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 mb-10">
+        <QuickOrderStrip products={serializedQuickProducts} />
+      </div>
+
+      {/* 4. Shop by Use Case */}
+      <div className="max-w-7xl mx-auto px-6 mb-10">
         <UseCaseSection />
       </div>
 
-      {/* Tagline */}
-      <div className="text-center mb-6">
-        <p className="text-xs font-bold uppercase tracking-[0.25em] text-gray-400">
-          Quality Printing &mdash; Essential for Every Business
-        </p>
-      </div>
+      <SectionDivider />
 
-      {/* Popular Products — quick links */}
-      <div className="max-w-7xl mx-auto px-6 mb-10">
-        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-400 text-center mb-4">
-          {t("home.popularProducts")}
-        </h3>
-        <div className="flex flex-wrap justify-center gap-2">
-          {[
-            { label: "Marketing Prints", href: "/shop/marketing-prints" },
-            { label: "Business Cards", href: "/shop/business-cards" },
-            { label: "Stickers & Labels", href: "/shop/stickers-labels" },
-            { label: "Banners & Displays", href: "/shop/banners-displays" },
-            { label: "Signs & Boards", href: "/shop/rigid-signs" },
-            { label: "Self-Inking Stamps", href: "/shop/stamps" },
-          ].map((chip) => (
-            <Link
-              key={chip.href}
-              href={chip.href}
-              className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-all hover:border-gray-900 hover:bg-gray-900 hover:text-white"
-            >
-              {chip.label}
-            </Link>
-          ))}
+      {/* 5. Trust Signals — early social proof */}
+      <div className="bg-white py-14">
+        <div className="max-w-7xl mx-auto px-6">
+          <TrustSignals />
         </div>
       </div>
 
-      {/* Shop by Category — visual cards */}
-      <div className="max-w-7xl mx-auto px-6 mb-14">
+      <SectionDivider />
+
+      {/* 6. Shop by Category */}
+      <div className="max-w-7xl mx-auto px-6 my-14">
         <h2 className="text-2xl md:text-3xl font-black tracking-tight text-center mb-8">
           {t("home.shopByCategory")}
         </h2>
@@ -246,16 +197,7 @@ export default async function HomePage() {
 
       <SectionDivider />
 
-      {/* Trust Signals — moved up for early social proof */}
-      <div className="bg-white py-14">
-        <div className="max-w-7xl mx-auto px-6">
-          <TrustSignals />
-        </div>
-      </div>
-
-      <SectionDivider />
-
-      {/* Why La Lunar — USP differentiators */}
+      {/* 7. Why La Lunar — USP differentiators */}
       <div className="max-w-7xl mx-auto px-6 my-14">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -275,7 +217,7 @@ export default async function HomePage() {
             { icon: "🔬", titleKey: "home.usp3Title", bodyKey: "home.usp3Body" },
             { icon: "📍", titleKey: "home.usp4Title", bodyKey: "home.usp4Body" },
           ].map((usp) => (
-            <div key={usp.titleKey} className="rounded-2xl border border-gray-100 bg-white p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+            <div key={usp.titleKey} className="rounded-2xl border border-gray-100 bg-white p-5">
               <span className="text-2xl">{usp.icon}</span>
               <h3 className="mt-3 text-sm font-bold">{t(usp.titleKey)}</h3>
               <p className="mt-2 text-xs text-gray-500 leading-relaxed">{t(usp.bodyKey)}</p>
@@ -286,35 +228,28 @@ export default async function HomePage() {
 
       <SectionDivider />
 
-      {/* How It Works */}
+      {/* 8. How It Works */}
       <div className="max-w-7xl mx-auto px-6 my-14">
         <HowItWorks />
       </div>
 
-      {/* Tagline */}
-      <div className="text-center my-6">
-        <p className="text-xs font-bold uppercase tracking-[0.25em] text-gray-400">
-          Your Vision, Our Expertise &mdash; Essential to Your Brand
-        </p>
-      </div>
-
       <SectionDivider />
 
-      {/* Quote Calculator — moved up, key conversion tool */}
+      {/* 9. Quote Calculator */}
       <div className="max-w-7xl mx-auto px-6 mb-14">
         <QuoteCalculator />
       </div>
 
       <SectionDivider />
 
-      {/* Featured Display Products */}
+      {/* 10. Featured Display Products */}
       {displayProducts.length > 0 && (
         <div className="max-w-7xl mx-auto px-6 mb-14">
           <FeaturedBanner products={displayProducts} />
         </div>
       )}
 
-      {/* Bundles */}
+      {/* 11. Bundles */}
       <div className="max-w-7xl mx-auto px-6 mb-14">
         <BundlesSection />
       </div>

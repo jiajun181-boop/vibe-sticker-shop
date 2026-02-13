@@ -7,6 +7,7 @@ import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { CATALOG_DEFAULTS } from "@/lib/catalogConfig";
+import QuickOrderSheet from "@/components/QuickOrderSheet";
 
 const { departments, departmentMeta, categoryMeta } = CATALOG_DEFAULTS;
 
@@ -48,6 +49,22 @@ function BagIcon({ className }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+    </svg>
+  );
+}
+
+function BoltIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+    </svg>
+  );
+}
+
+function QuoteIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
     </svg>
   );
 }
@@ -148,14 +165,16 @@ export default function MobileBottomNav() {
 
   const [cartCount, setCartCount] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [quickOrderOpen, setQuickOrderOpen] = useState(false);
 
   useEffect(() => {
     setCartCount(storeCount);
   }, [storeCount]);
 
-  // Close drawer on route change
+  // Close drawers on route change
   useEffect(() => {
     setDrawerOpen(false);
+    setQuickOrderOpen(false);
   }, [pathname]);
 
   const isActive = (href) => {
@@ -165,16 +184,16 @@ export default function MobileBottomNav() {
 
   const tabs = [
     {
-      key: "categories",
-      label: t("mobileNav.categories"),
-      icon: GridIcon,
-      action: () => setDrawerOpen(true),
-    },
-    {
       key: "home",
       label: t("mobileNav.home"),
       icon: HomeIcon,
       href: "/",
+    },
+    {
+      key: "quickOrder",
+      label: "Quick",
+      icon: BoltIcon,
+      action: () => setQuickOrderOpen(true),
     },
     {
       key: "shop",
@@ -183,10 +202,10 @@ export default function MobileBottomNav() {
       href: "/shop",
     },
     {
-      key: "account",
-      label: authUser ? t("mobileNav.account") : t("mobileNav.login"),
-      icon: UserIcon,
-      href: authUser ? "/account" : "/login",
+      key: "quote",
+      label: t("nav.getQuote"),
+      icon: QuoteIcon,
+      href: "/quote",
     },
     {
       key: "cart",
@@ -200,11 +219,12 @@ export default function MobileBottomNav() {
   return (
     <>
       <CategoryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <QuickOrderSheet open={quickOrderOpen} onClose={() => setQuickOrderOpen(false)} />
 
       {/* Spacer so content isn't hidden behind the fixed nav */}
       <div className="h-16 md:hidden" />
 
-      <nav className="fixed bottom-0 left-0 right-0 z-[50] border-t border-gray-200 bg-white/95 backdrop-blur md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-[50] border-t border-gray-200 bg-white/95 backdrop-blur md:hidden pb-safe">
         <div className="flex items-center justify-around px-1 py-1.5">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -220,7 +240,7 @@ export default function MobileBottomNav() {
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] leading-tight ${active ? "font-semibold text-gray-900" : "text-gray-400"}`}>
+                <span className={`text-[11px] leading-tight ${active ? "font-semibold text-gray-900" : "text-gray-400"}`}>
                   {tab.label}
                 </span>
               </div>

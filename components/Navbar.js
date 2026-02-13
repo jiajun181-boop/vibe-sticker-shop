@@ -233,10 +233,10 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Ideas dropdown */}
+          {/* Solutions dropdown */}
           <div className="relative group">
             <Link href="/ideas" className="transition-colors duration-200 hover:text-gray-900">
-              {t("nav.ideas")}
+              {t("nav.solutions")}
             </Link>
             <div className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
               <div className="min-w-[200px] rounded-xl border border-gray-200 bg-white p-2 shadow-xl">
@@ -319,6 +319,14 @@ export default function Navbar() {
             </button>
           )}
 
+          {/* Get a Quote CTA */}
+          <Link
+            href="/quote"
+            className="hidden md:inline-flex rounded-full bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-black"
+          >
+            {t("nav.getQuote")}
+          </Link>
+
           {!authLoading && (
             authUser ? (
               <Link
@@ -337,6 +345,19 @@ export default function Navbar() {
             )
           )}
 
+          {/* Mobile account icon */}
+          {!authLoading && (
+            <Link
+              href={authUser ? "/account" : "/login"}
+              className="md:hidden p-2 text-gray-500 hover:text-gray-900 transition-colors"
+              aria-label={authUser ? t("nav.account") : t("nav.login")}
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+            </Link>
+          )}
+
           <button
             type="button"
             onClick={openCart}
@@ -350,30 +371,32 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile nav row with search */}
-      <div className="flex items-center gap-3 px-6 pb-2 md:hidden">
-        <div ref={mobileSearchWrapperRef} className="relative flex-1">
+      {/* Mobile search bar — full width (nav links already in MobileBottomNav) */}
+      <div className="px-4 pb-2 md:hidden">
+        <div ref={mobileSearchWrapperRef} className="relative">
           <form onSubmit={handleSearch}>
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("nav.searchPlaceholder")}
-              className="w-full rounded-full border border-gray-200 px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-gray-400"
+              className="w-full rounded-full border border-gray-200 bg-gray-50 pl-9 pr-4 py-2 text-sm outline-none focus:border-gray-400 focus:bg-white"
             />
           </form>
           {renderSearchDropdown(mobileDropdownRef)}
         </div>
-        <div className="flex items-center gap-4 text-xs font-medium text-gray-600 shrink-0">
-          {linkKeys.map((link) => (
-            <Link key={link.href} href={link.href} className="transition-colors duration-200 hover:text-gray-900 whitespace-nowrap">
-              {t(link.key)}
-            </Link>
-          ))}
-        </div>
       </div>
       {/* Mobile category chips */}
-      <div className="flex gap-2 overflow-x-auto px-6 pb-3 md:hidden scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto px-4 pb-3 md:hidden scrollbar-hide">
+        <Link
+          href="/quote"
+          className="shrink-0 rounded-full bg-gray-900 px-3 py-1 text-[11px] font-semibold text-white whitespace-nowrap"
+        >
+          {t("nav.getQuote")}
+        </Link>
         {[
           { label: "Marketing Prints", href: "/shop/marketing-prints" },
           { label: "Business Cards", href: "/shop/business-cards" },

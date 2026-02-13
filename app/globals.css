@@ -49,39 +49,18 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Micro-interactions base styles */
-button, a, [role="button"] {
-  transition: all var(--duration-fast) var(--ease-out-cubic);
+/* Micro-interactions — scoped to links only (buttons have per-component styles) */
+a {
+  transition: color var(--duration-fast) var(--ease-out-cubic);
 }
 
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-/* Input scale effect */
+/* Input focus (no transform — avoids layout jank on mobile keyboards) */
 input, textarea, select {
-  transition: all var(--duration-normal) var(--ease-out-cubic);
+  transition: border-color var(--duration-normal) var(--ease-out-cubic),
+              box-shadow var(--duration-normal) var(--ease-out-cubic);
 }
 
-input:focus,
-textarea:focus,
-select:focus {
-  transform: scale(1.001);
-}
-
-/* Card shadow elevation */
-.card,
-.rounded-3xl,
-.rounded-xl {
-  transition: all var(--duration-normal) var(--ease-out-cubic);
-}
-
-.card:hover,
-.rounded-3xl:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(26, 26, 26, 0.08);
+/* iOS safe area support */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 }

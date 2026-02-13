@@ -197,7 +197,7 @@ export default function CartDrawer() {
 
       <aside
         ref={asideRef}
-        className={`relative h-full w-full max-w-md bg-white shadow-2xl transition-transform duration-[230ms] ease-out ${
+        className={`relative flex h-full w-full max-w-md flex-col bg-white shadow-2xl transition-transform duration-[230ms] ease-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -214,7 +214,9 @@ export default function CartDrawer() {
             className="rounded-full border border-gray-200 p-2 text-gray-500 transition-colors duration-200 hover:text-gray-900"
             aria-label={t("cart.close")}
           >
-            x
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -235,11 +237,15 @@ export default function CartDrawer() {
           </div>
         )}
 
-        <div className="flex h-[calc(100%-280px)] flex-col overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto px-5 py-4">
             {cart.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-gray-500">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-gray-200 bg-gray-50">Bag</div>
+                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-gray-200 bg-gray-50">
+                  <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+                </div>
                 <p className="text-sm font-medium">{t("cart.empty")}</p>
                 <button
                   type="button"
@@ -275,10 +281,12 @@ export default function CartDrawer() {
                             <button
                               type="button"
                               onClick={() => removeItem(item._cartId)}
-                              className="text-gray-400 transition-colors duration-200 hover:text-gray-900"
+                              className="rounded-full p-1 text-gray-400 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900"
                               aria-label={`Remove ${item.name}`}
                             >
-                              x
+                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
                             </button>
                           </div>
 
@@ -359,10 +367,12 @@ export default function CartDrawer() {
                       <button
                         type="button"
                         onClick={() => { setPromoDiscount(null); setPromoCode(""); }}
-                        className="text-[10px] text-gray-400 hover:text-gray-600"
+                        className="rounded-full p-0.5 text-gray-400 hover:text-gray-600"
                         aria-label={t("cart.removePromo")}
                       >
-                        x
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     </span>
                     <span className="font-semibold">-{formatCad(discountAmount)}</span>

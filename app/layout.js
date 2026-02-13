@@ -52,6 +52,9 @@ export default async function RootLayout({ children }) {
   const locale = await getServerLocale();
   return (
     <html lang={locale}>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+      </head>
       <body className="antialiased">
         <SkipLink />
         <PromoBar />

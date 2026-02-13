@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
@@ -10,17 +11,16 @@ const formatCad = (cents) =>
     cents / 100
   );
 
-function ProductCard({ product, t }) {
+function ProductCard({ product, t, compact }) {
   const href = `/shop/${product.category}/${product.slug}`;
   const image = product.images?.[0];
-  const sizeCount = product.optionsConfig?.sizes?.length || 0;
 
   return (
     <Link
       href={href}
       className="group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
     >
-      <div className="relative aspect-[4/3] bg-gray-100">
+      <div className={`relative bg-gray-100 ${compact ? "aspect-square" : "aspect-[4/3]"}`}>
         {image?.url ? (
           <Image
             src={image.url}
@@ -54,26 +54,21 @@ function ProductCard({ product, t }) {
         )}
       </div>
 
-      <div className="p-3 sm:p-4">
-        <h3 className="text-sm font-semibold text-gray-900 leading-snug">
+      <div className={compact ? "p-2.5" : "p-3 sm:p-4"}>
+        <h3 className={`font-semibold text-gray-900 leading-snug ${compact ? "text-xs" : "text-sm"}`}>
           {product.name}
         </h3>
-        {product.description && (
+        {!compact && product.description && (
           <p className="mt-1 text-[11px] text-gray-500 line-clamp-2">
             {product.description}
           </p>
         )}
-        {sizeCount > 0 && (
-          <p className="mt-1.5 text-[11px] text-gray-400">
-            {sizeCount} {t("mp.landing.options")}
-          </p>
-        )}
         {product.basePrice > 0 && (
-          <p className="mt-2 text-sm font-bold text-gray-900">
+          <p className={`font-bold text-gray-900 ${compact ? "mt-1 text-xs" : "mt-2 text-sm"}`}>
             {t("product.from", { price: formatCad(product.basePrice) })}
           </p>
         )}
-        <span className="mt-2 inline-block rounded-full bg-gray-900 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white transition-colors group-hover:bg-black">
+        <span className={`inline-block rounded-full bg-gray-900 text-[10px] font-semibold uppercase tracking-[0.15em] text-white transition-colors group-hover:bg-black ${compact ? "mt-1.5 px-2.5 py-1" : "mt-2 px-3 py-1.5"}`}>
           {t("mp.landing.viewOrder")}
         </span>
       </div>
@@ -81,24 +76,42 @@ function ProductCard({ product, t }) {
   );
 }
 
+function sortProducts(list, sortBy) {
+  const arr = [...list];
+  if (sortBy === "price-asc") arr.sort((a, b) => a.basePrice - b.basePrice);
+  else if (sortBy === "price-desc") arr.sort((a, b) => b.basePrice - a.basePrice);
+  else if (sortBy === "name") arr.sort((a, b) => a.name.localeCompare(b.name));
+  // default "popular" keeps original sortOrder from server
+  return arr;
+}
+
 export default function CategoryLandingClient({
   category,
   categoryTitle,
   categoryIcon,
-  subGroups,
-  standaloneProducts,
+  products,
+  filterGroups = [],
 }) {
   const { t } = useTranslation();
+  const [activeFilter, setActiveFilter] = useState(null);
+  const [sortBy, setSortBy] = useState("popular");
 
-  // If single sub-group matches category slug → treat as flat grid
-  const isSingleGroup =
-    subGroups.length === 1 && subGroups[0].parentSlug === category;
-  const hasGroups = subGroups.length > 0 && !isSingleGroup;
+  const hasFilters = filterGroups.length > 1;
 
-  // Flat products: either the single group's products or standalone
-  const flatProducts = isSingleGroup
-    ? subGroups[0].products
-    : standaloneProducts;
+  // Build lookup: slug → set of db slugs for active filter
+  const activeSlugSet = useMemo(() => {
+    if (!activeFilter) return null;
+    const group = filterGroups.find((g) => g.slug === activeFilter);
+    return group ? new Set(group.dbSlugs) : null;
+  }, [activeFilter, filterGroups]);
+
+  const filtered = useMemo(() => {
+    let list = products;
+    if (activeSlugSet) {
+      list = list.filter((p) => activeSlugSet.has(p.slug));
+    }
+    return sortProducts(list, sortBy);
+  }, [products, activeSlugSet, sortBy]);
 
   return (
     <main className="bg-gray-50 pb-20 pt-10 text-gray-900">
@@ -111,68 +124,83 @@ export default function CategoryLandingClient({
         />
 
         {/* Header */}
-        <header className="mt-6">
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            {categoryIcon && <span className="mr-2">{categoryIcon}</span>}
-            {categoryTitle}
-          </h1>
+        <header className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
+              {categoryIcon && <span className="mr-2">{categoryIcon}</span>}
+              {categoryTitle}
+            </h1>
+            <p className="mt-1 text-sm text-gray-500">
+              {products.length} {t("mp.landing.products")}
+            </p>
+          </div>
+
+          {/* Sort */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs uppercase tracking-[0.15em] text-gray-400">{t("shop.sort")}</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-gray-900 focus:outline-none"
+            >
+              <option value="popular">{t("shop.sortPopular")}</option>
+              <option value="price-asc">{t("shop.sortPriceAsc")}</option>
+              <option value="price-desc">{t("shop.sortPriceDesc")}</option>
+              <option value="name">{t("shop.sortName")}</option>
+            </select>
+          </div>
         </header>
 
-        {/* Grouped sections (categories with multiple sub-groups) */}
-        {hasGroups &&
-          subGroups.map(({ parentSlug, products }) => {
-            const title = t(`sp.${parentSlug}.title`);
-            const subtitle = t(`sp.${parentSlug}.subtitle`);
-            const showTitle = !title.startsWith("sp.");
-            const showSubtitle = !subtitle.startsWith("sp.");
-
-            return (
-              <section key={parentSlug} className="mt-10">
-                {showTitle && (
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {title}
-                  </h2>
-                )}
-                {showSubtitle && (
-                  <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
-                )}
-                <div className="mt-4 grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-                  {products.map((product) => (
-                    <ProductCard key={product.id} product={product} t={t} />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-
-        {/* Standalone products (not in any sub-group) */}
-        {hasGroups && standaloneProducts.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {t("cat.more")}
-            </h2>
-            <div className="mt-4 grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-              {standaloneProducts.map((product) => (
-                <ProductCard key={product.id} product={product} t={t} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Flat grid (no sub-groups or single group = category) */}
-        {!hasGroups && flatProducts.length > 0 && (
-          <div className="mt-8 grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-            {flatProducts.map((product) => (
-              <ProductCard key={product.id} product={product} t={t} />
+        {/* Filter chips */}
+        {hasFilters && (
+          <div className="mt-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <button
+              onClick={() => setActiveFilter(null)}
+              className={`flex-none rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                activeFilter === null
+                  ? "bg-gray-900 text-white"
+                  : "border border-gray-200 bg-white text-gray-600 hover:border-gray-400"
+              }`}
+            >
+              {t("shop.all")} ({products.length})
+            </button>
+            {filterGroups.map((group) => (
+              <button
+                key={group.slug}
+                onClick={() =>
+                  setActiveFilter(activeFilter === group.slug ? null : group.slug)
+                }
+                className={`flex-none rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  activeFilter === group.slug
+                    ? "bg-gray-900 text-white"
+                    : "border border-gray-200 bg-white text-gray-600 hover:border-gray-400"
+                }`}
+              >
+                {group.label} ({group.count})
+              </button>
             ))}
           </div>
         )}
 
-        {/* Empty state */}
-        {!hasGroups && flatProducts.length === 0 && subGroups.length === 0 && (
-          <p className="mt-8 text-center text-sm text-gray-500">
-            No products available in this category yet.
-          </p>
+        {/* Product grid — compact on mobile to show more products */}
+        {filtered.length > 0 ? (
+          <div className="mt-6 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+            {filtered.map((product) => (
+              <ProductCard key={product.id} product={product} t={t} compact={false} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-12 text-center">
+            <p className="text-sm text-gray-500">{t("shop.noResults")}</p>
+            {activeFilter && (
+              <button
+                onClick={() => setActiveFilter(null)}
+                className="mt-3 rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-gray-700 hover:border-gray-900"
+              >
+                {t("shop.clearFilters")}
+              </button>
+            )}
+          </div>
         )}
 
         {/* Browse all categories link */}
