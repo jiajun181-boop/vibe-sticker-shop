@@ -17,7 +17,7 @@ function detectLocale(request: NextRequest): string {
   return DEFAULT_LOCALE;
 }
 
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const response = NextResponse.next();
 
