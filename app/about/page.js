@@ -35,6 +35,7 @@ export default async function AboutPage() {
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("about.badge")}</p>
               <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight">{t("about.title")}</h1>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">Essential to Your Brand &mdash; Since 2018</p>
             </div>
           </div>
           <p className="mt-6 text-sm text-gray-600 leading-relaxed max-w-3xl">{t("about.body")}</p>

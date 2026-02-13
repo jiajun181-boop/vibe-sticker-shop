@@ -74,6 +74,9 @@ export default async function HomePage() {
             <p className="text-gray-400 max-w-xl text-lg">
               {t("home.subheadline")}
             </p>
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-gray-600">
+              Business Essential &mdash; From Concept to Delivery
+            </p>
             {/* Inline product count */}
             <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 text-xs font-bold text-gray-300">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -130,6 +133,13 @@ export default async function HomePage() {
       {/* Shop by Use Case — quick entry */}
       <div className="max-w-7xl mx-auto px-6 mt-14 mb-10">
         <UseCaseSection />
+      </div>
+
+      {/* Tagline */}
+      <div className="text-center mb-6">
+        <p className="text-xs font-bold uppercase tracking-[0.25em] text-gray-400">
+          Quality Printing &mdash; Essential for Every Business
+        </p>
       </div>
 
       {/* Popular Products — quick links */}
@@ -254,6 +264,13 @@ export default async function HomePage() {
       {/* How It Works */}
       <div className="max-w-7xl mx-auto px-6 my-14">
         <HowItWorks />
+      </div>
+
+      {/* Tagline */}
+      <div className="text-center my-6">
+        <p className="text-xs font-bold uppercase tracking-[0.25em] text-gray-400">
+          Your Vision, Our Expertise &mdash; Essential to Your Brand
+        </p>
       </div>
 
       <SectionDivider />

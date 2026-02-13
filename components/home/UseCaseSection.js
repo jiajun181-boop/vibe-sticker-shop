@@ -16,7 +16,7 @@ export default function UseCaseSection() {
         {USE_CASES.map((uc) => (
           <Link
             key={uc.slug}
-            href={`/shop?useCase=${uc.slug}`}
+            href={`/ideas/${uc.slug}`}
             className="group overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
           >
             <span className="text-3xl block">{uc.icon}</span>

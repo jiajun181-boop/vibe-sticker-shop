@@ -234,6 +234,9 @@ export default function ShopClient({
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("shop.header")}</p>
             <h1 className="mt-2 text-4xl font-semibold tracking-tight">{t("shop.title")}</h1>
+            <p className="mt-1 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
+              Essential to Your Brand &mdash; Premium Custom Printing
+            </p>
           </div>
           {/* Compact search */}
           <div className="relative w-full sm:w-72">

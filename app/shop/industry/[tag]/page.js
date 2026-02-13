@@ -2,18 +2,57 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { INDUSTRY_TAGS, INDUSTRY_TAGS_SET, INDUSTRY_LABELS } from "@/lib/industryTags";
+import { getServerT } from "@/lib/i18n/server";
+import {
+  INDUSTRY_TAGS,
+  INDUSTRY_TAGS_SET,
+  INDUSTRY_LABELS,
+  INDUSTRY_RELATED,
+} from "@/lib/industryTags";
+import {
+  CollectionPageSchema,
+  BreadcrumbSchemaFromItems,
+} from "@/components/JsonLd";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+
+export async function generateMetadata({ params }) {
+  const { tag } = await params;
+  if (!INDUSTRY_TAGS_SET.has(tag)) return {};
+
+  const meta = INDUSTRY_LABELS[tag];
+  const t = await getServerT();
+  const extended = t(`industry.${tag}.extendedDescription`);
+
+  return {
+    title: `${meta.title} Printing Solutions | La Lunar Printing`,
+    description: extended || meta.description,
+    alternates: { canonical: `${SITE_URL}/shop/industry/${tag}` },
+    openGraph: {
+      title: `${meta.title} — Custom Print Solutions | La Lunar Printing`,
+      description: extended || meta.description,
+      url: `${SITE_URL}/shop/industry/${tag}`,
+      siteName: "La Lunar Printing",
+      type: "website",
+    },
+    twitter: { card: "summary_large_image" },
+  };
+}
 
 export const dynamic = "force-dynamic";
 
 const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+  new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+  }).format(cents / 100);
 
 export default async function IndustryPage({ params }) {
   const { tag } = await params;
 
   if (!INDUSTRY_TAGS_SET.has(tag)) notFound();
 
+  const t = await getServerT();
   const meta = INDUSTRY_LABELS[tag];
 
   const products = await prisma.product.findMany({
@@ -25,26 +64,70 @@ export default async function IndustryPage({ params }) {
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
 
+  const extended = t(`industry.${tag}.extendedDescription`);
+  const relatedTags = (INDUSTRY_RELATED[tag] || [])
+    .map((t) => ({ tag: t, ...INDUSTRY_LABELS[t] }))
+    .filter((r) => r.label);
+
   return (
     <div className="min-h-screen bg-[#fafafa] pb-20">
+      <CollectionPageSchema
+        name={meta.title}
+        description={extended || meta.description}
+        url={`${SITE_URL}/shop/industry/${tag}`}
+        products={products}
+      />
+      <BreadcrumbSchemaFromItems
+        items={[
+          { name: "Home", url: SITE_URL },
+          { name: "Shop", url: `${SITE_URL}/shop` },
+          { name: "Industry", url: `${SITE_URL}/ideas` },
+          { name: meta.title },
+        ]}
+      />
+
       {/* Header */}
       <div className="bg-black text-white pt-24 pb-14 px-6">
         <div className="max-w-7xl mx-auto">
-          <Link href="/shop" className="text-xs text-gray-500 uppercase tracking-widest hover:text-white transition-colors">
-            &larr; Back to Shop
-          </Link>
-          <div className="mt-4 flex items-center gap-4">
+          {/* Breadcrumbs */}
+          <nav className="flex items-center gap-2 text-xs text-gray-500 mb-6">
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+            <span>/</span>
+            <Link href="/shop" className="hover:text-white transition-colors">Shop</Link>
+            <span>/</span>
+            <Link href="/ideas" className="hover:text-white transition-colors">Industry</Link>
+            <span>/</span>
+            <span className="text-gray-300">{meta.title}</span>
+          </nav>
+
+          <div className="flex items-center gap-4">
             <span className="text-4xl">{meta.icon}</span>
             <div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tighter">{meta.title}</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-1">
+                Industry Solutions
+              </p>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tighter">
+                {meta.title}
+              </h1>
               <p className="text-gray-400 mt-2 max-w-2xl">{meta.description}</p>
             </div>
           </div>
           <div className="mt-4 text-xs text-gray-500 font-bold">
             {products.length} product{products.length !== 1 ? "s" : ""} available
+            <span className="mx-2">&middot;</span>
+            <span className="text-gray-600">Business Essential — Built for Your Industry</span>
           </div>
         </div>
       </div>
+
+      {/* Extended description */}
+      {extended && extended !== `industry.${tag}.extendedDescription` && (
+        <div className="max-w-7xl mx-auto px-6 mt-8 mb-4">
+          <p className="text-sm text-gray-600 leading-relaxed max-w-3xl">
+            {extended}
+          </p>
+        </div>
+      )}
 
       {/* Industry navigation chips */}
       <div className="max-w-7xl mx-auto px-6 mt-6 mb-8">
@@ -73,8 +156,13 @@ export default async function IndustryPage({ params }) {
       <div className="max-w-7xl mx-auto px-6">
         {products.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
-            <p className="text-lg font-semibold">No products found for this industry yet.</p>
-            <Link href="/shop" className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-black">
+            <p className="text-lg font-semibold">
+              No products found for this industry yet.
+            </p>
+            <Link
+              href="/shop"
+              className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-black"
+            >
               Browse All Products &rarr;
             </Link>
           </div>
@@ -91,7 +179,13 @@ export default async function IndustryPage({ params }) {
                   <div className="space-y-4">
                     <div className="aspect-square bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-500">
                       {img ? (
-                        <Image src={img} alt={product.name} width={300} height={300} className="w-full h-full object-cover" />
+                        <Image
+                          src={img}
+                          alt={product.name}
+                          width={300}
+                          height={300}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <span className="text-4xl">{meta.icon}</span>
                       )}
@@ -101,7 +195,9 @@ export default async function IndustryPage({ params }) {
                         {product.name}
                       </h3>
                       {product.description && (
-                        <p className="text-xs text-gray-400 line-clamp-2">{product.description}</p>
+                        <p className="text-xs text-gray-400 line-clamp-2">
+                          {product.description}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -110,7 +206,9 @@ export default async function IndustryPage({ params }) {
                       {product.basePrice > 0 ? "From" : "Get Quote"}
                     </div>
                     <div className="text-sm font-black">
-                      {product.basePrice > 0 ? formatCad(product.basePrice) : "Custom"}
+                      {product.basePrice > 0
+                        ? formatCad(product.basePrice)
+                        : "Custom"}
                     </div>
                   </div>
                 </Link>
@@ -118,6 +216,56 @@ export default async function IndustryPage({ params }) {
             })}
           </div>
         )}
+      </div>
+
+      {/* Related Industries */}
+      {relatedTags.length > 0 && (
+        <div className="max-w-7xl mx-auto px-6 mt-12 mb-8">
+          <h2 className="text-lg font-bold tracking-tight mb-4">
+            Related Industries
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            {relatedTags.map((r) => (
+              <Link
+                key={r.tag}
+                href={`/shop/industry/${r.tag}`}
+                className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-all"
+              >
+                <span>{r.icon}</span>
+                {r.title}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* CTA */}
+      <div className="max-w-4xl mx-auto px-6 mt-10">
+        <div className="rounded-3xl bg-gray-900 text-white p-8 md:p-12 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-3">
+            Essential to Your Brand
+          </p>
+          <h2 className="text-2xl font-black tracking-tight">
+            Need Custom {meta.title} Solutions?
+          </h2>
+          <p className="mt-3 text-gray-400 max-w-xl mx-auto text-sm">
+            From design to delivery &mdash; professional printing that makes your business stand out. Fast turnarounds, premium quality.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/contact"
+              className="bg-white text-black px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-colors"
+            >
+              Get a Free Quote
+            </Link>
+            <Link
+              href="/ideas"
+              className="border border-white/30 text-white px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:border-white/70 transition-colors"
+            >
+              Explore More Ideas
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

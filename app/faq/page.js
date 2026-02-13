@@ -37,6 +37,9 @@ export default async function FAQPage() {
             <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("faq.badge")}</p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight">{t("faq.title")}</h1>
             <p className="mt-4 text-sm text-gray-600">{t("faq.subtitle")}</p>
+            <p className="mt-3 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
+              Business Essential &mdash; We&apos;re Here to Help
+            </p>
           </header>
           <FAQClient />
         </div>

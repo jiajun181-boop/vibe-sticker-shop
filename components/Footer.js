@@ -85,7 +85,13 @@ export default function Footer({ locale = "en" }) {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-gray-800 pt-6 text-xs text-gray-400 md:flex-row md:items-center md:justify-between">
+        <div className="mt-8 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-gray-600">
+            Business Essential &mdash; Essential to Your Brand &mdash; From Concept to Delivery
+          </p>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-4 border-t border-gray-800 pt-6 text-xs text-gray-400 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap items-center gap-3">
             <span className="rounded-md border border-gray-700 px-2 py-1">Visa</span>
             <span className="rounded-md border border-gray-700 px-2 py-1">Mastercard</span>

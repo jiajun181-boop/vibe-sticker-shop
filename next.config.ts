@@ -38,6 +38,13 @@ const nextConfig: NextConfig = {
       { source: "/shop/marketing-promo", destination: "/shop/marketing-prints", permanent: true },
       { source: "/shop/marketing-promo/:slug", destination: "/shop/marketing-prints/:slug", permanent: true },
 
+      // ── Old /shop?useCase= links → /ideas/{slug} ──
+      { source: "/shop", destination: "/ideas/gifting", permanent: true, has: [{ type: "query", key: "useCase", value: "gifting" }] },
+      { source: "/shop", destination: "/ideas/wedding", permanent: true, has: [{ type: "query", key: "useCase", value: "wedding" }] },
+      { source: "/shop", destination: "/ideas/corporate", permanent: true, has: [{ type: "query", key: "useCase", value: "corporate" }] },
+      { source: "/shop", destination: "/ideas/campus", permanent: true, has: [{ type: "query", key: "useCase", value: "campus" }] },
+      { source: "/shop", destination: "/ideas/events", permanent: true, has: [{ type: "query", key: "useCase", value: "events" }] },
+
       // ── Old /shop?category= links → dedicated pages ──
       { source: "/shop", destination: "/shop/marketing-prints", permanent: false, has: [{ type: "query", key: "category", value: "marketing-prints" }] },
       { source: "/shop", destination: "/shop/stickers-labels", permanent: false, has: [{ type: "query", key: "category", value: "stickers-labels" }] },

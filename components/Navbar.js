@@ -122,21 +122,32 @@ export default function Navbar() {
 
           {/* Ideas dropdown */}
           <div className="relative group">
-            <button type="button" className="transition-colors duration-200 hover:text-gray-900">
+            <Link href="/ideas" className="transition-colors duration-200 hover:text-gray-900">
               {t("nav.ideas")}
-            </button>
+            </Link>
             <div className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-              <div className="min-w-[180px] rounded-xl border border-gray-200 bg-white p-2 shadow-xl">
+              <div className="min-w-[200px] rounded-xl border border-gray-200 bg-white p-2 shadow-xl">
                 {USE_CASES.map((uc) => (
                   <Link
                     key={uc.slug}
-                    href={`/shop?useCase=${uc.slug}`}
+                    href={`/ideas/${uc.slug}`}
                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
                   >
                     <span>{uc.icon}</span>
                     <span>{t(`useCase.${uc.slug}.title`)}</span>
                   </Link>
                 ))}
+                <div className="mt-1 border-t border-gray-100 pt-1">
+                  <Link
+                    href="/ideas"
+                    className="flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                  >
+                    {t("ideas.viewAll")}
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
