@@ -18,6 +18,7 @@ import dynamic from "next/dynamic";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import TemplateGallery from "@/components/product/TemplateGallery";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
+import RelatedLinks from "@/components/product/RelatedLinks";
 
 const StampEditor = dynamic(() => import("@/components/product/StampEditor"), {
   ssr: false,
@@ -1868,6 +1869,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           </div>
         </section>
         )}
+
+        {!embedded && <RelatedLinks product={product} />}
 
         {!embedded && <RecentlyViewed excludeSlug={product.slug} />}
       </div>
