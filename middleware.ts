@@ -34,8 +34,11 @@ export function middleware(request: NextRequest) {
 
   // Protect /admin routes (except login page and login API)
   if (path.startsWith("/admin") && path !== "/admin/login") {
-    const auth = request.cookies.get("admin_auth");
-    if (!auth || auth.value !== "authenticated") {
+    const legacyCookie = request.cookies.get("admin_auth");
+    const sessionCookie = request.cookies.get("admin_session");
+    const hasLegacy = legacyCookie?.value === "authenticated";
+    const hasSession = !!sessionCookie?.value;
+    if (!hasLegacy && !hasSession) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }
