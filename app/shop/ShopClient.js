@@ -33,6 +33,85 @@ function sortProducts(list, sortBy, catOrder) {
 
 /* ── Category Card Grid ─────────────────────────────────────────── */
 
+/* ── Small category card (no sub-groups) ──────────────────────── */
+function SmallCard({ catSlug, meta, count, previews, t }) {
+  return (
+    <Link
+      href={meta?.href || `/shop/${catSlug}`}
+      className="group flex flex-col rounded-2xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-gray-400"
+    >
+      <span className="text-2xl">{meta?.icon || ""}</span>
+      <h3 className="mt-2 text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+        {meta?.title || catSlug}
+      </h3>
+      {count > 0 && (
+        <p className="mt-1 text-[11px] text-gray-400">
+          {count} {t("mp.landing.products")}
+        </p>
+      )}
+      {previews.length > 0 && (
+        <div className="mt-2 flex -space-x-1.5">
+          {previews.map((url, i) => (
+            <div key={i} className="relative h-7 w-7 rounded-full border-2 border-white overflow-hidden bg-gray-100">
+              <Image src={url} alt="" fill className="object-cover" sizes="28px" unoptimized={url.endsWith(".svg")} />
+            </div>
+          ))}
+          {count > previews.length && (
+            <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[9px] font-bold text-gray-500">
+              +{count - previews.length}
+            </div>
+          )}
+        </div>
+      )}
+      <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-500 group-hover:text-gray-900 transition-colors">
+        {t("mp.landing.browse")}
+        <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+      </span>
+    </Link>
+  );
+}
+
+/* ── Wide parent card with sub-group pills ────────────────────── */
+function ParentCard({ catSlug, meta, count, t }) {
+  const subGroups = meta?.subGroups || [];
+  return (
+    <div className="col-span-2 md:col-span-3 lg:col-span-4 rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-200 hover:shadow-lg hover:border-gray-300">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{meta?.icon || ""}</span>
+          <div>
+            <h3 className="text-base font-semibold text-gray-900">{meta?.title || catSlug}</h3>
+            {count > 0 && (
+              <p className="text-[11px] text-gray-400">{count} {t("mp.landing.products")}</p>
+            )}
+          </div>
+        </div>
+        <Link
+          href={`/shop/${catSlug}`}
+          className="flex-none rounded-full border border-gray-300 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-600 hover:border-gray-900 hover:text-gray-900 transition-colors"
+        >
+          {t("mp.landing.browse")}
+        </Link>
+      </div>
+      {subGroups.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {subGroups.map((sg) => (
+            <Link
+              key={sg.slug}
+              href={sg.href}
+              className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-white hover:text-gray-900"
+            >
+              {sg.title}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CategoryGrid({ departments, departmentMeta, categoryMeta, categoryCounts, categoryPreviews, t }) {
   return (
     <div className="space-y-10">
@@ -48,51 +127,12 @@ function CategoryGrid({ departments, departmentMeta, categoryMeta, categoryCount
                 const meta = categoryMeta?.[catSlug];
                 const count = categoryCounts?.[catSlug] || 0;
                 const previews = categoryPreviews?.[catSlug] || [];
-                return (
-                  <Link
-                    key={catSlug}
-                    href={`/shop/${catSlug}`}
-                    className="group flex flex-col rounded-2xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-gray-400"
-                  >
-                    <span className="text-2xl">{meta?.icon || ""}</span>
-                    <h3 className="mt-2 text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                      {meta?.title || catSlug}
-                    </h3>
-                    {count > 0 && (
-                      <p className="mt-1 text-[11px] text-gray-400">
-                        {count} {t("mp.landing.products")}
-                      </p>
-                    )}
-                    {/* Product thumbnail previews */}
-                    {previews.length > 0 && (
-                      <div className="mt-2 flex -space-x-1.5">
-                        {previews.map((url, i) => (
-                          <div key={i} className="relative h-7 w-7 rounded-full border-2 border-white overflow-hidden bg-gray-100">
-                            <Image
-                              src={url}
-                              alt=""
-                              fill
-                              className="object-cover"
-                              sizes="28px"
-                              unoptimized={url.endsWith(".svg")}
-                            />
-                          </div>
-                        ))}
-                        {count > previews.length && (
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[9px] font-bold text-gray-500">
-                            +{count - previews.length}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-500 group-hover:text-gray-900 transition-colors">
-                      {t("mp.landing.browse")}
-                      <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                      </svg>
-                    </span>
-                  </Link>
-                );
+
+                if (meta?.subGroups) {
+                  return <ParentCard key={catSlug} catSlug={catSlug} meta={meta} count={count} t={t} />;
+                }
+
+                return <SmallCard key={catSlug} catSlug={catSlug} meta={meta} count={count} previews={previews} t={t} />;
               })}
             </div>
           </section>

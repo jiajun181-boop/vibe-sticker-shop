@@ -185,39 +185,43 @@ export default function Navbar() {
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Print & Marketing</p>
                     <div className="mt-2 space-y-1">
-                      <Link href="/shop/marketing-prints" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Marketing Prints</Link>
-                      <Link href="/shop/business-cards" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Business Cards</Link>
-                      <Link href="/shop/stamps" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Self-Inking Stamps</Link>
-                      <Link href="/shop/business-forms" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Business Forms</Link>
+                      <Link href="/shop/marketing-prints/business-cards" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Business Cards</Link>
+                      <Link href="/shop/marketing-prints/flyers" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Flyers</Link>
+                      <Link href="/shop/marketing-prints/postcards" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Postcards</Link>
+                      <Link href="/shop/marketing-prints/brochures" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Brochures</Link>
+                      <Link href="/shop/marketing-prints/stamps" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Stamps</Link>
+                      <Link href="/shop/marketing-prints" className="block rounded-lg px-2 py-1.5 text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900">All Prints &rarr;</Link>
                     </div>
                   </div>
                   {/* Column 2: Signs & Displays */}
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Signs & Displays</p>
                     <div className="mt-2 space-y-1">
-                      <Link href="/shop/banners-displays" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Banners & Displays</Link>
+                      <Link href="/shop/window-glass-films" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Window & Glass Films</Link>
                       <Link href="/shop/display-stands" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Display Stands</Link>
-                      <Link href="/shop/rigid-signs" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Signs & Boards</Link>
-                      <Link href="/shop/large-format-graphics" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Large Format</Link>
-                    </div>
-                  </div>
-                  {/* Column 3: Vehicle & Fleet */}
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Vehicle & Fleet</p>
-                    <div className="mt-2 space-y-1">
+                      <Link href="/shop/large-format-graphics" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Wall & Floor Graphics</Link>
                       <Link href="/shop/vehicle-branding-advertising" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Vehicle Branding</Link>
                       <Link href="/shop/fleet-compliance-id" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Fleet Compliance</Link>
-                      <Link href="/shop/retail-promo" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Retail & Promo</Link>
-                      <Link href="/shop/packaging" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Packaging Inserts</Link>
                     </div>
                   </div>
-                  {/* Column 4: Labels & Safety */}
+                  {/* Column 3: Stickers & Labels */}
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Labels & Safety</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Stickers & Labels</p>
                     <div className="mt-2 space-y-1">
-                      <Link href="/shop/stickers-labels" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Stickers & Labels</Link>
+                      <Link href="/shop/stickers-labels/die-cut-stickers" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Die-Cut Stickers</Link>
+                      <Link href="/shop/stickers-labels/kiss-cut-singles" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Kiss-Cut Singles</Link>
+                      <Link href="/shop/stickers-labels/sticker-pages" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Sheets & Pages</Link>
+                      <Link href="/shop/stickers-labels/sticker-rolls" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Sticker Rolls</Link>
+                      <Link href="/shop/stickers-labels" className="block rounded-lg px-2 py-1.5 text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900">All Stickers &rarr;</Link>
+                    </div>
+                  </div>
+                  {/* Column 4: More */}
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">More</p>
+                    <div className="mt-2 space-y-1">
                       <Link href="/shop/safety-warning-decals" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Safety & Warning</Link>
                       <Link href="/shop/facility-asset-labels" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Facility & Asset Labels</Link>
+                      <Link href="/shop/packaging" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Packaging Inserts</Link>
                     </div>
                   </div>
                 </div>
@@ -399,12 +403,10 @@ export default function Navbar() {
         </Link>
         {[
           { label: "Marketing Prints", href: "/shop/marketing-prints" },
-          { label: "Business Cards", href: "/shop/business-cards" },
-          { label: "Stickers", href: "/shop/stickers-labels" },
-          { label: "Banners", href: "/shop/banners-displays" },
-          { label: "Signs", href: "/shop/rigid-signs" },
+          { label: "Stickers & Labels", href: "/shop/stickers-labels" },
+          { label: "Window Films", href: "/shop/window-glass-films" },
+          { label: "Display Stands", href: "/shop/display-stands" },
           { label: "Vehicle", href: "/shop/vehicle-branding-advertising" },
-          { label: "Stamps", href: "/shop/stamps" },
           { label: "Safety", href: "/shop/safety-warning-decals" },
         ].map((chip) => (
           <Link

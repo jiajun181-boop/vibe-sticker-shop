@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCatalogConfig } from "@/lib/catalogConfig";
+import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 import ShopClient from "./ShopClient";
 
 export const dynamic = "force-dynamic";
@@ -60,6 +61,16 @@ export default async function ShopPage({ searchParams }) {
     if (categoryPreviews[p.category].length < 3 && p.images?.[0]?.url) {
       categoryPreviews[p.category].push(p.images[0].url);
     }
+  }
+
+  // Add sub-group counts & previews from SUB_PRODUCT_CONFIG
+  for (const [parentSlug, cfg] of Object.entries(SUB_PRODUCT_CONFIG)) {
+    const matching = products.filter((p) => cfg.dbSlugs.includes(p.slug));
+    categoryCounts[parentSlug] = matching.length;
+    categoryPreviews[parentSlug] = matching
+      .slice(0, 3)
+      .map((p) => p.images?.[0]?.url)
+      .filter(Boolean);
   }
 
   return (

@@ -44,9 +44,9 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      // ── Old marketing-prints sub-landing pages → new URLs ──
-      { source: "/shop/marketing-prints/stamps", destination: "/shop/stamps", permanent: true },
-      { source: "/shop/marketing-prints/business-cards", destination: "/shop/business-cards", permanent: true },
+      // ── Old top-level category URLs → now inside marketing-prints ──
+      { source: "/shop/business-cards", destination: "/shop/marketing-prints/business-cards", permanent: true },
+      { source: "/shop/stamps", destination: "/shop/marketing-prints/stamps", permanent: true },
 
       // Sub-group landings stay within marketing-prints
       { source: "/shop/marketing-prints/stationery", destination: "/shop/marketing-prints/envelopes", permanent: true },
@@ -105,7 +105,7 @@ const nextConfig: NextConfig = {
       { source: "/shop/:cat/window-decals", destination: "/shop/large-format-graphics/window-graphics", permanent: true },
       { source: "/shop/:cat/wall-decals", destination: "/shop/large-format-graphics/wall-graphics", permanent: true },
       { source: "/shop/:cat/lawn-signs-h-stake", destination: "/shop/rigid-signs/yard-sign-h-frame", permanent: true },
-      { source: "/shop/:cat/self-inking-stamps", destination: "/shop/stamps", permanent: true },
+      { source: "/shop/:cat/self-inking-stamps", destination: "/shop/marketing-prints/stamps", permanent: true },
       { source: "/shop/:cat/hang-tags", destination: "/shop/marketing-prints/tags-hang-tags", permanent: true },
       { source: "/shop/:cat/rp-hang-tags", destination: "/shop/marketing-prints/tags-hang-tags", permanent: true },
       { source: "/shop/:cat/rp-menus", destination: "/shop/marketing-prints/menus-flat", permanent: true },
