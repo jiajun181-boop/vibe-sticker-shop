@@ -148,8 +148,10 @@ const RECATEGORIZE = [
   { slug: "frosted-privacy-window-film", newCategory: "window-glass-films", newSortOrder: 2 },
   { slug: "storefront-hours-door-decal-cut-vinyl", newCategory: "window-glass-films", newSortOrder: 3 },
   { slug: "window-lettering-business", newCategory: "window-glass-films", newSortOrder: 4 },
-  // From vehicle-branding-advertising (storefront/general window products)
+  // From vehicle-branding-advertising (window products)
   { slug: "window-lettering-cut-vinyl", newCategory: "window-glass-films", newSortOrder: 5 },
+  { slug: "rear-window-perf-graphic-one-way-vision", newCategory: "window-glass-films", newSortOrder: 6 },
+  { slug: "vehicle-window-tint-graphic", newCategory: "window-glass-films", newSortOrder: 7 },
   // Move wall + floor graphics to large-format-graphics
   { slug: "wall-mural-graphic", newCategory: "large-format-graphics", newSortOrder: 10 },
   { slug: "floor-logo-graphic", newCategory: "large-format-graphics", newSortOrder: 11 },

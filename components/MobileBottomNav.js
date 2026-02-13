@@ -7,7 +7,6 @@ import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { CATALOG_DEFAULTS } from "@/lib/catalogConfig";
-import QuickOrderSheet from "@/components/QuickOrderSheet";
 
 const { departments, departmentMeta, categoryMeta } = CATALOG_DEFAULTS;
 
@@ -53,21 +52,6 @@ function BagIcon({ className }) {
   );
 }
 
-function BoltIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-    </svg>
-  );
-}
-
-function QuoteIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-    </svg>
-  );
-}
 
 /* ── Category Drawer ──────────────────────────────────────────── */
 
@@ -165,7 +149,6 @@ export default function MobileBottomNav() {
 
   const [cartCount, setCartCount] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [quickOrderOpen, setQuickOrderOpen] = useState(false);
 
   useEffect(() => {
     setCartCount(storeCount);
@@ -174,7 +157,6 @@ export default function MobileBottomNav() {
   // Close drawers on route change
   useEffect(() => {
     setDrawerOpen(false);
-    setQuickOrderOpen(false);
   }, [pathname]);
 
   const isActive = (href) => {
@@ -190,10 +172,10 @@ export default function MobileBottomNav() {
       href: "/",
     },
     {
-      key: "quickOrder",
-      label: "Quick",
-      icon: BoltIcon,
-      action: () => setQuickOrderOpen(true),
+      key: "categories",
+      label: t("mobileNav.categories"),
+      icon: GridIcon,
+      action: () => setDrawerOpen(true),
     },
     {
       key: "shop",
@@ -202,10 +184,10 @@ export default function MobileBottomNav() {
       href: "/shop",
     },
     {
-      key: "quote",
-      label: t("nav.getQuote"),
-      icon: QuoteIcon,
-      href: "/quote",
+      key: "account",
+      label: authUser ? t("mobileNav.account") : t("mobileNav.login"),
+      icon: UserIcon,
+      href: authUser ? "/account" : "/login",
     },
     {
       key: "cart",
@@ -219,7 +201,6 @@ export default function MobileBottomNav() {
   return (
     <>
       <CategoryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-      <QuickOrderSheet open={quickOrderOpen} onClose={() => setQuickOrderOpen(false)} />
 
       {/* Spacer so content isn't hidden behind the fixed nav */}
       <div className="h-16 md:hidden" />
