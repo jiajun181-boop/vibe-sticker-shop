@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import { createAdminToken, COOKIE_NAME } from "@/lib/admin-auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,6 +6,11 @@ export async function POST(request: NextRequest) {
 
     // ── New path: email + password login (AdminUser table) ──
     if (email) {
+      // Dynamic imports to avoid crashing legacy path if prisma isn't ready
+      const { prisma } = await import("@/lib/prisma");
+      const bcrypt = (await import("bcryptjs")).default;
+      const { createAdminToken, COOKIE_NAME } = await import("@/lib/admin-auth");
+
       const admin = await prisma.adminUser.findUnique({ where: { email } });
       if (!admin || !admin.isActive) {
         return NextResponse.json(
@@ -41,21 +43,22 @@ export async function POST(request: NextRequest) {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
-        maxAge: 60 * 60 * 24, // 24 hours
+        maxAge: 60 * 60 * 24,
       });
 
       return response;
     }
 
     // ── Legacy path: password-only login (env ADMIN_PASSWORD) ──
-    const adminPassword = process.env.ADMIN_PASSWORD;
+    // No prisma/bcrypt dependency — always works
+    const adminPassword = (process.env.ADMIN_PASSWORD || "").trim();
     if (!adminPassword) {
       return NextResponse.json(
         { error: "Admin password not configured" },
         { status: 500 }
       );
     }
-    if (password !== adminPassword) {
+    if ((password || "").trim() !== adminPassword) {
       return NextResponse.json(
         { error: "Invalid password" },
         { status: 401 }
@@ -71,7 +74,8 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24,
     });
     return response;
-  } catch {
+  } catch (err) {
+    console.error("[Admin Login] Error:", err);
     return NextResponse.json(
       { error: "Login failed" },
       { status: 500 }
@@ -82,6 +86,6 @@ export async function POST(request: NextRequest) {
 export async function DELETE() {
   const response = NextResponse.json({ success: true });
   response.cookies.delete("admin_auth");
-  response.cookies.delete(COOKIE_NAME);
+  response.cookies.delete("admin_session");
   return response;
 }
