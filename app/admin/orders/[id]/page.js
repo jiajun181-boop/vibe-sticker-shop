@@ -644,27 +644,61 @@ export default function OrderDetailPage() {
               </div>
             </Section>
 
-            {/* Files */}
+            {/* Files with Preflight Review */}
             {order.files && order.files.length > 0 && (
               <Section title={`Files (${order.files.length})`}>
                 <div className="space-y-2">
                   {order.files.map((file) => (
-                    <a
-                      key={file.id}
-                      href={file.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block rounded-lg border border-gray-200 px-3 py-2 text-xs text-blue-600 transition-colors hover:bg-gray-50"
-                    >
-                      {file.fileName || "File"}
-                      {file.mimeType && (
-                        <span className="ml-2 text-gray-400">{file.mimeType}</span>
+                    <div key={file.id} className="rounded-lg border border-gray-200 px-3 py-2">
+                      <div className="flex items-center justify-between">
+                        <a
+                          href={file.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          {file.fileName || "File"}
+                          {file.mimeType && (
+                            <span className="ml-2 text-gray-400">{file.mimeType}</span>
+                          )}
+                        </a>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          file.preflightStatus === "approved" ? "bg-green-100 text-green-700" :
+                          file.preflightStatus === "rejected" ? "bg-red-100 text-red-700" :
+                          "bg-gray-100 text-gray-600"
+                        }`}>
+                          {file.preflightStatus || "pending"}
+                        </span>
+                      </div>
+                      {file.preflightStatus === "pending" && (
+                        <PreflightActions orderId={id} fileId={file.id} fileName={file.fileName} onUpdate={() => {
+                          // Refresh order
+                          fetch(`/api/admin/orders/${id}`).then(r => r.json()).then(data => {
+                            if (!data.error) { setOrder(data); fetchTimeline(); }
+                          });
+                        }} />
                       )}
-                    </a>
+                    </div>
                   ))}
                 </div>
               </Section>
             )}
+
+            {/* Actions: Ship & Refund */}
+            <OrderActions
+              order={order}
+              onUpdate={() => {
+                fetch(`/api/admin/orders/${id}`).then(r => r.json()).then(data => {
+                  if (!data.error) {
+                    setOrder(data);
+                    setStatus(data.status);
+                    setPaymentStatus(data.paymentStatus);
+                    setProductionStatus(data.productionStatus);
+                    fetchTimeline();
+                  }
+                });
+              }}
+            />
           </div>
         </div>
       </div>
@@ -819,5 +853,265 @@ function SelectField({ label, value, onChange, options }) {
         ))}
       </select>
     </div>
+  );
+}
+
+/* ========== Preflight Review Actions ========== */
+function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
+  const [acting, setActing] = useState(false);
+  const [notes, setNotes] = useState("");
+
+  async function handleReview(status) {
+    setActing(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/preflight`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileId, status, notes: notes || undefined }),
+      });
+      if (res.ok) onUpdate();
+    } catch {
+      console.error("Preflight review failed");
+    } finally {
+      setActing(false);
+    }
+  }
+
+  return (
+    <div className="mt-2 flex items-center gap-2">
+      <input
+        type="text"
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder="Review notes..."
+        className="flex-1 rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-gray-400"
+      />
+      <button
+        type="button"
+        onClick={() => handleReview("approved")}
+        disabled={acting}
+        className="rounded bg-green-600 px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+      >
+        Approve
+      </button>
+      <button
+        type="button"
+        onClick={() => handleReview("rejected")}
+        disabled={acting}
+        className="rounded bg-red-600 px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+      >
+        Reject
+      </button>
+    </div>
+  );
+}
+
+/* ========== Order Actions (Ship / Refund) ========== */
+function OrderActions({ order, onUpdate }) {
+  const [shipOpen, setShipOpen] = useState(false);
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [acting, setActing] = useState(false);
+  const [actionMsg, setActionMsg] = useState("");
+
+  // Ship state
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [carrier, setCarrier] = useState("Canada Post");
+  const [estimatedDelivery, setEstimatedDelivery] = useState("");
+
+  // Refund state
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundReason, setRefundReason] = useState("");
+
+  const canShip = ["paid"].includes(order.paymentStatus) &&
+    ["in_production", "ready_to_ship", "preflight"].includes(order.productionStatus);
+  const canRefund = ["paid", "partially_refunded"].includes(order.paymentStatus) &&
+    order.stripePaymentIntentId;
+  const maxRefund = (order.totalAmount - (order.refundAmount || 0)) / 100;
+
+  async function handleShip() {
+    setActing(true);
+    setActionMsg("");
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}/ship`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trackingNumber,
+          carrier,
+          estimatedDelivery: estimatedDelivery || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setActionMsg("Shipped successfully!");
+        setShipOpen(false);
+        onUpdate();
+      } else {
+        setActionMsg(data.error || "Ship failed");
+      }
+    } catch {
+      setActionMsg("Ship failed");
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleRefund() {
+    setActing(true);
+    setActionMsg("");
+    const amountCents = Math.round(parseFloat(refundAmount) * 100);
+    if (!amountCents || amountCents <= 0) {
+      setActionMsg("Enter a valid amount");
+      setActing(false);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amountCents,
+          reason: refundReason || "Refund issued by admin",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setActionMsg("Refund issued!");
+        setRefundOpen(false);
+        onUpdate();
+      } else {
+        setActionMsg(data.error || "Refund failed");
+      }
+    } catch {
+      setActionMsg("Refund failed");
+    } finally {
+      setActing(false);
+    }
+  }
+
+  return (
+    <Section title="Actions">
+      <div className="space-y-3">
+        {actionMsg && (
+          <p className={`text-xs font-medium ${actionMsg.includes("fail") ? "text-red-600" : "text-green-600"}`}>
+            {actionMsg}
+          </p>
+        )}
+
+        {/* Ship button */}
+        {canShip && !shipOpen && (
+          <button
+            type="button"
+            onClick={() => setShipOpen(true)}
+            className="w-full rounded-lg bg-purple-600 py-2.5 text-xs font-semibold text-white hover:bg-purple-700"
+          >
+            Mark as Shipped
+          </button>
+        )}
+        {shipOpen && (
+          <div className="space-y-2 rounded-lg border border-purple-200 bg-purple-50 p-3">
+            <p className="text-xs font-semibold text-purple-900">Ship Order</p>
+            <input
+              type="text"
+              value={trackingNumber}
+              onChange={(e) => setTrackingNumber(e.target.value)}
+              placeholder="Tracking number"
+              className="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs outline-none"
+            />
+            <select
+              value={carrier}
+              onChange={(e) => setCarrier(e.target.value)}
+              className="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs outline-none"
+            >
+              <option>Canada Post</option>
+              <option>UPS</option>
+              <option>Purolator</option>
+              <option>FedEx</option>
+              <option>Other</option>
+            </select>
+            <input
+              type="date"
+              value={estimatedDelivery}
+              onChange={(e) => setEstimatedDelivery(e.target.value)}
+              className="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs outline-none"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleShip}
+                disabled={acting || !trackingNumber}
+                className="flex-1 rounded bg-purple-600 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 disabled:bg-gray-400"
+              >
+                {acting ? "..." : "Confirm Ship"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShipOpen(false)}
+                className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Refund button */}
+        {canRefund && !refundOpen && (
+          <button
+            type="button"
+            onClick={() => { setRefundOpen(true); setRefundAmount(maxRefund.toFixed(2)); }}
+            className="w-full rounded-lg border border-red-300 py-2.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+          >
+            Issue Refund
+          </button>
+        )}
+        {refundOpen && (
+          <div className="space-y-2 rounded-lg border border-red-200 bg-red-50 p-3">
+            <p className="text-xs font-semibold text-red-900">Issue Refund</p>
+            <p className="text-[10px] text-red-600">Max: ${maxRefund.toFixed(2)} CAD</p>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500">$</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                max={maxRefund}
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+                className="flex-1 rounded border border-gray-300 px-2.5 py-1.5 text-xs outline-none"
+              />
+            </div>
+            <input
+              type="text"
+              value={refundReason}
+              onChange={(e) => setRefundReason(e.target.value)}
+              placeholder="Reason (optional)"
+              className="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs outline-none"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleRefund}
+                disabled={acting}
+                className="flex-1 rounded bg-red-600 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:bg-gray-400"
+              >
+                {acting ? "..." : "Confirm Refund"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setRefundOpen(false)}
+                className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!canShip && !canRefund && (
+          <p className="text-xs text-gray-400 text-center py-2">No actions available for this order status</p>
+        )}
+      </div>
+    </Section>
   );
 }

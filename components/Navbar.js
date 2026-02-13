@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -27,9 +28,15 @@ export default function Navbar() {
     setCartCount(storeCount);
   }, [storeCount]);
 
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchRef = useRef(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const desktopDropdownRef = useRef(null);
+  const mobileDropdownRef = useRef(null);
+  const mobileSearchWrapperRef = useRef(null);
 
   useEffect(() => {
     if (searchOpen && searchRef.current) {
@@ -37,13 +44,119 @@ export default function Navbar() {
     }
   }, [searchOpen]);
 
+  // Debounced instant search
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    setSearchLoading(true);
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(searchQuery.trim())}&limit=6`, {
+        signal: controller.signal,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setSearchResults(data.results || []);
+          setSearchLoading(false);
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") setSearchLoading(false);
+        });
+    }, 300);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [searchQuery]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      const inDesktop = desktopDropdownRef.current?.contains(e.target);
+      const inMobile = mobileDropdownRef.current?.contains(e.target);
+      const inInput = searchRef.current?.contains(e.target);
+      const inMobileWrapper = mobileSearchWrapperRef.current?.contains(e.target);
+      if (!inDesktop && !inMobile && !inInput && !inMobileWrapper) {
+        setSearchResults([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const clearSearch = useCallback(() => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  }, []);
+
+  const handleResultClick = useCallback((category, slug) => {
+    router.push(`/shop/${category}/${slug}`);
+    clearSearch();
+  }, [router, clearSearch]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       window.location.href = `/shop?q=${encodeURIComponent(searchQuery.trim())}`;
-      setSearchOpen(false);
-      setSearchQuery("");
+      clearSearch();
     }
+  };
+
+  // Reusable search dropdown renderer
+  const renderSearchDropdown = (refProp) => {
+    if (searchQuery.trim().length < 2) return null;
+    if (!searchResults.length && !searchLoading) return null;
+    return (
+      <div
+        ref={refProp}
+        className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden"
+      >
+        {searchLoading ? (
+          <div className="px-4 py-3 text-sm text-gray-400">Searching...</div>
+        ) : (
+          <>
+            {searchResults.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleResultClick(item.category, item.slug)}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gray-50"
+              >
+                {item.image && (
+                  <Image
+                    src={item.image}
+                    alt={item.imageAlt || item.name}
+                    width={36}
+                    height={36}
+                    className="h-9 w-9 rounded object-cover shrink-0"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
+                  <p className="text-xs text-gray-400 truncate">{item.category}</p>
+                </div>
+                {item.price != null && (
+                  <span className="shrink-0 text-sm font-medium text-gray-700">
+                    ${(item.price / 100).toFixed(2)}
+                  </span>
+                )}
+              </button>
+            ))}
+            <Link
+              href={`/shop?q=${encodeURIComponent(searchQuery.trim())}`}
+              onClick={clearSearch}
+              className="block border-t border-gray-100 px-4 py-2.5 text-center text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+            >
+              View all results
+            </Link>
+          </>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -158,26 +271,29 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           {/* Desktop search */}
-          <div className="hidden md:flex items-center">
+          <div className="relative hidden md:flex items-center">
             {searchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center gap-2">
-                <input
-                  ref={searchRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t("nav.searchPlaceholder")}
-                  className="w-48 rounded-full border border-gray-300 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-gray-900"
-                  onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
-                />
-                <button
-                  type="button"
-                  onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
-                  className="text-gray-400 hover:text-gray-700 text-sm"
-                >
-                  &times;
-                </button>
-              </form>
+              <>
+                <form onSubmit={handleSearch} className="flex items-center gap-2">
+                  <input
+                    ref={searchRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={t("nav.searchPlaceholder")}
+                    className="w-48 rounded-full border border-gray-300 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-gray-900"
+                    onBlur={() => { if (!searchQuery && !searchResults.length) setSearchOpen(false); }}
+                  />
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    className="text-gray-400 hover:text-gray-700 text-sm"
+                  >
+                    &times;
+                  </button>
+                </form>
+                {renderSearchDropdown(desktopDropdownRef)}
+              </>
             ) : (
               <button
                 type="button"
@@ -236,15 +352,18 @@ export default function Navbar() {
 
       {/* Mobile nav row with search */}
       <div className="flex items-center gap-3 px-6 pb-2 md:hidden">
-        <form onSubmit={handleSearch} className="flex-1">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t("nav.searchPlaceholder")}
-            className="w-full rounded-full border border-gray-200 px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-gray-400"
-          />
-        </form>
+        <div ref={mobileSearchWrapperRef} className="relative flex-1">
+          <form onSubmit={handleSearch}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("nav.searchPlaceholder")}
+              className="w-full rounded-full border border-gray-200 px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-gray-400"
+            />
+          </form>
+          {renderSearchDropdown(mobileDropdownRef)}
+        </div>
         <div className="flex items-center gap-4 text-xs font-medium text-gray-600 shrink-0">
           {linkKeys.map((link) => (
             <Link key={link.href} href={link.href} className="transition-colors duration-200 hover:text-gray-900 whitespace-nowrap">
