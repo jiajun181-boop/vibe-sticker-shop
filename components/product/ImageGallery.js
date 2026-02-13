@@ -7,6 +7,11 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
+/**
+ * @param {object} props
+ * @param {Array} props.images - Array of image objects with { url, alt, focalX?, focalY?, mimeType? }
+ * @param {string} [props.productName] - Fallback alt text
+ */
 export default function ImageGallery({ images, productName }) {
   const list = Array.isArray(images) ? images.filter((x) => x && x.url) : [];
   const safeName = productName || "Product image";
@@ -76,9 +81,12 @@ export default function ImageGallery({ images, productName }) {
             alt={activeImage.alt || safeName}
             fill
             className="object-cover"
+            style={{
+              objectPosition: `${(activeImage.focalX ?? 0.5) * 100}% ${(activeImage.focalY ?? 0.5) * 100}%`,
+            }}
             sizes="(max-width: 1024px) 100vw, 58vw"
             priority
-            unoptimized={activeImage.url.endsWith(".svg")}
+            unoptimized={activeImage.mimeType === "image/svg+xml" || activeImage.url.endsWith(".svg")}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
@@ -135,8 +143,11 @@ export default function ImageGallery({ images, productName }) {
                 alt={img.alt || safeName}
                 fill
                 className="object-cover"
+                style={{
+                  objectPosition: `${(img.focalX ?? 0.5) * 100}% ${(img.focalY ?? 0.5) * 100}%`,
+                }}
                 sizes="64px"
-                unoptimized={img.url.endsWith(".svg")}
+                unoptimized={img.mimeType === "image/svg+xml" || img.url.endsWith(".svg")}
               />
             </button>
           ))}

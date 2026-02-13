@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSubProducts } from "@/lib/subProductConfig";
 import { CATALOG_DEFAULTS } from "@/lib/catalogConfig";
+import { getProductAssets } from "@/lib/assets";
 import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
@@ -151,7 +152,14 @@ export default async function ProductPage({ params }) {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
+  // Fetch asset-system images (falls back to legacy ProductImage)
+  const assetImages = await getProductAssets(product.id);
+
   const safeProduct = toClientSafe(product);
+  // Override images with asset-enriched data (includes focalX, focalY, mimeType)
+  if (assetImages.length > 0) {
+    safeProduct.images = assetImages;
+  }
   const safeRelated = toClientSafe(relatedProducts);
 
   return (

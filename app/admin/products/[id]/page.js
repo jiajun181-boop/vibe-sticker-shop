@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -134,6 +134,8 @@ export default function ProductDetailPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [imageAlt, setImageAlt] = useState("");
   const [addingImage, setAddingImage] = useState(false);
+  const [uploadingAsset, setUploadingAsset] = useState(false);
+  const assetFileRef = useRef(null);
 
   const fetchProduct = useCallback(async () => {
     try {
@@ -291,6 +293,43 @@ export default function ProductDetailPage() {
       const res = await fetch(`/api/admin/products/${productId}/images?imageId=${imageId}`, { method: "DELETE" });
       if (res.ok) { fetchProduct(); showMsg("Image deleted"); }
     } catch { showMsg("Failed to delete image", true); }
+  }
+
+  async function handleAssetUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAsset(true);
+    try {
+      // 1. Upload to asset system
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("altText", product.name);
+      formData.append("tags", "product");
+
+      const uploadRes = await fetch("/api/admin/assets", { method: "POST", body: formData });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) { showMsg(uploadData.error || "Upload failed", true); return; }
+
+      const asset = uploadData.asset;
+
+      // 2. Create asset link to this product
+      await fetch(`/api/admin/assets/${asset.id}/links`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entityType: "product", entityId: productId, purpose: "gallery" }),
+      });
+
+      // 3. Also add as legacy ProductImage for backward compatibility
+      await fetch(`/api/admin/products/${productId}/images`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: asset.originalUrl, alt: asset.altText }),
+      });
+
+      showMsg(uploadData.deduplicated ? "Existing asset linked (dedup)" : "Asset uploaded & linked!");
+      fetchProduct();
+    } catch { showMsg("Upload failed", true); }
+    finally { setUploadingAsset(false); if (assetFileRef.current) assetFileRef.current.value = ""; }
   }
 
   if (loading) return <div className="flex h-48 items-center justify-center text-sm text-gray-500">Loading...</div>;
@@ -588,13 +627,30 @@ export default function ProductDetailPage() {
               </div>
             )}
 
+            {/* Upload Asset */}
             <div className="space-y-2">
-              <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Image URL (https://...)" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
-              <input type="text" value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} placeholder="Alt text (optional)" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
-              <button type="button" onClick={handleAddImage} disabled={!imageUrl.trim() || addingImage} className="w-full rounded-lg bg-gray-900 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-50">
-                {addingImage ? "Adding..." : "Add Image"}
+              <button
+                type="button"
+                onClick={() => assetFileRef.current?.click()}
+                disabled={uploadingAsset}
+                className="w-full rounded-lg bg-gray-900 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-50"
+              >
+                {uploadingAsset ? "Uploading..." : "Upload Image"}
               </button>
+              <input ref={assetFileRef} type="file" accept="image/*" onChange={handleAssetUpload} className="hidden" />
             </div>
+
+            {/* Legacy: Add by URL */}
+            <details className="mt-3">
+              <summary className="cursor-pointer text-[10px] text-gray-400 hover:text-gray-600">Add by URL</summary>
+              <div className="mt-2 space-y-2">
+                <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Image URL (https://...)" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <input type="text" value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} placeholder="Alt text (optional)" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <button type="button" onClick={handleAddImage} disabled={!imageUrl.trim() || addingImage} className="w-full rounded-lg border border-gray-300 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50">
+                  {addingImage ? "Adding..." : "Add by URL"}
+                </button>
+              </div>
+            </details>
           </div>
 
           {/* Quick Info */}

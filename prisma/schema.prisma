@@ -307,6 +307,103 @@ model Setting {
   value Json
 }
 
+// ── Asset Management ──
+
+enum AssetStatus {
+  uploaded
+  processing
+  published
+  archived
+}
+
+enum AssetPurpose {
+  hero
+  gallery
+  card
+  thumbnail
+  logo
+  banner
+  background
+  other
+}
+
+model Asset {
+  id            String      @id @default(cuid())
+
+  // Identity & dedup
+  sha256        String      @unique
+  originalName  String
+
+  // Storage
+  originalUrl   String
+  storageKey    String?
+
+  // Metadata
+  mimeType      String
+  sizeBytes     Int
+  widthPx       Int
+  heightPx      Int
+  dpi           Int?
+  colorSpace    String?
+  hasAlpha      Boolean     @default(false)
+
+  // Smart cropping
+  focalX        Float       @default(0.5)
+  focalY        Float       @default(0.5)
+
+  // SEO & accessibility
+  altText       String?
+  altTextZh     String?
+  caption       String?
+  tags          String[]    @default([])
+
+  // Lifecycle
+  status        AssetStatus @default(uploaded)
+  version       Int         @default(1)
+  replacedById  String?
+
+  // Audit
+  uploadedBy    String      @default("system")
+  publishedAt   DateTime?
+  archivedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  links         AssetLink[]
+  replacedBy    Asset?      @relation("AssetVersions", fields: [replacedById], references: [id])
+  replacements  Asset[]     @relation("AssetVersions")
+
+  @@index([sha256])
+  @@index([status])
+  @@index([tags])
+  @@index([createdAt])
+  @@index([uploadedBy])
+}
+
+model AssetLink {
+  id          String       @id @default(cuid())
+  assetId     String
+  asset       Asset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  // Polymorphic binding
+  entityType  String
+  entityId    String
+
+  // Usage context
+  purpose     AssetPurpose @default(gallery)
+  sortOrder   Int          @default(0)
+
+  // Override per-link
+  altOverride String?
+
+  createdAt   DateTime     @default(now())
+
+  @@unique([assetId, entityType, entityId, purpose, sortOrder])
+  @@index([entityType, entityId, sortOrder])
+  @@index([assetId])
+}
+
 // Enums
 
 enum OrderStatus {
