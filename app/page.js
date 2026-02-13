@@ -18,16 +18,16 @@ const BRAND = "La Lunar Printing Inc.";
 
 export async function generateMetadata() {
   const t = await getServerT();
-  const title = `${BRAND} — Custom Printing & Vehicle Graphics in Toronto`;
-  const description = "Professional custom printing for business cards, banners, vehicle wraps, signs, stickers & labels. Fast turnaround, competitive pricing. Toronto & GTA delivery.";
+  const title = "Custom Stickers, Labels & Signs | La Lunar Printing";
+  const description = "Toronto's trusted custom printing shop. Stickers, labels, banners, vehicle wraps, business cards & more. Fast turnaround, free shipping on orders $150+.";
 
   return {
     title,
     description,
     alternates: { canonical: SITE_URL },
     openGraph: {
-      title,
-      description,
+      title: "Custom Stickers, Labels & Signs | La Lunar Printing",
+      description: "Toronto's trusted custom printing shop. Stickers, labels, banners, vehicle wraps, business cards & more.",
       url: SITE_URL,
       siteName: BRAND,
       type: "website",

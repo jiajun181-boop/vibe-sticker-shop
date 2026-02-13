@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { useCartStore } from "@/lib/store";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -28,10 +29,14 @@ const PRODUCTION_COLORS = {
 
 export default function OrderDetailPage() {
   const { id } = useParams();
+  const router = useRouter();
   const { t } = useTranslation();
+  const addItem = useCartStore((s) => s.addItem);
+  const openCart = useCartStore((s) => s.openCart);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reordering, setReordering] = useState(false);
 
   useEffect(() => {
     fetch(`/api/account/orders/${id}`)
@@ -103,6 +108,42 @@ export default function OrderDetailPage() {
           </span>
         </div>
       </div>
+
+      {/* Reorder Button */}
+      {order.status === "paid" || order.status === "refunded" || order.productionStatus === "completed" || order.productionStatus === "shipped" ? (
+        <button
+          type="button"
+          disabled={reordering}
+          onClick={async () => {
+            setReordering(true);
+            try {
+              const res = await fetch(`/api/account/orders/${id}/reorder`);
+              if (!res.ok) throw new Error();
+              const data = await res.json();
+              for (const item of data.items) {
+                if (!item.isDiscontinued) {
+                  addItem({
+                    id: item.id,
+                    slug: item.slug,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    options: item.options,
+                  });
+                }
+              }
+              openCart();
+            } catch {
+              setError("Failed to reorder");
+            } finally {
+              setReordering(false);
+            }
+          }}
+          className="w-full rounded-xl bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-black disabled:opacity-50 transition-colors"
+        >
+          {reordering ? "Adding to cart..." : "Reorder This Order"}
+        </button>
+      ) : null}
 
       {/* Items */}
       <div className="rounded-xl border border-gray-200">

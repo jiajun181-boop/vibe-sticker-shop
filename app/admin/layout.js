@@ -40,6 +40,7 @@ const navGroups = [
     labelKey: "admin.navGroup.insights",
     items: [
       { key: "admin.nav.analytics", href: "/admin/analytics", icon: "chart" },
+      { key: "admin.nav.funnel", href: "/admin/funnel", icon: "funnel" },
       { key: "admin.nav.salesReport", href: "/admin/reports/sales", icon: "report" },
       { key: "admin.nav.productionReport", href: "/admin/reports/production", icon: "report" },
     ],
@@ -100,6 +101,11 @@ function NavIcon({ name, className }) {
     chart: (
       <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+      </svg>
+    ),
+    funnel: (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c4.97 0 9 1.343 9 3v1.5L14.25 15v4.5l-4.5 1.5V15L3 7.5V6c0-1.657 4.03-3 9-3z" />
       </svg>
     ),
     report: (

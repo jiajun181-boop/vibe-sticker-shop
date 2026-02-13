@@ -9,8 +9,8 @@ const BRAND = "La Lunar Printing Inc.";
 
 export async function generateMetadata({ searchParams }) {
   const params = (await searchParams) || {};
-  const title = `Shop All Products | ${BRAND}`;
-  const description = "Browse our full catalog of custom printing products — business cards, banners, vehicle wraps, stickers, signs, and more. Competitive pricing, fast turnaround.";
+  const title = "Shop All Products | La Lunar Printing";
+  const description = "Browse our full catalog of custom printing products. Stickers, labels, signs, banners, business cards, and more. Order online with fast turnaround.";
 
   return {
     title,
