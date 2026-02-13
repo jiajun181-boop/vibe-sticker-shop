@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ALL_CATEGORIES, CATALOG_DEFAULTS } from "@/lib/catalogConfig";
-import { getSubProductsForCategory } from "@/lib/subProductConfig";
+import { SUB_PRODUCT_CONFIG, getSubProductsForCategory } from "@/lib/subProductConfig";
 import CategoryLandingClient from "./CategoryLandingClient";
+import SubGroupLandingClient from "./SubGroupLandingClient";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +64,41 @@ export default async function CategoryPage({ params }) {
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
 
-  // Build filter groups from sub-product config (for filter chips, not section headers)
+  // If category has sub-groups, render sub-group card landing instead of flat product list
+  const subGroups = meta?.subGroups;
+  if (subGroups?.length > 0) {
+    // Build sub-group data with counts and previews
+    const subGroupData = subGroups.map((sg) => {
+      const subCfg = SUB_PRODUCT_CONFIG[sg.slug];
+      const matching = subCfg
+        ? products.filter((p) => subCfg.dbSlugs.includes(p.slug))
+        : [];
+      return {
+        ...sg,
+        count: matching.length,
+        previews: matching.slice(0, 3).map((p) => p.images?.[0]?.url).filter(Boolean),
+      };
+    });
+
+    // Orphan products not in any sub-group
+    const allSubSlugs = new Set(
+      subGroups.flatMap((sg) => SUB_PRODUCT_CONFIG[sg.slug]?.dbSlugs || [])
+    );
+    const orphans = products.filter((p) => !allSubSlugs.has(p.slug));
+
+    return (
+      <SubGroupLandingClient
+        category={decoded}
+        categoryTitle={meta?.title || decoded}
+        categoryIcon={meta?.icon || ""}
+        subGroups={subGroupData}
+        orphanProducts={toClientSafe(orphans)}
+        totalCount={products.length}
+      />
+    );
+  }
+
+  // Regular category: flat product grid with filter chips
   const subGroupEntries = getSubProductsForCategory(decoded);
   const filterGroups = [];
 

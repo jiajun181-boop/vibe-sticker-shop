@@ -14,7 +14,6 @@ const CATEGORY_DISPLAY_NAMES = {
   "stickers-labels": "Stickers & Labels",
   "safety-warning-decals": "Safety & Warning",
   "facility-asset-labels": "Facility & Asset Labels",
-  "business-forms": "Business Forms",
   "retail-promo": "Retail Promo",
   packaging: "Packaging Inserts",
 };

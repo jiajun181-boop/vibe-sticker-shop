@@ -569,12 +569,12 @@ export const PRODUCTS = [
   // =========================
   // business-forms (draft stubs)
   // =========================
-  { category:"business-forms", product:"ncr-invoice-books", name:"NCR Invoice Books 收据本", description:"2-part / 3-part NCR invoice books with numbering.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"business-forms", product:"order-form-pads", name:"Order Form Pads 订单表（本）", description:"Order forms in pads for shops and service businesses.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"business-forms", product:"release-waiver-forms", name:"Release / Waiver Forms 免责声明", description:"Waivers, releases, and consent forms.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"business-forms", product:"bf-certificates", name:"Certificates 证书", description:"Certificates for awards, authenticity, and completion.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"business-forms", product:"bf-letterhead", name:"Letterhead 信纸", description:"Professional letterhead for business documents.", status:"draft", config:{ minimumPrice:0 } },
-  { category:"business-forms", product:"bf-notepads", name:"Notepads 记事本", description:"Branded notepads for office and retail use.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"ncr-invoice-books", name:"NCR Invoice Books 收据本", description:"2-part / 3-part NCR invoice books with numbering.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"order-form-pads", name:"Order Form Pads 订单表（本）", description:"Order forms in pads for shops and service businesses.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"release-waiver-forms", name:"Release / Waiver Forms 免责声明", description:"Waivers, releases, and consent forms.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"bf-certificates", name:"Certificates 证书", description:"Certificates for awards, authenticity, and completion.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"bf-letterhead", name:"Letterhead 信纸", description:"Professional letterhead for business documents.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"marketing-prints", product:"bf-notepads", name:"Notepads 记事本", description:"Branded notepads for office and retail use.", status:"draft", config:{ minimumPrice:0 } },
 
   // =========================
   // retail-promo (draft stubs)

@@ -47,6 +47,7 @@ const nextConfig: NextConfig = {
       // ── Old top-level category URLs → now inside marketing-prints ──
       { source: "/shop/business-cards", destination: "/shop/marketing-prints/business-cards", permanent: true },
       { source: "/shop/stamps", destination: "/shop/marketing-prints/stamps", permanent: true },
+      { source: "/shop/business-forms", destination: "/shop/marketing-prints", permanent: true },
 
       // Sub-group landings stay within marketing-prints
       { source: "/shop/marketing-prints/stationery", destination: "/shop/marketing-prints/envelopes", permanent: true },
