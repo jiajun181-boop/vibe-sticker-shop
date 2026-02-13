@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
   const [mode, setMode] = useState("legacy"); // "legacy" | "email"
@@ -9,7 +8,6 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -30,8 +28,9 @@ export default function AdminLoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        router.push("/admin");
-        router.refresh();
+        // Hard redirect — ensures browser sends the newly set cookie
+        window.location.href = "/admin";
+        return;
       } else {
         setError(data.error || "Login failed");
       }
