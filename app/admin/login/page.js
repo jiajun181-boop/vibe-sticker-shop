@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
+  const [mode, setMode] = useState("email"); // "email" | "legacy"
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,10 +17,14 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
+      const body = mode === "email"
+        ? { email, password }
+        : { password };
+
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -45,11 +51,25 @@ export default function AdminLoginPage() {
               ADMIN
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              Enter password to continue
+              {mode === "email" ? "Sign in with your admin account" : "Enter master password"}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === "email" && (
+              <div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  required
+                  autoFocus
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-gray-900"
+                />
+              </div>
+            )}
+
             <div>
               <input
                 type="password"
@@ -57,7 +77,7 @@ export default function AdminLoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
                 required
-                autoFocus
+                autoFocus={mode === "legacy"}
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-gray-900"
               />
             </div>
@@ -74,6 +94,16 @@ export default function AdminLoginPage() {
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
+
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => { setMode(mode === "email" ? "legacy" : "email"); setError(""); }}
+              className="text-xs text-gray-400 transition-colors hover:text-gray-600"
+            >
+              {mode === "email" ? "Use master password" : "Sign in with email"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

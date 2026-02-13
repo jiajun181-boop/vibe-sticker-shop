@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { getAllowedNavHrefs, ROLE_LABELS } from "@/lib/admin-permissions";
 
 const navGroups = [
   {
@@ -54,6 +55,7 @@ const navGroups = [
     labelKey: "admin.navGroup.system",
     items: [
       { key: "admin.nav.media", href: "/admin/media", icon: "image" },
+      { key: "admin.nav.users", href: "/admin/users", icon: "users" },
       { key: "admin.nav.activityLog", href: "/admin/logs", icon: "clock" },
       { key: "admin.nav.settings", href: "/admin/settings", icon: "cog" },
     ],
@@ -155,6 +157,23 @@ export default function AdminLayout({ children }) {
   const router = useRouter();
   const { t, locale, setLocale, hydrated } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [session, setSession] = useState(null);
+
+  const fetchSession = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/session");
+      if (res.ok) {
+        const data = await res.json();
+        setSession(data.user);
+      }
+    } catch {
+      // Ignore — legacy sessions won't have this endpoint
+    }
+  }, []);
+
+  useEffect(() => {
+    if (pathname !== "/admin/login") fetchSession();
+  }, [pathname, fetchSession]);
 
   if (pathname === "/admin/login") {
     return children;
@@ -165,6 +184,17 @@ export default function AdminLayout({ children }) {
     router.push("/admin/login");
     router.refresh();
   }
+
+  // Role-based nav filtering
+  const allowedHrefs = session?.role ? getAllowedNavHrefs(session.role) : null;
+  const filteredNavGroups = allowedHrefs
+    ? navGroups
+        .map((g) => ({
+          ...g,
+          items: g.items.filter((item) => allowedHrefs.has(item.href)),
+        }))
+        .filter((g) => g.items.length > 0)
+    : navGroups; // Legacy sessions see everything
 
   const isActive = (href) => {
     if (href === "/admin") return pathname === "/admin";
@@ -194,7 +224,7 @@ export default function AdminLayout({ children }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          {navGroups.map((group, gi) => (
+          {filteredNavGroups.map((group, gi) => (
             <div key={group.labelKey}>
               <p className={`px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 ${gi === 0 ? "pt-0" : "pt-4"}`}>
                 {t(group.labelKey)}
@@ -220,7 +250,15 @@ export default function AdminLayout({ children }) {
           ))}
         </nav>
 
-        <div className="border-t border-gray-800 p-3">
+        <div className="border-t border-gray-800 p-3 space-y-2">
+          {session && (
+            <div className="px-3 py-1">
+              <p className="truncate text-xs font-medium text-gray-300">{session.name || session.email}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                {ROLE_LABELS[session.role]?.[locale] || session.role}
+              </p>
+            </div>
+          )}
           <button
             type="button"
             onClick={handleLogout}

@@ -12,6 +12,33 @@ enum AccountType {
   B2B
 }
 
+// ── Admin RBAC ──
+
+enum AdminRole {
+  admin       // Full system access
+  cs          // Customer Service
+  merch_ops   // E-commerce Operations
+  design      // Design & Media
+  production  // Production Scheduling
+  sales       // Sales / B2B
+  finance     // Finance & Accounting
+  qa          // Quality Assurance / After-sales
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         AdminRole
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([role, isActive])
+}
+
 model User {
   id                   String      @id @default(cuid())
   email                String      @unique
