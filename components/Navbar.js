@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
@@ -48,8 +49,12 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-[50] w-full border-b border-gray-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-900">
-          La Lunar Printing Inc.
+        <Link href="/" className="flex items-center gap-2.5">
+          <Image src="/logo.svg" alt="La Lunar Printing" width={32} height={32} className="h-8 w-8" priority />
+          <div className="hidden sm:block">
+            <span className="block text-sm font-semibold uppercase tracking-[0.3em] text-gray-900 leading-tight">La Lunar</span>
+            <span className="block text-[8px] font-medium uppercase tracking-[0.25em] text-gray-400 leading-tight">Printing Inc.</span>
+          </div>
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-gray-600 md:flex">

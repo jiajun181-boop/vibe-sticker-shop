@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { createT } from "@/lib/i18n";
 
 export default function Footer({ locale = "en" }) {
@@ -50,6 +51,21 @@ export default function Footer({ locale = "en" }) {
   return (
     <footer className="bg-gray-900 text-gray-200">
       <div className="mx-auto w-full max-w-6xl px-6 py-12">
+        {/* Brand header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-10 pb-8 border-b border-gray-800">
+          <div className="flex items-center gap-3">
+            <Image src="/logo.svg" alt="La Lunar Printing" width={40} height={40} className="h-10 w-10 invert opacity-90" />
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white leading-tight">La Lunar Printing</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 mt-0.5">{t("footer.tagline")}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-gray-400">
+            <span className="text-[10px] uppercase tracking-[0.15em]">{t("footer.madeIn")}</span>
+            <span className="text-xs">🇨🇦</span>
+          </div>
+        </div>
+
         <div className="grid gap-10 md:grid-cols-5">
           {columns.map((column) => (
             <div key={column.title} className="space-y-3">

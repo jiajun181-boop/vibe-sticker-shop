@@ -56,11 +56,16 @@ export default async function HomePage() {
     <div className="min-h-screen bg-[#fafafa] pb-20 relative">
       <OrganizationSchema />
       {/* Hero — dual column with product preview */}
-      <div className="bg-black text-white pt-20 pb-16 px-6">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-10 items-center">
+      <div className="bg-black text-white pt-20 pb-16 px-6 relative overflow-hidden">
+        {/* Brand watermark */}
+        <div className="absolute -right-20 -top-20 opacity-[0.03] pointer-events-none">
+          <Image src="/logo.svg" alt="" width={400} height={400} className="invert" />
+        </div>
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-10 items-center relative">
           {/* Left: text + CTAs */}
           <div className="space-y-6">
-            <div className="inline-block bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase backdrop-blur-sm">
+              <Image src="/logo.svg" alt="" width={16} height={16} className="h-4 w-4 invert opacity-80" />
               {t("home.badge")}
             </div>
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter">
@@ -210,6 +215,37 @@ export default async function HomePage() {
       <div className="bg-white py-14">
         <div className="max-w-7xl mx-auto px-6">
           <TrustSignals />
+        </div>
+      </div>
+
+      <SectionDivider />
+
+      {/* Why La Lunar — USP differentiators */}
+      <div className="max-w-7xl mx-auto px-6 my-14">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Image src="/logo.svg" alt="" width={20} height={20} className="h-5 w-5 opacity-40" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+              {t("home.whyBadge")}
+            </span>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-black tracking-tight">
+            {t("home.whyTitle")}
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { icon: "🏭", titleKey: "home.usp1Title", bodyKey: "home.usp1Body" },
+            { icon: "⚡", titleKey: "home.usp2Title", bodyKey: "home.usp2Body" },
+            { icon: "🔬", titleKey: "home.usp3Title", bodyKey: "home.usp3Body" },
+            { icon: "📍", titleKey: "home.usp4Title", bodyKey: "home.usp4Body" },
+          ].map((usp) => (
+            <div key={usp.titleKey} className="rounded-2xl border border-gray-100 bg-white p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+              <span className="text-2xl">{usp.icon}</span>
+              <h3 className="mt-3 text-sm font-bold">{t(usp.titleKey)}</h3>
+              <p className="mt-2 text-xs text-gray-500 leading-relaxed">{t(usp.bodyKey)}</p>
+            </div>
+          ))}
         </div>
       </div>
 
