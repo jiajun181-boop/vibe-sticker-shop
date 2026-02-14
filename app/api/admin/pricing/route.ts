@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { validatePresetConfig } from "@/lib/pricing/validate-config";
 
 // GET /api/admin/pricing — list all presets with product count
 export async function GET(request: NextRequest) {
@@ -34,6 +35,14 @@ export async function POST(request: NextRequest) {
     if (!key || !name || !model || !config) {
       return NextResponse.json(
         { error: "key, name, model, and config are required" },
+        { status: 400 }
+      );
+    }
+
+    const validation = validatePresetConfig(model, config);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: "Invalid pricing config", errors: validation.errors },
         { status: 400 }
       );
     }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { validatePresetConfig } from "@/lib/pricing/validate-config";
 
 // GET /api/admin/pricing/[id] — single preset with products
 export async function GET(
@@ -54,6 +55,20 @@ export async function PUT(
         { error: "No fields to update" },
         { status: 400 }
       );
+    }
+
+    // Validate config if it's being updated
+    if (config !== undefined) {
+      const existing = await prisma.pricingPreset.findUnique({ where: { id }, select: { model: true } });
+      if (existing) {
+        const validation = validatePresetConfig(existing.model, config);
+        if (!validation.valid) {
+          return NextResponse.json(
+            { error: "Invalid pricing config", errors: validation.errors },
+            { status: 400 }
+          );
+        }
+      }
     }
 
     const preset = await prisma.pricingPreset.update({

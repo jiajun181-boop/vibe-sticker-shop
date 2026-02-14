@@ -12,6 +12,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 import QuickViewModal from "@/components/product/QuickViewModal";
+import { getProductImage, isSvgImage } from "@/lib/product-image";
 
 const PAGE_SIZE_OPTIONS = [12, 24, 36];
 
@@ -347,13 +348,14 @@ export default function ShopClient({
   const hasMore = visible.length < filtered.length;
 
   function quickAdd(product) {
+    const image = getProductImage(product);
     addItem({
       productId: product.id,
       slug: product.slug,
       name: product.name,
       unitAmount: product.basePrice,
       quantity: 1,
-      image: product.images[0]?.url || null,
+      image,
       meta: { pricingUnit: product.pricingUnit },
       id: product.id,
       price: product.basePrice,
@@ -591,18 +593,14 @@ export default function ShopClient({
               {visible.map((product) => {
                 const href = `/shop/${product.category}/${product.slug}`;
                 const isOutOfStock = !product.isActive;
-                const rangeText = product.pricingUnit === "per_sqft"
-                  ? `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 3.5))}`
-                  : `${formatCad(product.basePrice)} - ${formatCad(Math.round(product.basePrice * 2.2))}`;
+                const imageSrc = getProductImage(product);
+                const fromCents = product.fromPrice || product.basePrice;
+                const rangeText = fromCents > 0 ? `From ${formatCad(fromCents)}` : "";
 
                 return (
                   <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:shadow-lg ${viewMode === "list" ? "flex" : ""}`}>
                     <Link href={href} className={`relative block bg-gray-100 ${viewMode === "list" ? "h-36 w-32 sm:h-44 sm:w-52 flex-shrink-0" : "aspect-[4/3]"}`}>
-                      {product.images[0]?.url ? (
-                        <Image src={product.images[0].url} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" unoptimized={product.images[0].url.endsWith(".svg")} />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">{t("shop.noImage")}</div>
-                      )}
+                      <Image src={imageSrc} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" unoptimized={isSvgImage(imageSrc)} />
                       {product.sortOrder != null && product.sortOrder <= 2 && (
                         <span className="absolute top-2 right-2 bg-amber-500 text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full z-10">
                           {t("shop.popular")}

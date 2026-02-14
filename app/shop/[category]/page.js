@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import { SUB_PRODUCT_CONFIG, getSubProductsForCategory } from "@/lib/subProductConfig";
 import { getTurnaround } from "@/lib/turnaroundConfig";
+import { computeFromPrice } from "@/lib/pricing/from-price";
 import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
 
@@ -80,9 +81,15 @@ export default async function CategoryPage({ params }) {
     },
     include: {
       images: { take: 1, orderBy: { sortOrder: "asc" } },
+      pricingPreset: true,
     },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
+
+  // Compute real "From" price for each product using the quote engine
+  for (const p of products) {
+    p.fromPrice = computeFromPrice(p);
+  }
 
   // If category has sub-groups, render sub-group card landing instead of flat product list
   const subGroups = meta?.subGroups;
@@ -94,7 +101,7 @@ export default async function CategoryPage({ params }) {
         ? products.filter((p) => subCfg.dbSlugs.includes(p.slug))
         : [];
 
-      const prices = matching.filter((p) => p.basePrice > 0).map((p) => p.basePrice);
+      const prices = matching.map((p) => p.fromPrice || p.basePrice).filter((p) => p > 0);
       const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
       const turnaround = matching.length > 0
         ? getTurnaround(matching[0])

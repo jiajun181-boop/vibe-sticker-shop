@@ -287,6 +287,22 @@ export async function POST(req: Request) {
         }
 
         const repriced = repriceSingleItem(product, item);
+
+        // Log price drift between client and server for audit
+        const clientUnit = item.unitAmount;
+        const serverUnit = repriced.unitAmount;
+        if (clientUnit > 0 && serverUnit > 0) {
+          const driftPct = Math.round(Math.abs(serverUnit - clientUnit) / clientUnit * 100);
+          if (driftPct > 5) {
+            console.warn("[Checkout] Price drift:", {
+              slug: product.slug,
+              clientUnit,
+              serverUnit,
+              drift: `${driftPct}%`,
+            });
+          }
+        }
+
         return {
           productId: String(product.id),
           slug: String(product.slug),
@@ -296,6 +312,7 @@ export async function POST(req: Request) {
           lineTotal: repriced.lineTotal,
           meta: item.meta || {},
           originalUnitAmount: item.unitAmount,
+          priceDrift: clientUnit > 0 ? Math.round(Math.abs(serverUnit - clientUnit) / clientUnit * 100) : 0,
         };
       })
     );
@@ -377,6 +394,7 @@ export async function POST(req: Request) {
             quantity: item.quantity,
             unitAmount: item.unitAmount,
             originalUnitAmount: item.originalUnitAmount,
+            priceDrift: item.priceDrift || 0,
             meta: item.meta || null,
           }))
         ),
@@ -384,6 +402,7 @@ export async function POST(req: Request) {
         shippingAmount: shippingCost.toString(),
         taxAmount: estimatedTax.toString(),
         totalAmount: estimatedTotal.toString(),
+        maxPriceDrift: Math.max(...pricedItems.map((i) => i.priceDrift || 0)).toString(),
         statusToken,
       },
     });
