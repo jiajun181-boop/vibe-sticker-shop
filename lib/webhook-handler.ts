@@ -14,6 +14,33 @@ function toNumberOrNull(v: unknown) {
   return null;
 }
 
+function parseSizeRows(meta: Record<string, unknown> | null) {
+  if (!meta) return null;
+  const raw = meta.sizeRows;
+  let rows: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      rows = JSON.parse(raw);
+    } catch {
+      rows = null;
+    }
+  }
+  if (!Array.isArray(rows)) return null;
+  const normalized = rows
+    .map((row) => {
+      if (!row || typeof row !== "object") return null;
+      const r = row as Record<string, unknown>;
+      const width = toNumberOrNull(r.width ?? r.widthIn);
+      const height = toNumberOrNull(r.height ?? r.heightIn);
+      const quantity = toNumberOrNull(r.quantity);
+      if (width == null || height == null || quantity == null) return null;
+      if (width <= 0 || height <= 0 || quantity <= 0) return null;
+      return { width, height, quantity };
+    })
+    .filter(Boolean) as Array<{ width: number; height: number; quantity: number }>;
+  return normalized.length ? normalized : null;
+}
+
 export async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session
 ) {
@@ -75,24 +102,29 @@ export async function handleCheckoutCompleted(
       const meta = item?.meta && typeof item.meta === "object" ? item.meta : null;
       const widthIn = toNumberOrNull(meta?.width);
       const heightIn = toNumberOrNull(meta?.height);
+      const sizeRows = parseSizeRows(meta);
+      const sizeMode = meta?.sizeMode === "multi" ? "multi" : "single";
 
       const fileUrl = meta?.artworkUrl || meta?.fileUrl || null;
       const fileKey = meta?.artworkKey || meta?.fileKey || null;
       const fileName = meta?.artworkName || meta?.fileName || null;
 
-      const specsJson =
-        meta?.editorType === "text"
-          ? {
-              editor: {
-                type: "text",
-                text: meta?.editorText || "",
-                font: meta?.editorFont || "",
-                color: meta?.editorColor || "",
-                widthIn,
-                heightIn,
-              },
-            }
-          : null;
+      const specs: Record<string, unknown> = {};
+      if (meta?.editorType === "text") {
+        specs.editor = {
+          type: "text",
+          text: meta?.editorText || "",
+          font: meta?.editorFont || "",
+          color: meta?.editorColor || "",
+          widthIn,
+          heightIn,
+        };
+      }
+      if (sizeRows && sizeMode === "multi") {
+        specs.sizeMode = "multi";
+        specs.sizeRows = sizeRows;
+      }
+      const specsJson = Object.keys(specs).length > 0 ? specs : null;
 
       await tx.orderItem.create({
         data: {

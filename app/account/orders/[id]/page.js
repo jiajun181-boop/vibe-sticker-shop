@@ -27,6 +27,31 @@ const PRODUCTION_COLORS = {
   canceled: "bg-red-100 text-red-600",
 };
 
+function parseSizeRows(item) {
+  const meta = item?.meta && typeof item.meta === "object" ? item.meta : null;
+  const specs = item?.specsJson && typeof item.specsJson === "object" ? item.specsJson : null;
+  const raw = specs?.sizeRows ?? meta?.sizeRows;
+  let rows = raw;
+  if (typeof raw === "string") {
+    try {
+      rows = JSON.parse(raw);
+    } catch {
+      rows = [];
+    }
+  }
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .map((row) => {
+      const width = Number(row?.width ?? row?.widthIn);
+      const height = Number(row?.height ?? row?.heightIn);
+      const quantity = Number(row?.quantity);
+      if (!Number.isFinite(width) || !Number.isFinite(height) || !Number.isFinite(quantity)) return null;
+      if (width <= 0 || height <= 0 || quantity <= 0) return null;
+      return { width, height, quantity };
+    })
+    .filter(Boolean);
+}
+
 export default function OrderDetailPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -159,9 +184,18 @@ export default function OrderDetailPage() {
                 <p className="text-sm font-medium text-gray-900">{item.productName}</p>
                 <p className="mt-0.5 text-xs text-gray-500">
                   {t("account.orders.qty")}: {item.quantity}
-                  {item.material && ` · ${item.material}`}
-                  {item.finishing && ` · ${item.finishing}`}
+                  {item.material && ` - ${item.material}`}
+                  {item.finishing && ` - ${item.finishing}`}
                 </p>
+                {parseSizeRows(item).length > 0 && (
+                  <div className="mt-1 space-y-0.5 text-[11px] text-gray-500">
+                    {parseSizeRows(item).map((row, idx) => (
+                      <p key={`${item.id}-size-${idx}`}>
+                        #{idx + 1}: {row.width}&quot; x {row.height}&quot; x {row.quantity}
+                      </p>
+                    ))}
+                  </div>
+                )}
               </div>
               <p className="text-sm font-semibold text-gray-900">{formatCad(item.totalPrice)}</p>
             </div>
@@ -226,3 +260,4 @@ export default function OrderDetailPage() {
     </div>
   );
 }
+

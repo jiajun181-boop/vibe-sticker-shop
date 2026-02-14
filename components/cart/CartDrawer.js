@@ -16,6 +16,30 @@ const HST_RATE = 0.13;
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
+function parseSizeRows(meta) {
+  if (!meta || typeof meta !== "object") return [];
+  const raw = meta.sizeRows;
+  let rows = raw;
+  if (typeof raw === "string") {
+    try {
+      rows = JSON.parse(raw);
+    } catch {
+      rows = [];
+    }
+  }
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .map((row) => {
+      const width = Number(row?.width ?? row?.widthIn);
+      const height = Number(row?.height ?? row?.heightIn);
+      const quantity = Number(row?.quantity);
+      if (!Number.isFinite(width) || !Number.isFinite(height) || !Number.isFinite(quantity)) return null;
+      if (width <= 0 || height <= 0 || quantity <= 0) return null;
+      return { width, height, quantity };
+    })
+    .filter(Boolean);
+}
+
 function normalizeMeta(meta) {
   const input = meta && typeof meta === "object" ? meta : {};
   const out = {};
@@ -260,6 +284,13 @@ export default function CartDrawer() {
                 {cart.map((item) => {
                   const unit = item.unitAmount ?? item.price ?? 0;
                   const lineTotal = unit * item.quantity;
+                  const rawMeta = item.meta && typeof item.meta === "object"
+                    ? item.meta
+                    : item.options && typeof item.options === "object"
+                      ? item.options
+                      : {};
+                  const sizeRows = parseSizeRows(rawMeta);
+                  const isMultiSize = (rawMeta.sizeMode === "multi" || rawMeta.sizeMode === '"multi"') && sizeRows.length > 0;
 
                   return (
                     <article key={item._cartId} className="rounded-2xl border border-gray-200 p-4 transition-all duration-200 hover:shadow-sm">
@@ -277,6 +308,15 @@ export default function CartDrawer() {
                             <div>
                               <p className="truncate text-sm font-semibold text-gray-900">{item.name}</p>
                               {item.slug && <p className="text-xs text-gray-500">{item.slug}</p>}
+                              {isMultiSize && (
+                                <div className="mt-1 space-y-0.5 text-[11px] text-gray-500">
+                                  {sizeRows.map((row, idx) => (
+                                    <p key={`${item._cartId}-size-${idx}`}>
+                                      #{idx + 1}: {row.width}&quot; x {row.height}&quot; x {row.quantity}
+                                    </p>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                             <button
                               type="button"
