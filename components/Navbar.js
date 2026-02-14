@@ -164,7 +164,7 @@ export default function Navbar({ catalogConfig }) {
     <header className="sticky top-0 z-[50] w-full border-b border-gray-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2.5">
-          <Image src="/logo.svg" alt="La Lunar Printing" width={32} height={32} className="h-8 w-8" priority />
+          <Image src="/logo-lunarprint.png" alt="La Lunar Printing" width={32} height={32} className="h-8 w-8" priority />
           <div className="hidden sm:block">
             <span className="block text-sm font-semibold uppercase tracking-[0.3em] text-gray-900 leading-tight">La Lunar</span>
             <span className="block text-[8px] font-medium uppercase tracking-[0.25em] text-gray-400 leading-tight">Printing Inc.</span>

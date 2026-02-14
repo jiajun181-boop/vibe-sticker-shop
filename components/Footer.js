@@ -89,7 +89,7 @@ export default function Footer({ locale = "en" }) {
         {/* Brand header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-6 border-b border-gray-800">
           <div className="flex items-center gap-3">
-            <Image src="/logo.svg" alt="La Lunar Printing" width={40} height={40} className="h-10 w-10 invert opacity-90" />
+            <Image src="/logo-lunarprint.png" alt="La Lunar Printing" width={40} height={40} className="h-10 w-10" />
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white leading-tight">La Lunar Printing</p>
               <p className="text-[11px] uppercase tracking-[0.2em] text-gray-500 mt-0.5">{t("footer.tagline")}</p>

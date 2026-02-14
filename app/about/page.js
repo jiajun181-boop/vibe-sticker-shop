@@ -59,7 +59,7 @@ export default async function AboutPage() {
         {/* Hero with logo */}
         <header className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
           <div className="flex items-start gap-5">
-            <Image src="/logo.svg" alt="La Lunar Printing" width={64} height={64} className="h-16 w-16 shrink-0" />
+            <Image src="/logo-lunarprint.png" alt="La Lunar Printing" width={64} height={64} className="h-16 w-16 shrink-0" />
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("about.badge")}</p>
               <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight">{t("about.title")}</h1>
@@ -204,7 +204,7 @@ export default async function AboutPage() {
         <section className="rounded-3xl border border-gray-200 bg-gray-900 p-8 text-white relative overflow-hidden">
           {/* Subtle brand watermark */}
           <div className="absolute top-4 right-4 opacity-[0.04]">
-            <Image src="/logo.svg" alt="" width={120} height={120} className="invert" />
+            <Image src="/logo-lunarprint.png" alt="" width={120} height={120} className="opacity-20" />
           </div>
           <h2 className="text-2xl font-semibold relative">{t("about.ctaTitle")}</h2>
           <p className="mt-3 text-sm text-gray-200 relative">{t("about.ctaBody")}</p>

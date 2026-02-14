@@ -59,14 +59,14 @@ export default function DualEntryHero({ totalCount }) {
     <div className="bg-black text-white pt-16 pb-14 px-4 sm:px-6 relative overflow-hidden">
       {/* Subtle brand watermark */}
       <div className="absolute -right-20 -top-20 opacity-[0.03] pointer-events-none">
-        <Image src="/logo.svg" alt="" width={400} height={400} className="invert" />
+        <Image src="/logo-lunarprint.png" alt="" width={400} height={400} className="opacity-30" />
       </div>
 
       <div className="max-w-7xl mx-auto relative">
         {/* Headline */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase backdrop-blur-sm mb-4">
-            <Image src="/logo.svg" alt="" width={16} height={16} className="h-4 w-4 invert opacity-80" />
+            <Image src="/logo-lunarprint.png" alt="" width={16} height={16} className="h-4 w-4" />
             {t("home.badge")}
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter">

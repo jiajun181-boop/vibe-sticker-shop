@@ -42,7 +42,7 @@ export async function generateMetadata() {
       url: SITE_URL,
       siteName: BRAND,
       type: "website",
-      images: [{ url: `${SITE_URL}/og-image.png`, width: 1200, height: 630, alt: BRAND }],
+      images: [{ url: `${SITE_URL}/logo-social.png`, width: 1200, height: 630, alt: BRAND }],
     },
     twitter: { card: "summary_large_image", title, description },
   };
@@ -201,7 +201,7 @@ export default async function HomePage() {
       <div className="max-w-7xl mx-auto px-6 my-14">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Image src="/logo.svg" alt="" width={20} height={20} className="h-5 w-5 opacity-40" />
+            <Image src="/logo-lunarprint.png" alt="" width={20} height={20} className="h-5 w-5 opacity-60" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
               {t("home.whyBadge")}
             </span>

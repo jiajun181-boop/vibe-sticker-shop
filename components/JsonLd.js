@@ -24,7 +24,7 @@ export function OrganizationSchema() {
     "@type": "Organization",
     name: "La Lunar Printing Inc.",
     url: SITE_URL,
-    logo: `${SITE_URL}/logo.svg`,
+    logo: `${SITE_URL}/logo-lunarprint.png`,
     contactPoint: {
       "@type": "ContactPoint",
       telephone: "+1-416-555-0199",
