@@ -162,25 +162,20 @@ export default async function AboutPage() {
           <p className="mt-2 text-sm text-gray-500">{t("about.gallerySubtitle")}</p>
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              "/gallery/shop-1.jpg",
-              "/gallery/shop-2.jpg",
-              "/gallery/shop-3.jpg",
-              "/gallery/shop-4.jpg",
-              "/gallery/shop-5.jpg",
-              "/gallery/shop-6.jpg",
-            ].map((src, i) => (
-              <div key={i} className="aspect-[4/3] rounded-xl bg-gray-100 overflow-hidden border border-gray-200">
-                <Image
-                  src={src}
-                  alt={`La Lunar Printing shop photo ${i + 1}`}
-                  width={400}
-                  height={300}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
+              { label: "Production Floor", icon: "\uD83C\uDFED" },
+              { label: "Wide-Format Printers", icon: "\uD83D\uDDA8\uFE0F" },
+              { label: "Cutting Equipment", icon: "\u2702\uFE0F" },
+              { label: "Quality Inspection", icon: "\uD83D\uDD0D" },
+              { label: "Finished Products", icon: "\uD83D\uDCE6" },
+              { label: "Our Team", icon: "\uD83D\uDC4B" },
+            ].map((item, i) => (
+              <div key={i} className="aspect-[4/3] rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden border border-gray-200 flex flex-col items-center justify-center gap-2">
+                <span className="text-3xl">{item.icon}</span>
+                <span className="text-xs font-medium text-gray-400">{item.label}</span>
               </div>
             ))}
           </div>
+          <p className="mt-4 text-xs text-gray-400 text-center italic">Photos coming soon</p>
         </section>
 
         {/* Certifications & Compliance */}
