@@ -8,11 +8,11 @@ const BRAND = "La Lunar Printing Inc.";
 export async function generateMetadata() {
   return {
     title: `About Us | ${BRAND}`,
-    description: "Toronto-based custom printing company since 2018. Professional-grade equipment, FSC-certified materials, and 48-hour rush capability. Serving Ontario businesses.",
+    description: "Toronto's leading printing service provider. 30+ years of experience, competitive prices, fast turnaround (1-2 days), official invoices, one-stop printing solutions. Serving North America.",
     alternates: { canonical: `${SITE_URL}/about` },
     openGraph: {
-      title: `About ${BRAND}`,
-      description: "Toronto-based custom printing company since 2018. Professional-grade equipment, FSC-certified materials, and 48-hour rush capability.",
+      title: `About ${BRAND} — Toronto's Trusted Printing Partner`,
+      description: "30+ years of professional printing experience. Competitive prices, fast turnaround, high quality. Stickers, labels, banners, signs & more. Serving North America.",
       url: `${SITE_URL}/about`,
       siteName: BRAND,
       type: "website",
@@ -32,16 +32,25 @@ export default async function AboutPage() {
   ];
 
   const equipment = [
-    { key: "about.equip1", icon: "🖨️" },
-    { key: "about.equip2", icon: "🔪" },
-    { key: "about.equip3", icon: "🎨" },
-    { key: "about.equip4", icon: "📐" },
+    { key: "about.equip1", icon: "\uD83D\uDDA8\uFE0F" },
+    { key: "about.equip2", icon: "\uD83D\uDD2A" },
+    { key: "about.equip3", icon: "\uD83C\uDFA8" },
+    { key: "about.equip4", icon: "\uD83D\uDCD0" },
   ];
 
   const certifications = [
     "about.cert1",
     "about.cert2",
     "about.cert3",
+  ];
+
+  const whyUs = [
+    { icon: "\u2728", titleKey: "about.usp1Title", bodyKey: "about.usp1Body" },
+    { icon: "\u26A1", titleKey: "about.usp2Title", bodyKey: "about.usp2Body" },
+    { icon: "\uD83C\uDFA8", titleKey: "about.usp3Title", bodyKey: "about.usp3Body" },
+    { icon: "\uD83D\uDEE0\uFE0F", titleKey: "about.usp4Title", bodyKey: "about.usp4Body" },
+    { icon: "\uD83D\uDD0D", titleKey: "about.usp5Title", bodyKey: "about.usp5Body" },
+    { icon: "\uD83D\uDCCD", titleKey: "about.usp6Title", bodyKey: "about.usp6Body" },
   ];
 
   return (
@@ -60,6 +69,29 @@ export default async function AboutPage() {
           <p className="mt-6 text-sm text-gray-600 leading-relaxed max-w-3xl">{t("about.body")}</p>
           <p className="mt-4 text-sm text-gray-600 leading-relaxed max-w-3xl">{t("about.bodyExtended")}</p>
         </header>
+
+        {/* Why Work With Us */}
+        <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
+          <h2 className="text-2xl font-semibold tracking-tight mb-6">{t("about.whyTitle")}</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {whyUs.map((usp) => (
+              <article key={usp.titleKey} className="rounded-2xl border border-gray-100 bg-gray-50 p-5">
+                <span className="text-2xl">{usp.icon}</span>
+                <h3 className="mt-3 text-sm font-bold">{t(usp.titleKey)}</h3>
+                <p className="mt-2 text-xs text-gray-500 leading-relaxed">{t(usp.bodyKey)}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* Our Commitment */}
+        <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
+          <h2 className="text-2xl font-semibold tracking-tight">{t("about.commitmentTitle")}</h2>
+          <p className="mt-4 text-sm text-gray-600 leading-relaxed max-w-3xl">{t("about.commitmentBody")}</p>
+          <p className="mt-4 text-sm font-semibold text-gray-800">
+            {"\uD83D\uDC49"} Let&apos;s create something amazing together &mdash; with La Lunar Printing Inc., your trusted printing partner in Toronto &amp; beyond.
+          </p>
+        </section>
 
         {/* Company Story / Founding */}
         <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
@@ -96,7 +128,7 @@ export default async function AboutPage() {
               {milestones.map((m) => (
                 <div key={m.year} className="relative pl-12">
                   <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-gray-900 text-white text-[8px] font-bold flex items-center justify-center">
-                    ✓
+                    {"\u2713"}
                   </div>
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">{m.year}</p>
                   <p className="mt-1 text-sm text-gray-700">{t(m.key)}</p>
@@ -124,20 +156,31 @@ export default async function AboutPage() {
           </div>
         </section>
 
-        {/* USP / Why La Lunar */}
-        <section className="grid gap-4 sm:grid-cols-2">
-          {[
-            { icon: "🎯", titleKey: "about.usp1Title", bodyKey: "about.usp1Body" },
-            { icon: "⚡", titleKey: "about.usp2Title", bodyKey: "about.usp2Body" },
-            { icon: "🛡️", titleKey: "about.usp3Title", bodyKey: "about.usp3Body" },
-            { icon: "🤝", titleKey: "about.usp4Title", bodyKey: "about.usp4Body" },
-          ].map((usp) => (
-            <article key={usp.titleKey} className="rounded-2xl border border-gray-200 bg-white p-6">
-              <span className="text-2xl">{usp.icon}</span>
-              <h2 className="mt-3 text-lg font-semibold">{t(usp.titleKey)}</h2>
-              <p className="mt-2 text-sm text-gray-600 leading-relaxed">{t(usp.bodyKey)}</p>
-            </article>
-          ))}
+        {/* Gallery */}
+        <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
+          <h2 className="text-2xl font-semibold tracking-tight">{t("about.galleryTitle")}</h2>
+          <p className="mt-2 text-sm text-gray-500">{t("about.gallerySubtitle")}</p>
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[
+              "/gallery/shop-1.jpg",
+              "/gallery/shop-2.jpg",
+              "/gallery/shop-3.jpg",
+              "/gallery/shop-4.jpg",
+              "/gallery/shop-5.jpg",
+              "/gallery/shop-6.jpg",
+            ].map((src, i) => (
+              <div key={i} className="aspect-[4/3] rounded-xl bg-gray-100 overflow-hidden border border-gray-200">
+                <Image
+                  src={src}
+                  alt={`La Lunar Printing shop photo ${i + 1}`}
+                  width={400}
+                  height={300}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* Certifications & Compliance */}
