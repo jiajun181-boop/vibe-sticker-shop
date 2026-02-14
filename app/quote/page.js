@@ -1,4 +1,5 @@
 import { getServerT } from "@/lib/i18n/server";
+import { getCatalogConfig } from "@/lib/catalogConfig";
 import QuoteFormClient from "./QuoteFormClient";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
@@ -12,7 +13,7 @@ export async function generateMetadata() {
 }
 
 export default async function QuotePage({ searchParams }) {
-  const t = await getServerT();
+  const [t, config] = await Promise.all([getServerT(), getCatalogConfig()]);
   const sku = (await searchParams)?.sku || "";
 
   return (
@@ -26,7 +27,7 @@ export default async function QuotePage({ searchParams }) {
           <p className="mt-3 text-sm text-gray-500">{t("quote.pageSubtitle")}</p>
         </header>
 
-        <QuoteFormClient preselectedProduct={sku} />
+        <QuoteFormClient preselectedProduct={sku} categoryMeta={config.categoryMeta} />
       </div>
     </main>
   );

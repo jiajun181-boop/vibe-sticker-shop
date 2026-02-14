@@ -28,6 +28,7 @@ const StampEditor = dynamic(() => import("@/components/product/StampEditor"), {
 const HST_RATE = 0.13;
 const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
 const INCH_TO_CM = 2.54;
+const createSizeRowId = () => `sz_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -158,7 +159,7 @@ function parseQuantityRange(optionsConfig) {
   return { min, max, step: Number.isFinite(step) && step > 0 ? step : 1 };
 }
 
-export default function ProductClient({ product, relatedProducts, embedded = false }) {
+export default function ProductClient({ product, relatedProducts, embedded = false, catalogConfig }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
   const { t } = useTranslation();
@@ -264,6 +265,15 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   const [unit, setUnit] = useState("in");
   const [widthIn, setWidthIn] = useState(product.minWidthIn || 3);
   const [heightIn, setHeightIn] = useState(product.minHeightIn || 3);
+  const [useMultiSize, setUseMultiSize] = useState(false);
+  const [sizeRows, setSizeRows] = useState(() => [
+    {
+      id: createSizeRowId(),
+      widthIn: product.minWidthIn || 3,
+      heightIn: product.minHeightIn || 3,
+      quantity: quantityRange?.min || 1,
+    },
+  ]);
   const [uploadedArtwork, setUploadedArtwork] = useState(null); // { url, key, name, mime, size }
   const [added, setAdded] = useState(false);
 
@@ -493,14 +503,48 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
   const widthDisplay = unit === "in" ? widthIn : Number((widthIn * INCH_TO_CM).toFixed(2));
   const heightDisplay = unit === "in" ? heightIn : Number((heightIn * INCH_TO_CM).toFixed(2));
+  const multiSizeEnabled = isPerSqft && !isTextEditor;
+  const totalMultiQty = useMemo(
+    () =>
+      sizeRows.reduce((sum, row) => {
+        const q = Number(row.quantity);
+        return sum + (Number.isFinite(q) && q > 0 ? q : 0);
+      }, 0),
+    [sizeRows]
+  );
+  const multiSqftTotal = useMemo(
+    () =>
+      sizeRows.reduce((sum, row) => {
+        const w = Number(row.widthIn);
+        const h = Number(row.heightIn);
+        const q = Number(row.quantity);
+        if (!Number.isFinite(w) || !Number.isFinite(h) || !Number.isFinite(q) || w <= 0 || h <= 0 || q <= 0) return sum;
+        return sum + (w * h) / 144 * q;
+      }, 0),
+    [sizeRows]
+  );
 
   const sizeValidation = useMemo(() => {
     if (!dimensionsEnabled) return { valid: true, errors: [] };
+    if (multiSizeEnabled && useMultiSize) {
+      const errors = [];
+      sizeRows.forEach((row, idx) => {
+        const check = validateDimensions(Number(row.widthIn), Number(row.heightIn), material, product);
+        if (!check.valid) {
+          check.errors.forEach((err) => errors.push(`Size #${idx + 1}: ${err}`));
+        }
+        const q = Number(row.quantity);
+        if (!Number.isFinite(q) || q <= 0) {
+          errors.push(`Size #${idx + 1}: quantity must be greater than 0`);
+        }
+      });
+      return { valid: errors.length === 0, errors };
+    }
     return validateDimensions(widthIn, heightIn, material, product);
-  }, [widthIn, heightIn, material, product, dimensionsEnabled]);
+  }, [widthIn, heightIn, material, product, dimensionsEnabled, multiSizeEnabled, useMultiSize, sizeRows]);
 
   // Debounced /api/quote fetch (300ms)
-  const fetchQuote = useCallback(
+  const requestQuote = useCallback(
     async (slug, qty, w, h, mat, sizeLabel, addonIds, finishingIds, namesCount) => {
       const body = { slug, quantity: qty };
       if (dimensionsEnabled) {
@@ -513,29 +557,22 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       if (Array.isArray(finishingIds) && finishingIds.length > 0) body.finishings = finishingIds;
       if (namesCount && namesCount > 1) body.names = namesCount;
 
-      try {
-        setQuoteLoading(true);
-        const res = await fetch("/api/quote", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) return; // silently fail — sizeValidation shows dimension errors
-        const data = await res.json();
-        setQuote(data);
-      } catch {
-        // network error — keep previous quote
-      } finally {
-        setQuoteLoading(false);
-      }
+      const res = await fetch("/api/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) return null;
+      return res.json();
     },
     [dimensionsEnabled]
   );
 
   useEffect(() => {
     if (!sizeValidation.valid) return;
+    let cancelled = false;
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
+    debounceRef.current = setTimeout(async () => {
       const sizeLabel = isBusinessCard
         ? bcSizeLabel
         : isTextEditor && editorMode === "box"
@@ -543,10 +580,92 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           : sizeOptions.length > 0
             ? selectedSizeLabel
             : null;
-      fetchQuote(product.slug, quantity, widthIn, heightIn, material, sizeLabel, selectedAddons, selectedFinishings, showMultiName && names > 1 ? names : undefined);
+
+      try {
+        setQuoteLoading(true);
+        if (multiSizeEnabled && useMultiSize) {
+          const activeRows = sizeRows.filter((row) => Number(row.quantity) > 0);
+          if (activeRows.length === 0) {
+            if (!cancelled) setQuote(null);
+            return;
+          }
+          const selectedAddonDefs = visibleAddons.filter((addon) => selectedAddons.includes(addon.id));
+          const perUnitAddonIds = selectedAddonDefs.filter((addon) => addon.type !== "flat").map((addon) => addon.id);
+          const flatAddonIds = selectedAddonDefs.filter((addon) => addon.type === "flat").map((addon) => addon.id);
+          const selectedFinishingDefs = finishings.filter((finishing) => selectedFinishings.includes(finishing.id));
+          const perUnitFinishingIds = selectedFinishingDefs.filter((finishing) => finishing.type !== "flat").map((finishing) => finishing.id);
+          const flatFinishingIds = selectedFinishingDefs.filter((finishing) => finishing.type === "flat").map((finishing) => finishing.id);
+          const rowQuotes = await Promise.all(
+            activeRows.map((row, idx) =>
+              requestQuote(
+                product.slug,
+                Number(row.quantity),
+                Number(row.widthIn),
+                Number(row.heightIn),
+                material,
+                sizeLabel,
+                idx === 0 ? [...perUnitAddonIds, ...flatAddonIds] : perUnitAddonIds,
+                idx === 0 ? [...perUnitFinishingIds, ...flatFinishingIds] : perUnitFinishingIds,
+                showMultiName && names > 1 ? names : undefined
+              )
+            )
+          );
+          const valid = rowQuotes.filter((r) => r && typeof r.totalCents === "number");
+          if (valid.length === 0) {
+            if (!cancelled) setQuote(null);
+            return;
+          }
+          const totalCents = valid.reduce((sum, r) => sum + Number(r.totalCents || 0), 0);
+          const totalQty = activeRows.reduce((sum, row) => sum + Number(row.quantity || 0), 0);
+          const sqftTotal = activeRows.reduce(
+            (sum, row) => sum + (Number(row.widthIn || 0) * Number(row.heightIn || 0)) / 144 * Number(row.quantity || 0),
+            0
+          );
+          const breakdown = activeRows.map((row, idx) => ({
+            label: `Size #${idx + 1} (${Number(row.widthIn).toFixed(2)}" x ${Number(row.heightIn).toFixed(2)}") x ${Number(row.quantity)}`,
+            amount: Number(valid[idx]?.totalCents || 0),
+          }));
+          if (!cancelled) {
+            setQuote({
+              totalCents,
+              currency: "CAD",
+              unitCents: totalQty > 0 ? Math.round(totalCents / totalQty) : totalCents,
+              breakdown,
+              meta: {
+                model: "MULTI_SIZE",
+                rows: activeRows,
+                totalQty,
+                sqftTotal,
+                sqftPerUnit: totalQty > 0 ? sqftTotal / totalQty : null,
+              },
+            });
+          }
+          return;
+        }
+
+        const data = await requestQuote(
+          product.slug,
+          quantity,
+          widthIn,
+          heightIn,
+          material,
+          sizeLabel,
+          selectedAddons,
+          selectedFinishings,
+          showMultiName && names > 1 ? names : undefined
+        );
+        if (!cancelled && data) setQuote(data);
+      } catch {
+        // Keep previous quote on network failure.
+      } finally {
+        if (!cancelled) setQuoteLoading(false);
+      }
     }, 300);
-    return () => clearTimeout(debounceRef.current);
-  }, [product.slug, quantity, widthIn, heightIn, material, selectedAddons, selectedFinishings, editorSizeLabel, selectedSizeLabel, sizeOptions.length, isTextEditor, editorMode, sizeValidation.valid, fetchQuote, isBusinessCard, bcSizeLabel, showMultiName, names]);
+    return () => {
+      cancelled = true;
+      clearTimeout(debounceRef.current);
+    };
+  }, [product.slug, quantity, widthIn, heightIn, material, selectedAddons, selectedFinishings, visibleAddons, finishings, editorSizeLabel, selectedSizeLabel, sizeOptions.length, isTextEditor, editorMode, sizeValidation.valid, requestQuote, isBusinessCard, bcSizeLabel, showMultiName, names, multiSizeEnabled, useMultiSize, sizeRows]);
 
   // Scene presets for banner families (material + common size + addon defaults).
   useEffect(() => {
@@ -609,7 +728,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
   // Derive display prices from quote (fallback to basePrice estimate)
   const priceData = useMemo(() => {
-    const qty = Number(quantity) || 1;
+    const qty = multiSizeEnabled && useMultiSize ? totalMultiQty || 1 : Number(quantity) || 1;
     if (quote) {
       const subtotal = quote.totalCents;
       const tax = Math.round(subtotal * HST_RATE);
@@ -625,6 +744,12 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
     // Fallback while loading
     const baseUnitCents = product.basePrice;
+    if (dimensionsEnabled && multiSizeEnabled && useMultiSize) {
+      const subtotal = Math.max(1, Math.round(baseUnitCents * multiSqftTotal));
+      const tax = Math.round(subtotal * HST_RATE);
+      const unitAmount = Math.round(subtotal / qty);
+      return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: qty > 0 ? multiSqftTotal / qty : null, breakdown: null };
+    }
     if (dimensionsEnabled) {
       const sqft = (Number(widthIn) * Number(heightIn)) / 144;
       const unitAmount = Math.max(1, Math.round(baseUnitCents * sqft));
@@ -636,7 +761,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const subtotal = unitAmount * qty;
     const tax = Math.round(subtotal * HST_RATE);
     return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, breakdown: null };
-  }, [quote, quantity, product.basePrice, widthIn, heightIn, isPerSqft]);
+  }, [quote, quantity, product.basePrice, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal]);
 
   // Tier rows — quick client estimates for the tier table
   const estimateTierRows = useMemo(
@@ -711,6 +836,40 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     if (type === "h") setHeightIn(Number(inValue.toFixed(2)));
   }
 
+  function setRowValue(rowId, field, value) {
+    setSizeRows((prev) =>
+      prev.map((row) => {
+        if (row.id !== rowId) return row;
+        if (field === "quantity") {
+          const q = Math.max(1, Number(value) || 1);
+          return { ...row, quantity: q };
+        }
+        const n = Math.max(0.5, Number(value) || 0.5);
+        const inValue = unit === "in" ? n : n / INCH_TO_CM;
+        return { ...row, [field]: Number(inValue.toFixed(2)) };
+      })
+    );
+  }
+
+  function addSizeRow() {
+    setSizeRows((prev) => {
+      const last = prev[prev.length - 1] || { widthIn, heightIn, quantity: 1 };
+      return [
+        ...prev,
+        {
+          id: createSizeRowId(),
+          widthIn: Number(last.widthIn) || 3,
+          heightIn: Number(last.heightIn) || 3,
+          quantity: Number(last.quantity) || 1,
+        },
+      ];
+    });
+  }
+
+  function removeSizeRow(rowId) {
+    setSizeRows((prev) => (prev.length <= 1 ? prev : prev.filter((row) => row.id !== rowId)));
+  }
+
   function setQuantityValue(next) {
     const choices = activeQuantityChoices;
     if (Array.isArray(choices) && choices.length > 0) {
@@ -751,6 +910,15 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
   function handleAddToCart() {
     if (!canAddToCart) return;
+    const effectiveQty = multiSizeEnabled && useMultiSize ? totalMultiQty : Number(quantity);
+    const sizeRowsMeta = multiSizeEnabled && useMultiSize
+      ? sizeRows.map((row) => ({
+          width: Number(row.widthIn),
+          height: Number(row.heightIn),
+          quantity: Number(row.quantity),
+          sqft: Number(((Number(row.widthIn) * Number(row.heightIn)) / 144).toFixed(4)),
+        }))
+      : null;
 
     const artworkMeta = uploadedArtwork
       ? {
@@ -815,11 +983,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       slug: product.slug,
       name: product.name,
       unitAmount: priceData.unitAmount,
-      quantity: Number(quantity),
+      quantity: effectiveQty,
       image: imageList[0]?.url || null,
       meta: {
         width: dimensionsEnabled ? widthIn : null,
         height: dimensionsEnabled ? heightIn : null,
+        sizeMode: sizeRowsMeta ? "multi" : "single",
+        sizeRows: sizeRowsMeta,
         material,
         sizeLabel: effectiveSizeLabel,
         sceneId: selectedScene?.id || null,
@@ -837,6 +1007,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       options: {
         width: dimensionsEnabled ? widthIn : null,
         height: dimensionsEnabled ? heightIn : null,
+        sizeMode: sizeRowsMeta ? "multi" : "single",
+        sizeRows: sizeRowsMeta,
         material,
         sizeLabel: effectiveSizeLabel,
         sceneId: selectedScene?.id || null,
@@ -1015,7 +1187,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 {/* Quantity — always visible */}
                 <div className="mt-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.quantity")}</p>
-                  {activeQuantityChoices.length > 0 ? (
+                  {multiSizeEnabled && useMultiSize ? (
+                    <p className="mt-2 text-sm text-gray-700">
+                      {totalMultiQty} pcs across {sizeRows.length} sizes
+                    </p>
+                  ) : activeQuantityChoices.length > 0 ? (
                     <div className="mt-2 flex items-center gap-2">
                       <button
                         onClick={() => {
@@ -1303,6 +1479,29 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
               {isPerSqft && !isTextEditor && (
                 <div className="mt-5 space-y-3">
+                  <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">More Size</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!useMultiSize) {
+                          setSizeRows([
+                            {
+                              id: createSizeRowId(),
+                              widthIn,
+                              heightIn,
+                              quantity: Number(quantity) || 1,
+                            },
+                          ]);
+                        }
+                        setUseMultiSize((prev) => !prev);
+                      }}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${useMultiSize ? "bg-gray-900 text-white" : "border border-gray-300 bg-white text-gray-700"}`}
+                    >
+                      {useMultiSize ? "On" : "Off"}
+                    </button>
+                  </div>
+
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.sizeUnit")}</p>
                     <div className="rounded-full border border-gray-300 p-1 text-xs">
@@ -1311,27 +1510,92 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="text-xs text-gray-600">
-                      {t("product.width", { unit })}
-                      <input
-                        type="number"
-                        value={widthDisplay}
-                        onChange={(e) => setSizeValue("w", e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                      />
-                    </label>
-                    <label className="text-xs text-gray-600">
-                      {t("product.height", { unit })}
-                      <input
-                        type="number"
-                        value={heightDisplay}
-                        onChange={(e) => setSizeValue("h", e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                      />
-                    </label>
-                  </div>
-                  <p className="text-xs text-gray-500">{t("product.areaPerUnit", { sqft: priceData.sqft?.toFixed(3) })}</p>
+                  {!useMultiSize ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="text-xs text-gray-600">
+                          {t("product.width", { unit })}
+                          <input
+                            type="number"
+                            value={widthDisplay}
+                            onChange={(e) => setSizeValue("w", e.target.value)}
+                            className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                          />
+                        </label>
+                        <label className="text-xs text-gray-600">
+                          {t("product.height", { unit })}
+                          <input
+                            type="number"
+                            value={heightDisplay}
+                            onChange={(e) => setSizeValue("h", e.target.value)}
+                            className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                          />
+                        </label>
+                      </div>
+                      <p className="text-xs text-gray-500">{t("product.areaPerUnit", { sqft: priceData.sqft?.toFixed(3) })}</p>
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      {sizeRows.map((row, idx) => {
+                        const widthDisplayRow = unit === "in" ? Number(row.widthIn) : Number((Number(row.widthIn) * INCH_TO_CM).toFixed(2));
+                        const heightDisplayRow = unit === "in" ? Number(row.heightIn) : Number((Number(row.heightIn) * INCH_TO_CM).toFixed(2));
+                        return (
+                          <div key={row.id} className="rounded-xl border border-gray-200 p-3">
+                            <p className="text-xs font-semibold text-gray-500">Size #{idx + 1}</p>
+                            <div className="mt-2 grid grid-cols-3 gap-2">
+                              <label className="text-xs text-gray-600">
+                                W
+                                <input
+                                  type="number"
+                                  value={widthDisplayRow}
+                                  onChange={(e) => setRowValue(row.id, "widthIn", e.target.value)}
+                                  className="mt-1 w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                                />
+                              </label>
+                              <label className="text-xs text-gray-600">
+                                H
+                                <input
+                                  type="number"
+                                  value={heightDisplayRow}
+                                  onChange={(e) => setRowValue(row.id, "heightIn", e.target.value)}
+                                  className="mt-1 w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                                />
+                              </label>
+                              <label className="text-xs text-gray-600">
+                                Qty
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={row.quantity}
+                                  onChange={(e) => setRowValue(row.id, "quantity", e.target.value)}
+                                  className="mt-1 w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                                />
+                              </label>
+                            </div>
+                            {sizeRows.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeSizeRow(row.id)}
+                                className="mt-2 text-xs font-semibold text-red-600 hover:text-red-700"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        onClick={addSizeRow}
+                        className="w-full rounded-xl border border-dashed border-gray-400 px-3 py-2 text-sm font-semibold text-gray-700 hover:border-gray-600"
+                      >
+                        + Add Another Size
+                      </button>
+                      <p className="text-xs text-gray-500">
+                        Total area: {multiSqftTotal.toFixed(3)} sq.ft | Total qty: {totalMultiQty}
+                      </p>
+                    </div>
+                  )}
                   {!sizeValidation.valid && (
                     <div className="mt-1 space-y-1">
                       {sizeValidation.errors.map((err, i) => (
@@ -1870,7 +2134,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         </section>
         )}
 
-        {!embedded && <RelatedLinks product={product} />}
+        {!embedded && <RelatedLinks product={product} catalogConfig={catalogConfig} />}
 
         {!embedded && <RecentlyViewed excludeSlug={product.slug} />}
       </div>
@@ -1903,3 +2167,4 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     </Wrapper>
   );
 }
+

@@ -16,7 +16,8 @@ const linkKeys = [
   { key: "nav.contact", href: "/contact" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ catalogConfig }) {
+  const { departments, departmentMeta, categoryMeta } = catalogConfig || {};
   const storeCount = useCartStore((state) => state.getCartCount());
   const openCart = useCartStore((state) => state.openCart);
   const { t, locale, setLocale, hydrated } = useTranslation();
@@ -100,7 +101,7 @@ export default function Navbar() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      window.location.href = `/shop?q=${encodeURIComponent(searchQuery.trim())}`;
+      router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
       clearSearch();
     }
   };
@@ -115,7 +116,7 @@ export default function Navbar() {
         className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden"
       >
         {searchLoading ? (
-          <div className="px-4 py-3 text-sm text-gray-400">Searching...</div>
+          <div className="px-4 py-3 text-sm text-gray-400">{t("search.loading")}</div>
         ) : (
           <>
             {searchResults.map((item) => (
@@ -151,7 +152,7 @@ export default function Navbar() {
               onClick={clearSearch}
               className="block border-t border-gray-100 px-4 py-2.5 text-center text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
             >
-              View all results
+              {t("search.viewAll")}
             </Link>
           </>
         )}
@@ -181,48 +182,70 @@ export default function Navbar() {
             <div className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
               <div className="w-[640px] rounded-xl border border-gray-200 bg-white p-5 shadow-xl">
                 <div className="grid grid-cols-4 gap-5">
-                  {/* Column 1: Print & Marketing */}
+                  {(departments || []).map((dept) => {
+                    const dMeta = departmentMeta?.[dept.key];
+                    return (
+                      <div key={dept.key}>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
+                          {dMeta?.title || dept.key}
+                        </p>
+                        <div className="mt-2 space-y-1">
+                          {dept.categories.map((catSlug) => {
+                            const cMeta = categoryMeta?.[catSlug];
+                            if (cMeta?.subGroups) {
+                              return (
+                                <div key={catSlug}>
+                                  {cMeta.subGroups.slice(0, 5).map((sg) => (
+                                    <Link
+                                      key={sg.slug}
+                                      href={sg.href}
+                                      className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                                    >
+                                      {sg.title}
+                                    </Link>
+                                  ))}
+                                  <Link
+                                    href={`/shop/${catSlug}`}
+                                    className="block rounded-lg px-2 py-1.5 text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                                  >
+                                    {t("nav.allIn", { category: cMeta.title })} &rarr;
+                                  </Link>
+                                </div>
+                              );
+                            }
+                            return (
+                              <Link
+                                key={catSlug}
+                                href={`/shop/${catSlug}`}
+                                className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                              >
+                                {cMeta?.title || catSlug}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* More column */}
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Print & Marketing</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
+                      {t("nav.more")}
+                    </p>
                     <div className="mt-2 space-y-1">
-                      <Link href="/shop/marketing-prints/business-cards" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Business Cards</Link>
-                      <Link href="/shop/marketing-prints/flyers" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Flyers</Link>
-                      <Link href="/shop/marketing-prints/postcards" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Postcards</Link>
-                      <Link href="/shop/marketing-prints/brochures" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Brochures</Link>
-                      <Link href="/shop/marketing-prints/stamps" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Stamps</Link>
-                      <Link href="/shop/marketing-prints" className="block rounded-lg px-2 py-1.5 text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900">All Prints &rarr;</Link>
-                    </div>
-                  </div>
-                  {/* Column 2: Signs & Displays */}
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Signs & Displays</p>
-                    <div className="mt-2 space-y-1">
-                      <Link href="/shop/window-glass-films" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Window & Glass Films</Link>
-                      <Link href="/shop/banners-displays" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Banners & Flags</Link>
-                      <Link href="/shop/display-stands" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Stands & Frames</Link>
-                      <Link href="/shop/large-format-graphics" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Wall & Floor Graphics</Link>
-                      <Link href="/shop/vehicle-branding-advertising" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Vehicle Branding</Link>
-                      <Link href="/shop/fleet-compliance-id" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Fleet & DOT Numbers</Link>
-                    </div>
-                  </div>
-                  {/* Column 3: Stickers & Labels */}
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Stickers & Labels</p>
-                    <div className="mt-2 space-y-1">
-                      <Link href="/shop/stickers-labels/die-cut-stickers" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Die-Cut Stickers</Link>
-                      <Link href="/shop/stickers-labels/kiss-cut-singles" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Kiss-Cut Singles</Link>
-                      <Link href="/shop/stickers-labels/sticker-pages" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Sheets & Pages</Link>
-                      <Link href="/shop/stickers-labels/sticker-rolls" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Sticker Rolls</Link>
-                      <Link href="/shop/stickers-labels" className="block rounded-lg px-2 py-1.5 text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900">All Stickers &rarr;</Link>
-                    </div>
-                  </div>
-                  {/* Column 4: More */}
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">More</p>
-                    <div className="mt-2 space-y-1">
-                      <Link href="/shop/safety-warning-decals" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Safety Decals</Link>
-                      <Link href="/shop/facility-asset-labels" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Industrial Labels</Link>
-                      <Link href="/shop/packaging" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Packaging Inserts</Link>
+                      <Link href="/quote" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
+                        {t("nav.getQuote")}
+                      </Link>
+                      <Link href="/contact" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
+                        {t("nav.contact")}
+                      </Link>
+                      <Link href="/faq" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
+                        {t("nav.faq")}
+                      </Link>
+                      <Link href="/about" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
+                        {t("nav.about")}
+                      </Link>
                     </div>
                   </div>
                 </div>

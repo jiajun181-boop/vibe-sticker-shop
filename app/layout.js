@@ -5,6 +5,7 @@ import CartDrawer from "@/components/cart/CartDrawer";
 import { Toaster } from "@/components/Toast";
 import PromoBar from "@/components/home/PromoBar";
 import { getServerLocale } from "@/lib/i18n/server";
+import { getCatalogConfig } from "@/lib/catalogConfig";
 import Analytics from "@/components/Analytics";
 import SkipLink from "@/components/SkipLink";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
@@ -49,7 +50,10 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
-  const locale = await getServerLocale();
+  const [locale, catalogConfig] = await Promise.all([
+    getServerLocale(),
+    getCatalogConfig(),
+  ]);
   return (
     <html lang={locale}>
       <head>
@@ -58,9 +62,9 @@ export default async function RootLayout({ children }) {
       <body className="antialiased">
         <SkipLink />
         <PromoBar />
-        <Navbar />
+        <Navbar catalogConfig={catalogConfig} />
         <div id="main-content" className="min-h-screen">{children}</div>
-        <MobileBottomNav />
+        <MobileBottomNav catalogConfig={catalogConfig} />
         <Footer locale={locale} />
         <CartDrawer />
         <Toaster />

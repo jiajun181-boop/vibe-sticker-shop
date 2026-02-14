@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { INDUSTRY_LABELS } from "@/lib/industryTags";
 import { USE_CASES, USE_CASE_PRODUCTS } from "@/lib/useCases";
-import { CATALOG_DEFAULTS } from "@/lib/catalogConfig";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 /**
  * Internal cross-link blocks for product pages.
  * Shows relevant industry pages, use-case pages, and sibling categories.
  */
-export default function RelatedLinks({ product }) {
+export default function RelatedLinks({ product, catalogConfig }) {
+  const { departments = [], departmentMeta = {}, categoryMeta = {} } = catalogConfig || {};
   const { t } = useTranslation();
   const tags = product.tags || [];
   const slug = product.slug;
@@ -27,12 +27,12 @@ export default function RelatedLinks({ product }) {
   );
 
   // 3. Sibling categories in the same department
-  const dept = CATALOG_DEFAULTS.departments.find((d) =>
+  const dept = departments.find((d) =>
     d.categories.includes(category)
   );
   const siblingCategories = dept
     ? dept.categories
-        .filter((c) => c !== category && CATALOG_DEFAULTS.categoryMeta[c])
+        .filter((c) => c !== category && categoryMeta[c])
         .slice(0, 4)
     : [];
 
@@ -99,11 +99,11 @@ export default function RelatedLinks({ product }) {
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-gray-500">
               {t("product.alsoIn") || "Also In"}
               {" "}
-              {CATALOG_DEFAULTS.departmentMeta[dept?.key]?.title || ""}
+              {departmentMeta[dept?.key]?.title || ""}
             </h3>
             <div className="flex flex-wrap gap-2">
               {siblingCategories.map((cat) => {
-                const meta = CATALOG_DEFAULTS.categoryMeta[cat];
+                const meta = categoryMeta[cat];
                 return (
                   <Link
                     key={cat}

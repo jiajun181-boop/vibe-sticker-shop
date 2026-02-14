@@ -112,29 +112,51 @@ function ParentCard({ catSlug, meta, count, t }) {
   );
 }
 
+function renderCategoryCards(categorySlugs, categoryMeta, categoryCounts, categoryPreviews, t) {
+  return categorySlugs.map((catSlug) => {
+    const meta = categoryMeta?.[catSlug];
+    const count = categoryCounts?.[catSlug] || 0;
+    const previews = categoryPreviews?.[catSlug] || [];
+
+    if (meta?.subGroups) {
+      return <ParentCard key={catSlug} catSlug={catSlug} meta={meta} count={count} t={t} />;
+    }
+
+    return <SmallCard key={catSlug} catSlug={catSlug} meta={meta} count={count} previews={previews} t={t} />;
+  });
+}
+
 function CategoryGrid({ departments, departmentMeta, categoryMeta, categoryCounts, categoryPreviews, t }) {
   return (
     <div className="space-y-10">
       {departments.map((dept) => {
         const deptMeta = departmentMeta?.[dept.key];
+        const subSections = deptMeta?.subSections;
+
         return (
           <section key={dept.key}>
             <h2 className="text-lg font-semibold tracking-tight text-gray-900">
               {deptMeta?.title || dept.key}
             </h2>
-            <div className="mt-4 grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {dept.categories.map((catSlug) => {
-                const meta = categoryMeta?.[catSlug];
-                const count = categoryCounts?.[catSlug] || 0;
-                const previews = categoryPreviews?.[catSlug] || [];
 
-                if (meta?.subGroups) {
-                  return <ParentCard key={catSlug} catSlug={catSlug} meta={meta} count={count} t={t} />;
-                }
-
-                return <SmallCard key={catSlug} catSlug={catSlug} meta={meta} count={count} previews={previews} t={t} />;
-              })}
-            </div>
+            {subSections ? (
+              <div className="mt-4 space-y-6">
+                {subSections.map((ss) => (
+                  <div key={ss.label}>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 mb-3">
+                      {ss.label}
+                    </p>
+                    <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                      {renderCategoryCards(ss.categories, categoryMeta, categoryCounts, categoryPreviews, t)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                {renderCategoryCards(dept.categories, categoryMeta, categoryCounts, categoryPreviews, t)}
+              </div>
+            )}
           </section>
         );
       })}
@@ -171,13 +193,22 @@ export default function ShopClient({
   );
   const [pageSize, setPageSize] = useState(24);
   const [page, setPage] = useState(1);
-  const [browseAll, setBrowseAll] = useState(initialView === "all");
+  const [browseAll, setBrowseAll] = useState(initialView !== "category");
   const [categoryFilter, setCategoryFilter] = useState("");
   const isInternalUrlUpdate = useRef(false);
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     if (window.innerWidth < 1024 && viewMode === "grid") setViewMode("list");
   }, []);
+
+  // Auto-focus search input when ?focus=search is present (e.g. mobile Search tab)
+  useEffect(() => {
+    if (searchParams?.get("focus") === "search" && searchInputRef.current) {
+      searchInputRef.current.focus();
+      searchInputRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [searchParams]);
 
   // Sync state from URL on external navigation
   useEffect(() => {
@@ -189,7 +220,7 @@ export default function ShopClient({
     setTag(searchParams?.get("tag") || "");
     setUseCase(searchParams?.get("useCase") || "");
     const v = searchParams?.get("view");
-    if (v === "all") setBrowseAll(true);
+    setBrowseAll(v !== "category");
     setPage(1);
   }, [searchParams]);
 
@@ -243,7 +274,7 @@ export default function ShopClient({
     if (nextUseCase && nextUseCase.trim()) sp.set("useCase", nextUseCase.trim());
     else sp.delete("useCase");
 
-    if (nextBrowseAll && !nextQuery && !nextTag && !nextUseCase) sp.set("view", "all");
+    if (!nextBrowseAll && !nextQuery && !nextTag && !nextUseCase) sp.set("view", "category");
     else sp.delete("view");
 
     const qs = sp.toString();
@@ -305,11 +336,11 @@ export default function ShopClient({
     setUseCase("");
     setCategoryFilter("");
     setPage(1);
+    isInternalUrlUpdate.current = true;
     if (browseAll) {
-      syncUrl({ query: "", tag: "", useCase: "", browseAll: true });
+      router.push("/shop", { scroll: false });
     } else {
-      setBrowseAll(false);
-      router.replace("/shop", { scroll: false });
+      router.push("/shop?view=category", { scroll: false });
     }
   }
 
@@ -320,13 +351,15 @@ export default function ShopClient({
     setTag("");
     setUseCase("");
     setPage(1);
-    router.replace("/shop", { scroll: false });
+    isInternalUrlUpdate.current = true;
+    router.push("/shop?view=category", { scroll: false });
   }
 
   function switchToAllProducts() {
     setBrowseAll(true);
     setPage(1);
-    syncUrl({ browseAll: true });
+    isInternalUrlUpdate.current = true;
+    router.push("/shop", { scroll: false });
   }
 
   return (
@@ -339,7 +372,7 @@ export default function ShopClient({
             <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("shop.header")}</p>
             <h1 className="mt-2 text-4xl font-semibold tracking-tight">{t("shop.title")}</h1>
             <p className="mt-1 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
-              Essential to Your Brand &mdash; Premium Custom Printing
+              {t("shop.tagline")}
             </p>
           </div>
           {/* Compact search */}
@@ -348,6 +381,7 @@ export default function ShopClient({
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
             <input
+              ref={searchInputRef}
               value={query}
               onChange={(e) => {
                 const nextQ = e.target.value;
@@ -361,20 +395,20 @@ export default function ShopClient({
           </div>
         </header>
 
-        {/* View toggle tabs: By Category | All Products */}
+        {/* View toggle tabs: All Products | By Category */}
         <div className="mb-6 flex items-center gap-4">
           <div className="inline-flex rounded-full border border-gray-300 p-0.5 text-xs font-semibold">
-            <button
-              onClick={switchToCategories}
-              className={`rounded-full px-4 py-1.5 transition-colors ${!showProducts ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
-            >
-              {t("shop.byCategory")}
-            </button>
             <button
               onClick={switchToAllProducts}
               className={`rounded-full px-4 py-1.5 transition-colors ${showProducts ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
             >
               {t("shop.browseAll")} ({products.length})
+            </button>
+            <button
+              onClick={switchToCategories}
+              className={`rounded-full px-4 py-1.5 transition-colors ${!showProducts ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
+            >
+              {t("shop.byCategory")}
             </button>
           </div>
         </div>

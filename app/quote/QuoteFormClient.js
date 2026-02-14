@@ -2,14 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { CATALOG_DEFAULTS } from "@/lib/catalogConfig";
 import { showErrorToast } from "@/components/Toast";
 
 const STEPS = 4;
 
 const QUANTITY_PRESETS = [50, 100, 250, 500, 1000];
 
-export default function QuoteFormClient({ preselectedProduct }) {
+export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -120,7 +119,7 @@ export default function QuoteFormClient({ preselectedProduct }) {
 
       <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-8">
         {/* Step 1: Product selection */}
-        {step === 1 && <Step1 form={form} update={update} t={t} />}
+        {step === 1 && <Step1 form={form} update={update} t={t} categoryMeta={categoryMeta} />}
 
         {/* Step 2: Specifications */}
         {step === 2 && <Step2 form={form} update={update} t={t} />}
@@ -129,7 +128,7 @@ export default function QuoteFormClient({ preselectedProduct }) {
         {step === 3 && <Step3 form={form} update={update} t={t} />}
 
         {/* Step 4: Review */}
-        {step === 4 && <Step4 form={form} t={t} />}
+        {step === 4 && <Step4 form={form} t={t} categoryMeta={categoryMeta} />}
 
         {/* Navigation */}
         <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-6">
@@ -171,8 +170,8 @@ export default function QuoteFormClient({ preselectedProduct }) {
 }
 
 /* ── Step 1: What do you need? ── */
-function Step1({ form, update, t }) {
-  const categories = Object.entries(CATALOG_DEFAULTS.categoryMeta);
+function Step1({ form, update, t, categoryMeta }) {
+  const categories = Object.entries(categoryMeta);
   return (
     <div>
       <h2 className="text-xl font-bold text-gray-900">{t("quote.step1.title")}</h2>
@@ -443,8 +442,8 @@ function Step3({ form, update, t }) {
 }
 
 /* ── Step 4: Review & Submit ── */
-function Step4({ form, t }) {
-  const catMeta = CATALOG_DEFAULTS.categoryMeta[form.productType];
+function Step4({ form, t, categoryMeta }) {
+  const catMeta = categoryMeta[form.productType];
 
   const sections = [
     {

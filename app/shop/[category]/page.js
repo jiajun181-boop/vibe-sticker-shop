@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { ALL_CATEGORIES, CATALOG_DEFAULTS } from "@/lib/catalogConfig";
+import { getCatalogConfig } from "@/lib/catalogConfig";
 import { SUB_PRODUCT_CONFIG, getSubProductsForCategory } from "@/lib/subProductConfig";
 import { getTurnaround } from "@/lib/turnaroundConfig";
 import CategoryLandingClient from "./CategoryLandingClient";
@@ -30,7 +30,8 @@ function toClientSafe(value) {
 export async function generateMetadata({ params }) {
   const { category } = await params;
   const decoded = safeDecode(category);
-  const meta = CATALOG_DEFAULTS.categoryMeta[decoded];
+  const config = await getCatalogConfig();
+  const meta = config.categoryMeta[decoded];
   if (!meta) return {};
 
   const title = `${meta.title} — Vibe Sticker Shop`;
@@ -50,11 +51,13 @@ export default async function CategoryPage({ params }) {
   const { category } = await params;
   const decoded = safeDecode(category);
 
-  if (!ALL_CATEGORIES.includes(decoded)) {
+  const config = await getCatalogConfig();
+
+  if (!config.homepageCategories.includes(decoded)) {
     notFound();
   }
 
-  const meta = CATALOG_DEFAULTS.categoryMeta[decoded];
+  const meta = config.categoryMeta[decoded];
 
   // Collect categories to fetch: main + any cross-category sub-groups
   // (e.g. marketing-prints page also needs business-cards & stamps products)

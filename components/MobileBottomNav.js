@@ -6,9 +6,6 @@ import { useEffect, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { CATALOG_DEFAULTS } from "@/lib/catalogConfig";
-
-const { departments, departmentMeta, categoryMeta } = CATALOG_DEFAULTS;
 
 /* ── Icons (inline SVG for zero deps) ─────────────────────────── */
 
@@ -55,7 +52,7 @@ function BagIcon({ className }) {
 
 /* ── Category Drawer ──────────────────────────────────────────── */
 
-function CategoryDrawer({ open, onClose }) {
+function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMeta }) {
   const { t } = useTranslation();
 
   // Lock body scroll when open
@@ -143,7 +140,16 @@ function CategoryDrawer({ open, onClose }) {
 
 /* ── Bottom Nav ───────────────────────────────────────────────── */
 
-export default function MobileBottomNav() {
+function SearchIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+    </svg>
+  );
+}
+
+export default function MobileBottomNav({ catalogConfig }) {
+  const { departments = [], departmentMeta = {}, categoryMeta = {} } = catalogConfig || {};
   const pathname = usePathname();
   const { t } = useTranslation();
   const storeCount = useCartStore((s) => s.getCartCount());
@@ -181,10 +187,10 @@ export default function MobileBottomNav() {
       action: () => setDrawerOpen(true),
     },
     {
-      key: "shop",
-      label: t("mobileNav.shop"),
-      icon: ShopIcon,
-      href: "/shop",
+      key: "search",
+      label: t("mobileNav.search"),
+      icon: SearchIcon,
+      href: "/shop?focus=search",
     },
     {
       key: "account",
@@ -203,7 +209,13 @@ export default function MobileBottomNav() {
 
   return (
     <>
-      <CategoryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <CategoryDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        departments={departments}
+        departmentMeta={departmentMeta}
+        categoryMeta={categoryMeta}
+      />
 
       {/* Spacer so content isn't hidden behind the fixed nav */}
       <div className="h-16 md:hidden" />

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSubProducts } from "@/lib/subProductConfig";
-import { CATALOG_DEFAULTS } from "@/lib/catalogConfig";
+import { getCatalogConfig } from "@/lib/catalogConfig";
 import { getProductAssets } from "@/lib/assets";
 import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
@@ -102,7 +102,8 @@ export default async function ProductPage({ params }) {
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     });
 
-    const categoryMeta = CATALOG_DEFAULTS.categoryMeta[decodedCategory];
+    const config = await getCatalogConfig();
+    const categoryMeta = config.categoryMeta[decodedCategory];
 
     return (
       <SubProductLandingClient
@@ -164,6 +165,7 @@ export default async function ProductPage({ params }) {
     safeProduct.images = assetImages;
   }
   const safeRelated = toClientSafe(relatedProducts);
+  const catalogCfg = await getCatalogConfig();
 
   return (
     <>
@@ -173,7 +175,7 @@ export default async function ProductPage({ params }) {
         productName={safeProduct.name}
       />
       <Suspense>
-        <ProductClient product={safeProduct} relatedProducts={safeRelated} />
+        <ProductClient product={safeProduct} relatedProducts={safeRelated} catalogConfig={catalogCfg} />
       </Suspense>
     </>
   );
