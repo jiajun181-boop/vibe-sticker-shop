@@ -95,6 +95,7 @@ export default function CategoryLandingClient({
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState(null);
   const [sortBy, setSortBy] = useState("popular");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const hasFilters = filterGroups.length > 1;
 
@@ -110,8 +111,16 @@ export default function CategoryLandingClient({
     if (activeSlugSet) {
       list = list.filter((p) => activeSlugSet.has(p.slug));
     }
+    if (searchQuery.trim()) {
+      const sq = searchQuery.trim().toLowerCase();
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(sq) ||
+          (p.description || "").toLowerCase().includes(sq)
+      );
+    }
     return sortProducts(list, sortBy);
-  }, [products, activeSlugSet, sortBy]);
+  }, [products, activeSlugSet, searchQuery, sortBy]);
 
   return (
     <main className="bg-gray-50 pb-20 pt-10 text-gray-900">
@@ -124,30 +133,45 @@ export default function CategoryLandingClient({
         />
 
         {/* Header */}
-        <header className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-              {categoryIcon && <span className="mr-2">{categoryIcon}</span>}
-              {categoryTitle}
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              {products.length} {t("mp.landing.products")}
-            </p>
+        <header className="mt-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
+                {categoryIcon && <span className="mr-2">{categoryIcon}</span>}
+                {categoryTitle}
+              </h1>
+              <p className="mt-1 text-sm text-gray-500">
+                {products.length} {t("mp.landing.products")}
+              </p>
+            </div>
+
+            {/* Sort */}
+            <div className="flex items-center gap-2">
+              <label className="text-xs uppercase tracking-[0.15em] text-gray-400">{t("shop.sort")}</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-gray-900 focus:outline-none"
+              >
+                <option value="popular">{t("shop.sortPopular")}</option>
+                <option value="price-asc">{t("shop.sortPriceAsc")}</option>
+                <option value="price-desc">{t("shop.sortPriceDesc")}</option>
+                <option value="name">{t("shop.sortName")}</option>
+              </select>
+            </div>
           </div>
 
-          {/* Sort */}
-          <div className="flex items-center gap-2">
-            <label className="text-xs uppercase tracking-[0.15em] text-gray-400">{t("shop.sort")}</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm focus:border-gray-900 focus:outline-none"
-            >
-              <option value="popular">{t("shop.sortPopular")}</option>
-              <option value="price-asc">{t("shop.sortPriceAsc")}</option>
-              <option value="price-desc">{t("shop.sortPriceDesc")}</option>
-              <option value="name">{t("shop.sortName")}</option>
-            </select>
+          {/* Search */}
+          <div className="relative mt-4 w-full sm:w-72">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("shop.searchCategory") || "Search products..."}
+              className="w-full rounded-full border border-gray-200 bg-white pl-9 pr-4 py-2 text-sm focus:border-gray-400 focus:outline-none"
+            />
           </div>
         </header>
 

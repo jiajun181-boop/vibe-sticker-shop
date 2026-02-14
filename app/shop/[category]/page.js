@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ALL_CATEGORIES, CATALOG_DEFAULTS } from "@/lib/catalogConfig";
 import { SUB_PRODUCT_CONFIG, getSubProductsForCategory } from "@/lib/subProductConfig";
+import { getTurnaround } from "@/lib/turnaroundConfig";
 import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
 
@@ -55,9 +56,25 @@ export default async function CategoryPage({ params }) {
 
   const meta = CATALOG_DEFAULTS.categoryMeta[decoded];
 
-  // Fetch all active products in this category
+  // Collect categories to fetch: main + any cross-category sub-groups
+  // (e.g. marketing-prints page also needs business-cards & stamps products)
+  const categoriesToFetch = [decoded];
+  if (meta?.subGroups) {
+    for (const sg of meta.subGroups) {
+      const subCfg = SUB_PRODUCT_CONFIG[sg.slug];
+      if (subCfg && subCfg.category !== decoded && !categoriesToFetch.includes(subCfg.category)) {
+        categoriesToFetch.push(subCfg.category);
+      }
+    }
+  }
+
   const products = await prisma.product.findMany({
-    where: { category: decoded, isActive: true },
+    where: {
+      category: categoriesToFetch.length === 1
+        ? decoded
+        : { in: categoriesToFetch },
+      isActive: true,
+    },
     include: {
       images: { take: 1, orderBy: { sortOrder: "asc" } },
     },
@@ -67,16 +84,25 @@ export default async function CategoryPage({ params }) {
   // If category has sub-groups, render sub-group card landing instead of flat product list
   const subGroups = meta?.subGroups;
   if (subGroups?.length > 0) {
-    // Build sub-group data with counts and previews
+    // Build sub-group data with counts, previews, minPrice, turnaround
     const subGroupData = subGroups.map((sg) => {
       const subCfg = SUB_PRODUCT_CONFIG[sg.slug];
       const matching = subCfg
         ? products.filter((p) => subCfg.dbSlugs.includes(p.slug))
         : [];
+
+      const prices = matching.filter((p) => p.basePrice > 0).map((p) => p.basePrice);
+      const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+      const turnaround = matching.length > 0
+        ? getTurnaround(matching[0])
+        : getTurnaround({ category: subCfg?.category || decoded });
+
       return {
         ...sg,
         count: matching.length,
         previews: matching.slice(0, 3).map((p) => p.images?.[0]?.url).filter(Boolean),
+        minPrice,
+        turnaround,
       };
     });
 

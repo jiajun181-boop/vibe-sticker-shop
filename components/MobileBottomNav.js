@@ -122,6 +122,9 @@ function CategoryDrawer({ open, onClose }) {
 
           {/* Bottom links */}
           <div className="px-5 pt-4 pb-2 space-y-1">
+            <Link href="/quote" onClick={onClose} className="block rounded-lg px-2 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50">
+              {t("nav.getQuote")}
+            </Link>
             <Link href="/shop" onClick={onClose} className="block rounded-lg px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
               {t("shop.backToCategories")}
             </Link>

@@ -198,10 +198,11 @@ export default function Navbar() {
                     <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Signs & Displays</p>
                     <div className="mt-2 space-y-1">
                       <Link href="/shop/window-glass-films" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Window & Glass Films</Link>
-                      <Link href="/shop/display-stands" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Display Stands</Link>
+                      <Link href="/shop/banners-displays" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Banners & Flags</Link>
+                      <Link href="/shop/display-stands" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Stands & Frames</Link>
                       <Link href="/shop/large-format-graphics" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Wall & Floor Graphics</Link>
                       <Link href="/shop/vehicle-branding-advertising" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Vehicle Branding</Link>
-                      <Link href="/shop/fleet-compliance-id" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Fleet Compliance</Link>
+                      <Link href="/shop/fleet-compliance-id" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Fleet & DOT Numbers</Link>
                     </div>
                   </div>
                   {/* Column 3: Stickers & Labels */}
@@ -219,8 +220,8 @@ export default function Navbar() {
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">More</p>
                     <div className="mt-2 space-y-1">
-                      <Link href="/shop/safety-warning-decals" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Safety & Warning</Link>
-                      <Link href="/shop/facility-asset-labels" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Facility & Asset Labels</Link>
+                      <Link href="/shop/safety-warning-decals" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Safety Decals</Link>
+                      <Link href="/shop/facility-asset-labels" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Industrial Labels</Link>
                       <Link href="/shop/packaging" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">Packaging Inserts</Link>
                     </div>
                   </div>
@@ -393,30 +394,14 @@ export default function Navbar() {
           {renderSearchDropdown(mobileDropdownRef)}
         </div>
       </div>
-      {/* Mobile category chips */}
-      <div className="flex gap-2 overflow-x-auto px-4 pb-3 md:hidden scrollbar-hide">
+      {/* Mobile quick actions — single CTA, categories via bottom nav drawer */}
+      <div className="flex gap-2 px-4 pb-3 md:hidden">
         <Link
           href="/quote"
           className="shrink-0 rounded-full bg-gray-900 px-3 py-1 text-[11px] font-semibold text-white whitespace-nowrap"
         >
           {t("nav.getQuote")}
         </Link>
-        {[
-          { label: "Marketing Prints", href: "/shop/marketing-prints" },
-          { label: "Stickers & Labels", href: "/shop/stickers-labels" },
-          { label: "Window Films", href: "/shop/window-glass-films" },
-          { label: "Display Stands", href: "/shop/display-stands" },
-          { label: "Vehicle", href: "/shop/vehicle-branding-advertising" },
-          { label: "Safety", href: "/shop/safety-warning-decals" },
-        ].map((chip) => (
-          <Link
-            key={chip.href}
-            href={chip.href}
-            className="shrink-0 rounded-full border border-gray-200 px-3 py-1 text-[11px] font-medium text-gray-600 hover:border-gray-400 whitespace-nowrap"
-          >
-            {chip.label}
-          </Link>
-        ))}
       </div>
     </header>
   );
