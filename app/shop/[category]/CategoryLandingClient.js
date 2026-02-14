@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
 const formatCad = (cents) =>
@@ -55,6 +56,14 @@ function ProductCard({ product, t, compact }) {
       </div>
 
       <div className={compact ? "p-2.5" : "p-3 sm:p-4"}>
+        {!compact && (() => {
+          const tk = getTurnaround(product);
+          return (
+            <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold mb-1 ${turnaroundColor(tk)}`}>
+              {t(turnaroundI18nKey(tk))}
+            </span>
+          );
+        })()}
         <h3 className={`font-semibold text-gray-900 leading-snug ${compact ? "text-xs" : "text-sm"}`}>
           {product.name}
         </h3>
@@ -91,13 +100,16 @@ export default function CategoryLandingClient({
   categoryIcon,
   products,
   filterGroups = [],
+  turnaroundGroups = [],
 }) {
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState(null);
+  const [turnaroundFilter, setTurnaroundFilter] = useState(null);
   const [sortBy, setSortBy] = useState("popular");
   const [searchQuery, setSearchQuery] = useState("");
 
   const hasFilters = filterGroups.length > 1;
+  const hasTurnaroundFilters = turnaroundGroups.length > 1;
 
   // Build lookup: slug → set of db slugs for active filter
   const activeSlugSet = useMemo(() => {
@@ -106,10 +118,20 @@ export default function CategoryLandingClient({
     return group ? new Set(group.dbSlugs) : null;
   }, [activeFilter, filterGroups]);
 
+  // Build lookup: turnaround key → set of product IDs
+  const turnaroundIdSet = useMemo(() => {
+    if (!turnaroundFilter) return null;
+    const group = turnaroundGroups.find((g) => g.key === turnaroundFilter);
+    return group ? new Set(group.productIds) : null;
+  }, [turnaroundFilter, turnaroundGroups]);
+
   const filtered = useMemo(() => {
     let list = products;
     if (activeSlugSet) {
       list = list.filter((p) => activeSlugSet.has(p.slug));
+    }
+    if (turnaroundIdSet) {
+      list = list.filter((p) => turnaroundIdSet.has(p.id));
     }
     if (searchQuery.trim()) {
       const sq = searchQuery.trim().toLowerCase();
@@ -120,7 +142,7 @@ export default function CategoryLandingClient({
       );
     }
     return sortProducts(list, sortBy);
-  }, [products, activeSlugSet, searchQuery, sortBy]);
+  }, [products, activeSlugSet, turnaroundIdSet, searchQuery, sortBy]);
 
   return (
     <main className="bg-gray-50 pb-20 pt-10 text-gray-900">
@@ -206,6 +228,28 @@ export default function CategoryLandingClient({
           </div>
         )}
 
+        {/* Turnaround filter chips */}
+        {hasTurnaroundFilters && (
+          <div className={`${hasFilters ? "mt-3" : "mt-5"} flex gap-2 overflow-x-auto pb-1 scrollbar-hide`}>
+            <span className="flex-none self-center text-[10px] uppercase tracking-[0.15em] text-gray-400 mr-1">
+              {t("shop.turnaround")}
+            </span>
+            {turnaroundGroups.map((tg) => (
+              <button
+                key={tg.key}
+                onClick={() => setTurnaroundFilter(turnaroundFilter === tg.key ? null : tg.key)}
+                className={`flex-none rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  turnaroundFilter === tg.key
+                    ? turnaroundColor(tg.key)
+                    : "border border-gray-200 bg-white text-gray-600 hover:border-gray-400"
+                }`}
+              >
+                {t(turnaroundI18nKey(tg.key))} ({tg.count})
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Product grid — compact on mobile to show more products */}
         {filtered.length > 0 ? (
           <div className="mt-6 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
@@ -216,9 +260,9 @@ export default function CategoryLandingClient({
         ) : (
           <div className="mt-12 text-center">
             <p className="text-sm text-gray-500">{t("shop.noResults")}</p>
-            {activeFilter && (
+            {(activeFilter || turnaroundFilter) && (
               <button
-                onClick={() => setActiveFilter(null)}
+                onClick={() => { setActiveFilter(null); setTurnaroundFilter(null); }}
                 className="mt-3 rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-gray-700 hover:border-gray-900"
               >
                 {t("shop.clearFilters")}

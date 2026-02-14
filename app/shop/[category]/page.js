@@ -144,6 +144,19 @@ export default async function CategoryPage({ params }) {
     }
   }
 
+  // Build turnaround filter groups from product data
+  const turnaroundMap = {};
+  for (const p of products) {
+    const tk = getTurnaround(p);
+    if (!turnaroundMap[tk]) turnaroundMap[tk] = [];
+    turnaroundMap[tk].push(p.id);
+  }
+  const turnaroundGroups = Object.entries(turnaroundMap).map(([key, ids]) => ({
+    key,
+    count: ids.length,
+    productIds: ids,
+  }));
+
   return (
     <CategoryLandingClient
       category={decoded}
@@ -151,6 +164,7 @@ export default async function CategoryPage({ params }) {
       categoryIcon={meta?.icon || ""}
       products={toClientSafe(products)}
       filterGroups={filterGroups}
+      turnaroundGroups={turnaroundGroups}
     />
   );
 }

@@ -11,6 +11,7 @@ import { USE_CASES, USE_CASE_PRODUCTS } from "@/lib/useCases";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
+import QuickViewModal from "@/components/product/QuickViewModal";
 
 const PAGE_SIZE_OPTIONS = [12, 24, 36];
 
@@ -197,6 +198,7 @@ export default function ShopClient({
   const [categoryFilter, setCategoryFilter] = useState("");
   const isInternalUrlUpdate = useRef(false);
   const searchInputRef = useRef(null);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
 
   useEffect(() => {
     if (window.innerWidth < 1024 && viewMode === "grid") setViewMode("list");
@@ -223,6 +225,37 @@ export default function ShopClient({
     setBrowseAll(v !== "category");
     setPage(1);
   }, [searchParams]);
+
+  // Save scroll position to sessionStorage on scroll (debounced 200ms)
+  const scrollTimerRef = useRef(null);
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = setTimeout(() => {
+        sessionStorage.setItem("shop-scroll-y", window.scrollY);
+      }, 200);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    };
+  }, []);
+
+  // Restore scroll position from sessionStorage on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem("shop-scroll-y");
+    if (saved) {
+      const y = parseInt(saved, 10);
+      if (!isNaN(y) && y > 0) {
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            window.scrollTo(0, y);
+          }, 100);
+        });
+      }
+    }
+  }, []);
 
   // Derive whether we're in "product browsing" mode
   const isFiltering = !!(query.trim() || tag || useCase);
@@ -345,6 +378,7 @@ export default function ShopClient({
   }
 
   function switchToCategories() {
+    sessionStorage.removeItem("shop-scroll-y");
     setBrowseAll(false);
     setCategoryFilter("");
     setQuery("");
@@ -356,6 +390,7 @@ export default function ShopClient({
   }
 
   function switchToAllProducts() {
+    sessionStorage.removeItem("shop-scroll-y");
     setBrowseAll(true);
     setPage(1);
     isInternalUrlUpdate.current = true;
@@ -592,9 +627,9 @@ export default function ShopClient({
                       <p className="mt-1 text-sm text-gray-600">{rangeText}</p>
 
                       <div className="mt-3 flex gap-2">
-                        <Link href={href} className="rounded-full border border-gray-300 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900">
-                          {t("shop.view")}
-                        </Link>
+                        <button onClick={() => setQuickViewProduct(product)} className="rounded-full border border-gray-300 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900">
+                          {t("shop.quickView")}
+                        </button>
                         <button onClick={() => quickAdd(product)} className="rounded-full bg-gray-900 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black">
                           {t("shop.quickAdd")}
                         </button>
@@ -615,6 +650,15 @@ export default function ShopClient({
           </section>
         )}
       </div>
+
+      {quickViewProduct && (
+        <QuickViewModal
+          product={quickViewProduct}
+          onClose={() => setQuickViewProduct(null)}
+          onAddToCart={(p) => { quickAdd(p); setQuickViewProduct(null); }}
+          t={t}
+        />
+      )}
     </main>
   );
 }
