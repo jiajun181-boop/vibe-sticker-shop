@@ -76,9 +76,9 @@ export default function Footer({ locale = "en" }) {
     {
       title: t("footer.contact"),
       links: [
-        { label: "support@vibestickers.com", href: "mailto:support@vibestickers.com" },
-        { label: "+1 (416) 555-0199", href: "tel:+14165550199" },
-        { label: "Toronto, ON", href: "/about" },
+        { label: "info@lunarprint.ca", href: "mailto:info@lunarprint.ca" },
+        { label: "647-783-4728", href: "tel:+16477834728" },
+        { label: "11 Progress Ave #21, Scarborough", href: "https://maps.google.com/?q=11+Progress+Ave+%2321+Scarborough+ON+M1P+4S7" },
       ],
     },
   ];
@@ -119,7 +119,7 @@ export default function Footer({ locale = "en" }) {
             <span className="rounded-md border border-gray-700 px-2 py-1">Visa</span>
             <span className="rounded-md border border-gray-700 px-2 py-1">Mastercard</span>
             <span className="rounded-md border border-gray-700 px-2 py-1">Amex</span>
-            <span className="rounded-md border border-gray-700 px-2 py-1">PayPal</span>
+            <span className="rounded-md border border-gray-700 px-2 py-1">E-Transfer</span>
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>

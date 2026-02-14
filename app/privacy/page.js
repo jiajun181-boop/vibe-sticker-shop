@@ -96,8 +96,9 @@ export default function PrivacyPage() {
         <p>
           For privacy inquiries or data requests:<br />
           <strong>La Lunar Printing Inc.</strong><br />
-          Email: <a href="mailto:info@lalunarprinting.com" className="text-gray-900 underline">info@lalunarprinting.com</a><br />
-          Toronto, Ontario, Canada
+          11 Progress Ave #21, Scarborough, ON M1P 4S7, Canada<br />
+          Email: <a href="mailto:info@lunarprint.ca" className="text-gray-900 underline">info@lunarprint.ca</a><br />
+          Phone: <a href="tel:+16477834728" className="text-gray-900 underline">647-783-4728</a>
         </p>
       </div>
     </div>

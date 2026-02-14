@@ -41,7 +41,8 @@ export default async function ContactPage() {
                   </svg>
                   <div>
                     <p className="font-semibold text-gray-900">{t("contact.info.address")}</p>
-                    <p>Toronto, ON, Canada</p>
+                    <p>11 Progress Ave #21</p>
+                    <p>Scarborough, ON M1P 4S7, Canada</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -50,7 +51,9 @@ export default async function ContactPage() {
                   </svg>
                   <div>
                     <p className="font-semibold text-gray-900">{t("contact.info.phone")}</p>
-                    <a href="tel:+14165550199" className="hover:text-gray-900">+1 (416) 555-0199</a>
+                    <a href="tel:+16477834728" className="hover:text-gray-900">647-783-4728 (English)</a>
+                    <br />
+                    <a href="tel:+16478869288" className="hover:text-gray-900">647-886-9288 (中文)</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -59,7 +62,16 @@ export default async function ContactPage() {
                   </svg>
                   <div>
                     <p className="font-semibold text-gray-900">{t("contact.info.email")}</p>
-                    <a href="mailto:orders@lunarprint.ca" className="hover:text-gray-900">orders@lunarprint.ca</a>
+                    <a href="mailto:info@lunarprint.ca" className="hover:text-gray-900">info@lunarprint.ca</a>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                  </svg>
+                  <div>
+                    <p className="font-semibold text-gray-900">WeChat</p>
+                    <p>lunarprinting</p>
                   </div>
                 </div>
               </div>
@@ -70,11 +82,11 @@ export default async function ContactPage() {
               <div className="mt-3 space-y-2 text-sm text-gray-600">
                 <div className="flex justify-between">
                   <span>{t("contact.hours.weekdays")}</span>
-                  <span className="font-semibold text-gray-900">9:00 AM - 6:00 PM EST</span>
+                  <span className="font-semibold text-gray-900">10:00 AM - 6:00 PM EST</span>
                 </div>
                 <div className="flex justify-between">
                   <span>{t("contact.hours.saturday")}</span>
-                  <span className="font-semibold text-gray-900">10:00 AM - 3:00 PM EST</span>
+                  <span className="font-semibold text-gray-900">{t("contact.hours.closed")}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>{t("contact.hours.sunday")}</span>
