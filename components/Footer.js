@@ -5,6 +5,51 @@ import Image from "next/image";
 import { useState } from "react";
 import { createT } from "@/lib/i18n";
 
+function NewsletterForm({ t }) {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | sending | done
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!email.trim() || !email.includes("@")) return;
+    setStatus("sending");
+    try {
+      await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "Footer Subscriber", email: email.trim(), message: "Newsletter signup via footer" }),
+      });
+    } catch {}
+    setStatus("done");
+  }
+
+  if (status === "done") {
+    return (
+      <p className="text-xs text-emerald-400 font-medium">{t("footer.subscribed")}</p>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex gap-2">
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder={t("footer.emailPlaceholder")}
+        className="flex-1 min-w-0 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-xs text-white placeholder:text-gray-500 focus:border-gray-500 focus:outline-none"
+        required
+      />
+      <button
+        type="submit"
+        disabled={status === "sending"}
+        className="rounded-lg bg-white px-4 py-2 text-xs font-semibold text-gray-900 hover:bg-gray-200 transition-colors disabled:opacity-50"
+      >
+        {t("footer.subscribe")}
+      </button>
+    </form>
+  );
+}
+
 function FooterColumn({ title, links, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -69,8 +114,8 @@ export default function Footer({ locale = "en" }) {
       title: t("footer.support"),
       links: [
         { label: t("footer.contact"), href: "/contact" },
-        { label: t("footer.orderStatus"), href: "/contact" },
-        { label: t("footer.shipping"), href: "/contact" },
+        { label: t("footer.orderStatus"), href: "/track-order" },
+        { label: t("footer.shipping"), href: "/faq" },
       ],
     },
     {
@@ -108,10 +153,20 @@ export default function Footer({ locale = "en" }) {
           ))}
         </div>
 
-        <div className="mt-8 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-600">
-            Business Essential &mdash; Essential to Your Brand &mdash; From Concept to Delivery
-          </p>
+        {/* Newsletter + Social */}
+        <div className="mt-8 border-t border-gray-800 pt-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 mb-2">{t("footer.newsletterTitle")}</p>
+              <NewsletterForm t={t} />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-500 mr-1">{t("footer.followUs")}</span>
+              <a href="https://www.instagram.com/lunarprinting" target="_blank" rel="noopener noreferrer" className="rounded-md border border-gray-700 px-2.5 py-1 text-xs text-gray-400 hover:text-white hover:border-gray-500 transition-colors" aria-label="Instagram">Instagram</a>
+              <a href="https://www.facebook.com/lunarprinting" target="_blank" rel="noopener noreferrer" className="rounded-md border border-gray-700 px-2.5 py-1 text-xs text-gray-400 hover:text-white hover:border-gray-500 transition-colors" aria-label="Facebook">Facebook</a>
+              <span className="rounded-md border border-gray-700 px-2.5 py-1 text-xs text-gray-400" title="WeChat: lunarprinting">WeChat</span>
+            </div>
+          </div>
         </div>
 
         <div className="mt-6 flex flex-col gap-4 border-t border-gray-800 pt-6 text-xs text-gray-400 md:flex-row md:items-center md:justify-between">

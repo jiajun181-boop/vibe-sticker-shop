@@ -18,6 +18,9 @@ const SCENARIOS = [
   { label: "Corporate", href: "/ideas/corporate", icon: "🏢" },
   { label: "Events", href: "/ideas/events", icon: "🎪" },
   { label: "Weddings", href: "/ideas/wedding", icon: "💍" },
+  { label: "Trade Show", href: "/ideas/trade-show", icon: "🎪" },
+  { label: "Fleet Setup", href: "/ideas/fleet-setup", icon: "🚛" },
+  { label: "Opening Store", href: "/ideas/opening-store", icon: "🏪" },
   { label: "Campus", href: "/ideas/campus", icon: "🎓" },
   { label: "Gifting", href: "/ideas/gifting", icon: "🎁" },
 ];
@@ -156,28 +159,33 @@ export default function DualEntryHero({ totalCount }) {
             </h2>
             <p className="text-xs text-gray-500 mb-4">Browse by scenario or get a custom quote</p>
 
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-1.5">
               {SCENARIOS.map((s) => (
                 <Link
                   key={s.href}
                   href={s.href}
-                  className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm font-medium text-gray-300 transition-colors hover:bg-white/20 hover:text-white"
+                  className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2.5 text-[12px] font-medium text-gray-300 transition-colors hover:bg-white/20 hover:text-white"
                 >
-                  <span className="text-lg">{s.icon}</span>
+                  <span className="text-base">{s.icon}</span>
                   {s.label}
-                  <svg className="ml-auto h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
                 </Link>
               ))}
             </div>
 
-            <Link
-              href="/quote"
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-bold uppercase tracking-[0.15em] text-black transition-colors hover:bg-gray-200"
-            >
-              {t("home.cta.quote")}
-            </Link>
+            <div className="mt-4 flex gap-2">
+              <Link
+                href="/ideas"
+                className="flex-1 flex items-center justify-center gap-1 rounded-full border border-white/20 px-4 py-2.5 text-xs font-semibold text-gray-300 transition-colors hover:border-white/40 hover:text-white"
+              >
+                {t("home.cta.shop")} &rarr;
+              </Link>
+              <Link
+                href="/quote"
+                className="flex-1 flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-[0.15em] text-black transition-colors hover:bg-gray-200"
+              >
+                {t("home.cta.quote")}
+              </Link>
+            </div>
           </div>
         </div>
       </div>

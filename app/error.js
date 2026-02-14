@@ -1,15 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function ErrorPage({ error, reset }) {
   const { t } = useTranslation();
-
-  useEffect(() => {
-    console.error("[ErrorBoundary]", error);
-  }, [error]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-6 text-center text-gray-900">

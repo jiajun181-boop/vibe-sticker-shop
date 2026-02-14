@@ -329,7 +329,7 @@ function Step2({ form, update, t }) {
             {t("quote.step2.uploadArtwork")}
           </label>
           <p className="mt-1 text-xs text-gray-400">
-            You can email artwork to orders@lalunar.com after submitting your quote request.
+            You can email artwork to info@lunarprint.ca after submitting your quote request.
           </p>
         </div>
       </div>
