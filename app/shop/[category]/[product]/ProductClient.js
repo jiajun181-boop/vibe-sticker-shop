@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCartStore } from "@/lib/store";
-import { showSuccessToast } from "@/components/Toast";
+import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { validateDimensions } from "@/lib/materialLimits";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
@@ -19,6 +19,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import TemplateGallery from "@/components/product/TemplateGallery";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 import RelatedLinks from "@/components/product/RelatedLinks";
+import { getProductImage, isSvgImage } from "@/lib/product-image";
 
 const StampEditor = dynamic(() => import("@/components/product/StampEditor"), {
   ssr: false,
@@ -49,6 +50,24 @@ function getStartingUnitPrice(option) {
     .sort((a, b) => a[0] - b[0]);
   if (entries.length === 0) return null;
   return Math.round(entries[0][1] / entries[0][0]);
+}
+
+function normalizeCheckoutMeta(meta) {
+  const input = meta && typeof meta === "object" ? meta : {};
+  const out = {};
+  for (const [k, v] of Object.entries(input)) {
+    if (v == null) continue;
+    if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+      out[k] = v;
+      continue;
+    }
+    try {
+      out[k] = JSON.stringify(v);
+    } catch {
+      out[k] = String(v);
+    }
+  }
+  return out;
 }
 
 function parseMaterials(optionsConfig, presetConfig) {
@@ -256,9 +275,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [selectedFinishings, setSelectedFinishings] = useState([]);
   const [wantsFinishing, setWantsFinishing] = useState(false);
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth >= 768 : true
-  );
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [selectedSizeLabel, setSelectedSizeLabel] = useState(sizeOptions[0]?.label || "");
   const [variantBase, setVariantBase] = useState("");
   const [variantValue, setVariantValue] = useState("");
@@ -276,6 +293,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   ]);
   const [uploadedArtwork, setUploadedArtwork] = useState(null); // { url, key, name, mime, size }
   const [added, setAdded] = useState(false);
+  const [buyNowLoading, setBuyNowLoading] = useState(false);
 
   // Business card state
   const optionsConfig = product.optionsConfig && typeof product.optionsConfig === "object" ? product.optionsConfig : {};
@@ -453,11 +471,17 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   // Server-driven pricing state
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const stableQuoteRef = useRef(null);
   const debounceRef = useRef(null);
+  const lastQuoteRequestKeyRef = useRef("");
   const addToCartRef = useRef(null);
   const [stickyVisible, setStickyVisible] = useState(false);
 
-  const imageList = product.images?.length ? product.images : [];
+  const primaryImage = getProductImage(product);
+  const imageList = useMemo(() => {
+    if (Array.isArray(product.images) && product.images.length > 0) return product.images;
+    return [{ url: primaryImage, alt: product.name || "Product", mimeType: isSvgImage(primaryImage) ? "image/svg+xml" : undefined }];
+  }, [product.images, product.name, primaryImage]);
 
   // Track recently viewed
   useEffect(() => {
@@ -465,10 +489,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       slug: product.slug,
       category: product.category,
       name: product.name,
-      image: product.images?.[0]?.url || null,
+      image: primaryImage,
       basePrice: product.basePrice,
     });
-  }, [product.slug]);
+  }, [product.slug, product.category, product.name, product.basePrice, primaryImage]);
 
   // Apply product-level default material when switching products
   useEffect(() => {
@@ -569,44 +593,79 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   );
 
   useEffect(() => {
-    if (!sizeValidation.valid) return;
+    if (!sizeValidation.valid) {
+      setQuoteLoading(false);
+      return;
+    }
     let cancelled = false;
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      const sizeLabel = isBusinessCard
-        ? bcSizeLabel
-        : isTextEditor && editorMode === "box"
-          ? editorSizeLabel
-          : sizeOptions.length > 0
-            ? selectedSizeLabel
-            : null;
+    const sizeLabel = isBusinessCard
+      ? bcSizeLabel
+      : isTextEditor && editorMode === "box"
+        ? editorSizeLabel
+        : sizeOptions.length > 0
+          ? selectedSizeLabel
+          : null;
 
+    const isMulti = multiSizeEnabled && useMultiSize;
+    const namesCount = showMultiName && names > 1 ? names : undefined;
+    const selectedAddonDefs = visibleAddons.filter((addon) => selectedAddons.includes(addon.id));
+    const selectedFinishingDefs = finishings.filter((finishing) => selectedFinishings.includes(finishing.id));
+    const perUnitAddonIds = selectedAddonDefs.filter((addon) => addon.type !== "flat").map((addon) => addon.id).sort();
+    const flatAddonIds = selectedAddonDefs.filter((addon) => addon.type === "flat").map((addon) => addon.id).sort();
+    const perUnitFinishingIds = selectedFinishingDefs.filter((finishing) => finishing.type !== "flat").map((finishing) => finishing.id).sort();
+    const flatFinishingIds = selectedFinishingDefs.filter((finishing) => finishing.type === "flat").map((finishing) => finishing.id).sort();
+    const activeRows = isMulti
+      ? sizeRows
+          .filter((row) => Number(row.quantity) > 0)
+          .map((row) => ({
+            quantity: Number(row.quantity),
+            widthIn: Number(row.widthIn),
+            heightIn: Number(row.heightIn),
+          }))
+      : [];
+
+    const requestKey = JSON.stringify({
+      slug: product.slug,
+      isMulti,
+      quantity: Number(quantity),
+      widthIn: Number(widthIn),
+      heightIn: Number(heightIn),
+      material: material || "",
+      sizeLabel: sizeLabel || "",
+      names: namesCount || 1,
+      selectedAddons: [...selectedAddons].sort(),
+      selectedFinishings: [...selectedFinishings].sort(),
+      perUnitAddonIds,
+      flatAddonIds,
+      perUnitFinishingIds,
+      flatFinishingIds,
+      rows: activeRows,
+    });
+
+    if (requestKey === lastQuoteRequestKeyRef.current) return;
+    lastQuoteRequestKeyRef.current = requestKey;
+
+    debounceRef.current = setTimeout(async () => {
       try {
         setQuoteLoading(true);
-        if (multiSizeEnabled && useMultiSize) {
-          const activeRows = sizeRows.filter((row) => Number(row.quantity) > 0);
+        if (isMulti) {
           if (activeRows.length === 0) {
             if (!cancelled) setQuote(null);
             return;
           }
-          const selectedAddonDefs = visibleAddons.filter((addon) => selectedAddons.includes(addon.id));
-          const perUnitAddonIds = selectedAddonDefs.filter((addon) => addon.type !== "flat").map((addon) => addon.id);
-          const flatAddonIds = selectedAddonDefs.filter((addon) => addon.type === "flat").map((addon) => addon.id);
-          const selectedFinishingDefs = finishings.filter((finishing) => selectedFinishings.includes(finishing.id));
-          const perUnitFinishingIds = selectedFinishingDefs.filter((finishing) => finishing.type !== "flat").map((finishing) => finishing.id);
-          const flatFinishingIds = selectedFinishingDefs.filter((finishing) => finishing.type === "flat").map((finishing) => finishing.id);
           const rowQuotes = await Promise.all(
             activeRows.map((row, idx) =>
               requestQuote(
                 product.slug,
-                Number(row.quantity),
-                Number(row.widthIn),
-                Number(row.heightIn),
+                row.quantity,
+                row.widthIn,
+                row.heightIn,
                 material,
                 sizeLabel,
                 idx === 0 ? [...perUnitAddonIds, ...flatAddonIds] : perUnitAddonIds,
                 idx === 0 ? [...perUnitFinishingIds, ...flatFinishingIds] : perUnitFinishingIds,
-                showMultiName && names > 1 ? names : undefined
+                namesCount
               )
             )
           );
@@ -652,7 +711,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           sizeLabel,
           selectedAddons,
           selectedFinishings,
-          showMultiName && names > 1 ? names : undefined
+          namesCount
         );
         if (!cancelled && data) setQuote(data);
       } catch {
@@ -726,15 +785,22 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     }
   }, [isTextEditor, editorMode, editorSizeLabel, editorSizes]);
 
+  useEffect(() => {
+    if (quote && typeof quote.totalCents === "number" && quote.totalCents > 0) {
+      stableQuoteRef.current = quote;
+    }
+  }, [quote]);
+
   // Derive display prices from quote (fallback to basePrice estimate)
   const priceData = useMemo(() => {
+    const activeQuote = quote || stableQuoteRef.current;
     const qty = multiSizeEnabled && useMultiSize ? totalMultiQty || 1 : Number(quantity) || 1;
-    if (quote) {
-      const subtotal = quote.totalCents;
+    if (activeQuote) {
+      const subtotal = activeQuote.totalCents;
       const tax = Math.round(subtotal * HST_RATE);
-      const unitAmount = quote.unitCents || Math.round(subtotal / qty);
-      const sqft = quote.meta?.sqftPerUnit ?? null;
-      return { unitAmount, subtotal, tax, total: subtotal + tax, sqft, breakdown: quote.breakdown };
+      const unitAmount = activeQuote.unitCents || Math.round(subtotal / qty);
+      const sqft = activeQuote.meta?.sqftPerUnit ?? null;
+      return { unitAmount, subtotal, tax, total: subtotal + tax, sqft, breakdown: activeQuote.breakdown };
     }
 
     // If no quote and basePrice is missing, avoid showing misleading $0.01 pricing.
@@ -907,9 +973,41 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   }
 
   const canAddToCart = sizeValidation.valid && !priceData.unpriced;
+  const totalDisplay = !priceData.unpriced && typeof priceData.total === "number" ? formatCad(priceData.total) : t("product.priceOnRequest");
+  const quickSelection = useMemo(() => {
+    const rows = [];
+    rows.push({
+      label: "Qty",
+      value: multiSizeEnabled && useMultiSize ? `${totalMultiQty} pcs (${sizeRows.length} sizes)` : `${quantity} pcs`,
+    });
+    if (dimensionsEnabled && !useMultiSize && widthIn && heightIn) {
+      rows.push({ label: "Size", value: `${Number(widthIn).toFixed(2)} in x ${Number(heightIn).toFixed(2)} in` });
+    }
+    if (material) rows.push({ label: "Material", value: material });
+    if (selectedSize?.displayLabel || selectedSize?.label || bcSizeLabel) {
+      rows.push({ label: "Option", value: selectedSize?.displayLabel || selectedSize?.label || bcSizeLabel });
+    }
+    if (selectedAddons.length > 0) rows.push({ label: "Add-ons", value: `${selectedAddons.length} selected` });
+    if (selectedFinishings.length > 0) rows.push({ label: "Finish", value: `${selectedFinishings.length} selected` });
+    return rows;
+  }, [
+    multiSizeEnabled,
+    useMultiSize,
+    totalMultiQty,
+    sizeRows.length,
+    quantity,
+    dimensionsEnabled,
+    widthIn,
+    heightIn,
+    material,
+    selectedSize,
+    bcSizeLabel,
+    selectedAddons.length,
+    selectedFinishings.length,
+  ]);
 
-  function handleAddToCart() {
-    if (!canAddToCart) return;
+  function buildCartItem() {
+    if (!canAddToCart) return null;
     const effectiveQty = multiSizeEnabled && useMultiSize ? totalMultiQty : Number(quantity);
     const sizeRowsMeta = multiSizeEnabled && useMultiSize
       ? sizeRows.map((row) => ({
@@ -978,13 +1076,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       ? bcSizeLabel
       : selectedSize?.label || null;
 
-    const item = {
+    return {
       productId: product.id,
       slug: product.slug,
       name: product.name,
       unitAmount: priceData.unitAmount,
       quantity: effectiveQty,
-      image: imageList[0]?.url || null,
+      image: primaryImage,
       meta: {
         width: dimensionsEnabled ? widthIn : null,
         height: dimensionsEnabled ? heightIn : null,
@@ -1022,7 +1120,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         ...bcMeta,
       },
     };
+  }
 
+  function handleAddToCart() {
+    const item = buildCartItem();
+    if (!item) return;
     addItem(item);
     openCart();
     trackAddToCart({ name: product.name, value: priceData.subtotal });
@@ -1031,11 +1133,41 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     setTimeout(() => setAdded(false), 700);
   }
 
+  async function handleBuyNow() {
+    const item = buildCartItem();
+    if (!item || buyNowLoading) return;
+    setBuyNowLoading(true);
+    try {
+      const checkoutItem = {
+        productId: String(item.productId || item.id),
+        slug: String(item.slug || "unknown"),
+        name: item.name,
+        unitAmount: item.unitAmount ?? item.price ?? 0,
+        quantity: item.quantity,
+        meta: normalizeCheckoutMeta(item.meta ?? item.options ?? {}),
+      };
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: [checkoutItem] }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.url) {
+        throw new Error(data?.error || "Checkout failed");
+      }
+      window.location.href = data.url;
+    } catch (e) {
+      showErrorToast(e instanceof Error ? e.message : "Checkout failed");
+    } finally {
+      setBuyNowLoading(false);
+    }
+  }
+
   const Wrapper = embedded ? "section" : "main";
 
   return (
-    <Wrapper className={embedded ? "text-gray-900" : "bg-gray-50 pb-20 pt-10 text-gray-900"}>
-      <div className={embedded ? "mx-auto max-w-6xl space-y-6 lg:space-y-10 px-4 sm:px-6" : "mx-auto max-w-6xl space-y-6 lg:space-y-8 px-4 sm:px-6"}>
+    <Wrapper className={embedded ? "text-gray-900" : "bg-[radial-gradient(circle_at_top,_#f8fafc,_#eef2f7_45%,_#f8fafc)] pb-20 pt-10 text-gray-900"}>
+      <div className={embedded ? "mx-auto max-w-6xl space-y-6 lg:space-y-10 px-4 sm:px-6" : "mx-auto max-w-7xl space-y-6 lg:space-y-8 px-4 sm:px-6"}>
         {!embedded && (
           <Breadcrumbs items={[
             { label: t("product.shop"), href: "/shop" },
@@ -1053,7 +1185,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         {/* Mobile-only header — shows title before gallery on small screens */}
         {!embedded && (
           <header className="lg:hidden">
-            <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
+            <h1 className="text-3xl font-black tracking-tight text-slate-950">{product.name}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {(() => {
                 const tk = getTurnaround(product);
@@ -1069,18 +1201,18 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 {t("trust.madeToOrder")}
               </span>
             </div>
-            <p className="mt-2 text-sm text-gray-600">{product.description || t("product.defaultDescription")}</p>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">{product.description || t("product.defaultDescription")}</p>
           </header>
         )}
 
-        <section className="grid gap-6 lg:gap-10 lg:grid-cols-12">
+        <section className="grid gap-6 lg:gap-9 lg:grid-cols-12">
           <div className="space-y-4 lg:col-span-7">
             <ImageGallery images={imageList} productName={product.name} />
 
             {templateGallery && <TemplateGallery templates={templateGallery} />}
 
             {productSpecs ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
+              <div className="rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm sm:p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">{t("bc.specs")}</h3>
                 <div className="mt-3 divide-y divide-gray-100">
                   {productSpecs.dimensions && (
@@ -1114,7 +1246,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 </div>
               </div>
             ) : specs.length > 0 ? (
-              <div className="hidden lg:block rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
+              <div className="hidden lg:block rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm sm:p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">{t("product.specifications")}</h3>
                 <div className="mt-3 divide-y divide-gray-100">
                   {specs.map(([k, v]) => (
@@ -1132,7 +1264,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             {/* Desktop-only header — hidden on mobile where it appears above the grid */}
             {!embedded && (
               <header className="hidden lg:block">
-                <h1 className="text-4xl font-semibold tracking-tight">{product.name}</h1>
+                <h1 className="text-4xl font-black tracking-tight text-slate-950 xl:text-5xl">{product.name}</h1>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   {(() => {
                     const tk = getTurnaround(product);
@@ -1148,13 +1280,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     {t("trust.madeToOrder")}
                   </span>
                 </div>
-                <p className="mt-3 text-sm text-gray-600">{product.description || t("product.defaultDescription")}</p>
+                <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600">{product.description || t("product.defaultDescription")}</p>
               </header>
             )}
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 flex flex-col">
+            <div className="rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 lg:sticky lg:top-24 flex flex-col">
               {/* ── PRICE + QUANTITY + ATC (always visible, order-1) ── */}
-              <div className="order-1">
+              <div className="order-1 rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-4 sm:p-5">
                 {/* Price display */}
                 <div className="flex items-baseline justify-between">
                   {priceData.unpriced ? (
@@ -1166,11 +1298,12 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     </a>
                   ) : (
                     <div>
-                      <span className={`text-2xl font-bold ${quoteLoading ? "text-gray-400" : "text-gray-900"}`}>
+                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Instant Quote</span>
+                      <span className="text-2xl font-bold text-gray-900">
                         {formatCad(priceData.total)}
                       </span>
                       <span className="ml-1 text-xs text-gray-500">{t("product.cad")}</span>
-                      {quoteLoading && <span className="ml-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />}
+                      {quoteLoading && <span className="ml-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400">Updating</span>}
                     </div>
                   )}
                   {!priceData.unpriced && priceData.unitAmount != null && (
@@ -1183,6 +1316,18 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     {t("product.subtotal")}: {formatCad(priceData.subtotal)} + {t("product.tax")}: {formatCad(priceData.tax)}
                   </p>
                 )}
+
+                <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Order Summary</p>
+                  <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                    {quickSelection.slice(0, 6).map((item) => (
+                      <div key={`${item.label}-${item.value}`} className="min-w-0">
+                        <p className="text-slate-400">{item.label}</p>
+                        <p className="truncate font-medium text-slate-800">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Quantity — always visible */}
                 <div className="mt-4">
@@ -1199,14 +1344,14 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                           const next = idx > 0 ? activeQuantityChoices[idx - 1] : activeQuantityChoices[0];
                           setQuantityValue(next);
                         }}
-                        className="h-9 w-9 rounded-full border border-gray-300"
+                        className="h-9 w-9 rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
                       >
                         -
                       </button>
                       <select
                         value={String(quantity)}
                         onChange={(e) => setQuantityValue(Number(e.target.value))}
-                        className="w-32 rounded-xl border border-gray-300 px-3 py-2 text-center text-sm"
+                        className="w-32 rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-sm font-semibold text-slate-800"
                       >
                         {activeQuantityChoices.map((q) => (
                           <option key={q} value={q}>{q}</option>
@@ -1221,16 +1366,16 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               : activeQuantityChoices[activeQuantityChoices.length - 1];
                           setQuantityValue(next);
                         }}
-                        className="h-9 w-9 rounded-full border border-gray-300"
+                        className="h-9 w-9 rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
                       >
                         +
                       </button>
                     </div>
                   ) : (
                     <div className="mt-2 flex items-center gap-2">
-                      <button onClick={() => setQuantityValue(quantity - (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-gray-300">-</button>
-                      <input type="number" value={quantity} onChange={(e) => setQuantityValue(e.target.value)} className="w-24 rounded-xl border border-gray-300 px-3 py-2 text-center text-sm" />
-                      <button onClick={() => setQuantityValue(quantity + (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-gray-300">+</button>
+                      <button onClick={() => setQuantityValue(quantity - (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50">-</button>
+                      <input type="number" value={quantity} onChange={(e) => setQuantityValue(e.target.value)} className="w-24 rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-sm font-semibold text-slate-800" />
+                      <button onClick={() => setQuantityValue(quantity + (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50">+</button>
                     </div>
                   )}
                 </div>
@@ -1240,12 +1385,12 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   <button
                     onClick={handleAddToCart}
                     disabled={!canAddToCart}
-                    className={`w-full rounded-full px-4 py-3.5 text-sm font-semibold uppercase tracking-[0.15em] text-white transition-all duration-200 ${
+                    className={`w-full rounded-full px-4 py-3.5 text-sm font-semibold uppercase tracking-[0.15em] text-white shadow-sm transition-all duration-200 ${
                       !canAddToCart
                         ? "bg-gray-300 cursor-not-allowed"
                         : added
                           ? "bg-emerald-600"
-                          : "bg-gray-900 hover:bg-black"
+                          : "bg-gradient-to-r from-slate-900 to-black hover:from-black hover:to-slate-900"
                     }`}
                   >
                     {!canAddToCart
@@ -1257,16 +1402,60 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         : t("product.addToCart")}
                   </button>
                 </div>
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={handleBuyNow}
+                    disabled={!canAddToCart || buyNowLoading}
+                    className={`w-full rounded-full border px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition-all ${
+                      !canAddToCart || buyNowLoading
+                        ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                        : "border-slate-800 bg-white text-slate-900 hover:bg-slate-900 hover:text-white"
+                    }`}
+                  >
+                    {buyNowLoading ? "Processing..." : "Buy Now"}
+                  </button>
+                </div>
 
-                <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-gray-400">
-                  <span>{t("trust.madeToOrder")}</span>
-                  <span>•</span>
-                  <span>{t("trust.ordersCompleted")}</span>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                  <div className="flex flex-col items-center gap-0.5">
+                    <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-[10px] text-slate-500">{t("trust.deliveryPromise")}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                    </svg>
+                    <span className="text-[10px] text-slate-500">{t("trust.reprintGuarantee")}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                    </svg>
+                    <span className="text-[10px] text-slate-500">{t("trust.expertHelp")}</span>
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                  <p className="font-semibold text-slate-800">How it works</p>
+                  <p className="mt-1">1. Select options and quantity</p>
+                  <p>2. Upload artwork now or after checkout</p>
+                  <p>3. Checkout securely with live quote</p>
+                </div>
+                <div className="mt-2 flex gap-2 text-[11px]">
+                  <Link href="/quote" className="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50">
+                    Need a custom quote?
+                  </Link>
+                  <Link href="/contact" className="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50">
+                    Talk to support
+                  </Link>
                 </div>
               </div>
 
               {/* ── OPTIONS (collapsed on mobile, order-2) ── */}
-              <div className="order-2 mt-5 border-t border-gray-100 pt-4">
+              <div className="order-2 mt-5 border-t border-slate-100 pt-4">
 
                 {isTextEditor && (
                   <div className="mt-5 space-y-3">
@@ -1610,7 +1799,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 <button
                   type="button"
                   onClick={() => setShowAdvancedOptions((prev) => !prev)}
-                  className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-left md:hidden"
+                  className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-left"
                 >
                   <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-600">
                     {t("product.moreOptions")}
@@ -1620,7 +1809,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   </span>
                 </button>
 
-                <div className={`${showAdvancedOptions ? "mt-4 block" : "hidden"} space-y-5 md:mt-5 md:block`}>
+                <div className={`${showAdvancedOptions ? "mt-4 block" : "hidden"} space-y-5 md:mt-5`}>
                   {scenes.length > 0 && (
                     <div>
                       <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.scene")}</label>
@@ -1919,11 +2108,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.addons")}</p>
                   <div className="space-y-2">
-                    {visibleAddons.map((addon) => (
-                      <label key={addon.id} className="flex cursor-pointer items-start gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
+                    {visibleAddons.map((addon) => {
+                      const addonChecked = selectedAddons.includes(addon.id);
+                      return (
+                      <label key={addon.id} className={`flex cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${addonChecked ? "border-gray-900 bg-gray-50" : "border-gray-200 bg-white"}`}>
                         <input
                           type="checkbox"
-                          checked={selectedAddons.includes(addon.id)}
+                          checked={addonChecked}
                           onChange={(e) => {
                             if (e.target.checked) {
                               setSelectedAddons((prev) => (prev.includes(addon.id) ? prev : [...prev, addon.id]));
@@ -1934,7 +2125,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                           className="mt-0.5"
                         />
                         <span className="flex-1">
-                          <span className="font-medium text-gray-900">{t("bc.addon." + addon.id) !== "bc.addon." + addon.id ? t("bc.addon." + addon.id) : addon.name}</span>
+                          <span className="font-medium text-gray-900">
+                            {t("bc.addon." + addon.id) !== "bc.addon." + addon.id ? t("bc.addon." + addon.id) : addon.name}
+                            {addon.recommended && <span className="ml-1.5 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">{t("product.popular")}</span>}
+                          </span>
                           {addon.description && <span className="block text-xs text-gray-500">{addon.description}</span>}
                           {addon.price > 0 && (
                             <span className="block text-xs text-gray-500">
@@ -1943,7 +2137,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                           )}
                         </span>
                       </label>
-                    ))}
+                      );
+                    })}
                   </div>
                     </div>
                   )}
@@ -1976,7 +2171,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         const isMulti = uiConfig?.finishingMode === "multi";
                         const checked = selectedFinishings.includes(f.id);
                         return (
-                          <label key={f.id} className="flex cursor-pointer items-start gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
+                          <label key={f.id} className={`flex cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${checked ? "border-gray-900 bg-gray-50" : "border-gray-200 bg-white"}`}>
                             <input
                               type={isMulti ? "checkbox" : "radio"}
                               name="finishing"
@@ -1991,7 +2186,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               className="mt-0.5"
                             />
                             <span className="flex-1">
-                              <span className="font-medium text-gray-900">{f.name}</span>
+                              <span className="font-medium text-gray-900">
+                                {f.name}
+                                {f.recommended && <span className="ml-1.5 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">{t("product.popular")}</span>}
+                              </span>
                               <span className="block text-xs text-gray-500">
                                 {f.type === "flat" ? `$${f.price.toFixed(2)} flat` : f.type === "per_unit" ? `$${f.price.toFixed(2)}/unit` : `$${f.price.toFixed(2)}/sqft`}
                               </span>
@@ -2115,21 +2313,20 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             <Link href={`/shop?category=${product.category}`} className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 hover:text-gray-900">{t("product.viewCategory")}</Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {relatedProducts.map((item) => (
-              <Link key={item.id} href={`/shop/${item.category}/${item.slug}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-                <div className="relative aspect-[4/3] bg-gray-100">
-                  {item.images[0]?.url ? (
-                    <Image src={item.images[0].url} alt={item.images[0].alt || item.name} fill className="object-cover" sizes="25vw" unoptimized={item.images[0].url.endsWith(".svg")} />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">{t("product.noImageSmall")}</div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <p className="text-sm font-semibold">{item.name}</p>
-                  <p className="mt-1 text-xs text-gray-600">{t("product.from", { price: formatCad(item.basePrice) })}</p>
-                </div>
-              </Link>
-            ))}
+            {relatedProducts.map((item) => {
+              const relatedImage = getProductImage(item);
+              return (
+                <Link key={item.id} href={`/shop/${item.category}/${item.slug}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                  <div className="relative aspect-[4/3] bg-gray-100">
+                    <Image src={relatedImage} alt={item.images?.[0]?.alt || item.name} fill className="object-cover" sizes="25vw" unoptimized={isSvgImage(relatedImage)} />
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm font-semibold">{item.name}</p>
+                    <p className="mt-1 text-xs text-gray-600">{t("product.from", { price: formatCad(item.basePrice) })}</p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
         )}
@@ -2142,25 +2339,28 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         {/* Sticky mobile Add to Cart bar */}
         {stickyVisible && (
           <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 md:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-gray-700">{product.name}</p>
-                <p className="text-lg font-black">{formatCad(priceData.total)}</p>
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 shrink-0">
+                <p className="text-lg font-black">{totalDisplay}</p>
               </div>
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={!canAddToCart}
-                className={`flex-1 max-w-[200px] rounded-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-all duration-200 ${!canAddToCart ? "bg-gray-300 cursor-not-allowed" : added ? "bg-emerald-600" : "bg-gray-900 hover:bg-black"}`}
-              >
-                {!canAddToCart
-                  ? priceData.unpriced
-                    ? t("product.priceOnRequest")
-                    : t("product.fixSizeErrors")
-                  : added
-                    ? t("product.added")
-                    : t("product.addToCart")}
-              </button>
+              <div className="flex flex-1 gap-2">
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={!canAddToCart}
+                  className={`flex-1 rounded-full px-3 py-3 text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-200 ${!canAddToCart ? "border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : added ? "border border-emerald-600 bg-emerald-600 text-white" : "border border-gray-900 bg-white text-gray-900 hover:bg-gray-50"}`}
+                >
+                  {added ? t("product.added") : t("product.addToCart")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  disabled={!canAddToCart || buyNowLoading}
+                  className={`flex-1 rounded-full px-3 py-3 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-all duration-200 ${!canAddToCart || buyNowLoading ? "bg-gray-300 cursor-not-allowed" : "bg-gray-900 hover:bg-black"}`}
+                >
+                  {buyNowLoading ? "..." : "Buy Now"}
+                </button>
+              </div>
             </div>
           </div>
         )}
