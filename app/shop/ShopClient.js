@@ -144,7 +144,7 @@ function CategoryGrid({ departments, departmentMeta, categoryMeta, categoryCount
                 {subSections.map((ss) => (
                   <div key={ss.label}>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 mb-3">
-                      {ss.label}
+                      {ss.i18nKey ? t(ss.i18nKey) : ss.label}
                     </p>
                     <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                       {renderCategoryCards(ss.categories, categoryMeta, categoryCounts, categoryPreviews, t)}
