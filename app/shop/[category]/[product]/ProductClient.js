@@ -11,7 +11,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import { PaymentBadges } from "@/components/TrustBadges";
 import ImageGallery from "@/components/product/ImageGallery";
-import { trackAddToCart } from "@/lib/analytics";
+import { trackAddToCart, trackOptionChange, trackQuoteLoaded, trackBuyNow, trackUploadStarted, trackUploadCompleted } from "@/lib/analytics";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { useRecentlyViewedStore } from "@/lib/recently-viewed";
 import dynamic from "next/dynamic";
@@ -685,10 +685,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             amount: Number(valid[idx]?.totalCents || 0),
           }));
           if (!cancelled) {
+            const unitCents = totalQty > 0 ? Math.round(totalCents / totalQty) : totalCents;
             setQuote({
               totalCents,
               currency: "CAD",
-              unitCents: totalQty > 0 ? Math.round(totalCents / totalQty) : totalCents,
+              unitCents,
               breakdown,
               meta: {
                 model: "MULTI_SIZE",
@@ -698,6 +699,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 sqftPerUnit: totalQty > 0 ? sqftTotal / totalQty : null,
               },
             });
+            trackQuoteLoaded({ slug: product.slug, quantity: totalQty, pricingModel: "MULTI_SIZE", totalCents, unitCents });
           }
           return;
         }
@@ -713,7 +715,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           selectedFinishings,
           namesCount
         );
-        if (!cancelled && data) setQuote(data);
+        if (!cancelled && data) {
+          setQuote(data);
+          trackQuoteLoaded({ slug: product.slug, quantity, pricingModel: data.meta?.model || product.pricingPreset?.model, totalCents: data.totalCents, unitCents: data.unitCents });
+        }
       } catch {
         // Keep previous quote on network failure.
       } finally {
@@ -969,7 +974,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const numeric = Number(next) || range.min;
     const clamped = Math.min(range.max, Math.max(range.min, numeric));
     const stepped = Math.round(clamped / range.step) * range.step;
-    setQuantity(Math.min(range.max, Math.max(range.min, stepped)));
+    const final = Math.min(range.max, Math.max(range.min, stepped));
+    setQuantity(final);
+    trackOptionChange({ slug: product.slug, option: "quantity", value: String(final), quantity: final, pricingModel: product.pricingPreset?.model });
   }
 
   const canAddToCart = sizeValidation.valid && !priceData.unpriced;
@@ -1127,7 +1134,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     if (!item) return;
     addItem(item);
     openCart();
-    trackAddToCart({ name: product.name, value: priceData.subtotal });
+    trackAddToCart({ name: product.name, value: priceData.subtotal, slug: product.slug, quantity, pricingModel: product.pricingPreset?.model });
     showSuccessToast(t("product.addedToCart"));
     setAdded(true);
     setTimeout(() => setAdded(false), 700);
@@ -1136,6 +1143,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   async function handleBuyNow() {
     const item = buildCartItem();
     if (!item || buyNowLoading) return;
+    trackBuyNow({ name: product.name, value: priceData.subtotal });
     setBuyNowLoading(true);
     try {
       const checkoutItem = {
@@ -2065,7 +2073,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             <button
                               key={o.label}
                               type="button"
-                              onClick={() => setSelectedSizeLabel(o.label)}
+                              onClick={() => {
+                                setSelectedSizeLabel(o.label);
+                                trackOptionChange({ slug: product.slug, option: "size", value: o.label, quantity, pricingModel: product.pricingPreset?.model });
+                              }}
                               className={`relative rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
                                 selected
                                   ? "border-gray-900 bg-gray-900 text-white"
@@ -2121,6 +2132,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             } else {
                               setSelectedAddons((prev) => prev.filter((id) => id !== addon.id));
                             }
+                            trackOptionChange({ slug: product.slug, option: "addon", value: addon.id, quantity, pricingModel: product.pricingPreset?.model });
                           }}
                           className="mt-0.5"
                         />
@@ -2182,6 +2194,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                 } else {
                                   setSelectedFinishings([f.id]);
                                 }
+                                trackOptionChange({ slug: product.slug, option: "finishing", value: f.id, quantity, pricingModel: product.pricingPreset?.model });
                               }}
                               className="mt-0.5"
                             />
@@ -2210,6 +2223,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   <p className="mb-2 text-xs text-gray-600">{t("product.uploadHint")}</p>
                   <UploadButton
                     endpoint="artworkUploader"
+                    onUploadBegin={() => {
+                      trackUploadStarted({ slug: product.slug });
+                    }}
                     onClientUploadComplete={(res) => {
                       const first = Array.isArray(res) ? res[0] : null;
                       if (!first) return;
@@ -2220,6 +2236,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         mime: first.type || first.mime || null,
                         size: first.size || null,
                       });
+                      trackUploadCompleted({ slug: product.slug, fileName: first.name, fileSize: first.size });
                     }}
                     onUploadError={(e) => {
                       console.error("[uploadthing]", e);
