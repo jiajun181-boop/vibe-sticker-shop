@@ -16,7 +16,7 @@ import ReorderStrip from "@/components/home/ReorderStrip";
 
 export const dynamic = "force-dynamic";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 const BRAND = "La Lunar Printing Inc.";
 
 const QUICK_ORDER_SLUGS = [

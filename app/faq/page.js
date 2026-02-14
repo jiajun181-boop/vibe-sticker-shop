@@ -23,7 +23,7 @@ const FAQ_ITEMS_EN = [
   { question: "Can I make changes after my order is placed?", answer: "Once artwork is approved, it immediately goes into production. No changes or cancellations are possible after approval. Contact us as soon as possible if you need to make changes." },
 ];
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 
 export async function generateMetadata() {
   return {

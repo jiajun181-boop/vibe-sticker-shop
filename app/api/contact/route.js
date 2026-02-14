@@ -3,7 +3,7 @@ import { sendEmail } from "@/lib/email/resend";
 import { buildContactReceivedHtml, buildContactNotifyHtml } from "@/lib/email/templates/contact-received";
 import { contactLimiter, getClientIp } from "@/lib/rate-limit";
 
-const NOTIFY_EMAIL = process.env.CONTACT_NOTIFY_EMAIL || "support@vibestickers.com";
+const NOTIFY_EMAIL = process.env.CONTACT_NOTIFY_EMAIL || "support@lunarprint.ca";
 
 export async function POST(req) {
   try {

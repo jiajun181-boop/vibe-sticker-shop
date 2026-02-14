@@ -163,7 +163,7 @@ export default function SettingsPage() {
               type="email"
               value={settings["store.email"]}
               onChange={(v) => updateSetting("store.email", v)}
-              placeholder="hello@vibestickers.com"
+              placeholder="hello@lunarprint.ca"
             />
             <Field
               label="Phone"

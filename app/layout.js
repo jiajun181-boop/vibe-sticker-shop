@@ -12,7 +12,7 @@ import ExitIntentPopup from "@/components/ExitIntentPopup";
 import AuthInit from "@/components/AuthInit";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 
 export async function generateMetadata() {
   const locale = await getServerLocale();
@@ -37,13 +37,13 @@ export async function generateMetadata() {
       siteName: "La Lunar Printing Inc.",
       locale: locale === "zh" ? "zh_CN" : "en_CA",
       type: "website",
-      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "La Lunar Printing Inc." }],
+      images: [{ url: "/logo-social.png", width: 1200, height: 630, alt: "La Lunar Printing Inc." }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ["/og-image.png"],
+      images: ["/logo-social.png"],
     },
     manifest: "/manifest.json",
   };

@@ -14,7 +14,7 @@ import {
   BreadcrumbSchemaFromItems,
 } from "@/components/JsonLd";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 
 export async function generateMetadata({ params }) {
   const { tag } = await params;

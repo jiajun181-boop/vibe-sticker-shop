@@ -1,4 +1,4 @@
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 
 // Category slug → display name mapping for breadcrumbs
 const CATEGORY_DISPLAY_NAMES = {

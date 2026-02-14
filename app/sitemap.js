@@ -3,7 +3,7 @@ import { ALL_CATEGORIES } from "@/lib/catalogConfig";
 import { USE_CASE_SLUGS } from "@/lib/useCases";
 import { INDUSTRY_TAGS } from "@/lib/industryTags";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 
 export default async function sitemap() {
   const now = new Date();

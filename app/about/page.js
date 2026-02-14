@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getServerT } from "@/lib/i18n/server";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 const BRAND = "La Lunar Printing Inc.";
 
 export async function generateMetadata() {
@@ -156,7 +156,7 @@ export default async function AboutPage() {
           </div>
         </section>
 
-        {/* Gallery */}
+        {/* Capabilities at a glance */}
         <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
           <h2 className="text-2xl font-semibold tracking-tight">{t("about.galleryTitle")}</h2>
           <p className="mt-2 text-sm text-gray-500">{t("about.gallerySubtitle")}</p>
@@ -175,7 +175,6 @@ export default async function AboutPage() {
               </div>
             ))}
           </div>
-          <p className="mt-4 text-xs text-gray-400 text-center italic">Photos coming soon</p>
         </section>
 
         {/* Certifications & Compliance */}

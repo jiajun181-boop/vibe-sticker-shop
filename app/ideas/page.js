@@ -4,7 +4,7 @@ import { USE_CASES } from "@/lib/useCases";
 import { INDUSTRY_TAGS, INDUSTRY_LABELS } from "@/lib/industryTags";
 import { BreadcrumbSchemaFromItems } from "@/components/JsonLd";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 
 export async function generateMetadata() {
   return {

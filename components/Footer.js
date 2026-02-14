@@ -46,7 +46,7 @@ export default function Footer({ locale = "en" }) {
       links: [
         { label: t("footer.company"), href: "/about" },
         { label: t("footer.ourStory"), href: "/about" },
-        { label: t("footer.careers"), href: "/about" },
+        { label: t("footer.designServices"), href: "/design-services" },
       ],
     },
     {
@@ -60,8 +60,8 @@ export default function Footer({ locale = "en" }) {
     {
       title: t("footer.resources"),
       links: [
-        { label: t("footer.templates"), href: "/about" },
-        { label: t("footer.specs"), href: "/about" },
+        { label: t("footer.artworkGuidelines"), href: "/artwork-guidelines" },
+        { label: t("footer.specs"), href: "/design-services" },
         { label: t("footer.faq"), href: "/faq" },
       ],
     },

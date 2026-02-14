@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { setSessionCookie, generateToken } from "@/lib/auth";
+import { setSessionCookie, generateToken, hashToken } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildVerifyEmailHtml } from "@/lib/email/templates/verify-email";
 import { buildB2bPendingHtml } from "@/lib/email/templates/b2b-pending";
 import { authLimiter, getClientIp } from "@/lib/rate-limit";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 
 export async function POST(request) {
   try {
@@ -45,6 +45,7 @@ export async function POST(request) {
 
     // Generate email verification token (24h expiry)
     const emailVerifyToken = generateToken();
+    const emailVerifyTokenHash = hashToken(emailVerifyToken);
     const emailVerifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     // Create user
@@ -54,7 +55,7 @@ export async function POST(request) {
         name: name.trim(),
         password: hashedPassword,
         accountType: type,
-        emailVerifyToken,
+        emailVerifyToken: emailVerifyTokenHash,
         emailVerifyExpires,
         companyName: type === "B2B" ? (companyName || "").trim() || null : null,
         companyRole: type === "B2B" ? (companyRole || "").trim() || null : null,

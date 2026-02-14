@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { generateToken } from "@/lib/auth";
+import { generateToken, hashToken } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildPasswordResetHtml } from "@/lib/email/templates/password-reset";
 import { forgotPasswordLimiter, getClientIp } from "@/lib/rate-limit";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vibestickers.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 
 export async function POST(request) {
   try {
@@ -27,11 +27,12 @@ export async function POST(request) {
 
     if (user && user.password) {
       const token = generateToken();
+      const tokenHash = hashToken(token);
       const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
       await prisma.user.update({
         where: { id: user.id },
-        data: { passwordResetToken: token, passwordResetExpires: expires },
+        data: { passwordResetToken: tokenHash, passwordResetExpires: expires },
       });
 
       const resetUrl = `${SITE_URL}/reset-password?token=${token}`;
