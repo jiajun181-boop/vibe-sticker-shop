@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 import ShopClient from "./ShopClient";
+import ShopLoading from "./loading";
 
 export const dynamic = "force-dynamic";
 
@@ -74,17 +76,19 @@ export default async function ShopPage({ searchParams }) {
   }
 
   return (
-    <ShopClient
-      products={products}
-      initialQuery={initialQuery}
-      initialTag={initialTag}
-      initialUseCase={initialUseCase}
-      initialView={initialView}
-      categoryMeta={config.categoryMeta}
-      departments={config.departments}
-      departmentMeta={config.departmentMeta}
-      categoryCounts={categoryCounts}
-      categoryPreviews={categoryPreviews}
-    />
+    <Suspense fallback={<ShopLoading />}>
+      <ShopClient
+        products={products}
+        initialQuery={initialQuery}
+        initialTag={initialTag}
+        initialUseCase={initialUseCase}
+        initialView={initialView}
+        categoryMeta={config.categoryMeta}
+        departments={config.departments}
+        departmentMeta={config.departmentMeta}
+        categoryCounts={categoryCounts}
+        categoryPreviews={categoryPreviews}
+      />
+    </Suspense>
   );
 }

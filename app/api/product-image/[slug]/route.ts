@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { access } from "node:fs/promises";
-import path from "node:path";
 
-const EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".svg"];
+export const runtime = "nodejs";
 
 function esc(value: string) {
   return value
@@ -455,38 +453,11 @@ function makeSvg({ name, category, slug }: { name: string; category: string; slu
 </svg>`;
 }
 
-async function findAsset(slug: string) {
-  const safeSlug = slug.replace(/[^a-zA-Z0-9-_]/g, "");
-  if (!safeSlug) return null;
-
-  const root = process.cwd();
-  for (const ext of EXTENSIONS) {
-    const abs = path.join(root, "public", "products", `${safeSlug}${ext}`);
-    try {
-      await access(abs);
-      return `/products/${safeSlug}${ext}`;
-    } catch {
-      // continue
-    }
-  }
-  return null;
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
-  const asset = await findAsset(slug);
-  if (asset) {
-    return NextResponse.redirect(new URL(asset, request.url), {
-      status: 307,
-      headers: {
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
-  }
-
   const name = (request.nextUrl.searchParams.get("name") || "").slice(0, 120);
   const category = (request.nextUrl.searchParams.get("category") || "").slice(0, 120);
   const svg = makeSvg({ name, category, slug });

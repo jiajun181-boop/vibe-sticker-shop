@@ -44,6 +44,9 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // ── Cart URL (cart is a drawer, not a page) ──
+      { source: "/cart", destination: "/shop", permanent: false },
+
       // ── Old top-level category URLs → now inside marketing-prints ──
       { source: "/shop/business-cards", destination: "/shop/marketing-prints/business-cards", permanent: true },
       { source: "/shop/business-cards/:slug", destination: "/shop/marketing-prints/business-cards", permanent: true },
