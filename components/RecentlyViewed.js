@@ -39,7 +39,7 @@ export default function RecentlyViewed({ excludeSlug }) {
             </div>
             <div className="p-3">
               <p className="truncate text-xs font-semibold text-gray-900">{item.name}</p>
-              {item.basePrice && (
+              {item.basePrice > 0 && (
                 <p className="mt-0.5 text-[11px] text-gray-500">{t("product.from", { price: formatCad(item.basePrice) })}</p>
               )}
             </div>

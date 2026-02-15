@@ -102,6 +102,16 @@ export default async function ProductPage({ params }) {
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     });
 
+    // De-duplicate by name: keep the product with the highest basePrice
+    const seen = new Map();
+    for (const p of subProducts) {
+      const existing = seen.get(p.name);
+      if (!existing || (p.basePrice || 0) > (existing.basePrice || 0)) {
+        seen.set(p.name, p);
+      }
+    }
+    const dedupedProducts = [...seen.values()];
+
     const config = await getCatalogConfig();
     const categoryMeta = config.categoryMeta[decodedCategory];
 
@@ -110,7 +120,7 @@ export default async function ProductPage({ params }) {
         parentSlug={decodedSlug}
         category={decodedCategory}
         categoryTitle={categoryMeta?.title || decodedCategory}
-        products={toClientSafe(subProducts)}
+        products={toClientSafe(dedupedProducts)}
       />
     );
   }

@@ -2347,7 +2347,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   </div>
                   <div className="p-4">
                     <p className="text-sm font-semibold">{item.name}</p>
-                    <p className="mt-1 text-xs text-gray-600">{t("product.from", { price: formatCad(item.basePrice) })}</p>
+                    {item.basePrice > 0 && (
+                      <p className="mt-1 text-xs text-gray-600">{t("product.from", { price: formatCad(item.basePrice) })}</p>
+                    )}
                   </div>
                 </Link>
               );

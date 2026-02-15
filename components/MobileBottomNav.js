@@ -54,6 +54,7 @@ function BagIcon({ className }) {
 
 function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMeta }) {
   const { t } = useTranslation();
+  const [activeDept, setActiveDept] = useState(departments[0]?.key || "");
 
   // Lock body scroll when open
   useEffect(() => {
@@ -61,6 +62,19 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
     else document.body.style.overflow = "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
+
+  useEffect(() => {
+    if (!departments.length) {
+      setActiveDept("");
+      return;
+    }
+    if (!departments.some((d) => d.key === activeDept)) {
+      setActiveDept(departments[0].key);
+    }
+  }, [departments, activeDept]);
+
+  const currentDept = departments.find((d) => d.key === activeDept) || departments[0];
+  const currentCategories = currentDept?.categories || [];
 
   return (
     <>
@@ -71,9 +85,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
       />
 
       {/* Drawer */}
-      <div
-        className={`fixed inset-y-0 left-0 z-[61] w-72 bg-white shadow-2xl transition-transform duration-300 ease-out ${open ? "translate-x-0" : "-translate-x-full"}`}
-      >
+      <div className={`fixed inset-y-0 left-0 z-[61] w-80 bg-white shadow-2xl transition-transform duration-300 ease-out ${open ? "translate-x-0" : "-translate-x-full"}`}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
           <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-900">
@@ -90,38 +102,73 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
           </button>
         </div>
 
+        <div className="border-b border-gray-100 px-4 py-3">
+          <div className="mb-2 flex gap-2">
+            <Link href="/quote" onClick={onClose} className="btn-primary-pill px-3 py-1.5 text-[10px]">
+              {t("nav.getQuote")}
+            </Link>
+            <Link href="/shop" onClick={onClose} className="btn-secondary-pill px-3 py-1.5 text-[10px]">
+              {t("nav.shopAll")}
+            </Link>
+          </div>
+          <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
+            {departments.map((dept) => {
+              const selected = dept.key === currentDept?.key;
+              return (
+                <button
+                  key={dept.key}
+                  type="button"
+                  onClick={() => setActiveDept(dept.key)}
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${selected ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 text-gray-700"}`}
+                >
+                  {departmentMeta?.[dept.key]?.title || dept.key}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Category list */}
-        <nav className="overflow-y-auto h-[calc(100%-60px)] pb-24">
-          {departments.map((dept) => {
-            const dMeta = departmentMeta[dept.key];
-            return (
-              <div key={dept.key} className="border-b border-gray-50">
-                <p className="px-5 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
-                  {dMeta?.title || dept.key}
-                </p>
-                {dept.categories.map((catSlug) => {
-                  const cMeta = categoryMeta[catSlug];
-                  return (
-                    <Link
-                      key={catSlug}
-                      href={cMeta?.href || `/shop/${catSlug}`}
-                      onClick={onClose}
-                      className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 active:bg-gray-100"
-                    >
-                      <span className="text-base">{cMeta?.icon || ""}</span>
-                      <span>{cMeta?.title || catSlug}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            );
-          })}
+        <nav className="h-[calc(100%-150px)] overflow-y-auto pb-24">
+          <div className="p-4 space-y-3">
+            {currentCategories.map((catSlug) => {
+              const cMeta = categoryMeta[catSlug];
+              return (
+                <div key={catSlug} className="rounded-xl border border-gray-100 p-3">
+                  <Link
+                    href={cMeta?.href || `/shop/${catSlug}`}
+                    onClick={onClose}
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-900"
+                  >
+                    <span>{cMeta?.icon || ""}</span>
+                    <span>{cMeta?.title || catSlug}</span>
+                  </Link>
+                  <div className="mt-2 space-y-1">
+                    {(cMeta?.subGroups || []).slice(0, 4).map((sg) => (
+                      <Link
+                        key={sg.slug}
+                        href={sg.href}
+                        onClick={onClose}
+                        className="block rounded-md px-1 py-0.5 text-xs text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      >
+                        {sg.title}
+                      </Link>
+                    ))}
+                  </div>
+                  <Link
+                    href={`/shop/${catSlug}`}
+                    onClick={onClose}
+                    className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-900"
+                  >
+                    {t("nav.allIn", { category: cMeta?.title || catSlug })} &rarr;
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
 
           {/* Bottom links */}
           <div className="px-5 pt-4 pb-2 space-y-1">
-            <Link href="/quote" onClick={onClose} className="block rounded-lg px-2 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50">
-              {t("nav.getQuote")}
-            </Link>
             <Link href="/shop" onClick={onClose} className="block rounded-lg px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
               {t("shop.backToCategories")}
             </Link>

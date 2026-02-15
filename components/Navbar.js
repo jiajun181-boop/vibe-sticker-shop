@@ -9,13 +9,6 @@ import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { USE_CASES } from "@/lib/useCases";
 
-const linkKeys = [
-  { key: "nav.home", href: "/" },
-  { key: "nav.shop", href: "/shop" },
-  { key: "nav.about", href: "/about" },
-  { key: "nav.contact", href: "/contact" },
-];
-
 export default function Navbar({ catalogConfig }) {
   const { departments, departmentMeta, categoryMeta } = catalogConfig || {};
   const storeCount = useCartStore((state) => state.getCartCount());
@@ -38,12 +31,25 @@ export default function Navbar({ catalogConfig }) {
   const desktopDropdownRef = useRef(null);
   const mobileDropdownRef = useRef(null);
   const mobileSearchWrapperRef = useRef(null);
+  const [shopMenuOpen, setShopMenuOpen] = useState(false);
+  const safeDepartments = departments || [];
+  const [activeShopDept, setActiveShopDept] = useState(safeDepartments[0]?.key || "");
 
   useEffect(() => {
     if (searchOpen && searchRef.current) {
       searchRef.current.focus();
     }
   }, [searchOpen]);
+
+  useEffect(() => {
+    if (!safeDepartments.length) {
+      setActiveShopDept("");
+      return;
+    }
+    if (!safeDepartments.some((d) => d.key === activeShopDept)) {
+      setActiveShopDept(safeDepartments[0].key);
+    }
+  }, [safeDepartments, activeShopDept]);
 
   // Debounced instant search
   useEffect(() => {
@@ -105,6 +111,20 @@ export default function Navbar({ catalogConfig }) {
       clearSearch();
     }
   };
+
+  const activeDept =
+    safeDepartments.find((dept) => dept.key === activeShopDept) || safeDepartments[0] || null;
+  const activeCategories = activeDept?.categories || [];
+  const featuredCategorySlug = activeCategories[0];
+  const featuredCategoryMeta = featuredCategorySlug ? categoryMeta?.[featuredCategorySlug] : null;
+  const getCategoryImage = useCallback(
+    (catSlug) => {
+      const cMeta = categoryMeta?.[catSlug];
+      const label = cMeta?.title || catSlug;
+      return `/api/product-image/${encodeURIComponent(catSlug)}?name=${encodeURIComponent(label)}&category=${encodeURIComponent(catSlug)}`;
+    },
+    [categoryMeta],
+  );
 
   // Reusable search dropdown renderer
   const renderSearchDropdown = (refProp) => {
@@ -175,87 +195,135 @@ export default function Navbar({ catalogConfig }) {
           <Link href="/" className="transition-colors duration-200 hover:text-gray-900">{t("nav.home")}</Link>
 
           {/* Shop mega-menu dropdown */}
-          <div className="relative group">
-            <Link href="/shop" className="transition-colors duration-200 hover:text-gray-900">
+          <div
+            className="relative"
+            onMouseEnter={() => {
+              setShopMenuOpen(true);
+              if (!activeShopDept && safeDepartments[0]?.key) {
+                setActiveShopDept(safeDepartments[0].key);
+              }
+            }}
+            onMouseLeave={() => setShopMenuOpen(false)}
+          >
+            <Link href="/shop" className="transition-colors duration-200 hover:text-gray-900" aria-expanded={shopMenuOpen}>
               {t("nav.shop")}
             </Link>
-            <div className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-              <div className="w-[640px] rounded-xl border border-gray-200 bg-white p-5 shadow-xl">
-                <div className="grid grid-cols-4 gap-5">
-                  {(departments || []).map((dept) => {
-                    const dMeta = departmentMeta?.[dept.key];
-                    return (
-                      <div key={dept.key}>
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
-                          {dMeta?.title || dept.key}
-                        </p>
-                        <div className="mt-2 space-y-1">
-                          {dept.categories.map((catSlug) => {
-                            const cMeta = categoryMeta?.[catSlug];
-                            if (cMeta?.subGroups) {
-                              return (
-                                <div key={catSlug}>
-                                  {cMeta.subGroups.slice(0, 5).map((sg) => (
-                                    <Link
-                                      key={sg.slug}
-                                      href={sg.href}
-                                      className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-                                    >
-                                      {sg.title}
-                                    </Link>
-                                  ))}
-                                  <Link
-                                    href={`/shop/${catSlug}`}
-                                    className="block rounded-lg px-2 py-1.5 text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                                  >
-                                    {t("nav.allIn", { category: cMeta.title })} &rarr;
-                                  </Link>
-                                </div>
-                              );
-                            }
-                            return (
-                              <Link
-                                key={catSlug}
-                                href={`/shop/${catSlug}`}
-                                className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-                              >
-                                {cMeta?.title || catSlug}
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {/* More column */}
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
-                      {t("nav.more")}
+            <div className={`absolute left-1/2 top-full z-40 w-[940px] -translate-x-1/2 pt-2 transition-all duration-200 ${shopMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}>
+              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+                <div className="grid grid-cols-[220px_1fr]">
+                  <div className="border-r border-gray-100 bg-gray-50/70 p-3">
+                    <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
+                      Departments
                     </p>
-                    <div className="mt-2 space-y-1">
-                      <Link href="/quote" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
-                        {t("nav.getQuote")}
-                      </Link>
-                      <Link href="/contact" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
-                        {t("nav.contact")}
-                      </Link>
-                      <Link href="/faq" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
-                        {t("nav.faq")}
-                      </Link>
-                      <Link href="/about" className="block rounded-lg px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
-                        {t("nav.about")}
-                      </Link>
+                    <div className="space-y-1">
+                      {safeDepartments.map((dept) => {
+                        const selected = dept.key === activeDept?.key;
+                        return (
+                          <button
+                            key={dept.key}
+                            type="button"
+                            onMouseEnter={() => setActiveShopDept(dept.key)}
+                            onFocus={() => setActiveShopDept(dept.key)}
+                            className={`w-full rounded-xl px-3 py-2 text-left text-sm transition-colors ${selected ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-white hover:text-gray-900"}`}
+                          >
+                            {departmentMeta?.[dept.key]?.title || dept.key}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                </div>
-                <div className="mt-4 border-t border-gray-100 pt-3 flex items-center justify-between">
-                  <Link href="/shop" className="flex items-center gap-1 text-xs font-semibold text-gray-600 hover:text-gray-900 transition-colors">
-                    {t("nav.shopAll")}
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
-                  </Link>
+                  <div className="p-4">
+                    <div className="mb-3 grid grid-cols-[1fr_auto] gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link href="/quote" className="btn-primary-pill px-3 py-1.5 text-[10px]">
+                          {t("nav.getQuote")}
+                        </Link>
+                        <Link href="/shop" className="btn-secondary-pill px-3 py-1.5 text-[10px]">
+                          {t("nav.shopAll")}
+                        </Link>
+                        <Link href="/contact" className="btn-secondary-pill px-3 py-1.5 text-[10px]">
+                          {t("nav.contact")}
+                        </Link>
+                      </div>
+                      <Link
+                        href="/shop"
+                        className="inline-flex items-center gap-1 self-start rounded-full border border-gray-200 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-600 hover:border-gray-900 hover:text-gray-900"
+                      >
+                        Explore All
+                      </Link>
+                    </div>
+                    <div className="grid grid-cols-[1fr_220px] gap-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        {activeCategories.slice(0, 8).map((catSlug) => {
+                          const cMeta = categoryMeta?.[catSlug];
+                          return (
+                            <div key={catSlug} className="rounded-xl border border-gray-100 p-3">
+                              <Link href={`/shop/${catSlug}`} className="mb-2 block overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
+                                <Image
+                                  src={getCategoryImage(catSlug)}
+                                  alt={cMeta?.title || catSlug}
+                                  width={360}
+                                  height={140}
+                                  className="h-20 w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
+                                />
+                              </Link>
+                              <Link href={`/shop/${catSlug}`} className="inline-flex items-center gap-1 text-sm font-semibold text-gray-900 hover:text-black">
+                                <span>{cMeta?.icon || ""}</span>
+                                <span>{cMeta?.title || catSlug}</span>
+                              </Link>
+                              <div className="mt-2 space-y-1">
+                                {(cMeta?.subGroups || []).slice(0, 4).map((sg) => (
+                                  <Link key={sg.slug} href={sg.href} className="block rounded-md px-1 py-0.5 text-xs text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                                    {sg.title}
+                                  </Link>
+                                ))}
+                              </div>
+                              <Link href={`/shop/${catSlug}`} className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-900">
+                                {t("nav.allIn", { category: cMeta?.title || catSlug })} &rarr;
+                              </Link>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="rounded-xl border border-gray-100 bg-gradient-to-b from-gray-50 to-white p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">
+                          Featured
+                        </p>
+                        <Link href={featuredCategorySlug ? `/shop/${featuredCategorySlug}` : "/shop"} className="mt-2 block overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
+                          <Image
+                            src={getCategoryImage(featuredCategorySlug || "shop")}
+                            alt={featuredCategoryMeta?.title || "Featured category"}
+                            width={260}
+                            height={160}
+                            className="h-24 w-full object-cover"
+                          />
+                        </Link>
+                        <p className="mt-2 text-sm font-semibold text-gray-900">
+                          {featuredCategoryMeta?.title || "Shop by category"}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {featuredCategoryMeta?.subGroups?.[0]?.title || "Fast turnaround and business-ready print quality."}
+                        </p>
+                        <Link
+                          href={featuredCategorySlug ? `/shop/${featuredCategorySlug}` : "/shop"}
+                          className="mt-3 inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 text-[11px] font-semibold text-gray-700 hover:border-gray-900 hover:text-gray-900"
+                        >
+                          View Category
+                        </Link>
+                        <div className="mt-4 space-y-1 border-t border-gray-100 pt-3">
+                          <Link href="/faq" className="block text-xs text-gray-600 hover:text-gray-900">
+                            {t("nav.faq")}
+                          </Link>
+                          <Link href="/about" className="block text-xs text-gray-600 hover:text-gray-900">
+                            {t("nav.about")}
+                          </Link>
+                          <Link href="/ideas" className="block text-xs text-gray-600 hover:text-gray-900">
+                            {t("nav.solutions")}
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
