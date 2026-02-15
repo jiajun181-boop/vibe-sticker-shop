@@ -44,7 +44,7 @@ function SmallCard({ catSlug, meta, count, previews, t }) {
     >
       <span className="text-2xl">{meta?.icon || ""}</span>
       <h3 className="mt-2 text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-        {meta?.title || catSlug}
+        {t(`catalog.cat.${catSlug}`) !== `catalog.cat.${catSlug}` ? t(`catalog.cat.${catSlug}`) : (meta?.title || catSlug)}
       </h3>
       {count > 0 && (
         <p className="mt-1 text-[11px] text-gray-400">
@@ -84,7 +84,7 @@ function ParentCard({ catSlug, meta, count, t }) {
         <div className="flex items-center gap-3">
           <span className="text-2xl">{meta?.icon || ""}</span>
           <div>
-            <h3 className="text-base font-semibold text-gray-900">{meta?.title || catSlug}</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t(`catalog.cat.${catSlug}`) !== `catalog.cat.${catSlug}` ? t(`catalog.cat.${catSlug}`) : (meta?.title || catSlug)}</h3>
             {count > 0 && (
               <p className="text-[11px] text-gray-400">{count} {t("mp.landing.products")}</p>
             )}
@@ -105,7 +105,7 @@ function ParentCard({ catSlug, meta, count, t }) {
               href={sg.href}
               className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-white hover:text-gray-900"
             >
-              {sg.title}
+              {t(`catalog.sub.${sg.slug}`) !== `catalog.sub.${sg.slug}` ? t(`catalog.sub.${sg.slug}`) : sg.title}
             </Link>
           ))}
         </div>
@@ -144,7 +144,7 @@ function CategoryGrid({ departments, departmentMeta, categoryMeta, categoryCount
               className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-gray-50"
             >
               <h2 className="text-lg font-semibold tracking-tight text-gray-900">
-                {deptMeta?.title || dept.key}
+                {t(`catalog.dept.${dept.key}`) !== `catalog.dept.${dept.key}` ? t(`catalog.dept.${dept.key}`) : (deptMeta?.title || dept.key)}
               </h2>
               <svg
                 className={`h-5 w-5 flex-shrink-0 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
@@ -283,10 +283,12 @@ export default function ShopClient({
   const categoryLabels = useMemo(() => {
     const labels = {};
     for (const [slug, meta] of Object.entries(categoryMeta)) {
-      labels[slug] = meta.title || slug;
+      const key = `catalog.cat.${slug}`;
+      const translated = t(key);
+      labels[slug] = translated !== key ? translated : (meta.title || slug);
     }
     return labels;
-  }, [categoryMeta]);
+  }, [categoryMeta, t]);
 
   const categoryOrder = useMemo(() => {
     const m = new Map();
@@ -450,9 +452,9 @@ export default function ShopClient({
               {t("shop.tagline")}
             </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <span className="badge-soft bg-emerald-100 text-emerald-700">Fast Turnaround</span>
-                <span className="badge-soft bg-slate-100 text-slate-700">Live Pricing</span>
-                <span className="badge-soft bg-blue-100 text-blue-700">Made in Canada</span>
+                <span className="badge-soft bg-emerald-100 text-emerald-700">{t("shop.badge.fastTurnaround")}</span>
+                <span className="badge-soft bg-slate-100 text-slate-700">{t("shop.badge.livePricing")}</span>
+                <span className="badge-soft bg-blue-100 text-blue-700">{t("shop.badge.madeInCanada")}</span>
               </div>
             </div>
             {/* Compact search */}
@@ -522,7 +524,7 @@ export default function ShopClient({
                   }}
                   className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-400 transition-colors"
                 >
-                  {meta?.icon || ""} {meta?.label || tg}
+                  {meta?.icon || ""} {t(`industry.${tg}.label`)}
                 </button>
               );
             })}
@@ -595,7 +597,7 @@ export default function ShopClient({
                         : "border border-gray-200 bg-white text-gray-600 hover:border-gray-400"
                     }`}
                   >
-                    {meta?.icon} {meta?.title || catSlug} ({categoryCounts[catSlug] || 0})
+                    {meta?.icon} {t(`catalog.cat.${catSlug}`) !== `catalog.cat.${catSlug}` ? t(`catalog.cat.${catSlug}`) : (meta?.title || catSlug)} ({categoryCounts[catSlug] || 0})
                   </button>
                 );
               })}
@@ -666,7 +668,7 @@ export default function ShopClient({
                 const isOutOfStock = !product.isActive;
                 const imageSrc = getProductImage(product);
                 const fromCents = product.fromPrice || product.basePrice;
-                const rangeText = fromCents > 0 ? `From ${formatCad(fromCents)}` : "";
+                const rangeText = fromCents > 0 ? t("shop.priceFrom", { price: formatCad(fromCents) }) : "";
 
                 return (
                   <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl ${viewMode === "list" ? "flex" : ""}`}>
