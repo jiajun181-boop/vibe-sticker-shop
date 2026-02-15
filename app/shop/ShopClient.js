@@ -195,7 +195,7 @@ export default function ShopClient({
   );
   const [pageSize, setPageSize] = useState(24);
   const [page, setPage] = useState(1);
-  const [browseAll, setBrowseAll] = useState(initialView !== "category");
+  const [browseAll, setBrowseAll] = useState(initialView === "all");
   const [categoryFilter, setCategoryFilter] = useState("");
   const isInternalUrlUpdate = useRef(false);
   const searchInputRef = useRef(null);
@@ -223,7 +223,7 @@ export default function ShopClient({
     setTag(searchParams?.get("tag") || "");
     setUseCase(searchParams?.get("useCase") || "");
     const v = searchParams?.get("view");
-    setBrowseAll(v !== "category");
+    setBrowseAll(v === "all");
     setPage(1);
   }, [searchParams]);
 
