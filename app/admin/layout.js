@@ -216,7 +216,7 @@ export default function AdminLayout({ children }) {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="admin-shell flex h-screen bg-[#f6f6f7]">
       {sidebarOpen && (
         <button
           type="button"
@@ -227,12 +227,12 @@ export default function AdminLayout({ children }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-gray-900 transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-[#fdfdfd] transition-transform duration-200 lg:static lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-14 items-center border-b border-gray-800 px-5">
-          <Link href="/admin" className="text-xs font-semibold uppercase tracking-[0.25em] text-white">
+        <div className="flex h-14 items-center border-b border-gray-200 px-5">
+          <Link href="/admin" className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-900">
             {t("admin.brand")}
           </Link>
         </div>
@@ -240,7 +240,7 @@ export default function AdminLayout({ children }) {
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           {filteredNavGroups.map((group, gi) => (
             <div key={group.labelKey}>
-              <p className={`px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 ${gi === 0 ? "pt-0" : "pt-4"}`}>
+              <p className={`px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400 ${gi === 0 ? "pt-0" : "pt-4"}`}>
                 {t(group.labelKey)}
               </p>
               <div className="space-y-0.5">
@@ -251,8 +251,8 @@ export default function AdminLayout({ children }) {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                       isActive(item.href)
-                        ? "bg-gray-800 text-white"
-                        : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-200"
+                        ? "bg-[#eef2f6] text-gray-900"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
                     <NavIcon name={item.icon} className="h-4.5 w-4.5" />
@@ -264,11 +264,11 @@ export default function AdminLayout({ children }) {
           ))}
         </nav>
 
-        <div className="border-t border-gray-800 p-3 space-y-2">
+        <div className="space-y-2 border-t border-gray-200 p-3">
           {session && (
             <div className="px-3 py-1">
-              <p className="truncate text-xs font-medium text-gray-300">{session.name || session.email}</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+              <p className="truncate text-xs font-medium text-gray-700">{session.name || session.email}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                 {ROLE_LABELS[session.role]?.[locale] || session.role}
               </p>
             </div>
@@ -276,7 +276,7 @@ export default function AdminLayout({ children }) {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-400 transition-colors hover:bg-gray-800/50 hover:text-gray-200"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
@@ -287,7 +287,7 @@ export default function AdminLayout({ children }) {
       </aside>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 lg:px-6">
+        <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-[#fcfcfd] px-4 lg:px-6">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
@@ -313,13 +313,13 @@ export default function AdminLayout({ children }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
               {t("admin.search.hint")}
-              <kbd className="rounded border border-gray-200 px-1 py-0.5 text-[10px] font-mono">⌘K</kbd>
+              <kbd className="rounded border border-gray-200 px-1 py-0.5 text-[10px] font-mono">Ctrl/Cmd+K</kbd>
             </button>
             {hydrated && (
               <button
                 type="button"
                 onClick={() => setLocale(locale === "en" ? "zh" : "en")}
-                className="rounded-full border border-gray-200 px-2.5 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-gray-900"
+                className="rounded-full border border-gray-200 px-2.5 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-gray-500"
               >
                 {locale === "en" ? "中文" : "EN"}
               </button>
@@ -333,7 +333,7 @@ export default function AdminLayout({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto bg-[#f6f6f7] p-4 lg:p-6">
           {children}
         </main>
       </div>

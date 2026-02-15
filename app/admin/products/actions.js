@@ -13,9 +13,10 @@ export async function createProduct(formData) {
   const basePrice = Math.round(parseFloat(formData.get("basePrice")) * 100);
   const pricingUnit = formData.get("pricingUnit") || "per_piece";
   const imageUrl = formData.get("imageUrl") || null;
+  const subseries = (formData.get("subseries") || "").toString().trim();
 
-  if (!name || isNaN(basePrice) || basePrice < 0) {
-    return { error: "Name and a valid base price are required." };
+  if (!name || isNaN(basePrice) || basePrice < 0 || !subseries) {
+    return { error: "Name, subseries, and a valid base price are required." };
   }
 
   // Auto-generate slug from name if not provided, then validate
@@ -30,6 +31,7 @@ export async function createProduct(formData) {
   await prisma.product.create({
     data: {
       name, slug, category, type, description, basePrice, pricingUnit,
+      tags: [`subseries:${subseries}`],
       ...(imageUrl ? { images: { create: [{ url: imageUrl, alt: name }] } } : {}),
     },
   });
@@ -47,9 +49,10 @@ export async function updateProduct(formData) {
   const description = formData.get("description") || null;
   const basePrice = Math.round(parseFloat(formData.get("basePrice")) * 100);
   const pricingUnit = formData.get("pricingUnit") || "per_piece";
+  const subseries = (formData.get("subseries") || "").toString().trim();
 
-  if (!id || !name || !slug || isNaN(basePrice) || basePrice < 0) {
-    return { error: "ID, name, slug, and a valid base price are required." };
+  if (!id || !name || !slug || isNaN(basePrice) || basePrice < 0 || !subseries) {
+    return { error: "ID, name, slug, subseries, and a valid base price are required." };
   }
 
   // Sanitize and validate slug
@@ -63,7 +66,16 @@ export async function updateProduct(formData) {
 
   await prisma.product.update({
     where: { id },
-    data: { name, slug, category, type, description, basePrice, pricingUnit },
+    data: {
+      name,
+      slug,
+      category,
+      type,
+      description,
+      basePrice,
+      pricingUnit,
+      tags: [`subseries:${subseries}`],
+    },
   });
 
   revalidatePath("/admin/products");

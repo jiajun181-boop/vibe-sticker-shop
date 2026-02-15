@@ -3,6 +3,16 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { slugify, validateSlug } from "@/lib/slugify";
 
+const SUBSERIES_TAG_PREFIX = "subseries:";
+
+function getSubseriesTags(tags: unknown): string[] {
+  if (!Array.isArray(tags)) return [];
+  return tags
+    .filter((t): t is string => typeof t === "string" && t.startsWith(SUBSERIES_TAG_PREFIX))
+    .map((t) => t.slice(SUBSERIES_TAG_PREFIX.length))
+    .filter(Boolean);
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -70,6 +80,14 @@ export async function PATCH(
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
+  const existing = await prisma.product.findUnique({
+    where: { id },
+    select: { tags: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  }
+
   // Validate slug if being updated
   if (data.slug) {
     data.slug = slugify(data.slug as string);
@@ -84,6 +102,18 @@ export async function PATCH(
     if (existing) {
       return NextResponse.json({ error: `Slug "${data.slug}" is already taken` }, { status: 409 });
     }
+  }
+
+  const finalTags = (data.tags as unknown) ?? existing.tags ?? [];
+  const subseriesTags = getSubseriesTags(finalTags);
+  if (subseriesTags.length !== 1) {
+    return NextResponse.json(
+      {
+        error:
+          "Each product must have exactly one subseries tag (format: subseries:your-subseries).",
+      },
+      { status: 400 }
+    );
   }
 
   const product = await prisma.product.update({

@@ -8,6 +8,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 const navItems = [
   { key: "account.nav.dashboard", href: "/account" },
   { key: "account.nav.orders", href: "/account/orders" },
+  { key: "account.nav.favorites", href: "/account/favorites" },
 ];
 
 export default function AccountNav() {

@@ -18,6 +18,7 @@ import dynamic from "next/dynamic";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import TemplateGallery from "@/components/product/TemplateGallery";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
+import { useFavoritesStore } from "@/lib/favorites";
 import RelatedLinks from "@/components/product/RelatedLinks";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 
@@ -181,6 +182,8 @@ function parseQuantityRange(optionsConfig) {
 export default function ProductClient({ product, relatedProducts, embedded = false, catalogConfig }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const isFavorite = useFavoritesStore((s) => s.isFavorite);
   const { t } = useTranslation();
   const searchParams = useSearchParams();
   const moved = searchParams?.get("moved") === "1";
@@ -1193,7 +1196,21 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         {/* Mobile-only header — shows title before gallery on small screens */}
         {!embedded && (
           <header className="lg:hidden">
-            <h1 className="text-3xl font-black tracking-tight text-slate-950">{product.name}</h1>
+            <div className="flex items-start gap-3">
+              <h1 className="flex-1 text-3xl font-black tracking-tight text-slate-950">{product.name}</h1>
+              <button
+                type="button"
+                onClick={() => {
+                  const added = toggleFavorite({ slug: product.slug, category: product.category, name: product.name, image: getProductImage(product), basePrice: product.basePrice });
+                  showSuccessToast(added ? t("favorites.added") : t("favorites.removed"));
+                }}
+                className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 transition-colors hover:bg-gray-50"
+              >
+                <svg className={`h-5 w-5 transition-colors ${isFavorite(product.slug) ? "fill-red-500 text-red-500" : "fill-none text-gray-400"}`} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+              </button>
+            </div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {(() => {
                 const tk = getTurnaround(product);
@@ -1272,7 +1289,21 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             {/* Desktop-only header — hidden on mobile where it appears above the grid */}
             {!embedded && (
               <header className="hidden lg:block">
-                <h1 className="text-4xl font-black tracking-tight text-slate-950 xl:text-5xl">{product.name}</h1>
+                <div className="flex items-start gap-3">
+                  <h1 className="flex-1 text-4xl font-black tracking-tight text-slate-950 xl:text-5xl">{product.name}</h1>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const added = toggleFavorite({ slug: product.slug, category: product.category, name: product.name, image: getProductImage(product), basePrice: product.basePrice });
+                      showSuccessToast(added ? t("favorites.added") : t("favorites.removed"));
+                    }}
+                    className="mt-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-gray-200 transition-colors hover:bg-gray-50"
+                  >
+                    <svg className={`h-5 w-5 transition-colors ${isFavorite(product.slug) ? "fill-red-500 text-red-500" : "fill-none text-gray-400"}`} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
+                  </button>
+                </div>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   {(() => {
                     const tk = getTurnaround(product);

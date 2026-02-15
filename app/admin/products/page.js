@@ -12,6 +12,21 @@ const formatCad = (cents) =>
     cents / 100
   );
 const SUBSERIES_TAG_PREFIX = "subseries:";
+const CATEGORY_ORDER = [
+  "marketing-prints",
+  "retail-promo",
+  "packaging",
+  "banners-displays",
+  "display-stands",
+  "rigid-signs",
+  "large-format-graphics",
+  "vehicle-branding-advertising",
+  "window-glass-films",
+  "stickers-labels",
+  "safety-warning-decals",
+  "facility-asset-labels",
+  "fleet-compliance-id",
+];
 
 function titleizeSlug(value) {
   return String(value || "")
@@ -25,6 +40,10 @@ function getTaggedSubseries(tags) {
     (t) => typeof t === "string" && t.startsWith(SUBSERIES_TAG_PREFIX)
   );
   return tag ? tag.slice(SUBSERIES_TAG_PREFIX.length) : null;
+}
+
+function hasUncategorizedGroup(categoryNode) {
+  return categoryNode.subseries.some((s) => s.slug === "uncategorized" && s.products.length > 0);
 }
 
 function buildNextSubseriesTags(tags, targetSubseriesSlug) {
@@ -54,8 +73,14 @@ function buildCategoryTree(products) {
     byCategory.get(p.category).push(p);
   }
 
+  const orderIndex = new Map(CATEGORY_ORDER.map((slug, idx) => [slug, idx]));
   const tree = [];
-  for (const [category, items] of Array.from(byCategory.entries()).sort((a, b) => a[0].localeCompare(b[0]))) {
+  for (const [category, items] of Array.from(byCategory.entries()).sort((a, b) => {
+    const ai = orderIndex.has(a[0]) ? orderIndex.get(a[0]) : Number.MAX_SAFE_INTEGER;
+    const bi = orderIndex.has(b[0]) ? orderIndex.get(b[0]) : Number.MAX_SAFE_INTEGER;
+    if (ai !== bi) return ai - bi;
+    return a[0].localeCompare(b[0]);
+  })) {
     const parents = byCategoryParents.get(category) || [];
     const claimed = new Set();
     const subseriesMap = new Map();
@@ -172,15 +197,17 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
   const [bulkCategory, setBulkCategory] = useState("");
   const [bulkSubseries, setBulkSubseries] = useState("uncategorized");
   const [lastMove, setLastMove] = useState(null);
+  const [showOnlyUncategorized, setShowOnlyUncategorized] = useState(false);
 
   const page = parseInt(searchParams.get("page") || "1");
 
   const tree = useMemo(() => buildCategoryTree(catalogProducts), [catalogProducts]);
   const categoryOptions = useMemo(() => {
-    const dynamic = Array.from(new Set(catalogProducts.map((p) => p.category))).sort((a, b) =>
-      a.localeCompare(b)
-    );
-    return [{ value: "all", label: "All" }, ...dynamic.map((c) => ({ value: c, label: titleizeSlug(c) }))];
+    const dynamic = Array.from(new Set(catalogProducts.map((p) => p.category)));
+    const known = CATEGORY_ORDER.filter((c) => dynamic.includes(c));
+    const unknown = dynamic.filter((c) => !CATEGORY_ORDER.includes(c)).sort((a, b) => a.localeCompare(b));
+    const ordered = [...known, ...unknown];
+    return [{ value: "all", label: "All" }, ...ordered.map((c) => ({ value: c, label: titleizeSlug(c) }))];
   }, [catalogProducts]);
   const bulkCategoryOptions = useMemo(
     () => tree.map((c) => ({ value: c.category, label: c.title })),
@@ -191,6 +218,22 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     if (!selectedCategory) return [{ value: "uncategorized", label: "Uncategorized" }];
     return selectedCategory.subseries.map((s) => ({ value: s.slug, label: s.title }));
   }, [tree, bulkCategory]);
+  const uncategorizedEntries = useMemo(() => {
+    return tree.flatMap((cat) => {
+      const group = cat.subseries.find((s) => s.slug === "uncategorized");
+      if (!group || !group.products.length) return [];
+      return group.products.map((p) => ({ ...p, categoryTitle: cat.title, categorySlug: cat.category }));
+    });
+  }, [tree]);
+  const visibleTree = useMemo(() => {
+    if (!showOnlyUncategorized) return tree;
+    return tree
+      .filter((cat) => hasUncategorizedGroup(cat))
+      .map((cat) => ({
+        ...cat,
+        subseries: cat.subseries.filter((s) => s.slug === "uncategorized"),
+      }));
+  }, [tree, showOnlyUncategorized]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -313,6 +356,11 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       else ids.forEach((id) => set.delete(id));
       return Array.from(set);
     });
+  }
+
+  function selectAllUncategorized() {
+    const ids = uncategorizedEntries.map((p) => p.id);
+    setSelectedProductIds((prev) => Array.from(new Set([...prev, ...ids])));
   }
 
   async function handleDropToSubseries(productId, targetCategory, targetSubseriesSlug) {
@@ -478,7 +526,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Category tabs */}
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap items-center gap-1.5">
           {categoryOptions.map((c) => (
             <button
               key={c.value}
@@ -499,6 +547,17 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
               {c.label}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => setShowOnlyUncategorized((v) => !v)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              showOnlyUncategorized
+                ? "bg-amber-100 text-amber-800"
+                : "bg-white text-amber-700 hover:bg-amber-50"
+            }`}
+          >
+            Uncategorized ({uncategorizedEntries.length})
+          </button>
         </div>
 
         {/* Search */}
@@ -534,6 +593,27 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
           <p className="mt-1 text-[11px] text-gray-500">
             Shopify-style: select multiple cards then bulk move.
           </p>
+          {uncategorizedEntries.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+              <p className="text-xs font-medium text-amber-800">
+                {uncategorizedEntries.length} products are uncategorized.
+              </p>
+              <button
+                type="button"
+                onClick={selectAllUncategorized}
+                className="rounded border border-amber-300 px-2 py-0.5 text-[11px] font-medium text-amber-800 hover:bg-amber-100"
+              >
+                Select All Uncategorized
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowOnlyUncategorized((v) => !v)}
+                className="rounded border border-amber-300 px-2 py-0.5 text-[11px] font-medium text-amber-800 hover:bg-amber-100"
+              >
+                {showOnlyUncategorized ? "Show All Categories" : "Only Uncategorized"}
+              </button>
+            </div>
+          )}
         </div>
         <div className="border-b border-gray-100 bg-white px-4 py-3">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
@@ -597,12 +677,12 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
         </div>
         {catalogLoading ? (
           <div className="px-4 py-6 text-sm text-gray-500">Loading catalog map...</div>
-        ) : tree.length === 0 ? (
+        ) : visibleTree.length === 0 ? (
           <div className="px-4 py-6 text-sm text-gray-500">No products in current filter.</div>
         ) : (
           <div className="max-h-[560px] overflow-auto p-4">
             <div className="space-y-4">
-              {tree.map((cat) => (
+              {visibleTree.map((cat) => (
                 <details key={cat.category} className="rounded-lg border border-gray-200 bg-white" open>
                   <summary className="cursor-pointer list-none px-3 py-2 text-sm font-semibold text-gray-900">
                     <div className="flex items-center justify-between gap-2">
