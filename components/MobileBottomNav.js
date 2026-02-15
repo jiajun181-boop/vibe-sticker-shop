@@ -231,7 +231,10 @@ export default function MobileBottomNav({ catalogConfig }) {
                 <div className="relative">
                   <Icon className={`h-5 w-5 ${active ? "text-gray-900" : "text-gray-400"}`} />
                   {tab.badge > 0 && (
-                    <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold text-white">
+                    <span
+                      key={tab.badge}
+                      className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold text-white cart-badge-bounce"
+                    >
                       {tab.badge > 99 ? "99+" : tab.badge}
                     </span>
                   )}

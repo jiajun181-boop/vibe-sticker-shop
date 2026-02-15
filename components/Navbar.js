@@ -392,7 +392,10 @@ export default function Navbar({ catalogConfig }) {
             className="relative flex items-center gap-2 rounded-full border border-gray-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-800 transition-colors duration-200 hover:border-gray-900"
           >
             <span>{t("nav.cart")}</span>
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-900 text-[10px] font-semibold text-white">
+            <span
+              key={cartCount}
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-900 text-[10px] font-semibold text-white cart-badge-bounce"
+            >
               {cartCount}
             </span>
           </button>

@@ -11,6 +11,7 @@ import SkipLink from "@/components/SkipLink";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
 import AuthInit from "@/components/AuthInit";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 
@@ -68,6 +69,7 @@ export default async function RootLayout({ children }) {
         <Footer locale={locale} />
         <CartDrawer />
         <Toaster />
+        <ScrollToTop />
         <ExitIntentPopup />
         <AuthInit />
         <Analytics />

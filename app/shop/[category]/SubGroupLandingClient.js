@@ -29,7 +29,7 @@ function SubGroupCard({ group, t }) {
                     src={url}
                     alt=""
                     fill
-                    className="object-cover"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                     sizes="(max-width: 768px) 33vw, 15vw"
                     unoptimized={url.endsWith(".svg")}
                   />
@@ -150,7 +150,7 @@ export default function SubGroupLandingClient({
         {/* Quick-jump pill bar */}
         {subGroups.length > 4 && (
           <div className="sticky top-[64px] z-10 -mx-4 px-4 sm:-mx-6 sm:px-6 mt-6 pb-3 bg-gray-50/95 backdrop-blur-sm border-b border-gray-200/50">
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-fade py-1">
               {subGroups.map((group) => (
                 <button
                   key={group.slug}
@@ -192,7 +192,7 @@ export default function SubGroupLandingClient({
             <h2 className="text-lg font-semibold tracking-tight text-gray-900">
               {t("shop.exploreMore") || "Explore More"}
             </h2>
-            <div className="mt-4 flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+            <div className="mt-4 flex gap-3 overflow-x-auto scrollbar-hide scroll-fade pb-2">
               {siblingCategories.map((cat) => (
                 <Link
                   key={cat.slug}

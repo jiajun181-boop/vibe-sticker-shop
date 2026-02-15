@@ -104,7 +104,7 @@ export default function QuickOrderStrip({ products }) {
         onMouseLeave={() => setPaused(false)}
         onTouchStart={() => setPaused(true)}
         onTouchEnd={() => setPaused(false)}
-        className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
+        className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-fade"
       >
         {products.map((p) => {
           const img = p.images?.[0]?.url;
@@ -121,7 +121,7 @@ export default function QuickOrderStrip({ products }) {
                       alt={p.name}
                       width={176}
                       height={176}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                     />
                   ) : (
                     <span className="text-3xl opacity-30">🧩</span>
