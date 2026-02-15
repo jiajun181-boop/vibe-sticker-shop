@@ -11,11 +11,32 @@ const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
     cents / 100
   );
+const SUBSERIES_TAG_PREFIX = "subseries:";
 
 function titleizeSlug(value) {
   return String(value || "")
     .replace(/-/g, " ")
     .replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function getTaggedSubseries(tags) {
+  if (!Array.isArray(tags)) return null;
+  const tag = tags.find(
+    (t) => typeof t === "string" && t.startsWith(SUBSERIES_TAG_PREFIX)
+  );
+  return tag ? tag.slice(SUBSERIES_TAG_PREFIX.length) : null;
+}
+
+function buildNextSubseriesTags(tags, targetSubseriesSlug) {
+  const cleaned = Array.isArray(tags)
+    ? tags.filter(
+        (t) => !(typeof t === "string" && t.startsWith(SUBSERIES_TAG_PREFIX))
+      )
+    : [];
+  if (targetSubseriesSlug && targetSubseriesSlug !== "uncategorized") {
+    cleaned.push(`${SUBSERIES_TAG_PREFIX}${targetSubseriesSlug}`);
+  }
+  return cleaned;
 }
 
 function buildCategoryTree(products) {
@@ -37,18 +58,63 @@ function buildCategoryTree(products) {
   for (const [category, items] of Array.from(byCategory.entries()).sort((a, b) => a[0].localeCompare(b[0]))) {
     const parents = byCategoryParents.get(category) || [];
     const claimed = new Set();
-    const subseries = [];
+    const subseriesMap = new Map();
+    const parentOrder = [];
 
+    for (const parent of parents.sort((a, b) => a.parentSlug.localeCompare(b.parentSlug))) {
+      parentOrder.push(parent.parentSlug);
+      subseriesMap.set(parent.parentSlug, {
+        slug: parent.parentSlug,
+        title: titleizeSlug(parent.parentSlug),
+        products: [],
+      });
+    }
+
+    // 1) Manual tagged placement has priority
+    for (const p of items) {
+      const tagged = getTaggedSubseries(p.tags);
+      if (!tagged || tagged === "uncategorized") continue;
+      if (!subseriesMap.has(tagged)) {
+        subseriesMap.set(tagged, {
+          slug: tagged,
+          title: titleizeSlug(tagged),
+          products: [],
+        });
+      }
+      subseriesMap.get(tagged).products.push(p);
+      claimed.add(p.slug);
+    }
+
+    // 2) Default SUB_PRODUCT_CONFIG placement for unclaimed products
     for (const parent of parents.sort((a, b) => a.parentSlug.localeCompare(b.parentSlug))) {
       const children = items.filter((p) => parent.dbSlugs.includes(p.slug));
       if (!children.length) continue;
-      for (const c of children) claimed.add(c.slug);
+      for (const c of children) {
+        if (claimed.has(c.slug)) continue;
+        subseriesMap.get(parent.parentSlug).products.push(c);
+        claimed.add(c.slug);
+      }
+    }
+
+    const subseries = [];
+    for (const slug of parentOrder) {
+      const group = subseriesMap.get(slug);
+      if (!group || !group.products.length) continue;
       subseries.push({
-        slug: parent.parentSlug,
-        title: titleizeSlug(parent.parentSlug),
-        products: children.sort((a, b) => a.slug.localeCompare(b.slug)),
+        ...group,
+        products: group.products.sort((a, b) => a.slug.localeCompare(b.slug)),
       });
     }
+
+    // 3) Dynamic groups created by manual tags not defined in SUB_PRODUCT_CONFIG
+    const dynamicGroups = Array.from(subseriesMap.values())
+      .filter((g) => !parentOrder.includes(g.slug) && g.products.length)
+      .sort((a, b) => a.slug.localeCompare(b.slug))
+      .map((g) => ({
+        ...g,
+        products: g.products.sort((a, b) => a.slug.localeCompare(b.slug)),
+      }));
+    subseries.push(...dynamicGroups);
 
     const orphans = items.filter((p) => !claimed.has(p.slug)).sort((a, b) => a.slug.localeCompare(b.slug));
     if (orphans.length) {
@@ -99,6 +165,13 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
   );
   const [showForm, setShowForm] = useState(false);
   const [message, setMessage] = useState(null);
+  const [draggingProductId, setDraggingProductId] = useState(null);
+  const [dropTarget, setDropTarget] = useState(null);
+  const [moving, setMoving] = useState(false);
+  const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const [bulkCategory, setBulkCategory] = useState("");
+  const [bulkSubseries, setBulkSubseries] = useState("uncategorized");
+  const [lastMove, setLastMove] = useState(null);
 
   const page = parseInt(searchParams.get("page") || "1");
 
@@ -109,6 +182,15 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     );
     return [{ value: "all", label: "All" }, ...dynamic.map((c) => ({ value: c, label: titleizeSlug(c) }))];
   }, [catalogProducts]);
+  const bulkCategoryOptions = useMemo(
+    () => tree.map((c) => ({ value: c.category, label: c.title })),
+    [tree]
+  );
+  const bulkSubseriesOptions = useMemo(() => {
+    const selectedCategory = tree.find((c) => c.category === bulkCategory);
+    if (!selectedCategory) return [{ value: "uncategorized", label: "Uncategorized" }];
+    return selectedCategory.subseries.map((s) => ({ value: s.slug, label: s.title }));
+  }, [tree, bulkCategory]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -144,6 +226,24 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     fetchProducts();
   }, [fetchProducts]);
 
+  useEffect(() => {
+    if (!bulkCategory && bulkCategoryOptions.length > 0) {
+      setBulkCategory(bulkCategoryOptions[0].value);
+    }
+  }, [bulkCategory, bulkCategoryOptions]);
+
+  useEffect(() => {
+    if (!bulkSubseriesOptions.length) return;
+    const exists = bulkSubseriesOptions.some((opt) => opt.value === bulkSubseries);
+    if (!exists) {
+      setBulkSubseries(bulkSubseriesOptions[0].value);
+    }
+  }, [bulkSubseries, bulkSubseriesOptions]);
+
+  useEffect(() => {
+    setSelectedProductIds([]);
+  }, [categoryFilter, search]);
+
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(updates)) {
@@ -161,6 +261,151 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
   function showMsg(text, isError = false) {
     setMessage({ text, isError });
     setTimeout(() => setMessage(null), 3000);
+  }
+
+  async function patchProductClassification(productId, category, tags) {
+    const res = await fetch(`/api/admin/products/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        category,
+        tags,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Move failed");
+    }
+  }
+
+  async function patchProductMove(product, targetCategory, targetSubseriesSlug) {
+    const currentTagged = getTaggedSubseries(product.tags);
+    const currentGroup = currentTagged || "uncategorized";
+    if (product.category === targetCategory && currentGroup === targetSubseriesSlug) {
+      return false;
+    }
+    const nextTags = buildNextSubseriesTags(product.tags, targetSubseriesSlug);
+    await patchProductClassification(product.id, targetCategory, nextTags);
+    return true;
+  }
+
+  function toggleSubseriesSelection(category, subseriesSlug, shouldSelect) {
+    const cat = tree.find((c) => c.category === category);
+    if (!cat) return;
+    const group = cat.subseries.find((s) => s.slug === subseriesSlug);
+    if (!group) return;
+    const ids = group.products.map((p) => p.id);
+    setSelectedProductIds((prev) => {
+      const set = new Set(prev);
+      if (shouldSelect) ids.forEach((id) => set.add(id));
+      else ids.forEach((id) => set.delete(id));
+      return Array.from(set);
+    });
+  }
+
+  function toggleCategorySelection(category, shouldSelect) {
+    const cat = tree.find((c) => c.category === category);
+    if (!cat) return;
+    const ids = cat.subseries.flatMap((s) => s.products.map((p) => p.id));
+    setSelectedProductIds((prev) => {
+      const set = new Set(prev);
+      if (shouldSelect) ids.forEach((id) => set.add(id));
+      else ids.forEach((id) => set.delete(id));
+      return Array.from(set);
+    });
+  }
+
+  async function handleDropToSubseries(productId, targetCategory, targetSubseriesSlug) {
+    if (!productId || moving) return;
+    const product = catalogProducts.find((p) => p.id === productId);
+    if (!product) return;
+
+    setMoving(true);
+    try {
+      const moved = await patchProductMove(product, targetCategory, targetSubseriesSlug);
+      if (moved) {
+        setLastMove({
+          entries: [
+            {
+              id: product.id,
+              name: product.name,
+              fromCategory: product.category,
+              fromTags: Array.isArray(product.tags) ? [...product.tags] : [],
+            },
+          ],
+        });
+        showMsg(`Moved "${product.name}" to ${titleizeSlug(targetSubseriesSlug)}.`);
+        fetchProducts();
+      }
+    } catch (err) {
+      showMsg(err.message || "Move failed", true);
+    } finally {
+      setMoving(false);
+      setDraggingProductId(null);
+      setDropTarget(null);
+    }
+  }
+
+  async function handleBulkMove() {
+    if (!bulkCategory || selectedProductIds.length === 0 || moving) return;
+    const selectedProducts = catalogProducts.filter((p) =>
+      selectedProductIds.includes(p.id)
+    );
+    if (!selectedProducts.length) return;
+
+    setMoving(true);
+    try {
+      let movedCount = 0;
+      const movedEntries = [];
+      for (const product of selectedProducts) {
+        const moved = await patchProductMove(product, bulkCategory, bulkSubseries);
+        if (moved) {
+          movedCount += 1;
+          movedEntries.push({
+            id: product.id,
+            name: product.name,
+            fromCategory: product.category,
+            fromTags: Array.isArray(product.tags) ? [...product.tags] : [],
+          });
+        }
+      }
+      if (movedEntries.length > 0) {
+        setLastMove({ entries: movedEntries });
+      }
+      showMsg(
+        movedCount > 0
+          ? `Moved ${movedCount} products to ${titleizeSlug(bulkSubseries)}.`
+          : "Selected products are already in the target subseries."
+      );
+      setSelectedProductIds([]);
+      fetchProducts();
+    } catch (err) {
+      showMsg(err.message || "Bulk move failed", true);
+    } finally {
+      setMoving(false);
+      setDraggingProductId(null);
+      setDropTarget(null);
+    }
+  }
+
+  async function handleUndoLastMove() {
+    if (!lastMove?.entries?.length || moving) return;
+    setMoving(true);
+    try {
+      for (const entry of lastMove.entries) {
+        await patchProductClassification(entry.id, entry.fromCategory, entry.fromTags);
+      }
+      showMsg(`Undid last move (${lastMove.entries.length} products).`);
+      setLastMove(null);
+      setSelectedProductIds([]);
+      fetchProducts();
+    } catch (err) {
+      showMsg(err.message || "Undo failed", true);
+    } finally {
+      setMoving(false);
+      setDraggingProductId(null);
+      setDropTarget(null);
+    }
   }
 
   async function handleCreate(formData) {
@@ -283,6 +528,72 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
           <p className="mt-0.5 text-xs text-gray-500">
             Current filter view: {catalogProducts.length} products
           </p>
+          <p className="mt-1 text-[11px] text-gray-500">
+            Drag a product card into another subseries to reclassify it.
+          </p>
+          <p className="mt-1 text-[11px] text-gray-500">
+            Shopify-style: select multiple cards then bulk move.
+          </p>
+        </div>
+        <div className="border-b border-gray-100 bg-white px-4 py-3">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <p className="text-xs font-medium text-gray-700">
+              Selected: <span className="font-semibold">{selectedProductIds.length}</span>
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={bulkCategory}
+                onChange={(e) => setBulkCategory(e.target.value)}
+                className="rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-gray-700 outline-none focus:border-gray-900"
+              >
+                {bulkCategoryOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={bulkSubseries}
+                onChange={(e) => setBulkSubseries(e.target.value)}
+                className="rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-gray-700 outline-none focus:border-gray-900"
+              >
+                {bulkSubseriesOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={handleBulkMove}
+                disabled={moving || selectedProductIds.length === 0}
+                className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {moving ? "Moving..." : "Move Selected"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedProductIds([])}
+                disabled={selectedProductIds.length === 0}
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Clear Selection
+              </button>
+              <button
+                type="button"
+                onClick={handleUndoLastMove}
+                disabled={moving || !lastMove?.entries?.length}
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Undo Last Move
+              </button>
+            </div>
+          </div>
+          {lastMove?.entries?.length ? (
+            <p className="mt-2 text-[11px] text-gray-500">
+              Last move: {lastMove.entries.length} products
+            </p>
+          ) : null}
         </div>
         {catalogLoading ? (
           <div className="px-4 py-6 text-sm text-gray-500">Loading catalog map...</div>
@@ -294,25 +605,136 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
               {tree.map((cat) => (
                 <details key={cat.category} className="rounded-lg border border-gray-200 bg-white" open>
                   <summary className="cursor-pointer list-none px-3 py-2 text-sm font-semibold text-gray-900">
-                    {cat.title} ({cat.count})
+                    <div className="flex items-center justify-between gap-2">
+                      <span>
+                        {cat.title} ({cat.count})
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleCategorySelection(cat.category, true);
+                          }}
+                          className="rounded border border-gray-300 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-600 hover:bg-gray-100"
+                        >
+                          Select All
+                        </button>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleCategorySelection(cat.category, false);
+                          }}
+                          className="rounded border border-gray-300 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-600 hover:bg-gray-100"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
                   </summary>
                   <div className="border-t border-gray-100 px-3 py-2">
                     <div className="space-y-3">
                       {cat.subseries.map((group) => (
-                        <div key={`${cat.category}-${group.slug}`} className="rounded-md border border-gray-100 bg-gray-50 p-2">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">
-                            {group.title} ({group.products.length})
-                          </p>
+                        <div
+                          key={`${cat.category}-${group.slug}`}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            if (!draggingProductId) return;
+                            setDropTarget(`${cat.category}:${group.slug}`);
+                          }}
+                          onDragLeave={() => {
+                            setDropTarget((prev) =>
+                              prev === `${cat.category}:${group.slug}` ? null : prev
+                            );
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const productId =
+                              e.dataTransfer.getData("text/product-id") || draggingProductId;
+                            handleDropToSubseries(productId, cat.category, group.slug);
+                          }}
+                          className={`rounded-md border p-2 transition-colors ${
+                            dropTarget === `${cat.category}:${group.slug}`
+                              ? "border-blue-300 bg-blue-50"
+                              : "border-gray-100 bg-gray-50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">
+                              {group.title} ({group.products.length})
+                            </p>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  toggleSubseriesSelection(cat.category, group.slug, true)
+                                }
+                                className="rounded border border-gray-300 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-600 hover:bg-gray-100"
+                              >
+                                Select
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  toggleSubseriesSelection(cat.category, group.slug, false)
+                                }
+                                className="rounded border border-gray-300 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-600 hover:bg-gray-100"
+                              >
+                                Clear
+                              </button>
+                            </div>
+                          </div>
                           <div className="mt-2 grid gap-1 sm:grid-cols-2 xl:grid-cols-3">
                             {group.products.map((p) => (
-                              <Link
+                              <div
                                 key={p.id}
-                                href={`/admin/products/${p.id}`}
-                                className="rounded border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-700 hover:border-gray-400 hover:text-gray-900"
+                                draggable
+                                onDragStart={(e) => {
+                                  setDraggingProductId(p.id);
+                                  e.dataTransfer.setData("text/product-id", p.id);
+                                  e.dataTransfer.effectAllowed = "move";
+                                }}
+                                onDragEnd={() => {
+                                  setDraggingProductId(null);
+                                  setDropTarget(null);
+                                }}
+                                className={`rounded border bg-white px-2 py-1.5 text-xs text-gray-700 hover:border-gray-400 hover:text-gray-900 ${
+                                  draggingProductId === p.id
+                                    ? "cursor-grabbing border-blue-300 opacity-60"
+                                    : "cursor-grab border-gray-200"
+                                }`}
                               >
-                                <span className="block truncate font-medium">{p.name}</span>
-                                <span className="block truncate font-mono text-[10px] text-gray-500">{p.slug}</span>
-                              </Link>
+                                <div className="flex items-start justify-between gap-2">
+                                  <label className="flex min-w-0 items-start gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedProductIds.includes(p.id)}
+                                      onChange={(e) => {
+                                        setSelectedProductIds((prev) => {
+                                          if (e.target.checked) return [...prev, p.id];
+                                          return prev.filter((id) => id !== p.id);
+                                        });
+                                      }}
+                                      className="mt-0.5 h-3.5 w-3.5 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                                    />
+                                    <span className="min-w-0">
+                                      <span className="block truncate font-medium">{p.name}</span>
+                                      <span className="block truncate font-mono text-[10px] text-gray-500">{p.slug}</span>
+                                    </span>
+                                  </label>
+                                  <Link
+                                    href={`/admin/products/${p.id}`}
+                                    className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-blue-600 hover:text-blue-800"
+                                  >
+                                    Edit
+                                  </Link>
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>

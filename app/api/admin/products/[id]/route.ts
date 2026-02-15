@@ -56,6 +56,7 @@ export async function PATCH(
     "templateUrl",
     "pricingConfig",
     "optionsConfig",
+    "tags",
   ];
 
   const data: Record<string, unknown> = {};

@@ -443,37 +443,68 @@ export default function ShopClient({
       <div className="mx-auto max-w-7xl">
         <Breadcrumbs items={[{ label: t("shop.header") }]} />
 
-        <header className="mb-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-6 sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <header className="mb-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm sm:mb-6">
+          <div className="grid gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-900 p-4 text-white sm:grid-cols-2 sm:gap-8 sm:p-6">
             <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("shop.header")}</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight">{t("shop.title")}</h1>
-            <p className="mt-1 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
-              {t("shop.tagline")}
-            </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="badge-soft bg-emerald-100 text-emerald-700">{t("shop.badge.fastTurnaround")}</span>
-                <span className="badge-soft bg-slate-100 text-slate-700">{t("shop.badge.livePricing")}</span>
-                <span className="badge-soft bg-blue-100 text-blue-700">{t("shop.badge.madeInCanada")}</span>
+              <p className="text-xs uppercase tracking-[0.25em] text-slate-300">{t("shop.header")}</p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{t("shop.title")}</h1>
+              <p className="mt-1 text-[11px] font-black uppercase tracking-[0.25em] text-slate-300">
+                {t("shop.tagline")}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="badge-soft bg-emerald-200 text-emerald-900">{t("shop.badge.fastTurnaround")}</span>
+                <span className="badge-soft bg-white/20 text-white">{t("shop.badge.livePricing")}</span>
+                <span className="badge-soft bg-blue-200 text-blue-900">{t("shop.badge.madeInCanada")}</span>
               </div>
             </div>
-            {/* Compact search */}
-            <div className="relative w-full sm:w-80">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-              <input
-                ref={searchInputRef}
-                value={query}
-                onChange={(e) => {
-                  const nextQ = e.target.value;
-                  setQuery(nextQ);
-                  setPage(1);
-                  syncUrl({ query: nextQ });
-                }}
-                placeholder={t("shop.searchPlaceholder")}
-                className="w-full rounded-full border border-gray-300 bg-white pl-9 pr-4 py-3 text-sm focus:border-gray-900 focus:outline-none"
-              />
+            <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-200">{t("shop.searchPlaceholder")}</p>
+              <div className="relative mt-2">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                <input
+                  ref={searchInputRef}
+                  value={query}
+                  onChange={(e) => {
+                    const nextQ = e.target.value;
+                    setQuery(nextQ);
+                    setPage(1);
+                    syncUrl({ query: nextQ });
+                  }}
+                  placeholder={t("shop.searchPlaceholder")}
+                  className="w-full rounded-full border border-white/20 bg-white/95 pl-9 pr-4 py-3 text-sm text-slate-900 focus:border-white focus:outline-none"
+                />
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={switchToAllProducts}
+                  className="rounded-full bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-900 hover:bg-slate-100"
+                >
+                  {t("shop.browseAll")}
+                </button>
+                <Link
+                  href="/quote"
+                  className="rounded-full border border-white/40 bg-transparent px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.15em] text-white hover:bg-white/10"
+                >
+                  Get Quote
+                </Link>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 border-t border-slate-200 bg-white px-4 py-3 text-center sm:px-6">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.15em] text-slate-400">Products</p>
+              <p className="text-sm font-semibold text-slate-900">{products.length}</p>
+            </div>
+            <div className="border-x border-slate-200">
+              <p className="text-[11px] uppercase tracking-[0.15em] text-slate-400">Categories</p>
+              <p className="text-sm font-semibold text-slate-900">{availableCategories.length}</p>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.15em] text-slate-400">Made For</p>
+              <p className="text-sm font-semibold text-slate-900">{USE_CASES.length} industries</p>
             </div>
           </div>
         </header>
@@ -671,7 +702,7 @@ export default function ShopClient({
                 const rangeText = fromCents > 0 ? t("shop.priceFrom", { price: formatCad(fromCents) }) : "";
 
                 return (
-                  <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl ${viewMode === "list" ? "flex" : ""}`}>
+                  <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-xl ${viewMode === "list" ? "flex" : ""}`}>
                     <Link href={href} className={`relative block bg-gray-100 ${viewMode === "list" ? "h-36 w-32 sm:h-44 sm:w-52 flex-shrink-0" : "aspect-[4/3]"}`}>
                       <Image src={imageSrc} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" unoptimized={isSvgImage(imageSrc)} />
                       {product.sortOrder != null && product.sortOrder <= 2 && (
@@ -694,14 +725,20 @@ export default function ShopClient({
                           );
                         })()}
                       </div>
-                      <h3 className="mt-1 min-h-[2.5rem] overflow-hidden text-sm font-semibold text-gray-900">{product.name}</h3>
+                      <h3 className="mt-1 min-h-[2.5rem] overflow-hidden text-sm font-semibold leading-5 text-gray-900">{product.name}</h3>
                       <p className="mt-1 text-sm font-semibold text-slate-900">{rangeText}</p>
 
                       <div className="mt-3 flex gap-2">
-                        <button onClick={() => setQuickViewProduct(product)} className="rounded-full border border-gray-300 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900">
-                          {t("shop.quickView")}
-                        </button>
-                        <button onClick={() => quickAdd(product)} className="rounded-full bg-gray-900 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black">
+                        <Link
+                          href={href}
+                          className="flex-1 rounded-full bg-slate-900 px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black"
+                        >
+                          View Details
+                        </Link>
+                        <button
+                          onClick={() => quickAdd(product)}
+                          className="rounded-full border border-gray-300 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900"
+                        >
                           {t("shop.quickAdd")}
                         </button>
                       </div>

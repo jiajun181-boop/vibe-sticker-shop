@@ -1400,6 +1400,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   )}
                 </div>
 
+                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Step 3 - Checkout</p>
                 {/* Add to Cart button */}
                 <div ref={addToCartRef} className="mt-4">
                   <button
