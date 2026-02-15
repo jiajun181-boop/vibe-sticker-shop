@@ -96,54 +96,12 @@ function SubGroupCard({ group, t }) {
   );
 }
 
-function OrphanProductCard({ product, t }) {
-  const href = `/shop/${product.category}/${product.slug}`;
-  const image = product.images?.[0];
-
-  return (
-    <Link
-      href={href}
-      className="group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
-    >
-      <div className="relative aspect-[4/3] bg-gray-100">
-        {image?.url ? (
-          <Image
-            src={image.url}
-            alt={image.alt || product.name}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
-            unoptimized={image.url.endsWith(".svg")}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-            <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-            </svg>
-          </div>
-        )}
-      </div>
-      <div className="p-3 sm:p-4">
-        <h3 className="text-sm font-semibold text-gray-900 leading-snug">{product.name}</h3>
-        {product.basePrice > 0 && (
-          <p className="mt-2 text-sm font-bold text-gray-900">
-            {t("product.from", { price: formatCad(product.basePrice) })}
-          </p>
-        )}
-        <span className="mt-2 inline-block rounded-full bg-gray-900 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white transition-colors group-hover:bg-black">
-          {t("mp.landing.viewOrder")}
-        </span>
-      </div>
-    </Link>
-  );
-}
-
 export default function SubGroupLandingClient({
   category,
   categoryTitle,
   categoryIcon,
   subGroups,
-  orphanProducts = [],
+  siblingCategories = [],
   totalCount,
 }) {
   const { t } = useTranslation();
@@ -228,15 +186,27 @@ export default function SubGroupLandingClient({
           </div>
         )}
 
-        {/* Orphan products — products not in any sub-group */}
-        {orphanProducts.length > 0 && (
+        {/* Sibling categories — explore more */}
+        {siblingCategories.length > 0 && (
           <section className="mt-12">
             <h2 className="text-lg font-semibold tracking-tight text-gray-900">
-              {t("shop.more") || "More"}
+              {t("shop.exploreMore") || "Explore More"}
             </h2>
-            <div className="mt-4 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-              {orphanProducts.map((product) => (
-                <OrphanProductCard key={product.id} product={product} t={t} />
+            <div className="mt-4 flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+              {siblingCategories.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  href={cat.href}
+                  className="group shrink-0 flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-5 py-3.5 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+                >
+                  {cat.icon && <span className="text-lg">{cat.icon}</span>}
+                  <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 whitespace-nowrap">
+                    {cat.title}
+                  </span>
+                  <svg className="h-3.5 w-3.5 text-gray-400 group-hover:text-gray-600 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </Link>
               ))}
             </div>
           </section>

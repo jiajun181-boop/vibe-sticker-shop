@@ -136,11 +136,18 @@ export default async function CategoryPage({ params }) {
       };
     });
 
-    // Orphan products not in any sub-group
-    const allSubSlugs = new Set(
-      subGroups.flatMap((sg) => SUB_PRODUCT_CONFIG[sg.slug]?.dbSlugs || [])
-    );
-    const orphans = products.filter((p) => !allSubSlugs.has(p.slug));
+    // Sibling categories in the same department (for cross-category recommendations)
+    const dept = config.departments.find((d) => d.categories.includes(decoded));
+    const siblingCategories = dept
+      ? dept.categories
+          .filter((c) => c !== decoded)
+          .map((c) => ({
+            slug: c,
+            title: config.categoryMeta[c]?.title || c,
+            icon: config.categoryMeta[c]?.icon || "",
+            href: `/shop/${c}`,
+          }))
+      : [];
 
     return (
       <SubGroupLandingClient
@@ -148,7 +155,7 @@ export default async function CategoryPage({ params }) {
         categoryTitle={meta?.title || decoded}
         categoryIcon={meta?.icon || ""}
         subGroups={subGroupData}
-        orphanProducts={toClientSafe(orphans)}
+        siblingCategories={siblingCategories}
         totalCount={products.length}
       />
     );
