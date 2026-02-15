@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRecentlyViewedStore } from "@/lib/recently-viewed";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { getProductImage, isSvgImage } from "@/lib/product-image";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -25,18 +26,16 @@ export default function RecentlyViewed({ excludeSlug }) {
     <section>
       <h2 className="mb-4 text-lg font-semibold">{t("product.recentlyViewed")}</h2>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        {items.map((item) => (
+        {items.map((item) => {
+          const imageSrc = getProductImage(item);
+          return (
           <Link
             key={item.slug}
             href={`/shop/${item.category}/${item.slug}`}
             className="flex-shrink-0 w-40 overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
           >
             <div className="relative aspect-[4/3] bg-gray-100">
-              {item.image ? (
-                <Image src={item.image} alt={item.name} fill className="object-cover" sizes="160px" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">No image</div>
-              )}
+              <Image src={imageSrc} alt={item.name} fill className="object-cover" sizes="160px" unoptimized={isSvgImage(imageSrc)} />
             </div>
             <div className="p-3">
               <p className="truncate text-xs font-semibold text-gray-900">{item.name}</p>
@@ -45,7 +44,8 @@ export default function RecentlyViewed({ excludeSlug }) {
               )}
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

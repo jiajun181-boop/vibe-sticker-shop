@@ -1,25 +1,76 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, Suspense, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProductForm from "./product-form";
 import { createProduct, toggleProductStatus, deleteProduct } from "./actions";
-
-const categories = [
-  { value: "all", label: "All" },
-  { value: "fleet-compliance-id", label: "Fleet & ID" },
-  { value: "vehicle-branding-advertising", label: "Branding" },
-  { value: "safety-warning-decals", label: "Safety" },
-  { value: "facility-asset-labels", label: "Facility" },
-];
+import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
     cents / 100
   );
 
-export default function ProductsPage() {
+function titleizeSlug(value) {
+  return String(value || "")
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function buildCategoryTree(products) {
+  const parentEntries = Object.entries(SUB_PRODUCT_CONFIG);
+  const byCategoryParents = new Map();
+
+  for (const [parentSlug, cfg] of parentEntries) {
+    if (!byCategoryParents.has(cfg.category)) byCategoryParents.set(cfg.category, []);
+    byCategoryParents.get(cfg.category).push({ parentSlug, dbSlugs: cfg.dbSlugs });
+  }
+
+  const byCategory = new Map();
+  for (const p of products) {
+    if (!byCategory.has(p.category)) byCategory.set(p.category, []);
+    byCategory.get(p.category).push(p);
+  }
+
+  const tree = [];
+  for (const [category, items] of Array.from(byCategory.entries()).sort((a, b) => a[0].localeCompare(b[0]))) {
+    const parents = byCategoryParents.get(category) || [];
+    const claimed = new Set();
+    const subseries = [];
+
+    for (const parent of parents.sort((a, b) => a.parentSlug.localeCompare(b.parentSlug))) {
+      const children = items.filter((p) => parent.dbSlugs.includes(p.slug));
+      if (!children.length) continue;
+      for (const c of children) claimed.add(c.slug);
+      subseries.push({
+        slug: parent.parentSlug,
+        title: titleizeSlug(parent.parentSlug),
+        products: children.sort((a, b) => a.slug.localeCompare(b.slug)),
+      });
+    }
+
+    const orphans = items.filter((p) => !claimed.has(p.slug)).sort((a, b) => a.slug.localeCompare(b.slug));
+    if (orphans.length) {
+      subseries.push({
+        slug: "uncategorized",
+        title: "Uncategorized",
+        products: orphans,
+      });
+    }
+
+    tree.push({
+      category,
+      title: titleizeSlug(category),
+      count: items.length,
+      subseries,
+    });
+  }
+
+  return tree;
+}
+
+export default function ProductsPage({ embedded = false, basePath = "/admin/products" } = {}) {
   return (
     <Suspense
       fallback={
@@ -28,18 +79,20 @@ export default function ProductsPage() {
         </div>
       }
     >
-      <ProductsContent />
+      <ProductsContent embedded={embedded} basePath={basePath} />
     </Suspense>
   );
 }
 
-function ProductsContent() {
+function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [products, setProducts] = useState([]);
+  const [catalogProducts, setCatalogProducts] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [categoryFilter, setCategoryFilter] = useState(
     searchParams.get("category") || "all"
@@ -49,23 +102,41 @@ function ProductsContent() {
 
   const page = parseInt(searchParams.get("page") || "1");
 
+  const tree = useMemo(() => buildCategoryTree(catalogProducts), [catalogProducts]);
+  const categoryOptions = useMemo(() => {
+    const dynamic = Array.from(new Set(catalogProducts.map((p) => p.category))).sort((a, b) =>
+      a.localeCompare(b)
+    );
+    return [{ value: "all", label: "All" }, ...dynamic.map((c) => ({ value: c, label: titleizeSlug(c) }))];
+  }, [catalogProducts]);
+
   const fetchProducts = useCallback(async () => {
     setLoading(true);
+    setCatalogLoading(true);
     const params = new URLSearchParams();
     params.set("page", String(page));
     params.set("limit", "50");
     if (categoryFilter !== "all") params.set("category", categoryFilter);
     if (search) params.set("search", search);
 
+    const catalogParams = new URLSearchParams(params);
+    catalogParams.set("page", "1");
+    catalogParams.set("limit", "1000");
+
     try {
-      const res = await fetch(`/api/admin/products?${params}`);
-      const data = await res.json();
+      const [res, catalogRes] = await Promise.all([
+        fetch(`/api/admin/products?${params}`),
+        fetch(`/api/admin/products?${catalogParams}`),
+      ]);
+      const [data, catalogData] = await Promise.all([res.json(), catalogRes.json()]);
       setProducts(data.products || []);
       setPagination(data.pagination || null);
+      setCatalogProducts(catalogData.products || []);
     } catch (err) {
       console.error("Failed to load products:", err);
     } finally {
       setLoading(false);
+      setCatalogLoading(false);
     }
   }, [page, categoryFilter, search]);
 
@@ -79,7 +150,7 @@ function ProductsContent() {
       if (value) params.set(key, value);
       else params.delete(key);
     }
-    router.push(`/admin/products?${params}`);
+    router.push(`${basePath}?${params}`);
   }
 
   function handleSearch(e) {
@@ -122,16 +193,29 @@ function ProductsContent() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Products</h1>
-        <button
-          type="button"
-          onClick={() => setShowForm(true)}
-          className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
-        >
-          + Add Product
-        </button>
-      </div>
+      {!embedded && (
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-gray-900">Products</h1>
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+          >
+            + Add Product
+          </button>
+        </div>
+      )}
+      {embedded && (
+        <div className="flex items-center justify-end">
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+          >
+            + Add Product
+          </button>
+        </div>
+      )}
 
       {/* Toast */}
       {message && (
@@ -150,7 +234,7 @@ function ProductsContent() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Category tabs */}
         <div className="flex flex-wrap gap-1">
-          {categories.map((c) => (
+          {categoryOptions.map((c) => (
             <button
               key={c.value}
               type="button"
@@ -188,6 +272,58 @@ function ProductsContent() {
             Search
           </button>
         </form>
+      </div>
+
+      {/* Category -> Subseries -> Products */}
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+          <h2 className="text-sm font-semibold text-gray-900">
+            Category -> Subseries -> Products
+          </h2>
+          <p className="mt-0.5 text-xs text-gray-500">
+            Current filter view: {catalogProducts.length} products
+          </p>
+        </div>
+        {catalogLoading ? (
+          <div className="px-4 py-6 text-sm text-gray-500">Loading catalog map...</div>
+        ) : tree.length === 0 ? (
+          <div className="px-4 py-6 text-sm text-gray-500">No products in current filter.</div>
+        ) : (
+          <div className="max-h-[560px] overflow-auto p-4">
+            <div className="space-y-4">
+              {tree.map((cat) => (
+                <details key={cat.category} className="rounded-lg border border-gray-200 bg-white" open>
+                  <summary className="cursor-pointer list-none px-3 py-2 text-sm font-semibold text-gray-900">
+                    {cat.title} ({cat.count})
+                  </summary>
+                  <div className="border-t border-gray-100 px-3 py-2">
+                    <div className="space-y-3">
+                      {cat.subseries.map((group) => (
+                        <div key={`${cat.category}-${group.slug}`} className="rounded-md border border-gray-100 bg-gray-50 p-2">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">
+                            {group.title} ({group.products.length})
+                          </p>
+                          <div className="mt-2 grid gap-1 sm:grid-cols-2 xl:grid-cols-3">
+                            {group.products.map((p) => (
+                              <Link
+                                key={p.id}
+                                href={`/admin/products/${p.id}`}
+                                className="rounded border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-700 hover:border-gray-400 hover:text-gray-900"
+                              >
+                                <span className="block truncate font-medium">{p.name}</span>
+                                <span className="block truncate font-mono text-[10px] text-gray-500">{p.slug}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Table */}

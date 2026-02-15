@@ -78,6 +78,9 @@ export const checkoutLimiter = createRateLimiter({ windowMs: 5 * 60 * 1000, max:
 // Forgot password: 3 per 15 minutes
 export const forgotPasswordLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 3 });
 
+// Upload endpoints: 20 per 10 minutes
+export const uploadLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 20 });
+
 /**
  * Helper to extract client IP from request
  */

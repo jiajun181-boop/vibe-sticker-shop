@@ -1,4 +1,4 @@
-export const runtime = 'edge';
+export const runtime = "nodejs";
 
 import { createRouteHandler } from "uploadthing/next";
 import { ourFileRouter } from "./core";

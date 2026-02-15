@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { adminLoginLimiter, getClientIp } from "@/lib/rate-limit";
+import {
+  isSetupTokenAccepted,
+  isSetupTokenRequired,
+} from "@/lib/admin-setup-security";
 
 /**
  * Initial admin setup — only works when ZERO admin users exist.
@@ -18,6 +23,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const { success } = adminLoginLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many setup attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { prisma } = await import("@/lib/prisma");
     const bcrypt = (await import("bcryptjs")).default;
     const { createAdminToken, COOKIE_NAME } = await import("@/lib/admin-auth");
@@ -31,7 +45,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, password } = await request.json();
+    const setupTokenRequired = process.env.ADMIN_SETUP_TOKEN;
+    if (isSetupTokenRequired(process.env.NODE_ENV, setupTokenRequired)) {
+      return NextResponse.json(
+        { error: "ADMIN_SETUP_TOKEN must be configured in production." },
+        { status: 500 }
+      );
+    }
+
+    const body = await request.json();
+    const setupToken =
+      request.headers.get("x-admin-setup-token") ||
+      body?.setupToken ||
+      "";
+
+    if (!isSetupTokenAccepted(setupTokenRequired, setupToken)) {
+      return NextResponse.json(
+        { error: "Invalid setup token" },
+        { status: 401 }
+      );
+    }
+
+    const { name, email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -47,9 +82,10 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
+    const normalizedEmail = String(email).trim().toLowerCase();
     const admin = await prisma.adminUser.create({
       data: {
-        email,
+        email: normalizedEmail,
         name: name || "Admin",
         passwordHash,
         role: "admin",

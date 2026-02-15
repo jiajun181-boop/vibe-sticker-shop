@@ -24,6 +24,7 @@ const navGroups = [
   {
     labelKey: "admin.navGroup.products",
     items: [
+      { key: "admin.nav.catalogOps", href: "/admin/catalog-ops", icon: "catalog" },
       { key: "admin.nav.allProducts", href: "/admin/products", icon: "tag" },
       { key: "admin.nav.catalogSettings", href: "/admin/catalog", icon: "catalog" },
       { key: "admin.nav.pricing", href: "/admin/pricing", icon: "pricing" },

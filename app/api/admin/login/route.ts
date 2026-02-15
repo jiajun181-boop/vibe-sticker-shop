@@ -60,7 +60,6 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Legacy path: password-only login (env ADMIN_PASSWORD) ──
-    // No prisma/bcrypt dependency — always works
     const adminPassword = (process.env.ADMIN_PASSWORD || "").trim();
     if (!adminPassword) {
       return NextResponse.json(
@@ -75,8 +74,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { createAdminToken, COOKIE_NAME } = await import("@/lib/admin-auth");
+    const token = await createAdminToken({
+      id: "legacy-password-admin",
+      email: "admin@local",
+      name: "Legacy Admin",
+      role: "admin",
+    });
+
     const response = NextResponse.json({ success: true });
-    response.cookies.set("admin_auth", "authenticated", {
+    response.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -95,7 +102,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE() {
   const response = NextResponse.json({ success: true });
-  response.cookies.delete("admin_auth");
   response.cookies.delete("admin_session");
+  response.cookies.delete("admin_auth");
   return response;
 }

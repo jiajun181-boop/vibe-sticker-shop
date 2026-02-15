@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import { SUB_PRODUCT_CONFIG, getSubProductsForCategory } from "@/lib/subProductConfig";
@@ -10,6 +10,19 @@ import SubGroupLandingClient from "./SubGroupLandingClient";
 export const dynamic = "force-dynamic";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
+
+// Legacy category URLs -> current canonical category URLs.
+const CATEGORY_ALIASES = Object.freeze({
+  "fleet-compliance": "fleet-compliance-id",
+  "window-graphics-film": "window-glass-films",
+  "window-graphics": "window-glass-films",
+  "business-cards": "marketing-prints",
+  stamps: "marketing-prints",
+  "business-forms": "marketing-prints",
+  "paper-marketing": "marketing-prints",
+  "flyers-brochures": "marketing-prints",
+  "posters-prints": "marketing-prints",
+});
 
 function safeDecode(value) {
   try {
@@ -51,12 +64,19 @@ export async function generateMetadata({ params }) {
 export default async function CategoryPage({ params }) {
   const { category } = await params;
   const decoded = safeDecode(category);
+  const aliasTarget = CATEGORY_ALIASES[decoded];
+  if (aliasTarget && aliasTarget !== decoded) {
+    redirect(`/shop/${aliasTarget}?from=${encodeURIComponent(decoded)}`);
+  }
 
   const config = await getCatalogConfig();
+  const inHomepageConfig = config.homepageCategories.includes(decoded);
+  const activeCount = await prisma.product.count({
+    where: { category: decoded, isActive: true },
+  });
 
-  if (!config.homepageCategories.includes(decoded)) {
-    notFound();
-  }
+  // Do not hard-404 categories that still have products but are missing from homepage config.
+  if (!inHomepageConfig && activeCount === 0) notFound();
 
   const meta = config.categoryMeta[decoded];
 

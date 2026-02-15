@@ -13,15 +13,15 @@ function clamp(n, min, max) {
  * @param {string} [props.productName] - Fallback alt text
  */
 export default function ImageGallery({ images, productName }) {
-  const list = Array.isArray(images) ? images.filter((x) => x && x.url) : [];
+  const list = useMemo(
+    () => (Array.isArray(images) ? images.filter((x) => x && x.url) : []),
+    [images]
+  );
   const safeName = productName || "Product image";
 
   const [active, setActive] = useState(0);
-  const activeImage = list[active] || null;
-
-  useEffect(() => {
-    setActive(0);
-  }, [list.length]);
+  const activeIndex = list.length > 0 ? active % list.length : 0;
+  const activeImage = list[activeIndex] || null;
 
   const canNav = list.length > 1;
 
@@ -71,7 +71,7 @@ export default function ImageGallery({ images, productName }) {
   return (
     <div className="space-y-3">
       <div
-        className="relative aspect-square overflow-hidden rounded-2xl border border-gray-200 bg-white"
+        className="relative aspect-square overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-sm"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -80,7 +80,7 @@ export default function ImageGallery({ images, productName }) {
             src={activeImage.url}
             alt={activeImage.alt || safeName}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-500 hover:scale-[1.02]"
             style={{
               objectPosition: `${(activeImage.focalX ?? 0.5) * 100}% ${(activeImage.focalY ?? 0.5) * 100}%`,
             }}
@@ -100,7 +100,7 @@ export default function ImageGallery({ images, productName }) {
               type="button"
               onClick={() => go(-1)}
               aria-label="Previous image"
-              className="absolute left-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white/90 text-gray-700 backdrop-blur hover:bg-white"
+              className="absolute left-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-black/45 text-white backdrop-blur transition-colors hover:bg-black/60"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -110,7 +110,7 @@ export default function ImageGallery({ images, productName }) {
               type="button"
               onClick={() => go(1)}
               aria-label="Next image"
-              className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white/90 text-gray-700 backdrop-blur hover:bg-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-black/45 text-white backdrop-blur transition-colors hover:bg-black/60"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -120,22 +120,22 @@ export default function ImageGallery({ images, productName }) {
         )}
 
         {canNav && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-[11px] font-semibold text-white">
-            {clamp(active + 1, 1, list.length)} / {list.length}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-white/30 bg-black/60 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur">
+            {clamp(activeIndex + 1, 1, list.length)} / {list.length}
           </div>
         )}
       </div>
 
       {list.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1">
+        <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1 pt-1">
           {thumbs.map((img, idx) => (
             <button
               key={img.id || img.url}
               type="button"
               onClick={() => setActive(idx)}
               aria-label={`Select image ${idx + 1}`}
-              className={`relative h-16 w-16 flex-none snap-start overflow-hidden rounded-xl border ${
-                idx === active ? "border-gray-900" : "border-gray-200"
+              className={`relative h-16 w-16 flex-none snap-start overflow-hidden rounded-xl border transition-all ${
+                idx === activeIndex ? "border-slate-900 ring-2 ring-slate-200" : "border-slate-200 hover:border-slate-300"
               }`}
             >
               <Image

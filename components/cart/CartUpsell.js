@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { getProductImage } from "@/lib/product-image";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -65,19 +66,15 @@ export default function CartUpsell() {
         {t("cart.youMayAlsoNeed")}
       </p>
       <div className="mt-3 space-y-2">
-        {suggestions.map((item) => (
+        {suggestions.map((item) => {
+          const imageSrc = getProductImage(item);
+          return (
           <div
             key={item.slug}
             className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-2"
           >
             <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-              {item.image ? (
-                <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-[8px] text-gray-400">
-                  IMG
-                </div>
-              )}
+              <img src={imageSrc} alt={item.name} className="h-full w-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-semibold text-gray-900">{item.name}</p>
@@ -92,7 +89,7 @@ export default function CartUpsell() {
                   name: item.name,
                   unitAmount: item.basePrice,
                   quantity: 1,
-                  image: item.image || null,
+                  image: imageSrc,
                   meta: { pricingUnit: item.pricingUnit, category: item.category },
                   id: item.id,
                   price: item.basePrice,
@@ -105,7 +102,8 @@ export default function CartUpsell() {
               {t("cart.quickAdd")}
             </button>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

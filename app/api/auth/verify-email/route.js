@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hashToken } from "@/lib/auth";
 
 export async function POST(request) {
   try {
@@ -9,7 +10,12 @@ export async function POST(request) {
       return NextResponse.json({ error: "Token is required" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { emailVerifyToken: token } });
+    const tokenHash = hashToken(token);
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [{ emailVerifyToken: tokenHash }, { emailVerifyToken: token }],
+      },
+    });
 
     if (!user || !user.emailVerifyExpires || user.emailVerifyExpires < new Date()) {
       return NextResponse.json({ error: "Invalid or expired verification link" }, { status: 400 });

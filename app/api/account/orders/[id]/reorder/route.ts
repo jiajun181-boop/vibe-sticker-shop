@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUserFromRequest } from "@/lib/auth";
 
 /**
  * GET /api/account/orders/[id]/reorder
@@ -12,28 +13,14 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-
-    // Authenticate: check session cookie
-    const sessionCookie = request.cookies.get("session");
-    if (!sessionCookie?.value) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Verify session
-    const { prisma: db } = await import("@/lib/prisma");
-    const sessionData = JSON.parse(
-      Buffer.from(sessionCookie.value, "base64").toString("utf8")
-    );
-    const userId = sessionData?.userId;
-    if (!userId) {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-    }
+    const user = await getUserFromRequest(request);
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     // Fetch order belonging to this user
     const order = await prisma.order.findFirst({
       where: {
         id,
-        OR: [{ userId }, { customerEmail: sessionData.email }],
+        OR: [{ userId: user.id }, { customerEmail: user.email }],
       },
       include: {
         items: true,

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const SUPPORTED_LOCALES = ["en", "zh"];
 const DEFAULT_LOCALE = "en";
 
 function detectLocale(request: NextRequest): string {
@@ -34,11 +33,9 @@ export default function proxy(request: NextRequest) {
 
   // Protect /admin routes (except login page and login API)
   if (path.startsWith("/admin") && path !== "/admin/login") {
-    const legacyCookie = request.cookies.get("admin_auth");
     const sessionCookie = request.cookies.get("admin_session");
-    const hasLegacy = legacyCookie?.value === "authenticated";
     const hasSession = !!sessionCookie?.value;
-    if (!hasLegacy && !hasSession) {
+    if (!hasSession) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }

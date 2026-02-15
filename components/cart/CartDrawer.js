@@ -8,10 +8,12 @@ import { PaymentBadges } from "@/components/TrustBadges";
 import { trackBeginCheckout } from "@/lib/analytics";
 import useFocusTrap from "@/lib/useFocusTrap";
 import CartUpsell from "@/components/cart/CartUpsell";
+import { getProductImage } from "@/lib/product-image";
 
 const FREE_SHIPPING_THRESHOLD = 15000;
 const SHIPPING_COST = 1500;
 const HST_RATE = 0.13;
+const CHECKOUT_COOLDOWN_MS = 8000;
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -91,6 +93,8 @@ export default function CartDrawer() {
   const [promoCode, setPromoCode] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState(null);
+  const checkoutInFlightRef = useRef(false);
+  const lastCheckoutAtRef = useRef(0);
   const asideRef = useRef(null);
   useFocusTrap(asideRef, isOpen);
 
@@ -176,6 +180,18 @@ export default function CartDrawer() {
       return;
     }
 
+    if (checkoutInFlightRef.current || loading) {
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastCheckoutAtRef.current < CHECKOUT_COOLDOWN_MS) {
+      showErrorToast(t("cart.checkoutCooldown"));
+      return;
+    }
+
+    checkoutInFlightRef.current = true;
+    lastCheckoutAtRef.current = now;
     setLoading(true);
     setError("");
 
@@ -189,11 +205,23 @@ export default function CartDrawer() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Checkout failed");
+        if (data?.code === "RATE_LIMIT") {
+          throw new Error(t("cart.tooManyAttempts"));
+        }
+        if (data?.code === "EMPTY_CART") {
+          throw new Error(t("cart.emptyError"));
+        }
+        if (data?.code === "VALIDATION_ERROR") {
+          throw new Error(t("cart.invalidCheckout"));
+        }
+        if (response.status >= 500) {
+          throw new Error(t("cart.serverError"));
+        }
+        throw new Error(data?.error || t("cart.networkError"));
       }
 
       if (!data.url) {
-        throw new Error("Checkout failed");
+        throw new Error(t("cart.serverError"));
       }
 
       trackBeginCheckout({ value: total });
@@ -204,6 +232,7 @@ export default function CartDrawer() {
       setError(message);
       showErrorToast(message);
     } finally {
+      checkoutInFlightRef.current = false;
       setLoading(false);
     }
   }
@@ -289,6 +318,8 @@ export default function CartDrawer() {
                     : item.options && typeof item.options === "object"
                       ? item.options
                       : {};
+                  const category = rawMeta.category || item.category || "";
+                  const imageSrc = getProductImage(item, category);
                   const sizeRows = parseSizeRows(rawMeta);
                   const isMultiSize = (rawMeta.sizeMode === "multi" || rawMeta.sizeMode === '"multi"') && sizeRows.length > 0;
 
@@ -296,11 +327,7 @@ export default function CartDrawer() {
                     <article key={item._cartId} className="rounded-2xl border border-gray-200 p-4 transition-all duration-200 hover:shadow-sm">
                       <div className="flex items-start gap-3">
                         <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
-                          {item.image ? (
-                            <img src={item.image} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">Item</div>
-                          )}
+                          <img src={imageSrc} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
                         </div>
 
                         <div className="min-w-0 flex-1">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
+import { toSafeCsvCell } from "@/lib/csv";
 
 export async function POST(request: NextRequest) {
   const auth = await requirePermission(request, "orders", "view");
@@ -50,18 +51,18 @@ export async function POST(request: NextRequest) {
         .join(", ");
 
       const row = [
-        JSON.stringify(order.id),
-        JSON.stringify(order.customerName ?? ""),
-        JSON.stringify(order.customerEmail),
-        JSON.stringify(order.status),
-        JSON.stringify(order.paymentStatus),
+        JSON.stringify(toSafeCsvCell(order.id)),
+        JSON.stringify(toSafeCsvCell(order.customerName ?? "")),
+        JSON.stringify(toSafeCsvCell(order.customerEmail)),
+        JSON.stringify(toSafeCsvCell(order.status)),
+        JSON.stringify(toSafeCsvCell(order.paymentStatus)),
         JSON.stringify((order.subtotalAmount / 100).toFixed(2)),
         JSON.stringify((order.taxAmount / 100).toFixed(2)),
         JSON.stringify((order.shippingAmount / 100).toFixed(2)),
         JSON.stringify((order.totalAmount / 100).toFixed(2)),
-        JSON.stringify(order.currency),
-        JSON.stringify(order.createdAt.toISOString()),
-        JSON.stringify(itemsSummary),
+        JSON.stringify(toSafeCsvCell(order.currency)),
+        JSON.stringify(toSafeCsvCell(order.createdAt.toISOString())),
+        JSON.stringify(toSafeCsvCell(itemsSummary)),
       ];
 
       csvRows.push(row.join(","));

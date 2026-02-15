@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
+import { getProductImage, isSvgImage } from "@/lib/product-image";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -40,10 +41,7 @@ export default function QuickViewModal({ product, onClose, onAddToCart, t }) {
   const high = Math.round(base * multiplier);
 
   /* ── Primary image ── */
-  const imgSrc =
-    product.images?.[0]?.url ||
-    product.image ||
-    null;
+  const imgSrc = getProductImage(product);
 
   return (
     /* Backdrop */
@@ -69,24 +67,14 @@ export default function QuickViewModal({ product, onClose, onAddToCart, t }) {
 
         {/* Product image */}
         <div className="aspect-[4/3] relative w-full bg-gray-100">
-          {imgSrc ? (
-            <Image
-              src={imgSrc}
-              alt={product.name || "Product"}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 90vw, 32rem"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-              <div className="text-center">
-                <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-                </svg>
-                <p className="mt-1 text-xs text-gray-400">No image</p>
-              </div>
-            </div>
-          )}
+          <Image
+            src={imgSrc}
+            alt={product.name || "Product"}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 90vw, 32rem"
+            unoptimized={isSvgImage(imgSrc)}
+          />
         </div>
 
         {/* Content */}

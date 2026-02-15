@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { hashToken } from "@/lib/auth";
 
 export async function POST(request) {
   try {
@@ -13,7 +14,12 @@ export async function POST(request) {
       return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { passwordResetToken: token } });
+    const tokenHash = hashToken(token);
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [{ passwordResetToken: tokenHash }, { passwordResetToken: token }],
+      },
+    });
 
     if (!user || !user.passwordResetExpires || user.passwordResetExpires < new Date()) {
       return NextResponse.json({ error: "Invalid or expired reset link" }, { status: 400 });

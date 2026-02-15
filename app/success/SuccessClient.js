@@ -1,20 +1,123 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useCartStore } from "@/lib/store";
 import { trackPurchase } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
+const POLL_INTERVAL_MS = 2000;
+const MAX_POLL_ATTEMPTS = 15;
+
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-export default function SuccessClient({ sessionId, lineItems, customerEmail, amountTotal }) {
+function buildStatusCopy(t, status, reason) {
+  if (status === "canceled") {
+    return {
+      title: t("success.canceledTitle"),
+      subtitle: reason || t("success.canceledSubtitle"),
+    };
+  }
+
+  if (status === "failed") {
+    return {
+      title: t("success.failedTitle"),
+      subtitle: reason || t("success.failedSubtitle"),
+    };
+  }
+
+  if (status === "timeout") {
+    return {
+      title: t("success.timeoutTitle"),
+      subtitle: t("success.timeoutSubtitle"),
+    };
+  }
+
+  return {
+    title: t("success.verifyingTitle"),
+    subtitle: t("success.verifyingSubtitle"),
+  };
+}
+
+export default function SuccessClient({ sessionId, statusToken }) {
   const { t } = useTranslation();
   const cleared = useRef(false);
+  const [status, setStatus] = useState("pending");
+  const [reason, setReason] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [amountTotal, setAmountTotal] = useState(0);
+  const [lineItems, setLineItems] = useState([]);
+  const [retryToken, setRetryToken] = useState(0);
+
+  const statusCopy = useMemo(() => buildStatusCopy(t, status, reason), [t, status, reason]);
 
   useEffect(() => {
+    let stopped = false;
+    let attempts = 0;
+    let timer;
+
+    async function pollStatus() {
+      if (stopped) return;
+      attempts += 1;
+
+      try {
+        const query = new URLSearchParams({ session_id: sessionId });
+        if (statusToken) query.set("st", statusToken);
+
+        const res = await fetch(`/api/order-status?${query.toString()}`, {
+          method: "GET",
+          cache: "no-store",
+        });
+        const data = await res.json();
+
+        if (!res.ok && data.status !== "failed" && data.status !== "canceled") {
+          throw new Error(data.error || "Unable to verify payment status.");
+        }
+
+        if (data.status === "paid") {
+          setStatus("paid");
+          setCustomerEmail(data.customerEmail || "");
+          setAmountTotal(data.amountTotal || 0);
+          setLineItems(Array.isArray(data.lineItems) ? data.lineItems : []);
+          return;
+        }
+
+        if (data.status === "failed" || data.status === "canceled") {
+          setStatus(data.status);
+          setReason(data.reason || "");
+          return;
+        }
+
+        if (attempts >= MAX_POLL_ATTEMPTS) {
+          setStatus("timeout");
+          return;
+        }
+
+        timer = window.setTimeout(pollStatus, POLL_INTERVAL_MS);
+      } catch {
+        if (attempts >= MAX_POLL_ATTEMPTS) {
+          setStatus("timeout");
+          return;
+        }
+        timer = window.setTimeout(pollStatus, POLL_INTERVAL_MS);
+      }
+    }
+
+    setStatus("pending");
+    setReason("");
+    pollStatus();
+
+    return () => {
+      stopped = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [sessionId, statusToken, retryToken]);
+
+  useEffect(() => {
+    if (status !== "paid") return;
     if (cleared.current) return;
+
     cleared.current = true;
     useCartStore.getState().clearCart();
     trackPurchase({
@@ -23,7 +126,61 @@ export default function SuccessClient({ sessionId, lineItems, customerEmail, amo
       transactionId: sessionId,
       items: lineItems || [],
     });
-  }, [sessionId, lineItems, amountTotal]);
+  }, [status, sessionId, lineItems, amountTotal]);
+
+  if (status !== "paid") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
+        <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-lg">
+          <div className="mb-6 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sky-100">
+              <svg className="h-8 w-8 animate-spin text-sky-600" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" className="opacity-25" stroke="currentColor" strokeWidth="3" />
+                <path
+                  d="M21 12a9 9 0 00-9-9"
+                  className="opacity-90"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">{statusCopy.title}</h1>
+            <p className="mt-2 text-sm text-gray-600">{statusCopy.subtitle}</p>
+          </div>
+
+          <div className="mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            <p className="mb-1 text-[11px] uppercase tracking-[0.2em] text-gray-500">{t("success.orderRef")}</p>
+            <p className="break-all font-mono text-xs font-medium text-gray-800">{sessionId}</p>
+          </div>
+
+          <div className="space-y-3">
+            {(status === "pending" || status === "timeout") && (
+              <button
+                type="button"
+                onClick={() => setRetryToken((v) => v + 1)}
+                className="block w-full rounded-full border border-gray-300 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-700"
+              >
+                {t("success.retryStatus")}
+              </button>
+            )}
+            <Link
+              href="/cart"
+              className="block w-full rounded-full bg-gray-900 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black"
+            >
+              {t("success.backToCart")}
+            </Link>
+            <Link
+              href="/shop"
+              className="block w-full rounded-full border border-gray-300 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-700"
+            >
+              {t("success.continueShopping")}
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
