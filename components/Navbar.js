@@ -181,7 +181,7 @@ export default function Navbar({ catalogConfig }) {
   };
 
   return (
-    <header className="sticky top-0 z-[50] w-full border-b border-gray-200 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-[50] w-full border-b border-[#e4dccf] bg-[#fdfcf8]/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2.5">
           <Image src="/logo-lunarprint.png" alt="La Lunar Printing" width={32} height={32} className="h-8 w-8" priority />
@@ -191,7 +191,7 @@ export default function Navbar({ catalogConfig }) {
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm font-medium text-gray-600 md:flex">
+        <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 md:flex">
           <Link href="/" className="transition-colors duration-200 hover:text-gray-900">{t("nav.home")}</Link>
 
           {/* Shop mega-menu dropdown */}
@@ -247,7 +247,7 @@ export default function Navbar({ catalogConfig }) {
                       </div>
                       <Link
                         href="/shop"
-                        className="inline-flex items-center gap-1 self-start rounded-full border border-gray-200 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-600 hover:border-gray-900 hover:text-gray-900"
+                        className="inline-flex items-center gap-1 self-start rounded-full border border-[#d8cebf] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600 hover:border-[#163a63] hover:text-[#163a63]"
                       >
                         Explore All
                       </Link>
@@ -285,7 +285,7 @@ export default function Navbar({ catalogConfig }) {
                           );
                         })}
                       </div>
-                      <div className="rounded-xl border border-gray-100 bg-gradient-to-b from-gray-50 to-white p-3">
+                      <div className="rounded-xl border border-[#ece6dc] bg-gradient-to-b from-[#fbf8f2] to-white p-3">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">
                           Featured
                         </p>
@@ -335,7 +335,7 @@ export default function Navbar({ catalogConfig }) {
               {t("nav.solutions")}
             </Link>
             <div className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-              <div className="min-w-[200px] rounded-xl border border-gray-200 bg-white p-2 shadow-xl">
+              <div className="min-w-[200px] rounded-xl border border-[#e6decf] bg-[#fffefb] p-2 shadow-xl">
                 {USE_CASES.map((uc) => (
                   <Link
                     key={uc.slug}
@@ -377,7 +377,7 @@ export default function Navbar({ catalogConfig }) {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={t("nav.searchPlaceholder")}
-                    className="w-48 rounded-full border border-gray-300 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-48 rounded-full border border-[#d8cebf] px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#163a63]"
                     onBlur={() => { if (!searchQuery && !searchResults.length) setSearchOpen(false); }}
                   />
                   <button
@@ -408,7 +408,7 @@ export default function Navbar({ catalogConfig }) {
             <button
               type="button"
               onClick={() => setLocale(locale === "en" ? "zh" : "en")}
-              className="rounded-full border border-gray-200 px-2.5 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-gray-900"
+              className="rounded-full border border-[#d8cebf] px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-[#163a63] hover:text-[#163a63]"
               aria-label="Switch language"
             >
               {locale === "en" ? "中文" : "EN"}
@@ -418,7 +418,7 @@ export default function Navbar({ catalogConfig }) {
           {/* Get a Quote CTA */}
           <Link
             href="/quote"
-            className="hidden md:inline-flex rounded-full bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-black"
+            className="btn-primary-pill hidden md:inline-flex px-4 py-1.5 text-xs"
           >
             {t("nav.getQuote")}
           </Link>
@@ -427,14 +427,14 @@ export default function Navbar({ catalogConfig }) {
             authUser ? (
               <Link
                 href="/account"
-                className="hidden md:inline-flex rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900"
+                className="hidden md:inline-flex rounded-full border border-[#d8cebf] px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-[#163a63] hover:text-[#163a63]"
               >
                 {t("nav.account")}
               </Link>
             ) : (
               <Link
                 href="/login"
-                className="hidden md:inline-flex rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900"
+                className="hidden md:inline-flex rounded-full border border-[#d8cebf] px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-[#163a63] hover:text-[#163a63]"
               >
                 {t("nav.login")}
               </Link>
@@ -457,12 +457,12 @@ export default function Navbar({ catalogConfig }) {
           <button
             type="button"
             onClick={openCart}
-            className="relative flex items-center gap-2 rounded-full border border-gray-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-800 transition-colors duration-200 hover:border-gray-900"
+            className="relative flex items-center gap-2 rounded-full border border-[#d8cebf] px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-800 transition-colors duration-200 hover:border-[#163a63]"
           >
             <span>{t("nav.cart")}</span>
             <span
               key={cartCount}
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-900 text-[10px] font-semibold text-white cart-badge-bounce"
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-[#163a63] text-[10px] font-semibold text-white cart-badge-bounce"
             >
               {cartCount}
             </span>
@@ -482,7 +482,7 @@ export default function Navbar({ catalogConfig }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("nav.searchPlaceholder")}
-              className="w-full rounded-full border border-gray-200 bg-gray-50 pl-9 pr-4 py-2 text-sm outline-none focus:border-gray-400 focus:bg-white"
+              className="w-full rounded-full border border-[#d8cebf] bg-[#fbf8f2] pl-9 pr-4 py-2 text-sm outline-none focus:border-[#163a63] focus:bg-white"
             />
           </form>
           {renderSearchDropdown(mobileDropdownRef)}
@@ -492,7 +492,7 @@ export default function Navbar({ catalogConfig }) {
       <div className="flex gap-2 px-4 pb-3 md:hidden">
         <Link
           href="/quote"
-          className="shrink-0 rounded-full bg-gray-900 px-3 py-1 text-[11px] font-semibold text-white whitespace-nowrap"
+          className="btn-primary-pill shrink-0 px-3 py-1 text-[11px] whitespace-nowrap"
         >
           {t("nav.getQuote")}
         </Link>

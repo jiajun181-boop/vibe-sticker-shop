@@ -19,15 +19,6 @@ export const dynamic = "force-dynamic";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 const BRAND = "La Lunar Printing Inc.";
 
-const QUICK_ORDER_SLUGS = [
-  "business-cards-standard",
-  "custom-diecut-stickers",
-  "vinyl-banners",
-  "coroplast-signs",
-  "custom-printed-vehicle-logo-decals",
-  "self-inking-stamp-standard",
-];
-
 export async function generateMetadata() {
   const title = "Custom Stickers, Labels & Signs | La Lunar Printing";
   const description = "Toronto's trusted custom printing shop. Stickers, labels, banners, vehicle wraps, business cards & more. Fast turnaround, free shipping on orders $150+.";
@@ -61,7 +52,7 @@ export default async function HomePage() {
   const config = await getCatalogConfig();
   const { homepageCategories, maxPerCategory, categoryMeta } = config;
 
-  const [products, totalCount, displayProducts, quickOrderProducts] = await Promise.all([
+  const [products, totalCount, displayProducts] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true, category: { in: homepageCategories } },
       include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
@@ -74,21 +65,10 @@ export default async function HomePage() {
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       take: 6,
     }),
-    prisma.product.findMany({
-      where: { isActive: true, slug: { in: QUICK_ORDER_SLUGS } },
-      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
-    }),
   ]);
 
-  // Sort quick-order products by the original slug order
-  const sortedQuickOrder = QUICK_ORDER_SLUGS
-    .map((slug) => quickOrderProducts.find((p) => p.slug === slug))
-    .filter(Boolean);
-
-  // If not enough quick-order products found by slug, fill with popular products
-  const quickProducts = sortedQuickOrder.length >= 4
-    ? sortedQuickOrder
-    : products.slice(0, 6);
+  // More products for a long continuous popular strip
+  const quickProducts = products.slice(0, 36);
 
   const grouped = [];
   for (const cat of homepageCategories) {
@@ -117,61 +97,13 @@ export default async function HomePage() {
       {/* 1. Dual-Entry Hero */}
       <DualEntryHero totalCount={totalCount} />
 
-      {/* 1.5 Conversion Rail */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Quick Order</p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">Pick product, upload file, checkout in minutes.</p>
-            <Link href="/shop" className="btn-primary-pill mt-3 inline-flex px-4 py-2 text-[11px]">
-              Shop Now
-            </Link>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Need Pricing Help</p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">Get a custom quote for mixed sizes and bulk runs.</p>
-            <Link href="/quote" className="btn-secondary-pill mt-3 inline-flex px-4 py-2 text-[11px]">
-              Get a Quote
-            </Link>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Talk to Production</p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">Questions on material, finish, or turnaround? We reply fast.</p>
-            <Link href="/contact" className="btn-secondary-pill mt-3 inline-flex px-4 py-2 text-[11px]">
-              Contact Us
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* 2. Reorder Strip (logged-in users only, client-fetched) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10">
         <ReorderStrip />
       </div>
 
-      {/* 3. Quick Order Strip */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 mb-10">
-        <QuickOrderStrip products={serializedQuickProducts} />
-      </div>
-
-      {/* 4. Shop by Use Case */}
-      <div className="max-w-7xl mx-auto px-6 mb-10">
-        <UseCaseSection />
-      </div>
-
-      <SectionDivider />
-
-      {/* 5. Trust Signals — early social proof */}
-      <div className="bg-white py-14">
-        <div className="max-w-7xl mx-auto px-6">
-          <TrustSignals />
-        </div>
-      </div>
-
-      <SectionDivider />
-
-      {/* 6. Shop by Category */}
-      <div className="max-w-7xl mx-auto px-6 my-14">
+      {/* 3. Shop by Category (moved up) */}
+      <div className="max-w-7xl mx-auto px-6 my-12">
         <h2 className="text-2xl md:text-3xl font-black tracking-tight text-center mb-8">
           {t("home.shopByCategory")}
         </h2>
@@ -222,8 +154,26 @@ export default async function HomePage() {
         </div>
       </div>
 
+      {/* 4. Popular Products Strip */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 mb-10">
+        <QuickOrderStrip products={serializedQuickProducts} />
+      </div>
+
+      {/* 5. Shop by Use Case */}
+      <div className="max-w-7xl mx-auto px-6 mb-10">
+        <UseCaseSection />
+      </div>
+
       <SectionDivider />
 
+      {/* 5. Trust Signals — early social proof */}
+      <div className="bg-white py-14">
+        <div className="max-w-7xl mx-auto px-6">
+          <TrustSignals />
+        </div>
+      </div>
+
+      <SectionDivider />
       {/* 7. Why La Lunar — USP differentiators */}
       <div className="max-w-7xl mx-auto px-6 my-14">
         <div className="text-center mb-8">
@@ -283,3 +233,4 @@ export default async function HomePage() {
     </div>
   );
 }
+

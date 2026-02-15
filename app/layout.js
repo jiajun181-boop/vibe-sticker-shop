@@ -1,4 +1,5 @@
 import "./globals.css";
+import { DM_Sans } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
@@ -8,6 +9,13 @@ import { getServerLocale } from "@/lib/i18n/server";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import Analytics from "@/components/Analytics";
 import SkipLink from "@/components/SkipLink";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-brand",
+  display: "swap",
+});
 
 import AuthInit from "@/components/AuthInit";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -60,7 +68,7 @@ export default async function RootLayout({ children }) {
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
-      <body className="antialiased">
+      <body className={`${dmSans.variable} antialiased`}>
         <SkipLink />
         <PromoBar />
         <Navbar catalogConfig={catalogConfig} />
