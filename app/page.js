@@ -117,6 +117,33 @@ export default async function HomePage() {
       {/* 1. Dual-Entry Hero */}
       <DualEntryHero totalCount={totalCount} />
 
+      {/* 1.5 Conversion Rail */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Quick Order</p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">Pick product, upload file, checkout in minutes.</p>
+            <Link href="/shop" className="btn-primary-pill mt-3 inline-flex px-4 py-2 text-[11px]">
+              Shop Now
+            </Link>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Need Pricing Help</p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">Get a custom quote for mixed sizes and bulk runs.</p>
+            <Link href="/quote" className="btn-secondary-pill mt-3 inline-flex px-4 py-2 text-[11px]">
+              Get a Quote
+            </Link>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Talk to Production</p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">Questions on material, finish, or turnaround? We reply fast.</p>
+            <Link href="/contact" className="btn-secondary-pill mt-3 inline-flex px-4 py-2 text-[11px]">
+              Contact Us
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* 2. Reorder Strip (logged-in users only, client-fetched) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10">
         <ReorderStrip />

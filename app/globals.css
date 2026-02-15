@@ -79,6 +79,44 @@ input, textarea, select {
   animation: cart-bounce 0.4s var(--ease-out-cubic);
 }
 
+/* Reusable commerce UI tokens */
+.btn-primary-pill {
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #0f172a, #020617);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: transform var(--duration-fast) var(--ease-out-cubic), box-shadow var(--duration-fast) var(--ease-out-cubic), background var(--duration-fast) var(--ease-out-cubic);
+}
+.btn-primary-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(2, 6, 23, 0.18);
+}
+.btn-secondary-pill {
+  border-radius: 9999px;
+  border: 1px solid var(--color-gray-300);
+  background: #fff;
+  color: var(--color-gray-700);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: border-color var(--duration-fast) var(--ease-out-cubic), color var(--duration-fast) var(--ease-out-cubic), transform var(--duration-fast) var(--ease-out-cubic);
+}
+.btn-secondary-pill:hover {
+  border-color: #0f172a;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+.badge-soft {
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 /* Horizontal scroll fade edges */
 .scroll-fade {
   mask-image: linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent);

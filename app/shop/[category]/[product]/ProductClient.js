@@ -1295,6 +1295,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             <div className="rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 lg:sticky lg:top-24 flex flex-col">
               {/* ── PRICE + QUANTITY + ATC (always visible, order-1) ── */}
               <div className="order-1 rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-4 sm:p-5">
+                <div className="mb-2 flex flex-wrap gap-2">
+                  <span className="badge-soft bg-emerald-100 text-emerald-700">Live Quote</span>
+                  <span className="badge-soft bg-slate-100 text-slate-700">No Hidden Fees</span>
+                  <span className="badge-soft bg-blue-100 text-blue-700">Print-Ready Review</span>
+                </div>
                 {/* Price display */}
                 <div className="flex items-baseline justify-between">
                   {priceData.unpriced ? (
@@ -1335,6 +1340,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       </div>
                     ))}
                   </div>
+                  <p className="mt-2 text-[11px] text-slate-500">
+                    Recommended: finalize quantity first to lock your best unit price.
+                  </p>
                 </div>
 
                 {/* Quantity — always visible */}
@@ -1393,12 +1401,12 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   <button
                     onClick={handleAddToCart}
                     disabled={!canAddToCart}
-                    className={`w-full rounded-full px-4 py-3.5 text-sm font-semibold uppercase tracking-[0.15em] text-white shadow-sm transition-all duration-200 ${
+                    className={`btn-primary-pill w-full px-4 py-3.5 text-sm ${
                       !canAddToCart
                         ? "bg-gray-300 cursor-not-allowed"
                         : added
                           ? "bg-emerald-600"
-                          : "bg-gradient-to-r from-slate-900 to-black hover:from-black hover:to-slate-900"
+                          : ""
                     }`}
                   >
                     {!canAddToCart
@@ -1415,10 +1423,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     type="button"
                     onClick={handleBuyNow}
                     disabled={!canAddToCart || buyNowLoading}
-                    className={`w-full rounded-full border px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition-all ${
+                    className={`btn-secondary-pill w-full px-4 py-3 text-xs transition-all ${
                       !canAddToCart || buyNowLoading
                         ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
-                        : "border-slate-800 bg-white text-slate-900 hover:bg-slate-900 hover:text-white"
+                        : ""
                     }`}
                   >
                     {buyNowLoading ? "Processing..." : "Buy Now"}
@@ -1453,10 +1461,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   <p>3. Checkout securely with live quote</p>
                 </div>
                 <div className="mt-2 flex gap-2 text-[11px]">
-                  <Link href="/quote" className="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50">
+                  <Link href="/quote" className="btn-secondary-pill px-3 py-1.5 text-[11px]">
                     Need a custom quote?
                   </Link>
-                  <Link href="/contact" className="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50">
+                  <Link href="/contact" className="btn-secondary-pill px-3 py-1.5 text-[11px]">
                     Talk to support
                   </Link>
                 </div>
@@ -2355,7 +2363,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
         {/* Sticky mobile Add to Cart bar */}
         {stickyVisible && (
-          <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 md:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+          <div className="pb-safe fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-3 py-3 backdrop-blur md:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.08)] sm:px-4">
             <div className="flex items-center gap-3">
               <div className="min-w-0 shrink-0">
                 <p className="text-lg font-black">{totalDisplay}</p>
@@ -2365,7 +2373,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   type="button"
                   onClick={handleAddToCart}
                   disabled={!canAddToCart}
-                  className={`flex-1 rounded-full px-3 py-3 text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-200 ${!canAddToCart ? "border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : added ? "border border-emerald-600 bg-emerald-600 text-white" : "border border-gray-900 bg-white text-gray-900 hover:bg-gray-50"}`}
+                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-200 ${!canAddToCart ? "border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : added ? "border border-emerald-600 bg-emerald-600 text-white" : "border border-gray-900 bg-white text-gray-900 hover:bg-gray-50"}`}
                 >
                   {added ? t("product.added") : t("product.addToCart")}
                 </button>
@@ -2373,7 +2381,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   type="button"
                   onClick={handleBuyNow}
                   disabled={!canAddToCart || buyNowLoading}
-                  className={`flex-1 rounded-full px-3 py-3 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-all duration-200 ${!canAddToCart || buyNowLoading ? "bg-gray-300 cursor-not-allowed" : "bg-gray-900 hover:bg-black"}`}
+                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-all duration-200 ${!canAddToCart || buyNowLoading ? "bg-gray-300 cursor-not-allowed" : "bg-gray-900 hover:bg-black"}`}
                 >
                   {buyNowLoading ? "..." : "Buy Now"}
                 </button>

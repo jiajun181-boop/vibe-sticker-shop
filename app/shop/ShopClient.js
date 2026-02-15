@@ -400,50 +400,57 @@ export default function ShopClient({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 pb-16 pt-10 text-gray-900">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-gray-50 to-white px-3 pb-16 pt-8 text-gray-900 sm:px-4 sm:pt-10">
       <div className="mx-auto max-w-7xl">
         <Breadcrumbs items={[{ label: t("shop.header") }]} />
 
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+        <header className="mb-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-6 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
             <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("shop.header")}</p>
             <h1 className="mt-2 text-4xl font-semibold tracking-tight">{t("shop.title")}</h1>
             <p className="mt-1 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
               {t("shop.tagline")}
             </p>
-          </div>
-          {/* Compact search */}
-          <div className="relative w-full sm:w-72">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
-            <input
-              ref={searchInputRef}
-              value={query}
-              onChange={(e) => {
-                const nextQ = e.target.value;
-                setQuery(nextQ);
-                setPage(1);
-                syncUrl({ query: nextQ });
-              }}
-              placeholder={t("shop.searchPlaceholder")}
-              className="w-full rounded-full border border-gray-300 bg-white pl-9 pr-4 py-2 text-sm focus:border-gray-900 focus:outline-none"
-            />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="badge-soft bg-emerald-100 text-emerald-700">Fast Turnaround</span>
+                <span className="badge-soft bg-slate-100 text-slate-700">Live Pricing</span>
+                <span className="badge-soft bg-blue-100 text-blue-700">Made in Canada</span>
+              </div>
+            </div>
+            {/* Compact search */}
+            <div className="relative w-full sm:w-80">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+              <input
+                ref={searchInputRef}
+                value={query}
+                onChange={(e) => {
+                  const nextQ = e.target.value;
+                  setQuery(nextQ);
+                  setPage(1);
+                  syncUrl({ query: nextQ });
+                }}
+                placeholder={t("shop.searchPlaceholder")}
+                className="w-full rounded-full border border-gray-300 bg-white pl-9 pr-4 py-3 text-sm focus:border-gray-900 focus:outline-none"
+              />
+            </div>
           </div>
         </header>
 
         {/* View toggle tabs: All Products | By Category */}
-        <div className="mb-6 flex items-center gap-4">
+        <div className="mb-5 flex items-center gap-4 sm:mb-6">
           <div className="inline-flex rounded-full border border-gray-300 p-0.5 text-xs font-semibold">
             <button
               onClick={switchToAllProducts}
-              className={`rounded-full px-4 py-1.5 transition-colors ${showProducts ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
+              className={`rounded-full px-4 py-2 transition-colors ${showProducts ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
             >
               {t("shop.browseAll")} ({products.length})
             </button>
             <button
               onClick={switchToCategories}
-              className={`rounded-full px-4 py-1.5 transition-colors ${!showProducts ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
+              className={`rounded-full px-4 py-2 transition-colors ${!showProducts ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
             >
               {t("shop.byCategory")}
             </button>
@@ -504,7 +511,7 @@ export default function ShopClient({
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               <button
                 onClick={() => { setCategoryFilter(""); setPage(1); }}
-                className={`flex-none rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                className={`flex-none rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                   !categoryFilter
                     ? "bg-gray-900 text-white"
                     : "border border-gray-200 bg-white text-gray-600 hover:border-gray-400"
@@ -518,7 +525,7 @@ export default function ShopClient({
                   <button
                     key={catSlug}
                     onClick={() => { setCategoryFilter(categoryFilter === catSlug ? "" : catSlug); setPage(1); }}
-                    className={`flex-none rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                    className={`flex-none rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                       categoryFilter === catSlug
                         ? "bg-gray-900 text-white"
                         : "border border-gray-200 bg-white text-gray-600 hover:border-gray-400"
@@ -589,7 +596,7 @@ export default function ShopClient({
               </div>
             )}
 
-            <div className={viewMode === "grid" ? "grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-3"}>
+            <div className={viewMode === "grid" ? "grid grid-cols-2 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4" : "space-y-3"}>
               {visible.map((product) => {
                 const href = `/shop/${product.category}/${product.slug}`;
                 const isOutOfStock = !product.isActive;
@@ -598,7 +605,7 @@ export default function ShopClient({
                 const rangeText = fromCents > 0 ? `From ${formatCad(fromCents)}` : "";
 
                 return (
-                  <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:shadow-lg ${viewMode === "list" ? "flex" : ""}`}>
+                  <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl ${viewMode === "list" ? "flex" : ""}`}>
                     <Link href={href} className={`relative block bg-gray-100 ${viewMode === "list" ? "h-36 w-32 sm:h-44 sm:w-52 flex-shrink-0" : "aspect-[4/3]"}`}>
                       <Image src={imageSrc} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" unoptimized={isSvgImage(imageSrc)} />
                       {product.sortOrder != null && product.sortOrder <= 2 && (
@@ -621,14 +628,14 @@ export default function ShopClient({
                           );
                         })()}
                       </div>
-                      <h3 className="mt-1 text-sm font-semibold text-gray-900">{product.name}</h3>
-                      <p className="mt-1 text-sm text-gray-600">{rangeText}</p>
+                      <h3 className="mt-1 min-h-[2.5rem] overflow-hidden text-sm font-semibold text-gray-900">{product.name}</h3>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">{rangeText}</p>
 
                       <div className="mt-3 flex gap-2">
-                        <button onClick={() => setQuickViewProduct(product)} className="rounded-full border border-gray-300 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900">
+                        <button onClick={() => setQuickViewProduct(product)} className="rounded-full border border-gray-300 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900">
                           {t("shop.quickView")}
                         </button>
-                        <button onClick={() => quickAdd(product)} className="rounded-full bg-gray-900 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black">
+                        <button onClick={() => quickAdd(product)} className="rounded-full bg-gray-900 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black">
                           {t("shop.quickAdd")}
                         </button>
                       </div>

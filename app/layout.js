@@ -8,7 +8,7 @@ import { getServerLocale } from "@/lib/i18n/server";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import Analytics from "@/components/Analytics";
 import SkipLink from "@/components/SkipLink";
-import ExitIntentPopup from "@/components/ExitIntentPopup";
+
 import AuthInit from "@/components/AuthInit";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -70,7 +70,7 @@ export default async function RootLayout({ children }) {
         <CartDrawer />
         <Toaster />
         <ScrollToTop />
-        <ExitIntentPopup />
+
         <AuthInit />
         <Analytics />
       </body>

@@ -362,7 +362,7 @@ export default function CartDrawer() {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, Math.max(1, item.quantity - 1))}
-                                className="h-8 w-8 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 transition-colors duration-200 hover:bg-gray-100"
+                                className="h-10 w-10 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 transition-colors duration-200 hover:bg-gray-100"
                                 aria-label="Decrease quantity"
                               >
                                 -
@@ -371,7 +371,7 @@ export default function CartDrawer() {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, item.quantity + 1)}
-                                className="h-8 w-8 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 transition-colors duration-200 hover:bg-gray-100"
+                                className="h-10 w-10 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 transition-colors duration-200 hover:bg-gray-100"
                                 aria-label="Increase quantity"
                               >
                                 +

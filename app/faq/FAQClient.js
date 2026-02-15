@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const FAQ_CATEGORIES = [
@@ -47,21 +47,54 @@ export default function FAQClient() {
   const { t } = useTranslation();
   const [openItem, setOpenItem] = useState(null);
 
+  const toggle = useCallback((id) => {
+    setOpenItem((prev) => (prev === id ? null : id));
+  }, []);
+
+  const allIds = FAQ_CATEGORIES.flatMap((cat) =>
+    cat.items.map((_, i) => `${cat.key}-${i}`)
+  );
+
+  function handleKeyDown(e, id) {
+    const idx = allIds.indexOf(id);
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const next = allIds[idx + 1];
+      if (next) document.getElementById(`faq-btn-${next}`)?.focus();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const prev = allIds[idx - 1];
+      if (prev) document.getElementById(`faq-btn-${prev}`)?.focus();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      document.getElementById(`faq-btn-${allIds[0]}`)?.focus();
+    } else if (e.key === "End") {
+      e.preventDefault();
+      document.getElementById(`faq-btn-${allIds[allIds.length - 1]}`)?.focus();
+    }
+  }
+
   return (
     <div className="space-y-8">
       {FAQ_CATEGORIES.map((cat) => (
-        <section key={cat.key} id={cat.key}>
-          <h2 className="mb-4 text-lg font-semibold">{t(`faq.category.${cat.key}`)}</h2>
-          <div className="space-y-2">
+        <section key={cat.key} id={cat.key} aria-labelledby={`faq-heading-${cat.key}`}>
+          <h2 id={`faq-heading-${cat.key}`} className="mb-4 text-lg font-semibold">
+            {t(`faq.category.${cat.key}`)}
+          </h2>
+          <div className="space-y-2" role="group">
             {cat.items.map((item, i) => {
               const id = `${cat.key}-${i}`;
               const isOpen = openItem === id;
               return (
                 <div key={id} className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
                   <button
+                    id={`faq-btn-${id}`}
                     type="button"
-                    onClick={() => setOpenItem(isOpen ? null : id)}
-                    className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-semibold text-gray-900"
+                    onClick={() => toggle(id)}
+                    onKeyDown={(e) => handleKeyDown(e, id)}
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-panel-${id}`}
+                    className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-semibold text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
                   >
                     <span>{t(item.q)}</span>
                     <svg
@@ -74,11 +107,15 @@ export default function FAQClient() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
                   </button>
-                  {isOpen && (
-                    <div className="border-t border-gray-100 px-5 pb-4 pt-3 text-sm leading-relaxed text-gray-600">
-                      {t(item.a)}
-                    </div>
-                  )}
+                  <div
+                    id={`faq-panel-${id}`}
+                    role="region"
+                    aria-labelledby={`faq-btn-${id}`}
+                    hidden={!isOpen}
+                    className="border-t border-gray-100 px-5 pb-4 pt-3 text-sm leading-relaxed text-gray-600"
+                  >
+                    {t(item.a)}
+                  </div>
                 </div>
               );
             })}

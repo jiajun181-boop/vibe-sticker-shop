@@ -179,7 +179,7 @@ export default function Footer({ locale = "en" }) {
           <div className="flex flex-wrap items-center gap-4">
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-            <Link href="/returns" className="hover:text-white transition-colors">Return Policy</Link>
+            <Link href="/refund-policy" className="hover:text-white transition-colors">Refund Policy</Link>
           </div>
           <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
         </div>
