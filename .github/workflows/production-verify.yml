@@ -1,0 +1,34 @@
+name: Verify Production Deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Production base URL"
+        required: false
+        default: "https://vibe-sticker-shop.vercel.app"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install
+        run: npm ci
+
+      - name: Verify production is on this commit
+        env:
+          VERIFY_BASE_URL: ${{ github.event.inputs.base_url || 'https://vibe-sticker-shop.vercel.app' }}
+          EXPECTED_SHA: ${{ github.sha }}
+          VERIFY_RETRIES: "40"
+          VERIFY_DELAY_MS: "15000"
+        run: npm run verify:production
+

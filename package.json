@@ -8,6 +8,7 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
+    "verify:production": "node scripts/verify-production.mjs",
     "export:catalog-map": "node scripts/export-catalog-map.mjs",
     "export:catalog": "node scripts/export-catalog.mjs"
   },
