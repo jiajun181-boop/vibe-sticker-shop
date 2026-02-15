@@ -444,7 +444,7 @@ export default function ShopClient({
         <Breadcrumbs items={[{ label: t("shop.header") }]} />
 
         <header className="mb-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm sm:mb-6">
-          <div className="grid gap-4 bg-gradient-to-r from-[#0f2742] via-[#163a63] to-[#1a4a7a] p-4 text-white sm:grid-cols-2 sm:gap-8 sm:p-6" style={{ backgroundImage: "radial-gradient(ellipse at 80% 50%, rgba(217,179,91,0.08) 0%, transparent 60%), linear-gradient(to right, #0f2742, #163a63, #1a4a7a)" }}>
+          <div className="grid gap-4 bg-gray-900 p-4 text-white sm:grid-cols-2 sm:gap-8 sm:p-6">
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-slate-300">{t("shop.header")}</p>
               <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{t("shop.title")}</h1>
@@ -486,26 +486,25 @@ export default function ShopClient({
                 </button>
                 <Link
                   href="/quote"
-                  className="rounded-full border border-[#d9b35b]/60 bg-transparent px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.15em] text-[#d9b35b] hover:bg-[#d9b35b]/10 hover:border-[#d9b35b] transition-colors"
+                  className="rounded-full border border-white/30 bg-transparent px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.15em] text-white hover:bg-white/10 hover:border-white/50 transition-colors"
                 >
                   {t("shop.getQuote")}
                 </Link>
               </div>
             </div>
           </div>
-          <div className="relative grid grid-cols-3 border-t border-slate-200 bg-white px-4 py-3 text-center sm:px-6">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[2px] w-16 bg-gradient-to-r from-transparent via-[#d9b35b] to-transparent" />
+          <div className="grid grid-cols-3 border-t border-gray-100 bg-white px-4 py-3 text-center sm:px-6">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.15em] text-[#163a63]/60">{t("shop.statsProducts")}</p>
-              <p className="text-sm font-semibold text-[#163a63]">{products.length}</p>
+              <p className="text-[11px] uppercase tracking-[0.15em] text-gray-400">{t("shop.statsProducts")}</p>
+              <p className="text-sm font-semibold text-gray-900">{products.length}</p>
             </div>
-            <div className="border-x border-slate-200">
-              <p className="text-[11px] uppercase tracking-[0.15em] text-[#163a63]/60">{t("shop.statsCategories")}</p>
-              <p className="text-sm font-semibold text-[#163a63]">{availableCategories.length}</p>
+            <div className="border-x border-gray-100">
+              <p className="text-[11px] uppercase tracking-[0.15em] text-gray-400">{t("shop.statsCategories")}</p>
+              <p className="text-sm font-semibold text-gray-900">{availableCategories.length}</p>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.15em] text-[#163a63]/60">{t("shop.statsMadeFor")}</p>
-              <p className="text-sm font-semibold text-[#163a63]">{USE_CASES.length} {t("shop.statsIndustries")}</p>
+              <p className="text-[11px] uppercase tracking-[0.15em] text-gray-400">{t("shop.statsMadeFor")}</p>
+              <p className="text-sm font-semibold text-gray-900">{USE_CASES.length} {t("shop.statsIndustries")}</p>
             </div>
           </div>
         </header>
@@ -515,13 +514,13 @@ export default function ShopClient({
           <div className="inline-flex rounded-full border border-gray-300 p-0.5 text-xs font-semibold">
             <button
               onClick={switchToAllProducts}
-              className={`rounded-full px-4 py-2 transition-colors ${showProducts ? "bg-[#163a63] text-white" : "text-gray-600 hover:text-gray-900"}`}
+              className={`rounded-full px-4 py-2 transition-colors ${showProducts ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
             >
               {t("shop.browseAll")} ({products.length})
             </button>
             <button
               onClick={switchToCategories}
-              className={`rounded-full px-4 py-2 transition-colors ${!showProducts ? "bg-[#163a63] text-white" : "text-gray-600 hover:text-gray-900"}`}
+              className={`rounded-full px-4 py-2 transition-colors ${!showProducts ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
             >
               {t("shop.byCategory")}
             </button>
@@ -611,7 +610,7 @@ export default function ShopClient({
                 onClick={() => { setCategoryFilter(""); setPage(1); }}
                 className={`flex-none rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                   !categoryFilter
-                    ? "bg-[#163a63] text-white"
+                    ? "bg-gray-900 text-white"
                     : "border border-gray-200 bg-white text-gray-600 hover:border-gray-400"
                 }`}
               >
@@ -625,7 +624,7 @@ export default function ShopClient({
                     onClick={() => { setCategoryFilter(categoryFilter === catSlug ? "" : catSlug); setPage(1); }}
                     className={`flex-none rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                       categoryFilter === catSlug
-                        ? "bg-[#163a63] text-white"
+                        ? "bg-gray-900 text-white"
                         : "border border-gray-200 bg-white text-gray-600 hover:border-gray-400"
                     }`}
                   >
@@ -640,7 +639,7 @@ export default function ShopClient({
               <div className="flex items-center gap-3">
                 <button
                   onClick={clearAllFilters}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#163a63] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0f2742] transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-black transition-colors"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -675,8 +674,8 @@ export default function ShopClient({
 
               <div className="flex items-center gap-3">
                 <div className="rounded-full border border-gray-300 p-0.5 text-xs">
-                  <button onClick={() => setViewMode("grid")} className={`rounded-full px-3 py-1 ${viewMode === "grid" ? "bg-[#163a63] text-white" : "text-gray-600"}`}>{t("shop.grid")}</button>
-                  <button onClick={() => setViewMode("list")} className={`rounded-full px-3 py-1 ${viewMode === "list" ? "bg-[#163a63] text-white" : "text-gray-600"}`}>{t("shop.list")}</button>
+                  <button onClick={() => setViewMode("grid")} className={`rounded-full px-3 py-1 ${viewMode === "grid" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("shop.grid")}</button>
+                  <button onClick={() => setViewMode("list")} className={`rounded-full px-3 py-1 ${viewMode === "list" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("shop.list")}</button>
                 </div>
               </div>
             </div>
@@ -703,7 +702,7 @@ export default function ShopClient({
                 const rangeText = fromCents > 0 ? t("shop.priceFrom", { price: formatCad(fromCents) }) : "";
 
                 return (
-                  <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-[#d9b35b]/60 hover:shadow-xl ${viewMode === "list" ? "flex" : ""}`}>
+                  <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-400 hover:shadow-lg ${viewMode === "list" ? "flex" : ""}`}>
                     <Link href={href} className={`relative block bg-gray-100 ${viewMode === "list" ? "h-36 w-32 sm:h-44 sm:w-52 flex-shrink-0" : "aspect-[4/3]"}`}>
                       <Image src={imageSrc} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" unoptimized={isSvgImage(imageSrc)} />
                       {product.sortOrder != null && product.sortOrder <= 2 && (
@@ -732,7 +731,7 @@ export default function ShopClient({
                       <div className="mt-3 flex gap-2">
                         <Link
                           href={href}
-                          className="flex-1 rounded-full bg-[#163a63] px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-[#0f2742]"
+                          className="flex-1 rounded-full bg-gray-900 px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black"
                         >
                           {t("shop.viewDetails")}
                         </Link>
