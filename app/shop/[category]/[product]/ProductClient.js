@@ -1268,7 +1268,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             ) : null}
           </div>
 
-          <div className="space-y-6 lg:col-span-5">
+          <div className="space-y-6 lg:col-span-5 lg:self-start">
             {/* Desktop-only header — hidden on mobile where it appears above the grid */}
             {!embedded && (
               <header className="hidden lg:block">
@@ -1295,6 +1295,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             <div className="rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 lg:sticky lg:top-24 flex flex-col">
               {/* ── PRICE + QUANTITY + ATC (always visible, order-1) ── */}
               <div className="order-1 rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-4 sm:p-5">
+                <div className="mb-3 flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Checkout Steps</p>
+                  <p className="text-xs font-medium text-slate-600">1. Configure  2. Upload  3. Checkout</p>
+                </div>
                 <div className="mb-2 flex flex-wrap gap-2">
                   <span className="badge-soft bg-emerald-100 text-emerald-700">Live Quote</span>
                   <span className="badge-soft bg-slate-100 text-slate-700">No Hidden Fees</span>
@@ -1347,7 +1351,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
                 {/* Quantity — always visible */}
                 <div className="mt-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.quantity")}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Step 1 - {t("product.quantity")}</p>
                   {multiSizeEnabled && useMultiSize ? (
                     <p className="mt-2 text-sm text-gray-700">
                       {totalMultiQty} pcs across {sizeRows.length} sizes
@@ -1472,6 +1476,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
               {/* ── OPTIONS (collapsed on mobile, order-2) ── */}
               <div className="order-2 mt-5 border-t border-slate-100 pt-4">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Step 2 - Customize options</p>
 
                 {isTextEditor && (
                   <div className="mt-5 space-y-3">
@@ -2152,7 +2157,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                           {addon.description && <span className="block text-xs text-gray-500">{addon.description}</span>}
                           {addon.price > 0 && (
                             <span className="block text-xs text-gray-500">
-                              {addon.type === "flat" ? `$${addon.price.toFixed(2)} flat` : `$${addon.price.toFixed(2)}/unit`}
+                              {addon.type === "flat" ? `$${addon.price.toFixed(2)} ${t("product.pricingFlat")}` : `$${addon.price.toFixed(2)}/${t("product.pricingUnit")}`}
                             </span>
                           )}
                         </span>
@@ -2212,7 +2217,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                 {f.recommended && <span className="ml-1.5 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">{t("product.popular")}</span>}
                               </span>
                               <span className="block text-xs text-gray-500">
-                                {f.type === "flat" ? `$${f.price.toFixed(2)} flat` : f.type === "per_unit" ? `$${f.price.toFixed(2)}/unit` : `$${f.price.toFixed(2)}/sqft`}
+                                {f.type === "flat" ? `$${f.price.toFixed(2)} ${t("product.pricingFlat")}` : f.type === "per_unit" ? `$${f.price.toFixed(2)}/${t("product.pricingUnit")}` : `$${f.price.toFixed(2)}/${t("product.pricingSqft")}`}
                               </span>
                             </span>
                           </label>

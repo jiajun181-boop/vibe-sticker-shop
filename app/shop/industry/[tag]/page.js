@@ -203,12 +203,12 @@ export default async function IndustryPage({ params }) {
                   </div>
                   <div className="mt-5 pt-4 border-t border-gray-50 flex justify-between items-center">
                     <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                      {product.basePrice > 0 ? "From" : "Get Quote"}
+                      {product.basePrice > 0 ? t("shop.fromLabel") : t("shop.getQuote")}
                     </div>
                     <div className="text-sm font-black">
                       {product.basePrice > 0
                         ? formatCad(product.basePrice)
-                        : "Custom"}
+                        : t("shop.custom")}
                     </div>
                   </div>
                 </Link>

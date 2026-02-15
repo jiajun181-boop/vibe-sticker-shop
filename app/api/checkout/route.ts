@@ -336,7 +336,7 @@ export async function POST(req: Request) {
 
         return {
           price_data: {
-            currency: "cad",
+            currency: process.env.STRIPE_CURRENCY || "cad",
             product_data: {
               name: item.name,
               metadata: {
@@ -371,7 +371,7 @@ export async function POST(req: Request) {
             type: "fixed_amount",
             fixed_amount: {
               amount: shippingCost,
-              currency: "cad",
+              currency: process.env.STRIPE_CURRENCY || "cad",
             },
             display_name: isFreeShipping ? "Free Shipping" : "Standard Shipping",
             delivery_estimate: {
