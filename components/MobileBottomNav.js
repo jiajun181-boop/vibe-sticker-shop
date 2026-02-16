@@ -158,7 +158,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
                   <Link
                     href={`/shop/${catSlug}`}
                     onClick={onClose}
-                    className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-[var(--color-gray-800)]"
+                    className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-gray-500)] hover:text-[var(--color-gray-800)]"
                   >
                     {t("nav.allIn", { category: cMeta?.title || catSlug })} &rarr;
                   </Link>
@@ -320,4 +320,5 @@ export default function MobileBottomNav({ catalogConfig }) {
     </>
   );
 }
+
 

@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 /* Minimal Premium System: neutral, calm, high-end */
 :root {
@@ -8,8 +8,8 @@
   --color-paper-white: #fcfcfa;
   --color-paper-cream: #f5f3ef;
   --color-moon-gold: #b8925a;
-  --color-moon-blue: #334155;
-  --color-moon-blue-deep: #1e293b;
+  --color-moon-blue: #64748b;
+  --color-moon-blue-deep: #475569;
   
   /* Semantic colors */
   --background: var(--color-paper-white);
@@ -55,7 +55,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Micro-interactions — scoped to links only (buttons have per-component styles) */
+/* Micro-interactions â€” scoped to links only (buttons have per-component styles) */
 a {
   color: var(--color-accent);
   transition: color var(--duration-fast) var(--ease-out-cubic);
@@ -64,7 +64,7 @@ a:hover {
   color: var(--color-accent-light);
 }
 
-/* Input focus (no transform — avoids layout jank on mobile keyboards) */
+/* Input focus (no transform â€” avoids layout jank on mobile keyboards) */
 input, textarea, select {
   transition: border-color var(--duration-normal) var(--ease-out-cubic),
               box-shadow var(--duration-normal) var(--ease-out-cubic);
@@ -169,14 +169,8 @@ input:focus, textarea:focus, select:focus {
   animation-duration: var(--marquee-duration-slow, 72s);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .popular-marquee,
-  .popular-marquee-reverse {
-    animation: none;
-  }
-}
-
 /* iOS safe area support */
 @supports (padding: env(safe-area-inset-bottom)) {
   .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 }
+
