@@ -17,6 +17,30 @@ import { useFavoritesStore } from "@/lib/favorites";
 
 const PAGE_SIZE_OPTIONS = [12, 24, 36];
 
+const MATERIAL_OPTIONS = [
+  { key: "paper", label: "Paper" },
+  { key: "adhesive", label: "Adhesive" },
+  { key: "non-adhesive", label: "Non-Adhesive" },
+  { key: "rigid", label: "Rigid" },
+  { key: "hardware", label: "Hardware" },
+];
+
+const CATEGORY_MATERIAL_MAP = {
+  "marketing-prints": "paper",
+  "retail-promo": "paper",
+  packaging: "paper",
+  "stickers-labels": "adhesive",
+  "window-glass-films": "adhesive",
+  "vehicle-branding-advertising": "adhesive",
+  "safety-warning-decals": "adhesive",
+  "facility-asset-labels": "adhesive",
+  "fleet-compliance-id": "adhesive",
+  "banners-displays": "non-adhesive",
+  "large-format-graphics": "non-adhesive",
+  "rigid-signs": "rigid",
+  "display-stands": "hardware",
+};
+
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
@@ -209,6 +233,7 @@ export default function ShopClient({
   const [query, setQuery] = useState(initialQuery || "");
   const [tag, setTag] = useState(initialTag || "");
   const [useCase, setUseCase] = useState(initialUseCase || "");
+  const [material, setMaterial] = useState(searchParams?.get("material") || "");
   const [sortBy, setSortBy] = useState("popular");
   const [viewMode, setViewMode] = useState(() =>
     typeof window !== "undefined" && window.innerWidth < 1024 ? "list" : "grid"
@@ -243,8 +268,12 @@ export default function ShopClient({
     setQuery(searchParams?.get("q") || "");
     setTag(searchParams?.get("tag") || "");
     setUseCase(searchParams?.get("useCase") || "");
+    setMaterial(searchParams?.get("material") || "");
     const v = searchParams?.get("view");
     setBrowseAll(v === "all");
+    if (searchParams?.get("material")) setCatalogTab("material");
+    else if (v === "all") setCatalogTab("products");
+    else setCatalogTab("category");
     setPage(1);
   }, [searchParams]);
 
@@ -279,9 +308,14 @@ export default function ShopClient({
     }
   }, []);
 
-  // Derive whether we're in "product browsing" mode
   const isFiltering = !!(query.trim() || tag || useCase);
-  const showProducts = browseAll || isFiltering;
+  const [catalogTab, setCatalogTab] = useState(() => {
+    if (initialView === "all") return "products";
+    if (searchParams?.get("material")) return "material";
+    return "category";
+  });
+  const showProducts = catalogTab === "products" || isFiltering;
+  const isMaterialCatalog = catalogTab === "material";
 
   const categoryLabels = useMemo(() => {
     const labels = {};
@@ -320,6 +354,7 @@ export default function ShopClient({
     const nextQuery = next?.query ?? query;
     const nextTag = next?.tag ?? tag;
     const nextUseCase = next?.useCase ?? useCase;
+    const nextMaterial = next?.material ?? material;
     const nextBrowseAll = next?.browseAll ?? browseAll;
 
     if (nextQuery && nextQuery.trim()) sp.set("q", nextQuery.trim());
@@ -331,7 +366,10 @@ export default function ShopClient({
     if (nextUseCase && nextUseCase.trim()) sp.set("useCase", nextUseCase.trim());
     else sp.delete("useCase");
 
-    if (!nextBrowseAll && !nextQuery && !nextTag && !nextUseCase) sp.set("view", "category");
+    if (nextMaterial && nextMaterial.trim()) sp.set("material", nextMaterial.trim());
+    else sp.delete("material");
+
+    if (!nextBrowseAll && !nextQuery && !nextTag && !nextUseCase && !nextMaterial) sp.set("view", "category");
     else sp.delete("view");
 
     const qs = sp.toString();
@@ -345,6 +383,9 @@ export default function ShopClient({
 
   const filtered = useMemo(() => {
     let base = [...products];
+    if (material) {
+      base = base.filter((p) => CATEGORY_MATERIAL_MAP[p.category] === material);
+    }
     if (categoryFilter) {
       base = base.filter((p) => p.category === categoryFilter);
     }
@@ -365,7 +406,7 @@ export default function ShopClient({
       });
     }
     return sortProducts(base, sortBy, categoryOrder);
-  }, [products, categoryFilter, tag, useCase, useCaseSlugs, query, sortBy, categoryOrder]);
+  }, [products, categoryFilter, tag, useCase, useCaseSlugs, query, sortBy, categoryOrder, material]);
 
   const visible = useMemo(() => filtered.slice(0, page * pageSize), [filtered, page, pageSize]);
   const hasMore = visible.length < filtered.length;
@@ -388,8 +429,6 @@ export default function ShopClient({
     showSuccessToast(t("shop.addedToCart"));
   }
 
-  const allExpanded = expandedDepts.size === departments.length;
-
   function toggleDept(key) {
     setExpandedDepts((prev) => {
       const next = new Set(prev);
@@ -403,14 +442,52 @@ export default function ShopClient({
     if (allExpanded) {
       setExpandedDepts(new Set());
     } else {
-      setExpandedDepts(new Set(departments.map((d) => d.key)));
+      setExpandedDepts(new Set(currentDepartments.map((d) => d.key)));
     }
   }
+
+  const materialFilteredDepartments = useMemo(() => {
+    if (!material) return departments;
+
+    return departments
+      .map((dept) => {
+        const filteredCats = (dept.categories || []).filter((cat) => CATEGORY_MATERIAL_MAP[cat] === material);
+        const deptMeta = departmentMeta?.[dept.key];
+        const subSections = deptMeta?.subSections
+          ?.map((ss) => ({
+            ...ss,
+            categories: (ss.categories || []).filter((cat) => CATEGORY_MATERIAL_MAP[cat] === material),
+          }))
+          .filter((ss) => ss.categories.length > 0);
+
+        return {
+          ...dept,
+          categories: filteredCats,
+          __subSections: subSections,
+        };
+      })
+      .filter((dept) => dept.categories.length > 0);
+  }, [departments, departmentMeta, material]);
+
+  const materialFilteredDepartmentMeta = useMemo(() => {
+    if (!material) return departmentMeta;
+    const next = { ...departmentMeta };
+    for (const dept of materialFilteredDepartments) {
+      if (dept.__subSections) {
+        next[dept.key] = { ...(next[dept.key] || {}), subSections: dept.__subSections };
+      }
+    }
+    return next;
+  }, [departmentMeta, material, materialFilteredDepartments]);
+
+  const currentDepartments = isMaterialCatalog && material ? materialFilteredDepartments : departments;
+  const allExpanded = currentDepartments.length > 0 && currentDepartments.every((d) => expandedDepts.has(d.key));
 
   function clearAllFilters() {
     setQuery("");
     setTag("");
     setUseCase("");
+    setMaterial("");
     setCategoryFilter("");
     setPage(1);
     isInternalUrlUpdate.current = true;
@@ -428,6 +505,8 @@ export default function ShopClient({
     setQuery("");
     setTag("");
     setUseCase("");
+    setMaterial("");
+    setCatalogTab("category");
     setPage(1);
     isInternalUrlUpdate.current = true;
     router.push("/shop?view=category", { scroll: false });
@@ -436,6 +515,8 @@ export default function ShopClient({
   function switchToAllProducts() {
     sessionStorage.removeItem("shop-scroll-y");
     setBrowseAll(true);
+    setMaterial("");
+    setCatalogTab("products");
     setPage(1);
     isInternalUrlUpdate.current = true;
     router.push("/shop", { scroll: false });
@@ -482,10 +563,17 @@ export default function ShopClient({
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={switchToAllProducts}
+                  onClick={() => {
+                    setCatalogTab("material");
+                    setPage(1);
+                    requestAnimationFrame(() => {
+                      const el = document.getElementById("material-filter");
+                      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    });
+                  }}
                   className="rounded-full bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-900 hover:bg-slate-100"
                 >
-                  {t("shop.browseAll")}
+                  打印物料
                 </button>
                 <Link
                   href="/quote"
@@ -512,95 +600,122 @@ export default function ShopClient({
           </div>
         </header>
 
-        {/* View toggle tabs: All Products | By Category */}
         <div className="mb-5 flex items-center gap-4 sm:mb-6">
           <div className="inline-flex rounded-full border border-gray-300 p-0.5 text-xs font-semibold">
             <button
-              onClick={switchToAllProducts}
-              className={`rounded-full px-4 py-2 transition-colors ${showProducts ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
+              onClick={() => {
+                setCatalogTab("products");
+                setBrowseAll(true);
+                setPage(1);
+              }}
+              className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "products" ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
             >
-              {t("shop.browseAll")} ({products.length})
+              Products ({products.length})
             </button>
             <button
-              onClick={switchToCategories}
-              className={`rounded-full px-4 py-2 transition-colors ${!showProducts ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
+              onClick={() => {
+                setCatalogTab("category");
+                setBrowseAll(false);
+                setPage(1);
+              }}
+              className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "category" ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
             >
-              {t("shop.byCategory")}
+              Catalog
+            </button>
+            <button
+              onClick={() => {
+                setCatalogTab("material");
+                setBrowseAll(false);
+                setPage(1);
+              }}
+              className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "material" ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"}`}
+            >
+              打印物料
             </button>
           </div>
         </div>
 
-        {/* Quick filter chips (shown in category view only) */}
-        {!showProducts && (
-          <div className="mb-6 flex flex-wrap gap-2">
-            {USE_CASES.map((uc) => (
+        {isMaterialCatalog && (
+          <div id="material-filter" className="mb-5 flex flex-wrap items-center gap-2 sm:mb-6">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">打印物料</span>
+            <button
+              type="button"
+              onClick={() => {
+                setMaterial("");
+                setPage(1);
+                syncUrl({ material: "" });
+              }}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                !material ? "bg-gray-900 text-white" : "border border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+              }`}
+            >
+              All
+            </button>
+            {MATERIAL_OPTIONS.map((m) => (
               <button
-                key={uc.slug}
+                key={m.key}
+                type="button"
                 onClick={() => {
-                  setUseCase(uc.slug);
+                  setMaterial(m.key);
                   setPage(1);
-                  syncUrl({ useCase: uc.slug });
+                  syncUrl({ material: m.key });
                 }}
-                className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-400 transition-colors"
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  material === m.key
+                    ? "bg-gray-900 text-white"
+                    : "border border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                }`}
               >
-                {uc.icon} {t(`useCase.${uc.slug}.title`)}
+                {m.label}
               </button>
             ))}
-            {availableIndustryTags.slice(0, 6).map((tg) => {
-              const meta = INDUSTRY_LABELS[tg];
-              return (
-                <button
-                  key={tg}
-                  onClick={() => {
-                    setTag(tg);
-                    setPage(1);
-                    syncUrl({ tag: tg });
-                  }}
-                  className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-400 transition-colors"
-                >
-                  {meta?.icon || ""} {t(`industry.${tg}.label`)}
-                </button>
-              );
-            })}
           </div>
         )}
 
         {/* Category Grid (default view) */}
         {!showProducts && (
           <>
-            <div className="mb-4 flex justify-end">
-              <button
-                type="button"
-                onClick={toggleAllDepts}
-                className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-600 transition-colors hover:border-gray-900 hover:text-gray-900"
-              >
-                {allExpanded ? (
-                  <>
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-                    </svg>
-                    {t("shop.collapseAll")}
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                    </svg>
-                    {t("shop.expandAll")}
-                  </>
-                )}
-              </button>
-            </div>
-            <CategoryGrid
-              departments={departments}
-              departmentMeta={departmentMeta}
-              categoryMeta={categoryMeta}
-              categoryCounts={categoryCounts}
-              categoryPreviews={categoryPreviews}
-              expandedDepts={expandedDepts}
-              toggleDept={toggleDept}
-              t={t}
-            />
+            {currentDepartments.length > 0 ? (
+              <>
+                <div className="mb-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={toggleAllDepts}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-600 transition-colors hover:border-gray-900 hover:text-gray-900"
+                  >
+                    {allExpanded ? (
+                      <>
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                        </svg>
+                        {t("shop.collapseAll")}
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                        {t("shop.expandAll")}
+                      </>
+                    )}
+                  </button>
+                </div>
+                <CategoryGrid
+                  departments={isMaterialCatalog && material ? materialFilteredDepartments : departments}
+                  departmentMeta={isMaterialCatalog && material ? materialFilteredDepartmentMeta : departmentMeta}
+                  categoryMeta={categoryMeta}
+                  categoryCounts={categoryCounts}
+                  categoryPreviews={categoryPreviews}
+                  expandedDepts={expandedDepts}
+                  toggleDept={toggleDept}
+                  t={t}
+                />
+              </>
+            ) : (
+              <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
+                No categories found for this material. Try another material filter.
+              </div>
+            )}
           </>
         )}
 
