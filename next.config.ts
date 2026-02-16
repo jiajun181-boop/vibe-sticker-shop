@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { categoryReorgRedirectsV1 } from "./lib/redirects/category-reorg-v1";
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -120,6 +121,7 @@ const nextConfig: NextConfig = {
       { source: "/shop/:cat/rp-hang-tags", destination: "/shop/marketing-prints/tags-hang-tags", permanent: true },
       { source: "/shop/:cat/rp-menus", destination: "/shop/marketing-prints/menus-flat", permanent: true },
       { source: "/shop/:cat/rp-tickets", destination: "/shop/marketing-prints/tickets", permanent: true },
+      ...categoryReorgRedirectsV1,
     ];
   },
 };
