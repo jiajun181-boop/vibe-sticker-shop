@@ -1618,8 +1618,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.sizeUnit")}</p>
                       <div className="rounded-full border border-gray-300 p-1 text-xs">
-                        <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
-                        <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
+                        <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-indigo-700 text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
+                        <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-indigo-700 text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
                       </div>
                     </div>
 
@@ -1738,7 +1738,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         }
                         setUseMultiSize((prev) => !prev);
                       }}
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${useMultiSize ? "bg-gray-900 text-white" : "border border-gray-300 bg-white text-gray-700"}`}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${useMultiSize ? "bg-indigo-700 text-white" : "border border-gray-300 bg-white text-gray-700"}`}
                     >
                       {useMultiSize ? "On" : "Off"}
                     </button>
@@ -1747,8 +1747,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.sizeUnit")}</p>
                     <div className="rounded-full border border-gray-300 p-1 text-xs">
-                      <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
-                      <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-gray-900 text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
+                      <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-indigo-700 text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
+                      <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-indigo-700 text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
                     </div>
                   </div>
 
@@ -1888,7 +1888,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                           onClick={() => setCardType(ct.id)}
                           className={`rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
                             cardType === ct.id
-                              ? "border-gray-900 bg-gray-900 text-white"
+                              ? "border-indigo-700 bg-indigo-700 text-white"
                               : "border-gray-200 bg-white text-gray-900 hover:border-gray-400"
                           }`}
                         >
@@ -1911,7 +1911,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             onClick={() => setSides(s.id)}
                             className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
                               sides === s.id
-                                ? "border-gray-900 bg-gray-900 text-white"
+                                ? "border-indigo-700 bg-indigo-700 text-white"
                                 : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                             }`}
                           >
@@ -1934,7 +1934,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             onClick={() => setThickLayer(l.id)}
                             className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
                               thickLayer === l.id
-                                ? "border-gray-900 bg-gray-900 text-white"
+                                ? "border-indigo-700 bg-indigo-700 text-white"
                                 : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                             }`}
                           >
@@ -2067,13 +2067,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                 onClick={() => setVariantBase(base)}
                                 className={`relative rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
                                   selected
-                                    ? "border-gray-900 bg-gray-900 text-white"
+                                    ? "border-indigo-700 bg-indigo-700 text-white"
                                     : "border-gray-200 bg-white text-gray-900 hover:border-gray-400"
                                 }`}
                               >
                                 {isRec && (
                                   <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                                    selected ? "bg-white text-gray-900" : "bg-gray-900 text-white"
+                                    selected ? "bg-white text-indigo-900" : "bg-indigo-700 text-white"
                                   }`}>★</span>
                                 )}
                                 <span className="block text-sm font-semibold">{base}</span>
@@ -2095,7 +2095,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               onClick={() => setVariantValue(v)}
                               className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
                                 variantValue === v
-                                  ? "border-gray-900 bg-gray-900 text-white"
+                                  ? "border-indigo-700 bg-indigo-700 text-white"
                                   : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                               }`}
                             >
@@ -2124,13 +2124,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               }}
                               className={`relative rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
                                 selected
-                                  ? "border-gray-900 bg-gray-900 text-white"
+                                  ? "border-indigo-700 bg-indigo-700 text-white"
                                   : "border-gray-200 bg-white text-gray-900 hover:border-gray-400"
                               }`}
                             >
                               {o.recommended && (
                                 <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                                  selected ? "bg-white text-gray-900" : "bg-gray-900 text-white"
+                                  selected ? "bg-white text-indigo-900" : "bg-indigo-700 text-white"
                                 }`}>★</span>
                               )}
                               <span className="block text-sm font-semibold">{o.displayLabel || o.label}</span>
@@ -2167,7 +2167,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     {visibleAddons.map((addon) => {
                       const addonChecked = selectedAddons.includes(addon.id);
                       return (
-                      <label key={addon.id} className={`flex cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${addonChecked ? "border-gray-900 bg-gray-50" : "border-gray-200 bg-white"}`}>
+                      <label key={addon.id} className={`flex cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${addonChecked ? "border-indigo-700 bg-gray-50" : "border-gray-200 bg-white"}`}>
                         <input
                           type="checkbox"
                           checked={addonChecked}
@@ -2214,7 +2214,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         }}
                         className={`flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
                           wantsFinishing === val
-                            ? "border-gray-900 bg-gray-900 text-white"
+                            ? "border-indigo-700 bg-indigo-700 text-white"
                             : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                         }`}
                       >
@@ -2228,7 +2228,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         const isMulti = uiConfig?.finishingMode === "multi";
                         const checked = selectedFinishings.includes(f.id);
                         return (
-                          <label key={f.id} className={`flex cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${checked ? "border-gray-900 bg-gray-50" : "border-gray-200 bg-white"}`}>
+                          <label key={f.id} className={`flex cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${checked ? "border-indigo-700 bg-gray-50" : "border-gray-200 bg-white"}`}>
                             <input
                               type={isMulti ? "checkbox" : "radio"}
                               name="finishing"
@@ -2412,7 +2412,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   type="button"
                   onClick={handleAddToCart}
                   disabled={!canAddToCart}
-                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-200 ${!canAddToCart ? "border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : added ? "border border-emerald-600 bg-emerald-600 text-white" : "border border-gray-900 bg-white text-gray-900 hover:bg-gray-50"}`}
+                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-200 ${!canAddToCart ? "border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : added ? "border border-emerald-600 bg-emerald-600 text-white" : "border border-indigo-700 bg-white text-indigo-700 hover:bg-gray-50"}`}
                 >
                   {added ? t("product.added") : t("product.addToCart")}
                 </button>
@@ -2420,7 +2420,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   type="button"
                   onClick={handleBuyNow}
                   disabled={!canAddToCart || buyNowLoading}
-                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-all duration-200 ${!canAddToCart || buyNowLoading ? "bg-gray-300 cursor-not-allowed" : "bg-gray-900 hover:bg-black"}`}
+                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-all duration-200 ${!canAddToCart || buyNowLoading ? "bg-gray-300 cursor-not-allowed" : "bg-indigo-700 hover:bg-indigo-800"}`}
                 >
                   {buyNowLoading ? "..." : "Buy Now"}
                 </button>

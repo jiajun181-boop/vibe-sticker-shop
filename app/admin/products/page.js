@@ -58,6 +58,23 @@ function buildNextSubseriesTags(tags, targetSubseriesSlug) {
   return cleaned;
 }
 
+function suggestSubseriesForProduct(product) {
+  if (!product?.category || !product?.slug) return null;
+  const byCategory = Object.entries(SUB_PRODUCT_CONFIG).filter(([, cfg]) => cfg.category === product.category);
+  const slug = String(product.slug).toLowerCase();
+
+  for (const [parentSlug, cfg] of byCategory) {
+    if (Array.isArray(cfg.dbSlugs) && cfg.dbSlugs.includes(product.slug)) return parentSlug;
+  }
+  for (const [parentSlug, cfg] of byCategory) {
+    if (cfg.slugPrefix && slug.startsWith(String(cfg.slugPrefix).toLowerCase())) return parentSlug;
+  }
+  for (const [parentSlug] of byCategory) {
+    if (slug.includes(parentSlug.replace(/-/g, "")) || slug.includes(parentSlug)) return parentSlug;
+  }
+  return null;
+}
+
 function buildCategoryTree(products) {
   const parentEntries = Object.entries(SUB_PRODUCT_CONFIG);
   const byCategoryParents = new Map();
@@ -225,6 +242,11 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       return group.products.map((p) => ({ ...p, categoryTitle: cat.title, categorySlug: cat.category }));
     });
   }, [tree]);
+  const uncategorizedSuggestions = useMemo(() => {
+    return uncategorizedEntries
+      .map((p) => ({ product: p, suggested: suggestSubseriesForProduct(p) }))
+      .filter((x) => x.suggested);
+  }, [uncategorizedEntries]);
   const visibleTree = useMemo(() => {
     if (!showOnlyUncategorized) return tree;
     return tree
@@ -361,6 +383,47 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
   function selectAllUncategorized() {
     const ids = uncategorizedEntries.map((p) => p.id);
     setSelectedProductIds((prev) => Array.from(new Set([...prev, ...ids])));
+  }
+
+  async function handleAutoAssignUncategorized() {
+    if (moving || uncategorizedSuggestions.length === 0) return;
+    const selectedSet = new Set(selectedProductIds);
+    const rows = selectedSet.size
+      ? uncategorizedSuggestions.filter((x) => selectedSet.has(x.product.id))
+      : uncategorizedSuggestions;
+    if (!rows.length) return;
+
+    setMoving(true);
+    try {
+      const movedEntries = [];
+      for (const row of rows) {
+        const moved = await patchProductMove(row.product, row.product.category, row.suggested);
+        if (moved) {
+          movedEntries.push({
+            id: row.product.id,
+            name: row.product.name,
+            fromCategory: row.product.category,
+            fromTags: Array.isArray(row.product.tags) ? [...row.product.tags] : [],
+          });
+        }
+      }
+      if (movedEntries.length > 0) {
+        setLastMove({ entries: movedEntries });
+      }
+      showMsg(
+        movedEntries.length
+          ? `Auto-assigned ${movedEntries.length} products by slug rules.`
+          : "No matching suggestion to apply."
+      );
+      setSelectedProductIds([]);
+      fetchProducts();
+    } catch (err) {
+      showMsg(err.message || "Auto-assign failed", true);
+    } finally {
+      setMoving(false);
+      setDraggingProductId(null);
+      setDropTarget(null);
+    }
   }
 
   async function handleDropToSubseries(productId, targetCategory, targetSubseriesSlug) {
@@ -522,6 +585,19 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
           {message.text}
         </div>
       )}
+      {lastMove?.entries?.length ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm text-blue-800">
+          <span>Last change: {lastMove.entries.length} products moved.</span>
+          <button
+            type="button"
+            onClick={handleUndoLastMove}
+            disabled={moving}
+            className="rounded-md border border-blue-300 bg-white px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+          >
+            Undo
+          </button>
+        </div>
+      ) : null}
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -612,6 +688,14 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
               >
                 {showOnlyUncategorized ? "Show All Categories" : "Only Uncategorized"}
               </button>
+              <button
+                type="button"
+                onClick={handleAutoAssignUncategorized}
+                disabled={moving || uncategorizedSuggestions.length === 0}
+                className="rounded border border-amber-300 px-2 py-0.5 text-[11px] font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+              >
+                Auto Assign ({uncategorizedSuggestions.length})
+              </button>
             </div>
           )}
         </div>
@@ -670,9 +754,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
             </div>
           </div>
           {lastMove?.entries?.length ? (
-            <p className="mt-2 text-[11px] text-gray-500">
-              Last move: {lastMove.entries.length} products
-            </p>
+            <p className="mt-2 text-[11px] text-gray-500">Undo is available above.</p>
           ) : null}
         </div>
         {catalogLoading ? (

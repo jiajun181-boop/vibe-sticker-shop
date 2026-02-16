@@ -49,7 +49,7 @@ export default function FavoritesPage() {
           <p className="mt-4 text-sm text-gray-500">{t("favorites.empty")}</p>
           <Link
             href="/shop"
-            className="mt-4 inline-block rounded-full border border-gray-300 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:border-gray-900 hover:text-gray-900 transition-colors"
+            className="mt-4 inline-block rounded-full border border-gray-300 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:border-indigo-700 hover:text-indigo-700 transition-colors"
           >
             {t("favorites.browseCta")}
           </Link>
@@ -101,14 +101,14 @@ export default function FavoritesPage() {
                   <div className="mt-3 flex gap-2">
                     <Link
                       href={href}
-                      className="flex-1 rounded-full bg-gray-900 px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black"
+                      className="flex-1 rounded-full bg-indigo-700 px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-indigo-800"
                     >
                       {t("shop.viewDetails")}
                     </Link>
                     <button
                       type="button"
                       onClick={() => quickAdd(fav)}
-                      className="rounded-full border border-gray-300 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900"
+                      className="rounded-full border border-gray-300 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-700 transition-colors hover:border-indigo-700 hover:text-indigo-700"
                     >
                       {t("shop.quickAdd")}
                     </button>

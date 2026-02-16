@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 
 const categories = [
   { value: "fleet-compliance-id", label: "Fleet Compliance & ID" },
@@ -18,7 +19,6 @@ const categories = [
   { value: "large-format-graphics", label: "Large Format Graphics" },
   { value: "retail-promo", label: "Retail Promo" },
   { value: "packaging", label: "Packaging" },
-  { value: "business-forms", label: "Business Forms" },
 ];
 
 const types = [
@@ -34,6 +34,30 @@ const pricingUnits = [
 ];
 
 const ALL_FORMATS = ["ai", "pdf", "eps", "tiff", "jpg", "png", "svg"];
+const SUBSERIES_TAG_PREFIX = "subseries:";
+
+const CATEGORY_TO_SUBSERIES = Object.entries(SUB_PRODUCT_CONFIG).reduce((acc, [slug, cfg]) => {
+  if (!acc[cfg.category]) acc[cfg.category] = [];
+  acc[cfg.category].push(slug);
+  return acc;
+}, {});
+
+function titleizeSlug(value) {
+  return String(value || "")
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function getTaggedSubseries(tags) {
+  if (!Array.isArray(tags)) return "";
+  const tagged = tags.find((t) => typeof t === "string" && t.startsWith(SUBSERIES_TAG_PREFIX));
+  return tagged ? tagged.slice(SUBSERIES_TAG_PREFIX.length) : "";
+}
+
+function stripSubseriesTags(tags) {
+  if (!Array.isArray(tags)) return [];
+  return tags.filter((t) => !(typeof t === "string" && t.startsWith(SUBSERIES_TAG_PREFIX)));
+}
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -162,7 +186,8 @@ export default function ProductDetailPage() {
         requiresBleed: data.requiresBleed,
         bleedIn: data.bleedIn ?? "",
         acceptedFormats: data.acceptedFormats || [],
-        tags: data.tags || [],
+        subseries: getTaggedSubseries(data.tags),
+        tags: stripSubseriesTags(data.tags),
         keywords: data.keywords || [],
         metaTitle: data.metaTitle || "",
         metaDescription: data.metaDescription || "",
@@ -188,6 +213,8 @@ export default function ProductDetailPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  const subseriesOptions = (CATEGORY_TO_SUBSERIES[form.category] || []).slice().sort((a, b) => a.localeCompare(b));
+
   function toggleFormat(fmt) {
     setForm((prev) => {
       const current = prev.acceptedFormats || [];
@@ -203,6 +230,12 @@ export default function ProductDetailPage() {
   async function handleSave(e) {
     e.preventDefault();
     setSaving(true);
+
+    if (!form.subseries) {
+      setSaving(false);
+      showMsg("Subseries is required. Please choose one before saving.", true);
+      return;
+    }
 
     let parsedOptions = undefined;
     if (optionsJson.trim()) {
@@ -236,7 +269,7 @@ export default function ProductDetailPage() {
       requiresBleed: form.requiresBleed,
       bleedIn: form.bleedIn ? parseFloat(form.bleedIn) : null,
       acceptedFormats: form.acceptedFormats.length > 0 ? form.acceptedFormats : null,
-      tags: form.tags,
+      tags: [...stripSubseriesTags(form.tags), `${SUBSERIES_TAG_PREFIX}${form.subseries}`],
       keywords: form.keywords,
       metaTitle: form.metaTitle || null,
       metaDescription: form.metaDescription || null,
@@ -394,6 +427,11 @@ export default function ProductDetailPage() {
             </div>
             <div className="flex flex-wrap gap-2 text-xs">
               <span className="rounded-full bg-blue-50 px-2.5 py-1 font-medium text-blue-700">{product.category}</span>
+              {form.subseries ? (
+                <span className="rounded-full bg-indigo-50 px-2.5 py-1 font-medium text-indigo-700">
+                  {titleizeSlug(form.subseries)}
+                </span>
+              ) : null}
               <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">{product.type}</span>
               {product.isFeatured && (
                 <span className="rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-700">Featured</span>
@@ -427,11 +465,35 @@ export default function ProductDetailPage() {
                 <label className="mb-1 block text-xs font-medium text-gray-500">Slug *</label>
                 <input type="text" value={form.slug || ""} onChange={(e) => updateField("slug", e.target.value)} required className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm outline-none focus:border-gray-900" />
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-gray-500">Category</label>
-                  <select value={form.category || ""} onChange={(e) => updateField("category", e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900">
+                  <select
+                    value={form.category || ""}
+                    onChange={(e) => {
+                      const nextCategory = e.target.value;
+                      const nextSubseriesOptions = (CATEGORY_TO_SUBSERIES[nextCategory] || []);
+                      updateField("category", nextCategory);
+                      if (!nextSubseriesOptions.includes(form.subseries)) {
+                        updateField("subseries", nextSubseriesOptions[0] || "");
+                      }
+                    }}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  >
                     {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-500">Subseries *</label>
+                  <select
+                    value={form.subseries || ""}
+                    onChange={(e) => updateField("subseries", e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  >
+                    <option value="">Select subseries</option>
+                    {subseriesOptions.map((slug) => (
+                      <option key={slug} value={slug}>{titleizeSlug(slug)}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -557,6 +619,7 @@ export default function ProductDetailPage() {
             <div className="space-y-4">
               <div>
                 <label className="mb-2 block text-xs font-medium text-gray-500">Tags</label>
+                <p className="mb-2 text-[11px] text-gray-400">Subseries tag is managed in Basic Information.</p>
                 <TagInput value={form.tags || []} onChange={(v) => updateField("tags", v)} placeholder="Add tag and press Enter" />
               </div>
               <div>
@@ -668,6 +731,10 @@ export default function ProductDetailPage() {
               <div className="flex justify-between">
                 <dt className="text-gray-500">Updated</dt>
                 <dd className="text-gray-900">{new Date(product.updatedAt).toLocaleDateString()}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Subseries</dt>
+                <dd className="text-gray-900">{form.subseries ? titleizeSlug(form.subseries) : "Missing"}</dd>
               </div>
               {product.pricingPresetId && (
                 <div className="flex justify-between">

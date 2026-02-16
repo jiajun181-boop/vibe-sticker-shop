@@ -156,6 +156,10 @@ export default function PricingPresetsPage() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkPreview, setBulkPreview] = useState(null);
   const [bulkMessage, setBulkMessage] = useState(null);
+  const [quickPresetId, setQuickPresetId] = useState("");
+  const [quickOverwrite, setQuickOverwrite] = useState(false);
+  const [quickAssignLoading, setQuickAssignLoading] = useState(false);
+  const [quickAssignMsg, setQuickAssignMsg] = useState(null);
 
   // Parsed config for structured editors (derived from editJson)
   const parsedConfig = useMemo(() => {
@@ -185,6 +189,12 @@ export default function PricingPresetsPage() {
     fetchPresets();
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (!quickPresetId && presets.length > 0) {
+      setQuickPresetId(presets[0].id);
+    }
+  }, [quickPresetId, presets]);
 
   async function fetchPresets() {
     setLoading(true);
@@ -322,6 +332,38 @@ export default function PricingPresetsPage() {
     }
   }
 
+  async function handleQuickAssign() {
+    if (!bulkCategory || !quickPresetId) {
+      setQuickAssignMsg({ type: "error", text: "Choose category and preset first." });
+      return;
+    }
+    setQuickAssignLoading(true);
+    setQuickAssignMsg(null);
+    try {
+      const res = await fetch("/api/admin/pricing/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: bulkCategory,
+          presetId: quickPresetId,
+          overwriteExisting: quickOverwrite,
+          activeOnly: true,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Quick assign failed");
+      setQuickAssignMsg({
+        type: "success",
+        text: `Assigned preset to ${data.updated} products in ${data.category}.`,
+      });
+      await fetchCategories();
+    } catch (err) {
+      setQuickAssignMsg({ type: "error", text: err.message || "Quick assign failed" });
+    } finally {
+      setQuickAssignLoading(false);
+    }
+  }
+
   function updateAdjustFlag(flag, checked) {
     setAdjustFlags((prev) => ({ ...prev, [flag]: checked }));
   }
@@ -359,6 +401,43 @@ export default function PricingPresetsPage() {
       )}
 
       <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-widest text-gray-600">Quick Assign Preset</span>
+            <select
+              value={quickPresetId}
+              onChange={(e) => setQuickPresetId(e.target.value)}
+              className="rounded border border-gray-300 bg-white px-2 py-1 text-xs"
+            >
+              {presets.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.key})
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleQuickAssign}
+              disabled={quickAssignLoading || !quickPresetId || !bulkCategory}
+              className="rounded bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:opacity-50"
+            >
+              {quickAssignLoading ? "Applying..." : "Apply to Category"}
+            </button>
+            <label className="inline-flex items-center gap-1 text-xs text-gray-600">
+              <input
+                type="checkbox"
+                checked={quickOverwrite}
+                onChange={(e) => setQuickOverwrite(e.target.checked)}
+              />
+              Overwrite existing preset links
+            </label>
+          </div>
+          {quickAssignMsg && (
+            <p className={`mt-2 text-xs ${quickAssignMsg.type === "error" ? "text-red-600" : "text-green-700"}`}>
+              {quickAssignMsg.text}
+            </p>
+          )}
+        </div>
+
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-gray-900">Bulk Price Adjustment</h2>

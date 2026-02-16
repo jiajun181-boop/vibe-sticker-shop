@@ -119,7 +119,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
                   key={dept.key}
                   type="button"
                   onClick={() => setActiveDept(dept.key)}
-                  className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${selected ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 text-gray-700"}`}
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${selected ? "border-indigo-700 bg-indigo-700 text-white" : "border-gray-200 text-gray-700"}`}
                 >
                   {departmentMeta?.[dept.key]?.title || dept.key}
                 </button>

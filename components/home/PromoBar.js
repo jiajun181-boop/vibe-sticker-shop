@@ -25,7 +25,7 @@ export default function PromoBar() {
   if (hidden) return null;
 
   return (
-    <div className="sticky top-0 z-[60] w-full bg-gray-900 text-white">
+    <div className="sticky top-0 z-[60] w-full bg-indigo-900 text-white">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-2 text-xs sm:text-sm">
         <p className="font-medium">{t("promo.text")}</p>
         <button
