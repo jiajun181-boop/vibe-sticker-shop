@@ -14,19 +14,12 @@ const formatCad = (cents) =>
 const SUBSERIES_TAG_PREFIX = "subseries:";
 const PLACEMENT_TAG_PREFIX = "placement:";
 const CATEGORY_ORDER = [
-  "marketing-prints",
-  "retail-promo",
-  "packaging",
+  "marketing-business-print",
+  "stickers-labels-decals",
+  "signs-rigid-boards",
   "banners-displays",
-  "display-stands",
-  "rigid-signs",
-  "large-format-graphics",
-  "vehicle-branding-advertising",
-  "window-glass-films",
-  "stickers-labels",
-  "safety-warning-decals",
-  "facility-asset-labels",
-  "fleet-compliance-id",
+  "windows-walls-floors",
+  "vehicle-graphics-fleet",
 ];
 
 function titleizeSlug(value) {

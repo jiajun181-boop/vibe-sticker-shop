@@ -132,7 +132,7 @@ function dedupeByNormalizedName(list) {
 }
 
 function prioritizeSubGroups(category, groups) {
-  if (category !== "rigid-signs") return groups;
+  if (category !== "signs-rigid-boards" && category !== "rigid-signs") return groups;
   const priority = ["yard-signs", "real-estate-signs", "election-signs"];
   const rank = new Map(priority.map((slug, i) => [slug, i]));
   return [...groups].sort((a, b) => {
@@ -150,7 +150,7 @@ export async function generateMetadata({ params }) {
   const meta = config.categoryMeta[decoded];
   if (!meta) return {};
 
-  const title = `${meta.title} — Vibe Sticker Shop`;
+  const title = `${meta.title} - Vibe Sticker Shop`;
   const description = `Custom ${meta.title.toLowerCase()} printing — professional quality, fast turnaround in Toronto & the GTA.`;
   const url = `${SITE_URL}/shop/${category}`;
 
