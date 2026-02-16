@@ -12,6 +12,7 @@ const formatCad = (cents) =>
     cents / 100
   );
 const SUBSERIES_TAG_PREFIX = "subseries:";
+const PLACEMENT_TAG_PREFIX = "placement:";
 const CATEGORY_ORDER = [
   "marketing-prints",
   "retail-promo",
@@ -46,6 +47,26 @@ function getTaggedSubseriesList(tags) {
   );
 }
 
+function getPlacementSubseriesList(tags, category) {
+  if (!Array.isArray(tags) || !category) return [];
+  return Array.from(
+    new Set(
+      tags
+        .filter((t) => typeof t === "string" && t.startsWith(PLACEMENT_TAG_PREFIX))
+        .map((t) => t.slice(PLACEMENT_TAG_PREFIX.length))
+        .map((value) => {
+          const idx = value.indexOf(":");
+          if (idx < 0) return null;
+          return { category: value.slice(0, idx), subseries: value.slice(idx + 1) };
+        })
+        .filter(Boolean)
+        .filter((p) => p.category === category)
+        .map((p) => p.subseries)
+        .filter(Boolean)
+    )
+  );
+}
+
 function hasUncategorizedGroup(categoryNode) {
   return categoryNode.subseries.some((s) => s.slug === "uncategorized" && s.products.length > 0);
 }
@@ -69,6 +90,18 @@ function buildCopySubseriesTags(tags, targetSubseriesSlug) {
   if (targetSubseriesSlug && targetSubseriesSlug !== "uncategorized") {
     cleaned.push(`${SUBSERIES_TAG_PREFIX}${targetSubseriesSlug}`);
   }
+  return cleaned;
+}
+
+function buildCopyPlacementTags(tags, targetCategory, targetSubseriesSlug) {
+  if (!targetCategory || !targetSubseriesSlug || targetSubseriesSlug === "uncategorized") {
+    return Array.isArray(tags) ? [...tags] : [];
+  }
+  const exact = `${PLACEMENT_TAG_PREFIX}${targetCategory}:${targetSubseriesSlug}`;
+  const cleaned = Array.isArray(tags)
+    ? tags.filter((t) => !(typeof t === "string" && t === exact))
+    : [];
+  cleaned.push(exact);
   return cleaned;
 }
 
@@ -99,9 +132,25 @@ function buildCategoryTree(products) {
   }
 
   const byCategory = new Map();
+  const allCategories = new Set(products.map((p) => p.category));
   for (const p of products) {
-    if (!byCategory.has(p.category)) byCategory.set(p.category, []);
-    byCategory.get(p.category).push(p);
+    if (Array.isArray(p.tags)) {
+      for (const tag of p.tags) {
+        if (typeof tag !== "string" || !tag.startsWith(PLACEMENT_TAG_PREFIX)) continue;
+        const raw = tag.slice(PLACEMENT_TAG_PREFIX.length);
+        const idx = raw.indexOf(":");
+        if (idx < 0) continue;
+        const placementCategory = raw.slice(0, idx);
+        if (placementCategory) allCategories.add(placementCategory);
+      }
+    }
+  }
+  for (const category of allCategories) {
+    const categoryItems = products.filter((p) => {
+      if (p.category === category) return true;
+      return getPlacementSubseriesList(p.tags, category).length > 0;
+    });
+    if (categoryItems.length) byCategory.set(category, categoryItems);
   }
 
   const orderIndex = new Map(CATEGORY_ORDER.map((slug, idx) => [slug, idx]));
@@ -128,7 +177,14 @@ function buildCategoryTree(products) {
 
     // 1) Manual tagged placement has priority and can place one product in multiple subseries
     for (const p of items) {
-      const taggedList = getTaggedSubseriesList(p.tags).filter((tagged) => tagged !== "uncategorized");
+      const placementTagged = getPlacementSubseriesList(p.tags, category).filter(
+        (tagged) => tagged !== "uncategorized"
+      );
+      const canonicalTagged =
+        p.category === category
+          ? getTaggedSubseriesList(p.tags).filter((tagged) => tagged !== "uncategorized")
+          : [];
+      const taggedList = placementTagged.length ? placementTagged : canonicalTagged;
       if (!taggedList.length) continue;
       for (const tagged of taggedList) {
         if (!subseriesMap.has(tagged)) {
@@ -348,14 +404,13 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     setTimeout(() => setMessage(null), 3000);
   }
 
-  async function patchProductClassification(productId, category, tags) {
+  async function patchProductClassification(productId, { category, tags }) {
+    const payload = { tags };
+    if (category) payload.category = category;
     const res = await fetch(`/api/admin/products/${productId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        category,
-        tags,
-      }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -386,19 +441,23 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       return false;
     }
     const nextTags = buildMoveSubseriesTags(product.tags, targetSubseriesSlug);
-    await patchProductClassification(product.id, targetCategory, nextTags);
+    await patchProductClassification(product.id, { category: targetCategory, tags: nextTags });
     return true;
   }
 
   async function patchProductCopy(product, targetCategory, targetSubseriesSlug) {
     if (targetSubseriesSlug === "uncategorized") return false;
-    if (product.category !== targetCategory) {
-      throw new Error("Copy only supports targets in the same category.");
+    let nextTags = [];
+    if (product.category === targetCategory) {
+      const currentTagged = getTaggedSubseriesList(product.tags);
+      if (currentTagged.includes(targetSubseriesSlug)) return false;
+      nextTags = buildCopySubseriesTags(product.tags, targetSubseriesSlug);
+    } else {
+      const placementTagged = getPlacementSubseriesList(product.tags, targetCategory);
+      if (placementTagged.includes(targetSubseriesSlug)) return false;
+      nextTags = buildCopyPlacementTags(product.tags, targetCategory, targetSubseriesSlug);
     }
-    const currentTagged = getTaggedSubseriesList(product.tags);
-    if (currentTagged.includes(targetSubseriesSlug)) return false;
-    const nextTags = buildCopySubseriesTags(product.tags, targetSubseriesSlug);
-    await patchProductClassification(product.id, targetCategory, nextTags);
+    await patchProductClassification(product.id, { tags: nextTags });
     return true;
   }
 
@@ -634,7 +693,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     setMoving(true);
     try {
       for (const entry of lastMove.entries) {
-        await patchProductClassification(entry.id, entry.fromCategory, entry.fromTags);
+        await patchProductClassification(entry.id, { category: entry.fromCategory, tags: entry.fromTags });
       }
       showMsg(`Undid last move (${lastMove.entries.length} products).`);
       setLastMove(null);
