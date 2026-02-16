@@ -441,6 +441,24 @@ export const PRODUCTS = [
   { category:"banners-displays", product:"x-banner-prints", name:"X-Banner Prints", description:"X-stand banner prints (print only).", status:"draft", config:{ minimumPrice:0 } },
   { category:"banners-displays", product:"roll-up-banners", name:"Roll-Up Banners", description:"Retractable roll-up banners for events and trade shows.", status:"draft", config:{ minimumPrice:0 } },
   { category:"banners-displays", product:"step-repeat-backdrops", name:"Step & Repeat Backdrops", description:"Brand wall backdrops for media photos and events.", status:"draft", config:{ minimumPrice:0 } },
+  // pole-banners expansion
+  { category:"banners-displays", product:"pole-banner-single-sided", name:"Single-Sided Pole Banner", description:"Single-sided street pole banners for communities and districts.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"pole-banner-double-sided", name:"Double-Sided Pole Banner", description:"Double-sided pole banners visible from both directions.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"pole-banner-hardware-kit", name:"Pole Banner Hardware Kit", description:"Mounting brackets and arms for street pole banner installation.", status:"draft", config:{ minimumPrice:0 } },
+  // mesh-banners expansion
+  { category:"banners-displays", product:"mesh-banner-heavy-duty", name:"Heavy-Duty Mesh Banner", description:"Reinforced mesh banners for construction sites and long-term outdoor use.", status:"draft", config:{ minimumPrice:0 } },
+  // fabric-banners (new sub-group)
+  { category:"banners-displays", product:"fabric-banner", name:"Fabric Banner", description:"Lightweight wrinkle-resistant fabric banners for indoor events and trade shows.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"fabric-banner-double-sided", name:"Double-Sided Fabric Banner", description:"Double-sided dye-sublimation fabric banners with no show-through.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"fabric-banner-hanging", name:"Hanging Fabric Banner", description:"Ceiling-mounted fabric banners for retail and exhibition spaces.", status:"draft", config:{ minimumPrice:0 } },
+  // a-frames expansion
+  { category:"banners-displays", product:"a-frame-double-sided", name:"Double-Sided A-Frame", description:"Heavy-duty double-sided A-frame sidewalk sign with snap frames.", status:"draft", config:{ minimumPrice:0 } },
+  // tents-outdoor expansion
+  { category:"banners-displays", product:"tent-half-walls", name:"Tent Half Walls", description:"Half-height tent walls for ventilation with branding.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"tent-custom-print", name:"Custom Printed Tent Top", description:"Full-color dye-sublimation printed canopy tent top.", status:"draft", config:{ minimumPrice:0 } },
+  // backdrops expansion
+  { category:"banners-displays", product:"tension-fabric-display-8ft", name:"Tension Fabric Display 8ft", description:"Portable tension fabric display system — 8ft wide.", status:"draft", config:{ minimumPrice:0 } },
+  { category:"banners-displays", product:"tension-fabric-display-10ft", name:"Tension Fabric Display 10ft", description:"Large tension fabric display system — 10ft wide for maximum impact.", status:"draft", config:{ minimumPrice:0 } },
 
   // ===== MARKETING PRINTS =====
   { category:"marketing-prints", product:"business-cards", name:"Business Cards", description:"Premium cards with optional finishes and coatings.", status:"draft", config:{ minimumPrice:0 } },

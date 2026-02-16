@@ -38,13 +38,13 @@ const CATEGORY_ALIASES = Object.freeze({
   "fleet-compliance-id": "vehicle-graphics-fleet",
 });
 
-const FLATTENED_SUBGROUP_CATEGORIES = new Set(["packaging", "banners-displays"]);
+const FLATTENED_SUBGROUP_CATEGORIES = new Set(["packaging"]);
 
 const MARKETING_SEGMENTS = [
   {
     key: "business-essentials",
     title: "Business Essentials",
-    slugs: ["business-cards", "letterhead-stationery", "envelopes", "stamps", "ncr-forms", "order-forms", "waivers-releases"],
+    slugs: ["business-cards", "letterhead-stationery", "calendars", "envelopes", "stamps", "ncr-forms", "order-forms", "waivers-releases"],
   },
   {
     key: "marketing-materials",
@@ -55,6 +55,101 @@ const MARKETING_SEGMENTS = [
     key: "retail-events-packaging",
     title: "Retail, Events & Packaging",
     slugs: ["menus", "rack-cards", "door-hangers", "tickets-coupons", "retail-tags", "tags", "inserts-packaging", "certificates", "greeting-cards", "invitation-cards", "loyalty-cards", "shelf-displays", "table-tents"],
+  },
+];
+
+const BANNERS_SEGMENTS = [
+  {
+    key: "banners",
+    title: "Banners",
+    slugs: ["vinyl-banners", "mesh-banners", "pole-banners", "canvas-prints", "fabric-banners"],
+  },
+  {
+    key: "stands-displays",
+    title: "Stands & Displays",
+    slugs: ["retractable-stands", "x-banner-stands", "tabletop-displays", "backdrops-popups"],
+  },
+  {
+    key: "outdoor-signage",
+    title: "Outdoor & Signage",
+    slugs: ["flags-hardware", "a-frames-signs", "lawn-yard-signs", "tents-outdoor"],
+  },
+];
+
+const VEHICLE_GRAPHICS_FLEET_SEGMENTS = [
+  {
+    key: "vehicle-branding",
+    title: "Vehicle Branding",
+    slugs: ["vehicle-wraps", "door-panel-graphics", "vehicle-decals", "vehicle-graphics", "magnetic-signs"],
+  },
+  {
+    key: "fleet-packages",
+    title: "Fleet & Safety Packages",
+    slugs: ["fleet-packages"],
+  },
+  {
+    key: "compliance-id",
+    title: "Compliance & Identification",
+    slugs: ["dot-mc-numbers", "unit-weight-ids", "spec-labels", "inspection-compliance"],
+  },
+];
+
+const STICKERS_SEGMENTS = [
+  {
+    key: "custom-stickers",
+    title: "Custom Stickers & Labels",
+    slugs: ["die-cut-stickers", "kiss-cut-singles", "sticker-pages", "sticker-rolls"],
+  },
+  {
+    key: "vinyl-specialty",
+    title: "Vinyl & Specialty",
+    slugs: ["vinyl-lettering", "decals", "specialty"],
+  },
+  {
+    key: "safety-compliance",
+    title: "Safety & Compliance",
+    slugs: ["fire-emergency", "hazard-warning", "ppe-equipment", "electrical-chemical"],
+  },
+  {
+    key: "industrial-labels",
+    title: "Industrial & Asset Labels",
+    slugs: ["asset-equipment-tags", "pipe-valve-labels", "warehouse-labels", "electrical-cable-labels"],
+  },
+];
+
+const SIGNS_SEGMENTS = [
+  {
+    key: "outdoor-signs",
+    title: "Outdoor Signs",
+    slugs: ["yard-signs", "real-estate-signs", "election-signs"],
+  },
+  {
+    key: "indoor-portable",
+    title: "Indoor & Portable Signs",
+    slugs: ["foam-board-signs", "a-frame-signs"],
+  },
+  {
+    key: "event-display",
+    title: "Event & Display Boards",
+    slugs: ["event-boards", "display-signs"],
+  },
+];
+
+const WINDOWS_WALLS_FLOORS_SEGMENTS = [
+  {
+    key: "window-films",
+    title: "Window Films",
+    slugs: ["static-clings", "adhesive-films", "one-way-vision", "privacy-films"],
+  },
+  {
+    key: "lettering-graphics",
+    title: "Lettering & Window Graphics",
+    slugs: ["window-lettering", "window-graphics"],
+  },
+  {
+    key: "wall-floor",
+    title: "Wall & Floor Graphics",
+    slugs: ["wall-graphics", "floor-graphics"],
   },
 ];
 
@@ -258,7 +353,8 @@ export default async function CategoryPage({ params }) {
     const subGroupData = subGroups.map((sg) => {
       const subCfg = SUB_PRODUCT_CONFIG[sg.slug];
       const placementMatching = products.filter((p) =>
-        hasPlacementSubseries(p.tags, decoded, sg.slug)
+        hasPlacementSubseries(p.tags, decoded, sg.slug) &&
+        (!subCfg || subCfg.dbSlugs.includes(p.slug))
       );
       const fallbackMatching =
         placementMatching.length === 0 && subCfg
@@ -295,14 +391,23 @@ export default async function CategoryPage({ params }) {
       : [];
 
     const orderedSubGroupData = prioritizeSubGroups(decoded, subGroupData);
-    const groupedSubGroups =
-      decoded === "marketing-business-print"
-        ? MARKETING_SEGMENTS.map((segment) => ({
-            key: segment.key,
-            title: segment.title,
-            items: orderedSubGroupData.filter((sg) => segment.slugs.includes(sg.slug)),
-          })).filter((segment) => segment.items.length > 0)
-        : [];
+    const SEGMENT_MAP = {
+      "marketing-business-print": MARKETING_SEGMENTS,
+      "banners-displays": BANNERS_SEGMENTS,
+      "stickers-labels-decals": STICKERS_SEGMENTS,
+      "signs-rigid-boards": SIGNS_SEGMENTS,
+      "windows-walls-floors": WINDOWS_WALLS_FLOORS_SEGMENTS,
+      "vehicle-graphics-fleet": VEHICLE_GRAPHICS_FLEET_SEGMENTS,
+    };
+    const segmentDef = SEGMENT_MAP[decoded] || null;
+
+    const groupedSubGroups = segmentDef
+      ? segmentDef.map((segment) => ({
+          key: segment.key,
+          title: segment.title,
+          items: orderedSubGroupData.filter((sg) => segment.slugs.includes(sg.slug)),
+        })).filter((segment) => segment.items.length > 0)
+      : [];
 
     return (
       <SubGroupLandingClient
