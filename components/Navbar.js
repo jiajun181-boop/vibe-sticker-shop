@@ -411,7 +411,7 @@ export default function Navbar({ catalogConfig }) {
               className="rounded-full border border-[var(--color-gray-300)] px-2.5 py-1.5 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
               aria-label="Switch language"
             >
-              {locale === "en" ? "ä¸­æ–‡" : "EN"}
+              {locale === "en" ? "中文" : "EN"}
             </button>
           )}
 
