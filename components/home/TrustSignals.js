@@ -97,7 +97,7 @@ export default function TrustSignals() {
         {STATS.map((stat) => (
           <div
             key={stat.labelKey}
-            className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 text-center hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+            className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 text-center hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
           >
             <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-[var(--color-moon-blue-deep)] text-white flex items-center justify-center">
               {STAT_ICONS[stat.icon]}
@@ -149,7 +149,7 @@ export default function TrustSignals() {
               key={i}
               onClick={() => setReviewIdx(i)}
               className={`h-1.5 rounded-full transition-all ${
-                i === reviewIdx ? "bg-black w-4" : "bg-gray-200 w-1.5"
+                i === reviewIdx ? "bg-[var(--color-ink-black)] w-4" : "bg-gray-200 w-1.5"
               }`}
             />
           ))}

@@ -11,8 +11,8 @@ const BADGE_MAP = {
   "retractable-banner-stand-premium": { labelKey: "featured.badge.bestSeller", color: "from-amber-500 to-orange-500" },
   "x-banner-stand-standard": { labelKey: "featured.badge.budgetFriendly", color: "from-green-500 to-emerald-500" },
   "x-banner-stand-large": { labelKey: "featured.badge.highImpact", color: "from-[var(--color-moon-blue)] to-[var(--color-moon-blue-deep)]" },
-  "tabletop-banner-a4": { labelKey: "featured.badge.compact", color: "from-violet-500 to-purple-500" },
-  "tabletop-banner-a3": { labelKey: "featured.badge.popular", color: "from-rose-500 to-pink-500" },
+  "tabletop-banner-a4": { labelKey: "featured.badge.compact", color: "from-[var(--color-gray-600)] to-[var(--color-gray-800)]" },
+  "tabletop-banner-a3": { labelKey: "featured.badge.popular", color: "from-[var(--color-moon-gold)] to-amber-600" },
   "deluxe-tabletop-retractable-a3": { labelKey: "featured.badge.premium", color: "from-gray-700 to-gray-900" },
 };
 

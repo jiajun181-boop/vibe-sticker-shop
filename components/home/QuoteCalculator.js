@@ -63,7 +63,7 @@ export default function QuoteCalculator() {
         <div className="p-8 md:p-10 space-y-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-moon-gold)]" />
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                 {t("quote.badge")}
               </span>
@@ -100,7 +100,7 @@ export default function QuoteCalculator() {
                     onClick={() => setSizeIdx(i)}
                     className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition-all ${
                       sizeIdx === i
-                        ? "bg-black text-white border-black"
+                        ? "bg-[var(--color-ink-black)] text-white border-[var(--color-ink-black)]"
                         : "bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-400"
                     }`}
                   >
@@ -140,7 +140,7 @@ export default function QuoteCalculator() {
                     key={n}
                     onClick={() => setQty(n)}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                      qty === n ? "bg-black text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      qty === n ? "bg-[var(--color-ink-black)] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                     }`}
                   >
                     {n}
@@ -152,7 +152,7 @@ export default function QuoteCalculator() {
 
           {/* Rush production */}
           <label className="flex items-center gap-3 cursor-pointer group">
-            <div className={`w-10 h-6 rounded-full relative transition-colors ${rush ? "bg-orange-500" : "bg-gray-200"}`}>
+            <div className={`w-10 h-6 rounded-full relative transition-colors ${rush ? "bg-[var(--color-moon-gold)]" : "bg-gray-200"}`}>
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${rush ? "left-[18px]" : "left-0.5"}`} />
             </div>
             <div>
@@ -174,7 +174,7 @@ export default function QuoteCalculator() {
                 <span className="text-gray-400 text-sm">{t("quote.cad")}</span>
               </div>
               {rush && (
-                <div className="inline-flex items-center gap-1.5 mt-2 bg-orange-50 text-orange-600 text-[10px] font-bold px-3 py-1 rounded-full">
+                <div className="inline-flex items-center gap-1.5 mt-2 bg-amber-50 text-amber-700 text-[10px] font-bold px-3 py-1 rounded-full">
                   <span>&#9889;</span> {t("quote.rushIncluded")}
                 </div>
               )}
@@ -204,7 +204,7 @@ export default function QuoteCalculator() {
                 {t("quote.qty")}: {qty}
               </span>
               {rush && (
-                <span className="bg-orange-50 px-3 py-1.5 rounded-full text-[10px] font-bold text-orange-600 border border-orange-200">
+                <span className="bg-amber-50 px-3 py-1.5 rounded-full text-[10px] font-bold text-amber-700 border border-amber-200">
                   {t("quote.rush24h")}
                 </span>
               )}
@@ -219,7 +219,7 @@ export default function QuoteCalculator() {
           <div className="mt-8 space-y-3">
             <Link
               href={`/shop/${product.category}/${product.slug}`}
-              className="block w-full bg-black text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest text-center hover:bg-gray-800 transition-colors"
+              className="block w-full bg-[var(--color-ink-black)] text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest text-center hover:bg-gray-800 transition-colors"
             >
               {t("quote.cta")}
             </Link>

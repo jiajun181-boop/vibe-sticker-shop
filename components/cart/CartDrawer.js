@@ -107,7 +107,7 @@ export default function CartDrawer() {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
-      const ti = setTimeout(() => setRenderDrawer(false), 230);
+      const ti = setTimeout(() => setRenderDrawer(false), 300);
       return () => clearTimeout(ti);
     }
     return () => {
@@ -245,13 +245,13 @@ export default function CartDrawer() {
       <button
         type="button"
         onClick={closeCart}
-        className={`absolute inset-0 bg-black/45 transition-opacity duration-[230ms] ${isOpen ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 bg-black/45 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`}
         aria-label={t("cart.close")}
       />
 
       <aside
         ref={asideRef}
-        className={`relative flex h-full w-full max-w-md flex-col bg-white shadow-2xl transition-transform duration-[230ms] ease-out ${
+        className={`relative flex h-full w-full max-w-md flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >

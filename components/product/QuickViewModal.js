@@ -113,7 +113,7 @@ export default function QuickViewModal({ product, onClose, onAddToCart, t }) {
             <button
               type="button"
               onClick={() => onAddToCart(product)}
-              className="flex-1 rounded-lg bg-black px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-gray-800"
+              className="flex-1 rounded-lg bg-[var(--color-ink-black)] px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-gray-800"
             >
               {t("shop.quickAdd")}
             </button>

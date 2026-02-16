@@ -96,7 +96,7 @@ export default async function AboutPage() {
         {/* Company Story / Founding */}
         <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-black" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">{t("about.storyBadge")}</span>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight">{t("about.storyTitle")}</h2>
@@ -141,7 +141,7 @@ export default async function AboutPage() {
         {/* Equipment & Capabilities */}
         <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-black" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">{t("about.equipBadge")}</span>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight">{t("about.equipTitle")}</h2>

@@ -32,7 +32,7 @@ export default function HowItWorks() {
     <section className="bg-white rounded-3xl border border-gray-100 p-8 md:p-12">
       <div className="text-center mb-10">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-black" />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
             {t("howItWorks.badge")}
           </span>
@@ -53,7 +53,7 @@ export default function HowItWorks() {
             {/* Number badge */}
             <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 text-gray-800 mb-4 mx-auto">
               {STEP_ICONS[i]}
-              <span className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white rounded-full text-[10px] font-black flex items-center justify-center">
+              <span className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--color-ink-black)] text-white rounded-full text-[10px] font-black flex items-center justify-center">
                 {i + 1}
               </span>
             </div>

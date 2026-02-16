@@ -43,7 +43,7 @@ const BUNDLES = [
     price: 19900,
     originalPrice: 23900,
     savings: 4000,
-    color: "from-orange-500 to-red-600",
+    color: "from-amber-600 to-orange-600",
     itemKeys: [
       "bundles.kit.fleet.item1",
       "bundles.kit.fleet.item2",
@@ -119,7 +119,7 @@ export default function BundlesSection() {
                 href={bundle.href}
                 className={`block w-full text-center py-3.5 rounded-xl font-black uppercase text-xs tracking-widest transition-colors ${
                   bundle.popular
-                    ? "bg-black text-white hover:bg-gray-800"
+                    ? "bg-[var(--color-ink-black)] text-white hover:bg-gray-800"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >

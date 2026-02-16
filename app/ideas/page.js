@@ -39,7 +39,7 @@ export default async function IdeasPage() {
       />
 
       {/* Hero */}
-      <div className="bg-black text-white pt-24 pb-16 px-6 relative overflow-hidden">
+      <div className="bg-[var(--color-ink-black)] text-white pt-24 pb-16 px-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center">
           <span className="text-[300px] font-black tracking-tighter select-none">IDEAS</span>
         </div>

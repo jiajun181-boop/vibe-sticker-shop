@@ -131,6 +131,34 @@ input:focus, textarea:focus, select:focus {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
+.badge-solid {
+  border-radius: 9999px;
+  background: var(--color-ink-black);
+  color: #fff;
+  padding: 0.25rem 0.625rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.btn-outline-pill {
+  border-radius: 9999px;
+  border: 1px solid var(--color-gray-300);
+  background: var(--color-paper-white);
+  color: var(--color-gray-700);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: border-color var(--duration-fast) var(--ease-out-cubic),
+              color var(--duration-fast) var(--ease-out-cubic),
+              transform var(--duration-fast) var(--ease-out-cubic);
+}
+.btn-outline-pill:hover {
+  border-color: var(--color-gray-400);
+  color: var(--color-gray-800);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(45, 41, 36, 0.10);
+}
 
 /* Horizontal scroll fade edges */
 .scroll-fade {

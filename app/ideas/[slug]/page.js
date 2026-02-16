@@ -107,7 +107,7 @@ export default async function UseCasePage({ params }) {
       />
 
       {/* Hero */}
-      <div className="bg-black text-white pt-24 pb-16 px-6 relative overflow-hidden">
+      <div className="bg-[var(--color-ink-black)] text-white pt-24 pb-16 px-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.04] pointer-events-none flex items-center justify-center">
           <span className="text-[250px] select-none">{currentUseCase.icon}</span>
         </div>
@@ -165,7 +165,7 @@ export default async function UseCasePage({ params }) {
       {tips.length > 0 && (
         <div className="max-w-7xl mx-auto px-6 mb-12">
           <div className="flex items-center gap-2 mb-6">
-            <div className="w-1.5 h-1.5 rounded-full bg-black" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
             <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
               {t("ideas.tipsTitle")}
             </h2>
@@ -191,7 +191,7 @@ export default async function UseCasePage({ params }) {
       {(SOLUTION_BUNDLES[slug] || []).length > 0 && (
         <div className="max-w-7xl mx-auto px-6 mb-12">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-black" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
             <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
               {t("solutions.bundlesTitle")}
             </h2>
@@ -273,7 +273,7 @@ export default async function UseCasePage({ params }) {
                       )}
                     </div>
                     <div>
-                      <h3 className="font-bold text-base leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
+                      <h3 className="font-bold text-base leading-tight mb-1 group-hover:text-[var(--color-moon-gold)] transition-colors line-clamp-2">
                         {product.name}
                       </h3>
                       {product.description && (

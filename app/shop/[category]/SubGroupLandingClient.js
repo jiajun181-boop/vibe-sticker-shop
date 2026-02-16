@@ -61,7 +61,7 @@ function SubGroupCard({ group, t }) {
 
         {/* Content */}
         <div className="flex flex-1 flex-col p-3 sm:p-4">
-          <h3 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+          <h3 className="text-sm font-semibold text-gray-900 group-hover:text-[var(--color-moon-gold)] transition-colors">
             {group.title}
           </h3>
           {group.count > 0 && (

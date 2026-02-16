@@ -87,7 +87,7 @@ export default async function IndustryPage({ params }) {
       />
 
       {/* Header */}
-      <div className="bg-black text-white pt-24 pb-14 px-6">
+      <div className="bg-[var(--color-ink-black)] text-white pt-24 pb-14 px-6">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 text-xs text-gray-500 mb-6">
@@ -191,7 +191,7 @@ export default async function IndustryPage({ params }) {
                       )}
                     </div>
                     <div>
-                      <h3 className="font-bold text-base leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
+                      <h3 className="font-bold text-base leading-tight mb-1 group-hover:text-[var(--color-moon-gold)] transition-colors line-clamp-2">
                         {product.name}
                       </h3>
                       {product.description && (
