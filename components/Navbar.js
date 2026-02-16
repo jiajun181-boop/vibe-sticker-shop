@@ -265,6 +265,7 @@ export default function Navbar({ catalogConfig }) {
                                   width={360}
                                   height={140}
                                   className="h-20 w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
+                                  unoptimized
                                 />
                               </Link>
                               <Link href={`/shop/${catSlug}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-gray-800)] hover:text-black">
@@ -296,6 +297,7 @@ export default function Navbar({ catalogConfig }) {
                             width={260}
                             height={160}
                             className="h-24 w-full object-cover"
+                            unoptimized
                           />
                         </Link>
                         <p className="mt-2 text-sm font-semibold text-[var(--color-gray-800)]">

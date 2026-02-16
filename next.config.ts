@@ -32,6 +32,15 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    localPatterns: [
+      {
+        pathname: "/**",
+      },
+      {
+        pathname: "/api/product-image/**",
+        search: "",
+      },
+    ],
     remotePatterns: [
       {
         protocol: "https",
