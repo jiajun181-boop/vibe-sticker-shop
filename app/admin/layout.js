@@ -3,9 +3,16 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { Inter } from "next/font/google";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAllowedNavHrefs, ROLE_LABELS } from "@/lib/admin-permissions";
 import CommandPalette from "@/components/admin/CommandPalette";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-admin",
+});
 
 const navGroups = [
   {
@@ -213,7 +220,7 @@ export default function AdminLayout({ children }) {
   };
 
   return (
-    <div className="admin-shell flex h-screen bg-[var(--color-gray-50)]">
+    <div className={`admin-shell ${inter.variable} flex h-screen bg-[var(--color-gray-50)]`} style={{ fontFamily: "var(--font-admin, system-ui)" }}>
       {sidebarOpen && (
         <button
           type="button"
@@ -224,12 +231,12 @@ export default function AdminLayout({ children }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-[var(--color-gray-200)] bg-[var(--color-paper-white)] transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-[var(--color-gray-200)] bg-[#f7f7f5] transition-transform duration-200 lg:static lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex h-14 items-center border-b border-[var(--color-gray-200)] px-5">
-          <Link href="/admin" className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-gray-800)]">
+          <Link href="/admin" className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--color-gray-800)]">
             {t("admin.brand")}
           </Link>
         </div>
@@ -237,7 +244,7 @@ export default function AdminLayout({ children }) {
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           {filteredNavGroups.map((group, gi) => (
             <div key={group.labelKey}>
-              <p className={`px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)] ${gi === 0 ? "pt-0" : "pt-4"}`}>
+              <p className={`px-3 pb-1 label-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)] ${gi === 0 ? "pt-0" : "pt-4"}`}>
                 {t(group.labelKey)}
               </p>
               <div className="space-y-0.5">
@@ -246,13 +253,13 @@ export default function AdminLayout({ children }) {
                     key={item.href}
                     href={item.href}
                     onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                       isActive(item.href)
-                        ? "bg-[var(--color-gray-100)] text-[var(--color-gray-800)]"
-                        : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-100)] hover:text-[var(--color-gray-800)]"
+                        ? "bg-[var(--color-gray-100)] text-[var(--color-gray-800)] font-semibold border-l-3 border-l-[var(--color-moon-blue)] -ml-px"
+                        : "text-[var(--color-gray-600)] font-medium hover:bg-[var(--color-gray-100)] hover:text-[var(--color-gray-800)]"
                     }`}
                   >
-                    <NavIcon name={item.icon} className="h-4.5 w-4.5" />
+                    <NavIcon name={item.icon} className="h-5 w-5" />
                     {t(item.key)}
                   </Link>
                 ))}
@@ -265,7 +272,7 @@ export default function AdminLayout({ children }) {
           {session && (
             <div className="px-3 py-1">
               <p className="truncate text-xs font-medium text-[var(--color-gray-700)]">{session.name || session.email}</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-gray-400)]">
+              <p className="label-xs font-semibold uppercase tracking-wider text-[var(--color-gray-400)]">
                 {ROLE_LABELS[session.role]?.[locale] || session.role}
               </p>
             </div>
@@ -310,7 +317,7 @@ export default function AdminLayout({ children }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
               {t("admin.search.hint")}
-              <kbd className="rounded border border-[var(--color-gray-200)] px-1 py-0.5 text-[10px] font-mono">Ctrl/Cmd+K</kbd>
+              <kbd className="rounded border border-[var(--color-gray-200)] px-1 py-0.5 label-xs font-mono">Ctrl/Cmd+K</kbd>
             </button>
             {hydrated && (
               <button

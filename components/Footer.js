@@ -137,19 +137,21 @@ export default function Footer({ locale = "en" }) {
   ];
 
   return (
-    <footer className="border-t border-[var(--color-gray-200)] bg-[var(--color-paper-white)] text-[var(--color-gray-700)]">
+    <footer className="relative border-t border-[var(--color-gray-200)] bg-[var(--color-paper-white)] text-[var(--color-gray-700)]">
+      {/* Gradient top transition */}
+      <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--color-moon-gold)] to-transparent opacity-30" />
       <div className="mx-auto w-full max-w-6xl px-6 py-10 md:py-12">
         <div className="mb-8 flex flex-col gap-4 border-b border-[var(--color-gray-200)] pb-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <Image src="/logo-lunarprint.png" alt="La Lunar Printing" width={40} height={40} className="h-10 w-10" />
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[var(--color-gray-800)] leading-tight">La Lunar Printing</p>
-              <p className="mt-0.5 text-[11px] uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("footer.tagline")}</p>
+              <p className="mt-0.5 label-sm uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("footer.tagline")}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 text-[var(--color-gray-500)]">
-            <span className="text-[11px] uppercase tracking-[0.15em]">{t("footer.madeIn")}</span>
-            <span className="rounded-md border border-[var(--color-gray-300)] px-2 py-0.5 text-[10px] font-semibold">CA</span>
+            <span className="label-sm uppercase tracking-[0.15em]">{t("footer.madeIn")}</span>
+            <span className="rounded-md border border-[var(--color-gray-300)] px-2 py-0.5 label-xs font-semibold">CA</span>
           </div>
         </div>
 

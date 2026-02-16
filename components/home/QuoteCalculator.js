@@ -64,11 +64,11 @@ export default function QuoteCalculator() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-moon-gold)]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+              <span className="label-xs text-gray-400">
                 {t("quote.badge")}
               </span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight">
+            <h2 className="heading-2">
               {t("quote.title")}
             </h2>
           </div>
@@ -139,7 +139,7 @@ export default function QuoteCalculator() {
                   <button
                     key={n}
                     onClick={() => setQty(n)}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                    className={`px-3 py-1.5 rounded-lg label-xs font-bold transition-all ${
                       qty === n ? "bg-[var(--color-ink-black)] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                     }`}
                   >
@@ -157,7 +157,7 @@ export default function QuoteCalculator() {
             </div>
             <div>
               <span className="text-sm font-bold group-hover:text-black transition-colors">{t("quote.rush")}</span>
-              <span className="text-[10px] text-gray-400 block">{t("quote.rushDesc")}</span>
+              <span className="label-xs text-gray-400 block">{t("quote.rushDesc")}</span>
             </div>
           </label>
         </div>
@@ -174,7 +174,7 @@ export default function QuoteCalculator() {
                 <span className="text-gray-400 text-sm">{t("quote.cad")}</span>
               </div>
               {rush && (
-                <div className="inline-flex items-center gap-1.5 mt-2 bg-amber-50 text-amber-700 text-[10px] font-bold px-3 py-1 rounded-full">
+                <div className="inline-flex items-center gap-1.5 mt-2 bg-amber-50 text-amber-700 label-xs font-bold px-3 py-1 rounded-full">
                   <span>&#9889;</span> {t("quote.rushIncluded")}
                 </div>
               )}
@@ -192,19 +192,19 @@ export default function QuoteCalculator() {
 
             {/* Summary chips */}
             <div className="flex flex-wrap gap-2">
-              <span className="bg-white px-3 py-1.5 rounded-full text-[10px] font-bold text-gray-500 border border-gray-200">
+              <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-gray-500 border border-gray-200">
                 {product.label}
               </span>
               {product.unit === "per_sqft" && (
-                <span className="bg-white px-3 py-1.5 rounded-full text-[10px] font-bold text-gray-500 border border-gray-200">
+                <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-gray-500 border border-gray-200">
                   {size.label}
                 </span>
               )}
-              <span className="bg-white px-3 py-1.5 rounded-full text-[10px] font-bold text-gray-500 border border-gray-200">
+              <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-gray-500 border border-gray-200">
                 {t("quote.qty")}: {qty}
               </span>
               {rush && (
-                <span className="bg-amber-50 px-3 py-1.5 rounded-full text-[10px] font-bold text-amber-700 border border-amber-200">
+                <span className="bg-amber-50 px-3 py-1.5 rounded-full label-xs font-bold text-amber-700 border border-amber-200">
                   {t("quote.rush24h")}
                 </span>
               )}
@@ -219,11 +219,11 @@ export default function QuoteCalculator() {
           <div className="mt-8 space-y-3">
             <Link
               href={`/shop/${product.category}/${product.slug}`}
-              className="block w-full bg-[var(--color-ink-black)] text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest text-center hover:bg-gray-800 transition-colors"
+              className="btn-dark-pill btn-lg block w-full text-center tracking-widest"
             >
               {t("quote.cta")}
             </Link>
-            <p className="text-center text-[10px] text-gray-400">
+            <p className="text-center label-xs text-gray-400">
               {t("quote.noObligation")}
             </p>
           </div>

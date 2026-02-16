@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductsPage from "@/app/admin/products/page";
 import CatalogPage from "@/app/admin/catalog/page";
@@ -11,19 +11,92 @@ const TABS = [
   { key: "catalog", label: "Catalog Settings", href: "/admin/catalog" },
   { key: "pricing", label: "Pricing", href: "/admin/pricing" },
 ];
+const CATEGORY_OPTIONS = [
+  { value: "all", label: "All Categories" },
+  { value: "marketing-business-print", label: "Marketing & Business Print" },
+  { value: "stickers-labels-decals", label: "Stickers, Labels & Decals" },
+  { value: "signs-rigid-boards", label: "Signs & Rigid Boards" },
+  { value: "banners-displays", label: "Banners & Displays" },
+  { value: "windows-walls-floors", label: "Windows, Walls & Floors" },
+  { value: "vehicle-graphics-fleet", label: "Vehicle Graphics & Fleet" },
+];
 
 export default function CatalogOpsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") || "products";
+  const [workspaceSearch, setWorkspaceSearch] = useState(searchParams.get("search") || "");
+  const [workspaceCategory, setWorkspaceCategory] = useState(searchParams.get("category") || "all");
+  const [stats, setStats] = useState({ products: null, categories: null, presets: null });
+  const [statsLoading, setStatsLoading] = useState(false);
 
   const activeTab = useMemo(() => {
     return TABS.some((t) => t.key === tab) ? tab : "products";
   }, [tab]);
 
+  useEffect(() => {
+    setWorkspaceSearch(searchParams.get("search") || "");
+    setWorkspaceCategory(searchParams.get("category") || "all");
+  }, [searchParams]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadStats() {
+      setStatsLoading(true);
+      try {
+        const [productsRes, catalogRes, pricingRes] = await Promise.all([
+          fetch("/api/admin/products?page=1&limit=1"),
+          fetch("/api/admin/catalog"),
+          fetch("/api/admin/pricing"),
+        ]);
+        const [productsData, catalogData, pricingData] = await Promise.all([
+          productsRes.json(),
+          catalogRes.json(),
+          pricingRes.json(),
+        ]);
+        if (cancelled) return;
+        setStats({
+          products: productsData?.pagination?.total ?? null,
+          categories: Array.isArray(catalogData?.categories) ? catalogData.categories.length : null,
+          presets: Array.isArray(pricingData) ? pricingData.length : null,
+        });
+      } catch {
+        if (!cancelled) {
+          setStats({ products: null, categories: null, presets: null });
+        }
+      } finally {
+        if (!cancelled) setStatsLoading(false);
+      }
+    }
+    loadStats();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   function switchTab(next) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", next);
+    router.replace(`/admin/catalog-ops?${params.toString()}`);
+  }
+
+  function updateWorkspaceFilters() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "products");
+    if (workspaceSearch.trim()) params.set("search", workspaceSearch.trim());
+    else params.delete("search");
+    if (workspaceCategory && workspaceCategory !== "all") params.set("category", workspaceCategory);
+    else params.delete("category");
+    params.set("page", "1");
+    router.replace(`/admin/catalog-ops?${params.toString()}`);
+  }
+
+  function clearWorkspaceFilters() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "products");
+    params.delete("search");
+    params.delete("category");
+    params.set("page", "1");
     router.replace(`/admin/catalog-ops?${params.toString()}`);
   }
 
@@ -55,11 +128,76 @@ export default function CatalogOpsPage() {
           </div>
         </div>
         <div className="mt-3 text-xs text-gray-500">Single workspace mode enabled.</div>
+        <div className="mt-3 grid gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3 lg:grid-cols-[1fr_auto_auto_auto]">
+          <input
+            type="text"
+            value={workspaceSearch}
+            onChange={(e) => setWorkspaceSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") updateWorkspaceFilters();
+            }}
+            placeholder="Quick search products..."
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-900"
+          />
+          <select
+            value={workspaceCategory}
+            onChange={(e) => setWorkspaceCategory(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-900"
+          >
+            {CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={updateWorkspaceFilters}
+            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+          >
+            Apply
+          </button>
+          <button
+            type="button"
+            onClick={clearWorkspaceFilters}
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+          >
+            Reset
+          </button>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-gray-600">
+            Products:{" "}
+            <span className="font-semibold text-gray-900">
+              {statsLoading ? "..." : stats.products ?? "-"}
+            </span>
+          </span>
+          <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-gray-600">
+            Categories:{" "}
+            <span className="font-semibold text-gray-900">
+              {statsLoading ? "..." : stats.categories ?? "-"}
+            </span>
+          </span>
+          <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-gray-600">
+            Pricing Presets:{" "}
+            <span className="font-semibold text-gray-900">
+              {statsLoading ? "..." : stats.presets ?? "-"}
+            </span>
+          </span>
+          <span className="ml-auto text-gray-500">
+            Focus mode:{" "}
+            <a href="/admin/products" className="text-blue-600 hover:underline">Products</a>{" "}
+            ·{" "}
+            <a href="/admin/catalog" className="text-blue-600 hover:underline">Catalog</a>{" "}
+            ·{" "}
+            <a href="/admin/pricing" className="text-blue-600 hover:underline">Pricing</a>
+          </span>
+        </div>
       </div>
 
       {activeTab === "products" && <ProductsPage embedded basePath="/admin/catalog-ops" />}
-      {activeTab === "catalog" && <CatalogPage />}
-      {activeTab === "pricing" && <PricingPage />}
+      {activeTab === "catalog" && <CatalogPage embedded />}
+      {activeTab === "pricing" && <PricingPage embedded />}
     </div>
   );
 }

@@ -10,8 +10,6 @@ const ADMIN_PAGES = [
   { key: "admin.nav.customers", href: "/admin/customers" },
   { key: "admin.nav.b2b", href: "/admin/b2b" },
   { key: "admin.nav.catalogOps", href: "/admin/catalog-ops" },
-  { key: "admin.nav.allProducts", href: "/admin/products" },
-  { key: "admin.nav.pricing", href: "/admin/pricing" },
   { key: "admin.nav.production", href: "/admin/production" },
   { key: "admin.nav.factories", href: "/admin/factories" },
   { key: "admin.nav.qc", href: "/admin/qc" },

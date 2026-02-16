@@ -58,7 +58,7 @@ function SmallCard({ catSlug, meta, count, previews, t }) {
   return (
     <Link
       href={meta?.href || `/shop/${catSlug}`}
-      className="group flex flex-col rounded-2xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-gray-400"
+      className="group flex flex-col rounded-2xl border border-gray-200 bg-white p-4 hover-lift-subtle"
     >
       <span className="text-2xl">{meta?.icon || ""}</span>
       <h3 className="mt-2 text-sm font-semibold text-gray-900 group-hover:text-[var(--color-moon-gold)] transition-colors">
@@ -77,7 +77,7 @@ function SmallCard({ catSlug, meta, count, previews, t }) {
             </div>
           ))}
           {count > previews.length && (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[9px] font-bold text-gray-500">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-gray-100 label-xs font-bold text-gray-500">
               +{count - previews.length}
             </div>
           )}
@@ -813,7 +813,7 @@ export default function ShopClient({
                 const rangeText = fromCents > 0 ? t("shop.priceFrom", { price: formatCad(fromCents) }) : "";
 
                 return (
-                  <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-400 hover:shadow-lg ${viewMode === "list" ? "flex" : ""}`}>
+                  <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white hover-lift-subtle ${viewMode === "list" ? "flex" : ""}`}>
                     <Link href={href} className={`relative block bg-gray-100 ${viewMode === "list" ? "h-36 w-32 sm:h-44 sm:w-52 flex-shrink-0" : "aspect-[4/3]"}`}>
                       <Image src={imageSrc} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" unoptimized={isSvgImage(imageSrc)} />
                       {product.sortOrder != null && product.sortOrder <= 2 && (
@@ -840,29 +840,29 @@ export default function ShopClient({
 
                     <div className="flex flex-1 flex-col p-3 sm:p-4">
                       <div className="flex items-center gap-2">
-                        <p className="text-[10px] uppercase tracking-[0.15em] text-gray-500">{categoryLabels[product.category] || product.category}</p>
+                        <p className="label-xs text-gray-500">{categoryLabels[product.category] || product.category}</p>
                         {(() => {
                           const tk = getTurnaround(product);
                           return (
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${turnaroundColor(tk)}`}>
+                            <span className={`rounded-full px-2 py-0.5 label-xs font-semibold ${turnaroundColor(tk)}`}>
                               {t(turnaroundI18nKey(tk))}
                             </span>
                           );
                         })()}
                       </div>
-                      <h3 className="mt-1 min-h-[2.5rem] overflow-hidden text-sm font-semibold leading-5 text-gray-900">{product.name}</h3>
+                      <h3 className="mt-1 min-h-[2.5rem] overflow-hidden body-sm font-semibold leading-5 text-gray-900">{product.name}</h3>
                       <p className="mt-1 text-sm font-semibold text-gray-900">{rangeText}</p>
 
                       <div className="mt-3 flex gap-2">
                         <Link
                           href={href}
-                          className="flex-1 rounded-full bg-[var(--color-ink-black)] px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black"
+                          className="flex-1 rounded-full bg-[var(--color-ink-black)] px-3 py-2 text-center label-sm text-white transition-colors hover:bg-black"
                         >
                           {t("shop.viewDetails")}
                         </Link>
                         <button
                           onClick={() => quickAdd(product)}
-                          className="rounded-full border border-gray-300 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-700 transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
+                          className="rounded-full border border-gray-300 px-3 py-2 label-sm text-gray-700 transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
                         >
                           {t("shop.quickAdd")}
                         </button>

@@ -1,0 +1,360 @@
+slug,name,category,pricingUnit,basePrice_cad,preset_key,preset_model,preset_active,minimumPrice,fileFee,materials_count,finishings_count,addons_count,sizes_count,tier_1,tier_2,tier_3,has_optionsConfig
+blockout-banners,Blockout Banners,banners-displays,per_sqft,0.00,la_banner_vinyl_area_v2,AREA_TIERED,true,35,5,3,8,,,6:4.5,18:3.8,32:3.2,true
+canvas-prints,Canvas Prints,banners-displays,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+double-sided-banners,Double-Sided Banners,banners-displays,per_sqft,0.00,la_banner_vinyl_area_v2,AREA_TIERED,true,35,5,3,8,,,6:4.5,18:3.8,32:3.2,true
+mesh-banner,Mesh Banner (Wind Proof),banners-displays,per_sqft,50.00,la_banner_mesh_area_v2,AREA_TIERED,true,38,5,2,6,,,6:4.8,18:4,32:3.4,true
+mesh-banners,Mesh Banners,banners-displays,per_sqft,0.00,la_banner_mesh_area_v2,AREA_TIERED,true,38,5,2,6,,,6:4.8,18:4,32:3.4,true
+pole-banners,Pole Banners,banners-displays,per_sqft,0.00,la_banner_mesh_area_v2,AREA_TIERED,true,38,5,2,6,,,6:4.8,18:4,32:3.4,true
+vinyl-banner-13oz,13oz Vinyl Banner,banners-displays,per_sqft,50.00,la_banner_vinyl_area_v2,AREA_TIERED,true,35,5,3,8,,,6:4.5,18:3.8,32:3.2,true
+vinyl-banners,Vinyl Banners,banners-displays,per_sqft,0.00,la_banner_vinyl_area_v2,AREA_TIERED,true,35,5,3,8,,,6:4.5,18:3.8,32:3.2,true
+a-frame-sign-stand,A-Frame Sidewalk Stand,display-stands,per_piece,149.00,autobase_a-frame-sign-stand,QTY_TIERED,true,149,0,,,,,1:149,3:141.55,5:134.1,false
+a-frame-stand,A-Frame Stand,display-stands,per_piece,149.00,autobase_a-frame-sign-stand,QTY_TIERED,true,149,0,,,,,1:149,3:141.55,5:134.1,false
+backdrop-stand-hardware,Backdrop Stand Hardware,display-stands,per_piece,129.00,autobase_backdrop-stand-hardware,QTY_TIERED,true,129,0,,,,,1:129,3:122.55,5:116.1,false
+banner-hems,Banner Hems (Service),display-stands,per_piece,7.00,catbase_display_stands_01,QTY_TIERED,true,0,0,0,0,,,1:5.5,5:5.225,10:4.95,false
+banner-stand-l-base,L-Base Banner Stand (Hardware),display-stands,per_piece,69.00,autobase_banner-stand-l-base,QTY_TIERED,true,69,0,,,,,1:69,3:65.55,5:62.1,false
+banner-stand-rollup,Roll-Up Stand (Hardware),display-stands,per_piece,99.00,autobase_acrylic-signs,QTY_TIERED,true,99,0,,,,,1:99,3:94.05,5:89.1,false
+banner-stand-x,X-Stand (Hardware),display-stands,per_piece,49.00,autobase_banner-stand-x,QTY_TIERED,true,49,0,,,,,1:49,3:46.55,5:44.1,false
+branded-table-cover-6ft,Branded Table Cover — 6ft,display-stands,per_piece,149.00,autobase_a-frame-sign-stand,QTY_TIERED,true,149,0,,,,,1:149,3:141.55,5:134.1,false
+branded-table-runner,Branded Table Runner,display-stands,per_piece,89.00,autobase_acm-dibond-signs,QTY_TIERED,true,89,0,,,,,1:89,3:84.55,5:80.1,false
+deluxe-rollup-banner,Deluxe Roll-Up Banner Stand,display-stands,per_piece,165.00,autobase_deluxe-rollup-banner,QTY_TIERED,true,165,0,,,,,1:165,3:156.75,5:148.5,false
+deluxe-tabletop-retractable-a3,Deluxe Tabletop Retractable - A3,display-stands,per_piece,75.00,autobase_deluxe-tabletop-retractable-a3,QTY_TIERED,true,75,0,,,,,1:75,3:71.25,5:67.5,false
+double-sided-tape,Double-Sided Tape (Add-on),display-stands,per_piece,9.00,catbase_display_stands_02,QTY_TIERED,true,0,0,0,0,,,1:10.5,5:9.975,10:9.45,false
+drilled-holes-service,Drilled Holes (Service),display-stands,per_piece,6.00,catbase_display_stands_01,QTY_TIERED,true,0,0,0,0,,,1:5.5,5:5.225,10:4.95,false
+feather-flag,Feather Flag,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+feather-flag-large,Feather Flag — Large,display-stands,per_piece,169.00,autobase_feather-flag-large,QTY_TIERED,true,169,0,,,,,1:169,3:160.55,5:152.1,false
+feather-flag-medium,Feather Flag — Medium,display-stands,per_piece,129.00,autobase_backdrop-stand-hardware,QTY_TIERED,true,129,0,,,,,1:129,3:122.55,5:116.1,false
+feather-flag-pole-set,Feather Flag Pole Set,display-stands,per_piece,99.00,autobase_acrylic-signs,QTY_TIERED,true,99,0,,,,,1:99,3:94.05,5:89.1,false
+feather-flags,Feather Flags,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+flag-base-ground-stake,Flag Ground Stake,display-stands,per_piece,29.00,autobase_flag-base-ground-stake,QTY_TIERED,true,29,0,,,,,1:29,3:27.55,5:26.1,false
+flag-base-water-bag,Flag Water Bag,display-stands,per_piece,39.00,autobase_flag-base-water-bag,QTY_TIERED,true,39,0,,,,,1:39,3:37.05,5:35.1,false
+flag-bases-cross,Flag Cross Base,display-stands,per_piece,59.00,autobase_flag-bases-cross,QTY_TIERED,true,59,0,,,,,1:59,3:56.05,5:53.1,false
+grommets-service,Grommets (Service),display-stands,per_piece,5.00,catbase_display_stands_01,QTY_TIERED,true,0,0,0,0,,,1:5.5,5:5.225,10:4.95,false
+h-stake-wire,H-Wire Stake,display-stands,per_piece,3.50,catbase_display_stands_01,QTY_TIERED,true,0,0,0,0,,,1:5.5,5:5.225,10:4.95,false
+h-stakes,H-Stakes,display-stands,per_piece,12.00,catbase_display_stands_02,QTY_TIERED,true,0,0,0,0,,,1:10.5,5:9.975,10:9.45,false
+installation-service,Installation Service,display-stands,per_piece,199.00,catbase_display_stands_03,QTY_TIERED,true,0,0,0,0,,,1:287,5:272.65,10:258.3,false
+l-base-banner-stand,L-Base Banner Stand,display-stands,per_piece,35.00,autobase_aisle-markers-hanging,QTY_TIERED,true,35,0,,,,,1:35,3:33.25,5:31.5,false
+media-wall-pop-up,Media Wall Pop-Up Frame,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+outdoor-canopy-tent-10x10,Outdoor Canopy Tent 10×10,display-stands,per_piece,599.00,catbase_display_stands_04,QTY_TIERED,true,0,0,0,0,,,1:599,5:569.05,10:539.1,false
+pillowcase-display-frame,Pillowcase Display,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+pole-pockets,Pole Pockets (Service),display-stands,per_piece,9.00,catbase_display_stands_02,QTY_TIERED,true,0,0,0,0,,,1:10.5,5:9.975,10:9.45,false
+popup-display-curved-8ft,Curved Pop-Up Display 8ft,display-stands,per_piece,349.00,catbase_display_stands_03,QTY_TIERED,true,0,0,0,0,,,1:287,5:272.65,10:258.3,false
+popup-display-straight-8ft,Straight Pop-Up Display 8ft,display-stands,per_piece,329.00,catbase_display_stands_03,QTY_TIERED,true,0,0,0,0,,,1:287,5:272.65,10:258.3,false
+pull-up-banner,Pull Up Banner,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+real-estate-frame,Real Estate Sign Frame,display-stands,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+retractable-banner-stand-premium,Retractable Banner Stand - Premium,display-stands,per_piece,145.00,batch1_retractable_banner_premium,QTY_TIERED,true,145,0,,3,,,1:145,3:128,5:115,false
+roll-up-banners,Roll-Up Banners,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+roll-up-stand-hardware,Roll-Up Stand Hardware,display-stands,per_piece,99.00,autobase_acrylic-signs,QTY_TIERED,true,99,0,,,,,1:99,3:94.05,5:89.1,false
+standoff-hardware-set,Standoff Hardware Set,display-stands,per_piece,32.00,autobase_standoff-hardware-set,QTY_TIERED,true,32,0,,,,,1:32,3:30.4,5:28.8,false
+step-and-repeat-stand-kit,Step & Repeat Stand Kit,display-stands,per_piece,129.00,autobase_backdrop-stand-hardware,QTY_TIERED,true,129,0,,,,,1:129,3:122.55,5:116.1,false
+step-repeat-backdrop-8x8,Step & Repeat Backdrop 8×8,display-stands,per_piece,275.00,catbase_display_stands_03,QTY_TIERED,true,0,0,0,0,,,1:287,5:272.65,10:258.3,false
+step-repeat-backdrops,Step & Repeat Backdrops,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+table-cloth,Table Cloth,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+tabletop-banner-a3,Tabletop Banner - A3,display-stands,per_piece,55.00,autobase_magnetic-truck-door-signs,QTY_TIERED,true,55,0,,,,,1:55,3:52.25,5:49.5,false
+tabletop-banner-a4,Tabletop Banner - A4,display-stands,per_piece,35.00,batch1_tabletop_banner_a4,QTY_TIERED,true,55,0,,1,,,1:55,3:48,5:42,false
+tabletop-x-banner,Tabletop X-Banner Stand,display-stands,per_piece,25.00,autobase_cvor-number-decals,QTY_TIERED,true,25,0,,,,,1:25,3:23.75,5:22.5,false
+teardrop-flag,Teardrop Flag,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+teardrop-flag-medium,Teardrop Flag — Medium,display-stands,per_piece,119.00,autobase_teardrop-flag-medium,QTY_TIERED,true,119,0,,,,,1:119,3:113.05,5:107.1,false
+teardrop-flag-pole-set,Teardrop Flag Pole Set,display-stands,per_piece,99.00,autobase_acrylic-signs,QTY_TIERED,true,99,0,,,,,1:99,3:94.05,5:89.1,false
+teardrop-flags,Teardrop Flags,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+telescopic-backdrop,Telescopic Backdrop,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+tension-fabric-display-3x3,Tension Fabric Display 3×3,display-stands,per_piece,299.00,catbase_display_stands_03,QTY_TIERED,true,0,0,0,0,,,1:287,5:272.65,10:258.3,false
+tent-frame-10x10,10x10 Canopy Tent Frame,display-stands,per_piece,259.00,catbase_display_stands_03,QTY_TIERED,true,0,0,0,0,,,1:287,5:272.65,10:258.3,false
+tent-walls-set,Canopy Tent Side Walls Set,display-stands,per_piece,129.00,autobase_backdrop-stand-hardware,QTY_TIERED,true,129,0,,,,,1:129,3:122.55,5:116.1,false
+velcro-strips,Velcro Strips (Add-on),display-stands,per_piece,12.00,catbase_display_stands_02,QTY_TIERED,true,0,0,0,0,,,1:10.5,5:9.975,10:9.45,false
+x-banner-frame-print,X-Banner Frame + Print,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+x-banner-prints,X-Banner Prints,display-stands,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+x-banner-stand-large,X-Banner Stand - Large,display-stands,per_piece,65.00,autobase_car-door-magnets-pair,QTY_TIERED,true,65,0,,,,,1:65,3:61.75,5:58.5,false
+x-banner-stand-standard,X-Banner Stand - Standard,display-stands,per_piece,45.00,batch1_x_banner_standard,QTY_TIERED,true,72,0,,2,,,1:72,3:62,5:55,false
+x-stand-hardware,X-Stand Hardware,display-stands,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+aisle-markers-hanging,Hanging Aisle Markers,facility-asset-labels,per_piece,35.00,autobase_aisle-markers-hanging,QTY_TIERED,true,35,0,,,,,1:35,3:33.25,5:31.5,false
+asset-tags-qr-barcode,Asset Tags (QR / Barcode),facility-asset-labels,per_piece,2.00,catbase_vehicle_branding_advertising_01,QTY_TIERED,true,0,0,0,0,,,1:1.75,5:1.6625,10:1.575,false
+asset-tags-tamper-evident,Asset Tags,facility-asset-labels,per_piece,3.00,catbase_facility_asset_labels_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,false
+cable-panel-labels,Panel Labels,facility-asset-labels,per_piece,1.50,catbase_facility_asset_labels_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,false
+dock-door-numbers,Loading Dock Door Numbers,facility-asset-labels,per_piece,25.00,autobase_cvor-number-decals,QTY_TIERED,true,25,0,,,,,1:25,3:23.75,5:22.5,false
+electrical-panel-labels,Electrical Panel Directory Labels,facility-asset-labels,per_piece,15.00,catbase_facility_asset_labels_03,QTY_TIERED,true,0,0,0,0,,,1:15,5:14.25,10:13.5,false
+equipment-rating-plates,Equipment Rating Plates,facility-asset-labels,per_piece,15.00,catbase_facility_asset_labels_03,QTY_TIERED,true,0,0,0,0,,,1:15,5:14.25,10:13.5,false
+pipe-markers-color-coded,Colour-Coded Pipe Markers,facility-asset-labels,per_piece,8.00,catbase_facility_asset_labels_02,QTY_TIERED,true,0,0,0,0,,,1:5,5:4.75,10:4.5,false
+pipe-markers-custom,Custom Pipe Markers,facility-asset-labels,per_piece,12.00,catbase_facility_asset_labels_03,QTY_TIERED,true,0,0,0,0,,,1:15,5:14.25,10:13.5,false
+rack-labels-warehouse,Warehouse Rack Labels,facility-asset-labels,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+tool-box-bin-labels,Bin Labels,facility-asset-labels,per_piece,1.50,catbase_facility_asset_labels_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,false
+valve-tags-engraved,Engraved Valve Tags,facility-asset-labels,per_piece,5.00,catbase_facility_asset_labels_02,QTY_TIERED,true,0,0,0,0,,,1:5,5:4.75,10:4.5,false
+warehouse-zone-labels,Warehouse Zone Labels,facility-asset-labels,per_piece,3.00,catbase_facility_asset_labels_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,false
+cvor-number-decals,CVOR Number Decals,fleet-compliance-id,per_piece,25.00,autobase_cvor-number-decals,QTY_TIERED,true,25,0,,,,,1:25,3:23.75,5:22.5,false
+dangerous-goods-placards,Dangerous Goods Placards,fleet-compliance-id,per_piece,35.00,autobase_aisle-markers-hanging,QTY_TIERED,true,35,0,,,,,1:35,3:33.25,5:31.5,false
+equipment-id-decals-cut-vinyl,Equipment ID Decals,fleet-compliance-id,per_piece,10.00,catbase_vehicle_branding_advertising_03,QTY_TIERED,true,0,0,0,0,,,1:13.5,5:12.825,10:12.15,false
+fleet-unit-number-stickers,Fleet Unit Number Stickers,fleet-compliance-id,per_piece,12.00,catbase_vehicle_branding_advertising_03,QTY_TIERED,true,0,0,0,0,,,1:13.5,5:12.825,10:12.15,false
+fleet-vehicle-inspection-book,Fleet Vehicle Inspection Book,fleet-compliance-id,per_piece,24.00,autobase_fleet-vehicle-inspection-book,QTY_TIERED,true,24,0,,,,,1:24,3:22.8,5:21.6,false
+fuel-type-labels-diesel-gas,Fuel Type Labels (Diesel / Gas),fleet-compliance-id,per_piece,8.00,catbase_vehicle_branding_advertising_02,QTY_TIERED,true,0,0,0,0,,,1:5,5:4.75,10:4.5,false
+gvw-tare-weight-lettering,GVW / Tare Weight Lettering,fleet-compliance-id,per_piece,15.00,catbase_vehicle_branding_advertising_03,QTY_TIERED,true,0,0,0,0,,,1:13.5,5:12.825,10:12.15,false
+hours-of-service-log-holder,Hours of Service Log Holder,fleet-compliance-id,per_piece,8.00,catbase_fleet_compliance_id_01,QTY_TIERED,true,0,0,0,0,,,1:10,5:9.5,10:9,false
+ifta-cab-card-holder,IFTA Cab Card Holder Decal,fleet-compliance-id,per_piece,12.00,catbase_fleet_compliance_id_01,QTY_TIERED,true,0,0,0,0,,,1:10,5:9.5,10:9,false
+mc-number-decals,MC Number Decals,fleet-compliance-id,per_piece,25.00,autobase_cvor-number-decals,QTY_TIERED,true,25,0,,,,,1:25,3:23.75,5:22.5,false
+nsc-number-decals,NSC Number Decals,fleet-compliance-id,per_piece,28.00,autobase_confined-space-warning-signs,QTY_TIERED,true,28,0,,,,,1:28,3:26.6,5:25.2,false
+tire-pressure-load-labels,Tire Pressure / Load Labels,fleet-compliance-id,per_piece,5.00,catbase_vehicle_branding_advertising_02,QTY_TIERED,true,0,0,0,0,,,1:5,5:4.75,10:4.5,false
+trailer-id-number-decals,Trailer ID Number Decals,fleet-compliance-id,per_piece,18.00,autobase_arc-flash-labels,QTY_TIERED,true,18,0,,,,,1:18,3:17.1,5:16.2,false
+truck-door-compliance-kit,Truck Door Compliance Kit,fleet-compliance-id,per_piece,89.00,autobase_acm-dibond-signs,QTY_TIERED,true,89,0,,,,,1:89,3:84.55,5:80.1,false
+tssa-truck-number-lettering-cut-vinyl,TSSA Truck Number Lettering (Cut Vinyl),fleet-compliance-id,per_piece,35.00,autobase_aisle-markers-hanging,QTY_TIERED,true,35,0,,,,,1:35,3:33.25,5:31.5,false
+usdot-number-decals,US DOT Number Decals,fleet-compliance-id,per_piece,25.00,autobase_cvor-number-decals,QTY_TIERED,true,25,0,,,,,1:25,3:23.75,5:22.5,false
+vehicle-inspection-maintenance-stickers,Vehicle Inspection Stickers,fleet-compliance-id,per_piece,4.00,catbase_vehicle_branding_advertising_02,QTY_TIERED,true,0,0,0,0,,,1:5,5:4.75,10:4.5,false
+car-graphics,Car Graphics,large-format-graphics,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+floor-direction-arrows-set,Floor Arrows,large-format-graphics,per_piece,25.00,autobase_cvor-number-decals,QTY_TIERED,true,25,0,,,,,1:25,3:23.75,5:22.5,false
+floor-graphics,Floor Graphics,large-format-graphics,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+floor-logo-graphic,Custom Floor Logo Graphic,large-format-graphics,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+floor-number-markers-set,Floor Number Markers,large-format-graphics,per_piece,20.00,autobase_crane-lift-capacity-labels,QTY_TIERED,true,20,0,,,,,1:20,3:19,5:18,false
+frosted-privacy-film,Frosted Privacy Film,large-format-graphics,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+full-window-graphics,Full Window Graphics,large-format-graphics,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+lf-floor-graphics,Floor Graphics,large-format-graphics,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+one-way-vision-graphics,One-Way Vision Graphics,large-format-graphics,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+wall-graphics,Wall Graphics,large-format-graphics,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+wall-mural-graphic,Custom Wall Mural,large-format-graphics,per_sqft,25.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+wall-murals,Wall Murals,large-format-graphics,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+warehouse-floor-safety-graphics,Warehouse Floor Graphics,large-format-graphics,per_sqft,18.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+window-frosted,Frosted Film,large-format-graphics,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+window-graphics,Window Graphics,large-format-graphics,per_sqft,0.00,batch1_window_graphics,AREA_TIERED,true,35,5,,2,,,4:12,12:9.5,32:7.5,false
+window-perforated,Perforated Window Film,large-format-graphics,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+bf-certificates,Certificates,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+bf-letterhead,Letterhead,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+bf-notepads,Notepads,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+booklets,Booklets,marketing-prints,per_piece,0.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+booklets-perfect-bound,Perfect Bound Booklet,marketing-prints,per_piece,399.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+booklets-saddle-stitch,Saddle Stitch Booklet,marketing-prints,per_piece,249.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+booklets-wire-o,Wire-O Booklet,marketing-prints,per_piece,349.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+bookmarks,Bookmarks,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+bookmarks-custom,Custom Bookmarks,marketing-prints,per_piece,29.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+brochures,Brochures,marketing-prints,per_piece,0.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+brochures-bi-fold,Bi-Fold Brochure,marketing-prints,per_piece,99.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+brochures-tri-fold,Tri-Fold Brochure,marketing-prints,per_piece,119.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+brochures-z-fold,Z-Fold Brochure,marketing-prints,per_piece,139.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+business-cards-classic,Classic Business Cards,marketing-prints,per_piece,29.00,business_cards_premium,QTY_OPTIONS,true,25,5,,,8,16,classic-single|50:0.442,classic-single|100:0.289,classic-single|250:0.17,true
+business-cards-gloss,Gloss Business Cards,marketing-prints,per_piece,34.22,business_cards_premium,QTY_OPTIONS,true,25,5,,,8,16,classic-single|50:0.442,classic-single|100:0.289,classic-single|250:0.17,true
+business-cards-gold-foil,Gold Foil Business Cards,marketing-prints,per_piece,44.95,business_cards_premium,QTY_OPTIONS,true,25,5,,,8,16,classic-single|50:0.442,classic-single|100:0.289,classic-single|250:0.17,true
+business-cards-linen,Linen Business Cards,marketing-prints,per_piece,35.38,business_cards_premium,QTY_OPTIONS,true,25,5,,,8,16,classic-single|50:0.442,classic-single|100:0.289,classic-single|250:0.17,true
+business-cards-matte,Matte Business Cards,marketing-prints,per_piece,32.48,business_cards_premium,QTY_OPTIONS,true,25,5,,,8,16,classic-single|50:0.442,classic-single|100:0.289,classic-single|250:0.17,true
+business-cards-pearl,Pearl Business Cards,marketing-prints,per_piece,37.12,business_cards_premium,QTY_OPTIONS,true,25,5,,,8,16,classic-single|50:0.442,classic-single|100:0.289,classic-single|250:0.17,true
+business-cards-soft-touch,Soft Touch Business Cards,marketing-prints,per_piece,37.70,business_cards_premium,QTY_OPTIONS,true,25,5,,,8,16,classic-single|50:0.442,classic-single|100:0.289,classic-single|250:0.17,true
+business-cards-thick,Thick Layered Business Cards,marketing-prints,per_piece,39.15,business_cards_premium,QTY_OPTIONS,true,25,5,,,8,16,classic-single|50:0.442,classic-single|100:0.289,classic-single|250:0.17,true
+calendars,Calendars,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+calendars-wall,Custom Wall Calendars,marketing-prints,per_piece,89.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+calendars-wall-desk,Calendars,marketing-prints,per_piece,52.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+certificates,Certificates,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+door-hangers,Door Hangers,marketing-prints,per_piece,0.00,door_hangers_standard_qo_v1,QTY_OPTIONS,true,99.82,0,,,,2,Single-sided|100:1,Single-sided|250:0.59,Single-sided|500:0.41,true
+door-hangers-large,Large Door Hanger,marketing-prints,per_piece,89.00,door_hangers_large_qo_v1,QTY_OPTIONS,true,118.18,0,,,,2,Single-sided|100:1.18,Single-sided|250:0.7,Single-sided|500:0.49,true
+door-hangers-perforated,Perforated Door Hanger,marketing-prints,per_piece,79.00,door_hangers_standard_qo_v1,QTY_OPTIONS,true,99.82,0,,,,2,Single-sided|100:1,Single-sided|250:0.59,Single-sided|500:0.41,true
+door-hangers-standard,Standard Door Hanger,marketing-prints,per_piece,69.00,door_hangers_standard_qo_v1,QTY_OPTIONS,true,99.82,0,,,,2,Single-sided|100:1,Single-sided|250:0.59,Single-sided|500:0.41,true
+envelopes,Envelopes,marketing-prints,per_piece,0.55,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+envelopes-10-business,#10 Business Envelope,marketing-prints,per_piece,89.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+envelopes-6x9-catalog,6×9 Catalog Envelope,marketing-prints,per_piece,99.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+envelopes-9x12-catalog,9×12 Catalog Envelope,marketing-prints,per_piece,119.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+envelopes-a7-invitation,A7 Invitation Envelope,marketing-prints,per_piece,79.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+flyers,Flyers,marketing-prints,per_piece,0.00,batch1_flyers_standard,QTY_TIERED,true,25,0,,3,,,100:0.55,250:0.35,500:0.25,true
+flyers-large,Large Flyer,marketing-prints,per_piece,109.00,batch1_flyers_standard,QTY_TIERED,true,25,0,,3,,,100:0.55,250:0.35,500:0.25,true
+flyers-small,Small Flyer,marketing-prints,per_piece,59.00,batch1_flyers_standard,QTY_TIERED,true,25,0,,3,,,100:0.55,250:0.35,500:0.25,true
+flyers-standard,Standard Flyer,marketing-prints,per_piece,79.00,batch1_flyers_standard,QTY_TIERED,true,25,0,,3,,,100:0.55,250:0.35,500:0.25,true
+gift-certificates,Gift Certificates,marketing-prints,per_piece,59.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+greeting-cards,Greeting Cards,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+invitation-cards,Invitation Cards,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+invitations-flat,Flat Invitations,marketing-prints,per_piece,59.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+letterhead,Letterhead,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+letterhead-standard,Letterhead,marketing-prints,per_piece,79.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+loyalty-cards,Loyalty & Punch Cards,marketing-prints,per_piece,35.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+magnets-business-card,Business Card Magnets,marketing-prints,per_piece,49.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+menus,Menus,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+menus-flat,Flat Menu,marketing-prints,per_piece,79.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+menus-folded,Folded Menu,marketing-prints,per_piece,109.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+menus-laminated,Laminated Menu,marketing-prints,per_piece,149.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+menus-takeout,Takeout Insert,marketing-prints,per_piece,59.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+ncr-forms-duplicate,NCR Duplicate Forms (2-Part),marketing-prints,per_piece,89.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+ncr-forms-triplicate,NCR Triplicate Forms (3-Part),marketing-prints,per_piece,119.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+ncr-invoice-books,NCR Invoice Books,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+ncr-invoices,NCR Invoice,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+notepads,Notepads,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+notepads-custom,Custom Notepads,marketing-prints,per_piece,49.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+order-form-pads,Order Form Pads,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+order-forms-single,Order Form,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+postcards,Postcards,marketing-prints,per_piece,0.00,batch1_postcards_standard,QTY_TIERED,true,25,0,,2,,,100:0.45,250:0.28,500:0.18,true
+postcards-eddm,EDDM Postcard,marketing-prints,per_piece,89.00,batch1_postcards_standard,QTY_TIERED,true,25,0,,2,,,100:0.45,250:0.28,500:0.18,true
+postcards-large,Large Postcard,marketing-prints,per_piece,79.00,batch1_postcards_standard,QTY_TIERED,true,25,0,,2,,,100:0.45,250:0.28,500:0.18,true
+postcards-medium,Medium Postcard,marketing-prints,per_piece,59.00,batch1_postcards_standard,QTY_TIERED,true,25,0,,2,,,100:0.45,250:0.28,500:0.18,true
+postcards-standard,Standard Postcard,marketing-prints,per_piece,49.00,batch1_postcards_standard,QTY_TIERED,true,25,0,,2,,,100:0.45,250:0.28,500:0.18,true
+posters,Posters,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+posters-adhesive,Adhesive Poster,marketing-prints,per_piece,169.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+posters-backlit,Backlit Poster,marketing-prints,per_piece,249.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+posters-glossy,Glossy Poster,marketing-prints,per_piece,99.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+posters-matte,Matte Poster,marketing-prints,per_piece,9.50,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+presentation-folders,Presentation Folders,marketing-prints,per_piece,0.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+presentation-folders-die-cut,Custom Die-Cut Folder,marketing-prints,per_piece,449.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+presentation-folders-legal,Legal Size Folder,marketing-prints,per_piece,349.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+presentation-folders-reinforced,Reinforced Folder,marketing-prints,per_piece,349.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+presentation-folders-standard,Standard 2-Pocket Folder,marketing-prints,per_piece,299.00,catbase_marketing_prints_02,QTY_TIERED,true,0,0,0,0,,,1:349,5:331.55,10:314.1,true
+rack-cards,Rack Cards,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+rack-cards-folded,Folded Rack Card,marketing-prints,per_piece,69.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+rack-cards-standard,Standard Rack Card,marketing-prints,per_piece,59.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+rack-cards-tear-off,Tear Card,marketing-prints,per_piece,69.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+release-forms,Release / Waiver Form,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+release-waiver-forms,Release / Waiver Forms,marketing-prints,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+stamps-r512,Self-Inking Stamp R-512,marketing-prints,per_piece,19.99,batch1_stamps_s520,QTY_TIERED,true,28,0,,3,,,1:28,5:24,10:20,true
+stamps-r524,Self-Inking Stamp R-524,marketing-prints,per_piece,27.99,batch1_stamps_s520,QTY_TIERED,true,28,0,,3,,,1:28,5:24,10:20,true
+stamps-r532,Self-Inking Stamp R-532,marketing-prints,per_piece,34.99,batch1_stamps_s520,QTY_TIERED,true,28,0,,3,,,1:28,5:24,10:20,true
+stamps-r552,Self-Inking Stamp R-552,marketing-prints,per_piece,59.99,batch1_stamps_s520,QTY_TIERED,true,28,0,,3,,,1:28,5:24,10:20,true
+stamps-s510,Self-Inking Stamp S-510,marketing-prints,per_piece,19.99,batch1_stamps_s520,QTY_TIERED,true,28,0,,3,,,1:28,5:24,10:20,true
+stamps-s520,Self-Inking Stamp S-520,marketing-prints,per_piece,24.99,batch1_stamps_s520,QTY_TIERED,true,28,0,,3,,,1:28,5:24,10:20,true
+stamps-s542,Self-Inking Stamp S-542,marketing-prints,per_piece,44.99,batch1_stamps_s520,QTY_TIERED,true,28,0,,3,,,1:28,5:24,10:20,true
+stamps-s827,Self-Inking Stamp S-827,marketing-prints,per_piece,39.99,batch1_stamps_s520,QTY_TIERED,true,28,0,,3,,,1:28,5:24,10:20,true
+box-sleeves,Box Sleeves,packaging,per_piece,0.00,catbase_packaging_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,true
+hang-tags,Hang Tags,packaging,per_piece,2.80,catbase_packaging_02,QTY_TIERED,true,0,0,0,0,,,1:3.15,5:2.9925,10:2.835,true
+hang-tags-custom,Custom Hang Tags,packaging,per_piece,39.00,catbase_packaging_02,QTY_TIERED,true,0,0,0,0,,,1:3.15,5:2.9925,10:2.835,true
+label-sets,Product Label Sets,packaging,per_piece,3.50,catbase_packaging_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,true
+packaging-inserts,Packaging Inserts,packaging,per_piece,2.20,catbase_packaging_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,true
+packing-slips,Packing Slips,packaging,per_piece,1.20,catbase_packaging_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,true
+product-inserts,Product Inserts,packaging,per_piece,0.00,catbase_packaging_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,true
+sticker-seals,Sticker Seals,packaging,per_piece,1.80,catbase_packaging_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,true
+tags-hang-tags,Tags / Hang Tags,packaging,per_piece,0.00,catbase_packaging_02,QTY_TIERED,true,0,0,0,0,,,1:3.15,5:2.9925,10:2.835,true
+thank-you-cards,Thank You Cards,packaging,per_piece,2.20,catbase_packaging_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,true
+cardstock-prints,Cardstock Prints (14pt) — Custom Size,retail-promo,per_sqft,0.00,cardstock_14pt_custom_size,AREA_TIERED,true,48.8,48.8,1,6,,,9999:0.8228571429,,,true
+coupons,Coupons,retail-promo,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+danglers,Dangler,retail-promo,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+rp-coupons,Coupons,retail-promo,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+rp-hang-tags,Hang Tags,retail-promo,per_piece,0.00,catbase_packaging_02,QTY_TIERED,true,0,0,0,0,,,1:3.15,5:2.9925,10:2.835,true
+rp-menus,Menus,retail-promo,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+rp-tickets,Tickets,retail-promo,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+shelf-talkers,Shelf Talkers,retail-promo,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+table-display-cards,Table Display Cards,retail-promo,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+table-tent-cards,Table Tent Cards,retail-promo,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+table-tents-4x6,Table Tents,retail-promo,per_piece,39.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+tickets,Tickets,retail-promo,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+wobblers,Wobbler,retail-promo,per_piece,0.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+a-frame-insert-prints,A-Frame Inserts,rigid-signs,per_piece,52.00,autobase_a-frame-insert-prints,QTY_TIERED,true,52,0,,,,,1:52,3:49.4,5:46.8,false
+a-frame-sandwich-board,A-Frame Sandwich Board,rigid-signs,per_piece,85.00,autobase_a-frame-sandwich-board,QTY_TIERED,true,85,0,,,,,1:85,3:80.75,5:76.5,true
+acm-dibond-signs,ACM / Dibond Signs,rigid-signs,per_piece,89.00,autobase_acm-dibond-signs,QTY_TIERED,true,89,0,,,,,1:89,3:84.55,5:80.1,false
+acrylic-signs,Acrylic Signs,rigid-signs,per_piece,99.00,autobase_acrylic-signs,QTY_TIERED,true,99,0,,,,,1:99,3:94.05,5:89.1,false
+aluminum-composite,Aluminum Composite (Dibond),rigid-signs,per_sqft,80.00,rigid_sheets_default,AREA_TIERED,true,50,10,6,5,,,4:8,12:6.5,32:5,true
+aluminum-signs,Aluminum Signs,rigid-signs,per_piece,89.00,batch1_aluminum_signs,QTY_TIERED,true,48,0,,3,,,1:48,5:38,10:32,false
+backdrop-board,Backdrop Board,rigid-signs,per_piece,52.00,autobase_a-frame-insert-prints,QTY_TIERED,true,52,0,,,,,1:52,3:49.4,5:46.8,false
+clear-acrylic-signs,Clear Acrylic Signs,rigid-signs,per_piece,99.00,autobase_acrylic-signs,QTY_TIERED,true,99,0,,,,,1:99,3:94.05,5:89.1,false
+construction-site-signs,Construction Site Signs,rigid-signs,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+coroplast-signs,Coroplast Signs,rigid-signs,per_piece,42.00,batch1_coroplast_signs,QTY_TIERED,true,19.5,0,,3,,,1:19.5,5:14.5,10:11.5,false
+coroplast-yard-signs,Coroplast Yard Signs,rigid-signs,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,true
+custom-foam-board,Custom Foam Board Sign,rigid-signs,per_sqft,50.00,rigid_sheets_default,AREA_TIERED,true,50,10,6,5,,,4:8,12:6.5,32:5,true
+directional-arrow-sign,Directional Arrow Sign,rigid-signs,per_piece,15.00,catbase_rigid_signs_01,QTY_TIERED,true,0,0,0,0,,,1:15,5:14.25,10:13.5,true
+directional-arrow-signs,Directional Arrow Signs,rigid-signs,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+double-sided-lawn-signs,Double-Sided Lawn Signs,rigid-signs,per_piece,42.00,autobase_double-sided-lawn-signs,QTY_TIERED,true,42,0,,,,,1:42,3:39.9,5:37.8,false
+election-campaign-sign,Election / Campaign Sign,rigid-signs,per_piece,18.00,autobase_arc-flash-labels,QTY_TIERED,true,18,0,,,,,1:18,3:17.1,5:16.2,true
+foam-board,Foam Board (Custom Size),rigid-signs,per_sqft,60.00,rigid_sheets_default,AREA_TIERED,true,50,10,6,5,,,4:8,12:6.5,32:5,true
+foam-board-easel,Foam Board + Easel Back,rigid-signs,per_piece,52.00,autobase_a-frame-insert-prints,QTY_TIERED,true,52,0,,,,,1:52,3:49.4,5:46.8,false
+foam-board-prints,Foam Board Prints,rigid-signs,per_piece,52.00,autobase_a-frame-insert-prints,QTY_TIERED,true,52,0,,,,,1:52,3:49.4,5:46.8,false
+frosted-acrylic-signs,Frosted Acrylic Signs,rigid-signs,per_piece,99.00,autobase_acrylic-signs,QTY_TIERED,true,99,0,,,,,1:99,3:94.05,5:89.1,false
+gatorboard-signs,Gatorboard Signs,rigid-signs,per_piece,59.00,autobase_flag-bases-cross,QTY_TIERED,true,59,0,,,,,1:59,3:56.05,5:53.1,false
+handheld-sign,Handheld Sign,rigid-signs,per_sqft,25.00,rigid_sheets_default,AREA_TIERED,true,50,10,6,5,,,4:8,12:6.5,32:5,true
+handheld-signs,Handheld Signs,rigid-signs,per_piece,52.00,autobase_a-frame-insert-prints,QTY_TIERED,true,52,0,,,,,1:52,3:49.4,5:46.8,false
+lawn-signs-h-stake,Lawn Signs + H-Stake,rigid-signs,per_piece,42.00,autobase_double-sided-lawn-signs,QTY_TIERED,true,42,0,,,,,1:42,3:39.9,5:37.8,false
+menu-boards,Menu Boards,rigid-signs,per_piece,39.00,autobase_flag-base-water-bag,QTY_TIERED,true,39,0,,,,,1:39,3:37.05,5:35.1,false
+parking-property-signs,Parking & Property Signs,rigid-signs,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+photo-board,Photo Board,rigid-signs,per_sqft,45.00,rigid_sheets_default,AREA_TIERED,true,50,10,6,5,,,4:8,12:6.5,32:5,true
+pvc-sintra-signs,PVC Sintra Signs,rigid-signs,per_piece,59.00,autobase_flag-bases-cross,QTY_TIERED,true,59,0,,,,,1:59,3:56.05,5:53.1,false
+real-estate-agent-sign,Real Estate Agent Sign,rigid-signs,per_piece,52.00,autobase_a-frame-insert-prints,QTY_TIERED,true,52,0,,,,,1:52,3:49.4,5:46.8,false
+real-estate-sign,Real Estate Sign,rigid-signs,per_piece,35.00,autobase_aisle-markers-hanging,QTY_TIERED,true,35,0,,,,,1:35,3:33.25,5:31.5,true
+rigid-foam-board-prints,Foam Board / KT Board,rigid-signs,per_piece,52.00,autobase_a-frame-insert-prints,QTY_TIERED,true,52,0,,,,,1:52,3:49.4,5:46.8,false
+rigid-tabletop-signs,Tabletop Signs,rigid-signs,per_piece,39.00,autobase_flag-base-water-bag,QTY_TIERED,true,39,0,,,,,1:39,3:37.05,5:35.1,false
+safety-signs,Safety Signs,rigid-signs,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+standoff-mounted-signs,Standoff Mounted Signs,rigid-signs,per_piece,52.00,autobase_a-frame-insert-prints,QTY_TIERED,true,52,0,,,,,1:52,3:49.4,5:46.8,false
+table-easel-display,Table Easel Display,rigid-signs,per_sqft,35.00,rigid_sheets_default,AREA_TIERED,true,50,10,6,5,,,4:8,12:6.5,32:5,true
+tabletop-signs,Tabletop Signs,rigid-signs,per_piece,39.00,autobase_flag-base-water-bag,QTY_TIERED,true,39,0,,,,,1:39,3:37.05,5:35.1,false
+tags-tickets-rigid,Rigid Tags / Tickets,rigid-signs,per_piece,52.00,catbase_marketing_prints_01,QTY_TIERED,true,0,0,0,0,,,1:0.55,5:0.5225,10:0.495,true
+wayfinding-signs,Wayfinding Signs,rigid-signs,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+yard-sign,Yard Sign,rigid-signs,per_piece,18.00,autobase_arc-flash-labels,QTY_TIERED,true,18,0,,,,,1:18,3:17.1,5:16.2,true
+yard-sign-h-frame,Yard Sign + H-Frame,rigid-signs,per_piece,42.00,autobase_double-sided-lawn-signs,QTY_TIERED,true,42,0,,,,,1:42,3:39.9,5:37.8,false
+yard-sign-panel-only,Yard Sign Panel,rigid-signs,per_piece,42.00,autobase_double-sided-lawn-signs,QTY_TIERED,true,42,0,,,,,1:42,3:39.9,5:37.8,false
+yard-signs-coroplast,Coroplast Yard Signs,rigid-signs,per_piece,29.00,autobase_flag-base-ground-stake,QTY_TIERED,true,29,0,,,,,1:29,3:27.55,5:26.1,false
+arc-flash-labels,Arc Flash Warning Labels,safety-warning-decals,per_piece,18.00,autobase_arc-flash-labels,QTY_TIERED,true,18,0,,,,,1:18,3:17.1,5:16.2,false
+chemical-storage-labels,Chemical Storage Cabinet Labels,safety-warning-decals,per_piece,12.00,catbase_safety_warning_decals_01,QTY_TIERED,true,0,0,0,0,,,1:13.5,5:12.825,10:12.15,false
+confined-space-warning-signs,Confined Space Warning Signs,safety-warning-decals,per_piece,28.00,autobase_confined-space-warning-signs,QTY_TIERED,true,28,0,,,,,1:28,3:26.6,5:25.2,false
+crane-lift-capacity-labels,Crane & Lift Capacity Labels,safety-warning-decals,per_piece,20.00,autobase_crane-lift-capacity-labels,QTY_TIERED,true,20,0,,,,,1:20,3:19,5:18,false
+emergency-exit-egress-signs-set,Emergency Exit Signs,safety-warning-decals,per_piece,25.00,autobase_cvor-number-decals,QTY_TIERED,true,25,0,,,,,1:25,3:23.75,5:22.5,false
+fire-extinguisher-location-stickers,Fire Extinguisher Stickers,safety-warning-decals,per_piece,5.00,catbase_facility_asset_labels_02,QTY_TIERED,true,0,0,0,0,,,1:5,5:4.75,10:4.5,false
+first-aid-location-stickers,First Aid Stickers,safety-warning-decals,per_piece,5.00,catbase_facility_asset_labels_02,QTY_TIERED,true,0,0,0,0,,,1:5,5:4.75,10:4.5,false
+forklift-safety-decals,Forklift Safety Decal Kit,safety-warning-decals,per_piece,35.00,autobase_aisle-markers-hanging,QTY_TIERED,true,35,0,,,,,1:35,3:33.25,5:31.5,false
+hazard-ghs-labels,Hazard GHS Labels,safety-warning-decals,per_piece,4.00,catbase_facility_asset_labels_02,QTY_TIERED,true,0,0,0,0,,,1:5,5:4.75,10:4.5,false
+high-visibility-rear-chevron-kit,Rear Chevron Kit,safety-warning-decals,per_piece,125.00,autobase_high-visibility-rear-chevron-kit,QTY_TIERED,true,125,0,,,,,1:125,3:118.75,5:112.5,false
+high-voltage-warning-signs,High Voltage Warning Signs,safety-warning-decals,per_piece,22.00,autobase_high-voltage-warning-signs,QTY_TIERED,true,22,0,,,,,1:22,3:20.9,5:19.8,false
+lockout-tagout-labels,Lockout/Tagout Labels,safety-warning-decals,per_piece,15.00,catbase_safety_warning_decals_01,QTY_TIERED,true,0,0,0,0,,,1:13.5,5:12.825,10:12.15,false
+no-smoking-decals-set,No Smoking Decals,safety-warning-decals,per_piece,15.00,catbase_facility_asset_labels_03,QTY_TIERED,true,0,0,0,0,,,1:15,5:14.25,10:13.5,false
+parking-lot-stencils,Parking Lot Stencils,safety-warning-decals,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+ppe-hard-hat-stickers,Hard Hat Stickers,safety-warning-decals,per_piece,2.00,catbase_facility_asset_labels_01,QTY_TIERED,true,0,0,0,0,,,1:2,5:1.9,10:1.8,false
+ppe-required-signs,PPE Required Signs,safety-warning-decals,per_piece,25.00,autobase_cvor-number-decals,QTY_TIERED,true,25,0,,,,,1:25,3:23.75,5:22.5,false
+reflective-conspicuity-tape-kit,Reflective Conspicuity Tape,safety-warning-decals,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+reflective-safety-stripes-kit,Reflective Safety Stripes,safety-warning-decals,per_piece,65.00,autobase_car-door-magnets-pair,QTY_TIERED,true,65,0,,,,,1:65,3:61.75,5:58.5,false
+safety-notice-decal-pack,Safety Notice Pack,safety-warning-decals,per_piece,35.00,autobase_aisle-markers-hanging,QTY_TIERED,true,35,0,,,,,1:35,3:33.25,5:31.5,false
+slip-trip-hazard-signs,Slip & Trip Hazard Signs,safety-warning-decals,per_piece,18.00,autobase_arc-flash-labels,QTY_TIERED,true,18,0,,,,,1:18,3:17.1,5:16.2,false
+stay-back-warning-decals,Stay Back Warning,safety-warning-decals,per_piece,18.00,autobase_arc-flash-labels,QTY_TIERED,true,18,0,,,,,1:18,3:17.1,5:16.2,false
+whmis-workplace-labels,WHMIS Workplace Labels,safety-warning-decals,per_piece,35.00,autobase_aisle-markers-hanging,QTY_TIERED,true,35,0,,,,,1:35,3:33.25,5:31.5,false
+barcode-labels,Barcode Labels,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+clear-labels,Clear Labels,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+clear-singles,Clear Stickers (Singles),stickers-labels,per_sqft,50.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,true
+die-cut-singles,Die-Cut Stickers (Singles),stickers-labels,per_sqft,50.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,true
+die-cut-stickers,Die-Cut Stickers,stickers-labels,per_piece,0.00,batch1_die_cut_stickers,QTY_TIERED,true,25,0,,3,,,50:1.1,100:0.82,250:0.55,false
+floor-decals,Floor Decals,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+foil-stickers,Foil Stickers,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+freezer-labels,Freezer Labels,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+heavy-duty-vinyl-stickers,Heavy Duty Outdoor Vinyl Stickers,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+holographic-singles,Holographic Singles,stickers-labels,per_sqft,65.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,true
+holographic-stickers,Holographic Stickers,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+kiss-cut-sticker-sheets,Kiss-Cut Sticker Sheets,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+kraft-paper-labels,Kraft Paper Labels,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+labels-clear,Clear Labels,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+labels-roll-quote,Roll Labels,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+labels-white-bopp,White BOPP Labels,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+magnets-flexible,Magnets,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+perforated-window-film,Perforated Window Film,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+qr-code-labels,QR Code Labels,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+removable-stickers,Removable Stickers,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+roll-labels,Roll Labels,stickers-labels,per_piece,0.00,batch1_roll_labels,QTY_TIERED,true,50,0,,3,,,250:0.42,500:0.26,1000:0.15,false
+sticker-packs,Sticker Packs,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+sticker-sheets,Sticker Sheets (12x18),stickers-labels,per_piece,30.00,autobase_sticker-sheets,QTY_TIERED,true,30,0,,,,,1:30,3:28.5,5:27,true
+stickers-color-on-clear,Color on Clear Stickers,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+stickers-color-on-white,Color on White Stickers,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+stickers-die-cut-custom,Custom Die-Cut Stickers,stickers-labels,per_piece,29.00,autobase_flag-base-ground-stake,QTY_TIERED,true,29,0,,,,,1:29,3:27.55,5:26.1,false
+stickers-multi-on-sheet,Multi on Sheet,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+stickers-roll-labels,Roll Labels,stickers-labels,per_piece,49.00,autobase_banner-stand-x,QTY_TIERED,true,49,0,,,,,1:49,3:46.55,5:44.1,false
+stickers-sheet-kisscut,Sticker Sheets (Kiss-Cut),stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+stickers-single-diecut,Die-Cut Stickers,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+transfer-vinyl-lettering,Transfer Vinyl Lettering,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+vinyl-lettering,Vinyl Lettering,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+wall-decals,Wall Decals,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+white-bopp-labels,White BOPP Labels,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+window-decals,Window Decals,stickers-labels,per_piece,0.00,autobase_barcode-labels,QTY_TIERED,true,5,0,,,,,1:0.01,3:0.01,5:0.01,false
+boat-lettering-registration,Boat Registration Lettering,vehicle-branding-advertising,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+bumper-sticker-custom,Custom Bumper Sticker,vehicle-branding-advertising,per_piece,1.50,catbase_vehicle_branding_advertising_01,QTY_TIERED,true,0,0,0,0,,,1:1.75,5:1.6625,10:1.575,false
+car-door-magnets-pair,Car Door Magnets (Pair),vehicle-branding-advertising,per_piece,65.00,autobase_car-door-magnets-pair,QTY_TIERED,true,65,0,,,,,1:65,3:61.75,5:58.5,false
+car-hood-decal,Car Hood Decal,vehicle-branding-advertising,per_piece,180.00,catbase_vehicle_branding_advertising_04,QTY_TIERED,true,0,0,0,0,,,1:220,5:209,10:198,false
+custom-cut-vinyl-lettering-any-text,Custom Cut Vinyl Lettering,vehicle-branding-advertising,per_piece,20.00,autobase_crane-lift-capacity-labels,QTY_TIERED,true,20,0,,,,,1:20,3:19,5:18,false
+custom-printed-vehicle-logo-decals,Custom Van Logo Decals,vehicle-branding-advertising,per_sqft,18.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+custom-truck-door-lettering-kit,Custom Truck Door Lettering Kit,vehicle-branding-advertising,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+fleet-graphic-package,Fleet Graphic Package,vehicle-branding-advertising,per_piece,250.00,catbase_vehicle_branding_advertising_04,QTY_TIERED,true,0,0,0,0,,,1:220,5:209,10:198,false
+full-vehicle-wrap-design-print,Full Vehicle Wrap (Design + Print),vehicle-branding-advertising,per_piece,850.00,catbase_vehicle_branding_advertising_05,QTY_TIERED,true,0,0,0,0,,,1:850,5:807.5,10:765,false
+long-term-outdoor-vehicle-decals,Long-Term Outdoor Decals,vehicle-branding-advertising,per_sqft,18.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+magnetic-car-signs,Magnetic Car Signs,vehicle-branding-advertising,per_piece,59.00,autobase_flag-bases-cross,QTY_TIERED,true,59,0,,,,,1:59,3:56.05,5:53.1,false
+magnetic-rooftop-sign,Magnetic Rooftop Car Topper,vehicle-branding-advertising,per_piece,120.00,autobase_magnetic-rooftop-sign,QTY_TIERED,true,120,0,,,,,1:120,3:114,5:108,false
+magnetic-truck-door-signs,Magnetic Truck Door Signs,vehicle-branding-advertising,per_piece,55.00,autobase_magnetic-truck-door-signs,QTY_TIERED,true,55,0,,,,,1:55,3:52.25,5:49.5,false
+partial-wrap-spot-graphics,Partial Wrap Graphics,vehicle-branding-advertising,per_sqft,20.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+printed-truck-door-decals-full-color,Printed Truck Door Decals,vehicle-branding-advertising,per_sqft,16.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+removable-promo-vehicle-decals,Removable Promo Decals,vehicle-branding-advertising,per_sqft,15.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+social-qr-vehicle-decals,Social Media QR Decals,vehicle-branding-advertising,per_piece,15.00,catbase_vehicle_branding_advertising_03,QTY_TIERED,true,0,0,0,0,,,1:13.5,5:12.825,10:12.15,false
+tailgate-rear-door-printed-decal,Tailgate Decal,vehicle-branding-advertising,per_sqft,16.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+trailer-box-truck-large-graphics,Trailer Large Graphics,vehicle-branding-advertising,per_sqft,12.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+trailer-full-wrap,53ft Trailer Full Wrap,vehicle-branding-advertising,per_piece,2500.00,catbase_vehicle_branding_advertising_06,QTY_TIERED,true,0,0,0,0,,,1:2500,5:2375,10:2250,false
+truck-side-panel-printed-decal,Truck Side Panel Decal,vehicle-branding-advertising,per_sqft,16.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+vehicle-roof-wrap,Vehicle Roof Wrap,vehicle-branding-advertising,per_piece,220.00,catbase_vehicle_branding_advertising_04,QTY_TIERED,true,0,0,0,0,,,1:220,5:209,10:198,false
+vehicle-wrap-print-only-quote,Vehicle Wrap (Print Only),vehicle-branding-advertising,per_sqft,22.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+clear-static-cling,Clear Static Cling,window-glass-films,per_sqft,12.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+color-white-color-clear-vinyl,Colour + White + Colour on Clear Vinyl,window-glass-films,per_sqft,28.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+color-white-on-clear-vinyl,Colour + White on Clear Vinyl,window-glass-films,per_sqft,20.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+frosted-matte-window-film,Frosted Matte Window Film,window-glass-films,per_sqft,18.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+frosted-privacy-window-film,Frosted Privacy Film,window-glass-films,per_sqft,20.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+frosted-static-cling,Frosted Static Cling,window-glass-films,per_sqft,14.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+holographic-iridescent-film,Holographic Iridescent Film,window-glass-films,per_sqft,22.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+storefront-hours-door-decal-cut-vinyl,Storefront Hours Decal,window-glass-films,per_piece,35.00,autobase_aisle-markers-hanging,QTY_TIERED,true,35,0,,,,,1:35,3:33.25,5:31.5,false
+vehicle-window-tint-graphic,Perforated Window Tint Graphic,window-glass-films,per_piece,35.00,autobase_aisle-markers-hanging,QTY_TIERED,true,35,0,,,,,1:35,3:33.25,5:31.5,false
+window-cut-vinyl-lettering,Window Cut Vinyl Lettering,window-glass-films,per_piece,20.00,autobase_crane-lift-capacity-labels,QTY_TIERED,true,20,0,,,,,1:20,3:19,5:18,false
+window-graphics-perforated,Perforated Window Graphics,window-glass-films,per_sqft,16.00,largeformat_roll_default,AREA_TIERED,true,25,5,,,,,4:2.5,12:2,32:1.5,false
+window-lettering-business,Business Window Lettering,window-glass-films,per_piece,45.00,autobase_boat-lettering-registration,QTY_TIERED,true,45,0,,,,,1:45,3:42.75,5:40.5,false
+window-lettering-cut-vinyl,Window Lettering,window-glass-films,per_piece,25.00,autobase_cvor-number-decals,QTY_TIERED,true,25,0,,,,,1:25,3:23.75,5:22.5,false

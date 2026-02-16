@@ -60,31 +60,31 @@ export default function BundlesSection() {
   return (
     <section>
       <div className="text-center mb-10">
-        <div className="flex items-center justify-center gap-2 mb-2">
+        <div className="flex items-center justify-center gap-2 mb-3">
           <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-moon-gold)]" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+          <span className="label-xs text-gray-400">
             {t("bundles.badge")}
           </span>
         </div>
-        <h2 className="text-3xl md:text-4xl font-black tracking-tight">
+        <h2 className="heading-2">
           {t("bundles.title")}
         </h2>
-        <p className="text-gray-400 text-sm mt-2 max-w-lg mx-auto">
+        <p className="text-gray-400 body-base mt-2 max-w-lg mx-auto">
           {t("bundles.subtitle")}
         </p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-5">
-        {BUNDLES.map((bundle) => (
+        {BUNDLES.map((bundle, i) => (
           <div
             key={bundle.id}
-            className={`relative bg-white rounded-3xl border ${
+            className={`animate-scale-in delay-${i + 1} relative bg-white rounded-3xl border ${
               bundle.popular ? "border-amber-200 shadow-lg shadow-amber-100/50" : "border-gray-100"
-            } overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
+            } overflow-hidden hover-lift`}
           >
             {bundle.popular && (
               <div className="absolute -top-px -right-px">
-                <div className="bg-gradient-to-r from-[var(--color-moon-gold)] to-amber-600 text-white text-[9px] font-black uppercase tracking-wider px-4 py-1.5 rounded-bl-xl">
+                <div className="bg-gradient-to-r from-[var(--color-moon-gold)] to-amber-600 text-white label-xs px-4 py-1.5 rounded-bl-xl">
                   {t("bundles.mostPopular")}
                 </div>
               </div>
@@ -95,9 +95,9 @@ export default function BundlesSection() {
               <h3 className="font-black text-lg">{t(bundle.nameKey)}</h3>
               <div className="flex items-baseline gap-2 mt-2">
                 <span className="text-3xl font-black tracking-tight">{cad(bundle.price)}</span>
-                <span className="text-white/60 line-through text-sm">{cad(bundle.originalPrice)}</span>
+                <span className="text-white/60 line-through body-sm">{cad(bundle.originalPrice)}</span>
               </div>
-              <div className="inline-block bg-white/20 text-[10px] font-bold px-2.5 py-1 rounded-full mt-2">
+              <div className="inline-block badge-gold mt-2">
                 {t("bundles.save")} {cad(bundle.savings)}
               </div>
             </div>
@@ -105,8 +105,8 @@ export default function BundlesSection() {
             {/* Items list */}
             <div className="p-6">
               <ul className="space-y-2.5 mb-6">
-                {bundle.itemKeys.map((itemKey, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm text-gray-600">
+                {bundle.itemKeys.map((itemKey, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 body-sm text-gray-600">
                     <svg className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>
@@ -117,9 +117,9 @@ export default function BundlesSection() {
 
               <Link
                 href={bundle.href}
-                className={`block w-full text-center py-3.5 rounded-xl font-black uppercase text-xs tracking-widest transition-colors ${
+                className={`block w-full text-center py-3.5 rounded-xl font-black uppercase label-sm tracking-widest transition-colors ${
                   bundle.popular
-                    ? "bg-[var(--color-ink-black)] text-white hover:bg-gray-800"
+                    ? "btn-dark-pill"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const BAR_COLORS = [
@@ -13,12 +14,21 @@ function formatCategoryName(slug) {
   return slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
-export default function CatalogPage() {
+export default function CatalogPage({ embedded = false } = {}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState(null);
+
+  useEffect(() => {
+    if (embedded) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "catalog");
+    router.replace(`/admin/catalog-ops?${params.toString()}`);
+  }, [embedded, router, searchParams]);
 
   useEffect(() => {
     fetch("/api/admin/catalog")

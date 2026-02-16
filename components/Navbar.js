@@ -181,18 +181,18 @@ export default function Navbar({ catalogConfig }) {
   };
 
   return (
-    <header className="sticky top-0 z-[50] w-full border-b border-[var(--color-gray-200)] bg-[var(--color-paper-white)] backdrop-blur">
+    <header className="sticky top-0 z-[50] w-full border-b border-[var(--color-gray-200)] bg-[var(--color-paper-white)]/90 backdrop-blur-lg backdrop-saturate-150">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2.5">
           <Image src="/logo-lunarprint.png" alt="La Lunar Printing" width={32} height={32} className="h-8 w-8" priority />
           <div className="hidden sm:block">
             <span className="block text-sm font-semibold uppercase tracking-[0.3em] text-[var(--color-gray-800)] leading-tight">La Lunar</span>
-            <span className="block text-[8px] font-medium uppercase tracking-[0.25em] text-[var(--color-gray-400)] leading-tight">Printing Inc.</span>
+            <span className="block label-xs font-medium text-[var(--color-gray-400)] leading-tight tracking-[0.25em]">Printing Inc.</span>
           </div>
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-[var(--color-gray-600)] md:flex">
-          <Link href="/" className="transition-colors duration-200 hover:text-[var(--color-gray-800)]">{t("nav.home")}</Link>
+          <Link href="/" className="transition-colors duration-200 hover:text-[var(--color-gray-800)] border-b-2 border-transparent hover:border-[var(--color-moon-gold)] pb-0.5">{t("nav.home")}</Link>
 
           {/* Shop mega-menu dropdown */}
           <div
@@ -212,7 +212,7 @@ export default function Navbar({ catalogConfig }) {
               <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
                 <div className="grid grid-cols-[220px_1fr]">
                   <div className="border-r border-gray-100 bg-gray-50/70 p-3">
-                    <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">
+                    <p className="px-2 pb-2 label-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">
                       Departments
                     </p>
                     <div className="space-y-1">
@@ -235,19 +235,19 @@ export default function Navbar({ catalogConfig }) {
                   <div className="p-4">
                     <div className="mb-3 grid grid-cols-[1fr_auto] gap-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Link href="/quote" className="btn-primary-pill px-3 py-1.5 text-[10px]">
+                        <Link href="/quote" className="btn-primary-pill px-3 py-1.5 label-xs">
                           {t("nav.getQuote")}
                         </Link>
-                        <Link href="/shop" className="btn-secondary-pill px-3 py-1.5 text-[10px]">
+                        <Link href="/shop" className="btn-secondary-pill px-3 py-1.5 label-xs">
                           {t("nav.shopAll")}
                         </Link>
-                        <Link href="/contact" className="btn-secondary-pill px-3 py-1.5 text-[10px]">
+                        <Link href="/contact" className="btn-secondary-pill px-3 py-1.5 label-xs">
                           {t("nav.contact")}
                         </Link>
                       </div>
                       <Link
                         href="/shop"
-                        className="inline-flex items-center gap-1 self-start rounded-full border border-[var(--color-gray-300)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
+                        className="inline-flex items-center gap-1 self-start rounded-full border border-[var(--color-gray-300)] px-3 py-1 label-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
                       >
                         Explore All
                       </Link>
@@ -287,7 +287,7 @@ export default function Navbar({ catalogConfig }) {
                         })}
                       </div>
                       <div className="rounded-xl border border-[var(--color-gray-200)] bg-gradient-to-b from-[var(--color-paper-cream)] to-white p-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-gray-400)]">
+                        <p className="label-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-gray-400)]">
                           Featured
                         </p>
                         <Link href={featuredCategorySlug ? `/shop/${featuredCategorySlug}` : "/shop"} className="mt-2 block overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
@@ -464,7 +464,7 @@ export default function Navbar({ catalogConfig }) {
             <span>{t("nav.cart")}</span>
             <span
               key={cartCount}
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-moon-blue)] text-[10px] font-semibold text-white cart-badge-bounce"
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-moon-blue)] label-xs font-semibold text-white cart-badge-bounce"
             >
               {cartCount}
             </span>

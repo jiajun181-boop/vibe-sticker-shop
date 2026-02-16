@@ -127,7 +127,7 @@ export default async function AboutPage() {
             <div className="space-y-6">
               {milestones.map((m) => (
                 <div key={m.year} className="relative pl-12">
-                  <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-gray-900 text-white text-[8px] font-bold flex items-center justify-center">
+                  <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-gray-900 text-white label-xs font-bold flex items-center justify-center">
                     {"\u2713"}
                   </div>
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">{m.year}</p>

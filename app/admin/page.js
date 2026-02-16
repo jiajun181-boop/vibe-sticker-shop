@@ -36,12 +36,12 @@ function Sparkline({ data, color = "blue" }) {
 /* ── % change badge ── */
 function Change({ current, previous }) {
   if (previous === 0 && current === 0) return null;
-  if (previous === 0) return <span className="mt-1 inline-block text-[11px] font-medium text-emerald-600">NEW</span>;
+  if (previous === 0) return <span className="mt-1 inline-block label-sm font-medium text-emerald-600">NEW</span>;
   const pct = Math.round(((current - previous) / previous) * 100);
-  if (pct === 0) return <span className="mt-1 inline-block text-[11px] text-gray-400">&mdash; vs prev</span>;
+  if (pct === 0) return <span className="mt-1 inline-block label-sm text-gray-400">&mdash; vs prev</span>;
   const up = pct > 0;
   return (
-    <span className={`mt-1 inline-flex items-center gap-0.5 text-[11px] font-medium ${up ? "text-emerald-600" : "text-red-500"}`}>
+    <span className={`mt-1 inline-flex items-center gap-0.5 label-sm font-medium ${up ? "text-emerald-600" : "text-red-500"}`}>
       <svg className={`h-3 w-3 ${up ? "" : "rotate-180"}`} viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clipRule="evenodd" />
       </svg>
@@ -57,8 +57,8 @@ function StatCard({ label, value, change, sparkline, color }) {
     <div className={`rounded-xl border bg-white p-5 ${border[color] || border.gray}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{label}</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900 tabular-nums">{value}</p>
+          <p className="label-sm text-gray-400">{label}</p>
+          <p className="mt-1 text-2xl font-bold text-gray-900 tabular-nums">{value}</p>
           {change}
         </div>
         {sparkline && <Sparkline data={sparkline} color={color} />}
@@ -120,7 +120,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">{t("admin.dashboard.title")}</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t("admin.dashboard.title")}</h1>
         <p className="text-xs text-gray-400">
           {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
         </p>
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
           <Link
             key={a.href}
             href={a.href}
-            className="flex shrink-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs font-medium text-gray-700 transition-all hover:border-gray-400 hover:shadow-sm"
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-all hover:border-gray-400 hover:shadow-sm"
           >
             <QIcon name={a.icon} className="h-4 w-4" />
             {a.label}
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
 
       <div className="rounded-xl border border-gray-200 bg-white">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-          <h2 className="text-sm font-semibold text-gray-900">{t("admin.dashboard.recentOrders")}</h2>
+          <h2 className="text-sm font-bold text-gray-900">{t("admin.dashboard.recentOrders")}</h2>
           <Link href="/admin/orders" className="text-xs font-medium text-blue-600 hover:text-blue-800">
             {t("admin.dashboard.viewAll")}
           </Link>
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
-                  <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusColors[order.status] || "bg-gray-100 text-gray-700"}`}>
+                  <span className={`rounded-full px-2.5 py-0.5 label-sm font-medium ${statusColors[order.status] || "bg-gray-100 text-gray-700"}`}>
                     {order.status}
                   </span>
                   <span className="text-sm font-semibold tabular-nums text-gray-900">{formatCad(order.totalAmount)}</span>

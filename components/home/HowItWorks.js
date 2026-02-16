@@ -31,13 +31,13 @@ export default function HowItWorks() {
   return (
     <section className="bg-white rounded-3xl border border-gray-100 p-8 md:p-12">
       <div className="text-center mb-10">
-        <div className="flex items-center justify-center gap-2 mb-2">
+        <div className="flex items-center justify-center gap-2 mb-3">
           <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+          <span className="label-xs text-gray-400">
             {t("howItWorks.badge")}
           </span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-black tracking-tight">
+        <h2 className="heading-2">
           {t("howItWorks.title")}
         </h2>
       </div>
@@ -47,19 +47,19 @@ export default function HowItWorks() {
           <div key={i} className="text-center relative">
             {/* Connector line (desktop only) */}
             {i < STEP_KEYS.length - 1 && (
-              <div className="hidden md:block absolute top-8 left-[60%] right-[-40%] h-px bg-gray-200" />
+              <div className="hidden md:block absolute top-8 left-[60%] right-[-40%] h-px bg-gradient-to-r from-[var(--color-moon-gold)] to-transparent" />
             )}
 
             {/* Number badge */}
             <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 text-gray-800 mb-4 mx-auto">
               {STEP_ICONS[i]}
-              <span className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--color-ink-black)] text-white rounded-full text-[10px] font-black flex items-center justify-center">
+              <span className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-[var(--color-moon-gold)] to-[var(--color-moon-gold-dark)] text-white rounded-full label-xs flex items-center justify-center tracking-normal font-black">
                 {i + 1}
               </span>
             </div>
 
-            <h3 className="font-bold text-sm mb-1.5">{t(step.titleKey)}</h3>
-            <p className="text-xs text-gray-400 leading-relaxed max-w-[180px] mx-auto">{t(step.descKey)}</p>
+            <h3 className="font-bold body-sm mb-1.5">{t(step.titleKey)}</h3>
+            <p className="body-sm text-gray-400 leading-relaxed max-w-[180px] mx-auto">{t(step.descKey)}</p>
           </div>
         ))}
       </div>

@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
@@ -14,31 +14,33 @@ function ProductCard({ p, t, onQuickAdd }) {
   const img = p.images?.[0]?.url;
 
   return (
-    <div className="w-44 shrink-0 overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm">
+    <div className="w-52 shrink-0 overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm hover-lift-subtle">
       <Link href={`/shop/${p.category}/${p.slug}`} className="block">
         <div className="aspect-square overflow-hidden bg-[var(--color-paper-cream)]">
           {img ? (
             <Image
               src={img}
               alt={p.name}
-              width={176}
-              height={176}
+              width={208}
+              height={208}
               className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-2xl text-[var(--color-gray-400)]">No image</div>
+            <div className="flex h-full items-center justify-center text-2xl text-[var(--color-gray-400)]">
+              No image
+            </div>
           )}
         </div>
       </Link>
       <div className="p-3">
-        <p className="truncate text-xs font-semibold text-[var(--color-gray-800)]">{p.name}</p>
-        <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">
+        <p className="truncate body-sm font-semibold text-[var(--color-gray-800)]">{p.name}</p>
+        <p className="mt-0.5 body-sm text-[var(--color-gray-500)]">
           {t("home.from")} {formatCad(p.basePrice)}
         </p>
         <button
           type="button"
           onClick={() => onQuickAdd(p)}
-          className="btn-primary-pill mt-2 w-full py-1.5 text-[11px]"
+          className="btn-primary-pill mt-2 w-full py-1.5 label-sm"
         >
           {t("shop.quickAdd")}
         </button>
@@ -47,15 +49,88 @@ function ProductCard({ p, t, onQuickAdd }) {
   );
 }
 
-function MarqueeRow({ items, t, onQuickAdd, reverse = false, duration = "48s" }) {
+function MarqueeRow({
+  items,
+  t,
+  onQuickAdd,
+  speed = 0.42,
+  direction = 1,
+  pauseAll = false,
+  registerScroller,
+}) {
+  const wrapRef = useRef(null);
+  const dragRef = useRef({ active: false, startX: 0, startScrollLeft: 0, pointerId: null });
+  const [isPointerDown, setIsPointerDown] = useState(false);
   const loopItems = useMemo(() => [...items, ...items], [items]);
 
+  useEffect(() => {
+    if (!wrapRef.current || !registerScroller) return undefined;
+    return registerScroller(wrapRef.current);
+  }, [registerScroller]);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return undefined;
+
+    let raf = null;
+    if (direction < 0 && el.scrollLeft === 0) {
+      el.scrollLeft = Math.max(0, el.scrollWidth / 2);
+    }
+
+    const tick = () => {
+      const half = el.scrollWidth / 2;
+      if (!pauseAll && !isPointerDown && half > 0) {
+        if (direction > 0) {
+          el.scrollLeft += speed;
+          if (el.scrollLeft >= half) el.scrollLeft -= half;
+        } else {
+          el.scrollLeft -= speed;
+          if (el.scrollLeft <= 0) el.scrollLeft += half;
+        }
+      }
+      raf = window.requestAnimationFrame(tick);
+    };
+
+    raf = window.requestAnimationFrame(tick);
+    return () => {
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, [direction, isPointerDown, loopItems.length, pauseAll, speed]);
+
   return (
-    <div className="overflow-hidden">
-      <div
-        className={`flex w-max gap-3 ${reverse ? "popular-marquee-reverse" : "popular-marquee"}`}
-        style={{ "--marquee-duration": duration }}
-      >
+    <div
+      ref={wrapRef}
+      className={`overflow-x-auto scrollbar-hide ${isPointerDown ? "cursor-grabbing" : "cursor-grab"}`}
+      onPointerDown={(e) => {
+        setIsPointerDown(true);
+        if (e.pointerType !== "mouse" || !wrapRef.current) return;
+        dragRef.current = {
+          active: true,
+          startX: e.clientX,
+          startScrollLeft: wrapRef.current.scrollLeft,
+          pointerId: e.pointerId,
+        };
+        wrapRef.current.setPointerCapture?.(e.pointerId);
+      }}
+      onPointerMove={(e) => {
+        const drag = dragRef.current;
+        if (!drag.active || e.pointerType !== "mouse" || !wrapRef.current) return;
+        const delta = e.clientX - drag.startX;
+        wrapRef.current.scrollLeft = drag.startScrollLeft - delta;
+      }}
+      onPointerUp={() => {
+        setIsPointerDown(false);
+        if (dragRef.current.pointerId != null && wrapRef.current) {
+          wrapRef.current.releasePointerCapture?.(dragRef.current.pointerId);
+        }
+        dragRef.current = { active: false, startX: 0, startScrollLeft: 0, pointerId: null };
+      }}
+      onPointerCancel={() => {
+        setIsPointerDown(false);
+        dragRef.current = { active: false, startX: 0, startScrollLeft: 0, pointerId: null };
+      }}
+    >
+      <div className="flex w-max gap-3 py-0.5">
         {loopItems.map((p, i) => (
           <ProductCard key={`${p.id}-${i}`} p={p} t={t} onQuickAdd={onQuickAdd} />
         ))}
@@ -68,6 +143,8 @@ export default function QuickOrderStrip({ products }) {
   const { t } = useTranslation();
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
+  const [pauseAll, setPauseAll] = useState(false);
+  const scrollersRef = useRef([]);
 
   if (!products || products.length === 0) return null;
 
@@ -90,20 +167,74 @@ export default function QuickOrderStrip({ products }) {
     showSuccessToast(t("shop.addedToCart"));
   }
 
+  function registerScroller(node) {
+    if (!node) return () => {};
+    if (!scrollersRef.current.includes(node)) {
+      scrollersRef.current.push(node);
+    }
+    return () => {
+      scrollersRef.current = scrollersRef.current.filter((n) => n !== node);
+    };
+  }
+
+  function nudgeAll(delta) {
+    setPauseAll(true);
+    for (const node of scrollersRef.current) {
+      node.scrollBy({ left: delta, behavior: "smooth" });
+    }
+    window.setTimeout(() => setPauseAll(false), 700);
+  }
+
   return (
-    <div className="popular-marquee-wrap rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-paper-white)] p-4 md:p-5">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h3 className="text-center text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+    <div
+      className="popular-marquee-wrap rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-paper-white)] p-4 md:p-6"
+    >
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3 className="text-center label-sm tracking-[0.2em] text-[var(--color-gray-500)]">
           {t("home.popularProducts")}
         </h3>
-        <Link href="/shop" className="btn-secondary-pill px-3 py-1.5 text-[10px]">
-          {t("nav.shopAll")}
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => nudgeAll(-220)}
+            className="hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-600)] hover:bg-[var(--color-gray-100)] md:inline-flex"
+            aria-label="Scroll left"
+          >
+            {"<"}
+          </button>
+          <button
+            type="button"
+            onClick={() => nudgeAll(220)}
+            className="hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-600)] hover:bg-[var(--color-gray-100)] md:inline-flex"
+            aria-label="Scroll right"
+          >
+            {">"}
+          </button>
+          <Link href="/shop" className="btn-secondary-pill px-3 py-1.5 label-xs">
+            {t("nav.shopAll")}
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-3 scroll-fade">
-        <MarqueeRow items={rowA} t={t} onQuickAdd={handleQuickAdd} duration="42s" />
-        <MarqueeRow items={rowB} t={t} onQuickAdd={handleQuickAdd} reverse duration="48s" />
+        <MarqueeRow
+          items={rowA}
+          t={t}
+          onQuickAdd={handleQuickAdd}
+          speed={0.45}
+          direction={1}
+          pauseAll={pauseAll}
+          registerScroller={registerScroller}
+        />
+        <MarqueeRow
+          items={rowB}
+          t={t}
+          onQuickAdd={handleQuickAdd}
+          speed={0.38}
+          direction={-1}
+          pauseAll={pauseAll}
+          registerScroller={registerScroller}
+        />
       </div>
     </div>
   );

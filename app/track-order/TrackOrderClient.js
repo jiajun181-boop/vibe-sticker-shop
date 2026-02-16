@@ -137,7 +137,7 @@ export default function TrackOrderClient() {
               {STEPS.map((step, i) => (
                 <div key={step} className="flex-1 flex flex-col items-center gap-1">
                   <div className={`h-1.5 w-full rounded-full ${i < statusInfo.step ? "bg-gray-900" : "bg-gray-200"}`} />
-                  <span className={`text-[9px] font-medium ${i < statusInfo.step ? "text-gray-900" : "text-gray-400"}`}>
+                  <span className={`label-xs font-medium ${i < statusInfo.step ? "text-gray-900" : "text-gray-400"}`}>
                     {step}
                   </span>
                 </div>

@@ -18,6 +18,7 @@ import dynamic from "next/dynamic";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import TemplateGallery from "@/components/product/TemplateGallery";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
+import { getSlaWindow } from "@/lib/sla";
 import { useFavoritesStore } from "@/lib/favorites";
 import RelatedLinks from "@/components/product/RelatedLinks";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
@@ -267,6 +268,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     return { enabled: true, bases, variants, byBase, recommendedBases };
   }, [sizeOptions]);
   const inventorySignal = useMemo(() => parseInventorySignal(product.optionsConfig), [product.optionsConfig]);
+  const turnaroundKey = useMemo(() => getTurnaround(product), [product]);
+  const slaWindow = useMemo(() => getSlaWindow(turnaroundKey), [turnaroundKey]);
   const editorConfig = product.optionsConfig?.editor || null;
   const isTextEditor = editorConfig?.type === "text";
   const editorMode = editorConfig?.mode || "lettering"; // "lettering" | "box"
@@ -1158,6 +1161,27 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     };
   }
 
+  function handleDownloadQuotePdf() {
+    const payload = {
+      generatedAt: new Date().toISOString(),
+      productName: product.name,
+      productSlug: product.slug,
+      category: product.category,
+      quantity: multiSizeEnabled && useMultiSize ? totalMultiQty : quantity,
+      unitAmount: priceData.unitAmount,
+      subtotal: priceData.subtotal,
+      tax: priceData.tax,
+      total: priceData.total,
+      currency: "CAD",
+      turnaroundKey,
+      shipByLabel: slaWindow.shipByLabel,
+      deliveryLabel: slaWindow.deliveryLabel,
+      selections: quickSelection.slice(0, 10),
+    };
+    const encoded = encodeURIComponent(JSON.stringify(payload));
+    window.open(`/quote/print?data=${encoded}`, "_blank", "noopener,noreferrer");
+  }
+
   function handleAddToCart() {
     const item = buildCartItem();
     if (!item) return;
@@ -1331,15 +1355,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   </button>
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {(() => {
-                    const tk = getTurnaround(product);
-                    return (
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${turnaroundColor(tk)}`}>
-                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        {t(turnaroundI18nKey(tk))}
-                      </span>
-                    );
-                  })()}
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${turnaroundColor(turnaroundKey)}`}>
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    {t(turnaroundI18nKey(turnaroundKey))}
+                  </span>
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     {t("trust.madeToOrder")}
@@ -1415,6 +1434,12 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   <p className="mt-2 text-[11px] text-gray-500">
                     Recommended: finalize quantity first to lock your best unit price.
                   </p>
+                </div>
+
+                <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs">
+                  <p className="font-semibold uppercase tracking-[0.18em] text-blue-700">SLA Promise</p>
+                  <p className="mt-1 text-blue-900">Ship by <span className="font-semibold">{slaWindow.shipByLabel}</span></p>
+                  <p className="text-blue-900">Estimated delivery <span className="font-semibold">{slaWindow.deliveryLabel}</span></p>
                 </div>
 
                 {/* Quantity — always visible */}
@@ -1534,6 +1559,14 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   <p>3. Checkout securely with live quote</p>
                 </div>
                 <div className="mt-2 flex gap-2 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={handleDownloadQuotePdf}
+                    disabled={priceData.unpriced}
+                    className="btn-secondary-pill px-3 py-1.5 text-[11px] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Download Quote PDF
+                  </button>
                   <Link href="/quote" className="btn-secondary-pill px-3 py-1.5 text-[11px]">
                     Need a custom quote?
                   </Link>
@@ -2109,7 +2142,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                 }`}
                               >
                                 {isRec && (
-                                  <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                                  <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 label-xs font-bold uppercase tracking-wider ${
                                     selected ? "bg-white text-[var(--color-ink-black)]" : "bg-[var(--color-ink-black)] text-white"
                                   }`}>★</span>
                                 )}
@@ -2166,7 +2199,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               }`}
                             >
                               {o.recommended && (
-                                <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                                <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 label-xs font-bold uppercase tracking-wider ${
                                   selected ? "bg-white text-[var(--color-ink-black)]" : "bg-[var(--color-ink-black)] text-white"
                                 }`}>★</span>
                               )}
@@ -2221,7 +2254,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         <span className="flex-1">
                           <span className="font-medium text-gray-900">
                             {t("bc.addon." + addon.id) !== "bc.addon." + addon.id ? t("bc.addon." + addon.id) : addon.name}
-                            {addon.recommended && <span className="ml-1.5 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">{t("product.popular")}</span>}
+                            {addon.recommended && <span className="ml-1.5 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 label-xs font-bold uppercase tracking-wide text-amber-700">{t("product.popular")}</span>}
                           </span>
                           {addon.description && <span className="block text-xs text-gray-500">{addon.description}</span>}
                           {addon.price > 0 && (
@@ -2283,7 +2316,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             <span className="flex-1">
                               <span className="font-medium text-gray-900">
                                 {f.name}
-                                {f.recommended && <span className="ml-1.5 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">{t("product.popular")}</span>}
+                                {f.recommended && <span className="ml-1.5 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 label-xs font-bold uppercase tracking-wide text-amber-700">{t("product.popular")}</span>}
                               </span>
                               <span className="block text-xs text-gray-500">
                                 {f.type === "flat" ? `$${f.price.toFixed(2)} ${t("product.pricingFlat")}` : f.type === "per_unit" ? `$${f.price.toFixed(2)}/${t("product.pricingUnit")}` : `$${f.price.toFixed(2)}/${t("product.pricingSqft")}`}

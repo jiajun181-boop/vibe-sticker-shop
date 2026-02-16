@@ -9,7 +9,7 @@ export default function UseCaseSection() {
 
   return (
     <section>
-      <h2 className="text-2xl md:text-3xl font-black tracking-tight text-center mb-8">
+      <h2 className="heading-2 text-center mb-10">
         {t("home.shopByUseCase")}
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -17,13 +17,13 @@ export default function UseCaseSection() {
           <Link
             key={uc.slug}
             href={`/ideas/${uc.slug}`}
-            className="group overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            className="group overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 text-center hover-lift"
           >
-            <span className="text-3xl block">{uc.icon}</span>
-            <h3 className="mt-3 font-bold text-sm text-gray-900">
+            <span className="text-4xl block">{uc.icon}</span>
+            <h3 className="mt-3 font-bold body-sm text-gray-900">
               {t(`useCase.${uc.slug}.title`)}
             </h3>
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 body-sm text-gray-400">
               {t(`useCase.${uc.slug}.subtitle`)}
             </p>
           </Link>

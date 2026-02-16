@@ -280,7 +280,7 @@ export default function MobileBottomNav({ catalogConfig }) {
                   {tab.badge > 0 && (
                     <span
                       key={tab.badge}
-                      className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-moon-blue)] px-1 text-[9px] font-bold text-white cart-badge-bounce"
+                      className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-moon-blue)] px-1 label-xs font-bold text-white cart-badge-bounce"
                     >
                       {tab.badge > 99 ? "99+" : tab.badge}
                     </span>

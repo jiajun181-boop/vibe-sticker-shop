@@ -64,13 +64,13 @@ export default function FeaturedBanner({ products }) {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-[var(--color-moon-gold)] animate-pulse" />
-            <h2 className="text-white text-xs font-black uppercase tracking-[0.2em]">
+            <h2 className="text-white label-xs tracking-[0.2em]">
               {t("featured.title")}
             </h2>
           </div>
           <Link
             href="/shop?category=display-stands"
-            className="text-[10px] font-bold text-gray-400 hover:text-white uppercase tracking-widest transition-colors"
+            className="label-xs text-gray-400 hover:text-white tracking-widest transition-colors"
           >
             {t("featured.viewAll")} &rarr;
           </Link>
@@ -131,7 +131,7 @@ function FeaturedCard({ product, compact }) {
     >
       {/* Badge */}
       {badge && (
-        <div className={`inline-block bg-gradient-to-r ${badge.color} text-white text-[8px] md:text-[9px] font-black uppercase tracking-wider px-2 py-0.5 md:px-2.5 md:py-1 rounded-full mb-3`}>
+        <div className={`inline-block bg-gradient-to-r ${badge.color} text-white label-xs px-2.5 py-1 rounded-full mb-3`}>
           {t(badge.labelKey)}
         </div>
       )}
@@ -145,31 +145,31 @@ function FeaturedCard({ product, compact }) {
             className="w-full h-full object-cover rounded-xl group-hover:scale-110 transition-transform duration-500"
           />
         ) : (
-          <span className="text-3xl opacity-20">🖼️</span>
+          <span className="text-3xl opacity-20">&#128444;</span>
         )}
       </div>
 
       {/* Info */}
-      <h3 className={`text-white font-bold ${compact ? "text-xs" : "text-sm"} leading-tight mb-1 group-hover:text-[var(--color-moon-gold)] transition-colors`}>
+      <h3 className={`text-white font-bold ${compact ? "body-sm" : "body-base"} leading-tight mb-1 group-hover:text-[var(--color-moon-gold)] transition-colors`}>
         {product.name}
       </h3>
 
       {sizeLabel && (
-        <p className="text-[10px] text-gray-500 font-mono mb-2">{sizeLabel}</p>
+        <p className="label-xs text-gray-500 font-mono mb-2 tracking-normal">{sizeLabel}</p>
       )}
 
       {!compact && product.description && (
-        <p className="text-[11px] text-gray-400 line-clamp-2 mb-3">{product.description}</p>
+        <p className="label-sm text-gray-400 line-clamp-2 mb-3 font-normal tracking-normal normal-case">{product.description}</p>
       )}
 
       <div className="flex items-end justify-between mt-auto">
         <div>
-          <span className="text-[9px] text-gray-500 uppercase tracking-widest block">{t("home.from")}</span>
+          <span className="label-xs text-gray-500 block">{t("home.from")}</span>
           <p className="text-white font-black text-base md:text-lg tracking-tight">
             {cad(product.basePrice)}
           </p>
         </div>
-        <span className="bg-white/10 text-white text-[9px] md:text-[10px] font-bold px-3 py-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity whitespace-nowrap">
+        <span className="bg-white/10 text-white label-xs px-3 py-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity whitespace-nowrap tracking-wide">
           {t("featured.customize")} &rarr;
         </span>
       </div>

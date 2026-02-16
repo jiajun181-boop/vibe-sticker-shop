@@ -26,7 +26,7 @@ function AnimatedCounter({ value, suffix = "", prefix = "", text, decimals = 0 }
   const hasAnimated = useRef(false);
 
   useEffect(() => {
-    if (text) return; // skip animation for text-only stats
+    if (text) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasAnimated.current) {
@@ -97,15 +97,15 @@ export default function TrustSignals() {
         {STATS.map((stat) => (
           <div
             key={stat.labelKey}
-            className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 text-center hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+            className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 text-center hover-lift-subtle"
           >
-            <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-[var(--color-moon-blue-deep)] text-white flex items-center justify-center">
+            <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-gradient-to-br from-[var(--color-moon-gold)] to-[var(--color-moon-gold-dark)] text-white flex items-center justify-center">
               {STAT_ICONS[stat.icon]}
             </div>
-            <div className="text-2xl md:text-3xl font-black tracking-tight text-gray-900">
+            <div className="text-3xl md:text-4xl font-black tracking-tight text-gray-900">
               <AnimatedCounter value={stat.value} suffix={stat.suffix} prefix={stat.prefix} text={stat.textKey ? t(stat.textKey) : undefined} />
             </div>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1.5">{t(stat.labelKey)}</p>
+            <p className="label-xs text-gray-400 mt-1.5 font-normal tracking-widest">{t(stat.labelKey)}</p>
           </div>
         ))}
       </div>
@@ -114,7 +114,7 @@ export default function TrustSignals() {
       <div className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 overflow-hidden">
         <div className="flex items-center gap-2 mb-6">
           <StarRating value={5} size={16} />
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+          <span className="label-xs text-gray-400 tracking-widest">
             {t("trust.customersSay")}
           </span>
         </div>
@@ -129,15 +129,15 @@ export default function TrustSignals() {
                   : "opacity-0 translate-y-4 pointer-events-none"
               }`}
             >
-              <blockquote className="text-gray-700 text-sm md:text-base leading-relaxed">
+              <blockquote className="text-gray-700 body-base leading-relaxed">
                 &ldquo;{review.text}&rdquo;
               </blockquote>
               <div className="mt-3 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-[var(--color-moon-blue-deep)] flex items-center justify-center text-[10px] font-bold text-white">
+                <div className="w-6 h-6 rounded-full bg-[var(--color-moon-blue-deep)] flex items-center justify-center label-xs text-white">
                   {review.name[0]}
                 </div>
-                <span className="text-xs font-bold">{review.name}</span>
-                <span className="text-xs text-gray-400">&mdash; {review.company}</span>
+                <span className="body-sm font-bold">{review.name}</span>
+                <span className="body-sm text-gray-400">&mdash; {review.company}</span>
               </div>
             </div>
           ))}

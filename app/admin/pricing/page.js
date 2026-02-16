@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const MODEL_LABELS = {
@@ -139,7 +140,9 @@ function FinishingsEditor({ finishings, onChange, t }) {
   );
 }
 
-export default function PricingPresetsPage() {
+export default function PricingPresetsPage({ embedded = false } = {}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useTranslation();
   const [presets, setPresets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -160,6 +163,13 @@ export default function PricingPresetsPage() {
   const [quickOverwrite, setQuickOverwrite] = useState(false);
   const [quickAssignLoading, setQuickAssignLoading] = useState(false);
   const [quickAssignMsg, setQuickAssignMsg] = useState(null);
+
+  useEffect(() => {
+    if (embedded) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "pricing");
+    router.replace(`/admin/catalog-ops?${params.toString()}`);
+  }, [embedded, router, searchParams]);
 
   // Parsed config for structured editors (derived from editJson)
   const parsedConfig = useMemo(() => {

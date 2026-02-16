@@ -287,6 +287,13 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
 
   const page = parseInt(searchParams.get("page") || "1");
 
+  useEffect(() => {
+    if (embedded) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "products");
+    router.replace(`/admin/catalog-ops?${params.toString()}`);
+  }, [embedded, router, searchParams]);
+
   const tree = useMemo(() => buildCategoryTree(catalogProducts), [catalogProducts]);
   const categoryOptions = useMemo(() => {
     const dynamic = Array.from(new Set(catalogProducts.map((p) => p.category)));
@@ -420,6 +427,18 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || "Sort update failed");
+    }
+  }
+
+  async function patchProductFlags(productId, payload) {
+    const res = await fetch(`/api/admin/products/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Update failed");
     }
   }
 
@@ -591,6 +610,53 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       setMoving(false);
       setDraggingProductId(null);
       setDropTarget(null);
+    }
+  }
+
+  async function handleNudgeWithinSubseries(productId, groupProducts, direction = "up") {
+    if (!productId || moving) return;
+    const ordered = [...groupProducts].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)
+    );
+    const currentIndex = ordered.findIndex((p) => p.id === productId);
+    if (currentIndex < 0) return;
+
+    const swapIndex = direction === "down" ? currentIndex + 1 : currentIndex - 1;
+    if (swapIndex < 0 || swapIndex >= ordered.length) return;
+
+    const temp = ordered[currentIndex];
+    ordered[currentIndex] = ordered[swapIndex];
+    ordered[swapIndex] = temp;
+
+    setMoving(true);
+    try {
+      for (let i = 0; i < ordered.length; i += 1) {
+        const nextSort = (i + 1) * 10;
+        if ((ordered[i].sortOrder ?? 0) === nextSort) continue;
+        await patchProductSortOrder(ordered[i].id, nextSort);
+      }
+      showMsg(`Updated order for "${temp.name}".`);
+      fetchProducts();
+    } catch (err) {
+      showMsg(err.message || "Reorder failed", true);
+    } finally {
+      setMoving(false);
+      setDraggingProductId(null);
+      setDropTarget(null);
+    }
+  }
+
+  async function handleQuickToggleFlag(product, payload, successText) {
+    if (!product?.id || moving) return;
+    setMoving(true);
+    try {
+      await patchProductFlags(product.id, payload);
+      showMsg(successText);
+      fetchProducts();
+    } catch (err) {
+      showMsg(err.message || "Update failed", true);
+    } finally {
+      setMoving(false);
     }
   }
 
@@ -1130,6 +1196,68 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                   >
                                     Edit
                                   </Link>
+                                </div>
+                                <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleNudgeWithinSubseries(p.id, group.products, "up")}
+                                    disabled={moving}
+                                    className="rounded border border-gray-300 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                    title="Move up"
+                                  >
+                                    ↑
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleNudgeWithinSubseries(p.id, group.products, "down")}
+                                    disabled={moving}
+                                    className="rounded border border-gray-300 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                    title="Move down"
+                                  >
+                                    ↓
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleQuickToggleFlag(
+                                        p,
+                                        { isFeatured: !p.isFeatured },
+                                        !p.isFeatured
+                                          ? `Pinned "${p.name}" to featured.`
+                                          : `Unpinned "${p.name}".`
+                                      )
+                                    }
+                                    disabled={moving}
+                                    className={`rounded border px-1.5 py-0.5 text-[10px] font-medium disabled:opacity-50 ${
+                                      p.isFeatured
+                                        ? "border-amber-300 bg-amber-50 text-amber-800"
+                                        : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                                    }`}
+                                    title={p.isFeatured ? "Unpin from featured" : "Pin to featured"}
+                                  >
+                                    {p.isFeatured ? "Pinned" : "Pin"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleQuickToggleFlag(
+                                        p,
+                                        { isActive: !p.isActive },
+                                        p.isActive
+                                          ? `Hidden "${p.name}" from storefront.`
+                                          : `Activated "${p.name}" on storefront.`
+                                      )
+                                    }
+                                    disabled={moving}
+                                    className={`rounded border px-1.5 py-0.5 text-[10px] font-medium disabled:opacity-50 ${
+                                      p.isActive
+                                        ? "border-gray-300 text-gray-700 hover:bg-gray-100"
+                                        : "border-emerald-300 bg-emerald-50 text-emerald-800"
+                                    }`}
+                                    title={p.isActive ? "Hide product" : "Activate product"}
+                                  >
+                                    {p.isActive ? "Hide" : "Show"}
+                                  </button>
                                 </div>
                               </div>
                             ))}
