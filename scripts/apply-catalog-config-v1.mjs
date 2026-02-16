@@ -37,13 +37,9 @@ async function main() {
     create: {
       key: "catalog.config",
       value: nextConfig,
-      type: "json",
-      description: "Catalog navigation/display configuration",
     },
     update: {
       value: nextConfig,
-      type: "json",
-      description: "Catalog navigation/display configuration",
     },
   });
 
