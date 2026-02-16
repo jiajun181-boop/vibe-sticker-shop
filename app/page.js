@@ -97,12 +97,17 @@ export default async function HomePage() {
       {/* 1. Dual-Entry Hero */}
       <DualEntryHero totalCount={totalCount} />
 
-      {/* 2. Reorder Strip (logged-in users only, client-fetched) */}
+      {/* 2. Popular Products (moved up) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 mb-10">
+        <QuickOrderStrip products={serializedQuickProducts} />
+      </div>
+
+      {/* 3. Reorder Strip (logged-in users only, client-fetched) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10">
         <ReorderStrip />
       </div>
 
-      {/* 3. Shop by Category (moved up) */}
+      {/* 4. Shop by Category (moved up) */}
       <div className="max-w-7xl mx-auto px-6 my-12">
         <h2 className="text-2xl md:text-3xl font-black tracking-tight text-center mb-8">
           {t("home.shopByCategory")}
@@ -152,11 +157,6 @@ export default async function HomePage() {
             {t("home.browseAll", { count: totalCount })}
           </Link>
         </div>
-      </div>
-
-      {/* 4. Popular Products Strip */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 mb-10">
-        <QuickOrderStrip products={serializedQuickProducts} />
       </div>
 
       {/* 5. Shop by Use Case */}

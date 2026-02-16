@@ -29,6 +29,34 @@ function toClientSafe(value) {
   );
 }
 
+function getSpecFamilyKey(slug) {
+  const alias = {
+    "notepads-custom": "notepads",
+    "bookmarks-custom": "bookmarks",
+    calendars: "calendar-wall",
+    "calendars-wall": "calendar-wall",
+    "calendars-wall-desk": "calendar-table",
+  };
+  return alias[slug] || slug;
+}
+
+function choosePreferredSpec(existing, candidate, familyKey) {
+  const canonicalByFamily = {
+    notepads: "notepads",
+    bookmarks: "bookmarks",
+    "calendar-wall": "calendars-wall",
+    "calendar-table": "calendars-wall-desk",
+  };
+  const canonicalSlug = canonicalByFamily[familyKey] || familyKey;
+
+  // Prefer canonical slug card (e.g. notepads over notepads-custom)
+  if (candidate.slug === canonicalSlug && existing.slug !== canonicalSlug) return candidate;
+  if (existing.slug === canonicalSlug && candidate.slug !== canonicalSlug) return existing;
+  // Otherwise prefer lower entry price for a better "from" card
+  if ((candidate.basePrice || 0) < (existing.basePrice || 0)) return candidate;
+  return existing;
+}
+
 export async function generateMetadata({ params }) {
   const { category, product: slug } = await params;
   const decodedSlug = safeDecode(slug);
@@ -101,15 +129,29 @@ export default async function ProductPage({ params }) {
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     });
 
-    // De-duplicate by name: keep the product with the highest basePrice
+    // Merge same-spec-family products into one card (e.g. notepads + custom-notepads)
     const seen = new Map();
     for (const p of subProducts) {
-      const existing = seen.get(p.name);
-      if (!existing || (p.basePrice || 0) > (existing.basePrice || 0)) {
-        seen.set(p.name, p);
+      const familyKey = getSpecFamilyKey(p.slug);
+      const existing = seen.get(familyKey)?.product;
+      if (!existing) {
+        seen.set(familyKey, { familyKey, product: p });
+      } else {
+        seen.set(familyKey, {
+          familyKey,
+          product: choosePreferredSpec(existing, p, familyKey),
+        });
       }
     }
-    const dedupedProducts = [...seen.values()];
+    const dedupedProducts = [...seen.values()].map(({ familyKey, product }) => {
+      if (familyKey === "calendar-wall") {
+        return { ...product, name: "Wall Calendars" };
+      }
+      if (familyKey === "calendar-table") {
+        return { ...product, name: "Table Calendars" };
+      }
+      return product;
+    });
 
     const config = await getCatalogConfig();
     const categoryMeta = config.categoryMeta[decodedCategory];

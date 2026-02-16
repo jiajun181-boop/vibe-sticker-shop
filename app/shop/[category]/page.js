@@ -41,6 +41,45 @@ function toClientSafe(value) {
   );
 }
 
+function normalizeProductNameKey(name) {
+  return String(name || "")
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .replace(/\b(banners|cards|labels|prints|stickers|menus)\b/g, (m) => m.replace(/s$/, ""))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function productStrengthScore(p) {
+  const hasImage = p?.images?.[0]?.url ? 1 : 0;
+  const price = (p?.fromPrice || p?.basePrice || 0) > 0 ? 1 : 0;
+  const hasDescription = p?.description ? 1 : 0;
+  return hasImage * 100 + price * 10 + hasDescription;
+}
+
+function dedupeByNormalizedName(list) {
+  const seen = new Map();
+  for (const p of list) {
+    const key = normalizeProductNameKey(p.name);
+    const existing = seen.get(key);
+    if (!existing) {
+      seen.set(key, p);
+      continue;
+    }
+    const existingScore = productStrengthScore(existing);
+    const nextScore = productStrengthScore(p);
+    if (nextScore > existingScore) {
+      seen.set(key, p);
+    } else if (nextScore === existingScore) {
+      const existingPrice = existing.fromPrice || existing.basePrice || Number.MAX_SAFE_INTEGER;
+      const nextPrice = p.fromPrice || p.basePrice || Number.MAX_SAFE_INTEGER;
+      if (nextPrice < existingPrice) seen.set(key, p);
+    }
+  }
+  return [...seen.values()];
+}
+
 export async function generateMetadata({ params }) {
   const { category } = await params;
   const decoded = safeDecode(category);
@@ -114,6 +153,49 @@ export default async function CategoryPage({ params }) {
   // If category has sub-groups, render sub-group card landing instead of flat product list
   const subGroups = meta?.subGroups;
   if (subGroups?.length > 0) {
+    // Some categories need all concrete products expanded directly on the page.
+    if (decoded === "packaging" || decoded === "banners-displays") {
+      const expandedProducts = dedupeByNormalizedName(products);
+      const subGroupEntries = getSubProductsForCategory(decoded);
+      const filterGroups = [];
+
+      for (const [parentSlug, cfg] of subGroupEntries) {
+        const slugSet = new Set(cfg.dbSlugs);
+        const count = expandedProducts.filter((p) => slugSet.has(p.slug)).length;
+        if (count > 0) {
+          filterGroups.push({
+            slug: parentSlug,
+            label: parentSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+            dbSlugs: cfg.dbSlugs,
+            count,
+          });
+        }
+      }
+
+      const turnaroundMap = {};
+      for (const p of expandedProducts) {
+        const tk = getTurnaround(p);
+        if (!turnaroundMap[tk]) turnaroundMap[tk] = [];
+        turnaroundMap[tk].push(p.id);
+      }
+      const turnaroundGroups = Object.entries(turnaroundMap).map(([key, ids]) => ({
+        key,
+        count: ids.length,
+        productIds: ids,
+      }));
+
+      return (
+        <CategoryLandingClient
+          category={decoded}
+          categoryTitle={meta?.title || decoded}
+          categoryIcon={meta?.icon || ""}
+          products={toClientSafe(expandedProducts)}
+          filterGroups={filterGroups}
+          turnaroundGroups={turnaroundGroups}
+        />
+      );
+    }
+
     // Build sub-group data with counts, previews, minPrice, turnaround
     const subGroupData = subGroups.map((sg) => {
       const subCfg = SUB_PRODUCT_CONFIG[sg.slug];

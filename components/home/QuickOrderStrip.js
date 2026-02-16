@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
@@ -46,36 +47,35 @@ function ProductCard({ p, t, onQuickAdd }) {
   );
 }
 
-function MarqueeRow({ items, t, onQuickAdd, reverse = false, duration = 42 }) {
-  const loop = [...items, ...items];
-
+function ScrollRow({ items, t, onQuickAdd, rowRef, onPointerDown, onPointerMove, onPointerUp }) {
   return (
     <div
-      className="popular-marquee-wrap overflow-hidden"
-      style={{
-        "--marquee-duration": `${duration}s`,
-        "--marquee-duration-slow": `${Math.round(duration * 1.75)}s`,
-      }}
+      ref={rowRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      onPointerLeave={onPointerUp}
+      className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide touch-pan-x select-none cursor-grab active:cursor-grabbing"
     >
-      <div
-        className={`flex w-max gap-3 py-1 ${reverse ? "popular-marquee-reverse" : "popular-marquee"}`}
-      >
-        {loop.map((p, idx) => (
-          <ProductCard key={`${p.id}-${idx}-${reverse ? "r" : "f"}`} p={p} t={t} onQuickAdd={onQuickAdd} />
-        ))}
-      </div>
+      {items.map((p) => (
+        <ProductCard key={p.id} p={p} t={t} onQuickAdd={onQuickAdd} />
+      ))}
     </div>
   );
 }
 
-export default function QuickOrderStrip({ products, speed = "normal" }) {
+export default function QuickOrderStrip({ products }) {
   const { t } = useTranslation();
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
+  const topRowRef = useRef(null);
+  const bottomRowRef = useRef(null);
+  const dragRef = useRef({ active: false, startX: 0, startScrollLeft: 0, target: null });
+  const [dragging, setDragging] = useState(false);
 
   if (!products || products.length === 0) return null;
 
-  const speedFactor = speed === "fast" ? 0.8 : speed === "slow" ? 1.25 : 1;
   const topRow = products.filter((_, idx) => idx % 2 === 0);
   const bottomRow = products.filter((_, idx) => idx % 2 === 1);
 
@@ -93,20 +93,86 @@ export default function QuickOrderStrip({ products, speed = "normal" }) {
     showSuccessToast(t("shop.addedToCart"));
   }
 
+  function scrollByAmount(rowRef, delta) {
+    const el = rowRef.current;
+    if (!el) return;
+    el.scrollBy({ left: delta, behavior: "smooth" });
+  }
+
+  function handlePointerDown(e) {
+    const target = e.currentTarget;
+    dragRef.current = {
+      active: true,
+      startX: e.clientX,
+      startScrollLeft: target.scrollLeft,
+      target,
+    };
+    setDragging(true);
+    target.setPointerCapture?.(e.pointerId);
+  }
+
+  function handlePointerMove(e) {
+    const state = dragRef.current;
+    if (!state.active || !state.target) return;
+    const dx = e.clientX - state.startX;
+    state.target.scrollLeft = state.startScrollLeft - dx;
+  }
+
+  function handlePointerUp() {
+    dragRef.current = { active: false, startX: 0, startScrollLeft: 0, target: null };
+    setDragging(false);
+  }
+
   return (
     <div className="rounded-2xl border border-[#e5ddd0] bg-[#fffefb] p-4 md:p-5">
-      <h3 className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.2em] text-[#7c7062]">
-        {t("home.popularProducts")}
-      </h3>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h3 className="text-center text-sm font-semibold uppercase tracking-[0.2em] text-[#7c7062]">
+          {t("home.popularProducts")}
+        </h3>
+        <div className="hidden md:flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              scrollByAmount(topRowRef, -360);
+              scrollByAmount(bottomRowRef, -360);
+            }}
+            className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-500"
+            aria-label="Scroll popular products left"
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              scrollByAmount(topRowRef, 360);
+              scrollByAmount(bottomRowRef, 360);
+            }}
+            className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-500"
+            aria-label="Scroll popular products right"
+          >
+            →
+          </button>
+        </div>
+      </div>
 
-      <div className="space-y-3 scroll-fade">
-        <MarqueeRow items={topRow} t={t} onQuickAdd={handleQuickAdd} duration={Math.round(44 * speedFactor)} />
-        <MarqueeRow
+      <div className={`space-y-3 ${dragging ? "" : "scroll-fade"}`}>
+        <ScrollRow
+          items={topRow}
+          t={t}
+          onQuickAdd={handleQuickAdd}
+          rowRef={topRowRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        />
+        <ScrollRow
           items={bottomRow.length ? bottomRow : topRow}
           t={t}
           onQuickAdd={handleQuickAdd}
-          reverse
-          duration={Math.round(50 * speedFactor)}
+          rowRef={bottomRowRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
         />
       </div>
     </div>
