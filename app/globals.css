@@ -1,33 +1,33 @@
 @import "tailwindcss";
 
-/* La Lunar Design System: Moonlight Blue + Warm Paper */
+/* La Lunar Design System: Bright Commerce */
 :root {
   /* Core brand colors */
-  --color-ink-black: #1f2937;
-  --color-paper-white: #fdfcf8;
-  --color-paper-cream: #f5f1e8;
-  --color-moon-gold: #d9b35b;
-  --color-moon-blue: #163a63;
-  --color-moon-blue-deep: #0f2742;
+  --color-ink-black: #172033;
+  --color-paper-white: #fefefe;
+  --color-paper-cream: #f8f6f1;
+  --color-moon-gold: #d3ab5d;
+  --color-moon-blue: #0f4f87;
+  --color-moon-blue-deep: #0a3965;
   
   /* Semantic colors */
   --background: var(--color-paper-white);
   --foreground: var(--color-ink-black);
   
   /* Grays for UI hierarchy */
-  --color-gray-50: #faf8f3;
-  --color-gray-100: #f0ece4;
-  --color-gray-200: #e4ddd2;
-  --color-gray-300: #d2c9bc;
-  --color-gray-400: #a89b8a;
-  --color-gray-500: #7c7062;
-  --color-gray-600: #5a5248;
-  --color-gray-700: #403c36;
-  --color-gray-800: #2b2a27;
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #eef2f7;
+  --color-gray-200: #dde5ef;
+  --color-gray-300: #c7d3e1;
+  --color-gray-400: #96a7ba;
+  --color-gray-500: #65768a;
+  --color-gray-600: #47586d;
+  --color-gray-700: #2f3f53;
+  --color-gray-800: #1f2d3f;
   
   /* Accents */
   --color-accent: var(--color-moon-blue);
-  --color-accent-light: #2a5588;
+  --color-accent-light: #2a6eab;
   
   /* Micro-interaction durations */
   --duration-fast: 150ms;
@@ -47,7 +47,8 @@
 
 html, body {
   background:
-    radial-gradient(1200px 420px at 50% -160px, rgba(217, 179, 91, 0.18), transparent 62%),
+    radial-gradient(1100px 360px at 50% -140px, rgba(211, 171, 93, 0.11), transparent 62%),
+    radial-gradient(920px 340px at 86% -110px, rgba(42, 110, 171, 0.09), transparent 65%),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-brand, system-ui), -apple-system, sans-serif;
@@ -69,8 +70,8 @@ input, textarea, select {
               box-shadow var(--duration-normal) var(--ease-out-cubic);
 }
 input:focus, textarea:focus, select:focus {
-  border-color: rgba(22, 58, 99, 0.55);
-  box-shadow: 0 0 0 3px rgba(217, 179, 91, 0.2);
+  border-color: rgba(15, 79, 135, 0.55);
+  box-shadow: 0 0 0 3px rgba(42, 110, 171, 0.2);
 }
 
 /* Hide scrollbar but keep scroll */
@@ -95,7 +96,7 @@ input:focus, textarea:focus, select:focus {
 /* Reusable commerce UI tokens */
 .btn-primary-pill {
   border-radius: 9999px;
-  background: linear-gradient(90deg, var(--color-moon-blue), var(--color-moon-blue-deep));
+  background: linear-gradient(92deg, #1362a3, #0a3f73);
   color: #fff;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -104,13 +105,13 @@ input:focus, textarea:focus, select:focus {
 }
 .btn-primary-pill:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(15, 39, 66, 0.22);
+  box-shadow: 0 10px 24px rgba(10, 63, 115, 0.3);
 }
 .btn-secondary-pill {
   border-radius: 9999px;
   border: 1px solid var(--color-gray-300);
-  background: #fffefb;
-  color: #3f4955;
+  background: #ffffff;
+  color: #2f3f53;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -120,6 +121,7 @@ input:focus, textarea:focus, select:focus {
   border-color: var(--color-moon-blue);
   color: var(--color-moon-blue);
   transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(15, 79, 135, 0.15);
 }
 .badge-soft {
   border-radius: 9999px;

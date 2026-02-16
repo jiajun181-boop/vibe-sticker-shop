@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
@@ -58,8 +58,8 @@ function ScrollRow({ items, t, onQuickAdd, rowRef, onPointerDown, onPointerMove,
       onPointerLeave={onPointerUp}
       className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide touch-pan-x select-none cursor-grab active:cursor-grabbing"
     >
-      {items.map((p) => (
-        <ProductCard key={p.id} p={p} t={t} onQuickAdd={onQuickAdd} />
+      {items.map((p, i) => (
+        <ProductCard key={`${p.id}-${i}`} p={p} t={t} onQuickAdd={onQuickAdd} />
       ))}
     </div>
   );
@@ -71,6 +71,8 @@ export default function QuickOrderStrip({ products }) {
   const openCart = useCartStore((s) => s.openCart);
   const topRowRef = useRef(null);
   const bottomRowRef = useRef(null);
+  const rafRef = useRef(null);
+  const hoverRef = useRef(false);
   const dragRef = useRef({ active: false, startX: 0, startScrollLeft: 0, target: null });
   const [dragging, setDragging] = useState(false);
 
@@ -78,6 +80,9 @@ export default function QuickOrderStrip({ products }) {
 
   const topRow = products.filter((_, idx) => idx % 2 === 0);
   const bottomRow = products.filter((_, idx) => idx % 2 === 1);
+  const topLoop = [...topRow, ...topRow];
+  const bottomBase = bottomRow.length ? bottomRow : topRow;
+  const bottomLoop = [...bottomBase, ...bottomBase];
 
   function handleQuickAdd(product) {
     addItem({
@@ -123,8 +128,50 @@ export default function QuickOrderStrip({ products }) {
     setDragging(false);
   }
 
+  useEffect(() => {
+    const topEl = topRowRef.current;
+    const bottomEl = bottomRowRef.current;
+    if (!topEl || !bottomEl) return;
+
+    let lastTs = performance.now();
+    const pxPerSec = 30;
+
+    const tick = (ts) => {
+      const dt = Math.max(0, (ts - lastTs) / 1000);
+      lastTs = ts;
+
+      if (!dragRef.current.active && !hoverRef.current) {
+        const delta = pxPerSec * dt;
+
+        topEl.scrollLeft += delta;
+        const topHalf = topEl.scrollWidth / 2;
+        if (topEl.scrollLeft >= topHalf) topEl.scrollLeft -= topHalf;
+
+        bottomEl.scrollLeft += delta * 0.9;
+        const bottomHalf = bottomEl.scrollWidth / 2;
+        if (bottomEl.scrollLeft >= bottomHalf) bottomEl.scrollLeft -= bottomHalf;
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    };
+  }, [products]);
+
   return (
-    <div className="rounded-2xl border border-[#e5ddd0] bg-[#fffefb] p-4 md:p-5">
+    <div
+      className="rounded-2xl border border-[#e5ddd0] bg-[#fffefb] p-4 md:p-5"
+      onMouseEnter={() => {
+        hoverRef.current = true;
+      }}
+      onMouseLeave={() => {
+        hoverRef.current = false;
+      }}
+    >
       <div className="mb-3 flex items-center justify-between gap-3">
         <h3 className="text-center text-sm font-semibold uppercase tracking-[0.2em] text-[#7c7062]">
           {t("home.popularProducts")}
@@ -139,7 +186,7 @@ export default function QuickOrderStrip({ products }) {
             className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-500"
             aria-label="Scroll popular products left"
           >
-            ←
+            {"<"}
           </button>
           <button
             type="button"
@@ -150,14 +197,14 @@ export default function QuickOrderStrip({ products }) {
             className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-500"
             aria-label="Scroll popular products right"
           >
-            →
+            {">"}
           </button>
         </div>
       </div>
 
       <div className={`space-y-3 ${dragging ? "" : "scroll-fade"}`}>
         <ScrollRow
-          items={topRow}
+          items={topLoop}
           t={t}
           onQuickAdd={handleQuickAdd}
           rowRef={topRowRef}
@@ -166,7 +213,7 @@ export default function QuickOrderStrip({ products }) {
           onPointerUp={handlePointerUp}
         />
         <ScrollRow
-          items={bottomRow.length ? bottomRow : topRow}
+          items={bottomLoop}
           t={t}
           onQuickAdd={handleQuickAdd}
           rowRef={bottomRowRef}

@@ -24,6 +24,8 @@ const CATEGORY_ALIASES = Object.freeze({
   "posters-prints": "marketing-prints",
 });
 
+const FLATTENED_SUBGROUP_CATEGORIES = new Set(["packaging", "banners-displays"]);
+
 function safeDecode(value) {
   try {
     return decodeURIComponent(value);
@@ -51,6 +53,16 @@ function normalizeProductNameKey(name) {
     .trim();
 }
 
+function normalizeProductSlugKey(slug) {
+  return String(slug || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/-?(banners|cards|labels|prints|stickers|menus|flags)s?$/g, "-$1")
+    .replace(/-+$/g, "")
+    .trim();
+}
+
 function productStrengthScore(p) {
   const hasImage = p?.images?.[0]?.url ? 1 : 0;
   const price = (p?.fromPrice || p?.basePrice || 0) > 0 ? 1 : 0;
@@ -61,7 +73,9 @@ function productStrengthScore(p) {
 function dedupeByNormalizedName(list) {
   const seen = new Map();
   for (const p of list) {
-    const key = normalizeProductNameKey(p.name);
+    const nameKey = normalizeProductNameKey(p.name);
+    const slugKey = normalizeProductSlugKey(p.slug);
+    const key = `${nameKey}::${slugKey}`;
     const existing = seen.get(key);
     if (!existing) {
       seen.set(key, p);
@@ -78,6 +92,18 @@ function dedupeByNormalizedName(list) {
     }
   }
   return [...seen.values()];
+}
+
+function prioritizeSubGroups(category, groups) {
+  if (category !== "rigid-signs") return groups;
+  const priority = ["yard-signs", "real-estate-signs", "election-signs"];
+  const rank = new Map(priority.map((slug, i) => [slug, i]));
+  return [...groups].sort((a, b) => {
+    const ra = rank.has(a.slug) ? rank.get(a.slug) : Number.MAX_SAFE_INTEGER;
+    const rb = rank.has(b.slug) ? rank.get(b.slug) : Number.MAX_SAFE_INTEGER;
+    if (ra !== rb) return ra - rb;
+    return 0;
+  });
 }
 
 export async function generateMetadata({ params }) {
@@ -154,7 +180,7 @@ export default async function CategoryPage({ params }) {
   const subGroups = meta?.subGroups;
   if (subGroups?.length > 0) {
     // Some categories need all concrete products expanded directly on the page.
-    if (decoded === "packaging" || decoded === "banners-displays") {
+    if (FLATTENED_SUBGROUP_CATEGORIES.has(decoded)) {
       const expandedProducts = dedupeByNormalizedName(products);
       const subGroupEntries = getSubProductsForCategory(decoded);
       const filterGroups = [];
@@ -231,12 +257,14 @@ export default async function CategoryPage({ params }) {
           }))
       : [];
 
+    const orderedSubGroupData = prioritizeSubGroups(decoded, subGroupData);
+
     return (
       <SubGroupLandingClient
         category={decoded}
         categoryTitle={meta?.title || decoded}
         categoryIcon={meta?.icon || ""}
-        subGroups={subGroupData}
+        subGroups={orderedSubGroupData}
         siblingCategories={siblingCategories}
         totalCount={products.length}
       />
