@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
@@ -26,13 +26,13 @@ function ProductCard({ p, t, onQuickAdd }) {
               className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-2xl text-slate-400">No image</div>
+            <div className="flex h-full items-center justify-center text-2xl text-[var(--color-gray-400)]">No image</div>
           )}
         </div>
       </Link>
       <div className="p-3">
-        <p className="truncate text-xs font-semibold text-gray-900">{p.name}</p>
-        <p className="mt-0.5 text-xs text-gray-500">
+        <p className="truncate text-xs font-semibold text-[var(--color-gray-800)]">{p.name}</p>
+        <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">
           {t("home.from")} {formatCad(p.basePrice)}
         </p>
         <button
@@ -47,20 +47,19 @@ function ProductCard({ p, t, onQuickAdd }) {
   );
 }
 
-function ScrollRow({ items, t, onQuickAdd, rowRef, onPointerDown, onPointerMove, onPointerUp }) {
+function MarqueeRow({ items, t, onQuickAdd, reverse = false, duration = "48s" }) {
+  const loopItems = useMemo(() => [...items, ...items], [items]);
+
   return (
-    <div
-      ref={rowRef}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
-      onPointerLeave={onPointerUp}
-      className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide touch-pan-x select-none cursor-grab active:cursor-grabbing"
-    >
-      {items.map((p, i) => (
-        <ProductCard key={`${p.id}-${i}`} p={p} t={t} onQuickAdd={onQuickAdd} />
-      ))}
+    <div className="overflow-hidden">
+      <div
+        className={`flex w-max gap-3 ${reverse ? "popular-marquee-reverse" : "popular-marquee"}`}
+        style={{ "--marquee-duration": duration }}
+      >
+        {loopItems.map((p, i) => (
+          <ProductCard key={`${p.id}-${i}`} p={p} t={t} onQuickAdd={onQuickAdd} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -69,20 +68,13 @@ export default function QuickOrderStrip({ products }) {
   const { t } = useTranslation();
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
-  const topRowRef = useRef(null);
-  const bottomRowRef = useRef(null);
-  const rafRef = useRef(null);
-  const hoverRef = useRef(false);
-  const dragRef = useRef({ active: false, startX: 0, startScrollLeft: 0, target: null });
-  const [dragging, setDragging] = useState(false);
 
   if (!products || products.length === 0) return null;
 
   const topRow = products.filter((_, idx) => idx % 2 === 0);
   const bottomRow = products.filter((_, idx) => idx % 2 === 1);
-  const topLoop = [...topRow, ...topRow];
-  const bottomBase = bottomRow.length ? bottomRow : topRow;
-  const bottomLoop = [...bottomBase, ...bottomBase];
+  const rowA = topRow.length ? topRow : products;
+  const rowB = bottomRow.length ? bottomRow : rowA;
 
   function handleQuickAdd(product) {
     addItem({
@@ -98,131 +90,21 @@ export default function QuickOrderStrip({ products }) {
     showSuccessToast(t("shop.addedToCart"));
   }
 
-  function scrollByAmount(rowRef, delta) {
-    const el = rowRef.current;
-    if (!el) return;
-    el.scrollBy({ left: delta, behavior: "smooth" });
-  }
-
-  function handlePointerDown(e) {
-    const target = e.currentTarget;
-    dragRef.current = {
-      active: true,
-      startX: e.clientX,
-      startScrollLeft: target.scrollLeft,
-      target,
-    };
-    setDragging(true);
-    target.setPointerCapture?.(e.pointerId);
-  }
-
-  function handlePointerMove(e) {
-    const state = dragRef.current;
-    if (!state.active || !state.target) return;
-    const dx = e.clientX - state.startX;
-    state.target.scrollLeft = state.startScrollLeft - dx;
-  }
-
-  function handlePointerUp() {
-    dragRef.current = { active: false, startX: 0, startScrollLeft: 0, target: null };
-    setDragging(false);
-  }
-
-  useEffect(() => {
-    const topEl = topRowRef.current;
-    const bottomEl = bottomRowRef.current;
-    if (!topEl || !bottomEl) return;
-
-    let lastTs = performance.now();
-    const pxPerSec = 30;
-
-    const tick = (ts) => {
-      const dt = Math.max(0, (ts - lastTs) / 1000);
-      lastTs = ts;
-
-      if (!dragRef.current.active && !hoverRef.current) {
-        const delta = pxPerSec * dt;
-
-        topEl.scrollLeft += delta;
-        const topHalf = topEl.scrollWidth / 2;
-        if (topEl.scrollLeft >= topHalf) topEl.scrollLeft -= topHalf;
-
-        bottomEl.scrollLeft += delta * 0.9;
-        const bottomHalf = bottomEl.scrollWidth / 2;
-        if (bottomEl.scrollLeft >= bottomHalf) bottomEl.scrollLeft -= bottomHalf;
-      }
-
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    };
-  }, [products]);
-
   return (
-    <div
-      className="rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-paper-white)] p-4 md:p-5"
-      onMouseEnter={() => {
-        hoverRef.current = true;
-      }}
-      onMouseLeave={() => {
-        hoverRef.current = false;
-      }}
-    >
+    <div className="popular-marquee-wrap rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-paper-white)] p-4 md:p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h3 className="text-center text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
           {t("home.popularProducts")}
         </h3>
-        <div className="hidden md:flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => {
-              scrollByAmount(topRowRef, -360);
-              scrollByAmount(bottomRowRef, -360);
-            }}
-            className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-500"
-            aria-label="Scroll popular products left"
-          >
-            {"<"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              scrollByAmount(topRowRef, 360);
-              scrollByAmount(bottomRowRef, 360);
-            }}
-            className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-500"
-            aria-label="Scroll popular products right"
-          >
-            {">"}
-          </button>
-        </div>
+        <Link href="/shop" className="btn-secondary-pill px-3 py-1.5 text-[10px]">
+          {t("nav.shopAll")}
+        </Link>
       </div>
 
-      <div className={`space-y-3 ${dragging ? "" : "scroll-fade"}`}>
-        <ScrollRow
-          items={topLoop}
-          t={t}
-          onQuickAdd={handleQuickAdd}
-          rowRef={topRowRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-        />
-        <ScrollRow
-          items={bottomLoop}
-          t={t}
-          onQuickAdd={handleQuickAdd}
-          rowRef={bottomRowRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-        />
+      <div className="space-y-3 scroll-fade">
+        <MarqueeRow items={rowA} t={t} onQuickAdd={handleQuickAdd} duration="42s" />
+        <MarqueeRow items={rowB} t={t} onQuickAdd={handleQuickAdd} reverse duration="48s" />
       </div>
     </div>
   );
 }
-

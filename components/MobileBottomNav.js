@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -7,7 +7,7 @@ import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
-/* ── Icons (inline SVG for zero deps) ─────────────────────────── */
+/* â”€â”€ Icons (inline SVG for zero deps) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function GridIcon({ className }) {
   return (
@@ -50,7 +50,7 @@ function BagIcon({ className }) {
 }
 
 
-/* ── Category Drawer ──────────────────────────────────────────── */
+/* â”€â”€ Category Drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMeta }) {
   const { t } = useTranslation();
@@ -88,13 +88,13 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
       <div className={`fixed inset-y-0 left-0 z-[61] w-80 bg-white shadow-2xl transition-transform duration-300 ease-out ${open ? "translate-x-0" : "-translate-x-full"}`}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-900">
+          <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--color-gray-800)]">
             {t("nav.categories")}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            className="rounded-full p-1.5 text-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)] hover:text-[var(--color-gray-700)] transition-colors"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -119,7 +119,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
                   key={dept.key}
                   type="button"
                   onClick={() => setActiveDept(dept.key)}
-                  className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${selected ? "border-indigo-700 bg-indigo-700 text-white" : "border-gray-200 text-gray-700"}`}
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${selected ? "border-[var(--color-moon-blue)] bg-[var(--color-moon-blue)] text-white" : "border-[var(--color-gray-200)] text-[var(--color-gray-700)]"}`}
                 >
                   {departmentMeta?.[dept.key]?.title || dept.key}
                 </button>
@@ -138,7 +138,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
                   <Link
                     href={cMeta?.href || `/shop/${catSlug}`}
                     onClick={onClose}
-                    className="flex items-center gap-2 text-sm font-semibold text-gray-900"
+                    className="flex items-center gap-2 text-sm font-semibold text-[var(--color-gray-800)]"
                   >
                     <span>{cMeta?.icon || ""}</span>
                     <span>{cMeta?.title || catSlug}</span>
@@ -149,7 +149,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
                         key={sg.slug}
                         href={sg.href}
                         onClick={onClose}
-                        className="block rounded-md px-1 py-0.5 text-xs text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        className="block rounded-md px-1 py-0.5 text-xs text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)] hover:text-[var(--color-gray-800)]"
                       >
                         {sg.title}
                       </Link>
@@ -158,7 +158,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
                   <Link
                     href={`/shop/${catSlug}`}
                     onClick={onClose}
-                    className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-900"
+                    className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-[var(--color-gray-800)]"
                   >
                     {t("nav.allIn", { category: cMeta?.title || catSlug })} &rarr;
                   </Link>
@@ -169,13 +169,13 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
 
           {/* Bottom links */}
           <div className="px-5 pt-4 pb-2 space-y-1">
-            <Link href="/shop" onClick={onClose} className="block rounded-lg px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <Link href="/shop" onClick={onClose} className="block rounded-lg px-2 py-2 text-sm font-medium text-[var(--color-gray-700)] hover:bg-[var(--color-gray-50)]">
               {t("shop.backToCategories")}
             </Link>
-            <Link href="/contact" onClick={onClose} className="block rounded-lg px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <Link href="/contact" onClick={onClose} className="block rounded-lg px-2 py-2 text-sm font-medium text-[var(--color-gray-700)] hover:bg-[var(--color-gray-50)]">
               {t("nav.contact")}
             </Link>
-            <Link href="/faq" onClick={onClose} className="block rounded-lg px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <Link href="/faq" onClick={onClose} className="block rounded-lg px-2 py-2 text-sm font-medium text-[var(--color-gray-700)] hover:bg-[var(--color-gray-50)]">
               {t("nav.faq")}
             </Link>
           </div>
@@ -185,7 +185,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
   );
 }
 
-/* ── Bottom Nav ───────────────────────────────────────────────── */
+/* â”€â”€ Bottom Nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function SearchIcon({ className }) {
   return (
@@ -267,7 +267,7 @@ export default function MobileBottomNav({ catalogConfig }) {
       {/* Spacer so content isn't hidden behind the fixed nav */}
       <div className="h-16 md:hidden" />
 
-      <nav className="fixed bottom-0 left-0 right-0 z-[50] border-t border-gray-200 bg-white/95 backdrop-blur md:hidden pb-safe">
+      <nav className="fixed bottom-0 left-0 right-0 z-[50] border-t border-[var(--color-gray-200)] bg-white/95 backdrop-blur md:hidden pb-safe">
         <div className="flex items-center justify-around px-1 py-1.5">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -276,17 +276,17 @@ export default function MobileBottomNav({ catalogConfig }) {
             const content = (
               <div className="flex flex-col items-center gap-0.5 relative">
                 <div className="relative">
-                  <Icon className={`h-5 w-5 ${active ? "text-gray-900" : "text-gray-400"}`} />
+                  <Icon className={`h-5 w-5 ${active ? "text-[var(--color-gray-800)]" : "text-[var(--color-gray-400)]"}`} />
                   {tab.badge > 0 && (
                     <span
                       key={tab.badge}
-                      className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold text-white cart-badge-bounce"
+                      className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-moon-blue)] px-1 text-[9px] font-bold text-white cart-badge-bounce"
                     >
                       {tab.badge > 99 ? "99+" : tab.badge}
                     </span>
                   )}
                 </div>
-                <span className={`text-[11px] leading-tight ${active ? "font-semibold text-gray-900" : "text-gray-400"}`}>
+                <span className={`text-[11px] leading-tight ${active ? "font-semibold text-[var(--color-gray-800)]" : "text-[var(--color-gray-400)]"}`}>
                   {tab.label}
                 </span>
               </div>
@@ -320,3 +320,4 @@ export default function MobileBottomNav({ catalogConfig }) {
     </>
   );
 }
+

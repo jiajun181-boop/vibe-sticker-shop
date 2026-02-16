@@ -1,33 +1,34 @@
 @import "tailwindcss";
 
-/* Shopify-like Commerce System: clean, minimal, high-conversion */
+/* Minimal Premium System: neutral, calm, high-end */
 :root {
+  color-scheme: light;
   /* Core brand colors */
-  --color-ink-black: #202223;
-  --color-paper-white: #ffffff;
-  --color-paper-cream: #f6f6f7;
-  --color-moon-gold: #008060;
-  --color-moon-blue: #2c6ecb;
-  --color-moon-blue-deep: #1f5199;
+  --color-ink-black: #1f2328;
+  --color-paper-white: #fcfcfa;
+  --color-paper-cream: #f5f3ef;
+  --color-moon-gold: #b8925a;
+  --color-moon-blue: #334155;
+  --color-moon-blue-deep: #1e293b;
   
   /* Semantic colors */
-  --background: var(--color-paper-cream);
+  --background: var(--color-paper-white);
   --foreground: var(--color-ink-black);
   
   /* Grays for UI hierarchy */
-  --color-gray-50: #f6f6f7;
-  --color-gray-100: #f1f2f3;
-  --color-gray-200: #e4e5e7;
-  --color-gray-300: #d2d5d8;
-  --color-gray-400: #8c9196;
-  --color-gray-500: #6d7175;
-  --color-gray-600: #61656a;
-  --color-gray-700: #45484d;
-  --color-gray-800: #303336;
+  --color-gray-50: #f7f6f3;
+  --color-gray-100: #efede9;
+  --color-gray-200: #e1ddd6;
+  --color-gray-300: #cbc6bd;
+  --color-gray-400: #9a948b;
+  --color-gray-500: #726b62;
+  --color-gray-600: #575148;
+  --color-gray-700: #3f3b35;
+  --color-gray-800: #2a2723;
   
   /* Accents */
   --color-accent: var(--color-moon-blue);
-  --color-accent-light: #1f5fbf;
+  --color-accent-light: #475569;
   
   /* Micro-interaction durations */
   --duration-fast: 150ms;
@@ -46,7 +47,9 @@
 }
 
 html, body {
-  background: var(--background);
+  background:
+    radial-gradient(900px 300px at 50% -120px, rgba(184, 146, 90, 0.12), transparent 62%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-brand, system-ui), -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -67,8 +70,8 @@ input, textarea, select {
               box-shadow var(--duration-normal) var(--ease-out-cubic);
 }
 input:focus, textarea:focus, select:focus {
-  border-color: rgba(44, 110, 203, 0.7);
-  box-shadow: 0 0 0 3px rgba(44, 110, 203, 0.16);
+  border-color: rgba(51, 65, 85, 0.68);
+  box-shadow: 0 0 0 3px rgba(51, 65, 85, 0.14);
 }
 
 /* Hide scrollbar but keep scroll */
@@ -93,7 +96,7 @@ input:focus, textarea:focus, select:focus {
 /* Reusable commerce UI tokens */
 .btn-primary-pill {
   border-radius: 9999px;
-  background: #008060;
+  background: linear-gradient(92deg, var(--color-moon-blue), var(--color-moon-blue-deep));
   color: #fff;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -102,14 +105,13 @@ input:focus, textarea:focus, select:focus {
 }
 .btn-primary-pill:hover {
   transform: translateY(-1px);
-  background: #006e52;
-  box-shadow: 0 6px 18px rgba(0, 110, 82, 0.22);
+  box-shadow: 0 8px 20px rgba(30, 41, 59, 0.24);
 }
 .btn-secondary-pill {
   border-radius: 9999px;
   border: 1px solid var(--color-gray-300);
   background: #ffffff;
-  color: #303336;
+  color: var(--color-gray-700);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -117,9 +119,9 @@ input:focus, textarea:focus, select:focus {
 }
 .btn-secondary-pill:hover {
   border-color: var(--color-gray-400);
-  color: #202223;
+  color: var(--color-gray-800);
   transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(32, 34, 35, 0.1);
+  box-shadow: 0 4px 12px rgba(39, 37, 34, 0.12);
 }
 .badge-soft {
   border-radius: 9999px;
