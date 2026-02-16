@@ -26,19 +26,12 @@ const MATERIAL_OPTIONS = [
 ];
 
 const CATEGORY_MATERIAL_MAP = {
-  "marketing-prints": "paper",
-  "retail-promo": "paper",
-  packaging: "paper",
-  "stickers-labels": "adhesive",
-  "window-glass-films": "adhesive",
-  "vehicle-branding-advertising": "adhesive",
-  "safety-warning-decals": "adhesive",
-  "facility-asset-labels": "adhesive",
-  "fleet-compliance-id": "adhesive",
+  "marketing-business-print": "paper",
+  "stickers-labels-decals": "adhesive",
+  "signs-rigid-boards": "rigid",
   "banners-displays": "non-adhesive",
-  "large-format-graphics": "non-adhesive",
-  "rigid-signs": "rigid",
-  "display-stands": "hardware",
+  "windows-walls-floors": "adhesive",
+  "vehicle-graphics-fleet": "adhesive",
 };
 
 const formatCad = (cents) =>

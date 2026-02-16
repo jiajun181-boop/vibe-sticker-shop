@@ -3,21 +3,14 @@ import { SUB_PRODUCT_CONFIG } from "../lib/subProductConfig.js";
 
 const prisma = new PrismaClient();
 
-// Hardcode the categories that have subGroups (from catalogConfig DEFAULTS)
+// Hardcode the 6 canonical categories with their subGroup slugs
 const CATEGORIES_WITH_SUBGROUPS = {
-  "marketing-prints": ["business-cards","flyers","rack-cards","door-hangers","postcards","brochures","booklets","posters","menus","ncr-forms","order-forms","waivers-releases","envelopes","letterhead-stationery","stamps","presentation-folders","certificates","greeting-cards","invitation-cards","loyalty-cards"],
-  "packaging": ["tags","inserts-packaging"],
-  "retail-promo": ["shelf-displays","table-tents","tickets-coupons","retail-tags"],
-  "banners-displays": ["vinyl-banners","mesh-banners","pole-banners","canvas-prints"],
-  "rigid-signs": ["yard-signs","real-estate-signs","foam-board-signs","a-frame-signs","election-signs","display-signs"],
-  "window-glass-films": ["static-clings","adhesive-films","one-way-vision","privacy-films","window-lettering"],
-  "display-stands": ["retractable-stands","x-banner-stands","tabletop-displays","backdrops-popups","flags-hardware","a-frames-signs","lawn-yard-signs","tents-outdoor"],
-  "large-format-graphics": ["wall-graphics","floor-graphics","window-graphics","vehicle-graphics"],
-  "vehicle-branding-advertising": ["vehicle-wraps","door-panel-graphics","vehicle-decals","magnetic-signs","fleet-packages"],
-  "fleet-compliance-id": ["dot-mc-numbers","unit-weight-ids","spec-labels","inspection-compliance"],
-  "stickers-labels": ["die-cut-stickers","kiss-cut-singles","sticker-pages","sticker-rolls","vinyl-lettering","decals","specialty"],
-  "safety-warning-decals": ["reflective-visibility","fire-emergency","hazard-warning","ppe-equipment","electrical-chemical"],
-  "facility-asset-labels": ["asset-equipment-tags","pipe-valve-labels","warehouse-labels","electrical-cable-labels"],
+  "marketing-business-print": ["business-cards","flyers","rack-cards","door-hangers","postcards","brochures","booklets","posters","menus","ncr-forms","order-forms","waivers-releases","envelopes","letterhead-stationery","stamps","presentation-folders","certificates","greeting-cards","invitation-cards","loyalty-cards","shelf-displays","table-tents","tickets-coupons","retail-tags","tags","inserts-packaging"],
+  "stickers-labels-decals": ["die-cut-stickers","kiss-cut-singles","sticker-pages","sticker-rolls","vinyl-lettering","decals","specialty","fire-emergency","hazard-warning","ppe-equipment","electrical-chemical","asset-equipment-tags","pipe-valve-labels","warehouse-labels","electrical-cable-labels"],
+  "signs-rigid-boards": ["yard-signs","real-estate-signs","foam-board-signs","a-frame-signs","election-signs","display-signs"],
+  "banners-displays": ["vinyl-banners","mesh-banners","pole-banners","canvas-prints","retractable-stands","x-banner-stands","tabletop-displays","backdrops-popups","flags-hardware","a-frames-signs","lawn-yard-signs","tents-outdoor"],
+  "windows-walls-floors": ["static-clings","adhesive-films","one-way-vision","privacy-films","window-lettering","wall-graphics","floor-graphics","window-graphics"],
+  "vehicle-graphics-fleet": ["vehicle-wraps","door-panel-graphics","vehicle-decals","magnetic-signs","fleet-packages","vehicle-graphics","dot-mc-numbers","unit-weight-ids","spec-labels","inspection-compliance"],
 };
 
 for (const [cat, sgSlugs] of Object.entries(CATEGORIES_WITH_SUBGROUPS)) {
