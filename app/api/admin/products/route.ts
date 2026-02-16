@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         images: { take: 1, orderBy: { sortOrder: "asc" } },
         _count: { select: { images: true } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       skip: (page - 1) * limit,
       take: limit,
     }),

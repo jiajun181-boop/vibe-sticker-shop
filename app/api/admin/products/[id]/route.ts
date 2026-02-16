@@ -67,6 +67,11 @@ export async function PATCH(
     "pricingConfig",
     "optionsConfig",
     "tags",
+    "isFeatured",
+    "acceptedFormats",
+    "keywords",
+    "metaTitle",
+    "metaDescription",
   ];
 
   const data: Record<string, unknown> = {};

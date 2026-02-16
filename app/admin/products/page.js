@@ -144,7 +144,7 @@ function buildCategoryTree(products) {
       if (!group || !group.products.length) continue;
       subseries.push({
         ...group,
-        products: group.products.sort((a, b) => a.slug.localeCompare(b.slug)),
+        products: group.products.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)),
       });
     }
 
@@ -154,11 +154,11 @@ function buildCategoryTree(products) {
       .sort((a, b) => a.slug.localeCompare(b.slug))
       .map((g) => ({
         ...g,
-        products: g.products.sort((a, b) => a.slug.localeCompare(b.slug)),
+        products: g.products.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)),
       }));
     subseries.push(...dynamicGroups);
 
-    const orphans = items.filter((p) => !claimed.has(p.slug)).sort((a, b) => a.slug.localeCompare(b.slug));
+    const orphans = items.filter((p) => !claimed.has(p.slug)).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
     if (orphans.length) {
       subseries.push({
         slug: "uncategorized",
