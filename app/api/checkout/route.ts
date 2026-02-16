@@ -36,6 +36,7 @@ const CheckoutSchema = z.object({
   items: z.array(CartItemSchema).min(1, "Cart is empty"),
   successUrl: z.string().url().optional(),
   cancelUrl: z.string().url().optional(),
+  promoCode: z.string().max(50).nullable().optional(),
 });
 
 type ProductWithPricingPreset = Prisma.ProductGetPayload<{
@@ -266,7 +267,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { items, successUrl, cancelUrl } = result.data;
+    const { items, successUrl, cancelUrl, promoCode } = result.data;
     const baseOrigin = buildBaseOriginFromHeaders(
       req.headers,
       process.env.NEXT_PUBLIC_SITE_URL
@@ -319,13 +320,57 @@ export async function POST(req: Request) {
 
     const subtotal = pricedItems.reduce((sum, item) => sum + item.lineTotal, 0);
 
+    // Validate coupon server-side and create Stripe discount
+    let couponData: { id: string; code: string; discountAmount: number; stripeCouponId?: string } | null = null;
+    if (promoCode) {
+      const coupon = await prisma.coupon.findUnique({
+        where: { code: promoCode.toUpperCase() },
+      });
+      if (coupon && coupon.isActive) {
+        const now = new Date();
+        const isValid = now >= coupon.validFrom && now <= coupon.validTo;
+        const hasUsesLeft = !coupon.maxUses || coupon.usedCount < coupon.maxUses;
+        const meetsMinimum = !coupon.minAmount || subtotal >= coupon.minAmount;
+
+        if (isValid && hasUsesLeft && meetsMinimum) {
+          const discountAmount = coupon.type === "percentage"
+            ? Math.round(subtotal * (coupon.value / 10000))
+            : Math.min(coupon.value, subtotal);
+
+          // Create a one-time Stripe coupon for this checkout
+          const stripeCoupon = coupon.type === "percentage"
+            ? await getStripe().coupons.create({
+                percent_off: coupon.value / 100,
+                duration: "once",
+                name: coupon.code,
+              })
+            : await getStripe().coupons.create({
+                amount_off: discountAmount,
+                currency: process.env.STRIPE_CURRENCY || "cad",
+                duration: "once",
+                name: coupon.code,
+              });
+
+          couponData = {
+            id: coupon.id,
+            code: coupon.code,
+            discountAmount,
+            stripeCouponId: stripeCoupon.id,
+          };
+        }
+      }
+    }
+
+    const discountAmount = couponData?.discountAmount || 0;
+    const afterDiscount = Math.max(0, subtotal - discountAmount);
+
     const FREE_SHIPPING_THRESHOLD = 15000;
-    const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+    const isFreeShipping = afterDiscount >= FREE_SHIPPING_THRESHOLD;
     const shippingCost = isFreeShipping ? 0 : 1500;
 
-    const taxableAmount = subtotal + shippingCost;
+    const taxableAmount = afterDiscount + shippingCost;
     const estimatedTax = Math.round(taxableAmount * 0.13);
-    const estimatedTotal = taxableAmount + estimatedTax;
+    const estimatedTotal = afterDiscount + shippingCost + estimatedTax;
 
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = pricedItems.map(
       (item) => {
@@ -358,6 +403,9 @@ export async function POST(req: Request) {
       mode: "payment",
       success_url: safeSuccessUrl,
       cancel_url: safeCancelUrl,
+      ...(couponData?.stripeCouponId && {
+        discounts: [{ coupon: couponData.stripeCouponId }],
+      }),
 
       billing_address_collection: "required",
       shipping_address_collection: {
@@ -399,11 +447,16 @@ export async function POST(req: Request) {
           }))
         ),
         subtotalAmount: subtotal.toString(),
+        discountAmount: discountAmount.toString(),
         shippingAmount: shippingCost.toString(),
         taxAmount: estimatedTax.toString(),
         totalAmount: estimatedTotal.toString(),
         maxPriceDrift: Math.max(...pricedItems.map((i) => i.priceDrift || 0)).toString(),
         statusToken,
+        ...(couponData && {
+          couponId: couponData.id,
+          couponCode: couponData.code,
+        }),
       },
     });
 

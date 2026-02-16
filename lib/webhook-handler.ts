@@ -78,10 +78,13 @@ export async function handleCheckoutCompleted(
   );
 
   // 5. Transactional order creation (catches duplicate if race condition)
+  const couponId = metadata.couponId || null;
+  const discountAmount = parseInt(metadata.discountAmount || "0");
+
   let order;
   try {
   order = await prisma.$transaction(async (tx) => {
-    // Create order
+
     const newOrder = await tx.order.create({
       data: {
         stripeSessionId: sessionId,
@@ -90,9 +93,11 @@ export async function handleCheckoutCompleted(
         customerName: session.customer_details?.name || null,
         customerPhone: session.customer_details?.phone || null,
         subtotalAmount: parseInt(metadata!.subtotalAmount),
+        discountAmount,
         taxAmount: parseInt(metadata!.taxAmount),
         shippingAmount: parseInt(metadata!.shippingAmount),
         totalAmount,
+        couponId,
         status: "paid",
         paymentStatus: "paid",
         paidAt: new Date(),
@@ -176,7 +181,21 @@ export async function handleCheckoutCompleted(
     throw txErr;
   }
 
-  // 6. Link order to existing user account (by email)
+  // 6. Atomic coupon usage increment
+  if (couponId) {
+    try {
+      await prisma.coupon.update({
+        where: { id: couponId },
+        data: { usedCount: { increment: 1 } },
+      });
+      console.log(`[Webhook] Incremented coupon usage: ${couponId}`);
+    } catch (couponErr) {
+      console.error("[Webhook] Failed to increment coupon usage:", couponErr);
+    }
+  }
+
+  // 7. Link order to existing user account (by email)
+
   try {
     if (session.customer_email) {
       const existingUser = await prisma.user.findUnique({
@@ -194,7 +213,7 @@ export async function handleCheckoutCompleted(
     console.error("[Webhook] Failed to link order to user:", linkError);
   }
 
-  // 7. Auto-create production jobs for each order item
+  // 8. Auto-create production jobs for each order item
   try {
     const orderItems = await prisma.orderItem.findMany({
       where: { orderId: order.id },
@@ -219,7 +238,7 @@ export async function handleCheckoutCompleted(
     console.error(`[Webhook] Failed to create production jobs:`, jobError);
   }
 
-  // 7. Send order confirmation email (non-blocking)
+  // 9. Send order confirmation email (non-blocking)
   try {
     const orderWithItems = await prisma.order.findUnique({
       where: { id: order.id },
