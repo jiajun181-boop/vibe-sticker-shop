@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }) {
   const description = t(`ideas.${slug}.heroDescription`);
 
   return {
-    title: `${title} — Custom Printing | La Lunar Printing`,
+    title: `${title} â€” Custom Printing | La Lunar Printing`,
     description,
     alternates: { canonical: `${SITE_URL}/ideas/${slug}` },
     openGraph: {
@@ -91,7 +91,7 @@ export default async function UseCasePage({ params }) {
   const otherUseCases = USE_CASES.filter((u) => u.slug !== slug);
 
   return (
-    <div className="min-h-screen bg-[#fafafa] pb-20">
+    <div className="min-h-screen bg-[var(--color-gray-50)] pb-20">
       <CollectionPageSchema
         name={t(`ideas.${slug}.title`)}
         description={t(`ideas.${slug}.heroDescription`)}
@@ -371,3 +371,4 @@ export default async function UseCasePage({ params }) {
     </div>
   );
 }
+

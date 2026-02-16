@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { getCatalogConfig } from "@/lib/catalogConfig";
@@ -90,7 +90,7 @@ export default async function HomePage() {
   }));
 
   return (
-    <div className="min-h-screen bg-[#fafafa] pb-20 relative">
+    <div className="min-h-screen bg-[var(--color-gray-50)] pb-20 relative">
       <OrganizationSchema />
       <WebSiteSchema />
 
@@ -114,7 +114,7 @@ export default async function HomePage() {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {grouped.map(([category, items]) => {
-            const meta = categoryMeta[category] || { title: category, icon: "🧩" };
+            const meta = categoryMeta[category] || { title: category, icon: "ðŸ§©" };
             const totalInCat = products.filter((p) => p.category === category).length;
             const previewImg = items[0]?.images?.[0]?.url;
             return (
@@ -152,7 +152,7 @@ export default async function HomePage() {
         <div className="text-center pt-8">
           <Link
             href="/shop"
-            className="inline-block bg-gray-900 text-white px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-black transition-colors"
+            className="btn-primary-pill inline-block px-8 py-3 text-xs font-black tracking-widest"
           >
             {t("home.browseAll", { count: totalCount })}
           </Link>
@@ -166,7 +166,7 @@ export default async function HomePage() {
 
       <SectionDivider />
 
-      {/* 5. Trust Signals — early social proof */}
+      {/* 5. Trust Signals â€” early social proof */}
       <div className="bg-white py-14">
         <div className="max-w-7xl mx-auto px-6">
           <TrustSignals />
@@ -174,7 +174,7 @@ export default async function HomePage() {
       </div>
 
       <SectionDivider />
-      {/* 7. Why La Lunar — USP differentiators */}
+      {/* 7. Why La Lunar â€” USP differentiators */}
       <div className="max-w-7xl mx-auto px-6 my-14">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -189,10 +189,10 @@ export default async function HomePage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { icon: "🏭", titleKey: "home.usp1Title", bodyKey: "home.usp1Body" },
-            { icon: "⚡", titleKey: "home.usp2Title", bodyKey: "home.usp2Body" },
-            { icon: "🔬", titleKey: "home.usp3Title", bodyKey: "home.usp3Body" },
-            { icon: "📍", titleKey: "home.usp4Title", bodyKey: "home.usp4Body" },
+            { icon: "ðŸ­", titleKey: "home.usp1Title", bodyKey: "home.usp1Body" },
+            { icon: "âš¡", titleKey: "home.usp2Title", bodyKey: "home.usp2Body" },
+            { icon: "ðŸ”¬", titleKey: "home.usp3Title", bodyKey: "home.usp3Body" },
+            { icon: "ðŸ“", titleKey: "home.usp4Title", bodyKey: "home.usp4Body" },
           ].map((usp) => (
             <div key={usp.titleKey} className="rounded-2xl border border-gray-100 bg-white p-5">
               <span className="text-2xl">{usp.icon}</span>
@@ -233,4 +233,5 @@ export default async function HomePage() {
     </div>
   );
 }
+
 

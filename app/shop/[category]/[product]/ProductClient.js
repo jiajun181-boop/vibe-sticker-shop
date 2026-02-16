@@ -1177,7 +1177,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   const Wrapper = embedded ? "section" : "main";
 
   return (
-    <Wrapper className={embedded ? "text-gray-900" : "bg-[radial-gradient(circle_at_top,_#f8fafc,_#eef2f7_45%,_#f8fafc)] pb-20 pt-10 text-gray-900"}>
+    <Wrapper className={embedded ? "text-[var(--color-gray-800)]" : "bg-[radial-gradient(circle_at_top,_var(--color-gray-50),_var(--color-gray-100)_45%,_var(--color-gray-50))] pb-20 pt-10 text-[var(--color-gray-800)]"}>
       <div className={embedded ? "mx-auto max-w-6xl space-y-6 lg:space-y-10 px-4 sm:px-6" : "mx-auto max-w-7xl space-y-6 lg:space-y-8 px-4 sm:px-6"}>
         {!embedded && (
           <Breadcrumbs items={[

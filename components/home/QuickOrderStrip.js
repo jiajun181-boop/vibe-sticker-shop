@@ -14,9 +14,9 @@ function ProductCard({ p, t, onQuickAdd }) {
   const img = p.images?.[0]?.url;
 
   return (
-    <div className="w-44 shrink-0 overflow-hidden rounded-2xl border border-[#e5ddd0] bg-white shadow-sm">
+    <div className="w-44 shrink-0 overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm">
       <Link href={`/shop/${p.category}/${p.slug}`} className="block">
-        <div className="aspect-square overflow-hidden bg-[#f8f4ec]">
+        <div className="aspect-square overflow-hidden bg-[var(--color-paper-cream)]">
           {img ? (
             <Image
               src={img}
@@ -164,7 +164,7 @@ export default function QuickOrderStrip({ products }) {
 
   return (
     <div
-      className="rounded-2xl border border-[#e5ddd0] bg-[#fffefb] p-4 md:p-5"
+      className="rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-paper-white)] p-4 md:p-5"
       onMouseEnter={() => {
         hoverRef.current = true;
       }}
@@ -173,7 +173,7 @@ export default function QuickOrderStrip({ products }) {
       }}
     >
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h3 className="text-center text-sm font-semibold uppercase tracking-[0.2em] text-[#7c7062]">
+        <h3 className="text-center text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
           {t("home.popularProducts")}
         </h3>
         <div className="hidden md:flex items-center gap-1.5">
@@ -225,3 +225,4 @@ export default function QuickOrderStrip({ products }) {
     </div>
   );
 }
+

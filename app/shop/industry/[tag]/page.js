@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }) {
     description: extended || meta.description,
     alternates: { canonical: `${SITE_URL}/shop/industry/${tag}` },
     openGraph: {
-      title: `${meta.title} — Custom Print Solutions | La Lunar Printing`,
+      title: `${meta.title} â€” Custom Print Solutions | La Lunar Printing`,
       description: extended || meta.description,
       url: `${SITE_URL}/shop/industry/${tag}`,
       siteName: "La Lunar Printing",
@@ -70,7 +70,7 @@ export default async function IndustryPage({ params }) {
     .filter((r) => r.label);
 
   return (
-    <div className="min-h-screen bg-[#fafafa] pb-20">
+    <div className="min-h-screen bg-[var(--color-gray-50)] pb-20">
       <CollectionPageSchema
         name={meta.title}
         description={extended || meta.description}
@@ -115,7 +115,7 @@ export default async function IndustryPage({ params }) {
           <div className="mt-4 text-xs text-gray-500 font-bold">
             {products.length} product{products.length !== 1 ? "s" : ""} available
             <span className="mx-2">&middot;</span>
-            <span className="text-gray-600">Business Essential — Built for Your Industry</span>
+            <span className="text-gray-600">Business Essential â€” Built for Your Industry</span>
           </div>
         </div>
       </div>
@@ -270,3 +270,4 @@ export default async function IndustryPage({ params }) {
     </div>
   );
 }
+

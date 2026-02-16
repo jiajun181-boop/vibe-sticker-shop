@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { getServerT } from "@/lib/i18n/server";
 import { USE_CASES } from "@/lib/useCases";
 import { INDUSTRY_TAGS, INDUSTRY_LABELS } from "@/lib/industryTags";
@@ -8,14 +8,14 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 
 export async function generateMetadata() {
   return {
-    title: "Ideas & Inspiration — Custom Print Projects | La Lunar Printing",
+    title: "Ideas & Inspiration â€” Custom Print Projects | La Lunar Printing",
     description:
-      "Explore print ideas for gifting, weddings, corporate events, campus life, and more. Find the perfect products for your industry — essential to your brand.",
+      "Explore print ideas for gifting, weddings, corporate events, campus life, and more. Find the perfect products for your industry â€” essential to your brand.",
     alternates: { canonical: `${SITE_URL}/ideas` },
     openGraph: {
       title: "Ideas & Inspiration | La Lunar Printing",
       description:
-        "Custom print solutions for every occasion and industry. Business essential — from concept to delivery.",
+        "Custom print solutions for every occasion and industry. Business essential â€” from concept to delivery.",
       url: `${SITE_URL}/ideas`,
       siteName: "La Lunar Printing",
       type: "website",
@@ -30,7 +30,7 @@ export default async function IdeasPage() {
   const t = await getServerT();
 
   return (
-    <div className="min-h-screen bg-[#fafafa] pb-20">
+    <div className="min-h-screen bg-[var(--color-gray-50)] pb-20">
       <BreadcrumbSchemaFromItems
         items={[
           { name: "Home", url: SITE_URL },
@@ -54,7 +54,7 @@ export default async function IdeasPage() {
             {t("ideas.subtitle")}
           </p>
           <p className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-gray-600">
-            Business Essential — From Concept to Delivery
+            Business Essential â€” From Concept to Delivery
           </p>
         </div>
       </div>
@@ -167,3 +167,4 @@ export default async function IdeasPage() {
     </div>
   );
 }
+
