@@ -34,23 +34,37 @@ function titleizeSlug(value) {
     .replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 
-function getTaggedSubseries(tags) {
-  if (!Array.isArray(tags)) return null;
-  const tag = tags.find(
-    (t) => typeof t === "string" && t.startsWith(SUBSERIES_TAG_PREFIX)
+function getTaggedSubseriesList(tags) {
+  if (!Array.isArray(tags)) return [];
+  return Array.from(
+    new Set(
+      tags
+        .filter((t) => typeof t === "string" && t.startsWith(SUBSERIES_TAG_PREFIX))
+        .map((t) => t.slice(SUBSERIES_TAG_PREFIX.length))
+        .filter(Boolean)
+    )
   );
-  return tag ? tag.slice(SUBSERIES_TAG_PREFIX.length) : null;
 }
 
 function hasUncategorizedGroup(categoryNode) {
   return categoryNode.subseries.some((s) => s.slug === "uncategorized" && s.products.length > 0);
 }
 
-function buildNextSubseriesTags(tags, targetSubseriesSlug) {
+function buildMoveSubseriesTags(tags, targetSubseriesSlug) {
   const cleaned = Array.isArray(tags)
     ? tags.filter(
         (t) => !(typeof t === "string" && t.startsWith(SUBSERIES_TAG_PREFIX))
       )
+    : [];
+  if (targetSubseriesSlug && targetSubseriesSlug !== "uncategorized") {
+    cleaned.push(`${SUBSERIES_TAG_PREFIX}${targetSubseriesSlug}`);
+  }
+  return cleaned;
+}
+
+function buildCopySubseriesTags(tags, targetSubseriesSlug) {
+  const cleaned = Array.isArray(tags)
+    ? tags.filter((t) => !(typeof t === "string" && t === `${SUBSERIES_TAG_PREFIX}${targetSubseriesSlug}`))
     : [];
   if (targetSubseriesSlug && targetSubseriesSlug !== "uncategorized") {
     cleaned.push(`${SUBSERIES_TAG_PREFIX}${targetSubseriesSlug}`);
@@ -112,19 +126,24 @@ function buildCategoryTree(products) {
       });
     }
 
-    // 1) Manual tagged placement has priority
+    // 1) Manual tagged placement has priority and can place one product in multiple subseries
     for (const p of items) {
-      const tagged = getTaggedSubseries(p.tags);
-      if (!tagged || tagged === "uncategorized") continue;
-      if (!subseriesMap.has(tagged)) {
-        subseriesMap.set(tagged, {
-          slug: tagged,
-          title: titleizeSlug(tagged),
-          products: [],
-        });
+      const taggedList = getTaggedSubseriesList(p.tags).filter((tagged) => tagged !== "uncategorized");
+      if (!taggedList.length) continue;
+      for (const tagged of taggedList) {
+        if (!subseriesMap.has(tagged)) {
+          subseriesMap.set(tagged, {
+            slug: tagged,
+            title: titleizeSlug(tagged),
+            products: [],
+          });
+        }
+        const group = subseriesMap.get(tagged);
+        if (!group.products.some((existing) => existing.id === p.id)) {
+          group.products.push(p);
+        }
       }
-      subseriesMap.get(tagged).products.push(p);
-      claimed.add(p.slug);
+      claimed.add(p.id);
     }
 
     // 2) Default SUB_PRODUCT_CONFIG placement for unclaimed products
@@ -132,9 +151,9 @@ function buildCategoryTree(products) {
       const children = items.filter((p) => parent.dbSlugs.includes(p.slug));
       if (!children.length) continue;
       for (const c of children) {
-        if (claimed.has(c.slug)) continue;
+        if (claimed.has(c.id)) continue;
         subseriesMap.get(parent.parentSlug).products.push(c);
-        claimed.add(c.slug);
+        claimed.add(c.id);
       }
     }
 
@@ -158,7 +177,7 @@ function buildCategoryTree(products) {
       }));
     subseries.push(...dynamicGroups);
 
-    const orphans = items.filter((p) => !claimed.has(p.slug)).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
+    const orphans = items.filter((p) => !claimed.has(p.id)).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
     if (orphans.length) {
       subseries.push({
         slug: "uncategorized",
@@ -211,6 +230,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
   const [dropTarget, setDropTarget] = useState(null);
   const [moving, setMoving] = useState(false);
   const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const [copiedProductIds, setCopiedProductIds] = useState([]);
   const [bulkCategory, setBulkCategory] = useState("");
   const [bulkSubseries, setBulkSubseries] = useState("uncategorized");
   const [lastMove, setLastMove] = useState(null);
@@ -343,13 +363,41 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     }
   }
 
+  async function patchProductSortOrder(productId, sortOrder) {
+    const res = await fetch(`/api/admin/products/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sortOrder }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Sort update failed");
+    }
+  }
+
   async function patchProductMove(product, targetCategory, targetSubseriesSlug) {
-    const currentTagged = getTaggedSubseries(product.tags);
-    const currentGroup = currentTagged || "uncategorized";
-    if (product.category === targetCategory && currentGroup === targetSubseriesSlug) {
+    const currentTagged = getTaggedSubseriesList(product.tags);
+    const isSameCategory = product.category === targetCategory;
+    const isSamePlacement =
+      isSameCategory &&
+      ((targetSubseriesSlug === "uncategorized" && currentTagged.length === 0) ||
+        (currentTagged.length === 1 && currentTagged[0] === targetSubseriesSlug));
+    if (isSamePlacement) {
       return false;
     }
-    const nextTags = buildNextSubseriesTags(product.tags, targetSubseriesSlug);
+    const nextTags = buildMoveSubseriesTags(product.tags, targetSubseriesSlug);
+    await patchProductClassification(product.id, targetCategory, nextTags);
+    return true;
+  }
+
+  async function patchProductCopy(product, targetCategory, targetSubseriesSlug) {
+    if (targetSubseriesSlug === "uncategorized") return false;
+    if (product.category !== targetCategory) {
+      throw new Error("Copy only supports targets in the same category.");
+    }
+    const currentTagged = getTaggedSubseriesList(product.tags);
+    if (currentTagged.includes(targetSubseriesSlug)) return false;
+    const nextTags = buildCopySubseriesTags(product.tags, targetSubseriesSlug);
     await patchProductClassification(product.id, targetCategory, nextTags);
     return true;
   }
@@ -426,15 +474,18 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     }
   }
 
-  async function handleDropToSubseries(productId, targetCategory, targetSubseriesSlug) {
+  async function handleDropToSubseries(productId, targetCategory, targetSubseriesSlug, options = {}) {
     if (!productId || moving) return;
+    const isCopy = Boolean(options.isCopy);
     const product = catalogProducts.find((p) => p.id === productId);
     if (!product) return;
 
     setMoving(true);
     try {
-      const moved = await patchProductMove(product, targetCategory, targetSubseriesSlug);
-      if (moved) {
+      const changed = isCopy
+        ? await patchProductCopy(product, targetCategory, targetSubseriesSlug)
+        : await patchProductMove(product, targetCategory, targetSubseriesSlug);
+      if (changed) {
         setLastMove({
           entries: [
             {
@@ -445,11 +496,45 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
             },
           ],
         });
-        showMsg(`Moved "${product.name}" to ${titleizeSlug(targetSubseriesSlug)}.`);
+        showMsg(
+          isCopy
+            ? `Copied "${product.name}" to ${titleizeSlug(targetSubseriesSlug)}.`
+            : `Moved "${product.name}" to ${titleizeSlug(targetSubseriesSlug)}.`
+        );
         fetchProducts();
       }
     } catch (err) {
       showMsg(err.message || "Move failed", true);
+    } finally {
+      setMoving(false);
+      setDraggingProductId(null);
+      setDropTarget(null);
+    }
+  }
+
+  async function handleReorderWithinSubseries(sourceProductId, targetProductId, groupProducts) {
+    if (!sourceProductId || !targetProductId || sourceProductId === targetProductId || moving) return;
+    const ordered = [...groupProducts].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)
+    );
+    const sourceIndex = ordered.findIndex((p) => p.id === sourceProductId);
+    const targetIndex = ordered.findIndex((p) => p.id === targetProductId);
+    if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return;
+
+    const [movedItem] = ordered.splice(sourceIndex, 1);
+    ordered.splice(targetIndex, 0, movedItem);
+
+    setMoving(true);
+    try {
+      for (let i = 0; i < ordered.length; i += 1) {
+        const nextSort = (i + 1) * 10;
+        if ((ordered[i].sortOrder ?? 0) === nextSort) continue;
+        await patchProductSortOrder(ordered[i].id, nextSort);
+      }
+      showMsg(`Reordered "${movedItem.name}".`);
+      fetchProducts();
+    } catch (err) {
+      showMsg(err.message || "Reorder failed", true);
     } finally {
       setMoving(false);
       setDraggingProductId(null);
@@ -492,6 +577,51 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       fetchProducts();
     } catch (err) {
       showMsg(err.message || "Bulk move failed", true);
+    } finally {
+      setMoving(false);
+      setDraggingProductId(null);
+      setDropTarget(null);
+    }
+  }
+
+  function handleCopySelected() {
+    if (!selectedProductIds.length) return;
+    setCopiedProductIds(selectedProductIds);
+    showMsg(`Copied ${selectedProductIds.length} products.`);
+  }
+
+  async function handlePasteCopied() {
+    if (!bulkCategory || !copiedProductIds.length || moving) return;
+    const copiedProducts = catalogProducts.filter((p) => copiedProductIds.includes(p.id));
+    if (!copiedProducts.length) return;
+
+    setMoving(true);
+    try {
+      let copiedCount = 0;
+      const copiedEntries = [];
+      for (const product of copiedProducts) {
+        const copied = await patchProductCopy(product, bulkCategory, bulkSubseries);
+        if (copied) {
+          copiedCount += 1;
+          copiedEntries.push({
+            id: product.id,
+            name: product.name,
+            fromCategory: product.category,
+            fromTags: Array.isArray(product.tags) ? [...product.tags] : [],
+          });
+        }
+      }
+      if (copiedEntries.length > 0) {
+        setLastMove({ entries: copiedEntries });
+      }
+      showMsg(
+        copiedCount > 0
+          ? `Pasted ${copiedCount} products into ${titleizeSlug(bulkSubseries)}.`
+          : "Copied products are already in the target subseries."
+      );
+      fetchProducts();
+    } catch (err) {
+      showMsg(err.message || "Paste failed", true);
     } finally {
       setMoving(false);
       setDraggingProductId(null);
@@ -667,6 +797,9 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
             Drag a product card into another subseries to reclassify it.
           </p>
           <p className="mt-1 text-[11px] text-gray-500">
+            Hold Ctrl/Command while dragging to copy into another subseries.
+          </p>
+          <p className="mt-1 text-[11px] text-gray-500">
             Shopify-style: select multiple cards then bulk move.
           </p>
           {uncategorizedEntries.length > 0 && (
@@ -703,6 +836,11 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
             <p className="text-xs font-medium text-gray-700">
               Selected: <span className="font-semibold">{selectedProductIds.length}</span>
+              {copiedProductIds.length ? (
+                <span className="ml-2 text-gray-500">
+                  | Clipboard: <span className="font-semibold">{copiedProductIds.length}</span>
+                </span>
+              ) : null}
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <select
@@ -734,6 +872,22 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {moving ? "Moving..." : "Move Selected"}
+              </button>
+              <button
+                type="button"
+                onClick={handleCopySelected}
+                disabled={moving || selectedProductIds.length === 0}
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Copy Selected
+              </button>
+              <button
+                type="button"
+                onClick={handlePasteCopied}
+                disabled={moving || copiedProductIds.length === 0}
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Paste to Target
               </button>
               <button
                 type="button"
@@ -818,7 +972,9 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                             e.preventDefault();
                             const productId =
                               e.dataTransfer.getData("text/product-id") || draggingProductId;
-                            handleDropToSubseries(productId, cat.category, group.slug);
+                            handleDropToSubseries(productId, cat.category, group.slug, {
+                              isCopy: e.ctrlKey || e.metaKey,
+                            });
                           }}
                           className={`rounded-md border p-2 transition-colors ${
                             dropTarget === `${cat.category}:${group.slug}`
@@ -859,14 +1015,41 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                 onDragStart={(e) => {
                                   setDraggingProductId(p.id);
                                   e.dataTransfer.setData("text/product-id", p.id);
-                                  e.dataTransfer.effectAllowed = "move";
+                                  e.dataTransfer.effectAllowed = "copyMove";
                                 }}
                                 onDragEnd={() => {
                                   setDraggingProductId(null);
                                   setDropTarget(null);
                                 }}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (!draggingProductId || draggingProductId === p.id) return;
+                                  setDropTarget(`card:${p.id}`);
+                                }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  const sourceId =
+                                    e.dataTransfer.getData("text/product-id") || draggingProductId;
+                                  const isInGroup = group.products.some((gp) => gp.id === sourceId);
+                                  const isCopy = e.ctrlKey || e.metaKey;
+                                  if (isInGroup) {
+                                    handleReorderWithinSubseries(
+                                      sourceId,
+                                      p.id,
+                                      group.products
+                                    );
+                                  } else {
+                                    handleDropToSubseries(sourceId, cat.category, group.slug, {
+                                      isCopy,
+                                    });
+                                  }
+                                }}
                                 className={`rounded border bg-white px-2 py-1.5 text-xs text-gray-700 hover:border-gray-400 hover:text-gray-900 ${
-                                  draggingProductId === p.id
+                                  dropTarget === `card:${p.id}`
+                                    ? "border-blue-400 bg-blue-50"
+                                    : draggingProductId === p.id
                                     ? "cursor-grabbing border-blue-300 opacity-60"
                                     : "cursor-grab border-gray-200"
                                 }`}

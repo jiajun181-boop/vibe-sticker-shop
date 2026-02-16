@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductsPage from "@/app/admin/products/page";
 import CatalogPage from "@/app/admin/catalog/page";
@@ -35,7 +34,7 @@ export default function CatalogOpsPage() {
           <div>
             <h1 className="text-xl font-semibold text-gray-900">Catalog Ops</h1>
             <p className="mt-0.5 text-sm text-gray-500">
-              Manage products, catalog structure, and pricing from one workspace.
+              Manage products, catalog structure, and pricing in one workspace.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -55,14 +54,7 @@ export default function CatalogOpsPage() {
             ))}
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-3 text-xs">
-          <span className="text-gray-500">Need full-screen mode?</span>
-          {TABS.map((t) => (
-            <Link key={t.key} href={t.href} className="font-medium text-blue-600 hover:text-blue-800">
-              Open {t.label}
-            </Link>
-          ))}
-        </div>
+        <div className="mt-3 text-xs text-gray-500">Single workspace mode enabled.</div>
       </div>
 
       {activeTab === "products" && <ProductsPage embedded basePath="/admin/catalog-ops" />}

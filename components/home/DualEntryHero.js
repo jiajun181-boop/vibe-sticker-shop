@@ -27,7 +27,7 @@ export default function DualEntryHero({ totalCount }) {
         </p>
 
         <div className="inline-flex items-center gap-2 border border-[var(--color-gray-200)] bg-white rounded-full px-4 py-1.5 text-xs font-bold text-[var(--color-gray-600)] mt-4">
-          <span className="w-2 h-2 rounded-full bg-[var(--color-moon-gold)] animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-[var(--color-moon-blue)] animate-pulse" />
           {t("home.productsAvailable", { count: totalCount })}
         </div>
 

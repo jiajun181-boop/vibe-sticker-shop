@@ -13,6 +13,15 @@ function getSubseriesTags(tags: unknown): string[] {
     .filter(Boolean);
 }
 
+function normalizeTags(tags: unknown): string[] {
+  if (!Array.isArray(tags)) return [];
+  const values = tags
+    .filter((t): t is string => typeof t === "string")
+    .map((t) => t.trim())
+    .filter(Boolean);
+  return Array.from(new Set(values));
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -109,13 +118,15 @@ export async function PATCH(
     }
   }
 
-  const finalTags = (data.tags as unknown) ?? existing.tags ?? [];
+  const finalTags = normalizeTags((data.tags as unknown) ?? existing.tags ?? []);
+  if (data.tags !== undefined) {
+    data.tags = finalTags;
+  }
   const subseriesTags = getSubseriesTags(finalTags);
-  if (subseriesTags.length !== 1) {
+  if (subseriesTags.length > 20) {
     return NextResponse.json(
       {
-        error:
-          "Each product must have exactly one subseries tag (format: subseries:your-subseries).",
+        error: "A product cannot have more than 20 subseries tags.",
       },
       { status: 400 }
     );
