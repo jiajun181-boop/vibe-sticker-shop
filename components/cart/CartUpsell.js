@@ -97,7 +97,7 @@ export default function CartUpsell() {
                 });
                 showSuccessToast(`${item.name} added`);
               }}
-              className="rounded-full bg-indigo-700 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white hover:bg-indigo-800"
+              className="rounded-full bg-[var(--color-moon-blue-deep)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white hover:bg-[var(--color-ink-black)]"
             >
               {t("cart.quickAdd")}
             </button>

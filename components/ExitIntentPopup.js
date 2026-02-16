@@ -106,7 +106,7 @@ export default function ExitIntentPopup() {
         ) : (
           <>
             <div className="mb-6 text-center">
-              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-700">
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-moon-gold)]">
                 <span className="text-2xl font-black text-white">10%</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900">{t("exit.headline")}</h3>
@@ -124,7 +124,7 @@ export default function ExitIntentPopup() {
               />
               <button
                 type="submit"
-                className="w-full rounded-full bg-indigo-700 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-indigo-800"
+                className="btn-primary-pill w-full py-3 text-xs"
               >
                 {t("exit.cta")}
               </button>

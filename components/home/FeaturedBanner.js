@@ -10,7 +10,7 @@ const cad = (cents) =>
 const BADGE_MAP = {
   "retractable-banner-stand-premium": { labelKey: "featured.badge.bestSeller", color: "from-amber-500 to-orange-500" },
   "x-banner-stand-standard": { labelKey: "featured.badge.budgetFriendly", color: "from-green-500 to-emerald-500" },
-  "x-banner-stand-large": { labelKey: "featured.badge.highImpact", color: "from-blue-500 to-indigo-500" },
+  "x-banner-stand-large": { labelKey: "featured.badge.highImpact", color: "from-[var(--color-moon-blue)] to-[var(--color-moon-blue-deep)]" },
   "tabletop-banner-a4": { labelKey: "featured.badge.compact", color: "from-violet-500 to-purple-500" },
   "tabletop-banner-a3": { labelKey: "featured.badge.popular", color: "from-rose-500 to-pink-500" },
   "deluxe-tabletop-retractable-a3": { labelKey: "featured.badge.premium", color: "from-gray-700 to-gray-900" },
@@ -55,15 +55,15 @@ export default function FeaturedBanner({ products }) {
     >
       {/* Background glow */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-500 rounded-full blur-[128px]" />
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-purple-600 rounded-full blur-[128px]" />
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-[var(--color-moon-blue)] rounded-full blur-[128px]" />
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-[var(--color-moon-gold)] rounded-full blur-[128px]" />
       </div>
 
       <div className="relative z-10 p-8 md:p-12">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-[var(--color-moon-gold)] animate-pulse" />
             <h2 className="text-white text-xs font-black uppercase tracking-[0.2em]">
               {t("featured.title")}
             </h2>
@@ -150,7 +150,7 @@ function FeaturedCard({ product, compact }) {
       </div>
 
       {/* Info */}
-      <h3 className={`text-white font-bold ${compact ? "text-xs" : "text-sm"} leading-tight mb-1 group-hover:text-blue-300 transition-colors`}>
+      <h3 className={`text-white font-bold ${compact ? "text-xs" : "text-sm"} leading-tight mb-1 group-hover:text-[var(--color-moon-gold)] transition-colors`}>
         {product.name}
       </h3>
 

@@ -13,7 +13,7 @@ const BUNDLES = [
     price: 29900,
     originalPrice: 34900,
     savings: 5000,
-    color: "from-blue-500 to-indigo-600",
+    color: "from-[var(--color-moon-blue)] to-[var(--color-moon-blue-deep)]",
     itemKeys: [
       "bundles.kit.tradeShow.item1",
       "bundles.kit.tradeShow.item2",
@@ -27,7 +27,7 @@ const BUNDLES = [
     price: 54900,
     originalPrice: 66900,
     savings: 12000,
-    color: "from-purple-500 to-pink-600",
+    color: "from-gray-800 to-gray-950",
     itemKeys: [
       "bundles.kit.premium.item1",
       "bundles.kit.premium.item2",
@@ -61,7 +61,7 @@ export default function BundlesSection() {
     <section>
       <div className="text-center mb-10">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-moon-gold)]" />
           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
             {t("bundles.badge")}
           </span>
@@ -79,12 +79,12 @@ export default function BundlesSection() {
           <div
             key={bundle.id}
             className={`relative bg-white rounded-3xl border ${
-              bundle.popular ? "border-purple-200 shadow-lg shadow-purple-100/50" : "border-gray-100"
+              bundle.popular ? "border-amber-200 shadow-lg shadow-amber-100/50" : "border-gray-100"
             } overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
           >
             {bundle.popular && (
               <div className="absolute -top-px -right-px">
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] font-black uppercase tracking-wider px-4 py-1.5 rounded-bl-xl">
+                <div className="bg-gradient-to-r from-[var(--color-moon-gold)] to-amber-600 text-white text-[9px] font-black uppercase tracking-wider px-4 py-1.5 rounded-bl-xl">
                   {t("bundles.mostPopular")}
                 </div>
               </div>

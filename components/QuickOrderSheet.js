@@ -147,7 +147,7 @@ export default function QuickOrderSheet({ open, onClose }) {
                       type="button"
                       onClick={() => handleReorder(order.id)}
                       disabled={reordering === order.id}
-                      className="rounded-full bg-indigo-700 px-3 py-1.5 text-[11px] font-semibold text-white disabled:opacity-50"
+                      className="rounded-full bg-[var(--color-moon-blue-deep)] px-3 py-1.5 text-[11px] font-semibold text-white disabled:opacity-50"
                     >
                       {reordering === order.id ? t("orders.reordering") : t("orders.reorder")}
                     </button>
@@ -180,7 +180,7 @@ export default function QuickOrderSheet({ open, onClose }) {
                 <button
                   type="button"
                   onClick={() => handleQuickAdd(p)}
-                  className="mt-1.5 w-full rounded-full bg-indigo-700 py-1.5 text-[11px] font-semibold text-white"
+                  className="mt-1.5 w-full rounded-full bg-[var(--color-moon-blue-deep)] py-1.5 text-[11px] font-semibold text-white"
                 >
                   {t("shop.quickAdd")}
                 </button>

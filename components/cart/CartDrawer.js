@@ -259,7 +259,7 @@ export default function CartDrawer() {
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-semibold tracking-[0.25em] text-gray-800">{t("cart.title")}</h2>
             {cart.length > 0 && (
-              <span className="rounded-full bg-indigo-700 px-2 py-0.5 text-[10px] font-semibold text-white">{cart.length}</span>
+              <span className="rounded-full bg-[var(--color-moon-blue-deep)] px-2 py-0.5 text-[10px] font-semibold text-white">{cart.length}</span>
             )}
           </div>
           <button
@@ -284,7 +284,7 @@ export default function CartDrawer() {
                   {t("cart.addMore", { amount: formatCad(freeShippingRemaining) })}
                 </p>
                 <div className="h-1.5 w-full rounded-full bg-gray-200">
-                  <div className="h-full rounded-full bg-indigo-700 transition-all duration-300" style={{ width: `${freeShippingProgress}%` }} />
+                  <div className="h-full rounded-full bg-[var(--color-moon-gold)] transition-all duration-300" style={{ width: `${freeShippingProgress}%` }} />
                 </div>
               </div>
             )}
@@ -465,7 +465,7 @@ export default function CartDrawer() {
                 type="button"
                 onClick={handleCheckout}
                 disabled={loading}
-                className="w-full rounded-full bg-indigo-700 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-200 hover:bg-indigo-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+                className="btn-primary-pill w-full px-4 py-3 text-xs disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none disabled:shadow-none"
               >
                 {loading ? t("cart.processing") : t("cart.checkout")}
               </button>

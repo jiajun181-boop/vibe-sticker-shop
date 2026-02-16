@@ -1197,7 +1197,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         {!embedded && (
           <header className="lg:hidden">
             <div className="flex items-start gap-3">
-              <h1 className="flex-1 text-3xl font-black tracking-tight text-slate-950">{product.name}</h1>
+              <h1 className="flex-1 text-3xl font-black tracking-tight text-gray-950">{product.name}</h1>
               <button
                 type="button"
                 onClick={() => {
@@ -1226,7 +1226,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 {t("trust.madeToOrder")}
               </span>
             </div>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">{product.description || t("product.defaultDescription")}</p>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">{product.description || t("product.defaultDescription")}</p>
           </header>
         )}
 
@@ -1237,7 +1237,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             {templateGallery && <TemplateGallery templates={templateGallery} />}
 
             {productSpecs ? (
-              <div className="rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm sm:p-5">
+              <div className="rounded-3xl border border-gray-200 bg-white/95 p-4 shadow-sm sm:p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">{t("bc.specs")}</h3>
                 <div className="mt-3 divide-y divide-gray-100">
                   {productSpecs.dimensions && (
@@ -1271,7 +1271,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 </div>
               </div>
             ) : specs.length > 0 ? (
-              <div className="hidden lg:block rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm sm:p-5">
+              <div className="hidden lg:block rounded-3xl border border-gray-200 bg-white/95 p-4 shadow-sm sm:p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-600">{t("product.specifications")}</h3>
                 <div className="mt-3 divide-y divide-gray-100">
                   {specs.map(([k, v]) => (
@@ -1290,7 +1290,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             {!embedded && (
               <header className="hidden lg:block">
                 <div className="flex items-start gap-3">
-                  <h1 className="flex-1 text-4xl font-black tracking-tight text-slate-950 xl:text-5xl">{product.name}</h1>
+                  <h1 className="flex-1 text-4xl font-black tracking-tight text-gray-950 xl:text-5xl">{product.name}</h1>
                   <button
                     type="button"
                     onClick={() => {
@@ -1319,20 +1319,20 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     {t("trust.madeToOrder")}
                   </span>
                 </div>
-                <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600">{product.description || t("product.defaultDescription")}</p>
+                <p className="mt-3 max-w-xl text-sm leading-relaxed text-gray-600">{product.description || t("product.defaultDescription")}</p>
               </header>
             )}
 
-            <div className="rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 lg:sticky lg:top-24 flex flex-col">
+            <div className="rounded-3xl border border-gray-200 bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 lg:sticky lg:top-24 flex flex-col">
               {/* ── PRICE + QUANTITY + ATC (always visible, order-1) ── */}
-              <div className="order-1 rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-4 sm:p-5">
-                <div className="mb-3 flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Checkout Steps</p>
-                  <p className="text-xs font-medium text-slate-600">1. Configure  2. Upload  3. Checkout</p>
+              <div className="order-1 rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-4 sm:p-5">
+                <div className="mb-3 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Checkout Steps</p>
+                  <p className="text-xs font-medium text-gray-600">1. Configure  2. Upload  3. Checkout</p>
                 </div>
                 <div className="mb-2 flex flex-wrap gap-2">
                   <span className="badge-soft bg-emerald-100 text-emerald-700">Live Quote</span>
-                  <span className="badge-soft bg-slate-100 text-slate-700">No Hidden Fees</span>
+                  <span className="badge-soft bg-gray-100 text-gray-700">No Hidden Fees</span>
                   <span className="badge-soft bg-blue-100 text-blue-700">Print-Ready Review</span>
                 </div>
                 {/* Price display */}
@@ -1346,7 +1346,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     </a>
                   ) : (
                     <div>
-                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Instant Quote</span>
+                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Instant Quote</span>
                       <span className="text-2xl font-bold text-gray-900">
                         {formatCad(priceData.total)}
                       </span>
@@ -1365,17 +1365,17 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   </p>
                 )}
 
-                <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Order Summary</p>
+                <div className="mt-3 rounded-xl border border-gray-200 bg-white p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-500">Order Summary</p>
                   <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
                     {quickSelection.slice(0, 6).map((item) => (
                       <div key={`${item.label}-${item.value}`} className="min-w-0">
-                        <p className="text-slate-400">{item.label}</p>
-                        <p className="truncate font-medium text-slate-800">{item.value}</p>
+                        <p className="text-gray-400">{item.label}</p>
+                        <p className="truncate font-medium text-gray-800">{item.value}</p>
                       </div>
                     ))}
                   </div>
-                  <p className="mt-2 text-[11px] text-slate-500">
+                  <p className="mt-2 text-[11px] text-gray-500">
                     Recommended: finalize quantity first to lock your best unit price.
                   </p>
                 </div>
@@ -1395,14 +1395,14 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                           const next = idx > 0 ? activeQuantityChoices[idx - 1] : activeQuantityChoices[0];
                           setQuantityValue(next);
                         }}
-                        className="h-9 w-9 rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                        className="h-9 w-9 rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50"
                       >
                         -
                       </button>
                       <select
                         value={String(quantity)}
                         onChange={(e) => setQuantityValue(Number(e.target.value))}
-                        className="w-32 rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-sm font-semibold text-slate-800"
+                        className="w-32 rounded-xl border border-gray-300 bg-white px-3 py-2 text-center text-sm font-semibold text-gray-800"
                       >
                         {activeQuantityChoices.map((q) => (
                           <option key={q} value={q}>{q}</option>
@@ -1417,16 +1417,16 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               : activeQuantityChoices[activeQuantityChoices.length - 1];
                           setQuantityValue(next);
                         }}
-                        className="h-9 w-9 rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                        className="h-9 w-9 rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50"
                       >
                         +
                       </button>
                     </div>
                   ) : (
                     <div className="mt-2 flex items-center gap-2">
-                      <button onClick={() => setQuantityValue(quantity - (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50">-</button>
-                      <input type="number" value={quantity} onChange={(e) => setQuantityValue(e.target.value)} className="w-24 rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-sm font-semibold text-slate-800" />
-                      <button onClick={() => setQuantityValue(quantity + (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-slate-300 bg-white text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50">+</button>
+                      <button onClick={() => setQuantityValue(quantity - (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50">-</button>
+                      <input type="number" value={quantity} onChange={(e) => setQuantityValue(e.target.value)} className="w-24 rounded-xl border border-gray-300 bg-white px-3 py-2 text-center text-sm font-semibold text-gray-800" />
+                      <button onClick={() => setQuantityValue(quantity + (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50">+</button>
                     </div>
                   )}
                 </div>
@@ -1461,7 +1461,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     disabled={!canAddToCart || buyNowLoading}
                     className={`btn-secondary-pill w-full px-4 py-3 text-xs transition-all ${
                       !canAddToCart || buyNowLoading
-                        ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                        ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
                         : ""
                     }`}
                   >
@@ -1471,27 +1471,27 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
                   <div className="flex flex-col items-center gap-0.5">
-                    <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className="text-[10px] text-slate-500">{t("trust.deliveryPromise")}</span>
+                    <span className="text-[10px] text-gray-500">{t("trust.deliveryPromise")}</span>
                   </div>
                   <div className="flex flex-col items-center gap-0.5">
-                    <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                     </svg>
-                    <span className="text-[10px] text-slate-500">{t("trust.reprintGuarantee")}</span>
+                    <span className="text-[10px] text-gray-500">{t("trust.reprintGuarantee")}</span>
                   </div>
                   <div className="flex flex-col items-center gap-0.5">
-                    <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
                     </svg>
-                    <span className="text-[10px] text-slate-500">{t("trust.expertHelp")}</span>
+                    <span className="text-[10px] text-gray-500">{t("trust.expertHelp")}</span>
                   </div>
                 </div>
 
-                <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                  <p className="font-semibold text-slate-800">How it works</p>
+                <div className="mt-3 rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-600">
+                  <p className="font-semibold text-gray-800">How it works</p>
                   <p className="mt-1">1. Select options and quantity</p>
                   <p>2. Upload artwork now or after checkout</p>
                   <p>3. Checkout securely with live quote</p>
@@ -1507,7 +1507,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               </div>
 
               {/* ── OPTIONS (collapsed on mobile, order-2) ── */}
-              <div className="order-2 mt-5 border-t border-slate-100 pt-4">
+              <div className="order-2 mt-5 border-t border-gray-100 pt-4">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Step 2 - Customize options</p>
 
                 {isTextEditor && (
@@ -1618,8 +1618,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.sizeUnit")}</p>
                       <div className="rounded-full border border-gray-300 p-1 text-xs">
-                        <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-indigo-700 text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
-                        <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-indigo-700 text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
+                        <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-[var(--color-ink-black)] text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
+                        <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-[var(--color-ink-black)] text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
                       </div>
                     </div>
 
@@ -1738,7 +1738,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         }
                         setUseMultiSize((prev) => !prev);
                       }}
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${useMultiSize ? "bg-indigo-700 text-white" : "border border-gray-300 bg-white text-gray-700"}`}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${useMultiSize ? "bg-[var(--color-ink-black)] text-white" : "border border-gray-300 bg-white text-gray-700"}`}
                     >
                       {useMultiSize ? "On" : "Off"}
                     </button>
@@ -1747,8 +1747,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.sizeUnit")}</p>
                     <div className="rounded-full border border-gray-300 p-1 text-xs">
-                      <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-indigo-700 text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
-                      <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-indigo-700 text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
+                      <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-[var(--color-ink-black)] text-white" : "text-gray-600"}`}>{t("product.inches")}</button>
+                      <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-[var(--color-ink-black)] text-white" : "text-gray-600"}`}>{t("product.cm")}</button>
                     </div>
                   </div>
 
@@ -1888,7 +1888,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                           onClick={() => setCardType(ct.id)}
                           className={`rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
                             cardType === ct.id
-                              ? "border-indigo-700 bg-indigo-700 text-white"
+                              ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
                               : "border-gray-200 bg-white text-gray-900 hover:border-gray-400"
                           }`}
                         >
@@ -1911,7 +1911,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             onClick={() => setSides(s.id)}
                             className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
                               sides === s.id
-                                ? "border-indigo-700 bg-indigo-700 text-white"
+                                ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
                                 : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                             }`}
                           >
@@ -1934,7 +1934,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             onClick={() => setThickLayer(l.id)}
                             className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
                               thickLayer === l.id
-                                ? "border-indigo-700 bg-indigo-700 text-white"
+                                ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
                                 : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                             }`}
                           >
@@ -2067,13 +2067,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                 onClick={() => setVariantBase(base)}
                                 className={`relative rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
                                   selected
-                                    ? "border-indigo-700 bg-indigo-700 text-white"
+                                    ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
                                     : "border-gray-200 bg-white text-gray-900 hover:border-gray-400"
                                 }`}
                               >
                                 {isRec && (
                                   <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                                    selected ? "bg-white text-indigo-900" : "bg-indigo-700 text-white"
+                                    selected ? "bg-white text-[var(--color-ink-black)]" : "bg-[var(--color-ink-black)] text-white"
                                   }`}>★</span>
                                 )}
                                 <span className="block text-sm font-semibold">{base}</span>
@@ -2095,7 +2095,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               onClick={() => setVariantValue(v)}
                               className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
                                 variantValue === v
-                                  ? "border-indigo-700 bg-indigo-700 text-white"
+                                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
                                   : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                               }`}
                             >
@@ -2124,13 +2124,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               }}
                               className={`relative rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
                                 selected
-                                  ? "border-indigo-700 bg-indigo-700 text-white"
+                                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
                                   : "border-gray-200 bg-white text-gray-900 hover:border-gray-400"
                               }`}
                             >
                               {o.recommended && (
                                 <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                                  selected ? "bg-white text-indigo-900" : "bg-indigo-700 text-white"
+                                  selected ? "bg-white text-[var(--color-ink-black)]" : "bg-[var(--color-ink-black)] text-white"
                                 }`}>★</span>
                               )}
                               <span className="block text-sm font-semibold">{o.displayLabel || o.label}</span>
@@ -2167,7 +2167,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     {visibleAddons.map((addon) => {
                       const addonChecked = selectedAddons.includes(addon.id);
                       return (
-                      <label key={addon.id} className={`flex cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${addonChecked ? "border-indigo-700 bg-gray-50" : "border-gray-200 bg-white"}`}>
+                      <label key={addon.id} className={`flex cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${addonChecked ? "border-[var(--color-ink-black)] bg-gray-50" : "border-gray-200 bg-white"}`}>
                         <input
                           type="checkbox"
                           checked={addonChecked}
@@ -2214,7 +2214,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         }}
                         className={`flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
                           wantsFinishing === val
-                            ? "border-indigo-700 bg-indigo-700 text-white"
+                            ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
                             : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                         }`}
                       >
@@ -2228,7 +2228,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         const isMulti = uiConfig?.finishingMode === "multi";
                         const checked = selectedFinishings.includes(f.id);
                         return (
-                          <label key={f.id} className={`flex cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${checked ? "border-indigo-700 bg-gray-50" : "border-gray-200 bg-white"}`}>
+                          <label key={f.id} className={`flex cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${checked ? "border-[var(--color-ink-black)] bg-gray-50" : "border-gray-200 bg-white"}`}>
                             <input
                               type={isMulti ? "checkbox" : "radio"}
                               name="finishing"
@@ -2412,7 +2412,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   type="button"
                   onClick={handleAddToCart}
                   disabled={!canAddToCart}
-                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-200 ${!canAddToCart ? "border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : added ? "border border-emerald-600 bg-emerald-600 text-white" : "border border-indigo-700 bg-white text-indigo-700 hover:bg-gray-50"}`}
+                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-200 ${!canAddToCart ? "border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : added ? "border border-emerald-600 bg-emerald-600 text-white" : "border border-[var(--color-ink-black)] bg-white text-[var(--color-ink-black)] hover:bg-gray-50"}`}
                 >
                   {added ? t("product.added") : t("product.addToCart")}
                 </button>
@@ -2420,7 +2420,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   type="button"
                   onClick={handleBuyNow}
                   disabled={!canAddToCart || buyNowLoading}
-                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-all duration-200 ${!canAddToCart || buyNowLoading ? "bg-gray-300 cursor-not-allowed" : "bg-indigo-700 hover:bg-indigo-800"}`}
+                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-all duration-200 ${!canAddToCart || buyNowLoading ? "bg-gray-300 cursor-not-allowed" : "bg-[var(--color-moon-gold)] hover:bg-[#9a7548]"}`}
                 >
                   {buyNowLoading ? "..." : "Buy Now"}
                 </button>

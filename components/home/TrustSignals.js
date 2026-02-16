@@ -99,7 +99,7 @@ export default function TrustSignals() {
             key={stat.labelKey}
             className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 text-center hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
           >
-            <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-indigo-700 text-white flex items-center justify-center">
+            <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-[var(--color-moon-blue-deep)] text-white flex items-center justify-center">
               {STAT_ICONS[stat.icon]}
             </div>
             <div className="text-2xl md:text-3xl font-black tracking-tight text-gray-900">
@@ -133,7 +133,7 @@ export default function TrustSignals() {
                 &ldquo;{review.text}&rdquo;
               </blockquote>
               <div className="mt-3 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] font-bold text-white">
+                <div className="w-6 h-6 rounded-full bg-[var(--color-moon-blue-deep)] flex items-center justify-center text-[10px] font-bold text-white">
                   {review.name[0]}
                 </div>
                 <span className="text-xs font-bold">{review.name}</span>
