@@ -32,10 +32,16 @@ export async function POST(req: Request) {
       select: {
         id: true,
         status: true,
+        productionStatus: true,
         totalAmount: true,
         createdAt: true,
         items: {
           select: { productName: true, quantity: true, unitPrice: true },
+        },
+        timeline: {
+          orderBy: { createdAt: "desc" },
+          take: 8,
+          select: { id: true, action: true, createdAt: true },
         },
       },
     });
@@ -52,11 +58,13 @@ export async function POST(req: Request) {
       status: order.status,
       totalAmount: order.totalAmount,
       createdAt: order.createdAt,
+      productionStatus: order.productionStatus,
       items: order.items.map((item) => ({
         name: item.productName,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
       })),
+      timeline: order.timeline,
     });
   } catch {
     return NextResponse.json(

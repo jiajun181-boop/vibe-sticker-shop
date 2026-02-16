@@ -4,13 +4,21 @@ import { useState } from "react";
 import Link from "next/link";
 
 const STATUS_MAP = {
-  pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800", step: 1 },
+  pending: { label: "Pending Payment", color: "bg-yellow-100 text-yellow-800", step: 1 },
   paid: { label: "Paid", color: "bg-blue-100 text-blue-800", step: 2 },
-  processing: { label: "In Production", color: "bg-purple-100 text-purple-800", step: 3 },
-  shipped: { label: "Shipped", color: "bg-emerald-100 text-emerald-800", step: 4 },
-  delivered: { label: "Delivered", color: "bg-green-100 text-green-800", step: 5 },
   canceled: { label: "Cancelled", color: "bg-red-100 text-red-800", step: 0 },
   refunded: { label: "Refunded", color: "bg-gray-100 text-gray-800", step: 0 },
+};
+
+const PROD_STEP_MAP = {
+  not_started: 2,
+  preflight: 2,
+  in_production: 3,
+  ready_to_ship: 4,
+  shipped: 4,
+  completed: 5,
+  on_hold: 2,
+  canceled: 0,
 };
 
 const STEPS = ["Order Placed", "Payment Confirmed", "In Production", "Shipped", "Delivered"];
@@ -51,7 +59,23 @@ export default function TrackOrderClient() {
     setLoading(false);
   }
 
-  const statusInfo = order ? STATUS_MAP[order.status] || STATUS_MAP.pending : null;
+  const statusInfo = (() => {
+    if (!order) return null;
+    const base = STATUS_MAP[order.status] || STATUS_MAP.pending;
+    if (order.status !== "paid") return base;
+    const productionStep = PROD_STEP_MAP[order.productionStatus] ?? base.step;
+    const label =
+      order.productionStatus === "in_production"
+        ? "In Production"
+        : order.productionStatus === "ready_to_ship"
+          ? "Ready to Ship"
+          : order.productionStatus === "shipped"
+            ? "Shipped"
+            : order.productionStatus === "completed"
+              ? "Delivered"
+              : base.label;
+    return { ...base, step: Math.max(base.step, productionStep), label };
+  })();
 
   return (
     <div className="space-y-6">
@@ -144,6 +168,30 @@ export default function TrackOrderClient() {
           <p className="text-xs text-gray-400">
             Ordered {new Date(order.createdAt).toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })}
           </p>
+
+          {Array.isArray(order.timeline) && order.timeline.length > 0 && (
+            <div className="border-t border-gray-100 pt-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-gray-400 mb-2">Timeline</p>
+              <div className="space-y-2">
+                {order.timeline.map((event) => (
+                  <div key={event.id} className="flex items-start gap-2">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-800">{event.action}</p>
+                      <p className="text-[11px] text-gray-500">
+                        {new Date(event.createdAt).toLocaleDateString("en-CA", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

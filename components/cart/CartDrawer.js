@@ -85,6 +85,8 @@ export default function CartDrawer() {
   const cart = useCartStore((state) => state.cart);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
+  const addItem = useCartStore((state) => state.addItem);
+  const clearCart = useCartStore((state) => state.clearCart);
   const { t } = useTranslation();
 
   const [mounted, setMounted] = useState(false);
@@ -94,6 +96,16 @@ export default function CartDrawer() {
   const [promoCode, setPromoCode] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState(null);
+  const [checkoutMode, setCheckoutMode] = useState("stripe");
+  const [invoiceForm, setInvoiceForm] = useState({
+    companyName: "",
+    contactName: "",
+    email: "",
+    poNumber: "",
+    paymentTerms: "net30",
+    notes: "",
+  });
+  const [invoiceSubmitting, setInvoiceSubmitting] = useState(false);
   const checkoutInFlightRef = useRef(false);
   const lastCheckoutAtRef = useRef(0);
   const asideRef = useRef(null);
@@ -105,6 +117,7 @@ export default function CartDrawer() {
     if (isOpen) {
       setRenderDrawer(true);
       document.body.style.overflow = "hidden";
+      setCheckoutMode("stripe");
     } else {
       document.body.style.overflow = "";
       const ti = setTimeout(() => setRenderDrawer(false), 300);
@@ -238,6 +251,47 @@ export default function CartDrawer() {
     }
   }
 
+  async function handleInvoiceCheckout() {
+    if (cartItems.length === 0) {
+      showErrorToast(t("cart.emptyError"));
+      return;
+    }
+    if (!invoiceForm.contactName.trim() || !invoiceForm.email.trim()) {
+      showErrorToast(t("cart.invoiceMissingFields"));
+      return;
+    }
+
+    try {
+      setInvoiceSubmitting(true);
+      const res = await fetch("/api/checkout/invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cartItems,
+          companyName: invoiceForm.companyName.trim() || null,
+          contactName: invoiceForm.contactName.trim(),
+          email: invoiceForm.email.trim(),
+          poNumber: invoiceForm.poNumber.trim() || null,
+          paymentTerms: invoiceForm.paymentTerms,
+          notes: invoiceForm.notes.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || t("cart.serverError"));
+      }
+
+      clearCart();
+      closeCart();
+      showSuccessToast(t("cart.invoiceRequested", { orderId: data.orderId }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t("cart.networkError");
+      showErrorToast(message);
+    } finally {
+      setInvoiceSubmitting(false);
+    }
+  }
+
   if (!mounted || !renderDrawer) return null;
 
   return (
@@ -358,6 +412,22 @@ export default function CartDrawer() {
                             </button>
                           </div>
 
+                          <div className="mt-2 flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                addItem({
+                                  ...item,
+                                  quantity: item.quantity,
+                                  forceNewLine: true,
+                                })
+                              }
+                              className="text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-500 transition-colors hover:text-gray-900"
+                            >
+                              {t("cart.duplicate")}
+                            </button>
+                          </div>
+
                           <div className="mt-3 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <button
@@ -461,14 +531,100 @@ export default function CartDrawer() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCheckoutMode("stripe")}
+                  className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] ${
+                    checkoutMode === "stripe"
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-300 text-gray-600"
+                  }`}
+                >
+                  {t("cart.payNow")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCheckoutMode("invoice")}
+                  className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] ${
+                    checkoutMode === "invoice"
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-300 text-gray-600"
+                  }`}
+                >
+                  {t("cart.invoiceCheckout")}
+                </button>
+              </div>
+
+            {checkoutMode === "invoice" && (
+              <div className="space-y-2 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">{t("cart.invoiceDetails")}</p>
+                <input
+                  value={invoiceForm.companyName}
+                  onChange={(e) => setInvoiceForm((prev) => ({ ...prev, companyName: e.target.value }))}
+                  placeholder={t("cart.companyName")}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    value={invoiceForm.contactName}
+                    onChange={(e) => setInvoiceForm((prev) => ({ ...prev, contactName: e.target.value }))}
+                    placeholder={t("cart.contactName")}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                  />
+                  <input
+                    value={invoiceForm.email}
+                    onChange={(e) => setInvoiceForm((prev) => ({ ...prev, email: e.target.value }))}
+                    placeholder={t("cart.contactEmail")}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    value={invoiceForm.poNumber}
+                    onChange={(e) => setInvoiceForm((prev) => ({ ...prev, poNumber: e.target.value }))}
+                    placeholder={t("cart.poNumber")}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                  />
+                  <select
+                    value={invoiceForm.paymentTerms}
+                    onChange={(e) => setInvoiceForm((prev) => ({ ...prev, paymentTerms: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                  >
+                    <option value="net15">Net 15</option>
+                    <option value="net30">Net 30</option>
+                    <option value="net45">Net 45</option>
+                  </select>
+                </div>
+                <textarea
+                  rows={2}
+                  value={invoiceForm.notes}
+                  onChange={(e) => setInvoiceForm((prev) => ({ ...prev, notes: e.target.value }))}
+                  placeholder={t("cart.invoiceNotes")}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                />
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleCheckout}
+              disabled={loading || checkoutMode !== "stripe"}
+              className="btn-primary-pill w-full px-4 py-3 text-xs disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none disabled:shadow-none"
+            >
+              {loading ? t("cart.processing") : t("cart.checkout")}
+            </button>
+
+            {checkoutMode === "invoice" && (
               <button
                 type="button"
-                onClick={handleCheckout}
-                disabled={loading}
-                className="btn-primary-pill w-full px-4 py-3 text-xs disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none disabled:shadow-none"
+                onClick={handleInvoiceCheckout}
+                disabled={invoiceSubmitting}
+                className="w-full rounded-full border border-gray-900 bg-white px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-900 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {loading ? t("cart.processing") : t("cart.checkout")}
+                {invoiceSubmitting ? t("cart.processing") : t("cart.submitInvoiceOrder")}
               </button>
+            )}
 
               <button
                 type="button"

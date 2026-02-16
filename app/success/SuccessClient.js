@@ -12,6 +12,20 @@ const MAX_POLL_ATTEMPTS = 30;
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
+function addBusinessDays(base, days) {
+  const n = new Date(base);
+  let count = 0;
+  while (count < days) {
+    n.setDate(n.getDate() + 1);
+    if (n.getDay() !== 0 && n.getDay() !== 6) count += 1;
+  }
+  return n;
+}
+
+function formatShortDate(date) {
+  return date.toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+}
+
 function buildStatusCopy(t, status, reason) {
   if (status === "canceled") {
     return {
@@ -51,6 +65,18 @@ export default function SuccessClient({ sessionId, statusToken }) {
   const [retryToken, setRetryToken] = useState(0);
 
   const statusCopy = useMemo(() => buildStatusCopy(t, status, reason), [t, status, reason]);
+  const timelinePlan = useMemo(() => {
+    const now = new Date();
+    const reviewDate = addBusinessDays(now, 1);
+    const prodStart = addBusinessDays(now, 2);
+    const shipWindowStart = addBusinessDays(now, 3);
+    const shipWindowEnd = addBusinessDays(now, 5);
+    return [
+      { title: "File check", date: formatShortDate(reviewDate), desc: "Artwork and specs reviewed" },
+      { title: "Production", date: formatShortDate(prodStart), desc: "Printing and finishing" },
+      { title: "Shipping", date: `${formatShortDate(shipWindowStart)} - ${formatShortDate(shipWindowEnd)}`, desc: "Dispatch and delivery scan" },
+    ];
+  }, []);
 
   useEffect(() => {
     let stopped = false;
@@ -236,6 +262,21 @@ export default function SuccessClient({ sessionId, statusToken }) {
                   {s.step}
                 </span>
                 <p className="text-sm text-emerald-800">{s.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 mb-6">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Order Timeline</h3>
+          <div className="space-y-3">
+            {timelinePlan.map((step) => (
+              <div key={step.title} className="flex items-start justify-between gap-3 border-b border-gray-100 pb-2 last:border-b-0 last:pb-0">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{step.title}</p>
+                  <p className="text-xs text-gray-500">{step.desc}</p>
+                </div>
+                <p className="text-xs font-semibold text-gray-700">{step.date}</p>
               </div>
             ))}
           </div>

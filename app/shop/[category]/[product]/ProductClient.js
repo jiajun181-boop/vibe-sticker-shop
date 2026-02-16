@@ -35,6 +35,31 @@ const createSizeRowId = () => `sz_${Date.now()}_${Math.random().toString(36).sli
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
+function parseInventorySignal(optionsConfig) {
+  if (!optionsConfig || typeof optionsConfig !== "object") return null;
+  const raw = optionsConfig.inventory;
+  if (!raw || typeof raw !== "object") return null;
+  const available = Number(raw.available);
+  const lowStockThreshold = Number(raw.lowStockThreshold ?? 5);
+  const restockEta = typeof raw.restockEta === "string" ? raw.restockEta : "";
+  const leadDays = Number(raw.leadDays ?? 0);
+
+  if (Number.isFinite(available)) {
+    if (available <= 0) {
+      return {
+        tone: "amber",
+        label: restockEta ? `Backorder • ETA ${restockEta}` : `Backorder • ships in ${leadDays > 0 ? `${leadDays} days` : "extended lead time"}`,
+      };
+    }
+    if (available <= lowStockThreshold) {
+      return { tone: "amber", label: `Low stock • ${available} left` };
+    }
+    return { tone: "green", label: `In stock • ${available} available` };
+  }
+
+  return null;
+}
+
 function applyAllowlist(items, allowIds) {
   if (!Array.isArray(items)) return [];
   if (!Array.isArray(allowIds)) return items;
@@ -241,6 +266,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const variants = [...variantSet];
     return { enabled: true, bases, variants, byBase, recommendedBases };
   }, [sizeOptions]);
+  const inventorySignal = useMemo(() => parseInventorySignal(product.optionsConfig), [product.optionsConfig]);
   const editorConfig = product.optionsConfig?.editor || null;
   const isTextEditor = editorConfig?.type === "text";
   const editorMode = editorConfig?.mode || "lettering"; // "lettering" | "box"
@@ -1334,6 +1360,17 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   <span className="badge-soft bg-emerald-100 text-emerald-700">Live Quote</span>
                   <span className="badge-soft bg-gray-100 text-gray-700">No Hidden Fees</span>
                   <span className="badge-soft bg-blue-100 text-blue-700">Print-Ready Review</span>
+                  {inventorySignal && (
+                    <span
+                      className={`badge-soft ${
+                        inventorySignal.tone === "green"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {inventorySignal.label}
+                    </span>
+                  )}
                 </div>
                 {/* Price display */}
                 <div className="flex items-baseline justify-between">
