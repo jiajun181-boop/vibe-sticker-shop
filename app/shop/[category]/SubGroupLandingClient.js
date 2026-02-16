@@ -101,6 +101,7 @@ export default function SubGroupLandingClient({
   categoryTitle,
   categoryIcon,
   subGroups,
+  groupedSubGroups = [],
   siblingCategories = [],
   totalCount,
 }) {
@@ -112,6 +113,17 @@ export default function SubGroupLandingClient({
     const q = search.trim().toLowerCase();
     return subGroups.filter((sg) => sg.title.toLowerCase().includes(q));
   }, [subGroups, search]);
+
+  const filteredGroupedSubGroups = useMemo(() => {
+    if (!groupedSubGroups.length) return [];
+    const bySlug = new Set(filteredSubGroups.map((sg) => sg.slug));
+    return groupedSubGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => bySlug.has(item.slug)),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [groupedSubGroups, filteredSubGroups]);
 
   return (
     <main className="bg-gray-50 pb-20 pt-10 text-gray-900">
@@ -168,11 +180,28 @@ export default function SubGroupLandingClient({
         )}
 
         {/* Sub-group card grid */}
-        <div className={`grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4 ${subGroups.length > 4 ? "mt-4" : "mt-8"}`}>
-          {filteredSubGroups.map((group) => (
-            <SubGroupCard key={group.slug} group={group} t={t} />
-          ))}
-        </div>
+        {filteredGroupedSubGroups.length > 0 ? (
+          <div className={subGroups.length > 4 ? "mt-4 space-y-8" : "mt-8 space-y-8"}>
+            {filteredGroupedSubGroups.map((segment) => (
+              <section key={segment.key}>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-gray-500">
+                  {segment.title}
+                </h2>
+                <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                  {segment.items.map((group) => (
+                    <SubGroupCard key={group.slug} group={group} t={t} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div className={`grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4 ${subGroups.length > 4 ? "mt-4" : "mt-8"}`}>
+            {filteredSubGroups.map((group) => (
+              <SubGroupCard key={group.slug} group={group} t={t} />
+            ))}
+          </div>
+        )}
 
         {filteredSubGroups.length === 0 && search.trim() && (
           <div className="mt-8 text-center">

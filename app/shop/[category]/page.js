@@ -10,21 +10,53 @@ import SubGroupLandingClient from "./SubGroupLandingClient";
 export const dynamic = "force-dynamic";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
+const PLACEMENT_TAG_PREFIX = "placement:";
 
 // Legacy category URLs -> current canonical category URLs.
 const CATEGORY_ALIASES = Object.freeze({
-  "fleet-compliance": "fleet-compliance-id",
-  "window-graphics-film": "window-glass-films",
-  "window-graphics": "window-glass-films",
-  "business-cards": "marketing-prints",
-  stamps: "marketing-prints",
-  "business-forms": "marketing-prints",
-  "paper-marketing": "marketing-prints",
-  "flyers-brochures": "marketing-prints",
-  "posters-prints": "marketing-prints",
+  "fleet-compliance": "vehicle-graphics-fleet",
+  "window-graphics-film": "windows-walls-floors",
+  "window-graphics": "windows-walls-floors",
+  "business-cards": "marketing-business-print",
+  stamps: "marketing-business-print",
+  "business-forms": "marketing-business-print",
+  "paper-marketing": "marketing-business-print",
+  "flyers-brochures": "marketing-business-print",
+  "posters-prints": "marketing-business-print",
+  "marketing-prints": "marketing-business-print",
+  "retail-promo": "marketing-business-print",
+  "packaging": "marketing-business-print",
+  "stickers-labels": "stickers-labels-decals",
+  "safety-warning-decals": "stickers-labels-decals",
+  "facility-asset-labels": "stickers-labels-decals",
+  "rigid-signs": "signs-rigid-boards",
+  "display-stands": "banners-displays",
+  "banners-displays": "banners-displays",
+  "window-glass-films": "windows-walls-floors",
+  "large-format-graphics": "windows-walls-floors",
+  "vehicle-branding-advertising": "vehicle-graphics-fleet",
+  "fleet-compliance-id": "vehicle-graphics-fleet",
 });
 
 const FLATTENED_SUBGROUP_CATEGORIES = new Set(["packaging", "banners-displays"]);
+
+const MARKETING_SEGMENTS = [
+  {
+    key: "business-essentials",
+    title: "Business Essentials",
+    slugs: ["business-cards", "letterhead-stationery", "envelopes", "stamps", "ncr-forms", "order-forms", "waivers-releases"],
+  },
+  {
+    key: "marketing-materials",
+    title: "Marketing Materials",
+    slugs: ["flyers", "postcards", "brochures", "booklets", "posters", "presentation-folders"],
+  },
+  {
+    key: "retail-events-packaging",
+    title: "Retail, Events & Packaging",
+    slugs: ["menus", "rack-cards", "door-hangers", "tickets-coupons", "retail-tags", "tags", "inserts-packaging", "certificates", "greeting-cards", "invitation-cards", "loyalty-cards", "shelf-displays", "table-tents"],
+  },
+];
 
 function safeDecode(value) {
   try {
@@ -32,6 +64,11 @@ function safeDecode(value) {
   } catch {
     return value;
   }
+}
+
+function hasPlacementSubseries(tags, category, subseries) {
+  if (!Array.isArray(tags) || !category || !subseries) return false;
+  return tags.includes(`${PLACEMENT_TAG_PREFIX}${category}:${subseries}`);
 }
 
 function toClientSafe(value) {
@@ -136,12 +173,7 @@ export default async function CategoryPage({ params }) {
 
   const config = await getCatalogConfig();
   const inHomepageConfig = config.homepageCategories.includes(decoded);
-  const activeCount = await prisma.product.count({
-    where: { category: decoded, isActive: true },
-  });
-
-  // Do not hard-404 categories that still have products but are missing from homepage config.
-  if (!inHomepageConfig && activeCount === 0) notFound();
+  if (!inHomepageConfig) notFound();
 
   const meta = config.categoryMeta[decoded];
 
@@ -225,9 +257,14 @@ export default async function CategoryPage({ params }) {
     // Build sub-group data with counts, previews, minPrice, turnaround
     const subGroupData = subGroups.map((sg) => {
       const subCfg = SUB_PRODUCT_CONFIG[sg.slug];
-      const matching = subCfg
-        ? products.filter((p) => subCfg.dbSlugs.includes(p.slug))
-        : [];
+      const placementMatching = products.filter((p) =>
+        hasPlacementSubseries(p.tags, decoded, sg.slug)
+      );
+      const fallbackMatching =
+        placementMatching.length === 0 && subCfg
+          ? products.filter((p) => subCfg.dbSlugs.includes(p.slug))
+          : [];
+      const matching = placementMatching.length > 0 ? placementMatching : fallbackMatching;
 
       const prices = matching.map((p) => p.fromPrice || p.basePrice).filter((p) => p > 0);
       const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
@@ -242,7 +279,7 @@ export default async function CategoryPage({ params }) {
         minPrice,
         turnaround,
       };
-    });
+    }).filter((sg) => sg.count > 0);
 
     // Sibling categories in the same department (for cross-category recommendations)
     const dept = config.departments.find((d) => d.categories.includes(decoded));
@@ -258,6 +295,14 @@ export default async function CategoryPage({ params }) {
       : [];
 
     const orderedSubGroupData = prioritizeSubGroups(decoded, subGroupData);
+    const groupedSubGroups =
+      decoded === "marketing-business-print"
+        ? MARKETING_SEGMENTS.map((segment) => ({
+            key: segment.key,
+            title: segment.title,
+            items: orderedSubGroupData.filter((sg) => segment.slugs.includes(sg.slug)),
+          })).filter((segment) => segment.items.length > 0)
+        : [];
 
     return (
       <SubGroupLandingClient
@@ -265,6 +310,7 @@ export default async function CategoryPage({ params }) {
         categoryTitle={meta?.title || decoded}
         categoryIcon={meta?.icon || ""}
         subGroups={orderedSubGroupData}
+        groupedSubGroups={groupedSubGroups}
         siblingCategories={siblingCategories}
         totalCount={products.length}
       />
