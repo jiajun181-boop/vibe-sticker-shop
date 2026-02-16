@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { useSearchParams } from "next/navigation";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -18,6 +19,8 @@ export default function SubProductLandingClient({
 }) {
   const { t } = useTranslation();
   const i18nBase = `sp.${parentSlug}`;
+  const searchParams = useSearchParams();
+  const selectedSpec = searchParams?.get("spec") || "";
 
   return (
     <main className="bg-gray-50 pb-20 pt-10 text-gray-900">
@@ -51,7 +54,9 @@ export default function SubProductLandingClient({
               <Link
                 key={product.id}
                 href={href}
-                className="group overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                className={`group overflow-hidden rounded-2xl border bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
+                  selectedSpec === product.slug ? "border-gray-900 ring-1 ring-gray-900" : "border-gray-200"
+                }`}
               >
                 {/* Image */}
                 <div className="relative aspect-[4/3] bg-gray-100">
@@ -93,6 +98,11 @@ export default function SubProductLandingClient({
                   <h3 className="text-sm font-semibold text-gray-900 leading-snug">
                     {product.name}
                   </h3>
+                  {selectedSpec === product.slug && (
+                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-600">
+                      Selected spec
+                    </p>
+                  )}
                   {product.description && (
                     <p className="mt-1 text-[11px] text-gray-500 line-clamp-2">
                       {product.description}

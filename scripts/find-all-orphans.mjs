@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 // Hardcode the categories that have subGroups (from catalogConfig DEFAULTS)
 const CATEGORIES_WITH_SUBGROUPS = {
-  "marketing-prints": ["business-cards","flyers","postcards","brochures-booklets","posters","menus","ncr-forms","order-forms","waivers-releases","envelopes","letterhead-stationery","presentation-folders","greeting-cards"],
+  "marketing-prints": ["business-cards","flyers","rack-cards","door-hangers","postcards","brochures","booklets","posters","menus","ncr-forms","order-forms","waivers-releases","envelopes","letterhead-stationery","stamps","presentation-folders","certificates","greeting-cards","invitation-cards","loyalty-cards"],
   "packaging": ["tags","inserts-packaging"],
   "retail-promo": ["shelf-displays","table-tents","tickets-coupons","retail-tags"],
   "banners-displays": ["vinyl-banners","mesh-banners","pole-banners","canvas-prints"],

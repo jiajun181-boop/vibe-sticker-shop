@@ -87,7 +87,6 @@ export default async function ProductPage({ params }) {
   const { category, product: slug } = await params;
   const decodedSlug = safeDecode(slug);
   const decodedCategory = safeDecode(category);
-
   // ── Sub-product landing: parent slug → show child products as card grid ──
   const subCfg = getSubProducts(decodedSlug);
   if (subCfg) {
