@@ -44,38 +44,36 @@ export async function applyAssignmentRules(jobId: string): Promise<boolean> {
       const orderItem = job.orderItem;
 
       if (matchesConditions(orderItem, job, conditions)) {
-        // Apply the rule
-        await prisma.productionJob.update({
-          where: { id: jobId },
-          data: {
-            factoryId: action.factoryId,
-            assignedTo: action.assignedTo || null,
-            priority: (action.autoPriority as any) || job.priority,
-            status: "assigned"
-          }
-        });
-
-        // Create event
-        await prisma.jobEvent.create({
-          data: {
-            jobId,
-            type: "auto_assigned",
-            payload: {
-              ruleId: rule.id,
-              ruleName: rule.name,
-              factoryId: action.factoryId
+        // Apply the rule atomically
+        await prisma.$transaction([
+          prisma.productionJob.update({
+            where: { id: jobId },
+            data: {
+              factoryId: action.factoryId,
+              assignedTo: action.assignedTo || null,
+              priority: (action.autoPriority as any) || job.priority,
+              status: "assigned"
             }
-          }
-        });
-
-        // Update rule trigger count
-        await prisma.assignmentRule.update({
-          where: { id: rule.id },
-          data: {
-            triggerCount: { increment: 1 },
-            lastTriggered: new Date()
-          }
-        });
+          }),
+          prisma.jobEvent.create({
+            data: {
+              jobId,
+              type: "auto_assigned",
+              payload: {
+                ruleId: rule.id,
+                ruleName: rule.name,
+                factoryId: action.factoryId
+              }
+            }
+          }),
+          prisma.assignmentRule.update({
+            where: { id: rule.id },
+            data: {
+              triggerCount: { increment: 1 },
+              lastTriggered: new Date()
+            }
+          }),
+        ]);
 
         console.log(`[AutoAssign] Job ${jobId} assigned by rule: ${rule.name}`);
         return true;

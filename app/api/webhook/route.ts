@@ -40,9 +40,7 @@ export async function POST(request: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Webhook error";
     console.error("[Webhook Error]", message);
-    return NextResponse.json(
-      { error: `Webhook Error: ${message}` },
-      { status: 400 }
-    );
+    // Always return 200 to acknowledge receipt — Stripe retries on non-2xx
+    return NextResponse.json({ received: true, error: message }, { status: 200 });
   }
 }

@@ -96,44 +96,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const report = await prisma.qCReport.create({
-      data: {
-        orderId,
-        orderItemId: orderItemId || null,
-        jobId: jobId || null,
-        defectType,
-        severity,
-        description,
-        photoUrls: photoUrls || [],
-        reportedBy: auth.user?.name || auth.user?.email || "admin",
-      },
-    });
-
-    // Add timeline event
-    await prisma.orderTimeline.create({
-      data: {
-        orderId,
-        action: "qc_defect_reported",
-        details: `${severity} defect: ${defectType} — ${description.slice(0, 100)}`,
-        actor: auth.user?.name || "QA",
-      },
-    });
-
-    // If critical, auto-hold the order
-    if (severity === "critical") {
-      await prisma.order.update({
-        where: { id: orderId },
-        data: { productionStatus: "on_hold" },
-      });
-      await prisma.orderTimeline.create({
+    const report = await prisma.$transaction(async (tx) => {
+      const newReport = await tx.qCReport.create({
         data: {
           orderId,
-          action: "production_hold",
-          details: "Auto-held due to critical QC defect",
-          actor: "system",
+          orderItemId: orderItemId || null,
+          jobId: jobId || null,
+          defectType,
+          severity,
+          description,
+          photoUrls: photoUrls || [],
+          reportedBy: auth.user?.name || auth.user?.email || "admin",
         },
       });
-    }
+
+      // Add timeline event
+      await tx.orderTimeline.create({
+        data: {
+          orderId,
+          action: "qc_defect_reported",
+          details: `${severity} defect: ${defectType} — ${description.slice(0, 100)}`,
+          actor: auth.user?.name || "QA",
+        },
+      });
+
+      // If critical, auto-hold the order
+      if (severity === "critical") {
+        await tx.order.update({
+          where: { id: orderId },
+          data: { productionStatus: "on_hold" },
+        });
+        await tx.orderTimeline.create({
+          data: {
+            orderId,
+            action: "production_hold",
+            details: "Auto-held due to critical QC defect",
+            actor: "system",
+          },
+        });
+      }
+
+      return newReport;
+    });
 
     await logActivity({
       action: "qc_report_created",

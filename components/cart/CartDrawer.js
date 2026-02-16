@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import Image from "next/image";
 import { PaymentBadges } from "@/components/TrustBadges";
 import { trackBeginCheckout } from "@/lib/analytics";
 import useFocusTrap from "@/lib/useFocusTrap";
@@ -326,8 +327,8 @@ export default function CartDrawer() {
                   return (
                     <article key={item._cartId} className="rounded-2xl border border-gray-200 p-4 transition-all duration-200 hover:shadow-sm">
                       <div className="flex items-start gap-3">
-                        <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
-                          <img src={imageSrc} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
+                        <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                          <Image src={imageSrc} alt={item.name} fill className="object-cover" sizes="56px" />
                         </div>
 
                         <div className="min-w-0 flex-1">
@@ -371,7 +372,8 @@ export default function CartDrawer() {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, item.quantity + 1)}
-                                className="h-10 w-10 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 transition-colors duration-200 hover:bg-gray-100"
+                                disabled={item.quantity >= 999}
+                                className="h-10 w-10 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 transition-colors duration-200 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
                                 aria-label="Increase quantity"
                               >
                                 +

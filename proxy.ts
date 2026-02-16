@@ -1,7 +1,27 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { jwtVerify } from "jose";
 
 const DEFAULT_LOCALE = "en";
+
+function getJwtSecret() {
+  const secret = process.env.ADMIN_JWT_SECRET;
+  if (!secret) return null;
+  return new TextEncoder().encode(secret);
+}
+
+async function isValidAdminJwt(request: NextRequest): Promise<boolean> {
+  const cookie = request.cookies.get("admin_session");
+  if (!cookie?.value) return false;
+  const secret = getJwtSecret();
+  if (!secret) return false;
+  try {
+    await jwtVerify(cookie.value, secret);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function detectLocale(request: NextRequest): string {
   const acceptLang = request.headers.get("accept-language") || "";
@@ -16,7 +36,7 @@ function detectLocale(request: NextRequest): string {
   return DEFAULT_LOCALE;
 }
 
-export default function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const response = NextResponse.next();
 
@@ -31,12 +51,13 @@ export default function proxy(request: NextRequest) {
     });
   }
 
-  // Protect /admin routes (except login page and login API)
+  // Protect /admin routes (except login page) - verify JWT signature
   if (path.startsWith("/admin") && path !== "/admin/login") {
-    const sessionCookie = request.cookies.get("admin_session");
-    const hasSession = !!sessionCookie?.value;
-    if (!hasSession) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+    const valid = await isValidAdminJwt(request);
+    if (!valid) {
+      const loginUrl = new URL("/admin/login", request.url);
+      loginUrl.searchParams.set("redirect", path);
+      return NextResponse.redirect(loginUrl);
     }
   }
 

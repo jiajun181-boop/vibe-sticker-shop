@@ -150,14 +150,11 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const orderItems = await prisma.orderItem.count({ where: { productId: id } });
-  if (orderItems > 0) {
-    return NextResponse.json(
-      { error: "Cannot delete a product with existing orders. Deactivate it instead." },
-      { status: 409 }
-    );
-  }
+  // Soft-delete: deactivate instead of hard delete to preserve order references
+  const product = await prisma.product.update({
+    where: { id },
+    data: { isActive: false },
+  });
 
-  await prisma.product.delete({ where: { id } });
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, deactivated: true, id: product.id });
 }

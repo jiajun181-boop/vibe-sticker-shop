@@ -200,6 +200,8 @@ model Order {
   @@index([customerEmail])
   @@index([userId])
   @@index([isArchived])
+  @@index([createdAt])
+  @@index([paidAt])
 }
 
 model OrderItem {

@@ -20,6 +20,10 @@ export async function POST(req) {
       return NextResponse.json({ error: "Required fields missing" }, { status: 400 });
     }
 
+    if (name.length > 200 || email.length > 200 || message.length > 5000) {
+      return NextResponse.json({ error: "Input too long" }, { status: 400 });
+    }
+
     const phone = body.phone || "";
     const company = body.company || "";
 

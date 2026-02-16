@@ -127,6 +127,23 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Check if this is the last image for its product
+    const image = await prisma.productImage.findUnique({
+      where: { id },
+      select: { productId: true },
+    });
+    if (image) {
+      const siblingCount = await prisma.productImage.count({
+        where: { productId: image.productId },
+      });
+      if (siblingCount <= 1) {
+        return NextResponse.json(
+          { error: "Cannot delete the last image of a product. Upload a replacement first." },
+          { status: 409 }
+        );
+      }
+    }
+
     await prisma.productImage.delete({
       where: { id },
     });

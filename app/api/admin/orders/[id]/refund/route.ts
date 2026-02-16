@@ -21,7 +21,7 @@ export async function POST(
     const body = await request.json();
     const { amountCents, reason } = body;
 
-    if (!amountCents || amountCents <= 0) {
+    if (!amountCents || !Number.isInteger(amountCents) || amountCents <= 0) {
       return NextResponse.json(
         { error: "amountCents must be a positive integer" },
         { status: 400 }

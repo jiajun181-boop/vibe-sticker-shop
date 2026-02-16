@@ -7,7 +7,7 @@ import { trackPurchase } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const POLL_INTERVAL_MS = 2000;
-const MAX_POLL_ATTEMPTS = 15;
+const MAX_POLL_ATTEMPTS = 30;
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -200,7 +200,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
           <p className="font-mono text-xs font-medium text-gray-800 break-all">{sessionId}</p>
           {customerEmail && (
             <p className="mt-2 text-xs text-gray-500">
-              {t("success.emailSent", { email: customerEmail })}
+              {t("success.emailSent", { email: customerEmail.replace(/(.{2})(.*)(@.*)/, (_, a, b, c) => a + b.replace(/./g, "*") + c) })}
             </p>
           )}
         </div>

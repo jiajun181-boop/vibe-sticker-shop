@@ -47,6 +47,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (products.length > 200) {
+      return NextResponse.json(
+        { error: "Import limited to 200 products at a time" },
+        { status: 400 }
+      );
+    }
+
     const errors: ValidationError[] = [];
 
     // Step 1: Validate all rows

@@ -34,7 +34,6 @@ export async function GET(request: NextRequest) {
       prisma.order.findMany({
         where,
         include: {
-          items: true,
           _count: { select: { items: true, notes: true } },
         },
         orderBy: { [sort]: order },

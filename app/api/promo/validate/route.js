@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createRateLimiter, getClientIp } from "@/lib/rate-limit";
+
+const promoLimiter = createRateLimiter({ windowMs: 60_000, max: 10 });
 
 export async function POST(req) {
   try {
+    const ip = getClientIp(req);
+    const { success: allowed } = promoLimiter.check(ip);
+    if (!allowed) {
+      return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
+    }
+
     const { code, subtotal } = await req.json();
 
     if (!code) {

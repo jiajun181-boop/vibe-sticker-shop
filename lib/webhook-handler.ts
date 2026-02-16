@@ -77,8 +77,10 @@ export async function handleCheckoutCompleted(
     session.amount_total || 0
   );
 
-  // 5. Transactional order creation
-  const order = await prisma.$transaction(async (tx) => {
+  // 5. Transactional order creation (catches duplicate if race condition)
+  let order;
+  try {
+  order = await prisma.$transaction(async (tx) => {
     // Create order
     const newOrder = await tx.order.create({
       data: {
@@ -162,6 +164,17 @@ export async function handleCheckoutCompleted(
 
     return newOrder;
   });
+  } catch (txErr: unknown) {
+    // Unique constraint on stripeSessionId — concurrent webhook created the order
+    const isPrismaUnique =
+      txErr && typeof txErr === "object" && "code" in txErr && (txErr as { code: string }).code === "P2002";
+    if (isPrismaUnique) {
+      console.log(`[Webhook] Concurrent duplicate caught for session: ${sessionId}`);
+      const duplicate = await prisma.order.findUnique({ where: { stripeSessionId: sessionId } });
+      if (duplicate) return duplicate;
+    }
+    throw txErr;
+  }
 
   // 6. Link order to existing user account (by email)
   try {

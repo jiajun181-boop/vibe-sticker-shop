@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
+import { toSafeCsvCell } from "@/lib/csv";
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, "products", "view");
@@ -64,15 +65,15 @@ export async function GET(request: NextRequest) {
 
       for (const product of products) {
         const row = [
-          JSON.stringify(product.id),
-          JSON.stringify(product.name),
-          JSON.stringify(product.slug),
-          JSON.stringify(product.category),
-          JSON.stringify(product.type),
+          JSON.stringify(toSafeCsvCell(product.id)),
+          JSON.stringify(toSafeCsvCell(product.name)),
+          JSON.stringify(toSafeCsvCell(product.slug)),
+          JSON.stringify(toSafeCsvCell(product.category)),
+          JSON.stringify(toSafeCsvCell(product.type)),
           JSON.stringify(product.basePrice),
           JSON.stringify(product.pricingUnit),
           JSON.stringify(product.isActive),
-          JSON.stringify(product.description ?? ""),
+          JSON.stringify(toSafeCsvCell(product.description ?? "")),
         ];
         csvRows.push(row.join(","));
       }
