@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import QuickAddButton from "@/components/product/QuickAddButton";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -77,9 +78,18 @@ function ProductCard({ product, t, compact }) {
             {t("product.from", { price: formatCad(product.basePrice) })}
           </p>
         )}
-        <span className={`inline-block rounded-full bg-gray-900 text-[10px] font-semibold uppercase tracking-[0.15em] text-white transition-colors group-hover:bg-black ${compact ? "mt-1.5 px-2.5 py-1" : "mt-2 px-3 py-1.5"}`}>
-          {t("mp.landing.viewOrder")}
-        </span>
+        {!compact ? (
+          <div className="mt-2 flex items-center gap-2">
+            <QuickAddButton product={product} />
+            <span className="inline-block rounded-full bg-gray-900 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white transition-colors group-hover:bg-black">
+              {t("mp.landing.viewOrder")}
+            </span>
+          </div>
+        ) : (
+          <span className="mt-1.5 inline-block rounded-full bg-gray-900 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-white transition-colors group-hover:bg-black">
+            {t("mp.landing.viewOrder")}
+          </span>
+        )}
       </div>
     </Link>
   );

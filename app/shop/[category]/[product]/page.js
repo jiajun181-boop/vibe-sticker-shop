@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getSubProducts } from "@/lib/subProductConfig";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import { getProductAssets } from "@/lib/assets";
+import { computeFromPrice } from "@/lib/pricing/from-price";
+import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
@@ -125,6 +127,7 @@ export default async function ProductPage({ params }) {
       },
       include: {
         images: { take: 1, orderBy: { sortOrder: "asc" } },
+        pricingPreset: true,
       },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     });
@@ -153,8 +156,20 @@ export default async function ProductPage({ params }) {
       return product;
     });
 
+    // Compute fromPrice + quickAddQty for sub-product cards
+    for (const p of dedupedProducts) {
+      p.fromPrice = computeFromPrice(p);
+      p.quickAddQty = getSmartDefaults(p).minQuantity;
+    }
+
     const config = await getCatalogConfig();
     const categoryMeta = config.categoryMeta[decodedCategory];
+
+    // Sibling sub-groups for "Also browse..." section
+    const siblingSubGroups = (categoryMeta?.subGroups || [])
+      .filter((sg) => sg.slug !== decodedSlug)
+      .slice(0, 6)
+      .map((sg) => ({ slug: sg.slug, title: sg.title, href: sg.href }));
 
     return (
       <SubProductLandingClient
@@ -162,6 +177,7 @@ export default async function ProductPage({ params }) {
         category={decodedCategory}
         categoryTitle={categoryMeta?.title || decodedCategory}
         products={toClientSafe(dedupedProducts)}
+        siblingSubGroups={siblingSubGroups}
       />
     );
   }

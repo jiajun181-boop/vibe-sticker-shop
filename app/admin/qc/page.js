@@ -40,7 +40,7 @@ const severityColors = {
 };
 
 const resolutionColors = {
-  pending: "bg-gray-100 text-gray-600",
+  pending: "bg-[#f5f5f5] text-[#666]",
   accepted: "bg-green-100 text-green-700",
   reprint: "bg-blue-100 text-blue-700",
   refund: "bg-purple-100 text-purple-700",
@@ -186,11 +186,11 @@ export default function QCPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-gray-900">
+          <h1 className="text-xl font-semibold text-black">
             Quality Control
           </h1>
           {pagination && (
-            <span className="inline-flex items-center rounded-full bg-gray-900 px-2.5 py-0.5 text-xs font-medium text-white">
+            <span className="inline-flex items-center rounded-[2px] bg-black px-2.5 py-0.5 text-xs font-medium text-white">
               {pagination.total}
             </span>
           )}
@@ -198,7 +198,7 @@ export default function QCPage() {
         <button
           type="button"
           onClick={() => setShowForm(!showForm)}
-          className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
         >
           {showForm ? "Cancel" : "Report Defect"}
         </button>
@@ -206,15 +206,15 @@ export default function QCPage() {
 
       {/* Report Defect Form (inline) */}
       {showForm && (
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="mb-4 text-sm font-semibold text-gray-900">
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+          <h2 className="mb-4 text-sm font-semibold text-black">
             New Defect Report
           </h2>
           <form onSubmit={handleCreateReport} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               {/* Order ID */}
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">
+                <label className="mb-1 block text-xs font-medium text-[#666]">
                   Order ID *
                 </label>
                 <input
@@ -224,13 +224,13 @@ export default function QCPage() {
                     setFormData((prev) => ({ ...prev, orderId: e.target.value }))
                   }
                   placeholder="e.g. cm4x7abc..."
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900"
                 />
               </div>
 
               {/* Defect Type */}
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">
+                <label className="mb-1 block text-xs font-medium text-[#666]">
                   Defect Type
                 </label>
                 <select
@@ -241,7 +241,7 @@ export default function QCPage() {
                       defectType: e.target.value,
                     }))
                   }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm text-black outline-none focus:border-gray-900"
                 >
                   {defectTypeOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -253,7 +253,7 @@ export default function QCPage() {
 
               {/* Severity */}
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">
+                <label className="mb-1 block text-xs font-medium text-[#666]">
                   Severity
                 </label>
                 <select
@@ -264,7 +264,7 @@ export default function QCPage() {
                       severity: e.target.value,
                     }))
                   }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm text-black outline-none focus:border-gray-900"
                 >
                   <option value="minor">Minor</option>
                   <option value="major">Major</option>
@@ -275,7 +275,7 @@ export default function QCPage() {
 
             {/* Description */}
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600">
+              <label className="mb-1 block text-xs font-medium text-[#666]">
                 Description *
               </label>
               <textarea
@@ -288,7 +288,7 @@ export default function QCPage() {
                 }
                 rows={3}
                 placeholder="Describe the defect..."
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900"
               />
             </div>
 
@@ -299,7 +299,7 @@ export default function QCPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-gray-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-black disabled:bg-gray-400"
+              className="rounded-[3px] bg-black px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
             >
               {submitting ? "Submitting..." : "Submit Report"}
             </button>
@@ -308,10 +308,10 @@ export default function QCPage() {
       )}
 
       {/* Filter bar */}
-      <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="flex flex-col gap-3 rounded-[3px] border border-[#e0e0e0] bg-white p-4 sm:flex-row sm:flex-wrap sm:items-center">
         {/* Resolution filter */}
         <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-500">
+          <label className="text-xs font-medium text-[#999]">
             Resolution
           </label>
           <select
@@ -320,7 +320,7 @@ export default function QCPage() {
               setResolutionFilter(e.target.value);
               setPage(1);
             }}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 outline-none focus:border-gray-900"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-gray-900"
           >
             {resolutionOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -332,14 +332,14 @@ export default function QCPage() {
 
         {/* Severity filter */}
         <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-gray-500">Severity</label>
+          <label className="text-xs font-medium text-[#999]">Severity</label>
           <select
             value={severityFilter}
             onChange={(e) => {
               setSeverityFilter(e.target.value);
               setPage(1);
             }}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 outline-none focus:border-gray-900"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-gray-900"
           >
             {severityOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -358,10 +358,10 @@ export default function QCPage() {
               setSeverityFilter("");
               setPage(1);
             }}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded-[3px] border px-3 py-1.5 text-xs font-medium transition-colors ${
               resolutionFilter === "pending" && !severityFilter
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                ? "border-gray-900 bg-black text-white"
+                : "border-[#d0d0d0] text-black hover:bg-[#fafafa]"
             }`}
           >
             Pending
@@ -373,10 +373,10 @@ export default function QCPage() {
               setResolutionFilter("");
               setPage(1);
             }}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded-[3px] border px-3 py-1.5 text-xs font-medium transition-colors ${
               severityFilter === "critical" && !resolutionFilter
                 ? "border-red-600 bg-red-600 text-white"
-                : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                : "border-[#d0d0d0] text-black hover:bg-[#fafafa]"
             }`}
           >
             Critical
@@ -388,7 +388,7 @@ export default function QCPage() {
               setSeverityFilter("");
               setPage(1);
             }}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
           >
             Clear
           </button>
@@ -397,40 +397,40 @@ export default function QCPage() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-xs font-medium text-gray-500">Total Reports</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900">
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
+          <p className="text-xs font-medium text-[#999]">Total Reports</p>
+          <p className="mt-1 text-2xl font-semibold text-black">
             {pagination?.total || 0}
           </p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-xs font-medium text-gray-500">Pending</p>
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
+          <p className="text-xs font-medium text-[#999]">Pending</p>
           <p className="mt-1 text-2xl font-semibold text-yellow-600">
             {pendingCount}
           </p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-xs font-medium text-gray-500">Critical</p>
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
+          <p className="text-xs font-medium text-[#999]">Critical</p>
           <p className="mt-1 text-2xl font-semibold text-red-600">
             {criticalCount}
           </p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-xs font-medium text-gray-500">This Page</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900">
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
+          <p className="text-xs font-medium text-[#999]">This Page</p>
+          <p className="mt-1 text-2xl font-semibold text-black">
             {reports.length}
           </p>
         </div>
       </div>
 
       {/* Reports table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
-          <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+          <div className="flex h-48 items-center justify-center text-sm text-[#999]">
             Loading QC reports...
           </div>
         ) : reports.length === 0 ? (
-          <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+          <div className="flex h-48 items-center justify-center text-sm text-[#999]">
             No QC reports found
           </div>
         ) : (
@@ -439,41 +439,41 @@ export default function QCPage() {
             <div className="hidden overflow-x-auto lg:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Order
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Defect Type
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Severity
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Description
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Resolution
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Reported By
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Created
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#e0e0e0]">
                   {reports.map((report) => (
-                    <tr key={report.id} className="hover:bg-gray-50">
+                    <tr key={report.id} className="hover:bg-[#fafafa]">
                       {/* Order ID (linked) */}
                       <td className="px-4 py-3">
                         <Link
                           href={`/admin/orders/${report.orderId}`}
-                          className="font-mono text-xs text-blue-600 hover:text-blue-800"
+                          className="font-mono text-xs text-black underline hover:no-underline"
                         >
                           {report.orderId?.slice(0, 8)}...
                         </Link>
@@ -481,7 +481,7 @@ export default function QCPage() {
 
                       {/* Defect Type */}
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-900">
+                        <span className="text-sm text-black">
                           {report.defectType?.replace(/_/g, " ")}
                         </span>
                       </td>
@@ -489,9 +489,9 @@ export default function QCPage() {
                       {/* Severity badge */}
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          className={`inline-block rounded-[2px] px-2.5 py-0.5 text-xs font-medium ${
                             severityColors[report.severity] ||
-                            "bg-gray-100 text-gray-600"
+                            "bg-[#f5f5f5] text-[#666]"
                           }`}
                         >
                           {report.severity}
@@ -501,7 +501,7 @@ export default function QCPage() {
                       {/* Description (truncated) */}
                       <td className="px-4 py-3">
                         <p
-                          className="max-w-[240px] truncate text-sm text-gray-600"
+                          className="max-w-[240px] truncate text-sm text-[#666]"
                           title={report.description}
                         >
                           {report.description}
@@ -511,9 +511,9 @@ export default function QCPage() {
                       {/* Resolution badge */}
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          className={`inline-block rounded-[2px] px-2.5 py-0.5 text-xs font-medium ${
                             resolutionColors[report.resolution] ||
-                            "bg-gray-100 text-gray-600"
+                            "bg-[#f5f5f5] text-[#666]"
                           }`}
                         >
                           {report.resolution || "pending"}
@@ -522,13 +522,13 @@ export default function QCPage() {
 
                       {/* Reported By */}
                       <td className="px-4 py-3">
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-[#666]">
                           {report.reportedBy || "\u2014"}
                         </span>
                       </td>
 
                       {/* Created */}
-                      <td className="px-4 py-3 text-xs text-gray-500">
+                      <td className="px-4 py-3 text-xs text-[#999]">
                         {timeAgo(report.createdAt)}
                       </td>
 
@@ -546,12 +546,12 @@ export default function QCPage() {
                                 resolutionNote: "",
                               });
                             }}
-                            className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                            className="text-xs font-medium text-black underline hover:no-underline"
                           >
                             {resolvingId === report.id ? "Cancel" : "Resolve"}
                           </button>
                         ) : (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-[#999]">
                             Resolved
                           </span>
                         )}
@@ -563,45 +563,45 @@ export default function QCPage() {
             </div>
 
             {/* Mobile cards */}
-            <div className="divide-y divide-gray-100 lg:hidden">
+            <div className="divide-y divide-[#e0e0e0] lg:hidden">
               {reports.map((report) => (
                 <div
                   key={report.id}
-                  className="px-4 py-3 hover:bg-gray-50"
+                  className="px-4 py-3 hover:bg-[#fafafa]"
                 >
                   <div className="flex items-start justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/admin/orders/${report.orderId}`}
-                          className="font-mono text-xs text-blue-600 hover:text-blue-800"
+                          className="font-mono text-xs text-black underline hover:no-underline"
                         >
                           {report.orderId?.slice(0, 8)}...
                         </Link>
                         <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                          className={`inline-block rounded-[2px] px-2 py-0.5 text-xs font-medium ${
                             severityColors[report.severity] ||
-                            "bg-gray-100 text-gray-600"
+                            "bg-[#f5f5f5] text-[#666]"
                           }`}
                         >
                           {report.severity}
                         </span>
                         <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                          className={`inline-block rounded-[2px] px-2 py-0.5 text-xs font-medium ${
                             resolutionColors[report.resolution] ||
-                            "bg-gray-100 text-gray-600"
+                            "bg-[#f5f5f5] text-[#666]"
                           }`}
                         >
                           {report.resolution || "pending"}
                         </span>
                       </div>
-                      <p className="mt-1 text-sm font-medium text-gray-900">
+                      <p className="mt-1 text-sm font-medium text-black">
                         {report.defectType?.replace(/_/g, " ")}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-gray-500">
+                      <p className="mt-0.5 truncate text-xs text-[#999]">
                         {report.description}
                       </p>
-                      <p className="mt-1 text-xs text-gray-400">
+                      <p className="mt-1 text-xs text-[#999]">
                         {report.reportedBy || "\u2014"} &middot;{" "}
                         {timeAgo(report.createdAt)}
                       </p>
@@ -618,7 +618,7 @@ export default function QCPage() {
                             resolutionNote: "",
                           });
                         }}
-                        className="ml-3 text-xs font-medium text-blue-600 hover:text-blue-800"
+                        className="ml-3 text-xs font-medium text-black underline hover:no-underline"
                       >
                         {resolvingId === report.id ? "Cancel" : "Resolve"}
                       </button>
@@ -627,7 +627,7 @@ export default function QCPage() {
 
                   {/* Inline resolve form (mobile) */}
                   {resolvingId === report.id && (
-                    <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                    <div className="mt-3 rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
                       <div className="flex flex-col gap-2">
                         <select
                           value={resolveData.resolution}
@@ -637,7 +637,7 @@ export default function QCPage() {
                               resolution: e.target.value,
                             }))
                           }
-                          className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 outline-none focus:border-gray-900"
+                          className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs text-black outline-none focus:border-gray-900"
                         >
                           <option value="accepted">Accepted</option>
                           <option value="reprint">Reprint</option>
@@ -654,13 +654,13 @@ export default function QCPage() {
                             }))
                           }
                           placeholder="Resolution note..."
-                          className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs outline-none focus:border-gray-900"
+                          className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs outline-none focus:border-gray-900"
                         />
                         <button
                           type="button"
                           onClick={() => handleResolve(report.id)}
                           disabled={resolveSubmitting}
-                          className="rounded-lg bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:bg-gray-400"
+                          className="rounded-[3px] bg-black px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
                         >
                           {resolveSubmitting ? "Saving..." : "Submit"}
                         </button>
@@ -678,10 +678,10 @@ export default function QCPage() {
                   resolvingId === report.id ? (
                     <div
                       key={`resolve-${report.id}`}
-                      className="border-t border-gray-200 bg-gray-50 px-4 py-3"
+                      className="border-t border-[#e0e0e0] bg-[#fafafa] px-4 py-3"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-medium text-gray-700">
+                        <span className="text-xs font-medium text-black">
                           Resolve {report.orderId?.slice(0, 8)}:
                         </span>
                         <select
@@ -692,7 +692,7 @@ export default function QCPage() {
                               resolution: e.target.value,
                             }))
                           }
-                          className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 outline-none focus:border-gray-900"
+                          className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs text-black outline-none focus:border-gray-900"
                         >
                           <option value="accepted">Accepted</option>
                           <option value="reprint">Reprint</option>
@@ -709,20 +709,20 @@ export default function QCPage() {
                             }))
                           }
                           placeholder="Resolution note..."
-                          className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs outline-none focus:border-gray-900"
+                          className="flex-1 rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs outline-none focus:border-gray-900"
                         />
                         <button
                           type="button"
                           onClick={() => handleResolve(report.id)}
                           disabled={resolveSubmitting}
-                          className="rounded-lg bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:bg-gray-400"
+                          className="rounded-[3px] bg-black px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
                         >
                           {resolveSubmitting ? "Saving..." : "Submit"}
                         </button>
                         <button
                           type="button"
                           onClick={() => setResolvingId(null)}
-                          className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                          className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
                         >
                           Cancel
                         </button>
@@ -739,7 +739,7 @@ export default function QCPage() {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[#999]">
             Showing {(pagination.page - 1) * pagination.limit + 1}-
             {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
             {pagination.total}
@@ -749,7 +749,7 @@ export default function QCPage() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
               Previous
             </button>
@@ -770,10 +770,10 @@ export default function QCPage() {
                   key={pageNum}
                   type="button"
                   onClick={() => setPage(pageNum)}
-                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-[3px] border px-3 py-1.5 text-xs font-medium transition-colors ${
                     page === pageNum
-                      ? "border-gray-900 bg-gray-900 text-white"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                      ? "border-gray-900 bg-black text-white"
+                      : "border-[#d0d0d0] text-black hover:bg-[#fafafa]"
                   }`}
                 >
                   {pageNum}
@@ -784,7 +784,7 @@ export default function QCPage() {
               type="button"
               disabled={page >= pagination.totalPages}
               onClick={() => setPage((p) => p + 1)}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
               Next
             </button>

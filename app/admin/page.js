@@ -16,17 +16,16 @@ const statusColors = {
 };
 
 /* ── Mini sparkline (7 bars) ── */
-function Sparkline({ data, color = "blue" }) {
+function Sparkline({ data }) {
   if (!data || data.length === 0) return null;
   const max = Math.max(...data, 1);
-  const barColor = { blue: "bg-blue-400", yellow: "bg-yellow-400", green: "bg-emerald-400", gray: "bg-gray-300" };
   return (
     <div className="flex items-end gap-[3px] h-8">
       {data.map((v, i) => (
         <div
           key={i}
-          className={`w-[5px] rounded-full ${barColor[color] || barColor.blue} transition-all duration-300`}
-          style={{ height: `${Math.max(10, (v / max) * 100)}%`, opacity: i === data.length - 1 ? 1 : 0.55 }}
+          className="w-[5px] bg-black transition-all duration-300"
+          style={{ height: `${Math.max(10, (v / max) * 100)}%`, opacity: i === data.length - 1 ? 1 : 0.3 }}
         />
       ))}
     </div>
@@ -36,12 +35,12 @@ function Sparkline({ data, color = "blue" }) {
 /* ── % change badge ── */
 function Change({ current, previous }) {
   if (previous === 0 && current === 0) return null;
-  if (previous === 0) return <span className="mt-1 inline-block label-sm font-medium text-emerald-600">NEW</span>;
+  if (previous === 0) return <span className="mt-1 inline-block text-[10px] font-bold uppercase tracking-wider text-emerald-600">NEW</span>;
   const pct = Math.round(((current - previous) / previous) * 100);
-  if (pct === 0) return <span className="mt-1 inline-block label-sm text-gray-400">&mdash; vs prev</span>;
+  if (pct === 0) return <span className="mt-1 inline-block text-[10px] text-[#999]">&mdash; vs prev</span>;
   const up = pct > 0;
   return (
-    <span className={`mt-1 inline-flex items-center gap-0.5 label-sm font-medium ${up ? "text-emerald-600" : "text-red-500"}`}>
+    <span className={`mt-1 inline-flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wider ${up ? "text-emerald-600" : "text-red-500"}`}>
       <svg className={`h-3 w-3 ${up ? "" : "rotate-180"}`} viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clipRule="evenodd" />
       </svg>
@@ -51,17 +50,16 @@ function Change({ current, previous }) {
 }
 
 /* ── Stat card ── */
-function StatCard({ label, value, change, sparkline, color }) {
-  const border = { blue: "border-blue-100", yellow: "border-yellow-100", green: "border-emerald-100", gray: "border-gray-200" };
+function StatCard({ label, value, change, sparkline }) {
   return (
-    <div className={`rounded-xl border bg-white p-5 ${border[color] || border.gray}`}>
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="label-sm text-gray-400">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 tabular-nums">{value}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">{label}</p>
+          <p className="mt-1 text-2xl font-bold text-black tabular-nums">{value}</p>
           {change}
         </div>
-        {sparkline && <Sparkline data={sparkline} color={color} />}
+        {sparkline && <Sparkline data={sparkline} />}
       </div>
     </div>
   );
@@ -120,8 +118,8 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">{t("admin.dashboard.title")}</h1>
-        <p className="text-xs text-gray-400">
+        <h1 className="text-xl font-bold text-black">{t("admin.dashboard.title")}</h1>
+        <p className="text-xs text-[#999]">
           {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
         </p>
       </div>
@@ -132,16 +130,14 @@ export default function AdminDashboard() {
           value={stats.todayOrders}
           change={<Change current={stats.todayOrders} previous={stats.yesterdayOrders} />}
           sparkline={stats.dailyOrders}
-          color="blue"
         />
-        <StatCard label={t("admin.dashboard.pendingOrders")} value={stats.pendingOrders} color="yellow" />
+        <StatCard label={t("admin.dashboard.pendingOrders")} value={stats.pendingOrders} />
         <StatCard
           label={t("admin.dashboard.monthRevenue")}
           value={formatCad(stats.monthRevenue)}
           change={<Change current={stats.monthRevenue} previous={stats.prevMonthRevenue} />}
-          color="green"
         />
-        <StatCard label={t("admin.dashboard.totalOrders")} value={stats.totalOrders} sparkline={stats.dailyOrders} color="gray" />
+        <StatCard label={t("admin.dashboard.totalOrders")} value={stats.totalOrders} sparkline={stats.dailyOrders} />
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -149,7 +145,7 @@ export default function AdminDashboard() {
           <Link
             key={a.href}
             href={a.href}
-            className="flex shrink-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-all hover:border-gray-400 hover:shadow-sm"
+            className="flex shrink-0 items-center gap-2 rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-2.5 text-sm font-semibold text-black transition-all hover:border-black hover:shadow-sm"
           >
             <QIcon name={a.icon} className="h-4 w-4" />
             {a.label}
@@ -157,35 +153,35 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white">
-        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-          <h2 className="text-sm font-bold text-gray-900">{t("admin.dashboard.recentOrders")}</h2>
-          <Link href="/admin/orders" className="text-xs font-medium text-blue-600 hover:text-blue-800">
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
+        <div className="flex items-center justify-between border-b border-[#e0e0e0] px-5 py-4">
+          <h2 className="text-sm font-bold text-black">{t("admin.dashboard.recentOrders")}</h2>
+          <Link href="/admin/orders" className="text-xs font-medium text-black underline hover:no-underline">
             {t("admin.dashboard.viewAll")}
           </Link>
         </div>
         {stats.recentOrders.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-gray-500">{t("admin.dashboard.noOrders")}</div>
+          <div className="px-5 py-8 text-center text-sm text-[#999]">{t("admin.dashboard.noOrders")}</div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-[#e0e0e0]">
             {stats.recentOrders.map((order) => (
               <Link
                 key={order.id}
                 href={`/admin/orders/${order.id}`}
-                className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-gray-50"
+                className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[#fafafa]"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900">{order.customerEmail}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="truncate text-sm font-medium text-black">{order.customerEmail}</p>
+                  <p className="text-xs text-[#999]">
                     {order._count.items} item{order._count.items !== 1 && "s"} &middot;{" "}
                     {new Date(order.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
-                  <span className={`rounded-full px-2.5 py-0.5 label-sm font-medium ${statusColors[order.status] || "bg-gray-100 text-gray-700"}`}>
+                  <span className={`rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusColors[order.status] || "bg-gray-100 text-gray-700"}`}>
                     {order.status}
                   </span>
-                  <span className="text-sm font-semibold tabular-nums text-gray-900">{formatCad(order.totalAmount)}</span>
+                  <span className="text-sm font-semibold tabular-nums text-black">{formatCad(order.totalAmount)}</span>
                 </div>
               </Link>
             ))}
@@ -200,29 +196,29 @@ function DashboardSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
       <div className="flex items-center justify-between">
-        <div className="h-7 w-32 rounded-lg bg-gray-200" />
-        <div className="h-4 w-40 rounded bg-gray-100" />
+        <div className="h-7 w-32 rounded-[3px] bg-[#e8e8e8]" />
+        <div className="h-4 w-40 rounded-[3px] bg-[#e8e8e8]" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-gray-200 bg-white p-5">
-            <div className="h-3 w-20 rounded bg-gray-200" />
-            <div className="mt-3 h-7 w-16 rounded bg-gray-200" />
-            <div className="mt-2 h-3 w-12 rounded bg-gray-100" />
+          <div key={i} className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+            <div className="h-3 w-20 rounded-[2px] bg-[#e8e8e8]" />
+            <div className="mt-3 h-7 w-16 rounded-[2px] bg-[#e8e8e8]" />
+            <div className="mt-2 h-3 w-12 rounded-[2px] bg-[#e8e8e8]" />
           </div>
         ))}
       </div>
       <div className="flex gap-2">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-10 w-32 rounded-lg border border-gray-200 bg-white" />
+          <div key={i} className="h-10 w-32 rounded-[3px] border border-[#e0e0e0] bg-white" />
         ))}
       </div>
-      <div className="rounded-xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 px-5 py-4"><div className="h-4 w-28 rounded bg-gray-200" /></div>
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
+        <div className="border-b border-[#e0e0e0] px-5 py-4"><div className="h-4 w-28 rounded-[2px] bg-[#e8e8e8]" /></div>
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex items-center justify-between px-5 py-3.5">
-            <div><div className="h-4 w-44 rounded bg-gray-200" /><div className="mt-1.5 h-3 w-24 rounded bg-gray-100" /></div>
-            <div className="flex items-center gap-3"><div className="h-5 w-14 rounded-full bg-gray-200" /><div className="h-5 w-16 rounded bg-gray-200" /></div>
+            <div><div className="h-4 w-44 rounded-[2px] bg-[#e8e8e8]" /><div className="mt-1.5 h-3 w-24 rounded-[2px] bg-[#e8e8e8]" /></div>
+            <div className="flex items-center gap-3"><div className="h-5 w-14 rounded-[2px] bg-[#e8e8e8]" /><div className="h-5 w-16 rounded-[2px] bg-[#e8e8e8]" /></div>
           </div>
         ))}
       </div>

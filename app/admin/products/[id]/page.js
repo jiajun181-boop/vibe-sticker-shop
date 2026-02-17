@@ -68,15 +68,15 @@ const formatCad = (cents) =>
 function Section({ title, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-xl border border-gray-200 bg-white">
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
       <button
         type="button"
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between px-5 py-4"
       >
-        <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
+        <h2 className="text-sm font-semibold text-black">{title}</h2>
         <svg
-          className={`h-4 w-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 text-[#999] transition-transform ${open ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -85,7 +85,7 @@ function Section({ title, defaultOpen = true, children }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
         </svg>
       </button>
-      {open && <div className="border-t border-gray-100 px-5 pb-5 pt-4">{children}</div>}
+      {open && <div className="border-t border-[#e0e0e0] px-5 pb-5 pt-4">{children}</div>}
     </div>
   );
 }
@@ -112,10 +112,10 @@ function TagInput({ value = [], onChange, placeholder }) {
         {value.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700"
+            className="inline-flex items-center gap-1 rounded-[2px] bg-[#f5f5f5] px-2.5 py-1 text-xs font-medium text-black"
           >
             {tag}
-            <button type="button" onClick={() => removeTag(tag)} className="text-gray-400 hover:text-red-500">
+            <button type="button" onClick={() => removeTag(tag)} className="text-[#999] hover:text-red-500">
               ×
             </button>
           </span>
@@ -130,9 +130,9 @@ function TagInput({ value = [], onChange, placeholder }) {
             if (e.key === "Enter") { e.preventDefault(); addTag(); }
           }}
           placeholder={placeholder}
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+          className="flex-1 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900"
         />
-        <button type="button" onClick={addTag} className="rounded-lg bg-gray-100 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-200">
+        <button type="button" onClick={addTag} className="rounded-[3px] bg-[#f5f5f5] px-3 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]">
           Add
         </button>
       </div>
@@ -365,7 +365,7 @@ export default function ProductDetailPage() {
     finally { setUploadingAsset(false); if (assetFileRef.current) assetFileRef.current.value = ""; }
   }
 
-  if (loading) return <div className="flex h-48 items-center justify-center text-sm text-gray-500">Loading...</div>;
+  if (loading) return <div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading...</div>;
   if (!product) return null;
 
   const primaryImage = product.images?.[0];
@@ -374,23 +374,23 @@ export default function ProductDetailPage() {
     <div className="space-y-6">
       {/* ── Header ── */}
       <div className="flex items-center gap-3">
-        <Link href="/admin/products" className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600">
+        <Link href="/admin/products" className="rounded-[3px] p-1.5 text-[#999] transition-colors hover:bg-[#fafafa] hover:text-[#666]">
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </Link>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold text-gray-900">{product.name}</h1>
-          <p className="font-mono text-xs text-gray-400">{product.slug}</p>
+          <h1 className="text-xl font-semibold text-black">{product.name}</h1>
+          <p className="font-mono text-xs text-[#999]">{product.slug}</p>
         </div>
-        <span className={`rounded-full px-3 py-1 text-xs font-medium ${product.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
+        <span className={`rounded-[2px] px-3 py-1 text-xs font-medium ${product.isActive ? "bg-green-100 text-green-700" : "bg-[#f5f5f5] text-[#999]"}`}>
           {product.isActive ? "Active" : "Inactive"}
         </span>
       </div>
 
       {/* ── Toast ── */}
       {message && (
-        <div className={`rounded-lg px-4 py-3 text-sm font-medium ${message.isError ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}>
+        <div className={`rounded-[3px] px-4 py-3 text-sm font-medium ${message.isError ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}>
           {message.text}
         </div>
       )}
@@ -398,10 +398,10 @@ export default function ProductDetailPage() {
       {/* ══════════════════════════════════════════════ */}
       {/* ── HERO: Image + Price (ALWAYS AT TOP) ────── */}
       {/* ══════════════════════════════════════════════ */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
         <div className="flex flex-col sm:flex-row gap-5">
           {/* Primary Image */}
-          <div className="relative flex-shrink-0 w-full sm:w-48 h-48 rounded-xl bg-gray-100 overflow-hidden">
+          <div className="relative flex-shrink-0 w-full sm:w-48 h-48 rounded-[3px] bg-[#f5f5f5] overflow-hidden">
             {primaryImage?.url ? (
               <Image
                 src={primaryImage.url}
@@ -412,7 +412,7 @@ export default function ProductDetailPage() {
                 unoptimized={primaryImage.url.endsWith(".svg")}
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+              <div className="flex h-full w-full items-center justify-center text-xs text-[#999]">
                 No image
               </div>
             )}
@@ -421,23 +421,23 @@ export default function ProductDetailPage() {
           {/* Price & Key Info */}
           <div className="flex-1 space-y-3">
             <div>
-              <p className="text-xs font-medium text-gray-500">Base Price</p>
-              <p className="text-3xl font-bold text-gray-900">{formatCad(product.basePrice)}</p>
-              <p className="text-xs text-gray-400">{product.pricingUnit === "per_sqft" ? "per sq ft" : "per piece"}</p>
+              <p className="text-xs font-medium text-[#999]">Base Price</p>
+              <p className="text-3xl font-bold text-black">{formatCad(product.basePrice)}</p>
+              <p className="text-xs text-[#999]">{product.pricingUnit === "per_sqft" ? "per sq ft" : "per piece"}</p>
             </div>
             <div className="flex flex-wrap gap-2 text-xs">
-              <span className="rounded-full bg-blue-50 px-2.5 py-1 font-medium text-blue-700">{product.category}</span>
+              <span className="rounded-[2px] bg-blue-50 px-2.5 py-1 font-medium text-blue-700">{product.category}</span>
               {form.subseries ? (
-                <span className="rounded-full bg-indigo-50 px-2.5 py-1 font-medium text-indigo-700">
+                <span className="rounded-[2px] bg-indigo-50 px-2.5 py-1 font-medium text-indigo-700">
                   {titleizeSlug(form.subseries)}
                 </span>
               ) : null}
-              <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">{product.type}</span>
+              <span className="rounded-[2px] bg-[#f5f5f5] px-2.5 py-1 font-medium text-[#666]">{product.type}</span>
               {product.isFeatured && (
-                <span className="rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-700">Featured</span>
+                <span className="rounded-[2px] bg-amber-50 px-2.5 py-1 font-medium text-amber-700">Featured</span>
               )}
             </div>
-            <div className="flex gap-2 text-xs text-gray-500">
+            <div className="flex gap-2 text-xs text-[#999]">
               <span>{product.images?.length || 0} images</span>
               <span>·</span>
               <span>Sort: {product.sortOrder}</span>
@@ -458,16 +458,16 @@ export default function ProductDetailPage() {
           <Section title="Basic Information">
             <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">Name *</label>
-                <input type="text" value={form.name || ""} onChange={(e) => updateField("name", e.target.value)} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <label className="mb-1 block text-xs font-medium text-[#999]">Name *</label>
+                <input type="text" value={form.name || ""} onChange={(e) => updateField("name", e.target.value)} required className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">Slug *</label>
-                <input type="text" value={form.slug || ""} onChange={(e) => updateField("slug", e.target.value)} required className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm outline-none focus:border-gray-900" />
+                <label className="mb-1 block text-xs font-medium text-[#999]">Slug *</label>
+                <input type="text" value={form.slug || ""} onChange={(e) => updateField("slug", e.target.value)} required className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 font-mono text-sm outline-none focus:border-gray-900" />
               </div>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">Category</label>
+                  <label className="mb-1 block text-xs font-medium text-[#999]">Category</label>
                   <select
                     value={form.category || ""}
                     onChange={(e) => {
@@ -478,17 +478,17 @@ export default function ProductDetailPage() {
                         updateField("subseries", nextSubseriesOptions[0] || "");
                       }
                     }}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900"
                   >
                     {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">Subseries *</label>
+                  <label className="mb-1 block text-xs font-medium text-[#999]">Subseries *</label>
                   <select
                     value={form.subseries || ""}
                     onChange={(e) => updateField("subseries", e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900"
                   >
                     <option value="">Select subseries</option>
                     {subseriesOptions.map((slug) => (
@@ -497,23 +497,23 @@ export default function ProductDetailPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">Type</label>
-                  <select value={form.type || "sticker"} onChange={(e) => updateField("type", e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900">
+                  <label className="mb-1 block text-xs font-medium text-[#999]">Type</label>
+                  <select value={form.type || "sticker"} onChange={(e) => updateField("type", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900">
                     {types.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">Sort Order</label>
-                  <input type="number" value={form.sortOrder ?? 0} onChange={(e) => updateField("sortOrder", e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                  <label className="mb-1 block text-xs font-medium text-[#999]">Sort Order</label>
+                  <input type="number" value={form.sortOrder ?? 0} onChange={(e) => updateField("sortOrder", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">Description</label>
-                <textarea rows={3} value={form.description || ""} onChange={(e) => updateField("description", e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <label className="mb-1 block text-xs font-medium text-[#999]">Description</label>
+                <textarea rows={3} value={form.description || ""} onChange={(e) => updateField("description", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
               </div>
               <div className="flex gap-4">
-                <label className="flex items-center gap-2 text-sm text-gray-700">
-                  <input type="checkbox" checked={form.isFeatured || false} onChange={(e) => updateField("isFeatured", e.target.checked)} className="rounded border-gray-300" />
+                <label className="flex items-center gap-2 text-sm text-black">
+                  <input type="checkbox" checked={form.isFeatured || false} onChange={(e) => updateField("isFeatured", e.target.checked)} className="rounded border-[#d0d0d0]" />
                   Featured Product
                 </label>
               </div>
@@ -524,12 +524,12 @@ export default function ProductDetailPage() {
           <Section title="Pricing">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">Base Price (CAD) *</label>
-                <input type="number" step="0.01" min="0" value={form.basePrice || ""} onChange={(e) => updateField("basePrice", e.target.value)} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <label className="mb-1 block text-xs font-medium text-[#999]">Base Price (CAD) *</label>
+                <input type="number" step="0.01" min="0" value={form.basePrice || ""} onChange={(e) => updateField("basePrice", e.target.value)} required className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">Pricing Unit</label>
-                <select value={form.pricingUnit || "per_piece"} onChange={(e) => updateField("pricingUnit", e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900">
+                <label className="mb-1 block text-xs font-medium text-[#999]">Pricing Unit</label>
+                <select value={form.pricingUnit || "per_piece"} onChange={(e) => updateField("pricingUnit", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900">
                   {pricingUnits.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
                 </select>
               </div>
@@ -546,23 +546,23 @@ export default function ProductDetailPage() {
                 ["maxHeightIn", "Max Height (in)"],
               ].map(([field, label]) => (
                 <div key={field}>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">{label}</label>
-                  <input type="number" step="0.1" value={form[field] ?? ""} onChange={(e) => updateField(field, e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                  <label className="mb-1 block text-xs font-medium text-[#999]">{label}</label>
+                  <input type="number" step="0.1" value={form[field] ?? ""} onChange={(e) => updateField(field, e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
                 </div>
               ))}
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">Min DPI</label>
-                <input type="number" value={form.minDpi ?? ""} onChange={(e) => updateField("minDpi", e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <label className="mb-1 block text-xs font-medium text-[#999]">Min DPI</label>
+                <input type="number" value={form.minDpi ?? ""} onChange={(e) => updateField("minDpi", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">Bleed (in)</label>
-                <input type="number" step="0.01" value={form.bleedIn ?? ""} onChange={(e) => updateField("bleedIn", e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <label className="mb-1 block text-xs font-medium text-[#999]">Bleed (in)</label>
+                <input type="number" step="0.01" value={form.bleedIn ?? ""} onChange={(e) => updateField("bleedIn", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
               </div>
               <div className="flex items-end gap-2 pb-2">
-                <label className="flex items-center gap-2 text-sm text-gray-700">
-                  <input type="checkbox" checked={form.requiresBleed || false} onChange={(e) => updateField("requiresBleed", e.target.checked)} className="rounded border-gray-300" />
+                <label className="flex items-center gap-2 text-sm text-black">
+                  <input type="checkbox" checked={form.requiresBleed || false} onChange={(e) => updateField("requiresBleed", e.target.checked)} className="rounded border-[#d0d0d0]" />
                   Requires Bleed
                 </label>
               </div>
@@ -570,17 +570,17 @@ export default function ProductDetailPage() {
 
             {/* Accepted Formats */}
             <div className="mt-4">
-              <label className="mb-2 block text-xs font-medium text-gray-500">Accepted Formats</label>
+              <label className="mb-2 block text-xs font-medium text-[#999]">Accepted Formats</label>
               <div className="flex flex-wrap gap-2">
                 {ALL_FORMATS.map((fmt) => (
                   <button
                     key={fmt}
                     type="button"
                     onClick={() => toggleFormat(fmt)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                       (form.acceptedFormats || []).includes(fmt)
-                        ? "bg-gray-900 text-white"
-                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                        ? "bg-black text-white"
+                        : "bg-[#f5f5f5] text-[#999] hover:bg-[#fafafa]"
                     }`}
                   >
                     .{fmt}
@@ -591,8 +591,8 @@ export default function ProductDetailPage() {
 
             {/* Template URL */}
             <div className="mt-4">
-              <label className="mb-1 block text-xs font-medium text-gray-500">Template URL</label>
-              <input type="url" value={form.templateUrl || ""} onChange={(e) => updateField("templateUrl", e.target.value)} placeholder="https://..." className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+              <label className="mb-1 block text-xs font-medium text-[#999]">Template URL</label>
+              <input type="url" value={form.templateUrl || ""} onChange={(e) => updateField("templateUrl", e.target.value)} placeholder="https://..." className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
             </div>
           </Section>
 
@@ -606,8 +606,8 @@ export default function ProductDetailPage() {
                 try { JSON.parse(e.target.value); setOptionsJsonError(null); } catch (err) { setOptionsJsonError(err.message); }
               }}
               spellCheck={false}
-              className={`w-full rounded-lg border px-3 py-2 font-mono text-xs outline-none ${
-                optionsJsonError ? "border-red-300 focus:border-red-500" : "border-gray-300 focus:border-gray-900"
+              className={`w-full rounded-[3px] border px-3 py-2 font-mono text-xs outline-none ${
+                optionsJsonError ? "border-red-300 focus:border-red-500" : "border-[#d0d0d0] focus:border-gray-900"
               }`}
               placeholder='{ "sizes": [...], "materials": [...] }'
             />
@@ -618,12 +618,12 @@ export default function ProductDetailPage() {
           <Section title="Tags & Keywords" defaultOpen={false}>
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-xs font-medium text-gray-500">Tags</label>
-                <p className="mb-2 text-[11px] text-gray-400">Subseries tag is managed in Basic Information.</p>
+                <label className="mb-2 block text-xs font-medium text-[#999]">Tags</label>
+                <p className="mb-2 text-[11px] text-[#999]">Subseries tag is managed in Basic Information.</p>
                 <TagInput value={form.tags || []} onChange={(v) => updateField("tags", v)} placeholder="Add tag and press Enter" />
               </div>
               <div>
-                <label className="mb-2 block text-xs font-medium text-gray-500">Keywords</label>
+                <label className="mb-2 block text-xs font-medium text-[#999]">Keywords</label>
                 <TagInput value={form.keywords || []} onChange={(v) => updateField("keywords", v)} placeholder="Add keyword and press Enter" />
               </div>
             </div>
@@ -633,27 +633,27 @@ export default function ProductDetailPage() {
           <Section title="SEO" defaultOpen={false}>
             <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">Meta Title</label>
-                <input type="text" value={form.metaTitle || ""} onChange={(e) => updateField("metaTitle", e.target.value)} placeholder="Custom page title (optional)" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
-                <p className="mt-1 text-[10px] text-gray-400">{(form.metaTitle || "").length}/60</p>
+                <label className="mb-1 block text-xs font-medium text-[#999]">Meta Title</label>
+                <input type="text" value={form.metaTitle || ""} onChange={(e) => updateField("metaTitle", e.target.value)} placeholder="Custom page title (optional)" className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <p className="mt-1 text-[10px] text-[#999]">{(form.metaTitle || "").length}/60</p>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">Meta Description</label>
-                <textarea rows={2} value={form.metaDescription || ""} onChange={(e) => updateField("metaDescription", e.target.value)} placeholder="Custom page description (optional)" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
-                <p className="mt-1 text-[10px] text-gray-400">{(form.metaDescription || "").length}/160</p>
+                <label className="mb-1 block text-xs font-medium text-[#999]">Meta Description</label>
+                <textarea rows={2} value={form.metaDescription || ""} onChange={(e) => updateField("metaDescription", e.target.value)} placeholder="Custom page description (optional)" className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <p className="mt-1 text-[10px] text-[#999]">{(form.metaDescription || "").length}/160</p>
               </div>
             </div>
           </Section>
 
           {/* Save button */}
           <div className="flex gap-3">
-            <button type="submit" disabled={saving} className="rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">
+            <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#222] disabled:opacity-50">
               {saving ? "Saving..." : "Save Changes"}
             </button>
             <button
               type="button"
               onClick={() => updateField("isActive", !form.isActive)}
-              className={`rounded-lg border px-4 py-2.5 text-sm font-medium ${form.isActive ? "border-red-200 text-red-600 hover:bg-red-50" : "border-green-200 text-green-600 hover:bg-green-50"}`}
+              className={`rounded-[3px] border px-4 py-2.5 text-sm font-medium ${form.isActive ? "border-red-200 text-red-600 hover:bg-red-50" : "border-green-200 text-green-600 hover:bg-green-50"}`}
             >
               {form.isActive ? "Deactivate" : "Activate"}
             </button>
@@ -663,8 +663,8 @@ export default function ProductDetailPage() {
         {/* ── Sidebar ── */}
         <div className="space-y-4">
           {/* Images */}
-          <div className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-gray-900">
+          <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+            <h2 className="mb-4 text-sm font-semibold text-black">
               Images ({product.images?.length || 0})
             </h2>
 
@@ -672,7 +672,7 @@ export default function ProductDetailPage() {
               <div className="mb-4 grid grid-cols-2 gap-2">
                 {product.images.map((img, idx) => (
                   <div key={img.id} className="group relative">
-                    <img src={img.url} alt={img.alt || product.name} className="h-24 w-full rounded-lg object-cover" />
+                    <img src={img.url} alt={img.alt || product.name} className="h-24 w-full rounded-[3px] object-cover" />
                     {idx === 0 && (
                       <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">Primary</span>
                     )}
@@ -685,7 +685,7 @@ export default function ProductDetailPage() {
                 ))}
               </div>
             ) : (
-              <div className="mb-4 flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-gray-200 text-xs text-gray-400">
+              <div className="mb-4 flex h-24 items-center justify-center rounded-[3px] border-2 border-dashed border-[#e0e0e0] text-xs text-[#999]">
                 No images
               </div>
             )}
@@ -696,7 +696,7 @@ export default function ProductDetailPage() {
                 type="button"
                 onClick={() => assetFileRef.current?.click()}
                 disabled={uploadingAsset}
-                className="w-full rounded-lg bg-gray-900 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-50"
+                className="w-full rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
               >
                 {uploadingAsset ? "Uploading..." : "Upload Image"}
               </button>
@@ -705,11 +705,11 @@ export default function ProductDetailPage() {
 
             {/* Legacy: Add by URL */}
             <details className="mt-3">
-              <summary className="cursor-pointer text-[10px] text-gray-400 hover:text-gray-600">Add by URL</summary>
+              <summary className="cursor-pointer text-[10px] text-[#999] hover:text-[#666]">Add by URL</summary>
               <div className="mt-2 space-y-2">
-                <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Image URL (https://...)" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
-                <input type="text" value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} placeholder="Alt text (optional)" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
-                <button type="button" onClick={handleAddImage} disabled={!imageUrl.trim() || addingImage} className="w-full rounded-lg border border-gray-300 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50">
+                <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Image URL (https://...)" className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <input type="text" value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} placeholder="Alt text (optional)" className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <button type="button" onClick={handleAddImage} disabled={!imageUrl.trim() || addingImage} className="w-full rounded-[3px] border border-[#d0d0d0] py-2 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-50">
                   {addingImage ? "Adding..." : "Add by URL"}
                 </button>
               </div>
@@ -717,29 +717,29 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Quick Info */}
-          <div className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="mb-3 text-sm font-semibold text-gray-900">Quick Info</h2>
+          <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+            <h2 className="mb-3 text-sm font-semibold text-black">Quick Info</h2>
             <dl className="space-y-2 text-xs">
               <div className="flex justify-between">
-                <dt className="text-gray-500">ID</dt>
-                <dd className="font-mono text-gray-900 truncate max-w-[120px]" title={product.id}>{product.id}</dd>
+                <dt className="text-[#999]">ID</dt>
+                <dd className="font-mono text-black truncate max-w-[120px]" title={product.id}>{product.id}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Created</dt>
-                <dd className="text-gray-900">{new Date(product.createdAt).toLocaleDateString()}</dd>
+                <dt className="text-[#999]">Created</dt>
+                <dd className="text-black">{new Date(product.createdAt).toLocaleDateString()}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Updated</dt>
-                <dd className="text-gray-900">{new Date(product.updatedAt).toLocaleDateString()}</dd>
+                <dt className="text-[#999]">Updated</dt>
+                <dd className="text-black">{new Date(product.updatedAt).toLocaleDateString()}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Subseries</dt>
-                <dd className="text-gray-900">{form.subseries ? titleizeSlug(form.subseries) : "Missing"}</dd>
+                <dt className="text-[#999]">Subseries</dt>
+                <dd className="text-black">{form.subseries ? titleizeSlug(form.subseries) : "Missing"}</dd>
               </div>
               {product.pricingPresetId && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">Pricing Preset</dt>
-                  <dd className="font-mono text-gray-900 truncate max-w-[120px]">{product.pricingPresetId}</dd>
+                  <dt className="text-[#999]">Pricing Preset</dt>
+                  <dd className="font-mono text-black truncate max-w-[120px]">{product.pricingPresetId}</dd>
                 </div>
               )}
             </dl>

@@ -26,39 +26,39 @@ export default function AdminUsersPage() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   if (loading) {
-    return <div className="flex h-48 items-center justify-center text-sm text-gray-500">Loading users...</div>;
+    return <div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading users...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Admin Users</h1>
+        <h1 className="text-xl font-semibold text-black">Admin Users</h1>
         <button
           type="button"
           onClick={() => { setShowCreate(true); setEditId(null); }}
-          className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+          className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-[#222]"
         >
           + New User
         </button>
       </div>
 
       {message && (
-        <div className={`rounded-lg px-4 py-3 text-sm font-medium ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+        <div className={`rounded-[3px] px-4 py-3 text-sm font-medium ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
           {message.text}
         </div>
       )}
 
       {/* Permission overview */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 text-sm font-semibold text-gray-900">Role Overview</h2>
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+        <h2 className="mb-3 text-sm font-semibold text-black">Role Overview</h2>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {ALL_ROLES.map((role) => {
             const count = users.filter((u) => u.role === role && u.isActive).length;
             return (
-              <div key={role} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
-                <p className="text-xs font-semibold text-gray-700">{ROLE_LABELS[role].en}</p>
-                <p className="text-[10px] text-gray-500">{ROLE_LABELS[role].zh}</p>
-                <p className="mt-1 text-lg font-bold text-gray-900">{count}</p>
+              <div key={role} className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] px-3 py-2">
+                <p className="text-xs font-semibold text-black">{ROLE_LABELS[role].en}</p>
+                <p className="text-[10px] text-[#999]">{ROLE_LABELS[role].zh}</p>
+                <p className="mt-1 text-lg font-bold text-black">{count}</p>
               </div>
             );
           })}
@@ -66,11 +66,11 @@ export default function AdminUsersPage() {
       </div>
 
       {/* User list */}
-      <div className="rounded-xl border border-gray-200 bg-white">
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <tr className="border-b border-[#e0e0e0] text-left text-xs font-semibold uppercase tracking-wider text-[#999]">
                 <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Email</th>
                 <th className="px-5 py-3">Role</th>
@@ -81,27 +81,27 @@ export default function AdminUsersPage() {
             </thead>
             <tbody>
               {users.map((user) => (
-                <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="px-5 py-3 font-medium text-gray-900">{user.name}</td>
-                  <td className="px-5 py-3 text-gray-600">{user.email}</td>
+                <tr key={user.id} className="border-b border-[#e0e0e0] hover:bg-[#fafafa]">
+                  <td className="px-5 py-3 font-medium text-black">{user.name}</td>
+                  <td className="px-5 py-3 text-[#666]">{user.email}</td>
                   <td className="px-5 py-3">
-                    <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+                    <span className="inline-flex rounded-[2px] bg-[#f5f5f5] px-2.5 py-0.5 text-xs font-semibold text-black">
                       {ROLE_LABELS[user.role]?.en || user.role}
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${user.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+                    <span className={`inline-flex rounded-[2px] px-2.5 py-0.5 text-xs font-semibold ${user.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
                       {user.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-gray-500 text-xs">
+                  <td className="px-5 py-3 text-[#999] text-xs">
                     {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never"}
                   </td>
                   <td className="px-5 py-3">
                     <button
                       type="button"
                       onClick={() => { setEditId(user.id); setShowCreate(false); }}
-                      className="text-xs font-semibold text-gray-600 hover:text-gray-900"
+                      className="text-xs font-semibold text-[#666] hover:text-black"
                     >
                       Edit
                     </button>
@@ -110,7 +110,7 @@ export default function AdminUsersPage() {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-gray-400">
+                  <td colSpan={6} className="px-5 py-8 text-center text-[#999]">
                     No admin users yet. Create one to get started.
                   </td>
                 </tr>
@@ -179,8 +179,8 @@ function CreateUserModal({ onClose, onCreated }) {
         <RoleSelect value={role} onChange={setRole} />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-          <button type="submit" disabled={saving} className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">{saving ? "Creating..." : "Create User"}</button>
+          <button type="button" onClick={onClose} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-sm font-medium text-black hover:bg-[#fafafa]">Cancel</button>
+          <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-[#222] disabled:opacity-50">{saving ? "Creating..." : "Create User"}</button>
         </div>
       </form>
     </Modal>
@@ -224,21 +224,21 @@ function EditUserModal({ user, onClose, onUpdated }) {
   return (
     <Modal title={`Edit: ${user.name}`} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="text-xs text-gray-500">{user.email}</div>
+        <div className="text-xs text-[#999]">{user.email}</div>
         <Field label="Name" value={name} onChange={setName} required />
         <RoleSelect value={role} onChange={setRole} />
         <Field label="New Password (leave blank to keep)" value={password} onChange={setPassword} type="password" placeholder="Min 8 characters" />
         <div className="flex items-center gap-3">
           <label className="relative inline-flex cursor-pointer items-center">
             <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="peer sr-only" />
-            <div className="h-5 w-9 rounded-full bg-gray-300 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-gray-900 peer-checked:after:translate-x-full" />
+            <div className="h-5 w-9 rounded-full bg-[#d0d0d0] after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-black peer-checked:after:translate-x-full" />
           </label>
-          <span className="text-sm text-gray-700">{isActive ? "Active" : "Inactive"}</span>
+          <span className="text-sm text-black">{isActive ? "Active" : "Inactive"}</span>
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-          <button type="submit" disabled={saving} className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50">{saving ? "Saving..." : "Save Changes"}</button>
+          <button type="button" onClick={onClose} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-sm font-medium text-black hover:bg-[#fafafa]">Cancel</button>
+          <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-[#222] disabled:opacity-50">{saving ? "Saving..." : "Save Changes"}</button>
         </div>
       </form>
     </Modal>
@@ -249,11 +249,11 @@ function EditUserModal({ user, onClose, onUpdated }) {
 
 function Modal({ title, onClose, children }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div className="w-full max-w-md rounded-[3px] border border-[#e0e0e0] bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h2 className="text-lg font-semibold text-black">{title}</h2>
+          <button type="button" onClick={onClose} className="text-[#999] hover:text-[#666]">
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
@@ -266,14 +266,14 @@ function Modal({ title, onClose, children }) {
 function Field({ label, value, onChange, type = "text", placeholder, required }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-gray-600">{label}</label>
+      <label className="mb-1 block text-xs font-medium text-[#666]">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+        className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
       />
     </div>
   );
@@ -282,11 +282,11 @@ function Field({ label, value, onChange, type = "text", placeholder, required })
 function RoleSelect({ value, onChange }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-gray-600">Role</label>
+      <label className="mb-1 block text-xs font-medium text-[#666]">Role</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+        className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
       >
         {ALL_ROLES.map((r) => (
           <option key={r} value={r}>

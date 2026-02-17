@@ -4,6 +4,7 @@ import { getCatalogConfig } from "@/lib/catalogConfig";
 import { SUB_PRODUCT_CONFIG, getSubProductsForCategory } from "@/lib/subProductConfig";
 import { getTurnaround } from "@/lib/turnaroundConfig";
 import { computeFromPrice } from "@/lib/pricing/from-price";
+import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
 
@@ -44,7 +45,7 @@ const MARKETING_SEGMENTS = [
   {
     key: "business-essentials",
     title: "Business Essentials",
-    slugs: ["business-cards", "letterhead-stationery", "calendars", "envelopes", "stamps", "ncr-forms", "order-forms", "waivers-releases"],
+    slugs: ["business-cards", "letterhead", "notepads", "bookmarks", "calendars", "envelopes", "stamps", "ncr-forms", "order-forms", "waivers-releases"],
   },
   {
     key: "marketing-materials",
@@ -298,9 +299,10 @@ export default async function CategoryPage({ params }) {
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
 
-  // Compute real "From" price for each product using the quote engine
+  // Compute real "From" price and quick-add quantity for each product
   for (const p of products) {
     p.fromPrice = computeFromPrice(p);
+    p.quickAddQty = getSmartDefaults(p).minQuantity;
   }
 
   // If category has sub-groups, render sub-group card landing instead of flat product list
@@ -349,7 +351,8 @@ export default async function CategoryPage({ params }) {
       );
     }
 
-    // Build sub-group data with counts, previews, minPrice, turnaround
+    // Build sub-group data with counts, previews, minPrice, turnaround, badges
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const subGroupData = subGroups.map((sg) => {
       const subCfg = SUB_PRODUCT_CONFIG[sg.slug];
       const placementMatching = products.filter((p) =>
@@ -372,8 +375,15 @@ export default async function CategoryPage({ params }) {
         ...sg,
         count: matching.length,
         previews: matching.slice(0, 3).map((p) => p.images?.[0]?.url).filter(Boolean),
+        topProducts: matching.slice(0, 3).map((p) => ({
+          name: p.name,
+          price: p.fromPrice || p.basePrice || 0,
+          imageUrl: p.images?.[0]?.url || null,
+        })),
         minPrice,
         turnaround,
+        hasNew: matching.some((p) => p.createdAt > thirtyDaysAgo),
+        hasFeatured: matching.some((p) => p.isFeatured),
       };
     }).filter((sg) => sg.count > 0);
 

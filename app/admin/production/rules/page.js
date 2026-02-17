@@ -262,7 +262,7 @@ export default function AssignmentRulesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">
+          <h1 className="text-xl font-semibold text-black">
             Assignment Rules
           </h1>
           <p className="mt-1 text-sm text-gray-500">
@@ -359,7 +359,7 @@ export default function AssignmentRulesPage() {
 
                       {/* Name */}
                       <td className="px-4 py-3">
-                        <span className="font-semibold text-gray-900">
+                        <span className="font-semibold text-black">
                           {rule.name}
                         </span>
                       </td>
@@ -461,7 +461,7 @@ export default function AssignmentRulesPage() {
                         <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-200 text-[10px] font-semibold text-gray-700">
                           {rule.priority}
                         </span>
-                        <span className="truncate text-sm font-semibold text-gray-900">
+                        <span className="truncate text-sm font-semibold text-black">
                           {rule.name}
                         </span>
                       </div>
@@ -534,7 +534,7 @@ export default function AssignmentRulesPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-8 shadow-xl">
-            <h2 className="mb-6 text-lg font-semibold text-gray-900">
+            <h2 className="mb-6 text-lg font-semibold text-black">
               {editingRule ? "Edit Rule" : "Add Rule"}
             </h2>
 
@@ -574,7 +574,7 @@ export default function AssignmentRulesPage() {
                       type="checkbox"
                       checked={formActive}
                       onChange={(e) => setFormActive(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                      className="h-4 w-4 rounded border-gray-300 text-black focus:ring-gray-900"
                     />
                     <span className="text-sm font-medium text-gray-700">
                       Active
@@ -585,7 +585,7 @@ export default function AssignmentRulesPage() {
 
               {/* Conditions section */}
               <fieldset>
-                <legend className="mb-3 text-sm font-semibold text-gray-900">
+                <legend className="mb-3 text-sm font-semibold text-black">
                   Conditions{" "}
                   <span className="font-normal text-gray-400">
                     (all must match)
@@ -676,7 +676,7 @@ export default function AssignmentRulesPage() {
 
               {/* Action section */}
               <fieldset>
-                <legend className="mb-3 text-sm font-semibold text-gray-900">
+                <legend className="mb-3 text-sm font-semibold text-black">
                   Action
                 </legend>
                 <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">

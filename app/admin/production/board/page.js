@@ -28,7 +28,7 @@ const COLUMN_LABELS = {
 };
 
 const COLUMN_HEADER_COLORS = {
-  queued: "text-gray-700",
+  queued: "text-black",
   assigned: "text-blue-700",
   printing: "text-yellow-700",
   quality_check: "text-purple-700",
@@ -38,7 +38,7 @@ const COLUMN_HEADER_COLORS = {
 };
 
 const COLUMN_COUNT_BADGE_COLORS = {
-  queued: "bg-gray-200 text-gray-700",
+  queued: "bg-[#e0e0e0] text-black",
   assigned: "bg-blue-100 text-blue-700",
   printing: "bg-yellow-100 text-yellow-700",
   quality_check: "bg-purple-100 text-purple-700",
@@ -201,9 +201,9 @@ export default function ProductionBoardPage() {
   return (
     <div className="space-y-4">
       {/* Top toolbar */}
-      <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="flex flex-col gap-3 rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-center">
         {/* Title */}
-        <h1 className="text-lg font-semibold text-gray-900">
+        <h1 className="text-lg font-semibold text-black">
           Production Board
         </h1>
 
@@ -212,7 +212,7 @@ export default function ProductionBoardPage() {
           type="button"
           onClick={() => fetchBoard()}
           disabled={loading}
-          className="inline-flex items-center justify-center rounded-lg border border-gray-300 p-2 text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-50"
+          className="inline-flex items-center justify-center rounded-[3px] border border-[#d0d0d0] p-2 text-[#666] transition-colors hover:bg-[#fafafa] disabled:opacity-50"
           aria-label="Refresh board"
         >
           <svg
@@ -234,7 +234,7 @@ export default function ProductionBoardPage() {
         <div className="flex items-center gap-2">
           <label
             htmlFor="board-factory-filter"
-            className="text-xs font-medium text-gray-500"
+            className="text-xs font-medium text-[#999]"
           >
             Factory
           </label>
@@ -242,7 +242,7 @@ export default function ProductionBoardPage() {
             id="board-factory-filter"
             value={factoryFilter}
             onChange={(e) => setFactoryFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 outline-none focus:border-gray-900"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-black"
           >
             <option value="all">All Factories</option>
             {factories.map((f) => (
@@ -257,7 +257,7 @@ export default function ProductionBoardPage() {
         <div className="flex items-center gap-2">
           <label
             htmlFor="board-priority-filter"
-            className="text-xs font-medium text-gray-500"
+            className="text-xs font-medium text-[#999]"
           >
             Priority
           </label>
@@ -265,7 +265,7 @@ export default function ProductionBoardPage() {
             id="board-priority-filter"
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 outline-none focus:border-gray-900"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-black"
           >
             {priorityOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -279,7 +279,7 @@ export default function ProductionBoardPage() {
         <div className="flex items-center gap-2">
           <label
             htmlFor="board-date-filter"
-            className="text-xs font-medium text-gray-500"
+            className="text-xs font-medium text-[#999]"
           >
             Date
           </label>
@@ -287,7 +287,7 @@ export default function ProductionBoardPage() {
             id="board-date-filter"
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 outline-none focus:border-gray-900"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-black"
           >
             {dateRangeOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -299,12 +299,12 @@ export default function ProductionBoardPage() {
 
         {/* View toggle */}
         <div className="flex items-center gap-1 sm:ml-auto">
-          <span className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white">
+          <span className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-white">
             Board
           </span>
           <Link
             href="/admin/production"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-[#fafafa]"
           >
             List
           </Link>
@@ -313,7 +313,7 @@ export default function ProductionBoardPage() {
 
       {/* Loading state */}
       {loading && Object.keys(columns).length === 0 ? (
-        <div className="flex h-64 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-64 items-center justify-center text-sm text-[#999]">
           Loading board...
         </div>
       ) : (
@@ -338,20 +338,20 @@ export default function ProductionBoardPage() {
                   setDraggedJob(null);
                   setDragOverColumn(null);
                 }}
-                className={`min-w-[300px] max-w-[300px] flex-shrink-0 rounded-xl bg-gray-50 border ${
+                className={`min-w-[300px] max-w-[300px] flex-shrink-0 rounded-[3px] bg-[#fafafa] border ${
                   dragOverColumn === status
                     ? "border-blue-400 border-2 border-dashed bg-blue-50/50"
-                    : "border-gray-200"
+                    : "border-[#e0e0e0]"
                 }`}
               >
                 {/* Column header */}
-                <div className="p-3 border-b border-gray-200 font-medium text-sm flex items-center justify-between">
-                  <span className={COLUMN_HEADER_COLORS[status] || "text-gray-700"}>
+                <div className="p-3 border-b border-[#e0e0e0] font-medium text-sm flex items-center justify-between">
+                  <span className={COLUMN_HEADER_COLORS[status] || "text-black"}>
                     {COLUMN_LABELS[status] || status}
                   </span>
                   <span
-                    className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                      COLUMN_COUNT_BADGE_COLORS[status] || "bg-gray-200 text-gray-700"
+                    className={`inline-flex items-center justify-center rounded-[2px] px-2 py-0.5 text-xs font-semibold ${
+                      COLUMN_COUNT_BADGE_COLORS[status] || "bg-[#e0e0e0] text-black"
                     }`}
                   >
                     {jobs.length}
@@ -361,7 +361,7 @@ export default function ProductionBoardPage() {
                 {/* Scrollable card list */}
                 <div className="p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-280px)]">
                   {jobs.length === 0 ? (
-                    <p className="py-8 text-center text-xs text-gray-400">
+                    <p className="py-8 text-center text-xs text-[#999]">
                       No jobs
                     </p>
                   ) : (
@@ -377,47 +377,47 @@ export default function ProductionBoardPage() {
                           setDraggedJob(null);
                           setDragOverColumn(null);
                         }}
-                        className={`rounded-lg bg-white border border-gray-200 p-3 shadow-sm hover:shadow-md transition-shadow cursor-move ${
+                        className={`rounded-[3px] bg-white border border-[#e0e0e0] p-3 shadow-sm hover:shadow-md transition-shadow cursor-move ${
                           draggedJob?.id === job.id ? "opacity-50" : ""
                         } ${updatingJob === job.id ? "opacity-50 pointer-events-none" : ""}`}
                       >
                         {/* Product name */}
-                        <p className="font-semibold text-sm text-gray-900 truncate">
+                        <p className="font-semibold text-sm text-black truncate">
                           {job.productName || "Unknown Product"}
                         </p>
 
                         {/* Customer email */}
-                        <p className="text-xs text-gray-500 truncate mt-0.5">
+                        <p className="text-xs text-[#999] truncate mt-0.5">
                           {job.customerEmail || "\u2014"}
                         </p>
 
                         {/* Badges row */}
                         <div className="flex flex-wrap items-center gap-1.5 mt-2">
                           {/* Quantity badge */}
-                          <span className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                          <span className="inline-block rounded-[2px] bg-[#f5f5f5] px-2 py-0.5 text-xs font-medium text-[#666]">
                             Qty: {job.quantity}
                           </span>
 
                           {/* Priority badge */}
                           {job.priority === "urgent" && (
-                            <span className="inline-block rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                            <span className="inline-block rounded-[2px] bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
                               Urgent
                             </span>
                           )}
                           {job.priority === "rush" && (
-                            <span className="inline-block rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
+                            <span className="inline-block rounded-[2px] bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
                               Rush
                             </span>
                           )}
                         </div>
 
                         {/* Footer row: factory, time, actions */}
-                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#e0e0e0]">
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs text-gray-500 truncate">
+                            <p className="text-xs text-[#999] truncate">
                               {job.factoryName || "Unassigned"}
                             </p>
-                            <p className="text-xs text-gray-400 mt-0.5">
+                            <p className="text-xs text-[#999] mt-0.5">
                               {timeAgo(job.createdAt)}
                             </p>
                           </div>
@@ -429,7 +429,7 @@ export default function ProductionBoardPage() {
                                 type="button"
                                 onClick={() => handleMoveToNext({ ...job, status })}
                                 disabled={updatingJob === job.id}
-                                className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40"
+                                className="inline-flex items-center justify-center rounded-md border border-[#e0e0e0] bg-white p-1.5 text-[#999] transition-colors hover:bg-[#fafafa] hover:text-black disabled:opacity-40"
                                 title={`Move to ${COLUMN_LABELS[NEXT_STATUS[status]]}`}
                               >
                                 <svg
@@ -451,7 +451,7 @@ export default function ProductionBoardPage() {
                             {/* View detail link */}
                             <Link
                               href={`/admin/production/${job.id}`}
-                              className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                              className="inline-flex items-center justify-center rounded-md border border-[#e0e0e0] bg-white p-1.5 text-[#999] transition-colors hover:bg-[#fafafa] hover:text-black"
                               title="View details"
                             >
                               <svg

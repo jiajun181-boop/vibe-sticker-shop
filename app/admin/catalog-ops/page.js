@@ -102,11 +102,11 @@ export default function CatalogOpsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Catalog Ops</h1>
-            <p className="mt-0.5 text-sm text-gray-500">
+            <h1 className="text-xl font-semibold text-black">Catalog Ops</h1>
+            <p className="mt-0.5 text-sm text-[#999]">
               Manage products, catalog structure, and pricing in one workspace.
             </p>
           </div>
@@ -116,10 +116,10 @@ export default function CatalogOpsPage() {
                 key={t.key}
                 type="button"
                 onClick={() => switchTab(t.key)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                   activeTab === t.key
-                    ? "bg-gray-900 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-black text-white"
+                    : "bg-[#f5f5f5] text-black hover:bg-[#fafafa]"
                 }`}
               >
                 {t.label}
@@ -127,8 +127,8 @@ export default function CatalogOpsPage() {
             ))}
           </div>
         </div>
-        <div className="mt-3 text-xs text-gray-500">Single workspace mode enabled.</div>
-        <div className="mt-3 grid gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3 lg:grid-cols-[1fr_auto_auto_auto]">
+        <div className="mt-3 text-xs text-[#999]">Single workspace mode enabled.</div>
+        <div className="mt-3 grid gap-2 rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3 lg:grid-cols-[1fr_auto_auto_auto]">
           <input
             type="text"
             value={workspaceSearch}
@@ -137,12 +137,12 @@ export default function CatalogOpsPage() {
               if (e.key === "Enter") updateWorkspaceFilters();
             }}
             placeholder="Quick search products..."
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-900"
+            className="rounded-[3px] border border-[#d0d0d0] bg-white px-3 py-2 text-sm outline-none focus:border-black"
           />
           <select
             value={workspaceCategory}
             onChange={(e) => setWorkspaceCategory(e.target.value)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-900"
+            className="rounded-[3px] border border-[#d0d0d0] bg-white px-3 py-2 text-sm outline-none focus:border-black"
           >
             {CATEGORY_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -153,44 +153,44 @@ export default function CatalogOpsPage() {
           <button
             type="button"
             onClick={updateWorkspaceFilters}
-            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
           >
             Apply
           </button>
           <button
             type="button"
             onClick={clearWorkspaceFilters}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+            className="rounded-[3px] border border-[#d0d0d0] bg-white px-4 py-2 text-xs font-semibold text-black hover:bg-[#f5f5f5]"
           >
             Reset
           </button>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-gray-600">
+          <span className="rounded-[2px] border border-[#e0e0e0] bg-white px-2.5 py-1 text-[#666]">
             Products:{" "}
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-black">
               {statsLoading ? "..." : stats.products ?? "-"}
             </span>
           </span>
-          <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-gray-600">
+          <span className="rounded-[2px] border border-[#e0e0e0] bg-white px-2.5 py-1 text-[#666]">
             Categories:{" "}
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-black">
               {statsLoading ? "..." : stats.categories ?? "-"}
             </span>
           </span>
-          <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-gray-600">
+          <span className="rounded-[2px] border border-[#e0e0e0] bg-white px-2.5 py-1 text-[#666]">
             Pricing Presets:{" "}
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-black">
               {statsLoading ? "..." : stats.presets ?? "-"}
             </span>
           </span>
-          <span className="ml-auto text-gray-500">
+          <span className="ml-auto text-[#999]">
             Focus mode:{" "}
-            <a href="/admin/products" className="text-blue-600 hover:underline">Products</a>{" "}
+            <a href="/admin/products" className="text-black underline hover:no-underline">Products</a>{" "}
             ·{" "}
-            <a href="/admin/catalog" className="text-blue-600 hover:underline">Catalog</a>{" "}
+            <a href="/admin/catalog" className="text-black underline hover:no-underline">Catalog</a>{" "}
             ·{" "}
-            <a href="/admin/pricing" className="text-blue-600 hover:underline">Pricing</a>
+            <a href="/admin/pricing" className="text-black underline hover:no-underline">Pricing</a>
           </span>
         </div>
       </div>

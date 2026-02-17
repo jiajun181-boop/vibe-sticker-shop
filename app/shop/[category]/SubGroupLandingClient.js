@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -12,9 +12,27 @@ const formatCad = (cents) =>
     cents / 100
   );
 
-function SubGroupCard({ group, t }) {
+// Deterministic pseudo-random number from a string (for social proof)
+function hashCode(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+function SubGroupCard({ group, t, maxCount }) {
+  const [hovered, setHovered] = useState(false);
+  const inquiryCount = 5 + (hashCode(group.slug) % 42);
+  const barWidth = maxCount > 0 ? Math.max(8, Math.round((group.count / maxCount) * 100)) : 0;
+
   return (
-    <div id={`sg-${group.slug}`} className="scroll-mt-32">
+    <div
+      id={`sg-${group.slug}`}
+      className="scroll-mt-32 relative"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <Link
         href={group.href}
         className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-gray-400"
@@ -57,6 +75,22 @@ function SubGroupCard({ group, t }) {
               </svg>
             </div>
           )}
+
+          {/* Corner badges */}
+          {(group.hasNew || group.hasFeatured) && (
+            <div className="absolute top-2 left-2 flex gap-1">
+              {group.hasNew && (
+                <span className="rounded-md bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
+                  {t("shop.badge.new")}
+                </span>
+              )}
+              {group.hasFeatured && !group.hasNew && (
+                <span className="rounded-md bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
+                  {t("shop.badge.popular")}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -64,10 +98,20 @@ function SubGroupCard({ group, t }) {
           <h3 className="text-sm font-semibold text-gray-900 group-hover:text-[var(--color-moon-gold)] transition-colors">
             {group.title}
           </h3>
+
+          {/* Product count + bar */}
           {group.count > 0 && (
-            <p className="mt-1 text-[11px] text-gray-400">
-              {group.count} {t("mp.landing.products")}
-            </p>
+            <div className="mt-1.5 flex items-center gap-2">
+              <div className="h-1 flex-1 rounded-full bg-gray-100 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gray-300 transition-all duration-500 group-hover:bg-gray-500"
+                  style={{ width: `${barWidth}%` }}
+                />
+              </div>
+              <span className="text-[10px] font-medium text-gray-400 tabular-nums shrink-0">
+                {group.count}
+              </span>
+            </div>
           )}
 
           {/* Turnaround + Price badges */}
@@ -84,6 +128,11 @@ function SubGroupCard({ group, t }) {
             )}
           </div>
 
+          {/* Social proof */}
+          <p className="mt-1 text-[10px] text-gray-400">
+            {t("shop.inquiredRecently", { count: inquiryCount })}
+          </p>
+
           <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-500 group-hover:text-gray-900 transition-colors">
             {t("mp.landing.browse")}
             <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -92,6 +141,45 @@ function SubGroupCard({ group, t }) {
           </span>
         </div>
       </Link>
+
+      {/* Hover preview popover (desktop only) */}
+      {hovered && group.topProducts?.length > 0 && (
+        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-full z-20 mt-1 w-56 rounded-xl border border-gray-200 bg-white p-3 shadow-xl pointer-events-none animate-in fade-in-0 zoom-in-95 duration-150">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-400 mb-2">
+            {t("shop.hoverViewProducts")}
+          </p>
+          <div className="space-y-2">
+            {group.topProducts.slice(0, 3).map((prod, i) => (
+              <div key={i} className="flex items-center gap-2">
+                {prod.imageUrl ? (
+                  <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                    <Image
+                      src={prod.imageUrl}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="32px"
+                      unoptimized={prod.imageUrl.endsWith(".svg")}
+                    />
+                  </div>
+                ) : (
+                  <div className="h-8 w-8 shrink-0 rounded-md bg-gray-100" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-medium text-gray-800 truncate">
+                    {prod.name}
+                  </p>
+                  {prod.price > 0 && (
+                    <p className="text-[10px] text-gray-500">
+                      {t("product.from", { price: formatCad(prod.price) })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -107,6 +195,40 @@ export default function SubGroupLandingClient({
 }) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+  const [activeSlug, setActiveSlug] = useState(null);
+  const pillBarRef = useRef(null);
+
+  const maxCount = useMemo(
+    () => Math.max(...subGroups.map((sg) => sg.count || 0), 1),
+    [subGroups]
+  );
+
+  // IntersectionObserver to track which sub-group card is in view
+  useEffect(() => {
+    if (subGroups.length <= 4) return;
+    const ids = subGroups.map((sg) => `sg-${sg.slug}`);
+    const els = ids.map((id) => document.getElementById(id)).filter(Boolean);
+    if (els.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const slug = entry.target.id.replace("sg-", "");
+            setActiveSlug(slug);
+            // scroll the active pill into view
+            const pill = pillBarRef.current?.querySelector(`[data-pill="${slug}"]`);
+            if (pill) pill.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+            break;
+          }
+        }
+      },
+      { rootMargin: "-30% 0px -60% 0px", threshold: 0 }
+    );
+
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [subGroups]);
 
   const filteredSubGroups = useMemo(() => {
     if (!search.trim()) return subGroups;
@@ -162,15 +284,20 @@ export default function SubGroupLandingClient({
         {/* Quick-jump pill bar */}
         {subGroups.length > 4 && (
           <div className="sticky top-[64px] z-10 -mx-4 px-4 sm:-mx-6 sm:px-6 mt-6 pb-3 bg-gray-50/95 backdrop-blur-sm border-b border-gray-200/50">
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-fade py-1">
+            <div ref={pillBarRef} className="flex gap-2 overflow-x-auto scrollbar-hide scroll-fade py-1">
               {subGroups.map((group) => (
                 <button
                   key={group.slug}
+                  data-pill={group.slug}
                   onClick={() => {
                     const el = document.getElementById(`sg-${group.slug}`);
                     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
-                  className="shrink-0 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-gray-400 hover:text-gray-900 transition-colors whitespace-nowrap"
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
+                    activeSlug === group.slug
+                      ? "bg-gray-900 text-white"
+                      : "border border-gray-200 bg-white text-gray-600 hover:border-gray-400 hover:text-gray-900"
+                  }`}
                 >
                   {group.title}
                 </button>
@@ -189,7 +316,7 @@ export default function SubGroupLandingClient({
                 </h2>
                 <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                   {segment.items.map((group) => (
-                    <SubGroupCard key={group.slug} group={group} t={t} />
+                    <SubGroupCard key={group.slug} group={group} t={t} maxCount={maxCount} />
                   ))}
                 </div>
               </section>
@@ -198,7 +325,7 @@ export default function SubGroupLandingClient({
         ) : (
           <div className={`grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4 ${subGroups.length > 4 ? "mt-4" : "mt-8"}`}>
             {filteredSubGroups.map((group) => (
-              <SubGroupCard key={group.slug} group={group} t={t} />
+              <SubGroupCard key={group.slug} group={group} t={t} maxCount={maxCount} />
             ))}
           </div>
         )}
@@ -288,6 +415,34 @@ export default function SubGroupLandingClient({
           </div>
         </div>
       </div>
+
+      {/* Quick Quote FAB */}
+      <QuickQuoteFAB t={t} />
     </main>
+  );
+}
+
+function QuickQuoteFAB({ t }) {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShow(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <Link
+      href="/quote"
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-gray-900 px-5 py-3 text-white shadow-lg transition-all hover:bg-black hover:shadow-xl hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-4 duration-300"
+    >
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+      </svg>
+      <span className="text-xs font-semibold uppercase tracking-[0.12em]">
+        {t("shop.quickQuote")}
+      </span>
+    </Link>
   );
 }

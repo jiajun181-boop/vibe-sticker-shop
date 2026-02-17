@@ -367,11 +367,26 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ADMIN SHELL OVERRIDES
+   ADMIN SHELL OVERRIDES — Black & White Industrial
    ═══════════════════════════════════════════════════════════════ */
 
 .admin-shell {
-  --admin-sidebar-bg: #f7f7f5;
-  --admin-text: var(--color-ink-black);
+  --admin-bg: #f5f5f5;
+  --admin-sidebar: #0a0a0a;
+  --admin-border: #e0e0e0;
+  --admin-card: #ffffff;
+  --admin-radius: 3px;
+  --admin-text: #000000;
+  --admin-text-secondary: #666666;
+  --admin-text-muted: #999999;
   font-family: var(--font-admin, var(--font-brand, system-ui)), -apple-system, sans-serif;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.01em;
+}
+
+.admin-shell input:focus,
+.admin-shell textarea:focus,
+.admin-shell select:focus {
+  border-color: #000 !important;
+  box-shadow: 0 0 0 1px #000 !important;
 }

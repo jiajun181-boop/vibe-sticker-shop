@@ -142,7 +142,7 @@ function LineChart({ data, width = 800, height = 300 }) {
             x={padding.left - 8}
             y={y + 4}
             textAnchor="end"
-            className="text-[10px] fill-gray-500"
+            className="text-[10px] fill-[#999]"
           >
             ${((maxValue * pct) / 100).toFixed(0)}
           </text>
@@ -164,7 +164,7 @@ function LineChart({ data, width = 800, height = 300 }) {
             x={x}
             y={height - 8}
             textAnchor="middle"
-            className="text-[10px] fill-gray-400"
+            className="text-[10px] fill-[#999]"
           >
             {label}
           </text>
@@ -213,8 +213,8 @@ function PieChart({ data }) {
               className="h-3 w-3 rounded-full"
               style={{ backgroundColor: colors[i % colors.length] }}
             />
-            <span className="text-sm text-gray-700">{d.category}</span>
-            <span className="text-sm font-medium text-gray-900">
+            <span className="text-sm text-black">{d.category}</span>
+            <span className="text-sm font-medium text-black">
               {d.percentage.toFixed(1)}%
             </span>
           </div>
@@ -234,7 +234,7 @@ function ChangeIndicator({ value }) {
     <span
       className={`inline-flex items-center gap-0.5 text-xs font-medium ${
         isNeutral
-          ? "text-gray-500"
+          ? "text-[#999]"
           : isPositive
             ? "text-green-600"
             : "text-red-600"
@@ -391,13 +391,13 @@ export default function SalesReportPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Sales Report</h1>
+        <h1 className="text-xl font-semibold text-black">Sales Report</h1>
 
         {data && (
           <button
             type="button"
             onClick={() => downloadCsv(data)}
-            className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-black"
+            className="inline-flex items-center gap-2 rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#222]"
           >
             <svg
               className="h-4 w-4"
@@ -418,7 +418,7 @@ export default function SalesReportPage() {
       </div>
 
       {/* Time range controls */}
-      <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
         <div className="flex flex-col gap-4">
           {/* Preset buttons */}
           <div className="flex flex-wrap gap-1">
@@ -427,10 +427,10 @@ export default function SalesReportPage() {
                 key={p.key}
                 type="button"
                 onClick={() => handlePreset(p.key)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                   activePreset === p.key
-                    ? "bg-gray-900 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-black text-white"
+                    : "bg-[#f5f5f5] text-[#666] hover:bg-[#fafafa]"
                 }`}
               >
                 {p.label}
@@ -441,21 +441,21 @@ export default function SalesReportPage() {
           {/* Custom date range + compare toggle */}
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-gray-500">From</label>
+              <label className="text-xs font-medium text-[#999]">From</label>
               <input
                 type="date"
                 value={fromDate}
                 onChange={handleFromChange}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-gray-900"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-sm outline-none focus:border-gray-900"
               />
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-gray-500">To</label>
+              <label className="text-xs font-medium text-[#999]">To</label>
               <input
                 type="date"
                 value={toDate}
                 onChange={handleToChange}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-gray-900"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-sm outline-none focus:border-gray-900"
               />
             </div>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -463,9 +463,9 @@ export default function SalesReportPage() {
                 type="checkbox"
                 checked={compare}
                 onChange={(e) => setCompare(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                className="h-4 w-4 rounded border-[#d0d0d0] text-black focus:ring-gray-900"
               />
-              <span className="text-xs font-medium text-gray-600">
+              <span className="text-xs font-medium text-[#666]">
                 Compare with previous period
               </span>
             </label>
@@ -476,7 +476,7 @@ export default function SalesReportPage() {
       {/* Content */}
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="text-sm text-gray-500">Loading report...</div>
+          <div className="text-sm text-[#999]">Loading report...</div>
         </div>
       ) : error ? (
         <div className="flex h-64 items-center justify-center">
@@ -486,9 +486,9 @@ export default function SalesReportPage() {
         <>
           {/* Key metric cards */}
           <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <p className="text-xs text-gray-500">Total Revenue</p>
-              <p className="mt-1 text-2xl font-semibold text-gray-900">
+            <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+              <p className="text-xs text-[#999]">Total Revenue</p>
+              <p className="mt-1 text-2xl font-semibold text-black">
                 {formatCad(current.totalRevenue)}
               </p>
               {compare && comparison && (
@@ -498,9 +498,9 @@ export default function SalesReportPage() {
               )}
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <p className="text-xs text-gray-500">Order Count</p>
-              <p className="mt-1 text-2xl font-semibold text-gray-900">
+            <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+              <p className="text-xs text-[#999]">Order Count</p>
+              <p className="mt-1 text-2xl font-semibold text-black">
                 {current.orderCount.toLocaleString()}
               </p>
               {compare && comparison && (
@@ -510,9 +510,9 @@ export default function SalesReportPage() {
               )}
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <p className="text-xs text-gray-500">Average Order Value</p>
-              <p className="mt-1 text-2xl font-semibold text-gray-900">
+            <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+              <p className="text-xs text-[#999]">Average Order Value</p>
+              <p className="mt-1 text-2xl font-semibold text-black">
                 {formatCad(current.avgOrderValue)}
               </p>
               {compare && comparison && (
@@ -522,9 +522,9 @@ export default function SalesReportPage() {
               )}
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <p className="text-xs text-gray-500">New Customers</p>
-              <p className="mt-1 text-2xl font-semibold text-gray-900">
+            <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+              <p className="text-xs text-[#999]">New Customers</p>
+              <p className="mt-1 text-2xl font-semibold text-black">
                 {current.newCustomers.toLocaleString()}
               </p>
               {compare && comparison && (
@@ -536,14 +536,14 @@ export default function SalesReportPage() {
           </div>
 
           {/* Revenue trend chart */}
-          <div className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-gray-900">
+          <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+            <h2 className="mb-4 text-sm font-semibold text-black">
               Revenue Trend
             </h2>
             {current.dailyRevenue && current.dailyRevenue.length > 0 ? (
               <LineChart data={current.dailyRevenue} />
             ) : (
-              <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+              <div className="flex h-48 items-center justify-center text-sm text-[#999]">
                 No revenue data for this period
               </div>
             )}
@@ -552,9 +552,9 @@ export default function SalesReportPage() {
           {/* Top products table & category pie chart */}
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Top Products */}
-            <div className="rounded-xl border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 px-5 py-4">
-                <h2 className="text-sm font-semibold text-gray-900">
+            <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
+              <div className="border-b border-[#e0e0e0] px-5 py-4">
+                <h2 className="text-sm font-semibold text-black">
                   Top Products
                 </h2>
               </div>
@@ -563,25 +563,25 @@ export default function SalesReportPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                           Rank
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                           Product Name
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-[#999]">
                           Qty Sold
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-[#999]">
                           Revenue
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-[#999]">
                           % of Total
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-[#e0e0e0]">
                       {current.topProducts.slice(0, 10).map((product, i) => {
                         const pctOfTotal =
                           totalProductRevenue > 0
@@ -590,25 +590,25 @@ export default function SalesReportPage() {
                         return (
                           <tr
                             key={product.productId || i}
-                            className="hover:bg-gray-50"
+                            className="hover:bg-[#fafafa]"
                           >
-                            <td className="px-4 py-3 text-gray-500">
+                            <td className="px-4 py-3 text-[#999]">
                               {i + 1}
                             </td>
                             <td className="px-4 py-3">
-                              <p className="font-medium text-gray-900 truncate max-w-[200px]">
+                              <p className="font-medium text-black truncate max-w-[200px]">
                                 {product.name}
                               </p>
                             </td>
-                            <td className="px-4 py-3 text-right text-gray-600">
+                            <td className="px-4 py-3 text-right text-[#666]">
                               {product.quantity}
                             </td>
                             <td className="px-4 py-3 text-right">
                               <div className="flex flex-col items-end gap-1">
-                                <span className="font-semibold text-gray-900">
+                                <span className="font-semibold text-black">
                                   {formatCad(product.revenue)}
                                 </span>
-                                <div className="h-1.5 w-full max-w-[80px] rounded-full bg-gray-100">
+                                <div className="h-1.5 w-full max-w-[80px] rounded-full bg-[#f5f5f5]">
                                   <div
                                     className="h-1.5 rounded-full bg-blue-500"
                                     style={{
@@ -618,7 +618,7 @@ export default function SalesReportPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-right text-gray-600">
+                            <td className="px-4 py-3 text-right text-[#666]">
                               {pctOfTotal.toFixed(1)}%
                             </td>
                           </tr>
@@ -628,16 +628,16 @@ export default function SalesReportPage() {
                   </table>
                 </div>
               ) : (
-                <div className="px-5 py-8 text-center text-sm text-gray-500">
+                <div className="px-5 py-8 text-center text-sm text-[#999]">
                   No product data for this period
                 </div>
               )}
             </div>
 
             {/* Category Sales */}
-            <div className="rounded-xl border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 px-5 py-4">
-                <h2 className="text-sm font-semibold text-gray-900">
+            <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
+              <div className="border-b border-[#e0e0e0] px-5 py-4">
+                <h2 className="text-sm font-semibold text-black">
                   Sales by Category
                 </h2>
               </div>
@@ -653,8 +653,8 @@ export default function SalesReportPage() {
                         key={cat.category}
                         className="flex items-center justify-between text-sm"
                       >
-                        <span className="text-gray-700">{cat.category}</span>
-                        <span className="font-medium text-gray-900">
+                        <span className="text-black">{cat.category}</span>
+                        <span className="font-medium text-black">
                           {formatCad(cat.amount)}
                         </span>
                       </div>
@@ -662,7 +662,7 @@ export default function SalesReportPage() {
                   </div>
                 </div>
               ) : (
-                <div className="px-5 py-8 text-center text-sm text-gray-500">
+                <div className="px-5 py-8 text-center text-sm text-[#999]">
                   No category data for this period
                 </div>
               )}

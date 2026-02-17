@@ -40,7 +40,7 @@ const statuses = ["all", "pending", "paid", "draft", "canceled", "refunded"];
 
 export default function OrdersPage() {
   return (
-    <Suspense fallback={<div className="flex h-48 items-center justify-center text-sm text-gray-500">Loading...</div>}>
+    <Suspense fallback={<div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading...</div>}>
       <OrdersContent />
     </Suspense>
   );
@@ -175,7 +175,7 @@ function OrdersContent() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-gray-900">Orders</h1>
+      <h1 className="text-xl font-bold text-black">Orders</h1>
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -189,10 +189,10 @@ function OrdersContent() {
                 setStatusFilter(s);
                 updateParams({ status: s === "all" ? null : s, page: "1" });
               }}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+              className={`rounded-[3px] px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
                 statusFilter === s
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-100"
+                  ? "bg-black text-white"
+                  : "bg-white text-[#666] border border-[#e0e0e0] hover:border-black hover:text-black"
               }`}
             >
               {s}
@@ -207,11 +207,11 @@ function OrdersContent() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search email or order ID..."
-            className="w-64 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+            className="w-64 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button
             type="submit"
-            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
           >
             Search
           </button>
@@ -220,16 +220,16 @@ function OrdersContent() {
 
       {/* Bulk Action Bar */}
       {selectedOrders.length > 0 && (
-        <div className="sticky top-0 z-10 rounded-lg border border-purple-200 bg-purple-50 p-4">
+        <div className="sticky top-0 z-10 rounded-[3px] border border-[#e0e0e0] bg-white p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-sm font-medium text-purple-900">
+            <span className="text-sm font-medium text-black">
               {selectedOrders.length} order{selectedOrders.length > 1 ? "s" : ""} selected
             </span>
             <div className="flex flex-wrap gap-2">
               <select
                 onChange={(e) => { handleBulkUpdateStatus(e.target.value); e.target.value = ""; }}
                 disabled={bulkUpdating}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs text-black"
                 defaultValue=""
               >
                 <option value="" disabled>Update Status...</option>
@@ -241,13 +241,13 @@ function OrdersContent() {
               <button
                 onClick={handleBulkExport}
                 disabled={bulkUpdating}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:border-black"
               >
                 Export CSV
               </button>
               <button
                 onClick={() => setSelectedOrders([])}
-                className="text-xs text-gray-500 hover:text-gray-700"
+                className="text-xs text-[#999] hover:text-black"
               >
                 Clear
               </button>
@@ -257,13 +257,13 @@ function OrdersContent() {
       )}
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
-          <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+          <div className="flex h-48 items-center justify-center text-sm text-[#999]">
             Loading...
           </div>
         ) : orders.length === 0 ? (
-          <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+          <div className="flex h-48 items-center justify-center text-sm text-[#999]">
             No orders found
           </div>
         ) : (
@@ -272,73 +272,73 @@ function OrdersContent() {
             <div className="hidden overflow-x-auto lg:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
+                  <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
                     <th className="px-4 py-3 w-10">
                       <input
                         type="checkbox"
                         checked={selectedOrders.length === orders.length && orders.length > 0}
                         onChange={toggleSelectAll}
-                        className="h-4 w-4 rounded border-gray-300"
+                        className="h-4 w-4"
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       Order
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       Customer
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       Amount
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       Status
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       Payment
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       Production
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       Date
                     </th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#e0e0e0]">
                   {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50">
+                    <tr key={order.id} className="hover:bg-[#fafafa]">
                       <td className="px-4 py-3">
                         <input
                           type="checkbox"
                           checked={selectedOrders.includes(order.id)}
                           onChange={() => toggleSelectOrder(order.id)}
-                          className="h-4 w-4 rounded border-gray-300"
+                          className="h-4 w-4"
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-mono text-xs text-gray-600">
+                        <span className="font-mono text-xs text-[#666]">
                           {order.id.slice(0, 8)}...
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-black">
                             {order.customerEmail}
                           </p>
                           {order.customerName && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-[#999]">
                               {order.customerName}
                             </p>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-gray-900">
+                      <td className="px-4 py-3 font-semibold tabular-nums text-black">
                         {formatCad(order.totalAmount)}
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          className={`inline-block rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                             statusColors[order.status] || "bg-gray-100"
                           }`}
                         >
@@ -347,7 +347,7 @@ function OrdersContent() {
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          className={`inline-block rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                             paymentColors[order.paymentStatus] || "bg-gray-100"
                           }`}
                         >
@@ -356,7 +356,7 @@ function OrdersContent() {
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          className={`inline-block rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                             productionColors[order.productionStatus] ||
                             "bg-gray-100"
                           }`}
@@ -364,13 +364,13 @@ function OrdersContent() {
                           {order.productionStatus?.replace(/_/g, " ")}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500">
+                      <td className="px-4 py-3 text-xs text-[#999]">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-3">
                         <Link
                           href={`/admin/orders/${order.id}`}
-                          className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                          className="text-xs font-medium text-black underline hover:no-underline"
                         >
                           View
                         </Link>
@@ -382,17 +382,17 @@ function OrdersContent() {
             </div>
 
             {/* Mobile cards */}
-            <div className="divide-y divide-gray-100 lg:hidden">
+            <div className="divide-y divide-[#e0e0e0] lg:hidden">
               {orders.map((order) => (
                 <div
                   key={order.id}
-                  className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-gray-50"
+                  className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-[#fafafa]"
                 >
                   <input
                     type="checkbox"
                     checked={selectedOrders.includes(order.id)}
                     onChange={() => toggleSelectOrder(order.id)}
-                    className="mt-1 h-4 w-4 rounded border-gray-300"
+                    className="mt-1 h-4 w-4"
                   />
                   <Link
                     href={`/admin/orders/${order.id}`}
@@ -400,34 +400,34 @@ function OrdersContent() {
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-black">
                           {order.customerEmail}
                         </p>
-                        <p className="mt-0.5 font-mono text-xs text-gray-400">
+                        <p className="mt-0.5 font-mono text-xs text-[#999]">
                           {order.id.slice(0, 12)}...
                         </p>
                       </div>
-                      <span className="text-sm font-semibold text-gray-900">
+                      <span className="text-sm font-semibold tabular-nums text-black">
                         {formatCad(order.totalAmount)}
                       </span>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                           statusColors[order.status] || "bg-gray-100"
                         }`}
                       >
                         {order.status}
                       </span>
                       <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                           productionColors[order.productionStatus] ||
                           "bg-gray-100"
                         }`}
                       >
                         {order.productionStatus?.replace(/_/g, " ")}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-[#999]">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </span>
                     </div>
@@ -442,7 +442,7 @@ function OrdersContent() {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[#999]">
             Showing {(pagination.page - 1) * pagination.limit + 1}-
             {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
             {pagination.total}
@@ -452,7 +452,7 @@ function OrdersContent() {
               type="button"
               disabled={page <= 1}
               onClick={() => updateParams({ page: String(page - 1) })}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:border-black disabled:opacity-40"
             >
               Previous
             </button>
@@ -460,7 +460,7 @@ function OrdersContent() {
               type="button"
               disabled={page >= pagination.totalPages}
               onClick={() => updateParams({ page: String(page + 1) })}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:border-black disabled:opacity-40"
             >
               Next
             </button>

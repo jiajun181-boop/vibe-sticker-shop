@@ -84,27 +84,27 @@ export default function ContentCMSPage() {
   }
 
   if (loading) {
-    return <div className="flex h-48 items-center justify-center text-sm text-gray-500">Loading content settings...</div>;
+    return <div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading content settings...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900">Content Management</h1>
+      <h1 className="text-xl font-semibold text-black">Content Management</h1>
 
       {message && (
-        <div className={`rounded-lg px-4 py-3 text-sm font-medium ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+        <div className={`rounded-[3px] px-4 py-3 text-sm font-medium ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
           {message.text}
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 rounded-xl bg-gray-100 p-1">
+      <div className="flex gap-1 rounded-[3px] bg-[#f5f5f5] p-1">
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => { setTab(t.id); setMessage(null); }}
-            className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${tab === t.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            className={`flex-1 rounded-[3px] px-3 py-2 text-xs font-semibold transition-colors ${tab === t.id ? "bg-white text-black shadow-sm" : "text-[#999] hover:text-black"}`}
           >
             {t.label}
           </button>
@@ -136,24 +136,24 @@ function PromoTab({ promo, setPromo, onSave, saving }) {
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <Toggle checked={promo.active} onChange={(v) => update("active", v)} />
-            <span className="text-sm text-gray-700">Promo bar is {promo.active ? "visible" : "hidden"}</span>
+            <span className="text-sm text-black">Promo bar is {promo.active ? "visible" : "hidden"}</span>
           </div>
           <Field label="English Text" value={promo.textEn} onChange={(v) => update("textEn", v)} placeholder="Free Shipping on Your First Order..." />
           <Field label="Chinese Text" value={promo.textZh} onChange={(v) => update("textZh", v)} placeholder="首单免运费..." />
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Link URL (optional)" value={promo.link} onChange={(v) => update("link", v)} placeholder="/shop" />
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600">Background Color</label>
+              <label className="mb-1 block text-xs font-medium text-[#666]">Background Color</label>
               <div className="flex items-center gap-2">
-                <input type="color" value={promo.bgColor} onChange={(e) => update("bgColor", e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-gray-300" />
-                <input type="text" value={promo.bgColor} onChange={(e) => update("bgColor", e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <input type="color" value={promo.bgColor} onChange={(e) => update("bgColor", e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-[#d0d0d0]" />
+                <input type="text" value={promo.bgColor} onChange={(e) => update("bgColor", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
               </div>
             </div>
           </div>
           {/* Preview */}
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600">Preview</label>
-            <div className="rounded-lg px-4 py-2 text-sm text-white" style={{ backgroundColor: promo.bgColor }}>
+            <label className="mb-1 block text-xs font-medium text-[#666]">Preview</label>
+            <div className="rounded-[3px] px-4 py-2 text-sm text-white" style={{ backgroundColor: promo.bgColor }}>
               {promo.textEn || "Promo text will appear here"}
             </div>
           </div>
@@ -183,13 +183,13 @@ function HomepageTab({ homepage, setHomepage, onSave, saving }) {
       </Card>
       <Card title="Featured Products">
         <div className="space-y-2">
-          <p className="text-xs text-gray-500">Enter product slugs, one per line. These will be highlighted on the homepage.</p>
+          <p className="text-xs text-[#999]">Enter product slugs, one per line. These will be highlighted on the homepage.</p>
           <textarea
             rows={5}
             value={(homepage.featuredProductSlugs || []).join("\n")}
             onChange={(e) => update("featuredProductSlugs", e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))}
             placeholder={"vinyl-banners\nflyers\nbusiness-cards-standard"}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm outline-none focus:border-gray-900"
+            className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 font-mono text-sm outline-none focus:border-black"
           />
         </div>
       </Card>
@@ -224,17 +224,17 @@ function FAQTab({ faq, setFaq, onSave, saving }) {
       <Card title={`FAQ Items (${faq.length})`}>
         <div className="space-y-4">
           {faq.length === 0 && (
-            <p className="py-4 text-center text-sm text-gray-400">No FAQ items yet. Click &quot;Add Item&quot; to start.</p>
+            <p className="py-4 text-center text-sm text-[#999]">No FAQ items yet. Click &quot;Add Item&quot; to start.</p>
           )}
           {faq.map((item, i) => (
-            <div key={i} className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+            <div key={i} className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500">#{i + 1}</span>
+                <span className="text-xs font-semibold text-[#999]">#{i + 1}</span>
                 <div className="flex items-center gap-1">
-                  <button type="button" onClick={() => moveItem(i, -1)} disabled={i === 0} className="rounded p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30" title="Move up">
+                  <button type="button" onClick={() => moveItem(i, -1)} disabled={i === 0} className="rounded p-1 text-[#999] hover:text-black disabled:opacity-30" title="Move up">
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
                   </button>
-                  <button type="button" onClick={() => moveItem(i, 1)} disabled={i === faq.length - 1} className="rounded p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30" title="Move down">
+                  <button type="button" onClick={() => moveItem(i, 1)} disabled={i === faq.length - 1} className="rounded p-1 text-[#999] hover:text-black disabled:opacity-30" title="Move down">
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                   </button>
                   <button type="button" onClick={() => removeItem(i)} className="rounded p-1 text-red-400 hover:text-red-600" title="Remove">
@@ -244,17 +244,17 @@ function FAQTab({ faq, setFaq, onSave, saving }) {
               </div>
               <Field label="Question (EN)" value={item.question} onChange={(v) => updateItem(i, "question", v)} />
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">Answer (EN)</label>
-                <textarea rows={2} value={item.answer} onChange={(e) => updateItem(i, "answer", e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <label className="mb-1 block text-xs font-medium text-[#666]">Answer (EN)</label>
+                <textarea rows={2} value={item.answer} onChange={(e) => updateItem(i, "answer", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
               </div>
               <Field label="Question (ZH)" value={item.questionZh} onChange={(v) => updateItem(i, "questionZh", v)} />
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">Answer (ZH)</label>
-                <textarea rows={2} value={item.answerZh} onChange={(e) => updateItem(i, "answerZh", e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <label className="mb-1 block text-xs font-medium text-[#666]">Answer (ZH)</label>
+                <textarea rows={2} value={item.answerZh} onChange={(e) => updateItem(i, "answerZh", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
               </div>
             </div>
           ))}
-          <button type="button" onClick={addItem} className="w-full rounded-lg border-2 border-dashed border-gray-300 py-3 text-sm font-medium text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700">
+          <button type="button" onClick={addItem} className="w-full rounded-[3px] border-2 border-dashed border-[#d0d0d0] py-3 text-sm font-medium text-[#999] transition-colors hover:border-[#999] hover:text-black">
             + Add FAQ Item
           </button>
         </div>
@@ -273,15 +273,15 @@ function SEOTab({ seo, setSeo, onSave, saving }) {
         <div className="space-y-4">
           <Field label="Title Suffix (appended to all page titles)" value={seo.titleSuffix} onChange={(v) => update("titleSuffix", v)} placeholder="La Lunar Printing Inc." />
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600">Default Meta Description</label>
-            <textarea rows={3} value={seo.defaultDescription} onChange={(e) => update("defaultDescription", e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+            <label className="mb-1 block text-xs font-medium text-[#666]">Default Meta Description</label>
+            <textarea rows={3} value={seo.defaultDescription} onChange={(e) => update("defaultDescription", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
           </div>
           <Field label="Default OG Image Path" value={seo.ogImage} onChange={(v) => update("ogImage", v)} placeholder="/og-image.png" />
           <Field label="Google Site Verification" value={seo.googleVerification} onChange={(v) => update("googleVerification", v)} placeholder="google-site-verification=..." />
         </div>
       </Card>
       <Card title="Robots.txt Hints">
-        <p className="text-xs text-gray-500">To edit robots.txt and sitemap.xml, modify the files in <code className="rounded bg-gray-100 px-1 py-0.5">app/robots.txt/route.js</code> and <code className="rounded bg-gray-100 px-1 py-0.5">app/sitemap.xml/route.js</code>.</p>
+        <p className="text-xs text-[#999]">To edit robots.txt and sitemap.xml, modify the files in <code className="rounded bg-[#f5f5f5] px-1 py-0.5">app/robots.txt/route.js</code> and <code className="rounded bg-[#f5f5f5] px-1 py-0.5">app/sitemap.xml/route.js</code>.</p>
       </Card>
       <SaveButton saving={saving} />
     </form>
@@ -292,8 +292,8 @@ function SEOTab({ seo, setSeo, onSave, saving }) {
 
 function Card({ title, children }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <h2 className="mb-4 text-sm font-semibold text-gray-900">{title}</h2>
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+      <h2 className="mb-4 text-sm font-semibold text-black">{title}</h2>
       {children}
     </div>
   );
@@ -302,8 +302,8 @@ function Card({ title, children }) {
 function Field({ label, value, onChange, placeholder, type = "text" }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-gray-600">{label}</label>
-      <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+      <label className="mb-1 block text-xs font-medium text-[#666]">{label}</label>
+      <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
     </div>
   );
 }
@@ -312,7 +312,7 @@ function Toggle({ checked, onChange }) {
   return (
     <label className="relative inline-flex cursor-pointer items-center">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
-      <div className="h-5 w-9 rounded-full bg-gray-300 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-gray-900 peer-checked:after:translate-x-full" />
+      <div className="h-5 w-9 rounded-full bg-[#d0d0d0] after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-black peer-checked:after:translate-x-full" />
     </label>
   );
 }
@@ -320,7 +320,7 @@ function Toggle({ checked, onChange }) {
 function SaveButton({ saving }) {
   return (
     <div className="flex justify-end">
-      <button type="submit" disabled={saving} className="rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-black disabled:opacity-50">
+      <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#222] disabled:opacity-50">
         {saving ? "Saving..." : "Save Changes"}
       </button>
     </div>

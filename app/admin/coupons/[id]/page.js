@@ -135,7 +135,7 @@ export default function CouponDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+      <div className="flex h-48 items-center justify-center text-sm text-[#999]">
         Loading...
       </div>
     );
@@ -152,7 +152,7 @@ export default function CouponDetailPage() {
   const statusStyles = {
     active: "bg-green-100 text-green-700",
     expired: "bg-red-100 text-red-700",
-    inactive: "bg-gray-100 text-gray-400",
+    inactive: "bg-[#f5f5f5] text-[#999]",
   };
 
   return (
@@ -161,7 +161,7 @@ export default function CouponDetailPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/admin/coupons"
-          className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
+          className="rounded-[3px] p-1.5 text-[#999] transition-colors hover:bg-[#fafafa] hover:text-[#666]"
         >
           <svg
             className="h-5 w-5"
@@ -178,13 +178,13 @@ export default function CouponDetailPage() {
           </svg>
         </Link>
         <div className="flex-1">
-          <h1 className="font-mono text-xl font-semibold text-gray-900">
+          <h1 className="font-mono text-xl font-semibold text-black">
             {coupon.code}
           </h1>
-          <p className="text-xs text-gray-400">{coupon.id}</p>
+          <p className="text-xs text-[#999]">{coupon.id}</p>
         </div>
         <span
-          className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${statusStyles[status]}`}
+          className={`rounded-[2px] px-3 py-1 text-xs font-medium capitalize ${statusStyles[status]}`}
         >
           {status}
         </span>
@@ -193,7 +193,7 @@ export default function CouponDetailPage() {
       {/* Toast */}
       {message && (
         <div
-          className={`rounded-lg px-4 py-3 text-sm font-medium ${
+          className={`rounded-[3px] px-4 py-3 text-sm font-medium ${
             message.isError
               ? "bg-red-50 text-red-600"
               : "bg-green-50 text-green-600"
@@ -205,14 +205,14 @@ export default function CouponDetailPage() {
 
       {/* Edit form */}
       <form onSubmit={handleSave} className="space-y-6">
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="mb-4 text-sm font-semibold text-gray-900">
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+          <h2 className="mb-4 text-sm font-semibold text-black">
             Coupon Details
           </h2>
 
           <div className="space-y-4">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-500">
+              <label className="mb-1 block text-xs font-medium text-[#999]">
                 Code *
               </label>
               <input
@@ -220,26 +220,26 @@ export default function CouponDetailPage() {
                 value={form.code || ""}
                 onChange={(e) => updateField("code", e.target.value)}
                 required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm uppercase outline-none focus:border-gray-900"
+                className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 font-mono text-sm uppercase outline-none focus:border-black"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-[#999]">
                   Type *
                 </label>
                 <select
                   value={form.type || "percentage"}
                   onChange={(e) => updateField("type", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 >
                   <option value="percentage">Percentage</option>
                   <option value="fixed">Fixed Amount</option>
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-[#999]">
                   Value * (cents or % x 100)
                 </label>
                 <input
@@ -248,14 +248,14 @@ export default function CouponDetailPage() {
                   value={form.value ?? ""}
                   onChange={(e) => updateField("value", e.target.value)}
                   required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-[#999]">
                   Min Order Amount (cents)
                 </label>
                 <input
@@ -264,11 +264,11 @@ export default function CouponDetailPage() {
                   value={form.minAmount ?? ""}
                   onChange={(e) => updateField("minAmount", e.target.value)}
                   placeholder="No minimum"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-[#999]">
                   Max Uses
                 </label>
                 <input
@@ -277,14 +277,14 @@ export default function CouponDetailPage() {
                   value={form.maxUses ?? ""}
                   onChange={(e) => updateField("maxUses", e.target.value)}
                   placeholder="Unlimited"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-[#999]">
                   Valid From *
                 </label>
                 <input
@@ -292,11 +292,11 @@ export default function CouponDetailPage() {
                   value={form.validFrom || ""}
                   onChange={(e) => updateField("validFrom", e.target.value)}
                   required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-[#999]">
                   Valid To *
                 </label>
                 <input
@@ -304,13 +304,13 @@ export default function CouponDetailPage() {
                   value={form.validTo || ""}
                   onChange={(e) => updateField("validTo", e.target.value)}
                   required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 />
               </div>
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-500">
+              <label className="mb-1 block text-xs font-medium text-[#999]">
                 Description
               </label>
               <textarea
@@ -318,7 +318,7 @@ export default function CouponDetailPage() {
                 value={form.description || ""}
                 onChange={(e) => updateField("description", e.target.value)}
                 placeholder="Optional internal note"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
               />
             </div>
           </div>
@@ -329,14 +329,14 @@ export default function CouponDetailPage() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
+            className="rounded-[3px] bg-black px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#222] disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>
           <button
             type="button"
             onClick={() => updateField("isActive", !form.isActive)}
-            className={`rounded-lg border px-4 py-2.5 text-sm font-medium ${
+            className={`rounded-[3px] border px-4 py-2.5 text-sm font-medium ${
               form.isActive
                 ? "border-red-200 text-red-600 hover:bg-red-50"
                 : "border-green-200 text-green-600 hover:bg-green-50"
@@ -347,7 +347,7 @@ export default function CouponDetailPage() {
           <button
             type="button"
             onClick={handleDelete}
-            className="rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
+            className="rounded-[3px] border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
           >
             Delete
           </button>
@@ -355,10 +355,10 @@ export default function CouponDetailPage() {
       </form>
 
       {/* Usage History */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="mb-4 text-sm font-semibold text-gray-900">
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+        <h2 className="mb-4 text-sm font-semibold text-black">
           Usage History
-          <span className="ml-2 text-xs font-normal text-gray-400">
+          <span className="ml-2 text-xs font-normal text-[#999]">
             ({coupon._count?.orders || 0} total orders)
           </span>
         </h2>
@@ -367,37 +367,37 @@ export default function CouponDetailPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                     Order ID
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                     Total
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                     Date
                   </th>
                   <th className="px-4 py-2" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#e0e0e0]">
                 {coupon.orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
+                  <tr key={order.id} className="hover:bg-[#fafafa]">
                     <td className="px-4 py-2">
-                      <span className="font-mono text-xs text-gray-600">
+                      <span className="font-mono text-xs text-[#666]">
                         {order.id.slice(0, 12)}...
                       </span>
                     </td>
-                    <td className="px-4 py-2 font-semibold text-gray-900">
+                    <td className="px-4 py-2 font-semibold text-black">
                       {formatCad(order.totalAmount)}
                     </td>
-                    <td className="px-4 py-2 text-xs text-gray-500">
+                    <td className="px-4 py-2 text-xs text-[#999]">
                       {new Date(order.createdAt).toLocaleDateString("en-CA")}
                     </td>
                     <td className="px-4 py-2">
                       <Link
                         href={`/admin/orders/${order.id}`}
-                        className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                        className="text-xs font-medium text-black underline hover:no-underline"
                       >
                         View
                       </Link>
@@ -408,38 +408,38 @@ export default function CouponDetailPage() {
             </table>
           </div>
         ) : (
-          <div className="flex h-24 items-center justify-center text-sm text-gray-400">
+          <div className="flex h-24 items-center justify-center text-sm text-[#999]">
             No orders have used this coupon yet.
           </div>
         )}
       </div>
 
       {/* Quick Info */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 text-sm font-semibold text-gray-900">Quick Info</h2>
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+        <h2 className="mb-3 text-sm font-semibold text-black">Quick Info</h2>
         <dl className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
           <div>
-            <dt className="text-gray-500">Used</dt>
-            <dd className="mt-0.5 font-semibold text-gray-900">
+            <dt className="text-[#999]">Used</dt>
+            <dd className="mt-0.5 font-semibold text-black">
               {coupon.usedCount}
               {coupon.maxUses ? ` / ${coupon.maxUses}` : ""}
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">Created</dt>
-            <dd className="mt-0.5 text-gray-900">
+            <dt className="text-[#999]">Created</dt>
+            <dd className="mt-0.5 text-black">
               {new Date(coupon.createdAt).toLocaleDateString("en-CA")}
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">Updated</dt>
-            <dd className="mt-0.5 text-gray-900">
+            <dt className="text-[#999]">Updated</dt>
+            <dd className="mt-0.5 text-black">
               {new Date(coupon.updatedAt).toLocaleDateString("en-CA")}
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">Orders</dt>
-            <dd className="mt-0.5 font-semibold text-gray-900">
+            <dt className="text-[#999]">Orders</dt>
+            <dd className="mt-0.5 font-semibold text-black">
               {coupon._count?.orders || 0}
             </dd>
           </div>

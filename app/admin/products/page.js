@@ -115,9 +115,13 @@ function suggestSubseriesForProduct(product) {
   return null;
 }
 
-function buildCategoryTree(products) {
+function buildCategoryTree(products, catalogConfig) {
   const parentEntries = Object.entries(SUB_PRODUCT_CONFIG);
   const byCategoryParents = new Map();
+  const categoryMeta = catalogConfig?.categoryMeta || {};
+  const configuredCategoryOrder = Array.isArray(catalogConfig?.homepageCategories)
+    ? catalogConfig.homepageCategories
+    : CATEGORY_ORDER;
 
   for (const [parentSlug, cfg] of parentEntries) {
     if (!byCategoryParents.has(cfg.category)) byCategoryParents.set(cfg.category, []);
@@ -146,7 +150,7 @@ function buildCategoryTree(products) {
     if (categoryItems.length) byCategory.set(category, categoryItems);
   }
 
-  const orderIndex = new Map(CATEGORY_ORDER.map((slug, idx) => [slug, idx]));
+  const orderIndex = new Map(configuredCategoryOrder.map((slug, idx) => [slug, idx]));
   const tree = [];
   for (const [category, items] of Array.from(byCategory.entries()).sort((a, b) => {
     const ai = orderIndex.has(a[0]) ? orderIndex.get(a[0]) : Number.MAX_SAFE_INTEGER;
@@ -155,15 +159,23 @@ function buildCategoryTree(products) {
     return a[0].localeCompare(b[0]);
   })) {
     const parents = byCategoryParents.get(category) || [];
+    const parentBySlug = new Map(parents.map((p) => [p.parentSlug, p]));
+    const sortedParentSlugs = Array.from(parentBySlug.keys()).sort((a, b) => a.localeCompare(b));
+    const configuredSubOrder = Array.isArray(categoryMeta?.[category]?.subGroups)
+      ? categoryMeta[category].subGroups.map((x) => x.slug).filter((slug) => parentBySlug.has(slug))
+      : [];
+    const configuredSubSet = new Set(configuredSubOrder);
+    const parentOrder = [
+      ...configuredSubOrder,
+      ...sortedParentSlugs.filter((slug) => !configuredSubSet.has(slug)),
+    ];
     const claimed = new Set();
     const subseriesMap = new Map();
-    const parentOrder = [];
 
-    for (const parent of parents.sort((a, b) => a.parentSlug.localeCompare(b.parentSlug))) {
-      parentOrder.push(parent.parentSlug);
-      subseriesMap.set(parent.parentSlug, {
-        slug: parent.parentSlug,
-        title: titleizeSlug(parent.parentSlug),
+    for (const slug of parentOrder) {
+      subseriesMap.set(slug, {
+        slug,
+        title: titleizeSlug(slug),
         products: [],
       });
     }
@@ -196,12 +208,14 @@ function buildCategoryTree(products) {
     }
 
     // 2) Default SUB_PRODUCT_CONFIG placement for unclaimed products
-    for (const parent of parents.sort((a, b) => a.parentSlug.localeCompare(b.parentSlug))) {
+    for (const slug of parentOrder) {
+      const parent = parentBySlug.get(slug);
+      if (!parent) continue;
       const children = items.filter((p) => parent.dbSlugs.includes(p.slug));
       if (!children.length) continue;
       for (const c of children) {
         if (claimed.has(c.id)) continue;
-        subseriesMap.get(parent.parentSlug).products.push(c);
+        subseriesMap.get(parent.parentSlug)?.products.push(c);
         claimed.add(c.id);
       }
     }
@@ -237,7 +251,7 @@ function buildCategoryTree(products) {
 
     tree.push({
       category,
-      title: titleizeSlug(category),
+      title: categoryMeta?.[category]?.title || titleizeSlug(category),
       count: items.length,
       subseries,
     });
@@ -250,7 +264,7 @@ export default function ProductsPage({ embedded = false, basePath = "/admin/prod
   return (
     <Suspense
       fallback={
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-48 items-center justify-center text-sm text-[#999]">
           Loading...
         </div>
       }
@@ -266,6 +280,10 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
 
   const [products, setProducts] = useState([]);
   const [catalogProducts, setCatalogProducts] = useState([]);
+  const [catalogConfig, setCatalogConfig] = useState({
+    homepageCategories: CATEGORY_ORDER,
+    categoryMeta: {},
+  });
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -294,14 +312,23 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     router.replace(`/admin/catalog-ops?${params.toString()}`);
   }, [embedded, router, searchParams]);
 
-  const tree = useMemo(() => buildCategoryTree(catalogProducts), [catalogProducts]);
+  const tree = useMemo(() => buildCategoryTree(catalogProducts, catalogConfig), [catalogProducts, catalogConfig]);
   const categoryOptions = useMemo(() => {
     const dynamic = Array.from(new Set(catalogProducts.map((p) => p.category)));
-    const known = CATEGORY_ORDER.filter((c) => dynamic.includes(c));
-    const unknown = dynamic.filter((c) => !CATEGORY_ORDER.includes(c)).sort((a, b) => a.localeCompare(b));
+    const configured = Array.isArray(catalogConfig?.homepageCategories)
+      ? catalogConfig.homepageCategories
+      : CATEGORY_ORDER;
+    const known = configured.filter((c) => dynamic.includes(c));
+    const unknown = dynamic.filter((c) => !configured.includes(c)).sort((a, b) => a.localeCompare(b));
     const ordered = [...known, ...unknown];
-    return [{ value: "all", label: "All" }, ...ordered.map((c) => ({ value: c, label: titleizeSlug(c) }))];
-  }, [catalogProducts]);
+    return [
+      { value: "all", label: "All" },
+      ...ordered.map((c) => ({
+        value: c,
+        label: catalogConfig?.categoryMeta?.[c]?.title || titleizeSlug(c),
+      })),
+    ];
+  }, [catalogProducts, catalogConfig]);
   const bulkCategoryOptions = useMemo(
     () => tree.map((c) => ({ value: c.category, label: c.title })),
     [tree]
@@ -352,6 +379,23 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
         fetch(`/api/admin/products?${catalogParams}`),
       ]);
       const [data, catalogData] = await Promise.all([res.json(), catalogRes.json()]);
+      try {
+        const cfgRes = await fetch("/api/admin/catalog");
+        if (cfgRes.ok) {
+          const cfgData = await cfgRes.json();
+          if (cfgData?.catalogConfig) {
+            setCatalogConfig((prev) => ({
+              ...prev,
+              ...cfgData.catalogConfig,
+              homepageCategories:
+                cfgData.catalogConfig.homepageCategories || prev.homepageCategories,
+              categoryMeta: cfgData.catalogConfig.categoryMeta || prev.categoryMeta,
+            }));
+          }
+        }
+      } catch {
+        // keep default fallback config when catalog API is unavailable
+      }
       setProducts(data.products || []);
       setPagination(data.pagination || null);
       setCatalogProducts(catalogData.products || []);
@@ -799,11 +843,11 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     <div className="space-y-4">
       {!embedded && (
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-gray-900">Products</h1>
+          <h1 className="text-xl font-semibold text-black">Products</h1>
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
           >
             + Add Product
           </button>
@@ -814,7 +858,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
           >
             + Add Product
           </button>
@@ -824,7 +868,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       {/* Toast */}
       {message && (
         <div
-          className={`rounded-lg px-4 py-3 text-sm font-medium ${
+          className={`rounded-[3px] px-4 py-3 text-sm font-medium ${
             message.isError
               ? "bg-red-50 text-red-600"
               : "bg-green-50 text-green-600"
@@ -834,7 +878,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
         </div>
       )}
       {lastMove?.entries?.length ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm text-blue-800">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-[3px] border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm text-blue-800">
           <span>Last change: {lastMove.entries.length} products moved.</span>
           <button
             type="button"
@@ -862,10 +906,10 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                   page: "1",
                 });
               }}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                 categoryFilter === c.value
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-100"
+                  ? "bg-black text-white"
+                  : "bg-white text-[#666] hover:bg-[#fafafa]"
               }`}
             >
               {c.label}
@@ -874,7 +918,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
           <button
             type="button"
             onClick={() => setShowOnlyUncategorized((v) => !v)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
               showOnlyUncategorized
                 ? "bg-amber-100 text-amber-800"
                 : "bg-white text-amber-700 hover:bg-amber-50"
@@ -891,11 +935,11 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search products..."
-            className="w-56 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+            className="w-56 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900"
           />
           <button
             type="submit"
-            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
           >
             Search
           </button>
@@ -903,25 +947,25 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       </div>
 
       {/* Category -> Subseries -> Products */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-          <h2 className="text-sm font-semibold text-gray-900">
+      <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
+        <div className="border-b border-[#e0e0e0] bg-[#fafafa] px-4 py-3">
+          <h2 className="text-sm font-semibold text-black">
             Category &rarr; Subseries &rarr; Products
           </h2>
-          <p className="mt-0.5 text-xs text-gray-500">
+          <p className="mt-0.5 text-xs text-[#999]">
             Current filter view: {catalogProducts.length} products
           </p>
-          <p className="mt-1 text-[11px] text-gray-500">
+          <p className="mt-1 text-[11px] text-[#999]">
             Drag a product card into another subseries to reclassify it.
           </p>
-          <p className="mt-1 text-[11px] text-gray-500">
+          <p className="mt-1 text-[11px] text-[#999]">
             Hold Ctrl/Command while dragging to copy into another subseries.
           </p>
-          <p className="mt-1 text-[11px] text-gray-500">
+          <p className="mt-1 text-[11px] text-[#999]">
             Shopify-style: select multiple cards then bulk move.
           </p>
           {uncategorizedEntries.length > 0 && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-[3px] border border-amber-200 bg-amber-50 px-3 py-2">
               <p className="text-xs font-medium text-amber-800">
                 {uncategorizedEntries.length} products are uncategorized.
               </p>
@@ -950,12 +994,12 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
             </div>
           )}
         </div>
-        <div className="border-b border-gray-100 bg-white px-4 py-3">
+        <div className="border-b border-[#e0e0e0] bg-white px-4 py-3">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-            <p className="text-xs font-medium text-gray-700">
+            <p className="text-xs font-medium text-black">
               Selected: <span className="font-semibold">{selectedProductIds.length}</span>
               {copiedProductIds.length ? (
-                <span className="ml-2 text-gray-500">
+                <span className="ml-2 text-[#999]">
                   | Clipboard: <span className="font-semibold">{copiedProductIds.length}</span>
                 </span>
               ) : null}
@@ -964,7 +1008,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
               <select
                 value={bulkCategory}
                 onChange={(e) => setBulkCategory(e.target.value)}
-                className="rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-gray-700 outline-none focus:border-gray-900"
+                className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1.5 text-xs text-black outline-none focus:border-gray-900"
               >
                 {bulkCategoryOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -975,7 +1019,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
               <select
                 value={bulkSubseries}
                 onChange={(e) => setBulkSubseries(e.target.value)}
-                className="rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-gray-700 outline-none focus:border-gray-900"
+                className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1.5 text-xs text-black outline-none focus:border-gray-900"
               >
                 {bulkSubseriesOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -987,7 +1031,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 type="button"
                 onClick={handleBulkMove}
                 disabled={moving || selectedProductIds.length === 0}
-                className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#222] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {moving ? "Moving..." : "Move Selected"}
               </button>
@@ -995,7 +1039,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 type="button"
                 onClick={handleCopySelected}
                 disabled={moving || selectedProductIds.length === 0}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Copy Selected
               </button>
@@ -1003,7 +1047,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 type="button"
                 onClick={handlePasteCopied}
                 disabled={moving || copiedProductIds.length === 0}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Paste to Target
               </button>
@@ -1011,7 +1055,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 type="button"
                 onClick={() => setSelectedProductIds([])}
                 disabled={selectedProductIds.length === 0}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Clear Selection
               </button>
@@ -1019,26 +1063,26 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 type="button"
                 onClick={handleUndoLastMove}
                 disabled={moving || !lastMove?.entries?.length}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Undo Last Move
               </button>
             </div>
           </div>
           {lastMove?.entries?.length ? (
-            <p className="mt-2 text-[11px] text-gray-500">Undo is available above.</p>
+            <p className="mt-2 text-[11px] text-[#999]">Undo is available above.</p>
           ) : null}
         </div>
         {catalogLoading ? (
-          <div className="px-4 py-6 text-sm text-gray-500">Loading catalog map...</div>
+          <div className="px-4 py-6 text-sm text-[#999]">Loading catalog map...</div>
         ) : visibleTree.length === 0 ? (
-          <div className="px-4 py-6 text-sm text-gray-500">No products in current filter.</div>
+          <div className="px-4 py-6 text-sm text-[#999]">No products in current filter.</div>
         ) : (
           <div className="max-h-[560px] overflow-auto p-4">
             <div className="space-y-4">
               {visibleTree.map((cat) => (
-                <details key={cat.category} className="rounded-lg border border-gray-200 bg-white" open>
-                  <summary className="cursor-pointer list-none px-3 py-2 text-sm font-semibold text-gray-900">
+                <details key={cat.category} className="rounded-[3px] border border-[#e0e0e0] bg-white" open>
+                  <summary className="cursor-pointer list-none px-3 py-2 text-sm font-semibold text-black">
                     <div className="flex items-center justify-between gap-2">
                       <span>
                         {cat.title} ({cat.count})
@@ -1052,7 +1096,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                             e.stopPropagation();
                             toggleCategorySelection(cat.category, true);
                           }}
-                          className="rounded border border-gray-300 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-600 hover:bg-gray-100"
+                          className="rounded border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#666] hover:bg-[#fafafa]"
                         >
                           Select All
                         </button>
@@ -1064,14 +1108,14 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                             e.stopPropagation();
                             toggleCategorySelection(cat.category, false);
                           }}
-                          className="rounded border border-gray-300 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-600 hover:bg-gray-100"
+                          className="rounded border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#666] hover:bg-[#fafafa]"
                         >
                           Clear
                         </button>
                       </div>
                     </div>
                   </summary>
-                  <div className="border-t border-gray-100 px-3 py-2">
+                  <div className="border-t border-[#e0e0e0] px-3 py-2">
                     <div className="space-y-3">
                       {cat.subseries.map((group) => (
                         <div
@@ -1097,11 +1141,11 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                           className={`rounded-md border p-2 transition-colors ${
                             dropTarget === `${cat.category}:${group.slug}`
                               ? "border-blue-300 bg-blue-50"
-                              : "border-gray-100 bg-gray-50"
+                              : "border-[#e0e0e0] bg-[#fafafa]"
                           }`}
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-700">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-black">
                               {group.title} ({group.products.length})
                             </p>
                             <div className="flex items-center gap-1">
@@ -1110,7 +1154,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                 onClick={() =>
                                   toggleSubseriesSelection(cat.category, group.slug, true)
                                 }
-                                className="rounded border border-gray-300 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-600 hover:bg-gray-100"
+                                className="rounded border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#666] hover:bg-[#fafafa]"
                               >
                                 Select
                               </button>
@@ -1119,7 +1163,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                 onClick={() =>
                                   toggleSubseriesSelection(cat.category, group.slug, false)
                                 }
-                                className="rounded border border-gray-300 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-600 hover:bg-gray-100"
+                                className="rounded border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#666] hover:bg-[#fafafa]"
                               >
                                 Clear
                               </button>
@@ -1164,12 +1208,12 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                     });
                                   }
                                 }}
-                                className={`rounded border bg-white px-2 py-1.5 text-xs text-gray-700 hover:border-gray-400 hover:text-gray-900 ${
+                                className={`rounded border bg-white px-2 py-1.5 text-xs text-black hover:border-gray-400 hover:text-black ${
                                   dropTarget === `card:${p.id}`
                                     ? "border-blue-400 bg-blue-50"
                                     : draggingProductId === p.id
                                     ? "cursor-grabbing border-blue-300 opacity-60"
-                                    : "cursor-grab border-gray-200"
+                                    : "cursor-grab border-[#e0e0e0]"
                                 }`}
                               >
                                 <div className="flex items-start justify-between gap-2">
@@ -1183,16 +1227,16 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                           return prev.filter((id) => id !== p.id);
                                         });
                                       }}
-                                      className="mt-0.5 h-3.5 w-3.5 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                                      className="mt-0.5 h-3.5 w-3.5 rounded border-[#d0d0d0] text-black focus:ring-gray-500"
                                     />
                                     <span className="min-w-0">
                                       <span className="block truncate font-medium">{p.name}</span>
-                                      <span className="block truncate font-mono text-[10px] text-gray-500">{p.slug}</span>
+                                      <span className="block truncate font-mono text-[10px] text-[#999]">{p.slug}</span>
                                     </span>
                                   </label>
                                   <Link
                                     href={`/admin/products/${p.id}`}
-                                    className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-blue-600 hover:text-blue-800"
+                                    className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-black underline hover:no-underline"
                                   >
                                     Edit
                                   </Link>
@@ -1202,7 +1246,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                     type="button"
                                     onClick={() => handleNudgeWithinSubseries(p.id, group.products, "up")}
                                     disabled={moving}
-                                    className="rounded border border-gray-300 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                    className="rounded border border-[#d0d0d0] px-1.5 py-0.5 text-[10px] font-medium text-black hover:bg-[#fafafa] disabled:opacity-50"
                                     title="Move up"
                                   >
                                     ↑
@@ -1211,7 +1255,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                     type="button"
                                     onClick={() => handleNudgeWithinSubseries(p.id, group.products, "down")}
                                     disabled={moving}
-                                    className="rounded border border-gray-300 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                    className="rounded border border-[#d0d0d0] px-1.5 py-0.5 text-[10px] font-medium text-black hover:bg-[#fafafa] disabled:opacity-50"
                                     title="Move down"
                                   >
                                     ↓
@@ -1231,7 +1275,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                     className={`rounded border px-1.5 py-0.5 text-[10px] font-medium disabled:opacity-50 ${
                                       p.isFeatured
                                         ? "border-amber-300 bg-amber-50 text-amber-800"
-                                        : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                                        : "border-[#d0d0d0] text-black hover:bg-[#fafafa]"
                                     }`}
                                     title={p.isFeatured ? "Unpin from featured" : "Pin to featured"}
                                   >
@@ -1251,7 +1295,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                     disabled={moving}
                                     className={`rounded border px-1.5 py-0.5 text-[10px] font-medium disabled:opacity-50 ${
                                       p.isActive
-                                        ? "border-gray-300 text-gray-700 hover:bg-gray-100"
+                                        ? "border-[#d0d0d0] text-black hover:bg-[#fafafa]"
                                         : "border-emerald-300 bg-emerald-50 text-emerald-800"
                                     }`}
                                     title={p.isActive ? "Hide product" : "Activate product"}
@@ -1274,13 +1318,13 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
-          <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+          <div className="flex h-48 items-center justify-center text-sm text-[#999]">
             Loading...
           </div>
         ) : products.length === 0 ? (
-          <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-gray-500">
+          <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-[#999]">
             <p>No products found</p>
             {categoryFilter !== "all" && (
               <button
@@ -1289,7 +1333,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                   setCategoryFilter("all");
                   updateParams({ category: null, page: "1" });
                 }}
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-black underline hover:no-underline"
               >
                 Clear filters
               </button>
@@ -1301,61 +1345,61 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
             <div className="hidden overflow-x-auto lg:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Image
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Category
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Price
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Status
                     </th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#e0e0e0]">
                   {products.map((product) => {
                     const imgUrl = product.images?.[0]?.url;
                     return (
-                      <tr key={product.id} className="hover:bg-gray-50">
+                      <tr key={product.id} className="hover:bg-[#fafafa]">
                         <td className="px-4 py-3">
                           {imgUrl ? (
                             <img
                               src={imgUrl}
                               alt={product.name}
-                              className="h-10 w-10 rounded-lg object-cover"
+                              className="h-10 w-10 rounded-[3px] object-cover"
                             />
                           ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-300 text-sm">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-[3px] bg-[#f5f5f5] text-[#999] text-sm">
                               ?
                             </div>
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-black">
                             {product.name}
                           </p>
-                          <p className="font-mono text-xs text-gray-400">
+                          <p className="font-mono text-xs text-[#999]">
                             {product.slug}
                           </p>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                          <span className="inline-block rounded-[2px] bg-[#f5f5f5] px-2.5 py-0.5 text-xs font-medium text-[#666]">
                             {product.category}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-black">
                             {formatCad(product.basePrice)}
                           </span>
-                          <span className="ml-1 text-xs text-gray-400">
+                          <span className="ml-1 text-xs text-[#999]">
                             /{product.pricingUnit === "per_sqft" ? "sqft" : "pc"}
                           </span>
                         </td>
@@ -1365,10 +1409,10 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                             onClick={() =>
                               handleToggle(product.id, product.isActive)
                             }
-                            className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            className={`inline-block rounded-[2px] px-2.5 py-0.5 text-xs font-medium ${
                               product.isActive
                                 ? "bg-green-100 text-green-700"
-                                : "bg-gray-100 text-gray-400"
+                                : "bg-[#f5f5f5] text-[#999]"
                             }`}
                           >
                             {product.isActive ? "Active" : "Inactive"}
@@ -1378,7 +1422,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                           <div className="flex items-center justify-end gap-2">
                             <Link
                               href={`/admin/products/${product.id}`}
-                              className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                              className="text-xs font-medium text-black underline hover:no-underline"
                             >
                               Edit
                             </Link>
@@ -1399,39 +1443,39 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
             </div>
 
             {/* Mobile cards */}
-            <div className="divide-y divide-gray-100 lg:hidden">
+            <div className="divide-y divide-[#e0e0e0] lg:hidden">
               {products.map((product) => {
                 const imgUrl = product.images?.[0]?.url;
                 return (
                   <Link
                     key={product.id}
                     href={`/admin/products/${product.id}`}
-                    className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-50"
+                    className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[#fafafa]"
                   >
                     {imgUrl ? (
                       <img
                         src={imgUrl}
                         alt={product.name}
-                        className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
+                        className="h-12 w-12 flex-shrink-0 rounded-[3px] object-cover"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-300">
+                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[3px] bg-[#f5f5f5] text-[#999]">
                         ?
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-black truncate">
                         {product.name}
                       </p>
                       <div className="mt-0.5 flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-sm font-semibold text-black">
                           {formatCad(product.basePrice)}
                         </span>
                         <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          className={`rounded-[2px] px-2 py-0.5 text-xs font-medium ${
                             product.isActive
                               ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-400"
+                              : "bg-[#f5f5f5] text-[#999]"
                           }`}
                         >
                           {product.isActive ? "Active" : "Inactive"}
@@ -1449,7 +1493,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[#999]">
             Showing {(pagination.page - 1) * pagination.limit + 1}-
             {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
             {pagination.total}
@@ -1459,7 +1503,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
               type="button"
               disabled={page <= 1}
               onClick={() => updateParams({ page: String(page - 1) })}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
               Previous
             </button>
@@ -1467,7 +1511,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
               type="button"
               disabled={page >= pagination.totalPages}
               onClick={() => updateParams({ page: String(page + 1) })}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
               Next
             </button>

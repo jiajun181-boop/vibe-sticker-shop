@@ -35,14 +35,14 @@ function getCouponStatus(coupon) {
 const statusStyles = {
   active: "bg-green-100 text-green-700",
   expired: "bg-red-100 text-red-700",
-  inactive: "bg-gray-100 text-gray-400",
+  inactive: "bg-gray-100 text-[#999]",
 };
 
 export default function CouponsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-48 items-center justify-center text-sm text-[#999]">
           Loading...
         </div>
       }
@@ -183,11 +183,11 @@ function CouponsContent() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Coupons</h1>
+        <h1 className="text-xl font-semibold text-black">Coupons</h1>
         <button
           type="button"
           onClick={() => setShowForm(true)}
-          className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
         >
           + Create Coupon
         </button>
@@ -196,7 +196,7 @@ function CouponsContent() {
       {/* Toast */}
       {message && (
         <div
-          className={`rounded-lg px-4 py-3 text-sm font-medium ${
+          className={`rounded-[3px] px-4 py-3 text-sm font-medium ${
             message.isError
               ? "bg-red-50 text-red-600"
               : "bg-green-50 text-green-600"
@@ -221,10 +221,10 @@ function CouponsContent() {
                   page: "1",
                 });
               }}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeFilter === tab.value
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-100"
+                  ? "bg-black text-white"
+                  : "bg-white text-[#666] hover:bg-[#fafafa]"
               }`}
             >
               {tab.label}
@@ -239,11 +239,11 @@ function CouponsContent() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search code or description..."
-            className="w-56 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+            className="w-56 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button
             type="submit"
-            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
           >
             Search
           </button>
@@ -251,13 +251,13 @@ function CouponsContent() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
-          <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+          <div className="flex h-48 items-center justify-center text-sm text-[#999]">
             Loading...
           </div>
         ) : coupons.length === 0 ? (
-          <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-gray-500">
+          <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-[#999]">
             <p>No coupons found</p>
             {activeFilter !== "all" && (
               <button
@@ -266,7 +266,7 @@ function CouponsContent() {
                   setActiveFilter("all");
                   updateParams({ filter: null, page: "1" });
                 }}
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-black underline hover:no-underline"
               >
                 Clear filters
               </button>
@@ -278,44 +278,44 @@ function CouponsContent() {
             <div className="hidden overflow-x-auto lg:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Code
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Type
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Value
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Min Amount
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Uses
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Valid Period
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Status
                     </th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#e0e0e0]">
                   {coupons.map((coupon) => {
                     const status = getCouponStatus(coupon);
                     return (
-                      <tr key={coupon.id} className="hover:bg-gray-50">
+                      <tr key={coupon.id} className="hover:bg-[#fafafa]">
                         <td className="px-4 py-3">
-                          <span className="font-mono text-sm font-semibold text-gray-900">
+                          <span className="font-mono text-sm font-semibold text-black">
                             {coupon.code}
                           </span>
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            className={`inline-block rounded-[2px] px-2.5 py-0.5 text-xs font-medium ${
                               coupon.type === "percentage"
                                 ? "bg-green-100 text-green-700"
                                 : "bg-blue-100 text-blue-700"
@@ -324,27 +324,27 @@ function CouponsContent() {
                             {coupon.type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 font-semibold text-gray-900">
+                        <td className="px-4 py-3 font-semibold text-black">
                           {formatValue(coupon)}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-[#666]">
                           {coupon.minAmount
                             ? formatCad(coupon.minAmount)
                             : "-"}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-[#666]">
                           {coupon.usedCount}
                           {coupon.maxUses
                             ? ` / ${coupon.maxUses}`
                             : " / unlimited"}
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-500">
+                        <td className="px-4 py-3 text-xs text-[#999]">
                           {formatDate(coupon.validFrom)} -{" "}
                           {formatDate(coupon.validTo)}
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                            className={`inline-block rounded-[2px] px-2.5 py-0.5 text-xs font-medium capitalize ${
                               statusStyles[status]
                             }`}
                           >
@@ -355,7 +355,7 @@ function CouponsContent() {
                           <div className="flex items-center justify-end gap-2">
                             <Link
                               href={`/admin/coupons/${coupon.id}`}
-                              className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                              className="text-xs font-medium text-black underline hover:no-underline"
                             >
                               Edit
                             </Link>
@@ -376,21 +376,21 @@ function CouponsContent() {
             </div>
 
             {/* Mobile cards */}
-            <div className="divide-y divide-gray-100 lg:hidden">
+            <div className="divide-y divide-[#e0e0e0] lg:hidden">
               {coupons.map((coupon) => {
                 const status = getCouponStatus(coupon);
                 return (
                   <Link
                     key={coupon.id}
                     href={`/admin/coupons/${coupon.id}`}
-                    className="block px-4 py-3 transition-colors hover:bg-gray-50"
+                    className="block px-4 py-3 transition-colors hover:bg-[#fafafa]"
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-mono text-sm font-semibold text-gray-900">
+                        <p className="font-mono text-sm font-semibold text-black">
                           {coupon.code}
                         </p>
-                        <p className="mt-0.5 text-xs text-gray-500">
+                        <p className="mt-0.5 text-xs text-[#999]">
                           {formatValue(coupon)} &middot;{" "}
                           {coupon.type === "percentage" ? "%" : "fixed"}
                         </p>
@@ -403,7 +403,7 @@ function CouponsContent() {
                         {status}
                       </span>
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[#999]">
                       <span>
                         {coupon.usedCount}
                         {coupon.maxUses
@@ -427,7 +427,7 @@ function CouponsContent() {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[#999]">
             Showing {(pagination.page - 1) * pagination.limit + 1}-
             {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
             {pagination.total}
@@ -437,7 +437,7 @@ function CouponsContent() {
               type="button"
               disabled={page <= 1}
               onClick={() => updateParams({ page: String(page - 1) })}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
               Previous
             </button>
@@ -445,7 +445,7 @@ function CouponsContent() {
               type="button"
               disabled={page >= pagination.totalPages}
               onClick={() => updateParams({ page: String(page + 1) })}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
               Next
             </button>
@@ -455,41 +455,41 @@ function CouponsContent() {
 
       {/* Create modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-8 shadow-xl">
-            <h2 className="mb-6 text-lg font-semibold text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[3px] bg-white p-8 shadow-xl">
+            <h2 className="mb-6 text-lg font-semibold text-black">
               Create Coupon
             </h2>
 
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-[#999]">
                   Code *
                 </label>
                 <input
                   name="code"
                   required
                   placeholder="e.g. SUMMER25"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm uppercase outline-none focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 font-mono text-sm uppercase outline-none focus:border-black"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">
+                  <label className="mb-1 block text-xs font-medium text-[#999]">
                     Type *
                   </label>
                   <select
                     name="type"
                     defaultValue="percentage"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   >
                     <option value="percentage">Percentage</option>
                     <option value="fixed">Fixed Amount</option>
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">
+                  <label className="mb-1 block text-xs font-medium text-[#999]">
                     Value * (cents or % x 100)
                   </label>
                   <input
@@ -498,14 +498,14 @@ function CouponsContent() {
                     min="1"
                     required
                     placeholder="e.g. 1000 = 10% or $10.00"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">
+                  <label className="mb-1 block text-xs font-medium text-[#999]">
                     Min Order Amount (cents)
                   </label>
                   <input
@@ -513,11 +513,11 @@ function CouponsContent() {
                     type="number"
                     min="0"
                     placeholder="Optional"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">
+                  <label className="mb-1 block text-xs font-medium text-[#999]">
                     Max Uses
                   </label>
                   <input
@@ -525,45 +525,45 @@ function CouponsContent() {
                     type="number"
                     min="1"
                     placeholder="Unlimited"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">
+                  <label className="mb-1 block text-xs font-medium text-[#999]">
                     Valid From *
                   </label>
                   <input
                     name="validFrom"
                     type="date"
                     required
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">
+                  <label className="mb-1 block text-xs font-medium text-[#999]">
                     Valid To *
                   </label>
                   <input
                     name="validTo"
                     type="date"
                     required
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-[#999]">
                   Description
                 </label>
                 <textarea
                   name="description"
                   rows={2}
                   placeholder="Optional internal note"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 />
               </div>
 
@@ -571,14 +571,14 @@ function CouponsContent() {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="flex-1 rounded-lg bg-gray-900 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
+                  className="flex-1 rounded-[3px] bg-black py-2.5 text-sm font-semibold text-white hover:bg-[#222] disabled:opacity-50"
                 >
                   {creating ? "Creating..." : "Create Coupon"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="flex-1 rounded-lg border border-gray-200 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="flex-1 rounded-[3px] border border-[#e0e0e0] py-2.5 text-sm font-medium text-black hover:bg-[#fafafa]"
                 >
                   Cancel
                 </button>

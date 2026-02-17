@@ -28,7 +28,7 @@ const priorityOptions = [
 ];
 
 const statusColors = {
-  queued: "bg-gray-100 text-gray-700",
+  queued: "bg-[#f5f5f5] text-black",
   assigned: "bg-blue-100 text-blue-700",
   printing: "bg-yellow-100 text-yellow-700",
   quality_check: "bg-purple-100 text-purple-700",
@@ -38,7 +38,7 @@ const statusColors = {
 };
 
 const priorityColors = {
-  normal: "bg-gray-100 text-gray-600",
+  normal: "bg-[#f5f5f5] text-[#666]",
   rush: "bg-orange-100 text-orange-700",
   urgent: "bg-red-100 text-red-700",
 };
@@ -62,7 +62,7 @@ export default function ProductionPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-48 items-center justify-center text-sm text-[#999]">
           Loading...
         </div>
       }
@@ -247,24 +247,24 @@ function ProductionContent() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <h1 className="text-xl font-semibold text-gray-900">
+        <h1 className="text-xl font-semibold text-black">
           Production Queue
         </h1>
         {pagination && (
-          <span className="inline-flex items-center rounded-full bg-gray-900 px-2.5 py-0.5 text-xs font-medium text-white">
+          <span className="inline-flex items-center rounded-[2px] bg-black px-2.5 py-0.5 text-xs font-medium text-white">
             {pagination.total}
           </span>
         )}
         <div className="ml-auto flex items-center gap-2">
           <Link
             href="/admin/production/board"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
           >
             Board View
           </Link>
           <Link
             href="/admin/production/rules"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
           >
             Rules
           </Link>
@@ -272,12 +272,12 @@ function ProductionContent() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="flex flex-col gap-3 rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-center">
         {/* Status filter */}
         <div className="flex items-center gap-2">
           <label
             htmlFor="status-filter"
-            className="text-xs font-medium text-gray-500"
+            className="text-xs font-medium text-[#999]"
           >
             Status
           </label>
@@ -291,7 +291,7 @@ function ProductionContent() {
                 page: "1",
               });
             }}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 outline-none focus:border-gray-900"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-black"
           >
             {statusOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -305,7 +305,7 @@ function ProductionContent() {
         <div className="flex items-center gap-2">
           <label
             htmlFor="priority-filter"
-            className="text-xs font-medium text-gray-500"
+            className="text-xs font-medium text-[#999]"
           >
             Priority
           </label>
@@ -319,7 +319,7 @@ function ProductionContent() {
                 page: "1",
               });
             }}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 outline-none focus:border-gray-900"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-black"
           >
             {priorityOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -333,7 +333,7 @@ function ProductionContent() {
         <div className="flex items-center gap-2">
           <label
             htmlFor="factory-filter"
-            className="text-xs font-medium text-gray-500"
+            className="text-xs font-medium text-[#999]"
           >
             Factory
           </label>
@@ -347,7 +347,7 @@ function ProductionContent() {
                 page: "1",
               });
             }}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 outline-none focus:border-gray-900"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-black"
           >
             <option value="all">All Factories</option>
             {factories.map((f) => (
@@ -368,11 +368,11 @@ function ProductionContent() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search product or email..."
-            className="w-64 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+            className="w-64 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button
             type="submit"
-            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
           >
             Search
           </button>
@@ -381,26 +381,26 @@ function ProductionContent() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-gray-500">Total Queued</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900">
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm">
+          <p className="text-xs font-medium text-[#999]">Total Queued</p>
+          <p className="mt-1 text-2xl font-semibold text-black">
             {totalQueued}
           </p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-gray-500">In Production</p>
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm">
+          <p className="text-xs font-medium text-[#999]">In Production</p>
           <p className="mt-1 text-2xl font-semibold text-yellow-600">
             {inProduction}
           </p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-gray-500">Quality Check</p>
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm">
+          <p className="text-xs font-medium text-[#999]">Quality Check</p>
           <p className="mt-1 text-2xl font-semibold text-purple-600">
             {qualityCheck}
           </p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-gray-500">Completed Today</p>
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm">
+          <p className="text-xs font-medium text-[#999]">Completed Today</p>
           <p className="mt-1 text-2xl font-semibold text-green-600">
             {completedToday}
           </p>
@@ -409,7 +409,7 @@ function ProductionContent() {
 
       {/* Bulk action bar */}
       {selectedJobs.length > 0 && (
-        <div className="sticky top-0 z-10 rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <div className="sticky top-0 z-10 rounded-[3px] border border-blue-200 bg-blue-50 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-sm font-medium text-blue-900">
               {selectedJobs.length} job{selectedJobs.length > 1 ? "s" : ""} selected
@@ -418,7 +418,7 @@ function ProductionContent() {
               <select
                 onChange={(e) => handleBulkUpdate({ status: e.target.value })}
                 disabled={bulkUpdating}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs text-black"
                 defaultValue=""
               >
                 <option value="" disabled>Change Status...</option>
@@ -431,7 +431,7 @@ function ProductionContent() {
               <select
                 onChange={(e) => handleBulkUpdate({ factoryId: e.target.value })}
                 disabled={bulkUpdating}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs text-black"
                 defaultValue=""
               >
                 <option value="" disabled>Assign Factory...</option>
@@ -442,7 +442,7 @@ function ProductionContent() {
               <select
                 onChange={(e) => handleBulkUpdate({ priority: e.target.value })}
                 disabled={bulkUpdating}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs text-black"
                 defaultValue=""
               >
                 <option value="" disabled>Set Priority...</option>
@@ -452,7 +452,7 @@ function ProductionContent() {
               </select>
               <button
                 onClick={() => setSelectedJobs([])}
-                className="text-xs text-gray-500 hover:text-gray-700"
+                className="text-xs text-[#999] hover:text-black"
               >
                 Clear
               </button>
@@ -462,13 +462,13 @@ function ProductionContent() {
       )}
 
       {/* Jobs table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white shadow-sm">
         {loading ? (
-          <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+          <div className="flex h-48 items-center justify-center text-sm text-[#999]">
             Loading...
           </div>
         ) : jobs.length === 0 ? (
-          <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+          <div className="flex h-48 items-center justify-center text-sm text-[#999]">
             No production jobs found
           </div>
         ) : (
@@ -477,46 +477,46 @@ function ProductionContent() {
             <div className="hidden overflow-x-auto xl:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
+                  <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
                     <th className="px-4 py-3 w-10">
                       <input
                         type="checkbox"
                         checked={selectedJobs.length === jobs.length && jobs.length > 0}
                         onChange={toggleSelectAll}
-                        className="h-4 w-4 rounded border-gray-300"
+                        className="h-4 w-4 rounded border-[#d0d0d0]"
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Job ID
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Product
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Customer
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Status
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Priority
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Factory
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Created
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#e0e0e0]">
                   {jobs.map((job) => (
                     <tr
                       key={job.id}
-                      className={`hover:bg-gray-50 ${
+                      className={`hover:bg-[#fafafa] ${
                         updatingJob === job.id ? "opacity-50" : ""
                       }`}
                     >
@@ -525,20 +525,20 @@ function ProductionContent() {
                           type="checkbox"
                           checked={selectedJobs.includes(job.id)}
                           onChange={() => toggleSelectJob(job.id)}
-                          className="h-4 w-4 rounded border-gray-300"
+                          className="h-4 w-4 rounded border-[#d0d0d0]"
                         />
                       </td>
 
                       {/* Job ID */}
                       <td className="px-4 py-3">
-                        <span className="font-mono text-xs text-gray-600">
+                        <span className="font-mono text-xs text-[#666]">
                           {job.id.slice(0, 8)}
                         </span>
                       </td>
 
                       {/* Product */}
                       <td className="px-4 py-3">
-                        <p className="max-w-[200px] truncate font-medium text-gray-900">
+                        <p className="max-w-[200px] truncate font-medium text-black">
                           {job.orderItem?.product?.name ||
                             job.productName ||
                             "Unknown"}
@@ -547,7 +547,7 @@ function ProductionContent() {
 
                       {/* Customer */}
                       <td className="px-4 py-3">
-                        <p className="max-w-[180px] truncate text-gray-600">
+                        <p className="max-w-[180px] truncate text-[#666]">
                           {job.orderItem?.order?.customerEmail ||
                             job.customerEmail ||
                             "\u2014"}
@@ -562,8 +562,8 @@ function ProductionContent() {
                             handleStatusChange(job.id, e.target.value)
                           }
                           disabled={updatingJob === job.id}
-                          className={`rounded-full border-0 px-2.5 py-0.5 text-xs font-medium outline-none cursor-pointer ${
-                            statusColors[job.status] || "bg-gray-100"
+                          className={`rounded-[2px] border-0 px-2.5 py-0.5 text-xs font-medium outline-none cursor-pointer ${
+                            statusColors[job.status] || "bg-[#f5f5f5]"
                           }`}
                         >
                           {statusOptions
@@ -579,8 +579,8 @@ function ProductionContent() {
                       {/* Priority */}
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            priorityColors[job.priority] || "bg-gray-100"
+                          className={`inline-block rounded-[2px] px-2.5 py-0.5 text-xs font-medium ${
+                            priorityColors[job.priority] || "bg-[#f5f5f5]"
                           }`}
                         >
                           {job.priority}
@@ -595,7 +595,7 @@ function ProductionContent() {
                             handleFactoryAssign(job.id, e.target.value)
                           }
                           disabled={updatingJob === job.id}
-                          className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 outline-none cursor-pointer focus:border-gray-900"
+                          className="rounded-[3px] border border-[#e0e0e0] bg-white px-2 py-1 text-xs text-black outline-none cursor-pointer focus:border-black"
                         >
                           <option value="">Unassigned</option>
                           {factories.map((f) => (
@@ -607,7 +607,7 @@ function ProductionContent() {
                       </td>
 
                       {/* Created */}
-                      <td className="px-4 py-3 text-xs text-gray-500">
+                      <td className="px-4 py-3 text-xs text-[#999]">
                         {timeAgo(job.createdAt)}
                       </td>
 
@@ -615,7 +615,7 @@ function ProductionContent() {
                       <td className="px-4 py-3">
                         <Link
                           href={`/admin/production/${job.id}`}
-                          className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                          className="text-xs font-medium text-black underline hover:no-underline"
                         >
                           View
                         </Link>
@@ -627,11 +627,11 @@ function ProductionContent() {
             </div>
 
             {/* Mobile / tablet cards */}
-            <div className="divide-y divide-gray-100 xl:hidden">
+            <div className="divide-y divide-[#e0e0e0] xl:hidden">
               {jobs.map((job) => (
                 <div
                   key={job.id}
-                  className={`px-4 py-3 transition-colors hover:bg-gray-50 ${
+                  className={`px-4 py-3 transition-colors hover:bg-[#fafafa] ${
                     updatingJob === job.id ? "opacity-50" : ""
                   }`}
                 >
@@ -640,18 +640,18 @@ function ProductionContent() {
                       type="checkbox"
                       checked={selectedJobs.includes(job.id)}
                       onChange={() => toggleSelectJob(job.id)}
-                      className="mr-3 mt-1 h-4 w-4 rounded border-gray-300"
+                      className="mr-3 mt-1 h-4 w-4 rounded border-[#d0d0d0]"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-gray-900">
+                      <p className="truncate text-sm font-medium text-black">
                         {job.orderItem?.product?.name ||
                           job.productName ||
                           "Unknown"}
                       </p>
-                      <p className="mt-0.5 font-mono text-xs text-gray-400">
+                      <p className="mt-0.5 font-mono text-xs text-[#999]">
                         {job.id.slice(0, 8)}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-gray-500">
+                      <p className="mt-0.5 truncate text-xs text-[#999]">
                         {job.orderItem?.order?.customerEmail ||
                           job.customerEmail ||
                           "\u2014"}
@@ -659,7 +659,7 @@ function ProductionContent() {
                     </div>
                     <Link
                       href={`/admin/production/${job.id}`}
-                      className="ml-3 text-xs font-medium text-blue-600 hover:text-blue-800"
+                      className="ml-3 text-xs font-medium text-black underline hover:no-underline"
                     >
                       View
                     </Link>
@@ -673,8 +673,8 @@ function ProductionContent() {
                         handleStatusChange(job.id, e.target.value)
                       }
                       disabled={updatingJob === job.id}
-                      className={`rounded-full border-0 px-2 py-0.5 text-xs font-medium outline-none cursor-pointer ${
-                        statusColors[job.status] || "bg-gray-100"
+                      className={`rounded-[2px] border-0 px-2 py-0.5 text-xs font-medium outline-none cursor-pointer ${
+                        statusColors[job.status] || "bg-[#f5f5f5]"
                       }`}
                     >
                       {statusOptions
@@ -687,8 +687,8 @@ function ProductionContent() {
                     </select>
 
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        priorityColors[job.priority] || "bg-gray-100"
+                      className={`rounded-[2px] px-2 py-0.5 text-xs font-medium ${
+                        priorityColors[job.priority] || "bg-[#f5f5f5]"
                       }`}
                     >
                       {job.priority}
@@ -701,7 +701,7 @@ function ProductionContent() {
                         handleFactoryAssign(job.id, e.target.value)
                       }
                       disabled={updatingJob === job.id}
-                      className="rounded-lg border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-700 outline-none cursor-pointer focus:border-gray-900"
+                      className="rounded-[3px] border border-[#e0e0e0] bg-white px-2 py-0.5 text-xs text-black outline-none cursor-pointer focus:border-black"
                     >
                       <option value="">Unassigned</option>
                       {factories.map((f) => (
@@ -711,7 +711,7 @@ function ProductionContent() {
                       ))}
                     </select>
 
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-[#999]">
                       {timeAgo(job.createdAt)}
                     </span>
                   </div>
@@ -725,7 +725,7 @@ function ProductionContent() {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[#999]">
             Showing {(pagination.page - 1) * pagination.limit + 1}-
             {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
             {pagination.total}
@@ -735,7 +735,7 @@ function ProductionContent() {
               type="button"
               disabled={page <= 1}
               onClick={() => updateParams({ page: String(page - 1) })}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
               Previous
             </button>
@@ -743,7 +743,7 @@ function ProductionContent() {
               type="button"
               disabled={page >= pagination.totalPages}
               onClick={() => updateParams({ page: String(page + 1) })}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
               Next
             </button>

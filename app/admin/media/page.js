@@ -8,7 +8,7 @@ export default function MediaPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-48 items-center justify-center text-sm text-[#999]">
           Loading...
         </div>
       }
@@ -255,11 +255,11 @@ function MediaContent() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Media Library</h1>
+        <h1 className="text-xl font-semibold text-black">Media Library</h1>
         <button
           type="button"
           onClick={() => setShowUpload(true)}
-          className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
         >
           + Upload Asset
         </button>
@@ -267,24 +267,24 @@ function MediaContent() {
 
       {/* Toast */}
       {message && (
-        <div className={`rounded-lg px-4 py-3 text-sm font-medium ${message.isError ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}>
+        <div className={`rounded-[3px] px-4 py-3 text-sm font-medium ${message.isError ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}>
           {message.text}
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
+      <div className="flex gap-1 rounded-[3px] bg-[#f5f5f5] p-1">
         <button
           type="button"
           onClick={() => setTab("assets")}
-          className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${tab === "assets" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+          className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${tab === "assets" ? "bg-white text-black shadow-sm" : "text-[#999] hover:text-black"}`}
         >
           Asset Library
         </button>
         <button
           type="button"
           onClick={() => setTab("legacy")}
-          className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${tab === "legacy" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+          className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${tab === "legacy" ? "bg-white text-black shadow-sm" : "text-[#999] hover:text-black"}`}
         >
           Legacy Images
         </button>
@@ -298,9 +298,9 @@ function MediaContent() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={tab === "assets" ? "Search by name, alt text..." : "Search by alt text or product..."}
-            className="w-72 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+            className="w-72 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
-          <button type="submit" className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black">
+          <button type="submit" className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]">
             Search
           </button>
         </form>
@@ -308,7 +308,7 @@ function MediaContent() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none"
           >
             <option value="">All Status</option>
             <option value="published">Published</option>
@@ -320,7 +320,7 @@ function MediaContent() {
           <button
             type="button"
             onClick={() => { setSearch(""); updateParams({ search: null, page: "1" }); }}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]"
           >
             Clear
           </button>
@@ -329,13 +329,13 @@ function MediaContent() {
 
       {/* ── Assets Grid ── */}
       {tab === "assets" && (
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
           {loading ? (
-            <div className="flex h-48 items-center justify-center text-sm text-gray-500">Loading...</div>
+            <div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading...</div>
           ) : assets.length === 0 ? (
-            <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-gray-500">
+            <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-[#999]">
               <p>No assets found</p>
-              <button type="button" onClick={() => setShowUpload(true)} className="text-xs text-blue-600 hover:underline">
+              <button type="button" onClick={() => setShowUpload(true)} className="text-xs text-black underline hover:no-underline">
                 Upload your first asset
               </button>
             </div>
@@ -344,17 +344,17 @@ function MediaContent() {
               {assets.map((asset) => (
                 <div
                   key={asset.id}
-                  className="rounded-lg overflow-hidden border border-gray-200 group relative cursor-pointer"
+                  className="rounded-[3px] overflow-hidden border border-[#e0e0e0] group relative cursor-pointer"
                   onClick={() => openDetail(asset)}
                 >
-                  <div className="aspect-square relative bg-gray-50">
+                  <div className="aspect-square relative bg-[#fafafa]">
                     <img src={asset.originalUrl} alt={asset.altText || ""} className="h-full w-full object-cover" />
                     {/* Hover overlay */}
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2.5">
                       <div className="flex justify-between items-start">
                         <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
                           asset.status === "published" ? "bg-green-500/80 text-white" :
-                          asset.status === "archived" ? "bg-gray-500/80 text-white" :
+                          asset.status === "archived" ? "bg-[#fafafa]0/80 text-white" :
                           "bg-yellow-500/80 text-white"
                         }`}>
                           {asset.status}
@@ -384,15 +384,15 @@ function MediaContent() {
 
       {/* ── Legacy Grid ── */}
       {tab === "legacy" && (
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
           {loading ? (
-            <div className="flex h-48 items-center justify-center text-sm text-gray-500">Loading...</div>
+            <div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading...</div>
           ) : legacyImages.length === 0 ? (
-            <div className="flex h-48 items-center justify-center text-sm text-gray-500">No legacy images found</div>
+            <div className="flex h-48 items-center justify-center text-sm text-[#999]">No legacy images found</div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {legacyImages.map((image) => (
-                <div key={image.id} className="rounded-lg overflow-hidden border border-gray-200 group relative">
+                <div key={image.id} className="rounded-[3px] overflow-hidden border border-[#e0e0e0] group relative">
                   <div className="aspect-square relative">
                     <img src={image.url} alt={image.alt || ""} className="h-full w-full object-cover" />
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2.5">
@@ -413,7 +413,7 @@ function MediaContent() {
                   </div>
                   {image.product && (
                     <div className="px-2 py-1.5">
-                      <Link href={`/admin/products/${image.product.id}`} className="text-xs text-gray-600 hover:text-blue-600 truncate block">
+                      <Link href={`/admin/products/${image.product.id}`} className="text-xs text-black underline hover:no-underline truncate block">
                         {image.product.name}
                       </Link>
                     </div>
@@ -428,15 +428,15 @@ function MediaContent() {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[#999]">
             Showing {(pagination.page - 1) * pagination.limit + 1}-
             {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
           </p>
           <div className="flex gap-1">
-            <button type="button" disabled={page <= 1} onClick={() => updateParams({ page: String(page - 1) })} className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40">
+            <button type="button" disabled={page <= 1} onClick={() => updateParams({ page: String(page - 1) })} className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40">
               Previous
             </button>
-            <button type="button" disabled={page >= pagination.totalPages} onClick={() => updateParams({ page: String(page + 1) })} className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40">
+            <button type="button" disabled={page >= pagination.totalPages} onClick={() => updateParams({ page: String(page + 1) })} className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40">
               Next
             </button>
           </div>
@@ -445,17 +445,17 @@ function MediaContent() {
 
       {/* ── Upload Modal ── */}
       {showUpload && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setShowUpload(false); }}>
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md mx-4 p-6">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setShowUpload(false); }}>
+          <div className="bg-white rounded-[3px] shadow-lg w-full max-w-md mx-4 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-900">Upload Asset</h2>
-              <button type="button" onClick={() => setShowUpload(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+              <h2 className="text-sm font-semibold text-black">Upload Asset</h2>
+              <button type="button" onClick={() => setShowUpload(false)} className="text-[#999] hover:text-[#666] text-lg leading-none">&times;</button>
             </div>
 
             <form onSubmit={handleUpload} className="space-y-4">
               {/* Drop zone */}
               <div
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 p-6 cursor-pointer hover:border-gray-400 transition-colors"
+                className="flex flex-col items-center justify-center gap-2 rounded-[3px] border-2 border-dashed border-[#d0d0d0] p-6 cursor-pointer hover:border-[#999] transition-colors"
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
@@ -465,40 +465,40 @@ function MediaContent() {
                 }}
               >
                 {uploadPreview ? (
-                  <img src={uploadPreview} alt="Preview" className="h-32 w-32 rounded-lg object-cover" />
+                  <img src={uploadPreview} alt="Preview" className="h-32 w-32 rounded-[3px] object-cover" />
                 ) : (
                   <>
-                    <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="h-8 w-8 text-[#999]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                     </svg>
-                    <p className="text-xs text-gray-500">Drop image or click to browse</p>
-                    <p className="text-[10px] text-gray-400">JPEG, PNG, WebP, SVG, AVIF (max 20MB)</p>
+                    <p className="text-xs text-[#999]">Drop image or click to browse</p>
+                    <p className="text-[10px] text-[#999]">JPEG, PNG, WebP, SVG, AVIF (max 20MB)</p>
                   </>
                 )}
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
               </div>
 
               {uploadFile && (
-                <p className="text-xs text-gray-500 truncate">
+                <p className="text-xs text-[#999] truncate">
                   {uploadFile.name} ({formatBytes(uploadFile.size)})
                 </p>
               )}
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Alt Text</label>
-                <input type="text" value={uploadAlt} onChange={(e) => setUploadAlt(e.target.value)} placeholder="Describe the image..." className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <label className="block text-xs font-medium text-[#666] mb-1">Alt Text</label>
+                <input type="text" value={uploadAlt} onChange={(e) => setUploadAlt(e.target.value)} placeholder="Describe the image..." className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Tags (comma-separated)</label>
-                <input type="text" value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} placeholder="product, banner, hero..." className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <label className="block text-xs font-medium text-[#666] mb-1">Tags (comma-separated)</label>
+                <input type="text" value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} placeholder="product, banner, hero..." className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowUpload(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100">
+                <button type="button" onClick={() => setShowUpload(false)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
                   Cancel
                 </button>
-                <button type="submit" disabled={!uploadFile || uploading} className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-50">
+                <button type="submit" disabled={!uploadFile || uploading} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50">
                   {uploading ? "Uploading..." : "Upload"}
                 </button>
               </div>
@@ -509,17 +509,17 @@ function MediaContent() {
 
       {/* ── Detail Modal ── */}
       {selectedAsset && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setSelectedAsset(null); }}>
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setSelectedAsset(null); }}>
+          <div className="bg-white rounded-[3px] shadow-lg w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-900">Asset Detail</h2>
-              <button type="button" onClick={() => setSelectedAsset(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+              <h2 className="text-sm font-semibold text-black">Asset Detail</h2>
+              <button type="button" onClick={() => setSelectedAsset(null)} className="text-[#999] hover:text-[#666] text-lg leading-none">&times;</button>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
               {/* Image with focal point */}
               <div>
-                <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 cursor-crosshair" onClick={handleFocalClick}>
+                <div className="relative aspect-square rounded-[3px] overflow-hidden border border-[#e0e0e0] cursor-crosshair" onClick={handleFocalClick}>
                   <img src={selectedAsset.originalUrl} alt={editAlt} className="h-full w-full object-cover" />
                   {/* Focal point indicator */}
                   <div
@@ -527,7 +527,7 @@ function MediaContent() {
                     style={{ left: `${editFocalX * 100}%`, top: `${editFocalY * 100}%` }}
                   />
                 </div>
-                <p className="mt-2 text-[10px] text-gray-400 text-center">
+                <p className="mt-2 text-[10px] text-[#999] text-center">
                   Click to set focal point ({editFocalX.toFixed(2)}, {editFocalY.toFixed(2)})
                 </p>
               </div>
@@ -536,50 +536,50 @@ function MediaContent() {
               <div className="space-y-3">
                 <dl className="space-y-2 text-xs">
                   <div className="flex justify-between">
-                    <dt className="text-gray-500">File</dt>
-                    <dd className="text-gray-900 truncate max-w-[200px]">{selectedAsset.originalName}</dd>
+                    <dt className="text-[#999]">File</dt>
+                    <dd className="text-black truncate max-w-[200px]">{selectedAsset.originalName}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-gray-500">Dimensions</dt>
-                    <dd className="text-gray-900">{selectedAsset.widthPx}x{selectedAsset.heightPx}</dd>
+                    <dt className="text-[#999]">Dimensions</dt>
+                    <dd className="text-black">{selectedAsset.widthPx}x{selectedAsset.heightPx}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-gray-500">Size</dt>
-                    <dd className="text-gray-900">{formatBytes(selectedAsset.sizeBytes)}</dd>
+                    <dt className="text-[#999]">Size</dt>
+                    <dd className="text-black">{formatBytes(selectedAsset.sizeBytes)}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-gray-500">Type</dt>
-                    <dd className="text-gray-900">{selectedAsset.mimeType}</dd>
+                    <dt className="text-[#999]">Type</dt>
+                    <dd className="text-black">{selectedAsset.mimeType}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-gray-500">Status</dt>
-                    <dd className="text-gray-900">{selectedAsset.status}</dd>
+                    <dt className="text-[#999]">Status</dt>
+                    <dd className="text-black">{selectedAsset.status}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-gray-500">Links</dt>
-                    <dd className="text-gray-900">{selectedAsset.linkCount || 0} usages</dd>
+                    <dt className="text-[#999]">Links</dt>
+                    <dd className="text-black">{selectedAsset.linkCount || 0} usages</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-gray-500">SHA256</dt>
-                    <dd className="text-gray-900 font-mono text-[10px] truncate max-w-[200px]" title={selectedAsset.sha256}>{selectedAsset.sha256}</dd>
+                    <dt className="text-[#999]">SHA256</dt>
+                    <dd className="text-black font-mono text-[10px] truncate max-w-[200px]" title={selectedAsset.sha256}>{selectedAsset.sha256}</dd>
                   </div>
                 </dl>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Alt Text</label>
-                  <input type="text" value={editAlt} onChange={(e) => setEditAlt(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                  <label className="block text-xs font-medium text-[#666] mb-1">Alt Text</label>
+                  <input type="text" value={editAlt} onChange={(e) => setEditAlt(e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Tags</label>
-                  <input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} placeholder="Comma-separated tags" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                  <label className="block text-xs font-medium text-[#666] mb-1">Tags</label>
+                  <input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} placeholder="Comma-separated tags" className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <button type="button" onClick={saveDetail} disabled={savingDetail} className="flex-1 rounded-lg bg-gray-900 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-50">
+                  <button type="button" onClick={saveDetail} disabled={savingDetail} className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50">
                     {savingDetail ? "Saving..." : "Save Changes"}
                   </button>
-                  <button type="button" onClick={() => setSelectedAsset(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100">
+                  <button type="button" onClick={() => setSelectedAsset(null)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
                     Close
                   </button>
                 </div>
@@ -591,20 +591,20 @@ function MediaContent() {
 
       {/* ── Archive Confirmation ── */}
       {deleteTarget && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setDeleteTarget(null); }}>
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-sm mx-4 p-6">
-            <h2 className="text-sm font-semibold text-gray-900 mb-2">Archive Asset</h2>
-            <p className="text-sm text-gray-600 mb-1">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setDeleteTarget(null); }}>
+          <div className="bg-white rounded-[3px] shadow-lg w-full max-w-sm mx-4 p-6">
+            <h2 className="text-sm font-semibold text-black mb-2">Archive Asset</h2>
+            <p className="text-sm text-[#666] mb-1">
               This will soft-delete the asset. It can be restored later.
             </p>
-            <p className="text-xs text-gray-400 mb-4 truncate">
+            <p className="text-xs text-[#999] mb-4 truncate">
               {deleteTarget.originalName}
             </p>
             <div className="flex items-center justify-end gap-2">
-              <button type="button" onClick={() => setDeleteTarget(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100">
+              <button type="button" onClick={() => setDeleteTarget(null)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
                 Cancel
               </button>
-              <button type="button" onClick={handleArchive} className="rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700">
+              <button type="button" onClick={handleArchive} className="rounded-[3px] bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700">
                 Archive
               </button>
             </div>

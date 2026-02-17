@@ -178,11 +178,11 @@ export default function FactoriesPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Factories</h1>
+        <h1 className="text-xl font-semibold text-black">Factories</h1>
         <button
           type="button"
           onClick={openAddModal}
-          className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
         >
           + Add Factory
         </button>
@@ -191,7 +191,7 @@ export default function FactoriesPage() {
       {/* Toast */}
       {message && (
         <div
-          className={`rounded-lg px-4 py-3 text-sm font-medium ${
+          className={`rounded-[3px] px-4 py-3 text-sm font-medium ${
             message.isError
               ? "bg-red-50 text-red-600"
               : "bg-green-50 text-green-600"
@@ -203,11 +203,11 @@ export default function FactoriesPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-48 items-center justify-center text-sm text-[#999]">
           Loading...
         </div>
       ) : factories.length === 0 ? (
-        <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-500">
+        <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-[3px] border border-[#e0e0e0] bg-white text-sm text-[#999]">
           <p>No factories found</p>
           <button
             type="button"

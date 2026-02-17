@@ -61,7 +61,7 @@ export default function CatalogPage({ embedded = false } = {}) {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center text-sm text-gray-400">
+      <div className="flex h-64 items-center justify-center text-sm text-[#999]">
         {t("admin.catalog.loading")}
       </div>
     );
@@ -78,7 +78,7 @@ export default function CatalogPage({ embedded = false } = {}) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-gray-900">{t("admin.nav.catalogSettings")}</h1>
+      <h1 className="text-lg font-semibold text-black">{t("admin.nav.catalogSettings")}</h1>
 
       {/* Summary Cards */}
       <SummaryCards totals={totals} t={t} />
@@ -110,14 +110,14 @@ function SummaryCards({ totals, t }) {
   const cards = [
     { label: t("admin.catalog.totalProducts"), value: totals.total, bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
     { label: t("admin.catalog.active"), value: totals.active, bg: "bg-green-50", text: "text-green-700", border: "border-green-200" },
-    { label: t("admin.catalog.inactive"), value: totals.inactive, bg: "bg-gray-50", text: "text-gray-600", border: "border-gray-200" },
+    { label: t("admin.catalog.inactive"), value: totals.inactive, bg: "bg-[#fafafa]", text: "text-[#666]", border: "border-[#e0e0e0]" },
     { label: t("admin.catalog.categories"), value: totals.categories, bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
   ];
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((c) => (
-        <div key={c.label} className={`rounded-xl border p-5 ${c.bg} ${c.border}`}>
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{c.label}</p>
+        <div key={c.label} className={`rounded-[3px] border p-5 ${c.bg} ${c.border}`}>
+          <p className="text-xs font-medium uppercase tracking-wide text-[#999]">{c.label}</p>
           <p className={`mt-2 text-2xl font-semibold ${c.text}`}>{c.value}</p>
         </div>
       ))}
@@ -129,23 +129,23 @@ function SummaryCards({ totals, t }) {
 function CategoryBarChart({ categories, t }) {
   const maxCount = Math.max(...categories.map((c) => c.count), 1);
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <h2 className="mb-4 text-sm font-semibold text-gray-900">{t("admin.catalog.distribution")}</h2>
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+      <h2 className="mb-4 text-sm font-semibold text-black">{t("admin.catalog.distribution")}</h2>
       <div className="space-y-2.5">
         {categories.map((cat, i) => {
           const pct = (cat.count / maxCount) * 100;
           return (
             <div key={cat.name} className="flex items-center gap-3">
-              <div className="w-44 shrink-0 truncate text-xs font-medium text-gray-700">
+              <div className="w-44 shrink-0 truncate text-xs font-medium text-black">
                 {formatCategoryName(cat.name)}
               </div>
-              <div className="flex-1 rounded-full bg-gray-100">
+              <div className="flex-1 rounded-full bg-[#f5f5f5]">
                 <div
                   className={`${BAR_COLORS[i % BAR_COLORS.length]} h-6 rounded-full transition-all`}
                   style={{ width: `${Math.max(pct, 3)}%` }}
                 />
               </div>
-              <div className="w-8 text-right text-xs font-bold text-gray-900">{cat.count}</div>
+              <div className="w-8 text-right text-xs font-bold text-black">{cat.count}</div>
             </div>
           );
         })}
@@ -211,11 +211,11 @@ function CatalogSettings({ catalogConfig, allCategories, onSave, saving, saveMsg
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-6">
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900">{t("admin.catalog.settingsTitle")}</h2>
-          <p className="text-xs text-gray-500 mt-0.5">{t("admin.catalog.settingsDesc")}</p>
+          <h2 className="text-sm font-semibold text-black">{t("admin.catalog.settingsTitle")}</h2>
+          <p className="text-xs text-[#999] mt-0.5">{t("admin.catalog.settingsDesc")}</p>
         </div>
         <div className="flex items-center gap-3">
           {saveMsg && (
@@ -226,7 +226,7 @@ function CatalogSettings({ catalogConfig, allCategories, onSave, saving, saveMsg
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-50 transition-colors"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50 transition-colors"
           >
             {saving ? t("admin.catalog.saving") : t("admin.catalog.save")}
           </button>
@@ -235,17 +235,17 @@ function CatalogSettings({ catalogConfig, allCategories, onSave, saving, saveMsg
 
       {/* Homepage Categories Order */}
       <div>
-        <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("admin.catalog.homepageCategories")}</label>
-        <p className="text-xs text-gray-400 mb-2">{t("admin.catalog.homepageCategoriesDesc")}</p>
+        <label className="text-xs font-semibold uppercase tracking-wide text-[#999]">{t("admin.catalog.homepageCategories")}</label>
+        <p className="text-xs text-[#999] mb-2">{t("admin.catalog.homepageCategoriesDesc")}</p>
         <div className="space-y-1.5">
           {homepageCategories.map((slug, i) => (
-            <div key={slug} className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-              <span className="text-xs font-bold text-gray-300 w-5">{i + 1}</span>
-              <span className="flex-1 text-sm font-medium text-gray-800">{formatCategoryName(slug)}</span>
-              <button onClick={() => moveUp(i)} disabled={i === 0} className="rounded p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30" title="Move up">
+            <div key={slug} className="flex items-center gap-2 rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] px-3 py-2">
+              <span className="text-xs font-bold text-[#999] w-5">{i + 1}</span>
+              <span className="flex-1 text-sm font-medium text-black">{formatCategoryName(slug)}</span>
+              <button onClick={() => moveUp(i)} disabled={i === 0} className="rounded p-1 text-[#999] hover:text-black disabled:opacity-30" title="Move up">
                 <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
               </button>
-              <button onClick={() => moveDown(i)} disabled={i >= homepageCategories.length - 1} className="rounded p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30" title="Move down">
+              <button onClick={() => moveDown(i)} disabled={i >= homepageCategories.length - 1} className="rounded p-1 text-[#999] hover:text-black disabled:opacity-30" title="Move down">
                 <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
               </button>
               <button onClick={() => removeFromHomepage(i)} className="rounded p-1 text-red-400 hover:text-red-600" title="Remove">
@@ -256,7 +256,7 @@ function CatalogSettings({ catalogConfig, allCategories, onSave, saving, saveMsg
         </div>
         {availableForHomepage.length > 0 && (
           <select
-            className="mt-2 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs text-gray-500"
+            className="mt-2 rounded-[3px] border border-dashed border-[#d0d0d0] px-3 py-2 text-xs text-[#999]"
             value=""
             onChange={(e) => addToHomepage(e.target.value)}
           >
@@ -270,32 +270,32 @@ function CatalogSettings({ catalogConfig, allCategories, onSave, saving, saveMsg
 
       {/* Max Per Category */}
       <div>
-        <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("admin.catalog.maxPerCategory")}</label>
-        <p className="text-xs text-gray-400 mb-2">{t("admin.catalog.maxPerCategoryDesc")}</p>
+        <label className="text-xs font-semibold uppercase tracking-wide text-[#999]">{t("admin.catalog.maxPerCategory")}</label>
+        <p className="text-xs text-[#999] mb-2">{t("admin.catalog.maxPerCategoryDesc")}</p>
         <input
           type="number"
           min={1}
           max={12}
           value={maxPerCategory}
           onChange={(e) => setMaxPerCategory(Math.max(1, Math.min(12, Number(e.target.value) || 4)))}
-          className="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-900"
+          className="w-20 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm font-semibold text-black"
         />
       </div>
 
       {/* Hidden Categories */}
       <div>
-        <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("admin.catalog.hiddenCategories")}</label>
-        <p className="text-xs text-gray-400 mb-2">{t("admin.catalog.hiddenCategoriesDesc")}</p>
+        <label className="text-xs font-semibold uppercase tracking-wide text-[#999]">{t("admin.catalog.hiddenCategories")}</label>
+        <p className="text-xs text-[#999] mb-2">{t("admin.catalog.hiddenCategoriesDesc")}</p>
         <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
           {allCategories.map((slug) => (
-            <label key={slug} className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 cursor-pointer">
+            <label key={slug} className="flex items-center gap-2 rounded-[3px] px-3 py-2 hover:bg-[#fafafa] cursor-pointer">
               <input
                 type="checkbox"
                 checked={hiddenCategories.has(slug)}
                 onChange={() => toggleHidden(slug)}
-                className="h-4 w-4 rounded border-gray-300 text-gray-900"
+                className="h-4 w-4 rounded border-[#d0d0d0] text-black"
               />
-              <span className="text-sm text-gray-700">{formatCategoryName(slug)}</span>
+              <span className="text-sm text-black">{formatCategoryName(slug)}</span>
             </label>
           ))}
         </div>
@@ -303,30 +303,30 @@ function CatalogSettings({ catalogConfig, allCategories, onSave, saving, saveMsg
 
       {/* Category Meta */}
       <div>
-        <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("admin.catalog.displayNames")}</label>
-        <p className="text-xs text-gray-400 mb-2">{t("admin.catalog.displayNamesDesc")}</p>
+        <label className="text-xs font-semibold uppercase tracking-wide text-[#999]">{t("admin.catalog.displayNames")}</label>
+        <p className="text-xs text-[#999] mb-2">{t("admin.catalog.displayNamesDesc")}</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500">{t("admin.catalog.slug")}</th>
-                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500">{t("admin.catalog.title_col")}</th>
-                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500 w-20">{t("admin.catalog.icon_col")}</th>
+              <tr className="border-b border-[#e0e0e0]">
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-[#999]">{t("admin.catalog.slug")}</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-[#999]">{t("admin.catalog.title_col")}</th>
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-[#999] w-20">{t("admin.catalog.icon_col")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[#e0e0e0]">
               {allCategories.map((slug) => {
                 const meta = categoryMeta[slug] || {};
                 return (
-                  <tr key={slug} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 font-mono text-xs text-gray-500">{slug}</td>
+                  <tr key={slug} className="hover:bg-[#fafafa]">
+                    <td className="px-3 py-2 font-mono text-xs text-[#999]">{slug}</td>
                     <td className="px-3 py-2">
                       <input
                         type="text"
                         value={meta.title || ""}
                         onChange={(e) => updateMeta(slug, "title", e.target.value)}
                         placeholder={formatCategoryName(slug)}
-                        className="w-full rounded border border-gray-200 px-2 py-1 text-sm text-gray-900 placeholder-gray-300"
+                        className="w-full rounded border border-[#e0e0e0] px-2 py-1 text-sm text-black placeholder-[#999]"
                       />
                     </td>
                     <td className="px-3 py-2">
@@ -335,7 +335,7 @@ function CatalogSettings({ catalogConfig, allCategories, onSave, saving, saveMsg
                         value={meta.icon || ""}
                         onChange={(e) => updateMeta(slug, "icon", e.target.value)}
                         placeholder="🧩"
-                        className="w-16 rounded border border-gray-200 px-2 py-1 text-center text-sm"
+                        className="w-16 rounded border border-[#e0e0e0] px-2 py-1 text-center text-sm"
                       />
                     </td>
                   </tr>
@@ -378,9 +378,9 @@ function MergeFlowDiagram({ mergeEdges, categories, t }) {
   const midX = svgWidth / 2;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <h2 className="mb-4 text-sm font-semibold text-gray-900">{t("admin.catalog.mergeFlow")}</h2>
-      <p className="mb-3 text-xs text-gray-500">{t("admin.catalog.mergeFlowDesc")}</p>
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+      <h2 className="mb-4 text-sm font-semibold text-black">{t("admin.catalog.mergeFlow")}</h2>
+      <p className="mb-3 text-xs text-[#999]">{t("admin.catalog.mergeFlowDesc")}</p>
       <div className="overflow-x-auto">
         <svg
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}

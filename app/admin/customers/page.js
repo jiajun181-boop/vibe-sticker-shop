@@ -13,7 +13,7 @@ export default function CustomersPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-48 items-center justify-center text-sm text-[#999]">
           Loading...
         </div>
       }
@@ -84,7 +84,7 @@ function CustomersContent() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-gray-900">Customers</h1>
+      <h1 className="text-xl font-semibold text-black">Customers</h1>
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -92,7 +92,7 @@ function CustomersContent() {
         <div className="flex items-center gap-2">
           <label
             htmlFor="sort-select"
-            className="text-xs font-medium text-gray-500"
+            className="text-xs font-medium text-[#999]"
           >
             Sort by
           </label>
@@ -100,7 +100,7 @@ function CustomersContent() {
             id="sort-select"
             value={`${sort}:${order}`}
             onChange={handleSortChange}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 outline-none focus:border-gray-900"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-black"
           >
             <option value="totalSpent:desc">Total Spent (High to Low)</option>
             <option value="totalSpent:asc">Total Spent (Low to High)</option>
@@ -118,11 +118,11 @@ function CustomersContent() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search email or name..."
-            className="w-64 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+            className="w-64 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button
             type="submit"
-            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
           >
             Search
           </button>
@@ -130,13 +130,13 @@ function CustomersContent() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
-          <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+          <div className="flex h-48 items-center justify-center text-sm text-[#999]">
             Loading...
           </div>
         ) : customers.length === 0 ? (
-          <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+          <div className="flex h-48 items-center justify-center text-sm text-[#999]">
             No customers found
           </div>
         ) : (
@@ -145,37 +145,37 @@ function CustomersContent() {
             <div className="hidden overflow-x-auto lg:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Email
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Orders
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Total Spent
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       First Order
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Last Order
                     </th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#e0e0e0]">
                   {customers.map((customer) => (
-                    <tr key={customer.email} className="hover:bg-gray-50">
+                    <tr key={customer.email} className="hover:bg-[#fafafa]">
                       <td className="px-4 py-3">
-                        <span className="font-medium text-gray-900">
+                        <span className="font-medium text-black">
                           {customer.email}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-[#666]">
                         {customer.name || "\u2014"}
                       </td>
                       <td className="px-4 py-3">
@@ -183,19 +183,19 @@ function CustomersContent() {
                           {customer.orderCount}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-gray-900">
+                      <td className="px-4 py-3 font-semibold text-black">
                         {formatCad(customer.totalSpent)}
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500">
+                      <td className="px-4 py-3 text-xs text-[#999]">
                         {new Date(customer.firstOrder).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500">
+                      <td className="px-4 py-3 text-xs text-[#999]">
                         {new Date(customer.lastOrder).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-3">
                         <Link
                           href={`/admin/customers/${encodeURIComponent(customer.email)}`}
-                          className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                          className="text-xs font-medium text-black underline hover:no-underline"
                         >
                           View
                         </Link>
@@ -207,25 +207,25 @@ function CustomersContent() {
             </div>
 
             {/* Mobile cards */}
-            <div className="divide-y divide-gray-100 lg:hidden">
+            <div className="divide-y divide-[#e0e0e0] lg:hidden">
               {customers.map((customer) => (
                 <Link
                   key={customer.email}
                   href={`/admin/customers/${encodeURIComponent(customer.email)}`}
-                  className="block px-4 py-3 transition-colors hover:bg-gray-50"
+                  className="block px-4 py-3 transition-colors hover:bg-[#fafafa]"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-black">
                         {customer.email}
                       </p>
                       {customer.name && (
-                        <p className="mt-0.5 text-xs text-gray-500">
+                        <p className="mt-0.5 text-xs text-[#999]">
                           {customer.name}
                         </p>
                       )}
                     </div>
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className="text-sm font-semibold text-black">
                       {formatCad(customer.totalSpent)}
                     </span>
                   </div>
@@ -234,7 +234,7 @@ function CustomersContent() {
                       {customer.orderCount}{" "}
                       {customer.orderCount === 1 ? "order" : "orders"}
                     </span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-[#999]">
                       Last:{" "}
                       {new Date(customer.lastOrder).toLocaleDateString()}
                     </span>
@@ -249,7 +249,7 @@ function CustomersContent() {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[#999]">
             Showing {(pagination.page - 1) * pagination.limit + 1}-
             {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
             {pagination.total}
@@ -259,7 +259,7 @@ function CustomersContent() {
               type="button"
               disabled={page <= 1}
               onClick={() => updateParams({ page: String(page - 1) })}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
               Previous
             </button>
@@ -267,7 +267,7 @@ function CustomersContent() {
               type="button"
               disabled={page >= pagination.totalPages}
               onClick={() => updateParams({ page: String(page + 1) })}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
               Next
             </button>

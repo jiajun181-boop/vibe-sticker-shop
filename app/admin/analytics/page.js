@@ -35,7 +35,7 @@ export default function AnalyticsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-48 items-center justify-center text-sm text-[#999]">
           Loading...
         </div>
       }
@@ -83,7 +83,7 @@ function AnalyticsContent() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Analytics</h1>
+        <h1 className="text-xl font-semibold text-black">Analytics</h1>
 
         {/* Period selector */}
         <div className="flex flex-wrap gap-1">
@@ -92,10 +92,10 @@ function AnalyticsContent() {
               key={p.key}
               type="button"
               onClick={() => setPeriod(p.key)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                 activePeriod === p.key
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-100"
+                  ? "bg-black text-white"
+                  : "bg-white text-[#666] hover:bg-[#fafafa]"
               }`}
             >
               {p.label}
@@ -106,7 +106,7 @@ function AnalyticsContent() {
 
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="text-sm text-gray-500">Loading analytics...</div>
+          <div className="text-sm text-[#999]">Loading analytics...</div>
         </div>
       ) : error ? (
         <div className="flex h-64 items-center justify-center">
@@ -168,10 +168,10 @@ function SummaryCards({ summary }) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-xl border border-gray-200 bg-white p-5"
+          className="rounded-[3px] border border-[#e0e0e0] bg-white p-5"
         >
-          <p className="text-xs text-gray-500">{card.label}</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900">
+          <p className="text-xs text-[#999]">{card.label}</p>
+          <p className="mt-1 text-2xl font-semibold text-black">
             {card.value}
           </p>
           {card.change !== undefined && (
@@ -181,7 +181,7 @@ function SummaryCards({ summary }) {
                   ? "text-green-600"
                   : card.change < 0
                     ? "text-red-600"
-                    : "text-gray-500"
+                    : "text-[#999]"
               }`}
             >
               {card.change > 0 ? "+" : ""}
@@ -189,7 +189,7 @@ function SummaryCards({ summary }) {
             </p>
           )}
           {card.subtitle && (
-            <p className="mt-1 text-xs text-gray-500">{card.subtitle}</p>
+            <p className="mt-1 text-xs text-[#999]">{card.subtitle}</p>
           )}
         </div>
       ))}
@@ -202,9 +202,9 @@ function SummaryCards({ summary }) {
 function RevenueChart({ timeline, period }) {
   if (!timeline || timeline.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="text-sm font-semibold text-gray-900">Revenue</h2>
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+        <h2 className="text-sm font-semibold text-black">Revenue</h2>
+        <div className="flex h-48 items-center justify-center text-sm text-[#999]">
           No revenue data for this period
         </div>
       </div>
@@ -225,10 +225,10 @@ function RevenueChart({ timeline, period }) {
   const showEveryN = timeline.length > 15 ? Math.ceil(timeline.length / 10) : 1;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-900">Revenue</h2>
-        <p className="text-xs text-gray-500">
+        <h2 className="text-sm font-semibold text-black">Revenue</h2>
+        <p className="text-xs text-[#999]">
           {timeline.length} {period === "12m" ? "months" : "days"}
         </p>
       </div>
@@ -243,16 +243,16 @@ function RevenueChart({ timeline, period }) {
               style={{ height: "100%" }}
             >
               {/* Tooltip */}
-              <div className="pointer-events-none absolute bottom-full mb-2 hidden rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-lg group-hover:block"
+              <div className="pointer-events-none absolute bottom-full mb-2 hidden rounded-[3px] border border-[#e0e0e0] bg-white px-3 py-2 shadow-lg group-hover:block"
                 style={{ zIndex: 10, whiteSpace: "nowrap" }}
               >
-                <p className="text-xs font-semibold text-gray-900">
+                <p className="text-xs font-semibold text-black">
                   {formatCad(d.revenue)}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#999]">
                   {d.orders} order{d.orders !== 1 ? "s" : ""}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-[#999]">
                   {formatDateLabel(d.date)}
                 </p>
               </div>
@@ -275,7 +275,7 @@ function RevenueChart({ timeline, period }) {
         {timeline.map((d, i) => (
           <div key={d.date} className="flex-1 text-center">
             {i % showEveryN === 0 ? (
-              <span className="text-[10px] text-gray-400">
+              <span className="text-[10px] text-[#999]">
                 {formatDateLabel(d.date)}
               </span>
             ) : null}
@@ -290,51 +290,51 @@ function RevenueChart({ timeline, period }) {
 
 function TopProductsTable({ products }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-200 px-5 py-4">
-        <h2 className="text-sm font-semibold text-gray-900">
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
+      <div className="border-b border-[#e0e0e0] px-5 py-4">
+        <h2 className="text-sm font-semibold text-black">
           Top Products by Revenue
         </h2>
       </div>
 
       {products.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-gray-500">
+        <div className="px-5 py-8 text-center text-sm text-[#999]">
           No product data for this period
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+              <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                   Product
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-[#999]">
                   Revenue
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-[#999]">
                   Qty
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-[#999]">
                   Orders
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[#e0e0e0]">
               {products.map((product, i) => (
-                <tr key={`${product.name}-${i}`} className="hover:bg-gray-50">
+                <tr key={`${product.name}-${i}`} className="hover:bg-[#fafafa]">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900 truncate max-w-[200px]">
+                    <p className="font-medium text-black truncate max-w-[200px]">
                       {product.name}
                     </p>
                   </td>
-                  <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                  <td className="px-4 py-3 text-right font-semibold text-black">
                     {formatCad(product.revenue)}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-600">
+                  <td className="px-4 py-3 text-right text-[#666]">
                     {product.quantity}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-600">
+                  <td className="px-4 py-3 text-right text-[#666]">
                     {product.orders}
                   </td>
                 </tr>
@@ -351,48 +351,48 @@ function TopProductsTable({ products }) {
 
 function TopCustomersTable({ customers }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-200 px-5 py-4">
-        <h2 className="text-sm font-semibold text-gray-900">
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
+      <div className="border-b border-[#e0e0e0] px-5 py-4">
+        <h2 className="text-sm font-semibold text-black">
           Top Customers by Spend
         </h2>
       </div>
 
       {customers.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-gray-500">
+        <div className="px-5 py-8 text-center text-sm text-[#999]">
           No customer data for this period
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+              <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                   Customer
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-[#999]">
                   Spent
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-[#999]">
                   Orders
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[#e0e0e0]">
               {customers.map((customer, i) => (
-                <tr key={`${customer.email}-${i}`} className="hover:bg-gray-50">
+                <tr key={`${customer.email}-${i}`} className="hover:bg-[#fafafa]">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900 truncate max-w-[200px]">
+                    <p className="font-medium text-black truncate max-w-[200px]">
                       {customer.email}
                     </p>
                     {customer.name && (
-                      <p className="text-xs text-gray-500">{customer.name}</p>
+                      <p className="text-xs text-[#999]">{customer.name}</p>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                  <td className="px-4 py-3 text-right font-semibold text-black">
                     {formatCad(customer.totalSpent)}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-600">
+                  <td className="px-4 py-3 text-right text-[#666]">
                     {customer.orders}
                   </td>
                 </tr>
@@ -412,11 +412,11 @@ function StatusBreakdown({ breakdown }) {
 
   if (total === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="text-sm font-semibold text-gray-900">
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+        <h2 className="text-sm font-semibold text-black">
           Order Status Breakdown
         </h2>
-        <div className="flex h-16 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-16 items-center justify-center text-sm text-[#999]">
           No orders in this period
         </div>
       </div>
@@ -424,13 +424,13 @@ function StatusBreakdown({ breakdown }) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <h2 className="mb-4 text-sm font-semibold text-gray-900">
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+      <h2 className="mb-4 text-sm font-semibold text-black">
         Order Status Breakdown
       </h2>
 
       {/* Horizontal stacked bar */}
-      <div className="flex h-8 overflow-hidden rounded-lg">
+      <div className="flex h-8 overflow-hidden rounded-[3px]">
         {breakdown.map((s) => {
           const percent = (s.count / total) * 100;
           const colors = statusColors[s.status] || {
@@ -459,12 +459,12 @@ function StatusBreakdown({ breakdown }) {
           return (
             <div key={s.status} className="flex items-center gap-2">
               <div className={`h-3 w-3 rounded-sm ${colors.bg}`} />
-              <span className="text-xs text-gray-600">
+              <span className="text-xs text-[#666]">
                 {colors.label}{" "}
-                <span className="font-medium text-gray-900">
+                <span className="font-medium text-black">
                   {s.count}
                 </span>{" "}
-                <span className="text-gray-400">({percent}%)</span>
+                <span className="text-[#999]">({percent}%)</span>
               </span>
             </div>
           );

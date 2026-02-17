@@ -94,10 +94,10 @@ export default function CommandPalette() {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[18vh]">
-      <button type="button" className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} aria-label="Close" />
-      <div className="relative w-full max-w-lg rounded-xl border border-gray-200 bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="Command palette">
-        <div className="flex items-center gap-3 border-b border-gray-200 px-4">
-          <svg className="h-4 w-4 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <button type="button" className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} aria-label="Close" />
+      <div className="relative w-full max-w-lg rounded-[3px] border border-[#e0e0e0] bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="Command palette">
+        <div className="flex items-center gap-3 border-b border-[#e0e0e0] px-4">
+          <svg className="h-4 w-4 shrink-0 text-[#999]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
           <input
@@ -106,26 +106,26 @@ export default function CommandPalette() {
             onChange={(e) => { setQuery(e.target.value); setActive(0); }}
             onKeyDown={onKeyDown}
             placeholder={t("admin.search.placeholder")}
-            className="w-full py-3.5 text-sm outline-none placeholder:text-gray-400"
+            className="w-full py-3.5 text-sm outline-none placeholder:text-[#999]"
           />
-          <kbd className="shrink-0 rounded border border-gray-200 px-1.5 py-0.5 text-[10px] font-mono text-gray-400">ESC</kbd>
+          <kbd className="shrink-0 rounded-[2px] border border-[#e0e0e0] px-1.5 py-0.5 text-[10px] font-mono text-[#999]">ESC</kbd>
         </div>
         <div className="max-h-72 overflow-y-auto p-2">
           {all.length === 0 && !searching && q && (
-            <p className="py-8 text-center text-sm text-gray-400">{t("admin.search.noResults")}</p>
+            <p className="py-8 text-center text-sm text-[#999]">{t("admin.search.noResults")}</p>
           )}
           {pageResults.length > 0 && (
             <div>
-              <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">{t("admin.search.pages")}</p>
+              <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#999]">{t("admin.search.pages")}</p>
               {pageResults.map((r, i) => (
                 <button
                   key={r.href}
                   type="button"
                   onClick={() => handleSelect(r)}
                   onMouseEnter={() => setActive(i)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${active === i ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-50"}`}
+                  className={`flex w-full items-center gap-3 rounded-[3px] px-3 py-2.5 text-left text-sm transition-colors ${active === i ? "bg-black text-white" : "text-black hover:bg-[#fafafa]"}`}
                 >
-                  <svg className={`h-3.5 w-3.5 shrink-0 ${active === i ? "text-gray-400" : "text-gray-300"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className={`h-3.5 w-3.5 shrink-0 ${active === i ? "text-[#999]" : "text-[#ccc]"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                   </svg>
                   {r.label}
@@ -135,7 +135,7 @@ export default function CommandPalette() {
           )}
           {apiResults.length > 0 && (
             <div className="mt-1">
-              <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">{t("admin.search.results")}</p>
+              <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#999]">{t("admin.search.results")}</p>
               {apiResults.map((r, i) => {
                 const idx = pageResults.length + i;
                 return (
@@ -144,9 +144,9 @@ export default function CommandPalette() {
                     type="button"
                     onClick={() => handleSelect(r)}
                     onMouseEnter={() => setActive(idx)}
-                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${active === idx ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-50"}`}
+                    className={`flex w-full items-center gap-3 rounded-[3px] px-3 py-2.5 text-left text-sm transition-colors ${active === idx ? "bg-black text-white" : "text-black hover:bg-[#fafafa]"}`}
                   >
-                    <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                    <span className={`shrink-0 rounded-[2px] px-1.5 py-0.5 text-[10px] font-semibold ${
                       r.type === "order"
                         ? active === idx ? "bg-blue-500/30 text-blue-200" : "bg-blue-100 text-blue-700"
                         : active === idx ? "bg-emerald-500/30 text-emerald-200" : "bg-emerald-100 text-emerald-700"
@@ -159,12 +159,12 @@ export default function CommandPalette() {
               })}
             </div>
           )}
-          {searching && <p className="py-3 text-center text-xs text-gray-400">{t("admin.search.searching")}</p>}
+          {searching && <p className="py-3 text-center text-xs text-[#999]">{t("admin.search.searching")}</p>}
         </div>
-        <div className="flex items-center gap-4 border-t border-gray-100 px-4 py-2 text-[10px] text-gray-400">
-          <span><kbd className="rounded border border-gray-200 px-1 py-0.5 font-mono">↑↓</kbd> navigate</span>
-          <span><kbd className="rounded border border-gray-200 px-1 py-0.5 font-mono">↵</kbd> select</span>
-          <span><kbd className="rounded border border-gray-200 px-1 py-0.5 font-mono">esc</kbd> close</span>
+        <div className="flex items-center gap-4 border-t border-[#e0e0e0] px-4 py-2 text-[10px] text-[#999]">
+          <span><kbd className="rounded-[2px] border border-[#e0e0e0] px-1 py-0.5 font-mono">↑↓</kbd> navigate</span>
+          <span><kbd className="rounded-[2px] border border-[#e0e0e0] px-1 py-0.5 font-mono">↵</kbd> select</span>
+          <span><kbd className="rounded-[2px] border border-[#e0e0e0] px-1 py-0.5 font-mono">esc</kbd> close</span>
         </div>
       </div>
     </div>

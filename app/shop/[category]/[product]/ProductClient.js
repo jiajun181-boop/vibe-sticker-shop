@@ -22,6 +22,7 @@ import { getSlaWindow } from "@/lib/sla";
 import { useFavoritesStore } from "@/lib/favorites";
 import RelatedLinks from "@/components/product/RelatedLinks";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
+import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 
 const StampEditor = dynamic(() => import("@/components/product/StampEditor"), {
   ssr: false,
@@ -267,6 +268,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const variants = [...variantSet];
     return { enabled: true, bases, variants, byBase, recommendedBases };
   }, [sizeOptions]);
+  const smartDefaults = useMemo(() => getSmartDefaults(product), [product]);
   const inventorySignal = useMemo(() => parseInventorySignal(product.optionsConfig), [product.optionsConfig]);
   const turnaroundKey = useMemo(() => getTurnaround(product), [product]);
   const slaWindow = useMemo(() => getSlaWindow(turnaroundKey), [turnaroundKey]);
@@ -297,10 +299,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   const [editorSizeLabel, setEditorSizeLabel] = useState(editorSizes[0]?.label || "");
   const dimensionsEnabled = isPerSqft || isTextEditor;
 
-  const [quantity, setQuantity] = useState(quantityRange?.min || 100);
+  const [quantity, setQuantity] = useState(quantityRange?.min || smartDefaults.minQuantity || 1);
   const [material, setMaterial] = useState(() => {
     const candidate = typeof uiConfig?.defaultMaterialId === "string" ? uiConfig.defaultMaterialId : "";
     if (candidate && materials.some((m) => m.id === candidate)) return candidate;
+    if (smartDefaults.defaultMaterial && materials.some((m) => m.id === smartDefaults.defaultMaterial)) return smartDefaults.defaultMaterial;
     return materials[0]?.id || candidate || "";
   });
   const [sceneId, setSceneId] = useState(scenes[0]?.id || "");
@@ -320,7 +323,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       id: createSizeRowId(),
       widthIn: product.minWidthIn || 3,
       heightIn: product.minHeightIn || 3,
-      quantity: quantityRange?.min || 1,
+      quantity: quantityRange?.min || smartDefaults.minQuantity || 1,
     },
   ]);
   const [uploadedArtwork, setUploadedArtwork] = useState(null); // { url, key, name, mime, size }
@@ -1467,7 +1470,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         className="w-32 rounded-xl border border-gray-300 bg-white px-3 py-2 text-center text-sm font-semibold text-gray-800"
                       >
                         {activeQuantityChoices.map((q) => (
-                          <option key={q} value={q}>{q}</option>
+                          <option key={q} value={q}>{q}{q === smartDefaults.minQuantity ? " ★" : ""}</option>
                         ))}
                       </select>
                       <button
@@ -2220,13 +2223,35 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               {!hideMaterials && materials.length > 0 && (
                 <div className="mt-5">
                   <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.material")}</label>
-                  <select value={material} onChange={(e) => setMaterial(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
-                    {materials.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}{m.multiplier !== 1.0 ? ` (+${Math.round((m.multiplier - 1) * 100)}%)` : ""}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="mt-2 space-y-1.5">
+                    {materials.map((m) => {
+                      const selected = material === m.id;
+                      const isPopular = m.multiplier === 1.0;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => setMaterial(m.id)}
+                          className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors text-left ${
+                            selected
+                              ? "border-[var(--color-ink-black)] bg-gray-50 font-semibold"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                          }`}
+                        >
+                          <span className={`h-3.5 w-3.5 shrink-0 rounded-full border-2 ${selected ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)]" : "border-gray-300"}`} />
+                          <span className="flex-1">
+                            {m.name}
+                            {m.multiplier !== 1.0 && <span className="ml-1 text-xs text-gray-500">(+{Math.round((m.multiplier - 1) * 100)}%)</span>}
+                          </span>
+                          {isPopular && (
+                            <span className="inline-block rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
+                              {t("product.popular")}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 

@@ -37,15 +37,15 @@ function MaterialsEditor({ materials, onChange, t }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-xs font-semibold text-gray-600 uppercase tracking-widest">{t("pricing.materials")}</span>
-          <p className="text-[11px] text-gray-400 mt-0.5">{t("pricing.materialsDesc")}</p>
+          <span className="text-xs font-semibold text-[#666] uppercase tracking-widest">{t("pricing.materials")}</span>
+          <p className="text-[11px] text-[#999] mt-0.5">{t("pricing.materialsDesc")}</p>
         </div>
-        <button type="button" onClick={addRow} className="text-xs text-blue-600 hover:underline">{t("pricing.addMaterial")}</button>
+        <button type="button" onClick={addRow} className="text-xs text-black underline hover:no-underline">{t("pricing.addMaterial")}</button>
       </div>
       {materials.length > 0 && (
         <table className="w-full text-xs">
           <thead>
-            <tr className="text-left text-gray-500">
+            <tr className="text-left text-[#999]">
               <th className="pb-1 pr-2">ID</th>
               <th className="pb-1 pr-2">{t("pricing.materialName")}</th>
               <th className="pb-1 pr-2">{t("pricing.materialMultiplier")}</th>
@@ -54,15 +54,15 @@ function MaterialsEditor({ materials, onChange, t }) {
           </thead>
           <tbody>
             {materials.map((m, i) => (
-              <tr key={i} className="border-t border-gray-100">
+              <tr key={i} className="border-t border-[#e0e0e0]">
                 <td className="py-1 pr-2">
-                  <input value={m.id || ""} onChange={(e) => updateRow(i, "id", e.target.value)} className="w-full rounded border border-gray-300 px-2 py-1 text-xs" placeholder="e.g. vinyl_13oz" />
+                  <input value={m.id || ""} onChange={(e) => updateRow(i, "id", e.target.value)} className="w-full rounded border border-[#d0d0d0] px-2 py-1 text-xs" placeholder="e.g. vinyl_13oz" />
                 </td>
                 <td className="py-1 pr-2">
-                  <input value={m.name || ""} onChange={(e) => updateRow(i, "name", e.target.value)} className="w-full rounded border border-gray-300 px-2 py-1 text-xs" placeholder="13oz Vinyl" />
+                  <input value={m.name || ""} onChange={(e) => updateRow(i, "name", e.target.value)} className="w-full rounded border border-[#d0d0d0] px-2 py-1 text-xs" placeholder="13oz Vinyl" />
                 </td>
                 <td className="py-1 pr-2">
-                  <input type="number" step="0.01" min="0.1" value={m.multiplier ?? 1} onChange={(e) => updateRow(i, "multiplier", e.target.value)} className="w-20 rounded border border-gray-300 px-2 py-1 text-xs" />
+                  <input type="number" step="0.01" min="0.1" value={m.multiplier ?? 1} onChange={(e) => updateRow(i, "multiplier", e.target.value)} className="w-20 rounded border border-[#d0d0d0] px-2 py-1 text-xs" />
                 </td>
                 <td className="py-1 text-center">
                   <button type="button" onClick={() => removeRow(i)} className="text-red-400 hover:text-red-600 text-sm leading-none">&times;</button>
@@ -93,15 +93,15 @@ function FinishingsEditor({ finishings, onChange, t }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-xs font-semibold text-gray-600 uppercase tracking-widest">{t("pricing.finishings")}</span>
-          <p className="text-[11px] text-gray-400 mt-0.5">{t("pricing.finishingsDesc")}</p>
+          <span className="text-xs font-semibold text-[#666] uppercase tracking-widest">{t("pricing.finishings")}</span>
+          <p className="text-[11px] text-[#999] mt-0.5">{t("pricing.finishingsDesc")}</p>
         </div>
-        <button type="button" onClick={addRow} className="text-xs text-blue-600 hover:underline">{t("pricing.addFinishing")}</button>
+        <button type="button" onClick={addRow} className="text-xs text-black underline hover:no-underline">{t("pricing.addFinishing")}</button>
       </div>
       {finishings.length > 0 && (
         <table className="w-full text-xs">
           <thead>
-            <tr className="text-left text-gray-500">
+            <tr className="text-left text-[#999]">
               <th className="pb-1 pr-2">ID</th>
               <th className="pb-1 pr-2">{t("pricing.finishingName")}</th>
               <th className="pb-1 pr-2">{t("pricing.finishingType")}</th>
@@ -111,22 +111,22 @@ function FinishingsEditor({ finishings, onChange, t }) {
           </thead>
           <tbody>
             {finishings.map((f, i) => (
-              <tr key={i} className="border-t border-gray-100">
+              <tr key={i} className="border-t border-[#e0e0e0]">
                 <td className="py-1 pr-2">
-                  <input value={f.id || ""} onChange={(e) => updateRow(i, "id", e.target.value)} className="w-full rounded border border-gray-300 px-2 py-1 text-xs" placeholder="e.g. lamination" />
+                  <input value={f.id || ""} onChange={(e) => updateRow(i, "id", e.target.value)} className="w-full rounded border border-[#d0d0d0] px-2 py-1 text-xs" placeholder="e.g. lamination" />
                 </td>
                 <td className="py-1 pr-2">
-                  <input value={f.name || ""} onChange={(e) => updateRow(i, "name", e.target.value)} className="w-full rounded border border-gray-300 px-2 py-1 text-xs" placeholder="Gloss Lamination" />
+                  <input value={f.name || ""} onChange={(e) => updateRow(i, "name", e.target.value)} className="w-full rounded border border-[#d0d0d0] px-2 py-1 text-xs" placeholder="Gloss Lamination" />
                 </td>
                 <td className="py-1 pr-2">
-                  <select value={f.type || "flat"} onChange={(e) => updateRow(i, "type", e.target.value)} className="w-full rounded border border-gray-300 px-2 py-1 text-xs bg-white">
+                  <select value={f.type || "flat"} onChange={(e) => updateRow(i, "type", e.target.value)} className="w-full rounded border border-[#d0d0d0] px-2 py-1 text-xs bg-white">
                     {FINISHING_TYPES.map((tp) => (
                       <option key={tp} value={tp}>{t(`pricing.type${tp.charAt(0).toUpperCase()}${tp.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase())}`)}</option>
                     ))}
                   </select>
                 </td>
                 <td className="py-1 pr-2">
-                  <input type="number" step="0.01" min="0" value={f.price ?? 0} onChange={(e) => updateRow(i, "price", e.target.value)} className="w-20 rounded border border-gray-300 px-2 py-1 text-xs" />
+                  <input type="number" step="0.01" min="0" value={f.price ?? 0} onChange={(e) => updateRow(i, "price", e.target.value)} className="w-20 rounded border border-[#d0d0d0] px-2 py-1 text-xs" />
                 </td>
                 <td className="py-1 text-center">
                   <button type="button" onClick={() => removeRow(i)} className="text-red-400 hover:text-red-600 text-sm leading-none">&times;</button>
@@ -380,7 +380,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
 
   if (loading) {
     return (
-      <div className="p-8 text-gray-500 text-sm">Loading pricing presets...</div>
+      <div className="p-8 text-[#999] text-sm">Loading pricing presets...</div>
     );
   }
 
@@ -389,18 +389,18 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Pricing Presets</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-[#999] mt-1">
             Edit pricing rules. Changes affect all products linked to each preset.
           </p>
         </div>
-        <span className="bg-gray-100 px-3 py-1 rounded-full text-xs font-bold text-gray-600">
+        <span className="bg-[#f5f5f5] px-3 py-1 rounded-[2px] text-xs font-bold text-[#666]">
           {presets.length} presets
         </span>
       </div>
 
       {message && (
         <div
-          className={`px-4 py-2 rounded-lg text-sm font-medium ${
+          className={`px-4 py-2 rounded-[3px] text-sm font-medium ${
             message.type === "error"
               ? "bg-red-50 text-red-700 border border-red-200"
               : "bg-green-50 text-green-700 border border-green-200"
@@ -410,14 +410,14 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5 space-y-4">
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-widest text-gray-600">Quick Assign Preset</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-[#666]">Quick Assign Preset</span>
             <select
               value={quickPresetId}
               onChange={(e) => setQuickPresetId(e.target.value)}
-              className="rounded border border-gray-300 bg-white px-2 py-1 text-xs"
+              className="rounded border border-[#d0d0d0] bg-white px-2 py-1 text-xs"
             >
               {presets.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -428,11 +428,11 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
             <button
               onClick={handleQuickAssign}
               disabled={quickAssignLoading || !quickPresetId || !bulkCategory}
-              className="rounded bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:opacity-50"
+              className="rounded bg-black px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
             >
               {quickAssignLoading ? "Applying..." : "Apply to Category"}
             </button>
-            <label className="inline-flex items-center gap-1 text-xs text-gray-600">
+            <label className="inline-flex items-center gap-1 text-xs text-[#666]">
               <input
                 type="checkbox"
                 checked={quickOverwrite}
@@ -450,23 +450,23 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
 
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-gray-900">Bulk Price Adjustment</h2>
-            <p className="text-xs text-gray-500 mt-1">
+            <h2 className="text-base font-bold text-black">Bulk Price Adjustment</h2>
+            <p className="text-xs text-[#999] mt-1">
               Adjust an entire category by percentage. Run preview first, then apply.
             </p>
           </div>
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-[11px] font-semibold text-gray-600">
+          <span className="rounded-[2px] bg-[#f5f5f5] px-3 py-1 text-[11px] font-semibold text-[#666]">
             Safe mode: shared presets protected
           </span>
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
           <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Category</span>
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-[#999]">Category</span>
             <select
               value={bulkCategory}
               onChange={(e) => setBulkCategory(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
+              className="mt-1 w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm bg-white"
             >
               {categories.map((c) => (
                 <option key={c.category} value={c.category}>
@@ -477,8 +477,8 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
           </label>
 
           <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Percent Change</span>
-            <div className="mt-1 flex items-center rounded-lg border border-gray-300 px-3 py-2">
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-[#999]">Percent Change</span>
+            <div className="mt-1 flex items-center rounded-[3px] border border-[#d0d0d0] px-3 py-2">
               <input
                 type="number"
                 step="0.1"
@@ -487,24 +487,24 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
                 className="w-full text-sm outline-none"
                 placeholder="e.g. 8 or -5"
               />
-              <span className="text-sm text-gray-500">%</span>
+              <span className="text-sm text-[#999]">%</span>
             </div>
           </label>
 
           <div className="flex flex-col justify-end gap-2">
-            <label className="inline-flex items-center gap-2 text-xs text-gray-700">
+            <label className="inline-flex items-center gap-2 text-xs text-black">
               <input
                 type="checkbox"
                 checked={includeShared}
                 onChange={(e) => setIncludeShared(e.target.checked)}
-                className="rounded border-gray-300"
+                className="rounded border-[#d0d0d0]"
               />
               Also adjust shared presets (cross-category)
             </label>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-700">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-black">
           <label className="inline-flex items-center gap-2">
             <input type="checkbox" checked={adjustFlags.tiers} onChange={(e) => updateAdjustFlag("tiers", e.target.checked)} />
             Tier prices
@@ -531,28 +531,28 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
           <button
             onClick={() => runBulk("preview")}
             disabled={bulkLoading}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-semibold text-black hover:bg-[#fafafa] disabled:opacity-50"
           >
             {bulkLoading ? "Running..." : "Preview"}
           </button>
           <button
             onClick={() => runBulk("apply")}
             disabled={bulkLoading || !bulkPreview}
-            className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-50"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
           >
             {bulkLoading ? "Applying..." : "Apply"}
           </button>
         </div>
 
         {bulkMessage && (
-          <div className={`rounded-lg border px-3 py-2 text-xs ${bulkMessage.type === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-green-200 bg-green-50 text-green-700"}`}>
+          <div className={`rounded-[3px] border px-3 py-2 text-xs ${bulkMessage.type === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-green-200 bg-green-50 text-green-700"}`}>
             {bulkMessage.text}
           </div>
         )}
 
         {bulkPreview && (
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-            <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+          <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
+            <div className="flex flex-wrap gap-3 text-xs text-[#666]">
               <span>Touched presets: {bulkPreview.touchedPresets}</span>
               <span>Touched products: {bulkPreview.touchedProducts}</span>
               <span>Applied: {bulkPreview.applied || 0}</span>
@@ -560,9 +560,9 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
               <span>Invalid: {bulkPreview.invalidConfigs}</span>
             </div>
             {!!bulkPreview.results?.length && (
-              <div className="mt-3 max-h-40 overflow-auto rounded border border-gray-200 bg-white">
+              <div className="mt-3 max-h-40 overflow-auto rounded border border-[#e0e0e0] bg-white">
                 <table className="w-full text-xs">
-                  <thead className="bg-gray-50 text-gray-500">
+                  <thead className="bg-[#fafafa] text-[#999]">
                     <tr>
                       <th className="px-2 py-1 text-left">Preset</th>
                       <th className="px-2 py-1 text-left">Status</th>
@@ -571,7 +571,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
                   </thead>
                   <tbody>
                     {bulkPreview.results.map((r) => (
-                      <tr key={r.presetId} className="border-t border-gray-100">
+                      <tr key={r.presetId} className="border-t border-[#e0e0e0]">
                         <td className="px-2 py-1.5 font-mono">{r.key}</td>
                         <td className="px-2 py-1.5">{r.status}</td>
                         <td className="px-2 py-1.5">
@@ -591,8 +591,8 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
         {groupedPresets.map((group) => (
           <section key={group.model} className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-gray-700">{group.label}</h2>
-              <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-semibold text-gray-600">
+              <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-black">{group.label}</h2>
+              <span className="rounded-[2px] bg-[#f5f5f5] px-2.5 py-1 text-[10px] font-semibold text-[#666]">
                 {group.items.length} preset{group.items.length !== 1 ? "s" : ""}
               </span>
             </div>
@@ -603,7 +603,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
           return (
             <div
               key={preset.id}
-              className="border border-gray-200 rounded-xl bg-white overflow-hidden"
+              className="border border-[#e0e0e0] rounded-[3px] bg-white overflow-hidden"
             >
               {/* Header */}
               <div className="px-5 py-4 flex items-center justify-between">
@@ -611,17 +611,17 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-base">{preset.name}</h3>
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      className={`px-2 py-0.5 rounded-[2px] text-[10px] font-bold ${
                         preset.isActive
                           ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-500"
+                          : "bg-[#f5f5f5] text-[#999]"
                       }`}
                     >
                       {preset.isActive ? "Active" : "Inactive"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span className="font-mono bg-gray-50 px-2 py-0.5 rounded">
+                  <div className="flex items-center gap-3 text-xs text-[#999]">
+                    <span className="font-mono bg-[#fafafa] px-2 py-0.5 rounded">
                       {preset.key}
                     </span>
                     <span>{MODEL_LABELS[preset.model] || preset.model}</span>
@@ -631,21 +631,21 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => toggleActive(preset)}
-                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 hover:bg-gray-50"
+                    className="px-3 py-1.5 text-xs font-medium rounded-[3px] border border-[#e0e0e0] hover:bg-[#fafafa]"
                   >
                     {preset.isActive ? "Deactivate" : "Activate"}
                   </button>
                   {isEditing ? (
                     <button
                       onClick={cancelEdit}
-                      className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 hover:bg-gray-50"
+                      className="px-3 py-1.5 text-xs font-medium rounded-[3px] border border-[#e0e0e0] hover:bg-[#fafafa]"
                     >
                       Cancel
                     </button>
                   ) : (
                     <button
                       onClick={() => startEdit(preset)}
-                      className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-900 text-white hover:bg-black"
+                      className="px-3 py-1.5 text-xs font-medium rounded-[3px] bg-black text-white hover:bg-[#222]"
                     >
                       Edit Config
                     </button>
@@ -655,28 +655,28 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
 
               {/* Editor */}
               {isEditing && (
-                <div className="border-t border-gray-200 px-5 py-4 space-y-4 bg-gray-50">
+                <div className="border-t border-[#e0e0e0] px-5 py-4 space-y-4 bg-[#fafafa]">
                   <label className="block">
-                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-widest">
+                    <span className="text-xs font-semibold text-[#666] uppercase tracking-widest">
                       Preset Name
                     </span>
                     <input
                       type="text"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="mt-1 w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm"
                     />
                   </label>
 
                   {/* Structured editors for materials & finishings */}
                   {parsedConfig && (
-                    <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">
+                    <div className="space-y-4 rounded-[3px] border border-[#e0e0e0] bg-white p-4">
                       <MaterialsEditor
                         materials={Array.isArray(parsedConfig.materials) ? parsedConfig.materials : []}
                         onChange={(mats) => updateConfigField("materials", mats)}
                         t={t}
                       />
-                      <div className="border-t border-gray-100" />
+                      <div className="border-t border-[#e0e0e0]" />
                       <FinishingsEditor
                         finishings={Array.isArray(parsedConfig.finishings) ? parsedConfig.finishings : []}
                         onChange={(fins) => updateConfigField("finishings", fins)}
@@ -686,14 +686,14 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
                   )}
 
                   <label className="block">
-                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-widest">
+                    <span className="text-xs font-semibold text-[#666] uppercase tracking-widest">
                       Config JSON
                     </span>
                     <textarea
                       value={editJson}
                       onChange={(e) => setEditJson(e.target.value)}
                       rows={16}
-                      className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono leading-relaxed"
+                      className="mt-1 w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm font-mono leading-relaxed"
                       spellCheck={false}
                     />
                   </label>
@@ -701,7 +701,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
                     <button
                       onClick={() => handleSave(preset.id)}
                       disabled={saving}
-                      className="px-5 py-2 rounded-lg bg-gray-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-black disabled:bg-gray-300"
+                      className="px-5 py-2 rounded-[3px] bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-[#222] disabled:bg-[#999]"
                     >
                       {saving ? "Saving..." : "Save Changes"}
                     </button>
@@ -711,8 +711,8 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
 
               {/* Preview (collapsed) */}
               {!isEditing && (
-                <div className="border-t border-gray-100 px-5 py-3">
-                  <pre className="text-[11px] text-gray-500 font-mono max-h-24 overflow-auto whitespace-pre-wrap">
+                <div className="border-t border-[#e0e0e0] px-5 py-3">
+                  <pre className="text-[11px] text-[#999] font-mono max-h-24 overflow-auto whitespace-pre-wrap">
                     {JSON.stringify(preset.config, null, 2)}
                   </pre>
                 </div>
@@ -724,7 +724,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
         ))}
 
         {presets.length === 0 && (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-[#999]">
             <p className="text-lg font-semibold">No pricing presets found.</p>
             <p className="text-sm mt-1">
               Run the seed script to create default presets.

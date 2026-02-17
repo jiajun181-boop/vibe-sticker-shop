@@ -23,7 +23,7 @@ const productionOptions = [
 ];
 
 const statusColors = {
-  draft: "bg-gray-100 text-gray-700",
+  draft: "bg-[#f5f5f5] text-black",
   pending: "bg-yellow-100 text-yellow-800",
   paid: "bg-green-100 text-green-800",
   canceled: "bg-red-100 text-red-700",
@@ -39,7 +39,7 @@ const paymentColors = {
 };
 
 const productionColors = {
-  not_started: "bg-gray-100 text-gray-600",
+  not_started: "bg-[#f5f5f5] text-[#666]",
   preflight: "bg-blue-100 text-blue-700",
   in_production: "bg-indigo-100 text-indigo-700",
   ready_to_ship: "bg-cyan-100 text-cyan-700",
@@ -51,7 +51,7 @@ const productionColors = {
 
 const priorityLabels = ["Normal", "High", "Urgent"];
 const priorityColors = [
-  "bg-gray-100 text-gray-700 border-gray-300",
+  "bg-[#f5f5f5] text-black border-[#d0d0d0]",
   "bg-yellow-100 text-yellow-800 border-yellow-400",
   "bg-red-100 text-red-700 border-red-400",
 ];
@@ -61,7 +61,7 @@ const timelineDotColors = {
   note_added: "bg-green-500",
   payment_received: "bg-emerald-500",
   refund_issued: "bg-red-500",
-  default: "bg-gray-400",
+  default: "bg-[#999]",
 };
 
 function parseSizeRows(item) {
@@ -250,7 +250,7 @@ export default function OrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center text-sm text-gray-500">
+      <div className="flex h-64 items-center justify-center text-sm text-[#999]">
         Loading...
       </div>
     );
@@ -259,8 +259,8 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-2">
-        <p className="text-sm text-gray-500">Order not found</p>
-        <Link href="/admin/orders" className="text-sm text-blue-600 hover:text-blue-800">
+        <p className="text-sm text-[#999]">Order not found</p>
+        <Link href="/admin/orders" className="text-sm text-black underline hover:no-underline">
           Back to Orders
         </Link>
       </div>
@@ -283,26 +283,26 @@ export default function OrderDetailPage() {
               <button
                 type="button"
                 onClick={() => router.push("/admin/orders")}
-                className="text-xs text-gray-500 hover:text-gray-900"
+                className="text-xs text-[#999] hover:text-black"
               >
                 &larr; Back to Orders
               </button>
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1 text-xs font-medium text-black hover:bg-[#fafafa]"
               >
                 Print Invoice
               </button>
             </div>
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-black">
               Order Details
             </h1>
-            <p className="mt-0.5 font-mono text-xs text-gray-400">{order.id}</p>
+            <p className="mt-0.5 font-mono text-xs text-[#999]">{order.id}</p>
           </div>
           <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              statusColors[order.status] || "bg-gray-100"
+            className={`rounded-[2px] px-3 py-1 text-xs font-semibold ${
+              statusColors[order.status] || "bg-[#f5f5f5]"
             }`}
           >
             {order.status}
@@ -324,19 +324,19 @@ export default function OrderDetailPage() {
             {/* Order items */}
             <Section title={`Items (${order.items?.length || 0})`}>
               {order.items && order.items.length > 0 ? (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-[#e0e0e0]">
                   {order.items.map((item) => (
                     <div key={item.id} className="py-3 first:pt-0 last:pb-0">
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-black">
                             {item.productName}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-[#999]">
                             {item.productType} &middot; Qty: {item.quantity}
                           </p>
                           {/* Specs */}
-                          <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-400">
+                          <div className="mt-1 flex flex-wrap gap-2 text-xs text-[#999]">
                             {item.widthIn && item.heightIn && (
                               <span>
                                 {item.widthIn}&quot; x {item.heightIn}&quot;
@@ -346,7 +346,7 @@ export default function OrderDetailPage() {
                             {item.finishing && <span>{item.finishing}</span>}
                           </div>
                           {parseSizeRows(item).length > 0 && (
-                            <div className="mt-1 space-y-0.5 text-[11px] text-gray-500">
+                            <div className="mt-1 space-y-0.5 text-[11px] text-[#999]">
                               {parseSizeRows(item).map((row, idx) => (
                                 <p key={`${item.id}-size-${idx}`}>
                                   #{idx + 1}: {row.width}&quot; x {row.height}&quot; x {row.quantity}
@@ -356,10 +356,10 @@ export default function OrderDetailPage() {
                           )}
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-gray-900">
+                          <p className="text-sm font-semibold text-black">
                             {formatCad(item.totalPrice)}
                           </p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-[#999]">
                             {formatCad(item.unitPrice)} each
                           </p>
                         </div>
@@ -368,7 +368,7 @@ export default function OrderDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">No items</p>
+                <p className="text-sm text-[#999]">No items</p>
               )}
             </Section>
 
@@ -376,14 +376,14 @@ export default function OrderDetailPage() {
             <Section title="Amount">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium text-gray-900">
+                  <span className="text-[#666]">Subtotal</span>
+                  <span className="font-medium text-black">
                     {formatCad(order.subtotalAmount)}
                   </span>
                 </div>
                 {order.coupon && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">
+                    <span className="text-[#666]">
                       Coupon ({order.coupon.code})
                     </span>
                     <span className="font-medium text-green-700">
@@ -392,14 +392,14 @@ export default function OrderDetailPage() {
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (13% HST)</span>
-                  <span className="font-medium text-gray-900">
+                  <span className="text-[#666]">Tax (13% HST)</span>
+                  <span className="font-medium text-black">
                     {formatCad(order.taxAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium text-gray-900">
+                  <span className="text-[#666]">Shipping</span>
+                  <span className="font-medium text-black">
                     {order.shippingAmount === 0
                       ? "FREE"
                       : formatCad(order.shippingAmount)}
@@ -413,7 +413,7 @@ export default function OrderDetailPage() {
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between border-t border-gray-200 pt-2 text-base font-semibold">
+                <div className="flex justify-between border-t border-[#e0e0e0] pt-2 text-base font-semibold">
                   <span>Total</span>
                   <span>{formatCad(order.totalAmount)} CAD</span>
                 </div>
@@ -429,15 +429,15 @@ export default function OrderDetailPage() {
                     value={noteText}
                     onChange={(e) => setNoteText(e.target.value)}
                     placeholder="Add a note..."
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    className="flex-1 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                     onKeyDown={(e) => e.key === "Enter" && handleAddNote()}
                   />
-                  <label className="flex items-center gap-1 text-xs text-gray-500">
+                  <label className="flex items-center gap-1 text-xs text-[#999]">
                     <input
                       type="checkbox"
                       checked={isInternalNote}
                       onChange={(e) => setIsInternalNote(e.target.checked)}
-                      className="rounded border-gray-300"
+                      className="rounded border-[#d0d0d0]"
                     />
                     Internal
                   </label>
@@ -445,7 +445,7 @@ export default function OrderDetailPage() {
                     type="button"
                     onClick={handleAddNote}
                     disabled={addingNote || !noteText.trim()}
-                    className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black disabled:bg-gray-400"
+                    className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
                   >
                     {addingNote ? "..." : "Add"}
                   </button>
@@ -456,14 +456,14 @@ export default function OrderDetailPage() {
                     {order.notes.map((note) => (
                       <div
                         key={note.id}
-                        className="rounded-lg bg-gray-50 px-3 py-2"
+                        className="rounded-[3px] bg-[#fafafa] px-3 py-2"
                       >
-                        <p className="text-sm text-gray-900">{note.message}</p>
-                        <p className="mt-1 text-xs text-gray-400">
+                        <p className="text-sm text-black">{note.message}</p>
+                        <p className="mt-1 text-xs text-[#999]">
                           {note.authorType} &middot;{" "}
                           {new Date(note.createdAt).toLocaleString()}
                           {note.isInternal && (
-                            <span className="ml-2 rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-600">
+                            <span className="ml-2 rounded bg-[#e0e0e0] px-1.5 py-0.5 text-xs text-[#666]">
                               Internal
                             </span>
                           )}
@@ -472,7 +472,7 @@ export default function OrderDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-400">No notes yet</p>
+                  <p className="text-xs text-[#999]">No notes yet</p>
                 )}
               </div>
             </Section>
@@ -480,7 +480,7 @@ export default function OrderDetailPage() {
             {/* Order Timeline */}
             <Section title="Timeline">
               {timeline.length > 0 ? (
-                <div className="relative pl-6 border-l-2 border-gray-200">
+                <div className="relative pl-6 border-l-2 border-[#e0e0e0]">
                   {timeline.map((event, idx) => {
                     const dotColor =
                       timelineDotColors[event.action] ||
@@ -492,15 +492,15 @@ export default function OrderDetailPage() {
                           className={`absolute -left-[25px] top-1 h-3 w-3 rounded-full border-2 border-white ${dotColor}`}
                         />
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-black">
                             {event.action.replace(/_/g, " ")}
                           </p>
                           {event.details && (
-                            <p className="mt-0.5 text-xs text-gray-500 break-all">
+                            <p className="mt-0.5 text-xs text-[#999] break-all">
                               {event.details}
                             </p>
                           )}
-                          <p className="mt-0.5 text-xs text-gray-400">
+                          <p className="mt-0.5 text-xs text-[#999]">
                             {event.actor && (
                               <span className="mr-2 font-medium">{event.actor}</span>
                             )}
@@ -512,7 +512,7 @@ export default function OrderDetailPage() {
                   })}
                 </div>
               ) : (
-                <p className="text-xs text-gray-400">No timeline events</p>
+                <p className="text-xs text-[#999]">No timeline events</p>
               )}
             </Section>
           </div>
@@ -549,7 +549,7 @@ export default function OrderDetailPage() {
                   type="button"
                   onClick={handleStatusUpdate}
                   disabled={saving}
-                  className="w-full rounded-lg bg-blue-600 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:bg-gray-400"
+                  className="w-full rounded-[3px] bg-black py-2.5 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
                 >
                   {saving ? "Saving..." : "Update Status"}
                 </button>
@@ -561,7 +561,7 @@ export default function OrderDetailPage() {
               <div className="space-y-4">
                 {/* Tags */}
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">
+                  <label className="mb-1 block text-xs font-medium text-[#666]">
                     Tags
                   </label>
                   <input
@@ -570,7 +570,7 @@ export default function OrderDetailPage() {
                     onChange={(e) => setTagsInput(e.target.value)}
                     onBlur={handleTagsBlur}
                     placeholder="e.g. rush, wholesale, VIP"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
                   {tagsInput && (
                     <div className="mt-2 flex flex-wrap gap-1">
@@ -581,7 +581,7 @@ export default function OrderDetailPage() {
                         .map((tag, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700"
+                            className="inline-flex items-center rounded-[2px] bg-[#f5f5f5] px-2.5 py-0.5 text-xs font-medium text-black"
                           >
                             {tag}
                           </span>
@@ -592,7 +592,7 @@ export default function OrderDetailPage() {
 
                 {/* Priority */}
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">
+                  <label className="mb-1 block text-xs font-medium text-[#666]">
                     Priority
                   </label>
                   <div className="flex gap-2">
@@ -601,10 +601,10 @@ export default function OrderDetailPage() {
                         key={label}
                         type="button"
                         onClick={() => handlePriorityChange(idx)}
-                        className={`flex-1 rounded-lg border px-2 py-1.5 text-xs font-semibold transition-colors ${
+                        className={`flex-1 rounded-[3px] border px-2 py-1.5 text-xs font-semibold transition-colors ${
                           priority === idx
                             ? priorityColors[idx]
-                            : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                            : "border-[#e0e0e0] bg-white text-[#999] hover:bg-[#fafafa]"
                         }`}
                       >
                         {label}
@@ -618,10 +618,10 @@ export default function OrderDetailPage() {
                   <button
                     type="button"
                     onClick={handleArchiveToggle}
-                    className={`w-full rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                    className={`w-full rounded-[3px] border px-3 py-2 text-xs font-semibold transition-colors ${
                       isArchived
                         ? "border-orange-300 bg-orange-50 text-orange-700"
-                        : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                        : "border-[#e0e0e0] bg-white text-[#666] hover:bg-[#fafafa]"
                     }`}
                   >
                     {isArchived ? "Archived - Click to Unarchive" : "Archive Order"}
@@ -630,14 +630,14 @@ export default function OrderDetailPage() {
 
                 {/* Estimated Completion */}
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">
+                  <label className="mb-1 block text-xs font-medium text-[#666]">
                     Estimated Completion
                   </label>
                   <input
                     type="date"
                     value={estimatedCompletion}
                     onChange={handleEstimatedCompletionChange}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
                 </div>
               </div>
@@ -683,23 +683,23 @@ export default function OrderDetailPage() {
               <Section title={`Files (${order.files.length})`}>
                 <div className="space-y-2">
                   {order.files.map((file) => (
-                    <div key={file.id} className="rounded-lg border border-gray-200 px-3 py-2">
+                    <div key={file.id} className="rounded-[3px] border border-[#e0e0e0] px-3 py-2">
                       <div className="flex items-center justify-between">
                         <a
                           href={file.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline"
+                          className="text-xs text-black underline hover:no-underline"
                         >
                           {file.fileName || "File"}
                           {file.mimeType && (
-                            <span className="ml-2 text-gray-400">{file.mimeType}</span>
+                            <span className="ml-2 text-[#999]">{file.mimeType}</span>
                           )}
                         </a>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-semibold ${
                           file.preflightStatus === "approved" ? "bg-green-100 text-green-700" :
                           file.preflightStatus === "rejected" ? "bg-red-100 text-red-700" :
-                          "bg-gray-100 text-gray-600"
+                          "bg-[#f5f5f5] text-[#666]"
                         }`}>
                           {file.preflightStatus || "pending"}
                         </span>
@@ -743,16 +743,16 @@ export default function OrderDetailPage() {
 /* ========== Print Invoice Component ========== */
 function PrintInvoice({ order }) {
   return (
-    <div className="p-8 text-sm text-gray-900">
+    <div className="p-8 text-sm text-black">
       {/* Invoice Header */}
-      <div className="flex items-start justify-between border-b border-gray-300 pb-4 mb-6">
+      <div className="flex items-start justify-between border-b border-[#d0d0d0] pb-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Vibe Sticker Shop</h1>
-          <p className="text-gray-500 mt-1">Invoice</p>
+          <p className="text-[#999] mt-1">Invoice</p>
         </div>
         <div className="text-right">
           <p className="font-semibold">Order #{order.id.slice(0, 8)}</p>
-          <p className="text-gray-500">
+          <p className="text-[#999]">
             {new Date(order.createdAt).toLocaleDateString("en-CA")}
           </p>
         </div>
@@ -760,7 +760,7 @@ function PrintInvoice({ order }) {
 
       {/* Customer Info */}
       <div className="mb-6">
-        <h2 className="text-xs font-semibold uppercase text-gray-500 mb-2">
+        <h2 className="text-xs font-semibold uppercase text-[#999] mb-2">
           Bill To
         </h2>
         <p className="font-medium">{order.customerName || order.customerEmail}</p>
@@ -771,7 +771,7 @@ function PrintInvoice({ order }) {
       {/* Items Table */}
       <table className="w-full mb-6 border-collapse">
         <thead>
-          <tr className="border-b border-gray-300 text-left text-xs font-semibold uppercase text-gray-500">
+          <tr className="border-b border-[#d0d0d0] text-left text-xs font-semibold uppercase text-[#999]">
             <th className="pb-2">Item</th>
             <th className="pb-2">Type</th>
             <th className="pb-2 text-center">Qty</th>
@@ -781,10 +781,10 @@ function PrintInvoice({ order }) {
         </thead>
         <tbody>
           {order.items?.map((item) => (
-            <tr key={item.id} className="border-b border-gray-100">
+            <tr key={item.id} className="border-b border-[#e0e0e0]">
               <td className="py-2">
                 <p className="font-medium">{item.productName}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#999]">
                   {[
                     item.widthIn && item.heightIn
                       ? `${item.widthIn}" x ${item.heightIn}"`
@@ -796,7 +796,7 @@ function PrintInvoice({ order }) {
                     .join(" / ")}
                 </p>
                 {parseSizeRows(item).length > 0 && (
-                  <div className="mt-1 text-[10px] text-gray-500">
+                  <div className="mt-1 text-[10px] text-[#999]">
                     {parseSizeRows(item).map((row, idx) => (
                       <p key={`${item.id}-print-size-${idx}`}>
                         #{idx + 1}: {row.width}&quot; x {row.height}&quot; x {row.quantity}
@@ -844,14 +844,14 @@ function PrintInvoice({ order }) {
             <span>-{formatCad(order.refundAmount)}</span>
           </div>
         )}
-        <div className="flex justify-between border-t border-gray-300 pt-2 text-base font-bold">
+        <div className="flex justify-between border-t border-[#d0d0d0] pt-2 text-base font-bold">
           <span>Total</span>
           <span>{formatCad(order.totalAmount)} CAD</span>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="mt-10 border-t border-gray-200 pt-4 text-center text-xs text-gray-400">
+      <div className="mt-10 border-t border-[#e0e0e0] pt-4 text-center text-xs text-[#999]">
         <p>Thank you for your order!</p>
         <p className="mt-1">Vibe Sticker Shop</p>
       </div>

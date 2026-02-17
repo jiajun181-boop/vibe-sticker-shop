@@ -51,17 +51,17 @@ export default function AdminB2BPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900">B2B Accounts</h1>
-          <p className="text-sm text-gray-500">{total} accounts</p>
+          <h1 className="text-lg font-semibold text-black">B2B Accounts</h1>
+          <p className="text-sm text-[#999]">{total} accounts</p>
         </div>
-        <div className="flex gap-1 rounded-lg border border-gray-200 p-1">
+        <div className="flex gap-1 rounded-[3px] border border-[#e0e0e0] p-1">
           {FILTERS.map((f) => (
             <button
               key={f.key}
               type="button"
               onClick={() => setFilter(f.key)}
               className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                filter === f.key ? "bg-gray-900 text-white" : "text-gray-500 hover:text-gray-900"
+                filter === f.key ? "bg-black text-white" : "text-[#999] hover:text-black"
               }`}
             >
               {f.label}
@@ -73,17 +73,17 @@ export default function AdminB2BPage() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-lg bg-gray-100" />
+            <div key={i} className="h-16 animate-pulse rounded-[3px] bg-[#f5f5f5]" />
           ))}
         </div>
       ) : users.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 p-8 text-center text-sm text-gray-500">
+        <div className="rounded-[3px] border border-[#e0e0e0] p-8 text-center text-sm text-[#999]">
           No B2B accounts found.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-gray-200">
+        <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0]">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <thead className="bg-[#fafafa] text-left text-xs font-semibold uppercase tracking-wider text-[#999]">
               <tr>
                 <th className="px-4 py-3">Company / Name</th>
                 <th className="px-4 py-3">Email</th>
@@ -93,27 +93,27 @@ export default function AdminB2BPage() {
                 <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[#e0e0e0]">
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+                <tr key={user.id} className="hover:bg-[#fafafa]">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{user.companyName || "—"}</p>
-                    <p className="text-xs text-gray-500">{user.name} {user.companyRole ? `(${user.companyRole})` : ""}</p>
+                    <p className="font-medium text-black">{user.companyName || "—"}</p>
+                    <p className="text-xs text-[#999]">{user.name} {user.companyRole ? `(${user.companyRole})` : ""}</p>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{user.email}</td>
-                  <td className="px-4 py-3 text-gray-600">{user._count?.orders || 0}</td>
+                  <td className="px-4 py-3 text-[#666]">{user.email}</td>
+                  <td className="px-4 py-3 text-[#666]">{user._count?.orders || 0}</td>
                   <td className="px-4 py-3">
                     {user.b2bApproved ? (
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                      <span className="rounded-[2px] bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
                         Approved
                       </span>
                     ) : (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                      <span className="rounded-[2px] bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
                         Pending
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500">
+                  <td className="px-4 py-3 text-xs text-[#999]">
                     {new Date(user.createdAt).toLocaleDateString("en-CA")}
                   </td>
                   <td className="px-4 py-3">

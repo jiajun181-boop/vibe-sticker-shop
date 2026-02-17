@@ -66,38 +66,127 @@ function parseArgs() {
   return flags;
 }
 
-const categoryScenes = {
-  "marketing-prints": "clean print shop tabletop with paper samples and soft daylight",
-  "stickers-labels": "close-up product mockup on matte surface with peel-and-stick texture",
-  "rigid-signs": "studio setup with rigid sign panel and subtle shadow",
-  "banners-displays": "trade show backdrop environment with realistic fabric and vinyl materials",
-  "display-stands": "showroom scene with display stand hardware and printed panel",
-  "window-glass-films": "storefront glass scene showing applied film texture and reflection",
-  "large-format-graphics": "wide-format print environment with mounted graphics",
-  "vehicle-branding-advertising": "commercial vehicle wrap mockup under natural daylight",
-  "fleet-compliance-id": "fleet vehicle compliance decal close-up with clean typography areas",
-  "safety-warning-decals": "industrial safety signage environment with high-contrast warning decals",
-  "facility-asset-labels": "warehouse labeling scene with equipment tags and decals",
-  "retail-promo": "retail counter display with promotional print materials",
-  packaging: "packaging mockup scene with labels, inserts, and branded boxes",
+// ── Category-level context: scene, material cues, and physical details ──
+const CATEGORY_CTX = {
+  "marketing-business-print": {
+    scene: "a clean white desk or marble countertop in a bright modern office, soft window light from the left",
+    materials: "premium paper stock, visible paper grain and layered edges, crisp ink, smooth or textured card finish",
+    props: "a few sheets fanned out or stacked neatly, a pen or plant leaf as scale reference",
+  },
+  "stickers-labels-decals": {
+    scene: "a light wood or matte concrete surface, close-up macro angle with shallow depth of field",
+    materials: "glossy or matte vinyl film, visible peel edge and kiss-cut line, adhesive backing visible on one corner",
+    props: "one sticker being peeled from backing sheet, a water bottle or laptop nearby for context",
+  },
+  "signs-rigid-boards": {
+    scene: "outdoor storefront sidewalk or indoor lobby with natural daylight, slight perspective angle",
+    materials: "rigid board substrate clearly visible at the edge (foam core, coroplast flutes, acrylic thickness, aluminum brushed surface)",
+    props: "mounted on a wall with standoffs, or standing on an easel, or staked in grass — whichever fits the product",
+  },
+  "banners-displays": {
+    scene: "a trade show booth or event venue with polished concrete floor and even overhead lighting",
+    materials: "fabric weave or vinyl texture, visible hem stitching or grommet hardware, pole pocket details",
+    props: "retractable stand base visible, or hanging hardware, or tent frame structure",
+  },
+  "windows-walls-floors": {
+    scene: "a real glass storefront, office wall, or retail floor — shot from a natural customer viewpoint",
+    materials: "applied film on glass showing slight reflection, or vinyl on wall showing adhesion edge, or floor graphic with anti-slip texture",
+    props: "the surrounding environment visible (street outside window, furniture against wall, shoes on floor graphic)",
+  },
+  "vehicle-graphics-fleet": {
+    scene: "a white commercial van or truck parked outdoors in a clean industrial area, overcast soft daylight",
+    materials: "vinyl wrap film conforming to vehicle curves, cut vinyl lettering with sharp edges, visible application texture",
+    props: "vehicle body panels, door handles, and mirrors visible for realism",
+  },
+};
+
+// ── Per-slug overrides for products that need very specific physical descriptions ──
+const SLUG_HINTS = {
+  // stickers
+  "die-cut-singles": "a single custom-shaped vinyl sticker being peeled from its white backing paper, showing the die-cut edge",
+  "clear-singles": "a transparent sticker applied to a glass water bottle, showing see-through clarity with white ink details",
+  "holographic-singles": "a holographic rainbow-shimmer sticker catching light at an angle, iridescent metallic surface",
+  "kiss-cut-sticker-sheets": "a sheet of kiss-cut stickers with multiple designs, one sticker half-peeled from the sheet",
+  "sticker-sheets": "a full printed sticker sheet (8.5×11 inches) with rows of colorful stickers on a desk",
+  "roll-labels": "a roll of custom labels partially unrolled on a table, showing the labels on a roll core",
+  "clear-labels": "clear transparent labels applied to amber glass bottles, creating a no-label look",
+  "kraft-paper-labels": "natural brown kraft paper labels on artisan jars, rustic organic aesthetic",
+  // signs
+  "coroplast-signs": "a corrugated plastic sign showing visible flute edges, lightweight and weatherproof",
+  "acrylic-signs": "a thick clear acrylic sign mounted with standoffs on a white wall, edge-lit glow effect",
+  "aluminum-signs": "a brushed aluminum sign with crisp printed graphics, industrial premium feel",
+  "foam-board-prints": "a lightweight foam board print on an easel at an event, visible foam core edge",
+  "yard-sign": "a corrugated plastic yard sign staked in a green lawn with an H-frame wire stake",
+  "a-frame-sandwich-board": "a folding A-frame sidewalk sign on a city sidewalk outside a café",
+  "life-size-cutout": "a life-size cardboard standee cutout of a person with a support stand behind",
+  // banners
+  "vinyl-banners": "a large vinyl banner with grommets hanging on a fence or building exterior",
+  "mesh-banners": "a mesh wind-through banner on a chain-link fence, showing the perforated texture",
+  "pull-up-banner": "a retractable pull-up banner stand in a hotel lobby, cassette base visible",
+  "feather-flag": "a tall feather flag on a cross base outside a car dealership, fluttering slightly",
+  "fabric-banner": "a fabric banner with sewn edges hanging from a pole, soft drape visible",
+  // business print
+  "business-cards-classic": "a stack of thick business cards on a marble surface, showing layered paper edges and a subtle emboss",
+  "flyers": "a fan of glossy flyers on a counter, vivid full-color print visible",
+  "brochures": "a tri-fold brochure partially opened on a desk, showing all three panels",
+  "postcards": "a stack of postcards with rounded corners, full-bleed photo on front visible",
+  "booklets": "a saddle-stitched booklet open to the middle spread, spine staples visible",
+  // vehicle
+  "full-vehicle-wrap-design-print": "a white van with a full-color printed vehicle wrap, parked in front of a building",
+  "car-door-magnets-pair": "a magnetic sign on a car door, showing it being placed by hand",
+  "magnetic-car-signs": "a car with a custom magnetic sign on the door panel, easily removable",
+  // windows-walls-floors
+  "frosted-privacy-film": "frosted film applied to an office glass partition, creating privacy while letting light through",
+  "floor-graphics": "a colorful floor graphic on a retail store tile floor with shoes walking nearby",
+  "wall-murals": "a large photographic wall mural covering an entire office wall, vibrant and seamless",
+  "window-graphics": "a storefront window with full-color vinyl graphics advertising a sale",
+  "perforated-window-film": "one-way perforated window film on a storefront — graphic visible outside, see-through from inside",
 };
 
 function buildPrompt(product) {
-  const scene = categoryScenes[product.category] || "professional product photography studio scene";
-  return [
-    "Use case: product-mockup",
-    "Asset type: ecommerce printed-result showcase image",
-    `Primary request: Photorealistic printed-after result image for "${product.name}".`,
-    `Scene/background: ${scene}.`,
-    `Subject: ${product.name}.`,
-    "Style/medium: premium commercial product photography, realistic print production output.",
-    "Composition/framing: show real finished printed item in use or installed, clear product visibility, clean ecommerce framing.",
-    "Lighting/mood: natural soft light, physically accurate shadows, realistic reflections.",
-    "Color palette: neutral base with navy and gold accents, subtle crescent moon motif inspired by La Lunar.",
-    "Materials/textures: visible paper grain, vinyl sheen, lamination texture, cut edges, mount depth, ink coverage consistency.",
-    "Constraints: no watermark, no logo text, no fake brand names, no gibberish text, final image must look like real printed production.",
-    "Avoid: CGI look, blur, low resolution, oversaturation, clutter, duplicate objects, distorted geometry, unreadable artifacts.",
-  ].join("\n");
+  const ctx = CATEGORY_CTX[product.category] || {
+    scene: "a professional product photography studio with a clean white sweep background and soft diffused lighting",
+    materials: "the actual physical material and finish of the product clearly visible",
+    props: "minimal props, focus on the product",
+  };
+
+  const slugHint = SLUG_HINTS[product.slug] || "";
+
+  const lines = [
+    `Photorealistic product photo of: ${product.name}.`,
+    "",
+    `Scene: ${ctx.scene}.`,
+    `Materials & texture: ${ctx.materials}.`,
+    `Props & context: ${ctx.props}.`,
+  ];
+
+  if (slugHint) {
+    lines.push(`Specific detail: ${slugHint}.`);
+  }
+
+  if (product.description && product.description.length > 30) {
+    // extract first sentence of description for context
+    const firstSentence = product.description.split(/\.\s/)[0];
+    lines.push(`Product context: ${firstSentence}.`);
+  }
+
+  lines.push(
+    "",
+    "Photography style: high-end commercial product photography, like Vistaprint or MOO product pages.",
+    "Camera: shot on a 50mm f/1.8 lens, shallow depth of field with the product tack-sharp and background softly blurred.",
+    "Lighting: natural soft daylight with a subtle fill, gentle shadows for depth, no harsh specular highlights.",
+    "Color: true-to-life warm neutral tones, the product should be the colorful hero against a clean background.",
+    "",
+    "CRITICAL RULES:",
+    "- DO NOT render any text, letters, words, logos, or writing on the product. The printed area should show abstract colorful geometric patterns, gradients, or lifestyle imagery instead.",
+    "- DO NOT use navy blue / dark blue as the dominant product color. Use varied, natural, market-appropriate colors.",
+    "- Show the real physical product as it would arrive to a customer — printed, finished, trimmed, ready to use.",
+    "- Show material edge, thickness, and substrate clearly visible.",
+    "- The image should look like it was shot by a professional photographer, not AI-generated.",
+    "- No watermarks, no text overlays, no badges.",
+  );
+
+  return lines.join("\n");
 }
 
 async function ensureImageUrl(productId, slug, alt) {
@@ -135,6 +224,7 @@ async function main() {
       slug: true,
       name: true,
       category: true,
+      description: true,
       images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
     },
     orderBy: [{ category: "asc" }, { name: "asc" }],

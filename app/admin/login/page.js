@@ -81,21 +81,21 @@ export default function AdminLoginPage() {
 
   if (mode === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <div className="text-sm text-gray-500">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f5f5]">
+        <div className="text-sm text-[#999]">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-[#f5f5f5]">
       <div className="w-full max-w-sm">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-8">
           <div className="mb-6 text-center">
-            <h1 className="text-lg font-semibold tracking-wide text-gray-900">
+            <h1 className="text-sm font-bold uppercase tracking-[0.2em] text-black">
               {mode === "setup" ? "ADMIN SETUP" : "ADMIN"}
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-xs text-[#999]">
               {mode === "setup" && "Create your first admin account"}
               {mode === "email" && "Sign in with your admin account"}
               {mode === "legacy" && "Enter master password"}
@@ -111,7 +111,7 @@ export default function AdminLoginPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Name (optional)"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-4 py-3 text-sm text-black placeholder-[#999] outline-none transition-colors focus:border-black"
                 />
               </div>
               <div>
@@ -122,7 +122,7 @@ export default function AdminLoginPage() {
                   placeholder="Email"
                   required
                   autoFocus
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-4 py-3 text-sm text-black placeholder-[#999] outline-none transition-colors focus:border-black"
                 />
               </div>
               <div>
@@ -132,7 +132,7 @@ export default function AdminLoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password (min 6 chars)"
                   required
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-gray-900"
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-4 py-3 text-sm text-black placeholder-[#999] outline-none transition-colors focus:border-black"
                 />
               </div>
 
@@ -143,7 +143,7 @@ export default function AdminLoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-white transition-colors hover:bg-black disabled:bg-gray-400"
+                className="w-full rounded-[3px] bg-black py-3 text-sm font-semibold text-white transition-colors hover:bg-[#222] disabled:bg-[#999]"
               >
                 {loading ? "Creating..." : "Create Admin Account"}
               </button>
@@ -163,7 +163,7 @@ export default function AdminLoginPage() {
                       placeholder="Email"
                       required
                       autoFocus
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-gray-900"
+                      className="w-full rounded-[3px] border border-[#d0d0d0] px-4 py-3 text-sm text-black placeholder-[#999] outline-none transition-colors focus:border-black"
                     />
                   </div>
                 )}
@@ -176,7 +176,7 @@ export default function AdminLoginPage() {
                     placeholder="Password"
                     required
                     autoFocus={mode === "legacy"}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-gray-900"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-4 py-3 text-sm text-black placeholder-[#999] outline-none transition-colors focus:border-black"
                   />
                 </div>
 
@@ -187,7 +187,7 @@ export default function AdminLoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-white transition-colors hover:bg-black disabled:bg-gray-400"
+                  className="w-full rounded-[3px] bg-black py-3 text-sm font-semibold text-white transition-colors hover:bg-[#222] disabled:bg-[#999]"
                 >
                   {loading ? "Signing in..." : "Sign In"}
                 </button>
@@ -197,7 +197,7 @@ export default function AdminLoginPage() {
                 <button
                   type="button"
                   onClick={() => { setMode(mode === "email" ? "legacy" : "email"); setError(""); }}
-                  className="text-xs text-gray-400 transition-colors hover:text-gray-600"
+                  className="text-xs text-[#999] transition-colors hover:text-black"
                 >
                   {mode === "email" ? "Use master password" : "Sign in with email"}
                 </button>
