@@ -208,17 +208,16 @@ async function uploadToUploadThing(
   fileName: string,
   mimeType: string
 ): Promise<string> {
-  const apiKey = process.env.UPLOADTHING_TOKEN;
-
-  if (!apiKey) {
+  if (!process.env.UPLOADTHING_TOKEN) {
     throw new Error(
       "UPLOADTHING_TOKEN is missing. Configure it in deployment env before uploading assets."
     );
   }
 
   // Use UploadThing's server-side presigned upload flow
+  // UTApi auto-reads UPLOADTHING_TOKEN from process.env
   const { UTApi, UTFile } = await import("uploadthing/server");
-  const utapi = new UTApi({ token: apiKey });
+  const utapi = new UTApi();
 
   // Use UTFile instead of native File to avoid Buffer pooling issues on Vercel
   const utFile = new UTFile([new Uint8Array(buffer)], fileName, {
