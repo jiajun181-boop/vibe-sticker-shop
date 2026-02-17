@@ -10,7 +10,7 @@ import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 

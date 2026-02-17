@@ -39,7 +39,7 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", {

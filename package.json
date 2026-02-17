@@ -10,7 +10,9 @@
     "lint": "eslint",
     "verify:production": "node scripts/verify-production.mjs",
     "export:catalog-map": "node scripts/export-catalog-map.mjs",
-    "export:catalog": "node scripts/export-catalog.mjs"
+    "export:catalog": "node scripts/export-catalog.mjs",
+    "price:tune": "node scripts/tune-backfilled-prices.mjs",
+    "price:check": "node scripts/check-pricing-health.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",

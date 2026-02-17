@@ -8,7 +8,7 @@ import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 const PLACEMENT_TAG_PREFIX = "placement:";

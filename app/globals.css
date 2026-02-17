@@ -9,7 +9,7 @@
 
   /* ── Core brand colors ── */
   --color-ink-black: #1a1816;
-  --color-paper-white: #fbfaf6;
+  --color-paper-white: #ffffff;
   --color-paper-cream: #f3f1ea;
   --color-moon-gold: #c49340;
   --color-moon-gold-light: #d4a84f;
@@ -73,12 +73,15 @@
 }
 
 html, body {
-  background:
-    radial-gradient(1000px 320px at 50% -140px, rgba(196, 147, 64, 0.08), transparent 64%),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-brand, system-ui), -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Keep global page canvases white without flattening all small gray UI surfaces. */
+[class~="min-h-screen"][class~="bg-gray-50"] {
+  background-color: #fff;
 }
 
 /* ═══════════════════════════════════════════════════════════════

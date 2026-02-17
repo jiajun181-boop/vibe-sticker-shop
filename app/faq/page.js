@@ -2,7 +2,7 @@ import { getServerT } from "@/lib/i18n/server";
 import FAQClient from "./FAQClient";
 import { FAQSchema } from "@/components/JsonLd";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 const FAQ_ITEMS_EN = [
   { question: "How do I place an order?", answer: "Browse our product catalog, select your product, customize size and quantity, upload your artwork, and add to cart. Complete checkout via our secure Stripe payment. You can also call us at 647-783-4728 to place an order by phone." },

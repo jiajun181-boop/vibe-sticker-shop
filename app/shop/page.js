@@ -5,7 +5,7 @@ import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 import ShopClient from "./ShopClient";
 import ShopLoading from "./loading";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 const BRAND = "La Lunar Printing Inc.";
