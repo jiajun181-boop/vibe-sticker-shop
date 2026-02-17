@@ -1,14 +1,12 @@
 import "./globals.css";
 import { DM_Sans } from "next/font/google";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
 import { Toaster } from "@/components/Toast";
-import PromoBar from "@/components/home/PromoBar";
 import { getServerLocale } from "@/lib/i18n/server";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import Analytics from "@/components/Analytics";
 import SkipLink from "@/components/SkipLink";
+import AppChrome from "@/components/AppChrome";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -18,7 +16,6 @@ const dmSans = DM_Sans({
 });
 
 import AuthInit from "@/components/AuthInit";
-import MobileBottomNav from "@/components/MobileBottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
@@ -70,11 +67,9 @@ export default async function RootLayout({ children }) {
       </head>
       <body className={`${dmSans.variable} antialiased`}>
         <SkipLink />
-        <PromoBar />
-        <Navbar catalogConfig={catalogConfig} />
-        <div id="main-content" className="min-h-screen">{children}</div>
-        <MobileBottomNav catalogConfig={catalogConfig} />
-        <Footer locale={locale} />
+        <AppChrome catalogConfig={catalogConfig} locale={locale}>
+          {children}
+        </AppChrome>
         <CartDrawer />
         <Toaster />
         <ScrollToTop />
