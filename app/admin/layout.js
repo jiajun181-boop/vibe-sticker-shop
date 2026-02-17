@@ -176,6 +176,13 @@ export default function AdminLayout({ children }) {
   const { t, locale, setLocale, hydrated } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [session, setSession] = useState(null);
+  const [pwModal, setPwModal] = useState(false);
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState("");
+  const [pwError, setPwError] = useState("");
 
   const fetchSession = useCallback(async () => {
     try {
@@ -207,6 +214,45 @@ export default function AdminLayout({ children }) {
     await fetch("/api/admin/login", { method: "DELETE" });
     router.push("/admin/login");
     router.refresh();
+  }
+
+  async function handleChangePassword() {
+    setPwMsg("");
+    setPwError("");
+    if (!pwCurrent || !pwNew) {
+      setPwError("Please fill in all fields");
+      return;
+    }
+    if (pwNew.length < 8) {
+      setPwError("New password must be at least 8 characters");
+      return;
+    }
+    if (pwNew !== pwConfirm) {
+      setPwError("New passwords do not match");
+      return;
+    }
+    setPwSaving(true);
+    try {
+      const res = await fetch("/api/admin/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: pwCurrent, newPassword: pwNew }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPwError(data.error || "Failed to change password");
+        return;
+      }
+      setPwMsg("Password changed successfully");
+      setPwCurrent("");
+      setPwNew("");
+      setPwConfirm("");
+      setTimeout(() => setPwModal(false), 1500);
+    } catch {
+      setPwError("Network error");
+    } finally {
+      setPwSaving(false);
+    }
   }
 
   // Role-based nav filtering
@@ -288,6 +334,16 @@ export default function AdminLayout({ children }) {
           )}
           <button
             type="button"
+            onClick={() => { setPwModal(true); setPwMsg(""); setPwError(""); setPwCurrent(""); setPwNew(""); setPwConfirm(""); }}
+            className="flex w-full items-center gap-3 rounded-[8px] px-3 py-2 text-[13px] font-medium text-[#6b7280] transition-colors hover:bg-[#f4f4f5] hover:text-[#111827]"
+          >
+            <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            Change Password
+          </button>
+          <button
+            type="button"
             onClick={handleLogout}
             className="flex w-full items-center gap-3 rounded-[8px] px-3 py-2 text-[13px] font-medium text-[#6b7280] transition-colors hover:bg-[#f4f4f5] hover:text-[#111827]"
           >
@@ -353,6 +409,68 @@ export default function AdminLayout({ children }) {
         </main>
       </div>
       <CommandPalette />
+
+      {/* Change Password Modal */}
+      {pwModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={(e) => { if (e.target === e.currentTarget) setPwModal(false); }}>
+          <div className="w-full max-w-sm mx-4 rounded-[3px] bg-white p-6 shadow-xl">
+            <h3 className="text-sm font-bold text-[#111] mb-4">Change Password</h3>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[11px] font-medium text-[#666] mb-1">Current Password</label>
+                <input
+                  type="password"
+                  value={pwCurrent}
+                  onChange={(e) => setPwCurrent(e.target.value)}
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-[#666] mb-1">New Password</label>
+                <input
+                  type="password"
+                  value={pwNew}
+                  onChange={(e) => setPwNew(e.target.value)}
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+                  placeholder="Min 8 characters"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-[#666] mb-1">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={pwConfirm}
+                  onChange={(e) => setPwConfirm(e.target.value)}
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+                />
+              </div>
+            </div>
+
+            {pwError && <p className="mt-3 text-xs text-red-600">{pwError}</p>}
+            {pwMsg && <p className="mt-3 text-xs text-green-600">{pwMsg}</p>}
+
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={handleChangePassword}
+                disabled={pwSaving}
+                className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+              >
+                {pwSaving ? "Saving..." : "Update Password"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPwModal(false)}
+                className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

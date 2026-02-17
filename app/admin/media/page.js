@@ -41,6 +41,7 @@ function MediaContent() {
   const [uploadProductResults, setUploadProductResults] = useState([]);
   const [uploadProductLoading, setUploadProductLoading] = useState(false);
   const [uploadProductId, setUploadProductId] = useState("");
+  const [uploadPreviewSrc, setUploadPreviewSrc] = useState(null);
   const fileInputRef = useRef(null);
 
   // Detail modal
@@ -421,13 +422,6 @@ function MediaContent() {
     fetchHealth();
     if (errorCount === 0) {
       showMsg(`${doneCount} image${doneCount > 1 ? "s" : ""} uploaded`);
-      setTimeout(() => {
-        setShowUpload(false);
-        setUploadFiles([]);
-        setUploadProductQuery("");
-        setUploadProductResults([]);
-        setUploadProductId("");
-      }, 800);
     } else {
       showMsg(`${doneCount} uploaded, ${errorCount} failed`, true);
     }
@@ -829,9 +823,9 @@ function MediaContent() {
         )}
       </div>
 
-      {/* ── Assets Grid ── */}
+      {/* ── Assets Gallery ── */}
       {tab === "assets" && (
-        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-3 sm:p-5">
           {loading ? (
             <div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading...</div>
           ) : assets.length === 0 ? (
@@ -842,44 +836,77 @@ function MediaContent() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {assets.map((asset) => (
-                <div
-                  key={asset.id}
-                  className="rounded-[3px] overflow-hidden border border-[#e0e0e0] group relative cursor-pointer"
-                  onClick={() => openDetail(asset)}
-                >
-                  <div className="aspect-square relative bg-[#fafafa]">
-                    <img src={asset.originalUrl} alt={asset.altText || ""} className="h-full w-full object-cover" />
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2.5">
-                      <div className="flex justify-between items-start">
-                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                          asset.status === "published" ? "bg-green-500/80 text-white" :
-                          asset.status === "archived" ? "bg-[#fafafa]0/80 text-white" :
-                          "bg-yellow-500/80 text-white"
-                        }`}>
-                          {asset.status}
-                        </span>
+            <>
+              {/* Mobile: gallery feed (like phone album) */}
+              <div className="space-y-3 sm:hidden">
+                {assets.map((asset) => (
+                  <div key={asset.id} className="rounded-[3px] border border-[#e0e0e0] overflow-hidden">
+                    <img src={asset.originalUrl} alt={asset.altText || ""} className="w-full object-contain bg-[#fafafa] max-h-[60vh]" />
+                    <div className="flex items-center justify-between gap-2 px-3 py-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-black truncate">{asset.originalName}</p>
+                        <p className="text-[10px] text-[#999]">{asset.widthPx}x{asset.heightPx} · {formatBytes(asset.sizeBytes)}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button
                           type="button"
-                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(asset); }}
-                          className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold hover:bg-red-600"
+                          onClick={() => openDetail(asset)}
+                          className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1.5 text-[10px] font-medium text-black hover:bg-[#fafafa]"
                         >
-                          X
+                          Edit
                         </button>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs text-white/90 truncate">{asset.originalName}</p>
-                        <p className="text-[10px] text-white/90">
-                          {asset.widthPx}x{asset.heightPx} · {formatBytes(asset.sizeBytes)} · {asset.linkCount || 0} links
-                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(asset)}
+                          className="rounded-[3px] border border-red-200 bg-red-50 px-2.5 py-1.5 text-[10px] font-medium text-red-600 hover:bg-red-100"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+
+              {/* Desktop: grid */}
+              <div className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {assets.map((asset) => (
+                  <div
+                    key={asset.id}
+                    className="rounded-[3px] overflow-hidden border border-[#e0e0e0] group relative cursor-pointer"
+                    onClick={() => openDetail(asset)}
+                  >
+                    <div className="aspect-square relative bg-[#fafafa]">
+                      <img src={asset.originalUrl} alt={asset.altText || ""} className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2.5">
+                        <div className="flex justify-between items-start">
+                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                            asset.status === "published" ? "bg-green-500/80 text-white" :
+                            asset.status === "archived" ? "bg-[#fafafa]0/80 text-white" :
+                            "bg-yellow-500/80 text-white"
+                          }`}>
+                            {asset.status}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(asset); }}
+                            className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold hover:bg-red-600"
+                          >
+                            X
+                          </button>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs text-white/90 truncate">{asset.originalName}</p>
+                          <p className="text-[10px] text-white/90">
+                            {asset.widthPx}x{asset.heightPx} · {formatBytes(asset.sizeBytes)} · {asset.linkCount || 0} links
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -981,38 +1008,47 @@ function MediaContent() {
                 <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
               </div>
 
-              {/* File list with per-file alt text */}
+              {/* File list with preview */}
               {uploadFiles.length > 0 && (
-                <div className="space-y-2 max-h-56 overflow-y-auto">
+                <div className="space-y-2 max-h-[50vh] overflow-y-auto">
                   {uploadFiles.map((entry) => (
-                    <div key={entry.id} className="flex items-center gap-2.5 rounded-[3px] border border-[#e0e0e0] p-2">
-                      <img src={entry.preview} alt="" className="h-10 w-10 flex-shrink-0 rounded-[2px] object-cover" />
-                      <div className="flex-1 min-w-0">
-                        <input
-                          type="text"
-                          value={entry.alt}
-                          onChange={(e) => updateUploadFileAlt(entry.id, e.target.value)}
-                          placeholder="Alt text"
-                          disabled={entry.status !== "ready"}
-                          className="w-full rounded-[2px] border border-transparent px-1.5 py-0.5 text-xs outline-none hover:border-[#d0d0d0] focus:border-black disabled:bg-transparent"
-                        />
-                        <p className="px-1.5 text-[10px] text-[#999] truncate">
-                          {entry.file.name} ({formatBytes(entry.file.size)})
-                          {entry.wasResized && <span className="ml-1 text-blue-500">resized</span>}
-                        </p>
+                    <div key={entry.id} className="rounded-[3px] border border-[#e0e0e0] p-2 space-y-2">
+                      {/* Clickable image preview */}
+                      <button
+                        type="button"
+                        onClick={() => setUploadPreviewSrc(entry.preview)}
+                        className="block w-full overflow-hidden rounded-[2px] border border-[#e0e0e0] hover:opacity-80 transition-opacity"
+                      >
+                        <img src={entry.preview} alt="" className="w-full max-h-48 object-contain bg-[#fafafa]" />
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <input
+                            type="text"
+                            value={entry.alt}
+                            onChange={(e) => updateUploadFileAlt(entry.id, e.target.value)}
+                            placeholder="Alt text"
+                            disabled={entry.status !== "ready"}
+                            className="w-full rounded-[2px] border border-transparent px-1.5 py-0.5 text-xs outline-none hover:border-[#d0d0d0] focus:border-black disabled:bg-transparent"
+                          />
+                          <p className="px-1.5 text-[10px] text-[#999] truncate">
+                            {entry.file.name} ({formatBytes(entry.file.size)})
+                            {entry.wasResized && <span className="ml-1 text-blue-500">resized</span>}
+                          </p>
+                        </div>
+                        {entry.status === "ready" && (
+                          <button type="button" onClick={() => removeUploadFile(entry.id)} className="flex-shrink-0 text-[#999] hover:text-red-500 text-sm">&times;</button>
+                        )}
+                        {entry.status === "uploading" && (
+                          <span className="flex-shrink-0 text-[10px] font-medium text-blue-600">Uploading...</span>
+                        )}
+                        {entry.status === "done" && (
+                          <span className="flex-shrink-0 rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-600">Uploaded</span>
+                        )}
+                        {entry.status === "error" && (
+                          <span className="flex-shrink-0 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-500">Failed</span>
+                        )}
                       </div>
-                      {entry.status === "ready" && (
-                        <button type="button" onClick={() => removeUploadFile(entry.id)} className="flex-shrink-0 text-[#999] hover:text-red-500 text-sm">&times;</button>
-                      )}
-                      {entry.status === "uploading" && (
-                        <span className="flex-shrink-0 text-[10px] font-medium text-blue-600">Uploading...</span>
-                      )}
-                      {entry.status === "done" && (
-                        <span className="flex-shrink-0 text-[10px] font-medium text-green-600">Done</span>
-                      )}
-                      {entry.status === "error" && (
-                        <span className="flex-shrink-0 text-[10px] font-medium text-red-500">Failed</span>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -1123,18 +1159,39 @@ function MediaContent() {
               {/* Actions */}
               <div className="flex items-center justify-between pt-2">
                 <p className="text-[11px] text-[#999]">
-                  {uploadFiles.filter((f) => f.status === "ready").length} file{uploadFiles.filter((f) => f.status === "ready").length !== 1 ? "s" : ""} ready
+                  {uploadFiles.filter((f) => f.status === "ready").length} ready
+                  {uploadFiles.filter((f) => f.status === "done").length > 0 && (
+                    <span className="ml-1 text-green-600">{uploadFiles.filter((f) => f.status === "done").length} uploaded</span>
+                  )}
                 </p>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => { setShowUpload(false); setUploadFiles([]); }} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
-                    Cancel
-                  </button>
-                  <button type="submit" disabled={uploadFiles.filter((f) => f.status === "ready").length === 0 || uploading} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50">
-                    {uploading ? "Uploading..." : `Upload ${uploadFiles.filter((f) => f.status === "ready").length}`}
-                  </button>
+                  {uploadFiles.some((f) => f.status === "done") && uploadFiles.every((f) => f.status !== "ready") ? (
+                    <button type="button" onClick={() => { setShowUpload(false); setUploadFiles([]); setUploadProductQuery(""); setUploadProductResults([]); setUploadProductId(""); }} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]">
+                      Done
+                    </button>
+                  ) : (
+                    <>
+                      <button type="button" onClick={() => { setShowUpload(false); setUploadFiles([]); }} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
+                        Cancel
+                      </button>
+                      <button type="submit" disabled={uploadFiles.filter((f) => f.status === "ready").length === 0 || uploading} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50">
+                        {uploading ? "Uploading..." : `Upload ${uploadFiles.filter((f) => f.status === "ready").length}`}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </form>
+
+            {/* Image preview lightbox */}
+            {uploadPreviewSrc && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4" onClick={() => setUploadPreviewSrc(null)}>
+                <button type="button" onClick={() => setUploadPreviewSrc(null)} className="absolute top-4 right-4 rounded-full bg-white/90 p-2 text-black hover:bg-white z-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <img src={uploadPreviewSrc} alt="Preview" className="max-h-[85vh] max-w-full rounded object-contain" onClick={(e) => e.stopPropagation()} />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1284,6 +1341,9 @@ function MediaContent() {
                 <div className="flex gap-2 pt-2">
                   <button type="button" onClick={saveDetail} disabled={savingDetail} className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50">
                     {savingDetail ? "Saving..." : "Save Changes"}
+                  </button>
+                  <button type="button" onClick={() => { setDeleteTarget(selectedAsset); setSelectedAsset(null); }} className="rounded-[3px] border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-100">
+                    Delete
                   </button>
                   <button type="button" onClick={() => setSelectedAsset(null)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
                     Close

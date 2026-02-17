@@ -340,6 +340,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   // Server-driven pricing state
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState(false);
   const stableQuoteRef = useRef(null);
   const debounceRef = useRef(null);
   const lastQuoteRequestKeyRef = useRef("");
@@ -350,6 +351,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   useEffect(() => {
     setQuote(null);
     setQuoteLoading(false);
+    setQuoteError(false);
     stableQuoteRef.current = null;
     lastQuoteRequestKeyRef.current = "";
   }, [product.slug]);
@@ -549,8 +551,74 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       }
     }
 
+    // 4) AREA_TIERED fallback from preset (estimate using current dimensions)
+    if (product.pricingPreset?.model === "AREA_TIERED" && Array.isArray(product.pricingPreset?.config?.tiers)) {
+      const w = Number(widthIn);
+      const h = Number(heightIn);
+      if (w > 0 && h > 0) {
+        const sqft = (w * h) / 144;
+        const tiers = [...product.pricingPreset.config.tiers]
+          .filter((t) => t && typeof t === "object" && Number.isFinite(Number(t.upToSqft)) && Number.isFinite(Number(t.rate)))
+          .sort((a, b) => Number(a.upToSqft) - Number(b.upToSqft));
+
+        if (tiers.length > 0) {
+          const tier = tiers.find((t) => sqft <= Number(t.upToSqft)) || tiers[tiers.length - 1];
+          const rateDollars = Number(tier.rate);
+          const lineTotal = rateDollars * sqft * qty;
+          const rawSubtotal = Math.round((lineTotal + Number(presetCfg?.fileFee || 0)) * 100);
+          const finalSubtotal = Math.max(rawSubtotal, minimumCents);
+          const tax = Math.round(finalSubtotal * HST_RATE);
+          return {
+            unitAmount: Math.max(1, Math.round(finalSubtotal / qty)),
+            subtotal: finalSubtotal,
+            tax,
+            total: finalSubtotal + tax,
+            sqft,
+            breakdown: null,
+            isEstimate: true,
+          };
+        }
+      }
+    }
+
+    // 5) QTY_OPTIONS fallback from preset sizes (estimate)
+    if (product.pricingPreset?.model === "QTY_OPTIONS" && Array.isArray(product.pricingPreset?.config?.sizes)) {
+      const sizes = product.pricingPreset.config.sizes;
+      const sizeEntry = (selectedSizeLabel && sizes.find((s) => s.label === selectedSizeLabel)) || sizes[0];
+
+      if (sizeEntry && Array.isArray(sizeEntry.tiers) && sizeEntry.tiers.length > 0) {
+        const tiers = [...sizeEntry.tiers]
+          .map((t) => ({
+            qty: Number(t.qty ?? t.minQty ?? 0),
+            unitPrice: Number(t.unitPrice ?? 0),
+          }))
+          .filter((t) => Number.isFinite(t.qty) && t.qty > 0 && Number.isFinite(t.unitPrice) && t.unitPrice > 0)
+          .sort((a, b) => a.qty - b.qty);
+
+        if (tiers.length > 0) {
+          let picked = tiers[0];
+          for (const t of tiers) {
+            if (qty >= t.qty) picked = t;
+          }
+          const billableQty = Math.max(qty, picked.qty);
+          const rawSubtotal = Math.round(picked.unitPrice * billableQty * 100) + fileFeeCents;
+          const finalSubtotal = Math.max(rawSubtotal, minimumCents);
+          const tax = Math.round(finalSubtotal * HST_RATE);
+          return {
+            unitAmount: Math.max(1, Math.round(finalSubtotal / qty)),
+            subtotal: finalSubtotal,
+            tax,
+            total: finalSubtotal + tax,
+            sqft: null,
+            breakdown: null,
+            isEstimate: true,
+          };
+        }
+      }
+    }
+
     return null;
-  }, [quantity, selectedSize, product.pricingPreset]);
+  }, [quantity, widthIn, heightIn, selectedSize, selectedSizeLabel, product.pricingPreset]);
 
   // Debounced /api/quote fetch (300ms)
   const requestQuote = useCallback(
@@ -631,9 +699,24 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     if (requestKey === lastQuoteRequestKeyRef.current) return;
     lastQuoteRequestKeyRef.current = requestKey;
 
+    const canUseExactLocalOnly =
+      !isMulti &&
+      !dimensionsEnabled &&
+      selectedAddons.length === 0 &&
+      selectedFinishings.length === 0 &&
+      selectedSize?.priceByQty &&
+      typeof selectedSize.priceByQty === "object" &&
+      Number.isFinite(selectedSize.priceByQty[String(Number(quantity) || 0)]);
+
+    if (canUseExactLocalOnly) {
+      setQuoteLoading(false);
+      return;
+    }
+
     debounceRef.current = setTimeout(async () => {
       try {
         setQuoteLoading(true);
+        setQuoteError(false);
         if (isMulti) {
           if (activeRows.length === 0) {
             if (!cancelled) setQuote(null);
@@ -656,7 +739,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           );
           const valid = rowQuotes.filter((r) => r && typeof r.totalCents === "number");
           if (valid.length === 0) {
-            if (!cancelled) setQuote(null);
+            if (!cancelled) { setQuote(null); setQuoteError(true); }
             return;
           }
           const totalCents = valid.reduce((sum, r) => sum + Number(r.totalCents || 0), 0);
@@ -709,18 +792,20 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             _requestKey: requestKey,
           });
           trackQuoteLoaded({ slug: product.slug, quantity, pricingModel: data.meta?.model || product.pricingPreset?.model, totalCents: data.totalCents, unitCents: data.unitCents });
+        } else if (!cancelled) {
+          setQuoteError(true);
         }
       } catch {
-        // Keep previous quote on network failure.
+        if (!cancelled) setQuoteError(true);
       } finally {
         if (!cancelled) setQuoteLoading(false);
       }
-    }, 300);
+    }, 120);
     return () => {
       cancelled = true;
       clearTimeout(debounceRef.current);
     };
-  }, [product.slug, quantity, widthIn, heightIn, material, selectedAddons, selectedFinishings, visibleAddons, finishings, editorSizeLabel, selectedSizeLabel, sizeOptions.length, isTextEditor, editorMode, sizeValidation.valid, requestQuote, isBusinessCard, bcSizeLabel, showMultiName, names, multiSizeEnabled, useMultiSize, sizeRows]);
+  }, [product.slug, quantity, widthIn, heightIn, material, selectedAddons, selectedFinishings, visibleAddons, finishings, editorSizeLabel, selectedSizeLabel, sizeOptions.length, isTextEditor, editorMode, sizeValidation.valid, requestQuote, isBusinessCard, bcSizeLabel, showMultiName, names, multiSizeEnabled, useMultiSize, sizeRows, dimensionsEnabled, selectedSize]);
 
   // Scene presets for banner families (material + common size + addon defaults).
   useEffect(() => {
@@ -831,6 +916,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       (isTextEditor || dimensionsEnabled || sizeOptions.length > 0 || activeQuantityChoices.length > 0);
     if (quoteRequired && localQuoteFallback) return localQuoteFallback;
     if (quoteRequired) {
+      // If the quote API already failed and there's no local fallback, show "Request a Quote" instead of hanging
+      if (quoteError) {
+        return { unitAmount: null, subtotal: null, tax: null, total: null, sqft: null, breakdown: null, unpriced: true };
+      }
       return { unitAmount: null, subtotal: null, tax: null, total: null, sqft: null, breakdown: null, pending: true };
     }
 
@@ -858,7 +947,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const subtotal = unitAmount * qty;
     const tax = Math.round(subtotal * HST_RATE);
     return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, breakdown: null };
-  }, [quote, quantity, product.basePrice, product.slug, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal, product.pricingPreset?.id, product.pricingPreset?.model, product.pricingPreset?.config, product.pricingPreset?.config?.minimumPrice, isTextEditor, sizeOptions.length, activeQuantityChoices.length, localQuoteFallback]);
+  }, [quote, quantity, product.basePrice, product.slug, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal, product.pricingPreset?.id, product.pricingPreset?.model, product.pricingPreset?.config, product.pricingPreset?.config?.minimumPrice, isTextEditor, sizeOptions.length, activeQuantityChoices.length, localQuoteFallback, quoteError]);
 
   // Tier rows â€” quick client estimates for the tier table
   const estimateTierRows = useMemo(
@@ -1005,20 +1094,17 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     trackOptionChange({ slug: product.slug, option: "quantity", value: String(final), quantity: final, pricingModel: product.pricingPreset?.model });
   }
 
-  function applyQuickSetup(setup) {
-    if (!setup || typeof setup !== "object") return;
-    if (setup.sizeLabel && sizeOptions.some((s) => s.label === setup.sizeLabel)) {
-      setSelectedSizeLabel(setup.sizeLabel);
-    }
-    if (Number.isFinite(setup.quantity) && setup.quantity > 0) {
-      setQuantityValue(setup.quantity);
-    }
-    if (setup.material && materials.some((m) => m.id === setup.material)) {
-      setMaterial(setup.material);
-    }
-  }
-
   const canAddToCart = sizeValidation.valid && !priceData.unpriced && !priceData.pending;
+  const hasResolvedQuote = Boolean(
+    (quote &&
+      quote._productSlug === product.slug &&
+      typeof quote.totalCents === "number" &&
+      quote.totalCents > 0) ||
+      (stableQuoteRef.current &&
+        stableQuoteRef.current._productSlug === product.slug &&
+        typeof stableQuoteRef.current.totalCents === "number" &&
+        stableQuoteRef.current.totalCents > 0)
+  );
   const preTaxDisplay =
     priceData.pending
       ? "Calculating..."
@@ -1056,32 +1142,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     selectedAddons.length,
     selectedFinishings.length,
   ]);
-
-  const recommendedSetups = useMemo(() => {
-    const cards = [];
-    if (scenes.length > 0) {
-      for (const scene of scenes.slice(0, 3)) {
-        cards.push({
-          id: `scene-${scene.id}`,
-          title: scene.label,
-          quantity: smartDefaults.minQuantity || activeQuantityChoices[0] || 1,
-          sizeLabel: selectedSizeLabel || sizeOptions[0]?.label || "",
-          material: scene.defaultMaterial || material || "",
-        });
-      }
-    } else if (sizeOptions.length > 0) {
-      for (const size of sizeOptions.slice(0, 3)) {
-        cards.push({
-          id: `size-${size.label}`,
-          title: size.displayLabel || size.label,
-          quantity: Number(size.quantityChoices?.[0]) || smartDefaults.minQuantity || activeQuantityChoices[0] || 1,
-          sizeLabel: size.label,
-          material: material || "",
-        });
-      }
-    }
-    return cards.slice(0, 3);
-  }, [scenes, sizeOptions, smartDefaults.minQuantity, activeQuantityChoices, material, selectedSizeLabel]);
 
   function buildCartItem() {
     if (!canAddToCart) return null;
@@ -1438,7 +1498,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       </span>
                       <span className="ml-1 text-xs text-[var(--color-gray-500)]">{t("product.cad")}</span>
                       {priceData.isEstimate && !quoteLoading && <span className="ml-2 text-[10px] text-[var(--color-gray-400)]">Est.</span>}
-                      {quoteLoading && <span className="ml-2 text-xs text-[var(--color-gray-400)]">updating...</span>}
+                      {quoteLoading && !hasResolvedQuote && <span className="ml-2 text-xs text-[var(--color-gray-400)]">updating...</span>}
                     </div>
                   )}
                   {!priceData.unpriced && priceData.unitAmount != null && (
@@ -1496,27 +1556,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     </div>
                   )}
                 </div>
-
-                {recommendedSetups.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-xs font-medium text-[var(--color-gray-500)]">Recommended Setups</p>
-                    <div className="mt-2 grid gap-2">
-                      {recommendedSetups.map((setup) => (
-                        <button
-                          key={setup.id}
-                          type="button"
-                          onClick={() => applyQuickSetup(setup)}
-                          className="rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-2 text-left text-xs transition-colors hover:border-[var(--color-gray-400)] hover:bg-white"
-                        >
-                          <span className="block font-semibold text-[var(--color-gray-900)]">{setup.title}</span>
-                          <span className="mt-0.5 block text-[var(--color-gray-500)]">
-                            Qty {setup.quantity}{setup.sizeLabel ? ` · ${setup.sizeLabel}` : ""}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* Add to Cart button */}
                 <div ref={addToCartRef} className="mt-5">
@@ -2229,7 +2268,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       return (
                         <button
                           key={m.id}
-                          type="button"
                           onClick={() => setMaterial(m.id)}
                           className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors text-left ${
                             selected
