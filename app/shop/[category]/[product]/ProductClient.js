@@ -432,6 +432,100 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     return validateDimensions(widthIn, heightIn, material, product);
   }, [widthIn, heightIn, material, product, dimensionsEnabled, multiSizeEnabled, useMultiSize, sizeRows]);
 
+  const localQuoteFallback = useMemo(() => {
+    const qty = Number(quantity) || 1;
+    if (qty <= 0) return null;
+
+    // 1) Exact per-size total table
+    if (
+      selectedSize?.priceByQty &&
+      typeof selectedSize.priceByQty === "object" &&
+      Number.isFinite(selectedSize.priceByQty[String(qty)])
+    ) {
+      const subtotal = Math.round(Number(selectedSize.priceByQty[String(qty)]));
+      const tax = Math.round(subtotal * HST_RATE);
+      return {
+        unitAmount: Math.max(1, Math.round(subtotal / qty)),
+        subtotal,
+        tax,
+        total: subtotal + tax,
+        sqft: null,
+        breakdown: null,
+      };
+    }
+
+    // 2) Per-size tiers
+    if (selectedSize && Array.isArray(selectedSize.tiers) && selectedSize.tiers.length > 0) {
+      const tiers = [...selectedSize.tiers]
+        .map((tier) => ({
+          qty: Number(tier.qty ?? tier.minQty ?? 0),
+          unitCents:
+            typeof tier.unitCents === "number"
+              ? Math.round(tier.unitCents)
+              : typeof tier.unitPriceCents === "number"
+                ? Math.round(tier.unitPriceCents)
+                : typeof tier.unitPrice === "number"
+                  ? Math.round(tier.unitPrice * 100)
+                  : null,
+        }))
+        .filter((tier) => Number.isFinite(tier.qty) && tier.qty > 0 && Number.isFinite(tier.unitCents) && tier.unitCents > 0)
+        .sort((a, b) => a.qty - b.qty);
+
+      if (tiers.length > 0) {
+        let picked = tiers[0];
+        for (const tier of tiers) {
+          if (qty >= tier.qty) picked = tier;
+        }
+        const subtotal = picked.unitCents * qty;
+        const tax = Math.round(subtotal * HST_RATE);
+        return {
+          unitAmount: picked.unitCents,
+          subtotal,
+          tax,
+          total: subtotal + tax,
+          sqft: null,
+          breakdown: null,
+        };
+      }
+    }
+
+    // 3) Generic QTY_TIERED fallback from preset
+    if (product.pricingPreset?.model === "QTY_TIERED" && Array.isArray(product.pricingPreset?.config?.tiers)) {
+      const tiers = [...product.pricingPreset.config.tiers]
+        .map((tier) => ({
+          minQty: Number(tier.minQty),
+          unitPrice: Number(tier.unitPrice),
+        }))
+        .filter((tier) => Number.isFinite(tier.minQty) && tier.minQty > 0 && Number.isFinite(tier.unitPrice) && tier.unitPrice > 0)
+        .sort((a, b) => a.minQty - b.minQty);
+
+      if (tiers.length > 0) {
+        let picked = tiers[0];
+        for (const tier of tiers) {
+          if (qty >= tier.minQty) picked = tier;
+        }
+        const billableQty = Math.max(qty, picked.minQty);
+        const subtotal = Math.round(picked.unitPrice * billableQty * 100);
+        const minimumCents =
+          Number(product?.pricingPreset?.config?.minimumPrice || 0) > 0
+            ? Math.round(Number(product.pricingPreset.config.minimumPrice) * 100)
+            : 0;
+        const finalSubtotal = Math.max(subtotal, minimumCents);
+        const tax = Math.round(finalSubtotal * HST_RATE);
+        return {
+          unitAmount: Math.max(1, Math.round(finalSubtotal / qty)),
+          subtotal: finalSubtotal,
+          tax,
+          total: finalSubtotal + tax,
+          sqft: null,
+          breakdown: null,
+        };
+      }
+    }
+
+    return null;
+  }, [quantity, selectedSize, product.pricingPreset]);
+
   // Debounced /api/quote fetch (300ms)
   const requestQuote = useCallback(
     async (slug, qty, w, h, mat, sizeLabel, addonIds, finishingIds, namesCount) => {
@@ -709,17 +803,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const quoteRequired =
       Boolean(product.pricingPreset?.id) &&
       (isTextEditor || dimensionsEnabled || sizeOptions.length > 0 || activeQuantityChoices.length > 0);
-    if (
-      quoteRequired &&
-      selectedSize?.priceByQty &&
-      typeof selectedSize.priceByQty === "object" &&
-      Number.isFinite(selectedSize.priceByQty[String(qty)])
-    ) {
-      const subtotal = Math.round(Number(selectedSize.priceByQty[String(qty)]));
-      const tax = Math.round(subtotal * HST_RATE);
-      const unitAmount = qty > 0 ? Math.round(subtotal / qty) : subtotal;
-      return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, breakdown: null };
-    }
+    if (quoteRequired && localQuoteFallback) return localQuoteFallback;
     if (quoteRequired) {
       return { unitAmount: null, subtotal: null, tax: null, total: null, sqft: null, breakdown: null, pending: true };
     }
@@ -748,7 +832,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const subtotal = unitAmount * qty;
     const tax = Math.round(subtotal * HST_RATE);
     return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, breakdown: null };
-  }, [quote, quantity, product.basePrice, product.slug, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal, product.pricingPreset?.id, product.pricingPreset?.model, product.pricingPreset?.config, product.pricingPreset?.config?.minimumPrice, isTextEditor, sizeOptions.length, activeQuantityChoices.length, selectedSize]);
+  }, [quote, quantity, product.basePrice, product.slug, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal, product.pricingPreset?.id, product.pricingPreset?.model, product.pricingPreset?.config, product.pricingPreset?.config?.minimumPrice, isTextEditor, sizeOptions.length, activeQuantityChoices.length, localQuoteFallback]);
 
   // Tier rows â€” quick client estimates for the tier table
   const estimateTierRows = useMemo(
