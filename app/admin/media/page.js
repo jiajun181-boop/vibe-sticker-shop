@@ -66,7 +66,10 @@ function MediaContent() {
   const [batchAutoLink, setBatchAutoLink] = useState(true);
   const [batchUploading, setBatchUploading] = useState(false);
   const [batchReport, setBatchReport] = useState([]);
+  const [batchCsvMap, setBatchCsvMap] = useState({});
+  const [batchCsvLoaded, setBatchCsvLoaded] = useState(false);
   const batchInputRef = useRef(null);
+  const batchCsvRef = useRef(null);
 
   const page = parseInt(searchParams.get("page") || "1");
 
@@ -116,10 +119,6 @@ function MediaContent() {
     else fetchLegacy();
   }, [tab, fetchAssets, fetchLegacy]);
 
-  useEffect(() => {
-    if (tab === "assets") fetchHealth();
-  }, [tab, fetchHealth]);
-
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(updates)) {
@@ -149,6 +148,54 @@ function MediaContent() {
       .replace(/^-|-$/g, "");
   }
 
+  function normalizeFileKey(name) {
+    return String(name || "").trim().toLowerCase();
+  }
+
+  function parseCsvLine(line) {
+    const out = [];
+    let cur = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i += 1) {
+      const ch = line[i];
+      if (ch === "\"") {
+        if (inQuotes && line[i + 1] === "\"") {
+          cur += "\"";
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+        continue;
+      }
+      if (ch === "," && !inQuotes) {
+        out.push(cur.trim());
+        cur = "";
+        continue;
+      }
+      cur += ch;
+    }
+    out.push(cur.trim());
+    return out;
+  }
+
+  function parseCsvMapping(text) {
+    const lines = String(text || "")
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const map = {};
+    lines.forEach((line, idx) => {
+      const parts = parseCsvLine(line);
+      if (parts.length < 2) return;
+      if (idx === 0 && /file(name)?/i.test(parts[0]) && /(slug|product)/i.test(parts[1])) return;
+      const filename = normalizeFileKey(parts[0]);
+      const productSlug = filenameToSlug(parts[1]);
+      if (!filename || !productSlug) return;
+      map[filename] = productSlug;
+    });
+    return map;
+  }
+
   const fetchHealth = useCallback(async () => {
     setHealthLoading(true);
     try {
@@ -165,6 +212,10 @@ function MediaContent() {
       setHealthLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (tab === "assets") fetchHealth();
+  }, [tab, fetchHealth]);
 
   async function searchProducts(query, setLoadingFn, setResultsFn) {
     const q = query.trim();
@@ -300,17 +351,52 @@ function MediaContent() {
     setBatchReport([]);
   }
 
-  async function handleBatchUpload(e) {
+  async function handleBatchCsvChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const mapping = parseCsvMapping(text);
+      setBatchCsvMap(mapping);
+      setBatchCsvLoaded(Object.keys(mapping).length > 0);
+      showMsg(`CSV mapping loaded: ${Object.keys(mapping).length} rows`);
+    } catch {
+      showMsg("Failed to parse CSV mapping", true);
+    } finally {
+      if (batchCsvRef.current) batchCsvRef.current.value = "";
+    }
+  }
+
+  function getMappedSlugForFile(fileName) {
+    const full = normalizeFileKey(fileName);
+    const base = normalizeFileKey(String(fileName || "").replace(/\.[^.]+$/, ""));
+    return batchCsvMap[full] || batchCsvMap[base] || null;
+  }
+
+  async function retryFailedRows() {
+    const retryRows = batchReport.filter((r) => ["failed", "uploaded_unmatched"].includes(r.status) && r.file);
+    if (!retryRows.length) {
+      showMsg("No retryable rows", true);
+      return;
+    }
+    const retryFiles = retryRows.map((r) => r.file);
+    setBatchFiles(retryFiles);
+    setBatchReport([]);
+    await handleBatchUpload({ preventDefault: () => {} }, retryFiles);
+  }
+
+  async function handleBatchUpload(e, explicitFiles = null) {
     e.preventDefault();
-    if (!batchFiles.length) {
+    const filesToRun = explicitFiles || batchFiles;
+    if (!filesToRun.length) {
       showMsg("Select batch files first", true);
       return;
     }
     setBatchUploading(true);
     const nextReport = [];
 
-    for (const file of batchFiles) {
-      const row = { fileName: file.name, status: "uploaded", product: null, error: null };
+    for (const file of filesToRun) {
+      const row = { fileName: file.name, status: "uploaded", product: null, error: null, file };
       try {
         const formData = new FormData();
         formData.append("file", file);
@@ -330,7 +416,7 @@ function MediaContent() {
         }
 
         if (batchAutoLink) {
-          const slugGuess = filenameToSlug(file.name);
+          const slugGuess = getMappedSlugForFile(file.name) || filenameToSlug(file.name);
           const product = await findProductBySlugSlugOrName(slugGuess);
           if (product?.id) {
             await linkAssetToProduct(uploadData.asset, product.id);
@@ -766,13 +852,29 @@ function MediaContent() {
               <div className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-medium text-[#666]">Batch Upload + Auto Match</label>
-                  <button
-                    type="button"
-                    onClick={() => batchInputRef.current?.click()}
-                    className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1 text-[11px] font-medium text-black hover:bg-[#fafafa]"
-                  >
-                    Select files
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => batchCsvRef.current?.click()}
+                      className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1 text-[11px] font-medium text-black hover:bg-[#fafafa]"
+                    >
+                      CSV map
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => batchInputRef.current?.click()}
+                      className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1 text-[11px] font-medium text-black hover:bg-[#fafafa]"
+                    >
+                      Select files
+                    </button>
+                  </div>
+                  <input
+                    ref={batchCsvRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    onChange={handleBatchCsvChange}
+                    className="hidden"
+                  />
                   <input
                     ref={batchInputRef}
                     type="file"
@@ -791,6 +893,21 @@ function MediaContent() {
                   />
                   Auto-link by filename to product slug
                 </label>
+                {batchCsvLoaded && (
+                  <div className="flex items-center justify-between rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] px-2 py-1.5 text-[11px] text-[#666]">
+                    <span>CSV mapping loaded: {Object.keys(batchCsvMap).length} keys</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBatchCsvMap({});
+                        setBatchCsvLoaded(false);
+                      }}
+                      className="rounded-[3px] border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-medium text-black hover:bg-white"
+                    >
+                      Clear map
+                    </button>
+                  </div>
+                )}
                 {batchFiles.length > 0 && (
                   <p className="text-[11px] text-[#666]">{batchFiles.length} files selected</p>
                 )}
@@ -802,6 +919,21 @@ function MediaContent() {
                 >
                   {batchUploading ? "Batch uploading..." : "Run Batch Upload"}
                 </button>
+                {batchReport.length > 0 && (
+                  <div className="flex items-center justify-between text-[11px] text-[#666]">
+                    <span>
+                      linked: {batchReport.filter((r) => r.status === "linked").length} | unmatched: {batchReport.filter((r) => r.status === "uploaded_unmatched").length} | failed: {batchReport.filter((r) => r.status === "failed").length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={retryFailedRows}
+                      disabled={!batchReport.some((r) => ["failed", "uploaded_unmatched"].includes(r.status))}
+                      className="rounded-[3px] border border-[#d0d0d0] px-2 py-1 text-[10px] font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
+                    >
+                      Retry failed
+                    </button>
+                  </div>
+                )}
                 {batchReport.length > 0 && (
                   <div className="max-h-28 overflow-auto rounded-[3px] border border-[#e0e0e0] p-2 text-[11px]">
                     {batchReport.map((r, idx) => (
