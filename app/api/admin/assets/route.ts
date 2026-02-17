@@ -208,14 +208,27 @@ async function uploadToUploadThing(
   fileName: string,
   mimeType: string
 ): Promise<string> {
-  if (!process.env.UPLOADTHING_TOKEN) {
+  const token = process.env.UPLOADTHING_TOKEN;
+  if (!token) {
     throw new Error(
       "UPLOADTHING_TOKEN is missing. Configure it in deployment env before uploading assets."
     );
   }
 
+  // Validate token can be decoded before passing to UTApi
+  try {
+    const decoded = JSON.parse(Buffer.from(token, "base64").toString());
+    if (!decoded.apiKey || !decoded.appId || !decoded.regions) {
+      throw new Error("Token missing required fields");
+    }
+    console.log("[UploadThing] Token valid, appId:", decoded.appId, "len:", token.length);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[UploadThing] Token decode failed:", msg, "token length:", token.length, "first10:", token.slice(0, 10), "last10:", token.slice(-10));
+    throw new Error(`UPLOADTHING_TOKEN is malformed: ${msg}. Check Vercel env — no extra spaces/quotes.`);
+  }
+
   // Use UploadThing's server-side presigned upload flow
-  // UTApi auto-reads UPLOADTHING_TOKEN from process.env
   const { UTApi, UTFile } = await import("uploadthing/server");
   const utapi = new UTApi();
 
