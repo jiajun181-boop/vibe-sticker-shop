@@ -17,7 +17,7 @@ export default function UseCaseSection() {
           <Link
             key={uc.slug}
             href={`/ideas/${uc.slug}`}
-            className="group overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 text-center hover-lift"
+            className="group overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 text-center hover-lift"
           >
             <span className="text-4xl block">{uc.icon}</span>
             <h3 className="mt-3 font-bold body-sm text-gray-900">

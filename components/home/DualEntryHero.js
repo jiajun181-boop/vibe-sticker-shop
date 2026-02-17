@@ -20,8 +20,8 @@ export default function DualEntryHero({ totalCount }) {
         <div className="absolute -top-20 left-1/3 w-[500px] h-[300px] rounded-full bg-[var(--color-moon-blue)] opacity-[0.04] blur-[80px]" />
       </div>
 
-      <div className="absolute -right-20 -top-20 opacity-[0.06] pointer-events-none">
-        <Image src="/logo-lunarprint.png" alt="" width={400} height={400} className="opacity-40" />
+      <div className="absolute -right-20 -top-20 opacity-[0.08] pointer-events-none">
+        <Image src="/logo-lunarprint.png" alt="" width={400} height={400} />
       </div>
 
       <div className="max-w-7xl mx-auto relative text-center">

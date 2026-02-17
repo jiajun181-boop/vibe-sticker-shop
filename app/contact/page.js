@@ -16,14 +16,14 @@ export async function generateMetadata() {
 export default async function ContactPage() {
   const t = await getServerT();
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-14 text-gray-900">
+    <main className="min-h-screen bg-[var(--color-gray-50)] px-6 py-14 text-[var(--color-gray-800)]">
       <div className="mx-auto max-w-5xl space-y-10">
         <header className="rounded-3xl border border-gray-200 bg-white p-8">
           <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("contact.badge")}</p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight">{t("contact.title")}</h1>
           <p className="mt-4 text-sm text-gray-600">{t("contact.subtitle")}</p>
           <p className="mt-3 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
-            Your Print Partner &mdash; Essential to Your Brand
+            {t("common.brandTagline")}
           </p>
         </header>
 
@@ -93,6 +93,31 @@ export default async function ContactPage() {
                   <span className="font-semibold text-gray-900">{t("contact.hours.closed")}</span>
                 </div>
               </div>
+            </div>
+
+            <div className="rounded-3xl border border-gray-200 bg-white p-2 overflow-hidden">
+              <iframe
+                title="La Lunar Printing Inc. Location"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2881.5!2d-79.2645!3d43.7735!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89d4ce80c1f5c26d%3A0x0!2s11+Progress+Ave+%2321%2C+Scarborough%2C+ON+M1P+4S7!5e0!3m2!1sen!2sca!4v1700000000000"
+                width="100%"
+                height="280"
+                style={{ border: 0, borderRadius: "1.25rem" }}
+                allowFullScreen=""
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              <a
+                href="https://www.google.com/maps/dir/?api=1&destination=11+Progress+Ave+%2321,+Scarborough,+ON+M1P+4S7"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 flex items-center justify-center gap-2 rounded-2xl bg-gray-900 px-4 py-3 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+                {t("contact.getDirections")}
+              </a>
             </div>
           </div>
         </div>

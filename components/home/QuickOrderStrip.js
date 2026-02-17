@@ -200,7 +200,7 @@ export default function QuickOrderStrip({ products }) {
             className="hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-600)] hover:bg-[var(--color-gray-100)] md:inline-flex"
             aria-label="Scroll left"
           >
-            {"<"}
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
           </button>
           <button
             type="button"
@@ -208,7 +208,7 @@ export default function QuickOrderStrip({ products }) {
             className="hidden h-8 w-8 items-center justify-center rounded-full border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-600)] hover:bg-[var(--color-gray-100)] md:inline-flex"
             aria-label="Scroll right"
           >
-            {">"}
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </button>
           <Link href="/shop" className="btn-secondary-pill px-3 py-1.5 label-xs">
             {t("nav.shopAll")}

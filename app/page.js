@@ -96,10 +96,8 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* 3. Reorder Strip */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-          <ReorderStrip />
-        </div>
+        {/* 3. Reorder Strip (renders null for logged-out users) */}
+        <ReorderStrip />
 
         {/* 4. Shop by Category */}
         <section className="py-20 bg-white animate-on-scroll">
@@ -116,9 +114,9 @@ export default async function HomePage() {
                   <Link
                     key={category}
                     href={`/shop/${category}`}
-                    className="group overflow-hidden rounded-2xl border border-gray-200 bg-white hover-lift"
+                    className="group overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white hover-lift"
                   >
-                    <div className="aspect-[4/3] bg-gray-100 overflow-hidden flex items-center justify-center">
+                    <div className="aspect-[4/3] bg-[var(--color-gray-100)] overflow-hidden flex items-center justify-center">
                       {previewImg ? (
                         <Image
                           src={previewImg}
@@ -169,38 +167,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* 7. Why La Lunar */}
-        <section className="py-20 bg-[var(--color-gray-50)] animate-on-scroll">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-10">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Image src="/logo-lunarprint.png" alt="" width={20} height={20} className="h-5 w-5 opacity-60" />
-                <span className="label-xs text-gray-400">
-                  {t("home.whyBadge")}
-                </span>
-              </div>
-              <h2 className="heading-2">
-                {t("home.whyTitle")}
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { icon: "\u{1F3ED}", titleKey: "home.usp1Title", bodyKey: "home.usp1Body" },
-                { icon: "\u26A1", titleKey: "home.usp2Title", bodyKey: "home.usp2Body" },
-                { icon: "\u{1F4EC}", titleKey: "home.usp3Title", bodyKey: "home.usp3Body" },
-                { icon: "\u{1F4CF}", titleKey: "home.usp4Title", bodyKey: "home.usp4Body" },
-              ].map((usp, i) => (
-                <div key={usp.titleKey} className={`animate-on-scroll delay-${i + 1} rounded-2xl border border-gray-100 bg-white p-6 hover-lift-subtle`}>
-                  <span className="text-3xl">{usp.icon}</span>
-                  <h3 className="mt-3 body-sm font-bold">{t(usp.titleKey)}</h3>
-                  <p className="mt-2 body-sm text-gray-500 leading-relaxed">{t(usp.bodyKey)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 8. How It Works */}
+        {/* 7. How It Works */}
         <section className="py-20 bg-white animate-on-scroll">
           <div className="max-w-7xl mx-auto px-6">
             <HowItWorks />

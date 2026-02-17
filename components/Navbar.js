@@ -513,15 +513,6 @@ export default function Navbar({ catalogConfig }) {
           {renderSearchDropdown(mobileDropdownRef)}
         </div>
       </div>
-      {/* Mobile quick actions â€” single CTA, categories via bottom nav drawer */}
-      <div className="flex gap-2 px-4 pb-3 md:hidden">
-        <Link
-          href="/quote"
-          className="btn-primary-pill shrink-0 px-3 py-1 text-[11px] whitespace-nowrap"
-        >
-          {t("nav.getQuote")}
-        </Link>
-      </div>
     </header>
   );
 }

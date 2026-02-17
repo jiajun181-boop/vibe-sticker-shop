@@ -29,7 +29,7 @@ export default function HowItWorks() {
   const { t } = useTranslation();
 
   return (
-    <section className="bg-white rounded-3xl border border-gray-100 p-8 md:p-12">
+    <section className="bg-white rounded-3xl border border-[var(--color-gray-100)] p-8 md:p-12">
       <div className="text-center mb-10">
         <div className="flex items-center justify-center gap-2 mb-3">
           <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
@@ -51,7 +51,7 @@ export default function HowItWorks() {
             )}
 
             {/* Number badge */}
-            <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 text-gray-800 mb-4 mx-auto">
+            <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--color-gray-50)] border border-[var(--color-gray-100)] text-gray-800 mb-4 mx-auto">
               {STEP_ICONS[i]}
               <span className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-[var(--color-moon-gold)] to-[var(--color-moon-gold-dark)] text-white rounded-full label-xs flex items-center justify-center tracking-normal font-black">
                 {i + 1}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -139,9 +140,11 @@ function FeaturedCard({ product, compact }) {
       {/* Image */}
       <div className={`${compact ? "aspect-[3/4]" : "aspect-[4/5]"} rounded-xl bg-white/5 mb-3 md:mb-4 overflow-hidden flex items-center justify-center`}>
         {img ? (
-          <img
+          <Image
             src={img}
             alt={product.name}
+            width={400}
+            height={500}
             className="w-full h-full object-cover rounded-xl group-hover:scale-110 transition-transform duration-500"
           />
         ) : (

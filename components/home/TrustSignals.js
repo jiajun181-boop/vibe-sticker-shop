@@ -6,7 +6,7 @@ import StarRating from "@/components/product/StarRating";
 
 const STATS = [
   { value: 15000, suffix: "+", labelKey: "trust.ordersDelivered", icon: "check" },
-  { value: 0, suffix: "", labelKey: "trust.sameDayPrinting", icon: "bolt", textKey: "trust.sameDayAvailable" },
+  { value: 24, suffix: "h", labelKey: "trust.sameDayPrinting", icon: "bolt" },
   { value: 150, suffix: "", labelKey: "trust.freeShippingOver", icon: "truck", prefix: "$" },
   { value: 100, suffix: "%", labelKey: "trust.satisfactionGuarantee", icon: "shield" },
 ];
@@ -97,7 +97,7 @@ export default function TrustSignals() {
         {STATS.map((stat) => (
           <div
             key={stat.labelKey}
-            className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 text-center hover-lift-subtle"
+            className="bg-white rounded-2xl border border-[var(--color-gray-100)] p-5 md:p-6 text-center hover-lift-subtle"
           >
             <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-gradient-to-br from-[var(--color-moon-gold)] to-[var(--color-moon-gold-dark)] text-white flex items-center justify-center">
               {STAT_ICONS[stat.icon]}
@@ -111,7 +111,7 @@ export default function TrustSignals() {
       </div>
 
       {/* Reviews */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[var(--color-gray-100)] p-6 md:p-8 overflow-hidden">
         <div className="flex items-center gap-2 mb-6">
           <StarRating value={5} size={16} />
           <span className="label-xs text-gray-400 tracking-widest">
@@ -149,7 +149,7 @@ export default function TrustSignals() {
               key={i}
               onClick={() => setReviewIdx(i)}
               className={`h-1.5 rounded-full transition-all ${
-                i === reviewIdx ? "bg-[var(--color-ink-black)] w-4" : "bg-gray-200 w-1.5"
+                i === reviewIdx ? "bg-[var(--color-ink-black)] w-4" : "bg-[var(--color-gray-200)] w-1.5"
               }`}
             />
           ))}

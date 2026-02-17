@@ -79,7 +79,7 @@ export default function BundlesSection() {
           <div
             key={bundle.id}
             className={`animate-scale-in delay-${i + 1} relative bg-white rounded-3xl border ${
-              bundle.popular ? "border-amber-200 shadow-lg shadow-amber-100/50" : "border-gray-100"
+              bundle.popular ? "border-amber-200 shadow-lg shadow-amber-100/50" : "border-[var(--color-gray-100)]"
             } overflow-hidden hover-lift`}
           >
             {bundle.popular && (
@@ -94,11 +94,11 @@ export default function BundlesSection() {
             <div className={`bg-gradient-to-br ${bundle.color} p-6 text-white`}>
               <h3 className="font-black text-lg">{t(bundle.nameKey)}</h3>
               <div className="flex items-baseline gap-2 mt-2">
+                <span className="text-xs text-white/70 font-semibold uppercase tracking-wider mr-0.5">{t("home.from")}</span>
                 <span className="text-3xl font-black tracking-tight">{cad(bundle.price)}</span>
-                <span className="text-white/60 line-through body-sm">{cad(bundle.originalPrice)}</span>
               </div>
               <div className="inline-block badge-gold mt-2">
-                {t("bundles.save")} {cad(bundle.savings)}
+                {t("bundles.save")} {Math.round((bundle.savings / bundle.originalPrice) * 100)}%
               </div>
             </div>
 
@@ -120,7 +120,7 @@ export default function BundlesSection() {
                 className={`block w-full text-center py-3.5 rounded-xl font-black uppercase label-sm tracking-widest transition-colors ${
                   bundle.popular
                     ? "btn-dark-pill"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-[var(--color-gray-100)] text-[var(--color-gray-700)] hover:bg-[var(--color-gray-200)]"
                 }`}
               >
                 {t(bundle.ctaKey)}
