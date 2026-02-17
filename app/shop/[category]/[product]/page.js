@@ -6,8 +6,10 @@ import { getCatalogConfig } from "@/lib/catalogConfig";
 import { getProductAssets } from "@/lib/assets";
 import { computeFromPrice } from "@/lib/pricing/from-price";
 import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
+import { getCuttingTypeForSlug } from "@/lib/sticker-order-config";
 import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
+import StickerOrderClient from "@/app/order/stickers/StickerOrderClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
 
 export const revalidate = 60;
@@ -191,6 +193,22 @@ export default async function ProductPage({ params }) {
         products={toClientSafe(dedupedProducts)}
         siblingSubGroups={siblingSubGroups}
       />
+    );
+  }
+
+  // ── Sticker configurator: render StickerOrderClient inline ──
+  const stickerCuttingType = getCuttingTypeForSlug(decodedSlug);
+  if (stickerCuttingType) {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+          </div>
+        }
+      >
+        <StickerOrderClient defaultType={stickerCuttingType} />
+      </Suspense>
     );
   }
 

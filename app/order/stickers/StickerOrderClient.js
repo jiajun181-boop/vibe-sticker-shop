@@ -97,13 +97,13 @@ function normalizeCheckoutMeta(meta) {
 /* ============================================================================
    MAIN COMPONENT — StickerYou-style product configurator
    ============================================================================ */
-export default function StickerOrderClient() {
+export default function StickerOrderClient({ defaultType }) {
   const { t } = useTranslation();
   const searchParams = useSearchParams();
   const { addItem, openCart } = useCartStore();
 
   // --- State ---
-  const [cuttingId, setCuttingId] = useState(searchParams.get("type") || "die-cut");
+  const [cuttingId, setCuttingId] = useState(defaultType || searchParams.get("type") || "die-cut");
   const cutting = useMemo(() => getCuttingType(cuttingId), [cuttingId]);
 
   const [sizeIdx, setSizeIdx] = useState(0);
