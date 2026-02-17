@@ -10,8 +10,9 @@ const prisma = new PrismaClient();
 
 async function main() {
   const [email, name, password, role = "admin"] = process.argv.slice(2);
+  const normalizedEmail = String(email || "").trim().toLowerCase();
 
-  if (!email || !name || !password) {
+  if (!normalizedEmail || !name || !password) {
     console.error("Usage: node scripts/create-admin.mjs <email> <name> <password> [role]");
     console.error("Roles: admin, cs, merch_ops, design, production, sales, finance, qa");
     process.exit(1);
@@ -22,16 +23,16 @@ async function main() {
     process.exit(1);
   }
 
-  const existing = await prisma.adminUser.findUnique({ where: { email } });
+  const existing = await prisma.adminUser.findUnique({ where: { email: normalizedEmail } });
   if (existing) {
-    console.error(`Admin user with email ${email} already exists (id: ${existing.id}, role: ${existing.role}).`);
+    console.error(`Admin user with email ${normalizedEmail} already exists (id: ${existing.id}, role: ${existing.role}).`);
     process.exit(1);
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
 
   const user = await prisma.adminUser.create({
-    data: { email, name, passwordHash, role },
+    data: { email: normalizedEmail, name, passwordHash, role },
   });
 
   console.log(`Created admin user:`);

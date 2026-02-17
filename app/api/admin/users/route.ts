@@ -36,8 +36,10 @@ export async function POST(request: NextRequest) {
 
   try {
     const { email, name, password, role } = await request.json();
+    const normalizedEmail =
+      typeof email === "string" ? email.trim().toLowerCase() : "";
 
-    if (!email || !name || !password || !role) {
+    if (!normalizedEmail || !name || !password || !role) {
       return NextResponse.json({ error: "email, name, password, and role are required" }, { status: 400 });
     }
 
@@ -45,7 +47,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
     }
 
-    const existing = await prisma.adminUser.findUnique({ where: { email } });
+    const existing = await prisma.adminUser.findUnique({
+      where: { email: normalizedEmail },
+    });
     if (existing) {
       return NextResponse.json({ error: "Email already exists" }, { status: 409 });
     }
@@ -53,7 +57,7 @@ export async function POST(request: NextRequest) {
     const passwordHash = await bcrypt.hash(password, 12);
 
     const user = await prisma.adminUser.create({
-      data: { email, name, passwordHash, role },
+      data: { email: normalizedEmail, name, passwordHash, role },
       select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true },
     });
 
@@ -62,7 +66,7 @@ export async function POST(request: NextRequest) {
       entity: "adminUser",
       entityId: user.id,
       actor: auth.user?.email || "admin",
-      details: { email, name, role },
+      details: { email: normalizedEmail, name, role },
     });
 
     return NextResponse.json({ user }, { status: 201 });

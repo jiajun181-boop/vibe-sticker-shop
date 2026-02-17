@@ -13,15 +13,19 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, password } = await request.json();
+    const normalizedEmail =
+      typeof email === "string" ? email.trim().toLowerCase() : "";
 
     // ── New path: email + password login (AdminUser table) ──
-    if (email) {
+    if (normalizedEmail) {
       // Dynamic imports to avoid crashing legacy path if prisma isn't ready
       const { prisma } = await import("@/lib/prisma");
       const bcrypt = (await import("bcryptjs")).default;
       const { createAdminToken, COOKIE_NAME } = await import("@/lib/admin-auth");
 
-      const admin = await prisma.adminUser.findUnique({ where: { email } });
+      const admin = await prisma.adminUser.findUnique({
+        where: { email: normalizedEmail },
+      });
       if (!admin || !admin.isActive) {
         return NextResponse.json(
           { error: "Invalid email or password" },
