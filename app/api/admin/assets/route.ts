@@ -208,14 +208,21 @@ async function uploadToUploadThing(
   fileName: string,
   mimeType: string
 ): Promise<string> {
-  if (!process.env.UPLOADTHING_TOKEN) {
+  const rawToken = process.env.UPLOADTHING_TOKEN;
+  if (!rawToken) {
     throw new Error(
       "UPLOADTHING_TOKEN is missing. Configure it in deployment env."
     );
   }
 
+  // Re-encode token as clean standard base64 to work around Effect's
+  // strict Uint8ArrayFromBase64 decoder that rejects some valid tokens.
+  const cleanToken = Buffer.from(
+    Buffer.from(rawToken, "base64").toString("utf-8")
+  ).toString("base64");
+
   const { UTApi, UTFile } = await import("uploadthing/server");
-  const utapi = new UTApi();
+  const utapi = new UTApi({ token: cleanToken });
 
   const utFile = new UTFile([new Uint8Array(buffer)], fileName, {
     type: mimeType,
