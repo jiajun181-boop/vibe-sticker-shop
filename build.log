@@ -1,0 +1,190 @@
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.6s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/129) ...
+  Generating static pages using 7 workers (32/129) 
+  Generating static pages using 7 workers (64/129) 
+  Generating static pages using 7 workers (96/129) 
+✓ Generating static pages using 7 workers (129/129) in 592.4ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /about
+├ ƒ /account
+├ ƒ /account/addresses
+├ ƒ /account/favorites
+├ ƒ /account/orders
+├ ƒ /account/orders/[id]
+├ ƒ /account/profile
+├ ƒ /admin
+├ ƒ /admin/analytics
+├ ƒ /admin/b2b
+├ ƒ /admin/catalog
+├ ƒ /admin/catalog-ops
+├ ƒ /admin/content
+├ ƒ /admin/coupons
+├ ƒ /admin/coupons/[id]
+├ ƒ /admin/customers
+├ ƒ /admin/customers/[email]
+├ ƒ /admin/factories
+├ ƒ /admin/funnel
+├ ƒ /admin/login
+├ ƒ /admin/logs
+├ ƒ /admin/media
+├ ƒ /admin/orders
+├ ƒ /admin/orders/[id]
+├ ƒ /admin/pricing
+├ ƒ /admin/production
+├ ƒ /admin/production/[id]
+├ ƒ /admin/production/board
+├ ƒ /admin/production/rules
+├ ƒ /admin/products
+├ ƒ /admin/products/[id]
+├ ƒ /admin/qc
+├ ƒ /admin/reports/production
+├ ƒ /admin/reports/sales
+├ ƒ /admin/reviews
+├ ƒ /admin/settings
+├ ƒ /admin/users
+├ ƒ /api/account/addresses
+├ ƒ /api/account/addresses/[id]
+├ ƒ /api/account/orders
+├ ƒ /api/account/orders/[id]
+├ ƒ /api/account/orders/[id]/invoice
+├ ƒ /api/account/orders/[id]/proofs
+├ ƒ /api/account/orders/[id]/reorder
+├ ƒ /api/account/profile
+├ ƒ /api/admin/analytics
+├ ƒ /api/admin/analytics/funnel
+├ ƒ /api/admin/assets
+├ ƒ /api/admin/assets/[id]
+├ ƒ /api/admin/assets/[id]/links
+├ ƒ /api/admin/assets/check-hash
+├ ƒ /api/admin/assets/orphans
+├ ƒ /api/admin/b2b
+├ ƒ /api/admin/b2b/[id]
+├ ƒ /api/admin/b2b/invites
+├ ƒ /api/admin/catalog
+├ ƒ /api/admin/coupons
+├ ƒ /api/admin/coupons/[id]
+├ ƒ /api/admin/customers
+├ ƒ /api/admin/customers/[email]
+├ ƒ /api/admin/factories
+├ ƒ /api/admin/factories/[id]
+├ ƒ /api/admin/login
+├ ƒ /api/admin/logs
+├ ƒ /api/admin/media
+├ ƒ /api/admin/media/health
+├ ƒ /api/admin/orders
+├ ƒ /api/admin/orders/[id]
+├ ƒ /api/admin/orders/[id]/notes
+├ ƒ /api/admin/orders/[id]/preflight
+├ ƒ /api/admin/orders/[id]/proofs
+├ ƒ /api/admin/orders/[id]/refund
+├ ƒ /api/admin/orders/[id]/ship
+├ ƒ /api/admin/orders/[id]/timeline
+├ ƒ /api/admin/orders/bulk-export
+├ ƒ /api/admin/orders/bulk-update
+├ ƒ /api/admin/password
+├ ƒ /api/admin/pricing
+├ ƒ /api/admin/pricing/[id]
+├ ƒ /api/admin/pricing/anomalies
+├ ƒ /api/admin/pricing/assign
+├ ƒ /api/admin/pricing/bulk-adjust
+├ ƒ /api/admin/pricing/bulk-adjust/rollback
+├ ƒ /api/admin/production
+├ ƒ /api/admin/production/[id]
+├ ƒ /api/admin/production/board
+├ ƒ /api/admin/production/bulk-update
+├ ƒ /api/admin/production/rules
+├ ƒ /api/admin/production/rules/[id]
+├ ƒ /api/admin/products
+├ ƒ /api/admin/products/[id]
+├ ƒ /api/admin/products/[id]/images
+├ ƒ /api/admin/products/[id]/workflow
+├ ƒ /api/admin/products/checklist
+├ ƒ /api/admin/products/export
+├ ƒ /api/admin/products/import
+├ ƒ /api/admin/qc
+├ ƒ /api/admin/qc/[id]
+├ ƒ /api/admin/reports/production
+├ ƒ /api/admin/reports/sales
+├ ƒ /api/admin/reviews
+├ ƒ /api/admin/search
+├ ƒ /api/admin/session
+├ ƒ /api/admin/settings
+├ ƒ /api/admin/setup
+├ ƒ /api/admin/stats
+├ ƒ /api/admin/users
+├ ƒ /api/admin/users/[id]
+├ ƒ /api/auth/forgot-password
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/me
+├ ƒ /api/auth/reset-password
+├ ƒ /api/auth/signup
+├ ƒ /api/auth/verify-email
+├ ƒ /api/checkout
+├ ƒ /api/checkout/invoice
+├ ƒ /api/contact
+├ ƒ /api/invite/[token]
+├ ƒ /api/order-status
+├ ƒ /api/partner
+├ ƒ /api/product-image/[slug]
+├ ƒ /api/products/[category]/[slug]
+├ ƒ /api/products/suggestions
+├ ƒ /api/promo/validate
+├ ƒ /api/quote
+├ ƒ /api/quote/submit
+├ ƒ /api/reviews
+├ ƒ /api/reviews/submit
+├ ƒ /api/search
+├ ƒ /api/track-order
+├ ƒ /api/uploadthing
+├ ƒ /api/version
+├ ƒ /api/webhook
+├ ƒ /artwork-guidelines
+├ ƒ /cancel
+├ ƒ /contact
+├ ƒ /design-services
+├ ƒ /faq
+├ ƒ /forgot-password
+├ ƒ /ideas
+├ ƒ /ideas/[slug]
+├ ƒ /invite/[token]
+├ ƒ /login
+├ ƒ /order/booklets
+├ ƒ /order/ncr
+├ ƒ /order/stickers
+├ ƒ /partner
+├ ƒ /pricing
+├ ƒ /privacy
+├ ƒ /quote
+├ ƒ /quote/print
+├ ƒ /refund-policy
+├ ƒ /reset-password
+├ ƒ /returns
+├ ○ /robots.txt
+├ ƒ /shop
+├ ƒ /shop/[category]
+├ ƒ /shop/[category]/[product]
+├ ƒ /shop/industry/[tag]
+├ ƒ /signup
+├ ○ /sitemap.xml
+├ ƒ /success
+├ ƒ /terms
+├ ƒ /track-order
+└ ƒ /verify-email
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

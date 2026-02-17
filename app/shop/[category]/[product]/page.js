@@ -7,9 +7,13 @@ import { getProductAssets } from "@/lib/assets";
 import { computeFromPrice } from "@/lib/pricing/from-price";
 import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import { getCuttingTypeForSlug } from "@/lib/sticker-order-config";
+import { getBookletBindingForSlug } from "@/lib/booklet-order-config";
+import { getNcrTypeForSlug } from "@/lib/ncr-order-config";
 import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
 import StickerOrderClient from "@/app/order/stickers/StickerOrderClient";
+import BookletOrderClient from "@/app/order/booklets/BookletOrderClient";
+import NcrOrderClient from "@/app/order/ncr/NcrOrderClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
 
 export const revalidate = 60;
@@ -208,6 +212,38 @@ export default async function ProductPage({ params }) {
         }
       >
         <StickerOrderClient defaultType={stickerCuttingType} />
+      </Suspense>
+    );
+  }
+
+  // ── Booklet configurator: render BookletOrderClient inline ──
+  const bookletBinding = getBookletBindingForSlug(decodedSlug);
+  if (bookletBinding) {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+          </div>
+        }
+      >
+        <BookletOrderClient defaultBinding={bookletBinding} />
+      </Suspense>
+    );
+  }
+
+  // ── NCR configurator: render NcrOrderClient inline ──
+  const ncrType = getNcrTypeForSlug(decodedSlug);
+  if (ncrType) {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+          </div>
+        }
+      >
+        <NcrOrderClient defaultType={ncrType} />
       </Suspense>
     );
   }

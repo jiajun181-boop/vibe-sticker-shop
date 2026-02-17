@@ -34,12 +34,12 @@ const QUANTITIES = [100, 250, 500, 1000, 2500, 5000];
 
 // ─── Main Component ───
 
-export default function NcrOrderClient() {
+export default function NcrOrderClient({ defaultType }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
   // Form state
-  const [formTypeId, setFormTypeId] = useState("duplicate");
+  const [formTypeId, setFormTypeId] = useState(defaultType || "duplicate");
   const [sizeIdx, setSizeIdx] = useState(1); // default: letter
   const [quantity, setQuantity] = useState(500);
   const [customQty, setCustomQty] = useState("");

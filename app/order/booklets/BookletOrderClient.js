@@ -109,11 +109,11 @@ function BindingIcon({ type, className = "h-7 w-7" }) {
 
 // ─── Main Component ───
 
-export default function BookletOrderClient() {
+export default function BookletOrderClient({ defaultBinding }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
-  const [bindingId, setBindingId] = useState("saddle-stitch");
+  const [bindingId, setBindingId] = useState(defaultBinding || "saddle-stitch");
   const [sizeIdx, setSizeIdx] = useState(1); // letter
   const [pageCount, setPageCount] = useState(16);
   const [interiorPaper, setInteriorPaper] = useState("100lb-gloss-text");
