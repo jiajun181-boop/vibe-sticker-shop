@@ -298,7 +298,7 @@ function MediaContent() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={tab === "assets" ? "Search by name, alt text..." : "Search by alt text or product..."}
-            className="w-72 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+            className="w-full sm:w-72 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button type="submit" className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]">
             Search
@@ -369,7 +369,7 @@ function MediaContent() {
                       </div>
                       <div className="space-y-1">
                         <p className="text-xs text-white/90 truncate">{asset.originalName}</p>
-                        <p className="text-[10px] text-white/70">
+                        <p className="text-[10px] text-white/90">
                           {asset.widthPx}x{asset.heightPx} · {formatBytes(asset.sizeBytes)} · {asset.linkCount || 0} links
                         </p>
                       </div>
@@ -407,7 +407,7 @@ function MediaContent() {
                       </div>
                       <div className="space-y-1">
                         {image.alt && <p className="text-xs text-white/90 leading-tight line-clamp-2">{image.alt}</p>}
-                        {image.product && <p className="text-xs text-white/70 truncate">{image.product.name}</p>}
+                        {image.product && <p className="text-xs text-white/90 truncate">{image.product.name}</p>}
                       </div>
                     </div>
                   </div>

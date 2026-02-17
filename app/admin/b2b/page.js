@@ -49,12 +49,12 @@ export default function AdminB2BPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold text-black">B2B Accounts</h1>
           <p className="text-sm text-[#999]">{total} accounts</p>
         </div>
-        <div className="flex gap-1 rounded-[3px] border border-[#e0e0e0] p-1">
+        <div className="flex flex-wrap gap-1 rounded-[3px] border border-[#e0e0e0] p-1">
           {FILTERS.map((f) => (
             <button
               key={f.key}
@@ -81,7 +81,9 @@ export default function AdminB2BPage() {
           No B2B accounts found.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0]">
+        <>
+        {/* Desktop table */}
+        <div className="hidden overflow-x-auto rounded-[3px] border border-[#e0e0e0] lg:block">
           <table className="w-full text-sm">
             <thead className="bg-[#fafafa] text-left text-xs font-semibold uppercase tracking-wider text-[#999]">
               <tr>
@@ -143,6 +145,36 @@ export default function AdminB2BPage() {
             </tbody>
           </table>
         </div>
+        {/* Mobile cards */}
+        <div className="space-y-3 lg:hidden">
+          {users.map((user) => (
+            <div key={user.id} className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-black">{user.companyName || "—"}</p>
+                  <p className="text-xs text-[#999]">{user.name} {user.companyRole ? `(${user.companyRole})` : ""}</p>
+                  <p className="mt-1 truncate text-xs text-[#666]">{user.email}</p>
+                </div>
+                {user.b2bApproved ? (
+                  <span className="shrink-0 rounded-[2px] bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">Approved</span>
+                ) : (
+                  <span className="shrink-0 rounded-[2px] bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Pending</span>
+                )}
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-[#999]">
+                <span>{user._count?.orders || 0} orders</span>
+                <span>{new Date(user.createdAt).toLocaleDateString("en-CA")}</span>
+              </div>
+              {!user.b2bApproved && (
+                <div className="mt-3 flex gap-2">
+                  <button type="button" onClick={() => handleAction(user.id, "approve")} disabled={actionLoading === user.id} className="rounded-md bg-emerald-600 px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">Approve</button>
+                  <button type="button" onClick={() => handleAction(user.id, "reject")} disabled={actionLoading === user.id} className="rounded-md bg-red-100 px-2.5 py-1.5 text-[11px] font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50">Reject</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        </>
       )}
     </div>
   );

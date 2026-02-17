@@ -77,7 +77,7 @@ function DonutChart({ data }) {
 
   if (!data || data.length === 0) {
     return (
-      <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+      <div className="flex h-48 items-center justify-center text-sm text-gray-600">
         No status data available
       </div>
     );
@@ -130,7 +130,7 @@ function DonutChart({ data }) {
 function LineChart({ data, label }) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+      <div className="flex h-48 items-center justify-center text-sm text-gray-600">
         No trend data available
       </div>
     );
@@ -350,7 +350,7 @@ export default function ProductionReportPage() {
 
         {/* Custom date inputs */}
         <div className="flex items-center gap-2 sm:ml-auto">
-          <label htmlFor="from-date" className="text-xs font-medium text-gray-500">
+          <label htmlFor="from-date" className="text-xs font-medium text-gray-600">
             From
           </label>
           <input
@@ -360,7 +360,7 @@ export default function ProductionReportPage() {
             onChange={(e) => handleCustomDateChange("from", e.target.value)}
             className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 outline-none focus:border-gray-900"
           />
-          <label htmlFor="to-date" className="text-xs font-medium text-gray-500">
+          <label htmlFor="to-date" className="text-xs font-medium text-gray-600">
             To
           </label>
           <input
@@ -376,7 +376,7 @@ export default function ProductionReportPage() {
       {/* ── Loading / Error states ── */}
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="text-sm text-gray-500">Loading production report...</div>
+          <div className="text-sm text-gray-600">Loading production report...</div>
         </div>
       ) : error ? (
         <div className="flex h-64 items-center justify-center">
@@ -388,7 +388,7 @@ export default function ProductionReportPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {/* On-Time Rate */}
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-medium text-gray-500">On-Time Rate</p>
+              <p className="text-xs font-medium text-gray-600">On-Time Rate</p>
               <p
                 className={`mt-1 text-2xl font-semibold ${
                   data.metrics.onTimeRate > 80
@@ -418,12 +418,12 @@ export default function ProductionReportPage() {
 
             {/* Avg Production Time */}
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-medium text-gray-500">
+              <p className="text-xs font-medium text-gray-600">
                 Avg Production Time
               </p>
               <p className="mt-1 text-2xl font-semibold text-gray-900">
                 {data.metrics.avgProductionTime.toFixed(1)}
-                <span className="ml-1 text-sm font-medium text-gray-500">
+                <span className="ml-1 text-sm font-medium text-gray-600">
                   hours
                 </span>
               </p>
@@ -431,18 +431,18 @@ export default function ProductionReportPage() {
 
             {/* Active Jobs */}
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-medium text-gray-500">Active Jobs</p>
+              <p className="text-xs font-medium text-gray-600">Active Jobs</p>
               <p className="mt-1 text-2xl font-semibold text-blue-600">
                 {totalActiveJobs}
               </p>
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs text-gray-600">
                 across {data.metrics.factoryUtilization?.length || 0} factories
               </p>
             </div>
 
             {/* Delayed Orders */}
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-medium text-gray-500">
+              <p className="text-xs font-medium text-gray-600">
                 Delayed Orders
               </p>
               <p
@@ -492,7 +492,7 @@ export default function ProductionReportPage() {
                 </div>
               ))
             ) : (
-              <div className="flex h-16 items-center justify-center text-sm text-gray-500">
+              <div className="flex h-16 items-center justify-center text-sm text-gray-600">
                 No factory utilization data
               </div>
             )}
@@ -514,29 +514,30 @@ export default function ProductionReportPage() {
                   Delayed Orders ({data.delayedOrders.length})
                 </h2>
               </div>
-              <div className="overflow-x-auto">
+              {/* Desktop table */}
+              <div className="hidden overflow-x-auto lg:block">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                         Job ID
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                         Product
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                         Customer
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                         Status
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                         Factory
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                         Days Delayed
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                         Action
                       </th>
                     </tr>
@@ -589,6 +590,32 @@ export default function ProductionReportPage() {
                   </tbody>
                 </table>
               </div>
+              {/* Mobile cards */}
+              <div className="divide-y divide-gray-100 lg:hidden">
+                {data.delayedOrders.map((order) => (
+                  <div key={order.jobId} className="px-4 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-gray-900">{order.productName}</p>
+                        <p className="mt-0.5 truncate text-xs text-gray-600">{order.customerEmail}</p>
+                      </div>
+                      <span className="shrink-0 font-bold text-red-600">{order.daysDelayed}d</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-[10px] text-gray-600">{order.jobId.slice(0, 8)}</span>
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${statusColors[order.status] || "bg-gray-100 text-gray-700"}`}>
+                        {order.status.replace("_", " ")}
+                      </span>
+                      {order.factoryName && <span className="text-[10px] text-gray-600">{order.factoryName}</span>}
+                    </div>
+                    <div className="mt-2">
+                      <Link href={`/admin/production/${order.jobId}`} className="text-xs font-medium text-blue-600 hover:text-blue-800">
+                        View Job
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -611,24 +638,26 @@ export default function ProductionReportPage() {
               </h2>
             </div>
             {sortedFactoryPerformance.length === 0 ? (
-              <div className="px-5 py-8 text-center text-sm text-gray-500">
+              <div className="px-5 py-8 text-center text-sm text-gray-600">
                 No factory performance data
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              {/* Desktop table */}
+              <div className="hidden overflow-x-auto lg:block">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                         Factory Name
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-600">
                         Completed Jobs
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-600">
                         Avg Time (hours)
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-600">
                         On-Time Rate
                       </th>
                     </tr>
@@ -663,6 +692,32 @@ export default function ProductionReportPage() {
                   </tbody>
                 </table>
               </div>
+              {/* Mobile cards */}
+              <div className="divide-y divide-gray-100 lg:hidden">
+                {sortedFactoryPerformance.map((factory) => (
+                  <div key={factory.factoryId} className="px-4 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-medium text-gray-900">{factory.name}</p>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          factory.onTimeRate > 80
+                            ? "bg-green-100 text-green-700"
+                            : factory.onTimeRate > 60
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {factory.onTimeRate.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-4 text-xs text-gray-600">
+                      <span>{factory.completedJobs} jobs</span>
+                      <span>avg {factory.avgTime.toFixed(1)}h</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </div>
         </>

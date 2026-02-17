@@ -277,9 +277,9 @@ export default function OrderDetailPage() {
       {/* Main content (visible on screen, hidden in print) */}
       <div className="space-y-6 print:hidden">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="mb-1 flex items-center gap-3">
+            <div className="mb-1 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => router.push("/admin/orders")}
@@ -872,7 +872,7 @@ function Section({ title, children }) {
 function InfoField({ label, value }) {
   return (
     <div>
-      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-xs text-gray-600">{label}</p>
       <p className="mt-0.5 text-sm text-gray-900">{value}</p>
     </div>
   );
@@ -1113,7 +1113,7 @@ function OrderActions({ order, onUpdate }) {
             <p className="text-xs font-semibold text-red-900">Issue Refund</p>
             <p className="text-[10px] text-red-600">Max: ${maxRefund.toFixed(2)} CAD</p>
             <div className="flex items-center gap-1">
-              <span className="text-xs text-gray-500">$</span>
+              <span className="text-xs text-gray-600">$</span>
               <input
                 type="number"
                 step="0.01"
@@ -1152,7 +1152,7 @@ function OrderActions({ order, onUpdate }) {
         )}
 
         {!canShip && !canRefund && (
-          <p className="text-xs text-gray-400 text-center py-2">No actions available for this order status</p>
+          <p className="text-xs text-gray-600 text-center py-2">No actions available for this order status</p>
         )}
       </div>
     </Section>

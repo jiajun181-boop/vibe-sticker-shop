@@ -51,7 +51,7 @@ export default function FunnelPage() {
 
   if (loading || !data) {
     return (
-      <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+      <div className="flex h-48 items-center justify-center text-sm text-gray-600">
         Loading conversion data...
       </div>
     );
@@ -74,7 +74,7 @@ export default function FunnelPage() {
               type="button"
               onClick={() => setDays(d)}
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                days === d ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                days === d ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-700"
               }`}
             >
               {d}d
@@ -135,9 +135,9 @@ export default function FunnelPage() {
         <h2 className="mb-4 text-sm font-semibold text-gray-900">Conversion Flow</h2>
         <div className="flex flex-col items-center gap-2">
           <FunnelBar label="Checkout Started" count={funnel.checkoutsStarted} maxCount={funnel.checkoutsStarted} color="#60a5fa" />
-          <svg className="h-4 w-4 text-gray-300" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12l-4-4h8z" /></svg>
+          <svg className="h-4 w-4 text-gray-600" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12l-4-4h8z" /></svg>
           <FunnelBar label="Payment Completed" count={funnel.paymentCompleted} maxCount={funnel.checkoutsStarted} color="#34d399" />
-          <svg className="h-4 w-4 text-gray-300" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12l-4-4h8z" /></svg>
+          <svg className="h-4 w-4 text-gray-600" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12l-4-4h8z" /></svg>
           <FunnelBar label="Repeat Purchase" count={funnel.repeatCustomers} maxCount={funnel.checkoutsStarted} color="#a78bfa" />
         </div>
       </div>
@@ -146,7 +146,7 @@ export default function FunnelPage() {
       <div className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="mb-4 text-sm font-semibold text-gray-900">Daily Orders (Created vs Paid)</h2>
         {dailyConversions.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">No data for this period</p>
+          <p className="text-sm text-gray-600 text-center py-8">No data for this period</p>
         ) : (
           <div className="flex items-end gap-px" style={{ height: 160 }}>
             {dailyConversions.map((d, i) => {
@@ -168,7 +168,7 @@ export default function FunnelPage() {
             })}
           </div>
         )}
-        <div className="mt-3 flex items-center gap-4 text-[10px] text-gray-500">
+        <div className="mt-3 flex items-center gap-4 text-[10px] text-gray-600">
           <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded bg-gray-200" /> Created</span>
           <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded bg-emerald-400" /> Paid</span>
         </div>
@@ -178,7 +178,7 @@ export default function FunnelPage() {
       <div className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="mb-4 text-sm font-semibold text-gray-900">Production Pipeline</h2>
         {productionBreakdown.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-4">No production data</p>
+          <p className="text-sm text-gray-600 text-center py-4">No production data</p>
         ) : (
           <div className="space-y-2">
             {productionBreakdown.map((item) => {
@@ -214,12 +214,12 @@ export default function FunnelPage() {
 function MetricCard({ label, value, sublabel, change, changeLabel }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-400">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-600">{label}</p>
       <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
       <div className="mt-1 flex items-center gap-2">
-        {sublabel && <p className="text-xs text-gray-500">{sublabel}</p>}
+        {sublabel && <p className="text-xs text-gray-600">{sublabel}</p>}
         {change !== undefined && change !== null && (
-          <span className={`text-[10px] font-semibold ${change > 0 ? "text-emerald-600" : change < 0 ? "text-red-500" : "text-gray-400"}`}>
+          <span className={`text-[10px] font-semibold ${change > 0 ? "text-emerald-600" : change < 0 ? "text-red-500" : "text-gray-600"}`}>
             {change > 0 ? "+" : ""}{change}% {changeLabel || ""}
           </span>
         )}

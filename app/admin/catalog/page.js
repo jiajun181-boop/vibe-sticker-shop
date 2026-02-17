@@ -136,7 +136,7 @@ function CategoryBarChart({ categories, t }) {
           const pct = (cat.count / maxCount) * 100;
           return (
             <div key={cat.name} className="flex items-center gap-3">
-              <div className="w-44 shrink-0 truncate text-xs font-medium text-black">
+              <div className="w-28 sm:w-44 shrink-0 truncate text-xs font-medium text-black">
                 {formatCategoryName(cat.name)}
               </div>
               <div className="flex-1 rounded-full bg-[#f5f5f5]">

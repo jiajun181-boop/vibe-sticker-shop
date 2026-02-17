@@ -91,7 +91,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
           {isEdit && <input type="hidden" name="id" value={product.id} />}
 
           <div>
-            <label className="mb-1 block text-xs font-bold uppercase text-gray-500">Name *</label>
+            <label className="mb-1 block text-xs font-bold uppercase text-gray-600">Name *</label>
             <input
               name="name"
               defaultValue={product?.name || ""}
@@ -101,7 +101,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-bold uppercase text-gray-500">Slug *</label>
+            <label className="mb-1 block text-xs font-bold uppercase text-gray-600">Slug *</label>
             <input
               name="slug"
               defaultValue={product?.slug || ""}
@@ -113,7 +113,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-bold uppercase text-gray-500">Category *</label>
+              <label className="mb-1 block text-xs font-bold uppercase text-gray-600">Category *</label>
               <select
                 name="category"
                 value={category}
@@ -132,7 +132,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-bold uppercase text-gray-500">Subseries *</label>
+              <label className="mb-1 block text-xs font-bold uppercase text-gray-600">Subseries *</label>
               <select
                 name="subseries"
                 value={subseries}
@@ -152,7 +152,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-bold uppercase text-gray-500">Type</label>
+              <label className="mb-1 block text-xs font-bold uppercase text-gray-600">Type</label>
               <select
                 name="type"
                 defaultValue={product?.type || "sticker"}
@@ -165,7 +165,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-bold uppercase text-gray-500">Pricing Unit *</label>
+              <label className="mb-1 block text-xs font-bold uppercase text-gray-600">Pricing Unit *</label>
               <select
                 name="pricingUnit"
                 defaultValue={product?.pricingUnit || "per_piece"}
@@ -178,7 +178,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-bold uppercase text-gray-500">Description</label>
+            <label className="mb-1 block text-xs font-bold uppercase text-gray-600">Description</label>
             <textarea
               name="description"
               rows={3}
@@ -188,7 +188,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-bold uppercase text-gray-500">Base Price (CAD) *</label>
+            <label className="mb-1 block text-xs font-bold uppercase text-gray-600">Base Price (CAD) *</label>
             <input
               name="basePrice"
               type="number"
@@ -202,7 +202,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
 
           {!isEdit && (
             <div>
-              <label className="mb-1 block text-xs font-bold uppercase text-gray-500">Image URL</label>
+              <label className="mb-1 block text-xs font-bold uppercase text-gray-600">Image URL</label>
               <input
                 name="imageUrl"
                 type="url"

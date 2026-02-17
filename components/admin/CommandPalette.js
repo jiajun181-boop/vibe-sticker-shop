@@ -93,7 +93,7 @@ export default function CommandPalette() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[18vh]">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center px-4 pt-[18vh]">
       <button type="button" className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} aria-label="Close" />
       <div className="relative w-full max-w-lg rounded-[3px] border border-[#e0e0e0] bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="Command palette">
         <div className="flex items-center gap-3 border-b border-[#e0e0e0] px-4">
@@ -161,7 +161,7 @@ export default function CommandPalette() {
           )}
           {searching && <p className="py-3 text-center text-xs text-[#999]">{t("admin.search.searching")}</p>}
         </div>
-        <div className="flex items-center gap-4 border-t border-[#e0e0e0] px-4 py-2 text-[10px] text-[#999]">
+        <div className="flex flex-wrap items-center gap-3 border-t border-[#e0e0e0] px-4 py-2 text-[10px] text-[#999]">
           <span><kbd className="rounded-[2px] border border-[#e0e0e0] px-1 py-0.5 font-mono">↑↓</kbd> navigate</span>
           <span><kbd className="rounded-[2px] border border-[#e0e0e0] px-1 py-0.5 font-mono">↵</kbd> select</span>
           <span><kbd className="rounded-[2px] border border-[#e0e0e0] px-1 py-0.5 font-mono">esc</kbd> close</span>

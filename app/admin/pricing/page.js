@@ -43,6 +43,7 @@ function MaterialsEditor({ materials, onChange, t }) {
         <button type="button" onClick={addRow} className="text-xs text-black underline hover:no-underline">{t("pricing.addMaterial")}</button>
       </div>
       {materials.length > 0 && (
+        <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="text-left text-[#999]">
@@ -71,6 +72,7 @@ function MaterialsEditor({ materials, onChange, t }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );
@@ -99,6 +101,7 @@ function FinishingsEditor({ finishings, onChange, t }) {
         <button type="button" onClick={addRow} className="text-xs text-black underline hover:no-underline">{t("pricing.addFinishing")}</button>
       </div>
       {finishings.length > 0 && (
+        <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="text-left text-[#999]">
@@ -135,6 +138,7 @@ function FinishingsEditor({ finishings, onChange, t }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );
@@ -606,8 +610,8 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
               className="border border-[#e0e0e0] rounded-[3px] bg-white overflow-hidden"
             >
               {/* Header */}
-              <div className="px-5 py-4 flex items-center justify-between">
-                <div className="space-y-1">
+              <div className="px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-base">{preset.name}</h3>
                     <span

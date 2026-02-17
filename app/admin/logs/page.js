@@ -24,7 +24,7 @@ export default function LogsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-48 items-center justify-center text-sm text-gray-600">
           Loading...
         </div>
       }
@@ -116,7 +116,7 @@ function LogsContent() {
       return (
         <div className="flex flex-wrap gap-x-4 gap-y-1">
           {entries.map(([key, value]) => (
-            <span key={key} className="text-xs text-gray-500">
+            <span key={key} className="text-xs text-gray-600">
               <span className="font-medium text-gray-600">{key}:</span>{" "}
               {typeof value === "object" ? JSON.stringify(value) : String(value)}
             </span>
@@ -125,7 +125,7 @@ function LogsContent() {
       );
     }
 
-    return <p className="text-xs text-gray-500">{String(details)}</p>;
+    return <p className="text-xs text-gray-600">{String(details)}</p>;
   }
 
   return (
@@ -156,7 +156,7 @@ function LogsContent() {
           />
 
           <div className="flex items-center gap-1.5">
-            <label className="text-xs text-gray-500">From</label>
+            <label className="text-xs text-gray-600">From</label>
             <input
               type="date"
               value={dateFrom}
@@ -166,7 +166,7 @@ function LogsContent() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <label className="text-xs text-gray-500">To</label>
+            <label className="text-xs text-gray-600">To</label>
             <input
               type="date"
               value={dateTo}
@@ -197,11 +197,11 @@ function LogsContent() {
 
       {/* Log entries */}
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-48 items-center justify-center text-sm text-gray-600">
           Loading activity logs...
         </div>
       ) : logs.length === 0 ? (
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-48 items-center justify-center text-sm text-gray-600">
           No activity logs found
         </div>
       ) : (
@@ -224,13 +224,13 @@ function LogsContent() {
                     {log.entity}
                   </span>
                   {log.entityId && (
-                    <span className="text-xs font-mono text-gray-400">
+                    <span className="text-xs font-mono text-gray-600">
                       {log.entityId}
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3 text-xs text-gray-400">
+                <div className="flex items-center gap-3 text-xs text-gray-600">
                   <span>{log.actor}</span>
                   <span>{new Date(log.createdAt).toLocaleString()}</span>
                 </div>
@@ -249,7 +249,7 @@ function LogsContent() {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-600">
             Showing {(pagination.page - 1) * pagination.limit + 1}-
             {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
             {pagination.total}

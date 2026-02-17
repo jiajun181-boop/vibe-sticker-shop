@@ -935,7 +935,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search products..."
-            className="w-56 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900"
+            className="w-full sm:w-56 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900"
           />
           <button
             type="submit"

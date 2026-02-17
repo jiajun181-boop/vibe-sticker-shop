@@ -234,7 +234,7 @@ export default function FactoriesPage() {
                     <h3 className="text-lg font-bold text-gray-900 truncate">
                       {factory.name}
                     </h3>
-                    <p className="mt-0.5 text-sm text-gray-500">
+                    <p className="mt-0.5 text-sm text-gray-600">
                       {factory.location || "No location"}
                     </p>
                   </div>
@@ -242,7 +242,7 @@ export default function FactoriesPage() {
                     className={`ml-3 inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                       factory.isActive
                         ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-500"
+                        : "bg-gray-100 text-gray-600"
                     }`}
                   >
                     {factory.isActive ? "Active" : "Inactive"}
@@ -255,7 +255,7 @@ export default function FactoriesPage() {
                     className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                       hasJobs
                         ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-500"
+                        : "bg-gray-100 text-gray-600"
                     }`}
                   >
                     <span className="text-sm font-bold">{jobs}</span>
@@ -299,7 +299,7 @@ export default function FactoriesPage() {
                     {factory.isActive ? "Deactivate" : "Activate"}
                   </button>
                   {hasJobs ? (
-                    <span className="ml-auto text-xs text-gray-400">
+                    <span className="ml-auto text-xs text-gray-600">
                       Has active jobs
                     </span>
                   ) : (
@@ -329,7 +329,7 @@ export default function FactoriesPage() {
             <form onSubmit={handleSave} className="space-y-4">
               {/* Name */}
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-gray-600">
                   Name *
                 </label>
                 <input
@@ -344,7 +344,7 @@ export default function FactoriesPage() {
 
               {/* Location */}
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-gray-600">
                   Location
                 </label>
                 <input
@@ -358,7 +358,7 @@ export default function FactoriesPage() {
 
               {/* Capabilities */}
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-gray-600">
                   Capabilities
                 </label>
                 <div className="rounded-lg border border-gray-300 px-3 py-2 focus-within:border-gray-900">
@@ -373,7 +373,7 @@ export default function FactoriesPage() {
                           <button
                             type="button"
                             onClick={() => removeCapability(cap)}
-                            className="ml-0.5 text-gray-400 hover:text-gray-600"
+                            className="ml-0.5 text-gray-600 hover:text-gray-600"
                           >
                             &times;
                           </button>
@@ -390,7 +390,7 @@ export default function FactoriesPage() {
                     className="w-full text-sm outline-none"
                   />
                 </div>
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-xs text-gray-600">
                   Press Enter to add each capability
                 </p>
               </div>

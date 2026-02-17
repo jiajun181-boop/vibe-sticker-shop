@@ -377,8 +377,8 @@ input:focus, textarea:focus, select:focus {
   --admin-card: #ffffff;
   --admin-radius: 3px;
   --admin-text: #000000;
-  --admin-text-secondary: #666666;
-  --admin-text-muted: #999999;
+  --admin-text-secondary: #444444;
+  --admin-text-muted: #666666;
   font-family: var(--font-admin, var(--font-brand, system-ui)), -apple-system, sans-serif;
   font-feature-settings: "tnum";
   letter-spacing: -0.01em;

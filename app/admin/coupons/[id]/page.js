@@ -224,7 +224,7 @@ export default function CouponDetailPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">
                   Type *
@@ -253,7 +253,7 @@ export default function CouponDetailPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">
                   Min Order Amount (cents)
@@ -282,7 +282,7 @@ export default function CouponDetailPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">
                   Valid From *
@@ -325,7 +325,7 @@ export default function CouponDetailPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             type="submit"
             disabled={saving}

@@ -72,7 +72,7 @@ export default function ProductTable({ products }) {
 
       {/* Table / Cards */}
       {products.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-gray-200 rounded-3xl p-20 text-center text-gray-400">
+        <div className="bg-white border-2 border-dashed border-gray-200 rounded-3xl p-20 text-center text-gray-600">
           No products yet. Click &quot;+ Add Product&quot; to create one.
         </div>
       ) : (
@@ -82,12 +82,12 @@ export default function ProductTable({ products }) {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="text-left text-xs font-bold text-gray-400 uppercase px-6 py-4">Image</th>
-                  <th className="text-left text-xs font-bold text-gray-400 uppercase px-6 py-4">Name</th>
-                  <th className="text-left text-xs font-bold text-gray-400 uppercase px-6 py-4 hidden lg:table-cell">Category</th>
-                  <th className="text-left text-xs font-bold text-gray-400 uppercase px-6 py-4">Price</th>
-                  <th className="text-left text-xs font-bold text-gray-400 uppercase px-6 py-4">Status</th>
-                  <th className="text-right text-xs font-bold text-gray-400 uppercase px-6 py-4">Actions</th>
+                  <th className="text-left text-xs font-bold text-gray-600 uppercase px-6 py-4">Image</th>
+                  <th className="text-left text-xs font-bold text-gray-600 uppercase px-6 py-4">Name</th>
+                  <th className="text-left text-xs font-bold text-gray-600 uppercase px-6 py-4 hidden lg:table-cell">Category</th>
+                  <th className="text-left text-xs font-bold text-gray-600 uppercase px-6 py-4">Price</th>
+                  <th className="text-left text-xs font-bold text-gray-600 uppercase px-6 py-4">Status</th>
+                  <th className="text-right text-xs font-bold text-gray-600 uppercase px-6 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -99,20 +99,20 @@ export default function ProductTable({ products }) {
                         {imgUrl ? (
                           <img src={imgUrl} alt={product.name} className="w-12 h-12 rounded-xl object-cover" />
                         ) : (
-                          <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-300 text-lg">?</div>
+                          <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-lg">?</div>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-bold text-sm">{product.name}</span>
-                        <span className="block text-xs text-gray-400 font-mono">{product.slug}</span>
+                        <span className="block text-xs text-gray-600 font-mono">{product.slug}</span>
                       </td>
                       <td className="px-6 py-4 hidden lg:table-cell">
-                        <span className="text-xs text-gray-500">{product.category}</span>
+                        <span className="text-xs text-gray-600">{product.category}</span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-mono font-bold text-sm">
                           ${(product.basePrice / 100).toFixed(2)}
-                          <span className="text-gray-400 font-normal text-xs ml-1">
+                          <span className="text-gray-600 font-normal text-xs ml-1">
                             {product.pricingUnit === "per_sqft" ? "/sqft" : "/pc"}
                           </span>
                         </span>
@@ -124,7 +124,7 @@ export default function ProductTable({ products }) {
                           className={`text-xs font-bold px-3 py-1 rounded-full transition-colors ${
                             product.isActive
                               ? "bg-green-100 text-green-700 hover:bg-green-200"
-                              : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                           }`}
                         >
                           {product.isActive ? "Active" : "Inactive"}
@@ -164,13 +164,13 @@ export default function ProductTable({ products }) {
                     {imgUrl ? (
                       <img src={imgUrl} alt={product.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
                     ) : (
-                      <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center text-gray-300 text-xl flex-shrink-0">?</div>
+                      <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 text-xl flex-shrink-0">?</div>
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-sm">{product.name}</p>
                       <p className="font-mono font-bold text-sm mt-0.5">
                         ${(product.basePrice / 100).toFixed(2)}
-                        <span className="text-gray-400 font-normal text-xs ml-1">
+                        <span className="text-gray-600 font-normal text-xs ml-1">
                           {product.pricingUnit === "per_sqft" ? "/sqft" : "/pc"}
                         </span>
                       </p>
@@ -181,7 +181,7 @@ export default function ProductTable({ products }) {
                       onClick={() => handleToggle(product.id, product.isActive)}
                       disabled={isPending}
                       className={`text-xs font-bold px-3 py-1 rounded-full ${
-                        product.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
+                        product.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
                       }`}
                     >
                       {product.isActive ? "Active" : "Inactive"}

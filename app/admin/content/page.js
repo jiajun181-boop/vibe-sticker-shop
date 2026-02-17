@@ -98,13 +98,13 @@ export default function ContentCMSPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 rounded-[3px] bg-[#f5f5f5] p-1">
+      <div className="flex flex-wrap gap-1 rounded-[3px] bg-[#f5f5f5] p-1">
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => { setTab(t.id); setMessage(null); }}
-            className={`flex-1 rounded-[3px] px-3 py-2 text-xs font-semibold transition-colors ${tab === t.id ? "bg-white text-black shadow-sm" : "text-[#999] hover:text-black"}`}
+            className={`flex-1 min-w-[80px] rounded-[3px] px-3 py-2 text-xs font-semibold transition-colors ${tab === t.id ? "bg-white text-black shadow-sm" : "text-[#999] hover:text-black"}`}
           >
             {t.label}
           </button>

@@ -224,7 +224,7 @@ export default function ProductionJobDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center text-sm text-gray-500">
+      <div className="flex h-64 items-center justify-center text-sm text-gray-600">
         Loading...
       </div>
     );
@@ -233,7 +233,7 @@ export default function ProductionJobDetailPage() {
   if (!job) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-2">
-        <p className="text-sm text-gray-500">Production job not found</p>
+        <p className="text-sm text-gray-600">Production job not found</p>
         <Link
           href="/admin/production"
           className="text-sm text-blue-600 hover:text-blue-800"
@@ -249,7 +249,7 @@ export default function ProductionJobDetailPage() {
       {/* Back link */}
       <Link
         href="/admin/production"
-        className="inline-block text-xs text-gray-500 hover:text-gray-900"
+        className="inline-block text-xs text-gray-600 hover:text-gray-900"
       >
         &larr; Back to Production Queue
       </Link>
@@ -341,7 +341,7 @@ export default function ProductionJobDetailPage() {
             </div>
             {(orderItem?.fileUrl || orderItem?.fileName) && (
               <div className="mt-4 border-t border-gray-100 pt-4">
-                <p className="mb-1 text-xs font-medium text-gray-500">File</p>
+                <p className="mb-1 text-xs font-medium text-gray-600">File</p>
                 {orderItem.fileUrl ? (
                   <a
                     href={orderItem.fileUrl}
@@ -551,7 +551,7 @@ export default function ProductionJobDetailPage() {
                                 {statusLabel(payload.from)}
                               </span>
                             )}
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-gray-600">
                               &rarr;
                             </span>
                             {payload.to && (
@@ -568,7 +568,7 @@ export default function ProductionJobDetailPage() {
 
                         {/* Factory assigned */}
                         {event.type === "factory_assigned" && payload && (
-                          <p className="mt-0.5 text-xs text-gray-500">
+                          <p className="mt-0.5 text-xs text-gray-600">
                             Factory: {payload.factoryName || payload.factoryId || "\u2014"}
                           </p>
                         )}
@@ -585,7 +585,7 @@ export default function ProductionJobDetailPage() {
                                 {payload.from}
                               </span>
                             )}
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-gray-600">
                               &rarr;
                             </span>
                             {payload.to && (
@@ -613,7 +613,7 @@ export default function ProductionJobDetailPage() {
                           event.type !== "priority_change" &&
                           event.type !== "note" &&
                           payload && (
-                            <p className="mt-0.5 text-xs text-gray-500 break-all">
+                            <p className="mt-0.5 text-xs text-gray-600 break-all">
                               {typeof payload === "object"
                                 ? JSON.stringify(payload)
                                 : String(payload)}
@@ -621,9 +621,9 @@ export default function ProductionJobDetailPage() {
                           )}
 
                         {/* Meta: operator + time */}
-                        <p className="mt-1 text-xs text-gray-400">
+                        <p className="mt-1 text-xs text-gray-600">
                           {event.operatorName && (
-                            <span className="mr-2 font-medium text-gray-500">
+                            <span className="mr-2 font-medium text-gray-600">
                               {event.operatorName}
                             </span>
                           )}
@@ -635,7 +635,7 @@ export default function ProductionJobDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="text-xs text-gray-400">No events yet</p>
+              <p className="text-xs text-gray-600">No events yet</p>
             )}
           </Section>
         </div>
@@ -646,19 +646,19 @@ export default function ProductionJobDetailPage() {
           <Section title="Dates">
             <div className="space-y-3 text-xs">
               <div>
-                <p className="text-gray-500">Created</p>
+                <p className="text-gray-600">Created</p>
                 <p className="mt-0.5 text-sm text-gray-900">
                   {formatDate(job.createdAt)}
                 </p>
               </div>
               <div>
-                <p className="text-gray-500">Started</p>
+                <p className="text-gray-600">Started</p>
                 <p className="mt-0.5 text-sm text-gray-900">
                   {job.startedAt ? formatDate(job.startedAt) : "Not started"}
                 </p>
               </div>
               <div>
-                <p className="text-gray-500">Completed</p>
+                <p className="text-gray-600">Completed</p>
                 <p className="mt-0.5 text-sm text-gray-900">
                   {job.completedAt
                     ? formatDate(job.completedAt)
@@ -666,7 +666,7 @@ export default function ProductionJobDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="text-gray-500">Due</p>
+                <p className="text-gray-600">Due</p>
                 <p className="mt-0.5 text-sm text-gray-900">
                   {job.dueAt ? formatDate(job.dueAt) : "No due date"}
                 </p>
@@ -728,7 +728,7 @@ export default function ProductionJobDetailPage() {
                 {Array.isArray(job.factory.capabilities) &&
                   job.factory.capabilities.length > 0 && (
                     <div>
-                      <p className="text-gray-500">Capabilities</p>
+                      <p className="text-gray-600">Capabilities</p>
                       <div className="mt-1 flex flex-wrap gap-1">
                         {job.factory.capabilities.map((cap) => (
                           <span
@@ -763,7 +763,7 @@ function Section({ title, children }) {
 function InfoField({ label, value }) {
   return (
     <div>
-      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-xs text-gray-600">{label}</p>
       <p className="mt-0.5 text-sm text-gray-900">{value}</p>
     </div>
   );

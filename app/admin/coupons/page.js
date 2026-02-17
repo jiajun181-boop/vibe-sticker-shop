@@ -239,7 +239,7 @@ function CouponsContent() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search code or description..."
-            className="w-56 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+            className="w-full sm:w-56 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button
             type="submit"

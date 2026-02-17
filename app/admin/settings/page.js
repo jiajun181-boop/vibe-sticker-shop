@@ -122,7 +122,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+      <div className="flex h-48 items-center justify-center text-sm text-gray-600">
         Loading settings...
       </div>
     );
@@ -233,7 +233,7 @@ export default function SettingsPage() {
                   onChange={(e) => updateSetting("tax.hstRate", e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-8 text-sm outline-none focus:border-gray-900"
                 />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-600">
                   %
                 </span>
               </div>
@@ -304,7 +304,7 @@ function Section({ title, isOpen, onToggle, children }) {
       >
         <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
         <svg
-          className={`h-4 w-4 text-gray-400 transition-transform ${
+          className={`h-4 w-4 text-gray-600 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
           viewBox="0 0 24 24"
@@ -350,7 +350,7 @@ function DollarField({ label, value, onChange }) {
         {label}
       </label>
       <div className="relative">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-600">
           $
         </span>
         <input

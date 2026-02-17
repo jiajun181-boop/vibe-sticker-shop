@@ -52,10 +52,10 @@ export default function ConfirmModal({
         <h3 id="confirm-title" className="mt-4 text-center text-sm font-semibold text-black">{title}</h3>
         <p id="confirm-desc" className="mt-2 text-center text-sm text-[#666]">{message}</p>
         <div className="mt-5 flex gap-2">
-          <button type="button" onClick={onCancel} className="flex-1 rounded-[3px] border border-[#d0d0d0] px-4 py-2.5 text-xs font-semibold text-black transition-colors hover:border-black">
+          <button type="button" onClick={onCancel} className="flex-1 rounded-[3px] border border-[#d0d0d0] px-4 py-3 text-xs font-semibold text-black transition-colors hover:border-black">
             {cancelLabel}
           </button>
-          <button ref={btnRef} type="button" onClick={onConfirm} className={`flex-1 rounded-[3px] px-4 py-2.5 text-xs font-semibold transition-colors ${btnColor}`}>
+          <button ref={btnRef} type="button" onClick={onConfirm} className={`flex-1 rounded-[3px] px-4 py-3 text-xs font-semibold transition-colors ${btnColor}`}>
             {confirmLabel}
           </button>
         </div>

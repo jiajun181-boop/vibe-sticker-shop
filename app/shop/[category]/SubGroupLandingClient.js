@@ -314,7 +314,7 @@ export default function SubGroupLandingClient({
                 <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-gray-500">
                   {segment.title}
                 </h2>
-                <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                   {segment.items.map((group) => (
                     <SubGroupCard key={group.slug} group={group} t={t} maxCount={maxCount} />
                   ))}
@@ -323,7 +323,7 @@ export default function SubGroupLandingClient({
             ))}
           </div>
         ) : (
-          <div className={`grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4 ${subGroups.length > 4 ? "mt-4" : "mt-8"}`}>
+          <div className={`grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 ${subGroups.length > 4 ? "mt-4" : "mt-8"}`}>
             {filteredSubGroups.map((group) => (
               <SubGroupCard key={group.slug} group={group} t={t} maxCount={maxCount} />
             ))}
@@ -435,7 +435,7 @@ function QuickQuoteFAB({ t }) {
   return (
     <Link
       href="/quote"
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-gray-900 px-5 py-3 text-white shadow-lg transition-all hover:bg-black hover:shadow-xl hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-4 duration-300"
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-gray-900 px-5 py-3 pb-safe text-white shadow-lg transition-all hover:bg-black hover:shadow-xl hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-4 duration-300"
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />

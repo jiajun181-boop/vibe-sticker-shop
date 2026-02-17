@@ -201,7 +201,7 @@ function PieChart({ data }) {
   });
 
   return (
-    <div className="flex items-center gap-8">
+    <div className="flex flex-col items-center gap-8 sm:flex-row">
       <div
         className="h-48 w-48 rounded-full flex-shrink-0"
         style={{ background: `conic-gradient(${segments.join(", ")})` }}
@@ -560,7 +560,9 @@ export default function SalesReportPage() {
               </div>
 
               {current.topProducts && current.topProducts.length > 0 ? (
-                <div className="overflow-x-auto">
+                <>
+                {/* Desktop table */}
+                <div className="hidden overflow-x-auto lg:block">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
@@ -627,6 +629,36 @@ export default function SalesReportPage() {
                     </tbody>
                   </table>
                 </div>
+                {/* Mobile cards */}
+                <div className="divide-y divide-[#e0e0e0] lg:hidden">
+                  {current.topProducts.slice(0, 10).map((product, i) => {
+                    const pctOfTotal =
+                      totalProductRevenue > 0
+                        ? (product.revenue / totalProductRevenue) * 100
+                        : 0;
+                    return (
+                      <div key={product.productId || i} className="px-4 py-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-[#999]">#{i + 1}</span>
+                              <p className="truncate font-medium text-black">{product.name}</p>
+                            </div>
+                            <p className="mt-1 text-xs text-[#666]">{product.quantity} sold</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="font-semibold text-black">{formatCad(product.revenue)}</p>
+                            <p className="text-xs text-[#666]">{pctOfTotal.toFixed(1)}%</p>
+                          </div>
+                        </div>
+                        <div className="mt-2 h-1.5 w-full rounded-full bg-[#f5f5f5]">
+                          <div className="h-1.5 rounded-full bg-blue-500" style={{ width: `${Math.min(pctOfTotal, 100)}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                </>
               ) : (
                 <div className="px-5 py-8 text-center text-sm text-[#999]">
                   No product data for this period

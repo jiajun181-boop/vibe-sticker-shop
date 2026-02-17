@@ -265,7 +265,7 @@ export default function AssignmentRulesPage() {
           <h1 className="text-xl font-semibold text-black">
             Assignment Rules
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-600">
             Rules are evaluated in priority order. The first matching rule is
             applied to new production jobs.
           </p>
@@ -294,13 +294,13 @@ export default function AssignmentRulesPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex h-48 items-center justify-center text-sm text-gray-500">
+        <div className="flex h-48 items-center justify-center text-sm text-gray-600">
           Loading...
         </div>
       ) : rules.length === 0 ? (
-        <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white text-center text-sm text-gray-500 shadow-sm">
+        <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white text-center text-sm text-gray-600 shadow-sm">
           <p>No assignment rules yet.</p>
-          <p className="max-w-sm text-xs text-gray-400">
+          <p className="max-w-sm text-xs text-gray-600">
             Create your first rule to automatically assign production jobs to
             factories.
           </p>
@@ -319,28 +319,28 @@ export default function AssignmentRulesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                     Priority
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                     Rule Name
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                     Conditions
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                     Target Factory
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                     Triggers
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                     Last Triggered
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                     Active
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-600">
                     Actions
                   </th>
                 </tr>
@@ -378,7 +378,7 @@ export default function AssignmentRulesPage() {
                             ))}
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-600">
                             All jobs
                           </span>
                         )}
@@ -395,7 +395,7 @@ export default function AssignmentRulesPage() {
                       </td>
 
                       {/* Last triggered */}
-                      <td className="px-4 py-3 text-xs text-gray-500">
+                      <td className="px-4 py-3 text-xs text-gray-600">
                         {timeAgo(rule.lastTriggered)}
                       </td>
 
@@ -465,7 +465,7 @@ export default function AssignmentRulesPage() {
                           {rule.name}
                         </span>
                       </div>
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-xs text-gray-600">
                         {getFactoryName(rule.action?.factoryId)}
                       </p>
                     </div>
@@ -502,7 +502,7 @@ export default function AssignmentRulesPage() {
                   )}
 
                   <div className="mt-2 flex items-center justify-between">
-                    <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <div className="flex items-center gap-3 text-xs text-gray-600">
                       <span>{rule.triggerCount ?? 0} triggers</span>
                       <span>{timeAgo(rule.lastTriggered)}</span>
                     </div>
@@ -541,7 +541,7 @@ export default function AssignmentRulesPage() {
             <form onSubmit={handleSave} className="space-y-5">
               {/* Name */}
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500">
+                <label className="mb-1 block text-xs font-medium text-gray-600">
                   Name *
                 </label>
                 <input
@@ -557,7 +557,7 @@ export default function AssignmentRulesPage() {
               {/* Priority + Active row */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">
+                  <label className="mb-1 block text-xs font-medium text-gray-600">
                     Priority
                   </label>
                   <input
@@ -587,14 +587,14 @@ export default function AssignmentRulesPage() {
               <fieldset>
                 <legend className="mb-3 text-sm font-semibold text-black">
                   Conditions{" "}
-                  <span className="font-normal text-gray-400">
+                  <span className="font-normal text-gray-600">
                     (all must match)
                   </span>
                 </legend>
                 <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
                   {/* Product type */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500">
+                    <label className="mb-1 block text-xs font-medium text-gray-600">
                       Product Type
                     </label>
                     <select
@@ -612,7 +612,7 @@ export default function AssignmentRulesPage() {
 
                   {/* Material */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500">
+                    <label className="mb-1 block text-xs font-medium text-gray-600">
                       Material
                     </label>
                     <input
@@ -627,7 +627,7 @@ export default function AssignmentRulesPage() {
                   {/* Quantity range */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">
+                      <label className="mb-1 block text-xs font-medium text-gray-600">
                         Min Quantity
                       </label>
                       <input
@@ -640,7 +640,7 @@ export default function AssignmentRulesPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">
+                      <label className="mb-1 block text-xs font-medium text-gray-600">
                         Max Quantity
                       </label>
                       <input
@@ -656,7 +656,7 @@ export default function AssignmentRulesPage() {
 
                   {/* Order priority */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500">
+                    <label className="mb-1 block text-xs font-medium text-gray-600">
                       Order Priority
                     </label>
                     <select
@@ -682,7 +682,7 @@ export default function AssignmentRulesPage() {
                 <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
                   {/* Factory */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500">
+                    <label className="mb-1 block text-xs font-medium text-gray-600">
                       Factory *
                     </label>
                     <select
@@ -702,7 +702,7 @@ export default function AssignmentRulesPage() {
 
                   {/* Default assignee */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500">
+                    <label className="mb-1 block text-xs font-medium text-gray-600">
                       Default Assignee
                     </label>
                     <input
@@ -716,7 +716,7 @@ export default function AssignmentRulesPage() {
 
                   {/* Auto-set priority */}
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500">
+                    <label className="mb-1 block text-xs font-medium text-gray-600">
                       Auto-set Priority
                     </label>
                     <select

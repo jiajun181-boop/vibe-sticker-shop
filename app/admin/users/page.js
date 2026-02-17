@@ -66,7 +66,8 @@ export default function AdminUsersPage() {
       </div>
 
       {/* User list */}
-      <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
+      {/* Desktop table */}
+      <div className="hidden rounded-[3px] border border-[#e0e0e0] bg-white lg:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -118,6 +119,42 @@ export default function AdminUsersPage() {
             </tbody>
           </table>
         </div>
+      </div>
+      {/* Mobile cards */}
+      <div className="space-y-3 lg:hidden">
+        {users.map((user) => (
+          <div key={user.id} className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-medium text-black">{user.name}</p>
+                <p className="mt-0.5 truncate text-xs text-[#666]">{user.email}</p>
+              </div>
+              <span className={`shrink-0 rounded-[2px] px-2.5 py-0.5 text-xs font-semibold ${user.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+                {user.isActive ? "Active" : "Inactive"}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="inline-flex rounded-[2px] bg-[#f5f5f5] px-2.5 py-0.5 text-xs font-semibold text-black">
+                {ROLE_LABELS[user.role]?.en || user.role}
+              </span>
+              <button
+                type="button"
+                onClick={() => { setEditId(user.id); setShowCreate(false); }}
+                className="text-xs font-semibold text-[#666] hover:text-black"
+              >
+                Edit
+              </button>
+            </div>
+            <p className="mt-2 text-[10px] text-[#999]">
+              Last login: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never"}
+            </p>
+          </div>
+        ))}
+        {users.length === 0 && (
+          <div className="rounded-[3px] border border-[#e0e0e0] p-8 text-center text-[#999]">
+            No admin users yet. Create one to get started.
+          </div>
+        )}
       </div>
 
       {/* Create modal */}

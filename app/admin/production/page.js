@@ -246,7 +246,7 @@ function ProductionContent() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-xl font-semibold text-black">
           Production Queue
         </h1>
@@ -368,7 +368,7 @@ function ProductionContent() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search product or email..."
-            className="w-64 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+            className="w-full sm:w-64 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button
             type="submit"
