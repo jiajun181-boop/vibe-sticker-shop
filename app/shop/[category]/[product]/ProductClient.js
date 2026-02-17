@@ -306,6 +306,15 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     setQuantity(activeQuantityChoices[0]);
   }, [activeQuantityChoices, quantity]);
 
+  // Keep selected size valid when switching between products/routes.
+  useEffect(() => {
+    if (!sizeOptions.length) return;
+    const stillValid = sizeOptions.some((s) => s.label === selectedSizeLabel);
+    if (!stillValid) {
+      setSelectedSizeLabel(sizeOptions[0].label);
+    }
+  }, [product.slug, sizeOptions, selectedSizeLabel]);
+
   // Server-driven pricing state
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -350,6 +359,16 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     if (next && next !== material) setMaterial(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
+
+  // Auto-open More Options when this product relies on option selection for quoting.
+  useEffect(() => {
+    const shouldOpen =
+      sizeOptions.length > 0 ||
+      (!hideMaterials && materials.length > 0) ||
+      (!hideAddons && addons.length > 0) ||
+      (!hideFinishings && finishings.length > 0);
+    setShowAdvancedOptions(shouldOpen);
+  }, [product.slug, sizeOptions.length, hideMaterials, materials.length, hideAddons, addons.length, hideFinishings, finishings.length]);
 
   // Sticky mobile ATC bar - show when original button scrolls out of view
   useEffect(() => {
@@ -690,6 +709,17 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const quoteRequired =
       Boolean(product.pricingPreset?.id) &&
       (isTextEditor || dimensionsEnabled || sizeOptions.length > 0 || activeQuantityChoices.length > 0);
+    if (
+      quoteRequired &&
+      selectedSize?.priceByQty &&
+      typeof selectedSize.priceByQty === "object" &&
+      Number.isFinite(selectedSize.priceByQty[String(qty)])
+    ) {
+      const subtotal = Math.round(Number(selectedSize.priceByQty[String(qty)]));
+      const tax = Math.round(subtotal * HST_RATE);
+      const unitAmount = qty > 0 ? Math.round(subtotal / qty) : subtotal;
+      return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, breakdown: null };
+    }
     if (quoteRequired) {
       return { unitAmount: null, subtotal: null, tax: null, total: null, sqft: null, breakdown: null, pending: true };
     }
@@ -718,7 +748,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const subtotal = unitAmount * qty;
     const tax = Math.round(subtotal * HST_RATE);
     return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, breakdown: null };
-  }, [quote, quantity, product.basePrice, product.slug, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal, product.pricingPreset?.id, product.pricingPreset?.model, product.pricingPreset?.config, product.pricingPreset?.config?.minimumPrice, isTextEditor, sizeOptions.length, activeQuantityChoices.length]);
+  }, [quote, quantity, product.basePrice, product.slug, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal, product.pricingPreset?.id, product.pricingPreset?.model, product.pricingPreset?.config, product.pricingPreset?.config?.minimumPrice, isTextEditor, sizeOptions.length, activeQuantityChoices.length, selectedSize]);
 
   // Tier rows â€” quick client estimates for the tier table
   const estimateTierRows = useMemo(
@@ -1331,9 +1361,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     }`}
                   >
                     {!canAddToCart
-                      ? priceData.unpriced
-                        ? t("product.priceOnRequest")
-                        : t("product.fixSizeErrors")
+                      ? priceData.pending
+                        ? "Calculating..."
+                        : priceData.unpriced
+                          ? t("product.priceOnRequest")
+                          : t("product.fixSizeErrors")
                       : added
                         ? t("product.added")
                         : t("product.addToCart")}
