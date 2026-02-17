@@ -186,7 +186,6 @@ export async function handleCheckoutCompleted(
         where: { id: couponId },
         data: { usedCount: { increment: 1 } },
       });
-      console.log(`[Webhook] Incremented coupon usage: ${couponId}`);
     } catch (couponErr) {
       console.error("[Webhook] Failed to increment coupon usage:", couponErr);
     }
@@ -204,7 +203,6 @@ export async function handleCheckoutCompleted(
           where: { id: order.id },
           data: { userId: existingUser.id },
         });
-        console.log(`[Webhook] Linked order ${order.id} to user ${existingUser.id}`);
       }
     }
   } catch (linkError) {
@@ -230,7 +228,6 @@ export async function handleCheckoutCompleted(
       await applyAssignmentRules(newJob.id);
     }
 
-    console.log(`[Webhook] Created ${orderItems.length} production jobs for order: ${order.id}`);
   } catch (jobError) {
     // Don't fail the webhook if job creation fails
     console.error(`[Webhook] Failed to create production jobs:`, jobError);

@@ -8,6 +8,8 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 const navItems = [
   { key: "account.nav.dashboard", href: "/account" },
   { key: "account.nav.orders", href: "/account/orders" },
+  { key: "account.nav.addresses", href: "/account/addresses" },
+  { key: "account.nav.profile", href: "/account/profile" },
   { key: "account.nav.favorites", href: "/account/favorites" },
 ];
 
