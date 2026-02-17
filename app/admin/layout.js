@@ -220,7 +220,7 @@ export default function AdminLayout({ children }) {
   };
 
   return (
-    <div className={`admin-shell ${inter.variable} flex h-screen bg-[#f5f5f5]`} style={{ fontFamily: "var(--font-admin, system-ui)" }}>
+    <div className={`admin-shell ${inter.variable} flex h-screen bg-[#f6f6f7]`} style={{ fontFamily: "var(--font-admin, system-ui)" }}>
       {sidebarOpen && (
         <button
           type="button"
@@ -231,12 +231,12 @@ export default function AdminLayout({ children }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-[#0a0a0a] transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-[#e3e3e3] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-transform duration-200 lg:static lg:translate-x-0 lg:shadow-none ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-14 items-center border-b border-[#222] px-5">
-          <Link href="/admin" className="text-xs font-bold uppercase tracking-[0.25em] text-white">
+        <div className="flex h-14 items-center border-b border-[#ececec] px-5">
+          <Link href="/admin" className="text-xs font-bold uppercase tracking-[0.25em] text-[#111827]">
             {t("admin.brand")}
           </Link>
         </div>
@@ -244,7 +244,7 @@ export default function AdminLayout({ children }) {
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           {filteredNavGroups.map((group, gi) => (
             <div key={group.labelKey}>
-              <p className={`px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#666] ${gi === 0 ? "pt-0" : "pt-5"}`}>
+              <p className={`px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a8a8a] ${gi === 0 ? "pt-0" : "pt-5"}`}>
                 {t(group.labelKey)}
               </p>
               <div className="space-y-0.5">
@@ -255,8 +255,8 @@ export default function AdminLayout({ children }) {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2 text-[13px] transition-colors ${
                       isActive(item.href)
-                        ? "border-l-2 border-l-white text-white font-semibold bg-white/5"
-                        : "border-l-2 border-l-transparent text-[#999] font-medium hover:text-white hover:bg-white/5"
+                        ? "border-l-2 border-l-[#4f46e5] bg-[#eef2ff] text-[#1f2937] font-semibold"
+                        : "border-l-2 border-l-transparent text-[#4b5563] font-medium hover:bg-[#f4f4f5] hover:text-[#111827]"
                     }`}
                   >
                     <NavIcon name={item.icon} className="h-[18px] w-[18px]" />
@@ -268,11 +268,11 @@ export default function AdminLayout({ children }) {
           ))}
         </nav>
 
-        <div className="space-y-2 border-t border-[#222] p-3">
+        <div className="space-y-2 border-t border-[#ececec] p-3">
           {session && (
             <div className="px-3 py-1">
-              <p className="truncate text-xs font-medium text-[#999]">{session.name || session.email}</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#666]">
+              <p className="truncate text-xs font-medium text-[#374151]">{session.name || session.email}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9ca3af]">
                 {ROLE_LABELS[session.role]?.[locale] || session.role}
               </p>
             </div>
@@ -280,7 +280,7 @@ export default function AdminLayout({ children }) {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 px-3 py-2 text-[13px] font-medium text-[#666] transition-colors hover:text-white"
+            className="flex w-full items-center gap-3 rounded-[8px] px-3 py-2 text-[13px] font-medium text-[#6b7280] transition-colors hover:bg-[#f4f4f5] hover:text-[#111827]"
           >
             <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
@@ -337,7 +337,7 @@ export default function AdminLayout({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-[#f5f5f5] p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto bg-[#f6f6f7] p-4 lg:p-6">
           {children}
         </main>
       </div>
