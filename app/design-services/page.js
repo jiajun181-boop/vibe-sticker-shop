@@ -28,13 +28,13 @@ const PRICING = [
 export default async function DesignServicesPage() {
   const t = await getServerT();
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-14 text-gray-900">
+    <main className="min-h-screen bg-[var(--color-gray-50)] px-6 py-14 text-[var(--color-gray-900)]">
       <div className="mx-auto max-w-4xl space-y-10">
         {/* Header */}
-        <header className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-500">Services</p>
+        <header className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
+          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gray-500)]">Services</p>
           <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight">Design Services</h1>
-          <p className="mt-4 text-sm text-gray-600 leading-relaxed max-w-2xl">
+          <p className="mt-4 text-sm text-[var(--color-gray-600)] leading-relaxed max-w-2xl">
             Need help with your design? Our professional graphic designers can create print-ready artwork
             for any product. From simple text edits to full custom designs, we&apos;ve got you covered.
           </p>
@@ -43,16 +43,16 @@ export default async function DesignServicesPage() {
         {/* Two tiers */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* Standard */}
-          <section className="rounded-3xl border border-gray-200 bg-white p-8">
-            <div className="inline-block rounded-full bg-gray-100 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4">
+          <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8">
+            <div className="inline-block rounded-full bg-[var(--color-gray-100)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[var(--color-gray-500)] mb-4">
               Standard
             </div>
             <h2 className="text-xl font-semibold">Standard Design</h2>
-            <p className="mt-3 text-sm text-gray-600 leading-relaxed">
+            <p className="mt-3 text-sm text-[var(--color-gray-600)] leading-relaxed">
               Budget-friendly option for basic layout adjustments. Select &quot;Design Service&quot; at checkout
               and provide notes on your preferred colours, text, and content.
             </p>
-            <ul className="mt-5 space-y-2 text-sm text-gray-700">
+            <ul className="mt-5 space-y-2 text-sm text-[var(--color-gray-700)]">
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-emerald-500">&#10003;</span>
                 Up to 3 revisions
@@ -62,27 +62,27 @@ export default async function DesignServicesPage() {
                 Print-ready file delivery
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-0.5 text-gray-300">&#10005;</span>
-                <span className="text-gray-400">Original source files not included</span>
+                <span className="mt-0.5 text-[var(--color-gray-300)]">&#10005;</span>
+                <span className="text-[var(--color-gray-400)]">Original source files not included</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-0.5 text-gray-300">&#10005;</span>
-                <span className="text-gray-400">Print usage only (no reuse rights)</span>
+                <span className="mt-0.5 text-[var(--color-gray-300)]">&#10005;</span>
+                <span className="text-[var(--color-gray-400)]">Print usage only (no reuse rights)</span>
               </li>
             </ul>
           </section>
 
           {/* Premium */}
-          <section className="rounded-3xl border-2 border-gray-900 bg-white p-8 relative">
-            <div className="inline-block rounded-full bg-gray-900 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white mb-4">
+          <section className="rounded-3xl border-2 border-[var(--color-gray-900)] bg-white p-8 relative">
+            <div className="inline-block rounded-full bg-[var(--color-gray-900)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white mb-4">
               Premium
             </div>
             <h2 className="text-xl font-semibold">Premium Custom Design</h2>
-            <p className="mt-3 text-sm text-gray-600 leading-relaxed">
+            <p className="mt-3 text-sm text-[var(--color-gray-600)] leading-relaxed">
               Full custom design service. Contact us directly with your brand requirements including
               vision, style preferences, and target audience.
             </p>
-            <ul className="mt-5 space-y-2 text-sm text-gray-700">
+            <ul className="mt-5 space-y-2 text-sm text-[var(--color-gray-700)]">
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-emerald-500">&#10003;</span>
                 Extended revisions
@@ -104,43 +104,43 @@ export default async function DesignServicesPage() {
         </div>
 
         {/* Pricing table */}
-        <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
           <h2 className="text-2xl font-semibold tracking-tight mb-6">Premium Design Pricing</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
+                <tr className="border-b border-[var(--color-gray-200)] text-left text-xs font-bold uppercase tracking-wider text-[var(--color-gray-400)]">
                   <th className="pb-3 pr-4">Item</th>
                   <th className="pb-3 pr-4">Single Side</th>
                   <th className="pb-3">Double Side</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[var(--color-gray-100)]">
                 {PRICING.map((row) => (
                   <tr key={row.item}>
-                    <td className="py-3 pr-4 font-medium text-gray-900">{row.item}</td>
-                    <td className="py-3 pr-4 text-gray-600">{row.single}</td>
-                    <td className="py-3 text-gray-600">{row.double}</td>
+                    <td className="py-3 pr-4 font-medium text-[var(--color-gray-900)]">{row.item}</td>
+                    <td className="py-3 pr-4 text-[var(--color-gray-600)]">{row.single}</td>
+                    <td className="py-3 text-[var(--color-gray-600)]">{row.double}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="mt-6 text-xs text-gray-400">
+          <p className="mt-6 text-xs text-[var(--color-gray-400)]">
             Prices are starting rates and may vary based on complexity. Contact us for a detailed quote.
           </p>
         </section>
 
         {/* CTA */}
-        <section className="rounded-3xl border border-gray-200 bg-gray-900 p-8 text-white">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-[var(--color-gray-900)] p-8 text-white">
           <h2 className="text-2xl font-semibold">Ready to get started?</h2>
-          <p className="mt-3 text-sm text-gray-300">
+          <p className="mt-3 text-sm text-[var(--color-gray-300)]">
             Email us your design brief or call to discuss your project. We typically respond within 24 hours.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href="/contact"
-              className="inline-block rounded-full bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-900 hover:bg-gray-100 transition-colors"
+              className="inline-block rounded-full bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
             >
               Contact Us
             </Link>

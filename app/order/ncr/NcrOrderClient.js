@@ -244,7 +244,7 @@ export default function NcrOrderClient() {
         ]}
       />
 
-      <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+      <h1 className="mb-8 text-2xl font-bold tracking-tight text-[var(--color-gray-900)] sm:text-3xl">
         {t("ncr.title")}
       </h1>
 
@@ -262,12 +262,12 @@ export default function NcrOrderClient() {
                   onClick={() => setFormTypeId(ft.id)}
                   className={`group flex flex-col items-start gap-1 rounded-xl border-2 p-4 text-left transition-all ${
                     formTypeId === ft.id
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white shadow-md"
+                      : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                   }`}
                 >
                   <span className="text-sm font-semibold">{t(`ncr.type.${ft.id}`)}</span>
-                  <span className={`text-[11px] ${formTypeId === ft.id ? "text-gray-300" : "text-gray-400"}`}>
+                  <span className={`text-[11px] ${formTypeId === ft.id ? "text-[var(--color-gray-300)]" : "text-[var(--color-gray-400)]"}`}>
                     {ft.parts} {t("ncr.parts")}
                   </span>
                 </button>
@@ -303,7 +303,7 @@ export default function NcrOrderClient() {
               ))}
             </div>
             <div className="mt-3 flex items-center gap-2">
-              <label className="text-xs text-gray-500">{t("ncr.customQty")}:</label>
+              <label className="text-xs text-[var(--color-gray-500)]">{t("ncr.customQty")}:</label>
               <input
                 type="number"
                 min="1"
@@ -311,7 +311,7 @@ export default function NcrOrderClient() {
                 value={customQty}
                 onChange={(e) => setCustomQty(e.target.value)}
                 placeholder="e.g. 750"
-                className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                className="w-28 rounded-lg border border-[var(--color-gray-300)] px-3 py-1.5 text-sm focus:border-[var(--color-gray-900)] focus:outline-none focus:ring-1 focus:ring-gray-900"
               />
             </div>
           </Section>
@@ -323,16 +323,16 @@ export default function NcrOrderClient() {
                 type="checkbox"
                 checked={numbering}
                 onChange={(e) => handleToggleNumbering(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                className="h-4 w-4 rounded border-[var(--color-gray-300)] text-[var(--color-gray-900)] focus:ring-gray-900"
               />
-              <span className="text-sm text-gray-700">{t("ncr.numbering.addNumbering")}</span>
+              <span className="text-sm text-[var(--color-gray-700)]">{t("ncr.numbering.addNumbering")}</span>
             </label>
 
             {numbering && (
-              <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <div className="mt-3 rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-4">
                 <div className="flex items-center gap-4">
                   <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400 mb-1">
+                    <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-1">
                       {t("ncr.numbering.startNumber")}
                     </label>
                     <input
@@ -340,25 +340,25 @@ export default function NcrOrderClient() {
                       min="0"
                       value={numberStart}
                       onChange={(e) => setNumberStart(e.target.value)}
-                      className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                      className="w-28 rounded-lg border border-[var(--color-gray-300)] px-3 py-2 text-sm focus:border-[var(--color-gray-900)] focus:outline-none focus:ring-1 focus:ring-gray-900"
                     />
                   </div>
-                  <span className="pt-5 text-gray-400">→</span>
+                  <span className="pt-5 text-[var(--color-gray-400)]">→</span>
                   <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400 mb-1">
+                    <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-1">
                       {t("ncr.numbering.endNumber")}
                     </label>
-                    <div className="flex h-[38px] items-center rounded-lg border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-900">
+                    <div className="flex h-[38px] items-center rounded-lg border border-[var(--color-gray-200)] bg-white px-3 text-sm font-semibold text-[var(--color-gray-900)]">
                       {numberEnd.toLocaleString()}
                     </div>
                   </div>
                   <div className="pt-5">
-                    <span className="rounded-full bg-gray-900 px-3 py-1 text-[11px] font-semibold text-white">
+                    <span className="rounded-full bg-[var(--color-gray-900)] px-3 py-1 text-[11px] font-semibold text-white">
                       {activeQty.toLocaleString()} {t("ncr.numbering.forms")}
                     </span>
                   </div>
                 </div>
-                <p className="mt-2 text-[11px] text-gray-400">
+                <p className="mt-2 text-[11px] text-[var(--color-gray-400)]">
                   {t("ncr.numbering.hint", { qty: activeQty.toLocaleString() })}
                 </p>
               </div>
@@ -367,11 +367,11 @@ export default function NcrOrderClient() {
 
           {/* File Upload */}
           <Section label={t("ncr.artwork")} optional>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="mb-3 text-xs text-gray-600">{t("ncr.uploadHint")}</p>
+            <div className="rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-4">
+              <p className="mb-3 text-xs text-[var(--color-gray-600)]">{t("ncr.uploadHint")}</p>
               {uploadedFile ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-800">{uploadedFile.name}</span>
+                  <span className="text-sm text-[var(--color-gray-800)]">{uploadedFile.name}</span>
                   <button
                     type="button"
                     onClick={() => setUploadedFile(null)}
@@ -402,8 +402,8 @@ export default function NcrOrderClient() {
 
         {/* ── RIGHT: Summary sidebar ── */}
         <aside className="hidden lg:col-span-2 lg:block">
-          <div className="sticky top-24 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-base font-bold text-gray-900">{t("ncr.summary")}</h2>
+          <div className="sticky top-24 space-y-6 rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 shadow-sm">
+            <h2 className="text-base font-bold text-[var(--color-gray-900)]">{t("ncr.summary")}</h2>
 
             <dl className="space-y-2 text-sm">
               <Row label={t("ncr.formType")} value={t(`ncr.type.${formTypeId}`)} />
@@ -417,12 +417,12 @@ export default function NcrOrderClient() {
               )}
             </dl>
 
-            <hr className="border-gray-100" />
+            <hr className="border-[var(--color-gray-100)]" />
 
             {quoteLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-4 animate-pulse rounded bg-gray-100" />
+                  <div key={i} className="h-4 animate-pulse rounded bg-[var(--color-gray-100)]" />
                 ))}
               </div>
             ) : quoteError ? (
@@ -438,13 +438,13 @@ export default function NcrOrderClient() {
                   />
                 )}
                 <Row label={`HST (13%)`} value={formatCad(taxCents)} />
-                <div className="flex justify-between border-t border-gray-100 pt-2">
-                  <dt className="font-semibold text-gray-900">{t("ncr.total")}</dt>
-                  <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
+                <div className="flex justify-between border-t border-[var(--color-gray-100)] pt-2">
+                  <dt className="font-semibold text-[var(--color-gray-900)]">{t("ncr.total")}</dt>
+                  <dd className="text-lg font-bold text-[var(--color-gray-900)]">{formatCad(totalCents)}</dd>
                 </div>
               </dl>
             ) : (
-              <p className="text-xs text-gray-400">{t("ncr.selectOptions")}</p>
+              <p className="text-xs text-[var(--color-gray-400)]">{t("ncr.selectOptions")}</p>
             )}
 
             {/* Actions */}
@@ -455,8 +455,8 @@ export default function NcrOrderClient() {
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart
-                    ? "bg-gray-900 text-white hover:bg-gray-800"
-                    : "cursor-not-allowed bg-gray-200 text-gray-400"
+                    ? "bg-[var(--color-gray-900)] text-white hover:bg-[var(--color-gray-800)]"
+                    : "cursor-not-allowed bg-[var(--color-gray-200)] text-[var(--color-gray-400)]"
                 }`}
               >
                 {t("ncr.addToCart")}
@@ -467,17 +467,17 @@ export default function NcrOrderClient() {
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading
-                    ? "border-gray-900 text-gray-900 hover:bg-gray-50"
-                    : "cursor-not-allowed border-gray-200 text-gray-400"
+                    ? "border-[var(--color-gray-900)] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)]"
+                    : "cursor-not-allowed border-[var(--color-gray-200)] text-[var(--color-gray-400)]"
                 }`}
               >
                 {buyNowLoading ? t("ncr.processing") : t("ncr.buyNow")}
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
+            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-[var(--color-gray-400)]">
               <span>{t("ncr.badge.carbonless")}</span>
-              <span className="text-gray-300">|</span>
+              <span className="text-[var(--color-gray-300)]">|</span>
               <span>{t("ncr.badge.shipping")}</span>
             </div>
           </div>
@@ -485,21 +485,21 @@ export default function NcrOrderClient() {
       </div>
 
       {/* ── MOBILE: Fixed bottom bar ── */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-gray-200)] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             {quoteLoading ? (
-              <div className="h-5 w-20 animate-pulse rounded bg-gray-200" />
+              <div className="h-5 w-20 animate-pulse rounded bg-[var(--color-gray-200)]" />
             ) : quoteData ? (
               <>
-                <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
-                <p className="truncate text-[11px] text-gray-500">
+                <p className="text-lg font-bold text-[var(--color-gray-900)]">{formatCad(totalCents)}</p>
+                <p className="truncate text-[11px] text-[var(--color-gray-500)]">
                   {activeQty.toLocaleString()} {t("ncr.numbering.forms")}
                   {numbering ? ` • #${numberStartInt}–${numberEnd}` : ""}
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">{t("ncr.selectOptions")}</p>
+              <p className="text-sm text-[var(--color-gray-400)]">{t("ncr.selectOptions")}</p>
             )}
           </div>
           <button
@@ -508,8 +508,8 @@ export default function NcrOrderClient() {
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart
-                ? "bg-gray-900 text-white hover:bg-gray-800"
-                : "cursor-not-allowed bg-gray-200 text-gray-400"
+                ? "bg-[var(--color-gray-900)] text-white hover:bg-[var(--color-gray-800)]"
+                : "cursor-not-allowed bg-[var(--color-gray-200)] text-[var(--color-gray-400)]"
             }`}
           >
             {t("ncr.addToCart")}
@@ -523,14 +523,14 @@ export default function NcrOrderClient() {
       {showNumberModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-1">{t("ncr.numbering.modalTitle")}</h3>
-            <p className="text-sm text-gray-500 mb-5">
+            <h3 className="text-lg font-bold text-[var(--color-gray-900)] mb-1">{t("ncr.numbering.modalTitle")}</h3>
+            <p className="text-sm text-[var(--color-gray-500)] mb-5">
               {t("ncr.numbering.modalDesc", { qty: activeQty.toLocaleString() })}
             </p>
 
             <div className="flex items-end gap-4">
               <div className="flex-1">
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400 mb-1.5">
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-1.5">
                   {t("ncr.numbering.startNumber")}
                 </label>
                 <input
@@ -539,22 +539,22 @@ export default function NcrOrderClient() {
                   value={numberStart}
                   onChange={(e) => setNumberStart(e.target.value)}
                   autoFocus
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-semibold focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                  className="w-full rounded-lg border border-[var(--color-gray-300)] px-3 py-2.5 text-sm font-semibold focus:border-[var(--color-gray-900)] focus:outline-none focus:ring-1 focus:ring-gray-900"
                 />
               </div>
-              <span className="pb-3 text-lg text-gray-400">→</span>
+              <span className="pb-3 text-lg text-[var(--color-gray-400)]">→</span>
               <div className="flex-1">
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400 mb-1.5">
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-1.5">
                   {t("ncr.numbering.endNumber")}
                 </label>
-                <div className="flex h-[42px] items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-bold text-gray-900">
+                <div className="flex h-[42px] items-center rounded-lg border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 text-sm font-bold text-[var(--color-gray-900)]">
                   {numberEnd.toLocaleString()}
                 </div>
               </div>
             </div>
 
-            <div className="mt-3 rounded-lg bg-gray-50 px-3 py-2">
-              <p className="text-xs text-gray-500">
+            <div className="mt-3 rounded-lg bg-[var(--color-gray-50)] px-3 py-2">
+              <p className="text-xs text-[var(--color-gray-500)]">
                 {t("ncr.numbering.rangeExplain", {
                   start: numberStartInt.toLocaleString(),
                   end: numberEnd.toLocaleString(),
@@ -567,14 +567,14 @@ export default function NcrOrderClient() {
               <button
                 type="button"
                 onClick={handleCancelNumbering}
-                className="rounded-full border border-gray-200 px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-gray-600 hover:bg-gray-50"
+                className="rounded-full border border-[var(--color-gray-200)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"
               >
                 {t("ncr.numbering.cancel")}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmNumbering}
-                className="rounded-full bg-gray-900 px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-white hover:bg-gray-800"
+                className="rounded-full bg-[var(--color-gray-900)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-white hover:bg-[var(--color-gray-800)]"
               >
                 {t("ncr.numbering.confirm")}
               </button>
@@ -592,8 +592,8 @@ function Section({ label, optional, children }) {
   return (
     <section>
       <div className="mb-3 flex items-baseline gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{label}</h2>
-        {optional && <span className="text-[10px] text-gray-400">(optional)</span>}
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{label}</h2>
+        {optional && <span className="text-[10px] text-[var(--color-gray-400)]">(optional)</span>}
       </div>
       {children}
     </section>
@@ -607,8 +607,8 @@ function Chip({ active, onClick, children }) {
       onClick={onClick}
       className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
         active
-          ? "border-gray-900 bg-gray-900 text-white"
-          : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"
+          ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+          : "border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)] hover:border-gray-500"
       }`}
     >
       {children}
@@ -619,8 +619,8 @@ function Chip({ active, onClick, children }) {
 function Row({ label, value }) {
   return (
     <div className="flex justify-between">
-      <dt className="text-gray-500">{label}</dt>
-      <dd className="font-medium text-gray-800">{value}</dd>
+      <dt className="text-[var(--color-gray-500)]">{label}</dt>
+      <dd className="font-medium text-[var(--color-gray-800)]">{value}</dd>
     </div>
   );
 }

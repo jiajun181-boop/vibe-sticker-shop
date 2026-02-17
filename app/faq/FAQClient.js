@@ -86,7 +86,7 @@ export default function FAQClient() {
               const id = `${cat.key}-${i}`;
               const isOpen = openItem === id;
               return (
-                <div key={id} className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                <div key={id} className="overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white">
                   <button
                     id={`faq-btn-${id}`}
                     type="button"
@@ -94,11 +94,11 @@ export default function FAQClient() {
                     onKeyDown={(e) => handleKeyDown(e, id)}
                     aria-expanded={isOpen}
                     aria-controls={`faq-panel-${id}`}
-                    className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-semibold text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
+                    className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-semibold text-[var(--color-gray-900)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gray-400)] focus-visible:ring-offset-2"
                   >
                     <span>{t(item.q)}</span>
                     <svg
-                      className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                      className={`h-4 w-4 flex-shrink-0 text-[var(--color-gray-400)] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -112,7 +112,7 @@ export default function FAQClient() {
                     role="region"
                     aria-labelledby={`faq-btn-${id}`}
                     hidden={!isOpen}
-                    className="border-t border-gray-100 px-5 pb-4 pt-3 text-sm leading-relaxed text-gray-600"
+                    className="border-t border-[var(--color-gray-100)] px-5 pb-4 pt-3 text-sm leading-relaxed text-[var(--color-gray-600)]"
                   >
                     {t(item.a)}
                   </div>

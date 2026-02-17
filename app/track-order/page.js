@@ -14,13 +14,13 @@ export async function generateMetadata() {
 export default async function TrackOrderPage() {
   const t = await getServerT();
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-14 text-gray-900">
+    <main className="min-h-screen bg-[var(--color-gray-50)] px-6 py-14 text-[var(--color-gray-900)]">
       <div className="mx-auto max-w-lg">
         <header className="text-center mb-8">
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-500">Support</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Track Your Order</h1>
-          <p className="mt-3 text-sm text-gray-600">
-            Enter your order reference number and the email you used at checkout.
+          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gray-500)]">{t("track.badge")}</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">{t("track.title")}</h1>
+          <p className="mt-3 text-sm text-[var(--color-gray-600)]">
+            {t("track.subtitle")}
           </p>
         </header>
         <TrackOrderClient />

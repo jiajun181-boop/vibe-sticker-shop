@@ -20,10 +20,10 @@ export default function UseCaseSection() {
             className="group overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 text-center hover-lift"
           >
             <span className="text-4xl block">{uc.icon}</span>
-            <h3 className="mt-3 font-bold body-sm text-gray-900">
+            <h3 className="mt-3 font-bold body-sm text-[var(--color-gray-900)]">
               {t(`useCase.${uc.slug}.title`)}
             </h3>
-            <p className="mt-1 body-sm text-gray-400">
+            <p className="mt-1 body-sm text-[var(--color-gray-400)]">
               {t(`useCase.${uc.slug}.subtitle`)}
             </p>
           </Link>

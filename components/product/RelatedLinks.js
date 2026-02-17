@@ -43,15 +43,15 @@ export default function RelatedLinks({ product, catalogConfig }) {
 
   return (
     <section className="space-y-6">
-      <h2 className="text-lg font-semibold text-gray-900">
+      <h2 className="text-lg font-semibold text-[var(--color-gray-900)]">
         {t("product.explore") || "Explore More"}
       </h2>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {/* Industry links */}
         {industries.length > 0 && (
-          <div className="rounded-2xl border border-gray-200 bg-white p-5">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-gray-500">
+          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
               {t("product.byIndustry") || "By Industry"}
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -61,7 +61,7 @@ export default function RelatedLinks({ product, catalogConfig }) {
                   <Link
                     key={tag}
                     href={`/shop/industry/${tag}`}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-100"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-1.5 text-xs font-medium text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-300)] hover:bg-[var(--color-gray-100)]"
                   >
                     <span>{info.icon}</span>
                     <span>{info.label}</span>
@@ -74,8 +74,8 @@ export default function RelatedLinks({ product, catalogConfig }) {
 
         {/* Use case links */}
         {useCases.length > 0 && (
-          <div className="rounded-2xl border border-gray-200 bg-white p-5">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-gray-500">
+          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
               {t("product.byUseCase") || "Ideas & Inspiration"}
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -83,7 +83,7 @@ export default function RelatedLinks({ product, catalogConfig }) {
                 <Link
                   key={uc.slug}
                   href={`/ideas/${uc.slug}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-100"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-1.5 text-xs font-medium text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-300)] hover:bg-[var(--color-gray-100)]"
                 >
                   <span>{uc.icon}</span>
                   <span>{t(`ideas.${uc.slug}.title`) || uc.slug}</span>
@@ -95,8 +95,8 @@ export default function RelatedLinks({ product, catalogConfig }) {
 
         {/* Sibling category links */}
         {siblingCategories.length > 0 && (
-          <div className="rounded-2xl border border-gray-200 bg-white p-5">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-gray-500">
+          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
               {t("product.alsoIn") || "Also In"}
               {" "}
               {departmentMeta[dept?.key]?.title || ""}
@@ -108,7 +108,7 @@ export default function RelatedLinks({ product, catalogConfig }) {
                   <Link
                     key={cat}
                     href={`/shop?category=${cat}`}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-100"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-1.5 text-xs font-medium text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-300)] hover:bg-[var(--color-gray-100)]"
                   >
                     <span>{meta.icon}</span>
                     <span>{meta.title}</span>

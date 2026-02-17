@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { resizeImageFile } from "@/lib/client-image-resize";
 
 export default function MediaPage() {
   return (
@@ -31,13 +32,11 @@ function MediaContent() {
   const [statusFilter, setStatusFilter] = useState("published");
   const [message, setMessage] = useState(null);
 
-  // Upload modal
+  // Upload modal — multi-file
   const [showUpload, setShowUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadFile, setUploadFile] = useState(null);
-  const [uploadAlt, setUploadAlt] = useState("");
+  const [uploadFiles, setUploadFiles] = useState([]); // [{id, file, preview, alt, status}]
   const [uploadTags, setUploadTags] = useState("");
-  const [uploadPreview, setUploadPreview] = useState(null);
   const [uploadProductQuery, setUploadProductQuery] = useState("");
   const [uploadProductResults, setUploadProductResults] = useState([]);
   const [uploadProductLoading, setUploadProductLoading] = useState(false);
@@ -56,6 +55,12 @@ function MediaContent() {
   const [detailProductLoading, setDetailProductLoading] = useState(false);
   const [detailProductId, setDetailProductId] = useState("");
   const [linkingInDetail, setLinkingInDetail] = useState(false);
+
+  // Background removal
+  const [bgRemoving, setBgRemoving] = useState(false);
+  const [bgRemovedBlob, setBgRemovedBlob] = useState(null);
+  const [bgRemovedPreview, setBgRemovedPreview] = useState(null);
+  const [bgSaving, setBgSaving] = useState(false);
 
   // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -286,62 +291,145 @@ function MediaContent() {
     }
   }
 
-  // ── File selection ──
-  function handleFileChange(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadFile(file);
-    setUploadPreview(URL.createObjectURL(file));
+  function filenameToAlt(fileName) {
+    return String(fileName || "")
+      .replace(/\.[^.]+$/, "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .trim();
   }
 
-  // ── Upload asset ──
+  let fileIdCounter = useRef(0);
+
+  // ── Clipboard paste (Ctrl+V) ──
+  useEffect(() => {
+    if (!showUpload) return;
+    function handlePaste(e) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const imageFiles = [];
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            const ext = file.type.split("/")[1] || "png";
+            const named = new File([file], `pasted-image-${Date.now()}.${ext}`, { type: file.type });
+            imageFiles.push(named);
+          }
+        }
+      }
+      if (imageFiles.length > 0) {
+        e.preventDefault();
+        addFiles(imageFiles);
+      }
+    }
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [showUpload]);
+
+  async function addFiles(fileList) {
+    const rawFiles = Array.from(fileList);
+    // Resize large images client-side before queuing
+    const resized = await Promise.all(rawFiles.map((f) => resizeImageFile(f)));
+    const newEntries = resized.map((file, i) => ({
+      id: `f_${++fileIdCounter.current}`,
+      file,
+      preview: URL.createObjectURL(file),
+      alt: filenameToAlt(rawFiles[i].name),
+      status: "ready",
+      wasResized: file !== rawFiles[i],
+    }));
+    setUploadFiles((prev) => [...prev, ...newEntries]);
+
+    // Smart auto-match: if no product selected yet, try to find one from first filename
+    if (!uploadProductId && newEntries.length > 0) {
+      const slug = filenameToSlug(rawFiles[0].name);
+      if (slug && slug.length >= 3) {
+        findProductBySlugSlugOrName(slug).then((product) => {
+          if (product) {
+            setUploadProductResults([product]);
+            setUploadProductId(product.id);
+            setUploadProductQuery(product.name);
+          }
+        }).catch(() => {});
+      }
+    }
+  }
+
+  // ── File selection (multi) ──
+  function handleFileChange(e) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    addFiles(files);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function removeUploadFile(id) {
+    setUploadFiles((prev) => {
+      const removed = prev.find((f) => f.id === id);
+      if (removed?.preview) URL.revokeObjectURL(removed.preview);
+      return prev.filter((f) => f.id !== id);
+    });
+  }
+
+  function updateUploadFileAlt(id, alt) {
+    setUploadFiles((prev) => prev.map((f) => f.id === id ? { ...f, alt } : f));
+  }
+
+  // ── Upload all queued files ──
   async function handleUpload(e) {
     e.preventDefault();
-    if (!uploadFile) { showMsg("Select a file first", true); return; }
+    const pending = uploadFiles.filter((f) => f.status === "ready");
+    if (pending.length === 0) { showMsg("Select files first", true); return; }
 
     setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", uploadFile);
-      if (uploadAlt.trim()) formData.append("altText", uploadAlt.trim());
-      if (uploadTags.trim()) formData.append("tags", uploadTags.trim());
+    let doneCount = 0;
+    let errorCount = 0;
 
-      const res = await fetch("/api/admin/assets", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
+    for (const entry of pending) {
+      setUploadFiles((prev) => prev.map((f) => f.id === entry.id ? { ...f, status: "uploading" } : f));
 
-      if (!res.ok) {
-        showMsg(data.error || "Upload failed", true);
-        return;
+      try {
+        const formData = new FormData();
+        formData.append("file", entry.file);
+        formData.append("altText", entry.alt || filenameToAlt(entry.file.name));
+        if (uploadTags.trim()) formData.append("tags", uploadTags.trim());
+
+        const res = await fetch("/api/admin/assets", { method: "POST", body: formData });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setUploadFiles((prev) => prev.map((f) => f.id === entry.id ? { ...f, status: "error" } : f));
+          errorCount++;
+          continue;
+        }
+
+        if (uploadProductId) {
+          try { await linkAssetToProduct(data.asset, uploadProductId); } catch {}
+        }
+
+        setUploadFiles((prev) => prev.map((f) => f.id === entry.id ? { ...f, status: "done" } : f));
+        doneCount++;
+      } catch {
+        setUploadFiles((prev) => prev.map((f) => f.id === entry.id ? { ...f, status: "error" } : f));
+        errorCount++;
       }
+    }
 
-      if (data.deduplicated) {
-        showMsg(`Duplicate detected — existing asset reused (${data.asset.originalName})`);
-      } else {
-        showMsg("Asset uploaded successfully");
-      }
-
-      if (uploadProductId) {
-        await linkAssetToProduct(data.asset, uploadProductId);
-        showMsg("Asset uploaded and linked to product");
-      }
-
-      setShowUpload(false);
-      setUploadFile(null);
-      setUploadAlt("");
-      setUploadTags("");
-      setUploadPreview(null);
-      setUploadProductQuery("");
-      setUploadProductResults([]);
-      setUploadProductId("");
-      fetchAssets();
-    } catch (err) {
-      console.error("Upload error:", err);
-      showMsg(err?.message || "Upload failed", true);
-    } finally {
-      setUploading(false);
+    setUploading(false);
+    fetchAssets();
+    fetchHealth();
+    if (errorCount === 0) {
+      showMsg(`${doneCount} image${doneCount > 1 ? "s" : ""} uploaded`);
+      setTimeout(() => {
+        setShowUpload(false);
+        setUploadFiles([]);
+        setUploadProductQuery("");
+        setUploadProductResults([]);
+        setUploadProductId("");
+      }, 800);
+    } else {
+      showMsg(`${doneCount} uploaded, ${errorCount} failed`, true);
     }
   }
 
@@ -400,7 +488,7 @@ function MediaContent() {
       try {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("altText", uploadAlt.trim() || file.name);
+        formData.append("altText", filenameToAlt(file.name));
         formData.append("tags", uploadTags.trim() || "product");
 
         const uploadRes = await fetch("/api/admin/assets", {
@@ -441,6 +529,59 @@ function MediaContent() {
     showMsg("Batch upload finished");
   }
 
+  // ── Background removal ──
+  async function handleRemoveBg() {
+    if (!selectedAsset || bgRemoving) return;
+    setBgRemoving(true);
+    setBgRemovedBlob(null);
+    setBgRemovedPreview(null);
+    try {
+      const { removeBackground } = await import("@imgly/background-removal");
+      const blob = await removeBackground(selectedAsset.originalUrl, {
+        output: { format: "image/png" },
+      });
+      const url = URL.createObjectURL(blob);
+      setBgRemovedBlob(blob);
+      setBgRemovedPreview(url);
+      showMsg("Background removed successfully");
+    } catch (err) {
+      console.error("Background removal failed:", err);
+      showMsg("Background removal failed — try a clearer photo", true);
+    } finally {
+      setBgRemoving(false);
+    }
+  }
+
+  async function handleSaveBgRemoved() {
+    if (!bgRemovedBlob || !selectedAsset || bgSaving) return;
+    setBgSaving(true);
+    try {
+      const fileName = selectedAsset.originalName.replace(/\.[^.]+$/, "") + "-nobg.png";
+      const file = new File([bgRemovedBlob], fileName, { type: "image/png" });
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("altText", (editAlt || selectedAsset.altText || filenameToAlt(fileName)) + " (no background)");
+      formData.append("tags", "background-removed");
+
+      const res = await fetch("/api/admin/assets", { method: "POST", body: formData });
+      if (!res.ok) {
+        showMsg("Failed to save background-removed image", true);
+        return;
+      }
+      showMsg("Saved as new asset");
+      setBgRemovedBlob(null);
+      if (bgRemovedPreview) URL.revokeObjectURL(bgRemovedPreview);
+      setBgRemovedPreview(null);
+      fetchAssets();
+      fetchHealth();
+    } catch {
+      showMsg("Failed to save", true);
+    } finally {
+      setBgSaving(false);
+    }
+  }
+
   // ── Open detail ──
   async function openDetail(asset) {
     setSelectedAsset(asset);
@@ -451,6 +592,10 @@ function MediaContent() {
     setDetailProductQuery("");
     setDetailProductResults([]);
     setDetailProductId("");
+    setBgRemovedBlob(null);
+    if (bgRemovedPreview) URL.revokeObjectURL(bgRemovedPreview);
+    setBgRemovedPreview(null);
+    setBgRemoving(false);
   }
 
   // ── Save detail ──
@@ -578,7 +723,7 @@ function MediaContent() {
           onClick={() => setTab("legacy")}
           className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${tab === "legacy" ? "bg-white text-black shadow-sm" : "text-[#999] hover:text-black"}`}
         >
-          Legacy Images
+          Product Images (old)
         </button>
       </div>
 
@@ -604,11 +749,13 @@ function MediaContent() {
                   <p className="text-base font-semibold text-black">{health.summary.totalAssets}</p>
                 </div>
                 <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-                  <p className="text-[11px] text-[#666]">Orphan Assets</p>
+                  <p className="text-[11px] text-[#666]">Unused Images</p>
+                  <p className="text-[10px] text-[#bbb]">Not linked to any product</p>
                   <p className="text-base font-semibold text-black">{health.summary.orphanAssets}</p>
                 </div>
                 <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-                  <p className="text-[11px] text-[#666]">Placeholder URLs</p>
+                  <p className="text-[11px] text-[#666]">Missing URLs</p>
+                  <p className="text-[10px] text-[#bbb]">Placeholder / broken links</p>
                   <p className="text-base font-semibold text-black">{health.summary.placeholderAssets}</p>
                 </div>
                 <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
@@ -619,7 +766,7 @@ function MediaContent() {
               {(health.orphanExamples?.length > 0 || health.missingImageProducts?.length > 0) && (
                 <div className="grid gap-2 lg:grid-cols-2">
                   <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-[#666]">Orphan Assets</p>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-[#666]">Unused Images</p>
                     <div className="space-y-1 text-xs">
                       {(health.orphanExamples || []).slice(0, 5).map((a) => (
                         <div key={a.id} className="truncate text-[#666]" title={a.originalName}>
@@ -798,196 +945,194 @@ function MediaContent() {
         </div>
       )}
 
-      {/* ── Upload Modal ── */}
+      {/* ── Upload Modal (multi-file) ── */}
       {showUpload && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setShowUpload(false); }}>
-          <div className="bg-white rounded-[3px] shadow-lg w-full max-w-md mx-4 p-6">
+          <div className="bg-white rounded-[3px] shadow-lg w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-black">Upload Asset</h2>
-              <button type="button" onClick={() => setShowUpload(false)} className="text-[#999] hover:text-[#666] text-lg leading-none">&times;</button>
+              <h2 className="text-sm font-semibold text-black">Upload Images</h2>
+              <button type="button" onClick={() => { setShowUpload(false); setUploadFiles([]); }} className="text-[#999] hover:text-[#666] text-lg leading-none">&times;</button>
             </div>
 
             <form onSubmit={handleUpload} className="space-y-4">
-              {/* Drop zone */}
+              {/* Drop zone (multi-file) */}
               <div
                 className="flex flex-col items-center justify-center gap-2 rounded-[3px] border-2 border-dashed border-[#d0d0d0] p-6 cursor-pointer hover:border-[#999] transition-colors"
                 onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => e.preventDefault()}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-black"); }}
+                onDragLeave={(e) => { e.currentTarget.classList.remove("border-black"); }}
                 onDrop={(e) => {
                   e.preventDefault();
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) { setUploadFile(file); setUploadPreview(URL.createObjectURL(file)); }
+                  e.currentTarget.classList.remove("border-black");
+                  if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
                 }}
               >
-                {uploadPreview ? (
-                  <img src={uploadPreview} alt="Preview" className="h-32 w-32 rounded-[3px] object-cover" />
-                ) : (
-                  <>
-                    <svg className="h-8 w-8 text-[#999]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                    </svg>
-                    <p className="text-xs text-[#999]">Drop image or click to browse</p>
-                    <p className="text-[10px] text-[#999]">JPEG, PNG, WebP, SVG, AVIF (max 20MB)</p>
-                  </>
+                <svg className="h-8 w-8 text-[#999]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                <p className="text-xs text-[#999]">Drop images here, click to browse, or Ctrl+V to paste</p>
+                <p className="text-[10px] text-[#999]">Multiple files OK — JPEG, PNG, WebP, SVG (max 20MB each)</p>
+                {uploadProductId && uploadProductQuery && (
+                  <p className="mt-1 rounded bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                    Auto-matched: {uploadProductQuery}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setUploadProductId(""); setUploadProductQuery(""); setUploadProductResults([]); }} className="ml-1 text-green-500 hover:text-red-500">&times;</button>
+                  </p>
                 )}
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
               </div>
 
-              {uploadFile && (
-                <p className="text-xs text-[#999] truncate">
-                  {uploadFile.name} ({formatBytes(uploadFile.size)})
-                </p>
+              {/* File list with per-file alt text */}
+              {uploadFiles.length > 0 && (
+                <div className="space-y-2 max-h-56 overflow-y-auto">
+                  {uploadFiles.map((entry) => (
+                    <div key={entry.id} className="flex items-center gap-2.5 rounded-[3px] border border-[#e0e0e0] p-2">
+                      <img src={entry.preview} alt="" className="h-10 w-10 flex-shrink-0 rounded-[2px] object-cover" />
+                      <div className="flex-1 min-w-0">
+                        <input
+                          type="text"
+                          value={entry.alt}
+                          onChange={(e) => updateUploadFileAlt(entry.id, e.target.value)}
+                          placeholder="Alt text"
+                          disabled={entry.status !== "ready"}
+                          className="w-full rounded-[2px] border border-transparent px-1.5 py-0.5 text-xs outline-none hover:border-[#d0d0d0] focus:border-black disabled:bg-transparent"
+                        />
+                        <p className="px-1.5 text-[10px] text-[#999] truncate">
+                          {entry.file.name} ({formatBytes(entry.file.size)})
+                          {entry.wasResized && <span className="ml-1 text-blue-500">resized</span>}
+                        </p>
+                      </div>
+                      {entry.status === "ready" && (
+                        <button type="button" onClick={() => removeUploadFile(entry.id)} className="flex-shrink-0 text-[#999] hover:text-red-500 text-sm">&times;</button>
+                      )}
+                      {entry.status === "uploading" && (
+                        <span className="flex-shrink-0 text-[10px] font-medium text-blue-600">Uploading...</span>
+                      )}
+                      {entry.status === "done" && (
+                        <span className="flex-shrink-0 text-[10px] font-medium text-green-600">Done</span>
+                      )}
+                      {entry.status === "error" && (
+                        <span className="flex-shrink-0 text-[10px] font-medium text-red-500">Failed</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
 
-              <div>
-                <label className="block text-xs font-medium text-[#666] mb-1">Alt Text</label>
-                <input type="text" value={uploadAlt} onChange={(e) => setUploadAlt(e.target.value)} placeholder="Describe the image..." className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
-              </div>
+              {/* Tags (optional, applies to all) */}
+              <details className="rounded-[3px] border border-[#e0e0e0]">
+                <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-[#666]">Tags & Product Link (optional)</summary>
+                <div className="border-t border-[#e0e0e0] p-3 space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#666] mb-1">Tags (comma-separated)</label>
+                    <input type="text" value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} placeholder="product, banner, hero..." className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#666] mb-1">Link to Product</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={uploadProductQuery}
+                        onChange={(e) => setUploadProductQuery(e.target.value)}
+                        placeholder="Search product name or slug"
+                        className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => searchProducts(uploadProductQuery, setUploadProductLoading, setUploadProductResults)}
+                        className="rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-medium text-black hover:bg-[#fafafa]"
+                      >
+                        {uploadProductLoading ? "..." : "Find"}
+                      </button>
+                    </div>
+                    {uploadProductResults.length > 0 && (
+                      <select
+                        value={uploadProductId}
+                        onChange={(e) => setUploadProductId(e.target.value)}
+                        className="mt-2 w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+                      >
+                        <option value="">Select product (optional)</option>
+                        {uploadProductResults.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} ({p.slug})
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </div>
+              </details>
 
-              <div>
-                <label className="block text-xs font-medium text-[#666] mb-1">Tags (comma-separated)</label>
-                <input type="text" value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} placeholder="product, banner, hero..." className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
-              </div>
-
-              <div className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-medium text-[#666]">Batch Upload + Auto Match</label>
+              {/* Batch CSV auto-match (advanced, collapsed) */}
+              <details className="rounded-[3px] border border-[#e0e0e0]">
+                <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-[#666]">Batch CSV Auto-Match (advanced)</summary>
+                <div className="border-t border-[#e0e0e0] p-3 space-y-2">
+                  <p className="text-[10px] text-[#999]">Upload a CSV (filename, product-slug) to auto-link images to products by name.</p>
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => batchCsvRef.current?.click()}
                       className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1 text-[11px] font-medium text-black hover:bg-[#fafafa]"
                     >
-                      CSV map
+                      Load CSV map
                     </button>
                     <button
                       type="button"
                       onClick={() => batchInputRef.current?.click()}
                       className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1 text-[11px] font-medium text-black hover:bg-[#fafafa]"
                     >
-                      Select files
+                      Select batch files
                     </button>
+                    <input ref={batchCsvRef} type="file" accept=".csv,text/csv" onChange={handleBatchCsvChange} className="hidden" />
+                    <input ref={batchInputRef} type="file" accept="image/*" multiple onChange={handleBatchFileChange} className="hidden" />
                   </div>
-                  <input
-                    ref={batchCsvRef}
-                    type="file"
-                    accept=".csv,text/csv"
-                    onChange={handleBatchCsvChange}
-                    className="hidden"
-                  />
-                  <input
-                    ref={batchInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleBatchFileChange}
-                    className="hidden"
-                  />
-                </div>
-                <label className="flex items-center gap-2 text-xs text-[#666]">
-                  <input
-                    type="checkbox"
-                    checked={batchAutoLink}
-                    onChange={(e) => setBatchAutoLink(e.target.checked)}
-                    className="rounded border-[#d0d0d0]"
-                  />
-                  Auto-link by filename to product slug
-                </label>
-                {batchCsvLoaded && (
-                  <div className="flex items-center justify-between rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] px-2 py-1.5 text-[11px] text-[#666]">
-                    <span>CSV mapping loaded: {Object.keys(batchCsvMap).length} keys</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBatchCsvMap({});
-                        setBatchCsvLoaded(false);
-                      }}
-                      className="rounded-[3px] border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-medium text-black hover:bg-white"
-                    >
-                      Clear map
-                    </button>
-                  </div>
-                )}
-                {batchFiles.length > 0 && (
-                  <p className="text-[11px] text-[#666]">{batchFiles.length} files selected</p>
-                )}
-                <button
-                  type="button"
-                  disabled={!batchFiles.length || batchUploading}
-                  onClick={handleBatchUpload}
-                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-semibold text-black hover:bg-[#fafafa] disabled:opacity-50"
-                >
-                  {batchUploading ? "Batch uploading..." : "Run Batch Upload"}
-                </button>
-                {batchReport.length > 0 && (
-                  <div className="flex items-center justify-between text-[11px] text-[#666]">
-                    <span>
-                      linked: {batchReport.filter((r) => r.status === "linked").length} | unmatched: {batchReport.filter((r) => r.status === "uploaded_unmatched").length} | failed: {batchReport.filter((r) => r.status === "failed").length}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={retryFailedRows}
-                      disabled={!batchReport.some((r) => ["failed", "uploaded_unmatched"].includes(r.status))}
-                      className="rounded-[3px] border border-[#d0d0d0] px-2 py-1 text-[10px] font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
-                    >
-                      Retry failed
-                    </button>
-                  </div>
-                )}
-                {batchReport.length > 0 && (
-                  <div className="max-h-28 overflow-auto rounded-[3px] border border-[#e0e0e0] p-2 text-[11px]">
-                    {batchReport.map((r, idx) => (
-                      <div key={`${r.fileName}-${idx}`} className="truncate">
-                        [{r.status}] {r.fileName}
-                        {r.product ? ` -> ${r.product}` : ""}
-                        {r.error ? ` (${r.error})` : ""}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
-                <label className="block text-xs font-medium text-[#666]">Optional: Link to Product</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={uploadProductQuery}
-                    onChange={(e) => setUploadProductQuery(e.target.value)}
-                    placeholder="Search product name or slug"
-                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-                  />
+                  <label className="flex items-center gap-2 text-xs text-[#666]">
+                    <input type="checkbox" checked={batchAutoLink} onChange={(e) => setBatchAutoLink(e.target.checked)} className="rounded border-[#d0d0d0]" />
+                    Auto-link by filename to product slug
+                  </label>
+                  {batchCsvLoaded && (
+                    <div className="flex items-center justify-between rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] px-2 py-1.5 text-[11px] text-[#666]">
+                      <span>CSV mapping loaded: {Object.keys(batchCsvMap).length} keys</span>
+                      <button type="button" onClick={() => { setBatchCsvMap({}); setBatchCsvLoaded(false); }} className="rounded-[3px] border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-medium text-black hover:bg-white">Clear</button>
+                    </div>
+                  )}
+                  {batchFiles.length > 0 && <p className="text-[11px] text-[#666]">{batchFiles.length} batch files selected</p>}
                   <button
                     type="button"
-                    onClick={() => searchProducts(uploadProductQuery, setUploadProductLoading, setUploadProductResults)}
-                    className="rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-medium text-black hover:bg-[#fafafa]"
+                    disabled={!batchFiles.length || batchUploading}
+                    onClick={handleBatchUpload}
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-semibold text-black hover:bg-[#fafafa] disabled:opacity-50"
                   >
-                    {uploadProductLoading ? "..." : "Find"}
+                    {batchUploading ? "Batch uploading..." : "Run Batch Upload"}
+                  </button>
+                  {batchReport.length > 0 && (
+                    <>
+                      <div className="flex items-center justify-between text-[11px] text-[#666]">
+                        <span>linked: {batchReport.filter((r) => r.status === "linked").length} | unmatched: {batchReport.filter((r) => r.status === "uploaded_unmatched").length} | failed: {batchReport.filter((r) => r.status === "failed").length}</span>
+                        <button type="button" onClick={retryFailedRows} disabled={!batchReport.some((r) => ["failed", "uploaded_unmatched"].includes(r.status))} className="rounded-[3px] border border-[#d0d0d0] px-2 py-1 text-[10px] font-medium text-black hover:bg-[#fafafa] disabled:opacity-40">Retry</button>
+                      </div>
+                      <div className="max-h-28 overflow-auto rounded-[3px] border border-[#e0e0e0] p-2 text-[11px]">
+                        {batchReport.map((r, idx) => (
+                          <div key={`${r.fileName}-${idx}`} className="truncate">[{r.status}] {r.fileName}{r.product ? ` -> ${r.product}` : ""}{r.error ? ` (${r.error})` : ""}</div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </details>
+
+              {/* Actions */}
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-[11px] text-[#999]">
+                  {uploadFiles.filter((f) => f.status === "ready").length} file{uploadFiles.filter((f) => f.status === "ready").length !== 1 ? "s" : ""} ready
+                </p>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => { setShowUpload(false); setUploadFiles([]); }} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={uploadFiles.filter((f) => f.status === "ready").length === 0 || uploading} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50">
+                    {uploading ? "Uploading..." : `Upload ${uploadFiles.filter((f) => f.status === "ready").length}`}
                   </button>
                 </div>
-                {uploadProductResults.length > 0 && (
-                  <select
-                    value={uploadProductId}
-                    onChange={(e) => setUploadProductId(e.target.value)}
-                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-                  >
-                    <option value="">Select product (optional)</option>
-                    {uploadProductResults.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.slug})
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowUpload(false)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
-                  Cancel
-                </button>
-                <button type="submit" disabled={!uploadFile || uploading} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50">
-                  {uploading ? "Uploading..." : "Upload"}
-                </button>
               </div>
             </form>
           </div>
@@ -1015,8 +1160,44 @@ function MediaContent() {
                   />
                 </div>
                 <p className="mt-2 text-[10px] text-[#999] text-center">
-                  Click to set focal point ({editFocalX.toFixed(2)}, {editFocalY.toFixed(2)})
+                  Click image to set crop center point
                 </p>
+
+                {/* Background Removal */}
+                {selectedAsset.mimeType?.startsWith("image/") && (
+                  <div className="mt-3 space-y-2">
+                    <button
+                      type="button"
+                      onClick={handleRemoveBg}
+                      disabled={bgRemoving}
+                      className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-semibold text-black hover:bg-[#fafafa] disabled:opacity-50"
+                    >
+                      {bgRemoving ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                          Removing Background...
+                        </span>
+                      ) : "Remove Background"}
+                    </button>
+
+                    {bgRemovedPreview && (
+                      <div className="space-y-2">
+                        <p className="text-[11px] font-medium text-[#666]">Result Preview</p>
+                        <div className="relative aspect-square rounded-[3px] overflow-hidden border border-[#e0e0e0]" style={{ backgroundImage: "linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(-45deg, #eee 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eee 75%), linear-gradient(-45deg, transparent 75%, #eee 75%)", backgroundSize: "16px 16px", backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px" }}>
+                          <img src={bgRemovedPreview} alt="Background removed" className="h-full w-full object-contain" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleSaveBgRemoved}
+                          disabled={bgSaving}
+                          className="w-full rounded-[3px] bg-black px-3 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+                        >
+                          {bgSaving ? "Saving..." : "Save as New Asset"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Metadata */}
@@ -1043,12 +1224,8 @@ function MediaContent() {
                     <dd className="text-black">{selectedAsset.status}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[#999]">Links</dt>
-                    <dd className="text-black">{selectedAsset.linkCount || 0} usages</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-[#999]">SHA256</dt>
-                    <dd className="text-black font-mono text-[10px] truncate max-w-[200px]" title={selectedAsset.sha256}>{selectedAsset.sha256}</dd>
+                    <dt className="text-[#999]">Linked to</dt>
+                    <dd className="text-black">{selectedAsset.linkCount || 0} product{(selectedAsset.linkCount || 0) !== 1 ? "s" : ""}</dd>
                   </div>
                 </dl>
 

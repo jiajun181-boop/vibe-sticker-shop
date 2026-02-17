@@ -25,7 +25,7 @@ export default function AccountNav() {
 
   return (
     <aside className="w-full shrink-0 md:w-48">
-      <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-400">
+      <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--color-gray-400)]">
         {t("account.title")}
       </h2>
       <nav className="mt-4 flex flex-row gap-1 overflow-x-auto md:flex-col">
@@ -37,8 +37,8 @@ export default function AccountNav() {
               href={item.href}
               className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 active
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-[var(--color-gray-100)] text-[var(--color-gray-900)]"
+                  : "text-[var(--color-gray-500)] hover:bg-[var(--color-gray-50)] hover:text-[var(--color-gray-900)]"
               }`}
             >
               {t(item.key)}
@@ -48,7 +48,7 @@ export default function AccountNav() {
         <button
           type="button"
           onClick={handleLogout}
-          className="whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-red-600"
+          className="whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-medium text-[var(--color-gray-500)] transition-colors hover:bg-[var(--color-gray-50)] hover:text-red-600"
         >
           {t("account.nav.logout")}
         </button>

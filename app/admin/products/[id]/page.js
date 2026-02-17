@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
+import { resizeImageFile } from "@/lib/client-image-resize";
 
 const categories = [
   { value: "fleet-compliance-id", label: "Fleet Compliance & ID" },
@@ -154,6 +155,7 @@ export default function ProductDetailPage() {
   const productId = params.id;
 
   const [product, setProduct] = useState(null);
+  const [presets, setPresets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
@@ -168,6 +170,9 @@ export default function ProductDetailPage() {
   const [imageAlt, setImageAlt] = useState("");
   const [addingImage, setAddingImage] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState(false);
+  const [uploadQueue, setUploadQueue] = useState([]); // [{id, name, status}]
+  const [dragIdx, setDragIdx] = useState(null); // drag-to-reorder
+  const [dropIdx, setDropIdx] = useState(null);
   const assetFileRef = useRef(null);
 
   const fetchProduct = useCallback(async () => {
@@ -202,6 +207,8 @@ export default function ProductDetailPage() {
         metaTitle: data.metaTitle || "",
         metaDescription: data.metaDescription || "",
         templateUrl: data.templateUrl || "",
+        pricingPresetId: data.pricingPresetId || "",
+        displayFromPrice: data.displayFromPrice ? (data.displayFromPrice / 100).toFixed(2) : "",
       });
       setOptionsJson(data.optionsConfig ? JSON.stringify(data.optionsConfig, null, 2) : "");
       setOptionsJsonError(null);
@@ -213,6 +220,42 @@ export default function ProductDetailPage() {
   }, [productId, router]);
 
   useEffect(() => { fetchProduct(); }, [fetchProduct]);
+
+  // Fetch available pricing presets
+  useEffect(() => {
+    fetch("/api/admin/pricing")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setPresets(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
+  // ── Clipboard paste (Ctrl+V) — auto-upload pasted images ──
+  useEffect(() => {
+    if (!product) return;
+    function handlePaste(e) {
+      // Don't intercept paste in text inputs
+      const tag = e.target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const imageFiles = [];
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            const ext = file.type.split("/")[1] || "png";
+            imageFiles.push(new File([file], `pasted-image-${Date.now()}.${ext}`, { type: file.type }));
+          }
+        }
+      }
+      if (imageFiles.length > 0) {
+        e.preventDefault();
+        processFileUploads(imageFiles);
+      }
+    }
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [product]);
 
   function showMsg(text, isError = false) {
     setMessage({ text, isError });
@@ -284,6 +327,8 @@ export default function ProductDetailPage() {
       metaTitle: form.metaTitle || null,
       metaDescription: form.metaDescription || null,
       templateUrl: form.templateUrl || null,
+      pricingPresetId: form.pricingPresetId || null,
+      displayFromPrice: form.displayFromPrice ? Math.round(parseFloat(form.displayFromPrice) * 100) : null,
     };
     if (parsedOptions !== undefined) payload.optionsConfig = parsedOptions;
 
@@ -357,6 +402,30 @@ export default function ProductDetailPage() {
     }
   }
 
+  async function handleReorderImages(fromIndex, toIndex) {
+    if (fromIndex === toIndex) return;
+    const imgs = [...(product.images || [])];
+    const [moved] = imgs.splice(fromIndex, 1);
+    imgs.splice(toIndex, 0, moved);
+    // Optimistic update
+    setProduct((prev) => ({ ...prev, images: imgs }));
+    try {
+      const order = imgs.map((img, i) => ({ id: img.id, sortOrder: i }));
+      const res = await fetch(`/api/admin/products/${productId}/images`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order }),
+      });
+      if (!res.ok) {
+        fetchProduct(); // revert on failure
+        showMsg("Failed to reorder", true);
+      }
+    } catch {
+      fetchProduct();
+      showMsg("Failed to reorder", true);
+    }
+  }
+
   async function handleWorkflow(action) {
     setWorkflowLoading(true);
     try {
@@ -380,41 +449,86 @@ export default function ProductDetailPage() {
     }
   }
 
+  function filenameToAlt(fileName) {
+    return String(fileName || "")
+      .replace(/\.[^.]+$/, "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .trim();
+  }
+
+  async function uploadSingleAsset(rawFile) {
+    const file = await resizeImageFile(rawFile);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("altText", product?.name || filenameToAlt(file.name));
+    formData.append("tags", "product");
+
+    const uploadRes = await fetch("/api/admin/assets", { method: "POST", body: formData });
+    const uploadData = await uploadRes.json();
+    if (!uploadRes.ok) throw new Error(uploadData.error || "Upload failed");
+
+    const asset = uploadData.asset;
+
+    await fetch(`/api/admin/assets/${asset.id}/links`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entityType: "product", entityId: productId, purpose: "gallery" }),
+    });
+
+    await fetch(`/api/admin/products/${productId}/images`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: asset.originalUrl, alt: asset.altText }),
+    });
+
+    return uploadData.deduplicated;
+  }
+
   async function handleAssetUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    if (assetFileRef.current) assetFileRef.current.value = "";
+    await processFileUploads(files);
+  }
+
+  async function handleImageDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove("ring-2", "ring-black");
+    const files = Array.from(e.dataTransfer.files || []).filter((f) => f.type.startsWith("image/"));
+    if (files.length === 0) return;
+    await processFileUploads(files);
+  }
+
+  async function processFileUploads(files) {
     setUploadingAsset(true);
-    try {
-      // 1. Upload to asset system
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("altText", product.name);
-      formData.append("tags", "product");
+    let queueId = 0;
+    const queue = files.map((f) => ({ id: `q_${++queueId}`, name: f.name, status: "pending" }));
+    setUploadQueue(queue);
 
-      const uploadRes = await fetch("/api/admin/assets", { method: "POST", body: formData });
-      const uploadData = await uploadRes.json();
-      if (!uploadRes.ok) { showMsg(uploadData.error || "Upload failed", true); return; }
+    let done = 0;
+    let failed = 0;
 
-      const asset = uploadData.asset;
+    for (let i = 0; i < files.length; i++) {
+      setUploadQueue((prev) => prev.map((q, idx) => idx === i ? { ...q, status: "uploading" } : q));
+      try {
+        await uploadSingleAsset(files[i]);
+        setUploadQueue((prev) => prev.map((q, idx) => idx === i ? { ...q, status: "done" } : q));
+        done++;
+      } catch {
+        setUploadQueue((prev) => prev.map((q, idx) => idx === i ? { ...q, status: "error" } : q));
+        failed++;
+      }
+    }
 
-      // 2. Create asset link to this product
-      await fetch(`/api/admin/assets/${asset.id}/links`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entityType: "product", entityId: productId, purpose: "gallery" }),
-      });
-
-      // 3. Also add as legacy ProductImage for backward compatibility
-      await fetch(`/api/admin/products/${productId}/images`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: asset.originalUrl, alt: asset.altText }),
-      });
-
-      showMsg(uploadData.deduplicated ? "Existing asset linked (dedup)" : "Asset uploaded & linked!");
-      fetchProduct();
-    } catch { showMsg("Upload failed", true); }
-    finally { setUploadingAsset(false); if (assetFileRef.current) assetFileRef.current.value = ""; }
+    setUploadingAsset(false);
+    fetchProduct();
+    if (failed === 0) {
+      showMsg(`${done} image${done > 1 ? "s" : ""} uploaded`);
+      setTimeout(() => setUploadQueue([]), 2000);
+    } else {
+      showMsg(`${done} uploaded, ${failed} failed`, true);
+    }
   }
 
   if (loading) return <div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading...</div>;
@@ -597,10 +711,216 @@ export default function ProductDetailPage() {
                 </select>
               </div>
             </div>
+
+            {/* Pricing Preset */}
+            <div className="mt-3">
+              <label className="mb-1 block text-xs font-medium text-[#999]">Pricing Preset</label>
+              <select
+                value={form.pricingPresetId || ""}
+                onChange={(e) => updateField("pricingPresetId", e.target.value)}
+                className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900"
+              >
+                <option value="">None (use base price only)</option>
+                {presets.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.model}) — {p._count?.products ?? 0} products
+                  </option>
+                ))}
+              </select>
+              <p className="mt-0.5 text-[10px] text-[#999]">Assigns tiered pricing engine. Overrides base price for quotes.</p>
+            </div>
+
+            {/* Display From Price override */}
+            <div className="mt-3">
+              <label className="mb-1 block text-xs font-medium text-[#999]">Display &ldquo;From&rdquo; Price Override (CAD)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="Auto-computed if empty"
+                value={form.displayFromPrice ?? ""}
+                onChange={(e) => updateField("displayFromPrice", e.target.value)}
+                className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900"
+              />
+              <p className="mt-0.5 text-[10px] text-[#999]">Overrides the listing &ldquo;From $X&rdquo; price. Leave blank to auto-compute from preset tiers.</p>
+              {product?.minPrice > 0 && (
+                <p className="mt-0.5 text-[10px] text-[#666]">Auto-computed min: {formatCad(product.minPrice)}</p>
+              )}
+            </div>
           </Section>
+
+          {/* Pricing Preview (read-only) */}
+          {product.pricingPreset && (
+            <Section title="Pricing Preview" defaultOpen={false}>
+              <p className="mb-3 text-[11px] text-[#999]">
+                Read-only breakdown from preset <span className="font-semibold text-[#666]">{product.pricingPreset.name}</span> ({product.pricingPreset.model}).
+              </p>
+
+              {/* Tier table */}
+              {(() => {
+                const cfg = product.pricingPreset.config || {};
+                const tiers = cfg.tiers || [];
+                const model = product.pricingPreset.model;
+
+                if (tiers.length === 0) return <p className="text-xs text-[#999]">No tiers configured.</p>;
+
+                if (model === "AREA_TIERED") {
+                  return (
+                    <div className="mb-4">
+                      <h3 className="mb-1.5 text-xs font-semibold text-black">Area Tiers</h3>
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-[#e0e0e0] text-left text-[#999]">
+                            <th className="pb-1.5 font-medium">Area</th>
+                            <th className="pb-1.5 font-medium text-right">Rate / sqft</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {tiers.map((t, i) => (
+                            <tr key={i} className="border-b border-[#f0f0f0]">
+                              <td className="py-1.5 text-black">
+                                {t.label || (t.maxSqft ? `Up to ${t.maxSqft} sqft` : `${t.minSqft ?? 0}+ sqft`)}
+                              </td>
+                              <td className="py-1.5 text-right font-mono text-black">
+                                {formatCad(t.rate ?? t.pricePerSqft ?? 0)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                }
+
+                // QTY_TIERED or QTY_OPTIONS
+                return (
+                  <div className="mb-4">
+                    <h3 className="mb-1.5 text-xs font-semibold text-black">Quantity Tiers</h3>
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-[#e0e0e0] text-left text-[#999]">
+                          <th className="pb-1.5 font-medium">Qty</th>
+                          <th className="pb-1.5 font-medium text-right">Unit Price</th>
+                          <th className="pb-1.5 font-medium text-right">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tiers.map((t, i) => {
+                          const qty = t.minQty ?? t.qty ?? 0;
+                          const unit = t.unitPrice ?? t.price ?? 0;
+                          return (
+                            <tr key={i} className="border-b border-[#f0f0f0]">
+                              <td className="py-1.5 text-black">{qty}+</td>
+                              <td className="py-1.5 text-right font-mono text-black">{formatCad(unit)}</td>
+                              <td className="py-1.5 text-right font-mono text-[#666]">{formatCad(unit * qty)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+
+              {/* Materials table — merge from optionsConfig and preset */}
+              {(() => {
+                const cfg = product.pricingPreset.config || {};
+                let optCfg = {};
+                try { optCfg = product.optionsConfig || {}; } catch { /* noop */ }
+                const materials = optCfg.materials || cfg.materials || [];
+                if (materials.length === 0) return null;
+
+                return (
+                  <div className="mb-4">
+                    <h3 className="mb-1.5 text-xs font-semibold text-black">Materials</h3>
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-[#e0e0e0] text-left text-[#999]">
+                          <th className="pb-1.5 font-medium">Material</th>
+                          <th className="pb-1.5 font-medium text-right">Multiplier</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {materials.map((m, i) => (
+                          <tr key={i} className="border-b border-[#f0f0f0]">
+                            <td className="py-1.5 text-black">{m.label || m.name || m.key}</td>
+                            <td className="py-1.5 text-right font-mono text-black">{(m.multiplier ?? 1).toFixed(2)}x</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+
+              {/* Addons table */}
+              {(() => {
+                let optCfg = {};
+                try { optCfg = product.optionsConfig || {}; } catch { /* noop */ }
+                const addons = optCfg.addons || product.pricingPreset.config?.addons || [];
+                if (addons.length === 0) return null;
+
+                return (
+                  <div className="mb-4">
+                    <h3 className="mb-1.5 text-xs font-semibold text-black">Addons</h3>
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-[#e0e0e0] text-left text-[#999]">
+                          <th className="pb-1.5 font-medium">Addon</th>
+                          <th className="pb-1.5 font-medium text-right">Price</th>
+                          <th className="pb-1.5 font-medium text-right">Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {addons.map((a, i) => (
+                          <tr key={i} className="border-b border-[#f0f0f0]">
+                            <td className="py-1.5 text-black">{a.label || a.name || a.key}</td>
+                            <td className="py-1.5 text-right font-mono text-black">
+                              {a.price === 0 || a.included ? "Included" : formatCad(a.price ?? 0)}
+                            </td>
+                            <td className="py-1.5 text-right text-[#999]">
+                              {a.included ? "—" : a.type || "flat"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+
+              {/* Meta info */}
+              {(() => {
+                const cfg = product.pricingPreset.config || {};
+                const hasMeta = cfg.minimumPrice || cfg.fileFee || cfg.setupFee;
+                if (!hasMeta) return null;
+
+                return (
+                  <div className="flex flex-wrap gap-3 text-xs">
+                    {cfg.minimumPrice != null && (
+                      <span className="rounded-[2px] bg-[#f5f5f5] px-2.5 py-1 text-[#666]">
+                        Min order: {formatCad(cfg.minimumPrice)}
+                      </span>
+                    )}
+                    {cfg.fileFee != null && (
+                      <span className="rounded-[2px] bg-[#f5f5f5] px-2.5 py-1 text-[#666]">
+                        File fee: {formatCad(cfg.fileFee)}
+                      </span>
+                    )}
+                    {cfg.setupFee != null && (
+                      <span className="rounded-[2px] bg-[#f5f5f5] px-2.5 py-1 text-[#666]">
+                        Setup fee: {formatCad(cfg.setupFee)}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
+            </Section>
+          )}
 
           {/* Print Specs */}
           <Section title="Print Specifications">
+            <p className="mb-3 text-[11px] text-[#999]">Set the printable area limits and file requirements for customer uploads.</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
                 ["minWidthIn", "Min Width (in)"],
@@ -618,10 +938,12 @@ export default function ProductDetailPage() {
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">Min DPI</label>
                 <input type="number" value={form.minDpi ?? ""} onChange={(e) => updateField("minDpi", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <p className="mt-0.5 text-[10px] text-[#999]">Minimum resolution (usually 300 for print)</p>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">Bleed (in)</label>
                 <input type="number" step="0.01" value={form.bleedIn ?? ""} onChange={(e) => updateField("bleedIn", e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900" />
+                <p className="mt-0.5 text-[10px] text-[#999]">Extra margin around edges (usually 0.125&quot;)</p>
               </div>
               <div className="flex items-end gap-2 pb-2">
                 <label className="flex items-center gap-2 text-sm text-black">
@@ -633,7 +955,8 @@ export default function ProductDetailPage() {
 
             {/* Accepted Formats */}
             <div className="mt-4">
-              <label className="mb-2 block text-xs font-medium text-[#999]">Accepted Formats</label>
+              <label className="mb-1 block text-xs font-medium text-[#999]">Accepted Formats</label>
+              <p className="mb-2 text-[10px] text-[#999]">File types customers can upload for this product</p>
               <div className="flex flex-wrap gap-2">
                 {ALL_FORMATS.map((fmt) => (
                   <button
@@ -660,7 +983,8 @@ export default function ProductDetailPage() {
           </Section>
 
           {/* Options Config (JSON) */}
-          <Section title="Options Config (JSON)" defaultOpen={false}>
+          <Section title="Advanced: Options Config" defaultOpen={false}>
+            <p className="mb-2 text-[11px] text-[#999]">For developers only — defines sizes, materials, and pricing tiers in JSON format. Leave empty for default settings.</p>
             <textarea
               rows={12}
               value={optionsJson}
@@ -755,16 +1079,30 @@ export default function ProductDetailPage() {
 
         {/* ── Sidebar ── */}
         <div className="space-y-4">
-          {/* Images */}
-          <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-black">
+          {/* Images — drag & drop zone */}
+          <div
+            className="rounded-[3px] border border-[#e0e0e0] bg-white p-5 transition-all"
+            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("ring-2", "ring-black"); }}
+            onDragLeave={(e) => { e.currentTarget.classList.remove("ring-2", "ring-black"); }}
+            onDrop={handleImageDrop}
+          >
+            <h2 className="text-sm font-semibold text-black">
               Images ({product.images?.length || 0})
             </h2>
+            <p className="mb-3 mt-1 text-[10px] text-[#999]">Drag to reorder. First image = cover. Drop files or Ctrl+V to upload.</p>
 
             {product.images && product.images.length > 0 ? (
               <div className="mb-4 grid grid-cols-2 gap-2">
                 {product.images.map((img, idx) => (
-                  <div key={img.id} className="group relative">
+                  <div
+                    key={img.id}
+                    draggable
+                    onDragStart={() => setDragIdx(idx)}
+                    onDragOver={(e) => { e.preventDefault(); setDropIdx(idx); }}
+                    onDragLeave={() => setDropIdx(null)}
+                    onDragEnd={() => { if (dragIdx !== null && dropIdx !== null) handleReorderImages(dragIdx, dropIdx); setDragIdx(null); setDropIdx(null); }}
+                    className={`group relative cursor-grab active:cursor-grabbing ${dropIdx === idx && dragIdx !== idx ? "ring-2 ring-black rounded-[3px]" : ""} ${dragIdx === idx ? "opacity-40" : ""}`}
+                  >
                     <img src={img.url} alt={img.alt || product.name} className="h-24 w-full rounded-[3px] object-cover" />
                     {idx === 0 && (
                       <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">Primary</span>
@@ -787,12 +1125,36 @@ export default function ProductDetailPage() {
                 ))}
               </div>
             ) : (
-              <div className="mb-4 flex h-24 items-center justify-center rounded-[3px] border-2 border-dashed border-[#e0e0e0] text-xs text-[#999]">
-                No images
+              <div className="mb-4 flex h-24 flex-col items-center justify-center rounded-[3px] border-2 border-dashed border-[#e0e0e0] text-xs text-[#999]">
+                <p>Drop images here</p>
+                <p className="text-[10px]">or click Upload below</p>
               </div>
             )}
 
-            {/* Upload Asset */}
+            {/* Upload progress queue */}
+            {uploadQueue.length > 0 && (
+              <div className="mb-3 space-y-1">
+                {uploadQueue.map((q) => (
+                  <div key={q.id} className="flex items-center gap-2 text-[11px]">
+                    <span className={`flex-shrink-0 h-1.5 w-1.5 rounded-full ${
+                      q.status === "pending" ? "bg-[#d0d0d0]" :
+                      q.status === "uploading" ? "bg-blue-500 animate-pulse" :
+                      q.status === "done" ? "bg-green-500" : "bg-red-500"
+                    }`} />
+                    <span className="truncate text-[#666]">{q.name}</span>
+                    <span className={`flex-shrink-0 text-[10px] font-medium ${
+                      q.status === "uploading" ? "text-blue-600" :
+                      q.status === "done" ? "text-green-600" :
+                      q.status === "error" ? "text-red-500" : "text-[#999]"
+                    }`}>
+                      {q.status === "uploading" ? "Uploading..." : q.status === "done" ? "Done" : q.status === "error" ? "Failed" : "Queued"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload button (multi-file) */}
             <div className="space-y-2">
               <button
                 type="button"
@@ -800,9 +1162,9 @@ export default function ProductDetailPage() {
                 disabled={uploadingAsset}
                 className="w-full rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
               >
-                {uploadingAsset ? "Uploading..." : "Upload Image"}
+                {uploadingAsset ? "Uploading..." : "Upload Images"}
               </button>
-              <input ref={assetFileRef} type="file" accept="image/*" onChange={handleAssetUpload} className="hidden" />
+              <input ref={assetFileRef} type="file" accept="image/*" multiple onChange={handleAssetUpload} className="hidden" />
             </div>
 
             {/* Legacy: Add by URL */}
@@ -841,7 +1203,9 @@ export default function ProductDetailPage() {
               {product.pricingPresetId && (
                 <div className="flex justify-between">
                   <dt className="text-[#999]">Pricing Preset</dt>
-                  <dd className="font-mono text-black truncate max-w-[120px]">{product.pricingPresetId}</dd>
+                  <dd className="text-black truncate max-w-[160px]" title={product.pricingPresetId}>
+                    {presets.find((p) => p.id === product.pricingPresetId)?.name || product.pricingPresetId}
+                  </dd>
                 </div>
               )}
             </dl>
@@ -850,10 +1214,10 @@ export default function ProductDetailPage() {
           <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
             <h2 className="mb-3 text-sm font-semibold text-black">Pre-Launch Checklist</h2>
             <div className="space-y-1.5 text-xs">
-              <div className={checklist.hasImage ? "text-green-700" : "text-red-600"}>{checklist.hasImage ? "✓" : "✕"} Has image</div>
-              <div className={checklist.hasPrice ? "text-green-700" : "text-red-600"}>{checklist.hasPrice ? "✓" : "✕"} Has price / preset</div>
-              <div className={checklist.hasDescription ? "text-green-700" : "text-red-600"}>{checklist.hasDescription ? "✓" : "✕"} Description length OK</div>
-              <div className={checklist.hasSeo ? "text-green-700" : "text-red-600"}>{checklist.hasSeo ? "✓" : "✕"} SEO title + description</div>
+              <div className={checklist.hasImage ? "text-green-700" : "text-red-600"}>{checklist.hasImage ? "✓" : "✕"} Has at least 1 image</div>
+              <div className={checklist.hasPrice ? "text-green-700" : "text-red-600"}>{checklist.hasPrice ? "✓" : "✕"} Has price or pricing preset</div>
+              <div className={checklist.hasDescription ? "text-green-700" : "text-red-600"}>{checklist.hasDescription ? "✓" : "✕"} Description 24+ characters</div>
+              <div className={checklist.hasSeo ? "text-green-700" : "text-red-600"}>{checklist.hasSeo ? "✓" : "✕"} SEO title + description filled</div>
               <div className={checklist.hasSubseries ? "text-green-700" : "text-red-600"}>{checklist.hasSubseries ? "✓" : "✕"} Subseries assigned</div>
             </div>
             <div className={`mt-3 rounded-[3px] px-2.5 py-2 text-xs font-semibold ${checklistReady ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>

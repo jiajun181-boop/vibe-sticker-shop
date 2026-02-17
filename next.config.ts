@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: https://placehold.co https://utfs.io https://*.ufs.sh https://www.google-analytics.com https://www.facebook.com",
               "font-src 'self'",
               "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://*.facebook.com https://api.stripe.com https://uploadthing.com https://*.uploadthing.com",
-              "frame-src https://js.stripe.com https://hooks.stripe.com",
+              "frame-src https://js.stripe.com https://hooks.stripe.com https://www.google.com",
               "object-src 'none'",
               "base-uri 'self'",
             ].join("; "),

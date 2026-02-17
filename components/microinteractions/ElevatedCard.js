@@ -18,7 +18,7 @@ export default function ElevatedCard({
   return (
     <div
       className={`
-        relative rounded-3xl border border-gray-200 bg-white p-8
+        relative rounded-3xl border border-[var(--color-gray-200)] bg-white p-8
         transition-all duration-300 ease-out-cubic
         ${clickable ? "cursor-pointer" : ""}
         hover:shadow-elevated hover:translate-y-[-4px]

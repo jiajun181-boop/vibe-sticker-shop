@@ -39,28 +39,66 @@ model AdminUser {
   @@index([role, isActive])
 }
 
+enum PartnerTier {
+  bronze
+  silver
+  gold
+  platinum
+}
+
 model User {
-  id                   String      @id @default(cuid())
-  email                String      @unique
+  id                   String       @id @default(cuid())
+  email                String       @unique
   name                 String?
   phone                String?
   password             String?
-  accountType          AccountType @default(B2C)
-  emailVerified        Boolean     @default(false)
-  emailVerifyToken     String?     @unique
+  accountType          AccountType  @default(B2C)
+  emailVerified        Boolean      @default(false)
+  emailVerifyToken     String?      @unique
   emailVerifyExpires   DateTime?
-  passwordResetToken   String?     @unique
+  passwordResetToken   String?      @unique
   passwordResetExpires DateTime?
   companyName          String?
   companyRole          String?
-  b2bApproved          Boolean     @default(false)
+  b2bApproved          Boolean      @default(false)
   b2bApprovedAt        DateTime?
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+
+  // Partner / reseller fields
+  partnerTier          PartnerTier?
+  partnerDiscount      Int          @default(0)   // percentage discount (0-50)
+  referredByUserId     String?
+  referredBy           User?        @relation("Referrals", fields: [referredByUserId], references: [id])
+  referrals            User[]       @relation("Referrals")
+  inviteCode           String?      @unique       // unique code for sharing
+
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
   addresses            Address[]
   orders               Order[]
+  sentInvites          PartnerInvite[] @relation("InviteSender")
 
   @@index([accountType, b2bApproved])
+  @@index([inviteCode])
+}
+
+model PartnerInvite {
+  id             String       @id @default(cuid())
+  email          String
+  companyName    String?
+  token          String       @unique
+  tier           PartnerTier  @default(bronze)
+  discount       Int          @default(0)
+  note           String?
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  acceptedUserId String?
+  invitedById    String?
+  invitedBy      User?        @relation("InviteSender", fields: [invitedById], references: [id])
+  createdAt      DateTime     @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
 }
 
 model Address {
@@ -103,6 +141,8 @@ model Product {
   requiresBleed   Boolean         @default(false)
   bleedIn         Float?
   templateUrl     String?
+  minPrice        Int?
+  displayFromPrice Int?
   pricingConfig   Json?
   optionsConfig   Json?
   pricingPresetId String?
@@ -194,6 +234,7 @@ model Order {
   notes                 OrderNote[]
   files                 OrderFile[]
   timeline              OrderTimeline[]
+  proofs                OrderProof[]
   coupon                Coupon?          @relation(fields: [couponId], references: [id])
 
   @@index([status, paymentStatus])
@@ -281,6 +322,43 @@ model OrderTimeline {
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId, createdAt])
+}
+
+model OrderProof {
+  id              String      @id @default(cuid())
+  orderId         String
+  order           Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  version         Int         @default(1)
+  imageUrl        String
+  fileName        String?
+  notes           String?       // Admin notes when uploading
+  status          ProofStatus   @default(pending)
+  customerComment String?       // Customer feedback
+  reviewedAt      DateTime?
+  uploadedBy      String?       // Admin who uploaded
+  createdAt       DateTime      @default(now())
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  productId   String
+  userId      String?
+  customerName String
+  customerEmail String
+  rating      Int        // 1-5
+  title       String?
+  body        String
+  isApproved  Boolean    @default(false)
+  isVerified  Boolean    @default(false) // purchased this product
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([productId, isApproved])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model Coupon {
@@ -466,6 +544,13 @@ enum PreflightStatus {
   pending
   approved
   rejected
+}
+
+enum ProofStatus {
+  pending
+  approved
+  rejected
+  revised
 }
 
 enum ProductType {

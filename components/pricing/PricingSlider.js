@@ -39,38 +39,38 @@ export default function PricingSlider({
   const percentage = ((quantity - min) / (max - min)) * 100;
 
   return (
-    <div className="w-full space-y-6 rounded-3xl border border-gray-200 bg-white p-8">
+    <div className="w-full space-y-6 rounded-3xl border border-[var(--color-gray-200)] bg-white p-8">
       {/* Header */}
       <div>
-        <label className="block text-sm font-semibold uppercase tracking-wide text-gray-700">
+        <label className="block text-sm font-semibold uppercase tracking-wide text-[var(--color-gray-700)]">
           {label}
         </label>
-        <p className="mt-1 text-xs text-gray-500">Drag to adjust • Price updates in real-time</p>
+        <p className="mt-1 text-xs text-[var(--color-gray-500)]">Drag to adjust • Price updates in real-time</p>
       </div>
 
       {/* Price Display with Counter Animation */}
       <div className="flex items-center justify-between gap-4 py-6">
         <div className="flex-1">
-          <p className="text-xs uppercase tracking-wide text-gray-500">Quantity</p>
+          <p className="text-xs uppercase tracking-wide text-[var(--color-gray-500)]">Quantity</p>
           <div className="mt-2 flex items-baseline gap-1">
             <span className="text-5xl font-bold text-[var(--color-ink-black)] tabular-nums">
               {quantity.toLocaleString()}
             </span>
-            <span className="text-lg text-gray-400">units</span>
+            <span className="text-lg text-[var(--color-gray-400)]">units</span>
           </div>
         </div>
 
         {/* Price Box */}
         <div className="flex flex-col items-end space-y-1 rounded-2xl border-2 border-[var(--color-ink-black)] bg-[var(--color-paper-white)] px-6 py-4">
-          <p className="text-xs uppercase tracking-wide text-gray-600">Total Price</p>
+          <p className="text-xs uppercase tracking-wide text-[var(--color-gray-600)]">Total Price</p>
           <div className="flex items-baseline gap-1">
             <span className="text-4xl font-bold text-[var(--color-ink-black)] tabular-nums">
               ${(total / 100).toFixed(2)}
             </span>
-            <span className="text-xs text-gray-500">{currency}</span>
+            <span className="text-xs text-[var(--color-gray-500)]">{currency}</span>
           </div>
           {showTax && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-[var(--color-gray-500)]">
               Incl. {Math.round(taxRate * 100)}% tax (${(tax / 100).toFixed(2)})
             </p>
           )}
@@ -97,14 +97,14 @@ export default function PricingSlider({
         />
 
         {/* Min/Max Labels */}
-        <div className="flex justify-between text-xs text-gray-500 uppercase tracking-wide">
+        <div className="flex justify-between text-xs text-[var(--color-gray-500)] uppercase tracking-wide">
           <span>{min}</span>
           <span>{max}</span>
         </div>
       </div>
 
       {/* Quick Select Buttons */}
-      <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
+      <div className="flex flex-wrap gap-2 pt-4 border-t border-[var(--color-gray-200)]">
         {[10, 50, 100, 500].map((value) => (
           <button
             key={value}
@@ -113,7 +113,7 @@ export default function PricingSlider({
               ${
                 quantity === value
                   ? "bg-[var(--color-ink-black)] text-white"
-                  : "border border-gray-300 text-gray-700 hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
+                  : "border border-[var(--color-gray-300)] text-[var(--color-gray-700)] hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
               }
             `}
           >
@@ -123,18 +123,18 @@ export default function PricingSlider({
       </div>
 
       {/* Breakdown */}
-      <div className="space-y-2 border-t border-gray-200 pt-4 text-sm">
+      <div className="space-y-2 border-t border-[var(--color-gray-200)] pt-4 text-sm">
         <div className="flex justify-between">
-          <span className="text-gray-600">Subtotal:</span>
+          <span className="text-[var(--color-gray-600)]">Subtotal:</span>
           <span className="font-semibold">${(subtotal / 100).toFixed(2)}</span>
         </div>
         {showTax && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Tax ({Math.round(taxRate * 100)}%):</span>
+            <span className="text-[var(--color-gray-600)]">Tax ({Math.round(taxRate * 100)}%):</span>
             <span className="font-semibold">${(tax / 100).toFixed(2)}</span>
           </div>
         )}
-        <div className="flex justify-between border-t border-gray-200 pt-2 text-base font-bold">
+        <div className="flex justify-between border-t border-[var(--color-gray-200)] pt-2 text-base font-bold">
           <span>Total:</span>
           <span>${(total / 100).toFixed(2)}</span>
         </div>

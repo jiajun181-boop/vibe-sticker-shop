@@ -309,9 +309,9 @@ export default function CartDrawer() {
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[var(--color-gray-200)] px-5 py-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold tracking-[0.25em] text-gray-800">{t("cart.title")}</h2>
+            <h2 className="text-sm font-semibold tracking-[0.25em] text-[var(--color-gray-800)]">{t("cart.title")}</h2>
             {cart.length > 0 && (
               <span className="rounded-full bg-[var(--color-moon-blue-deep)] px-2 py-0.5 text-[10px] font-semibold text-white">{cart.length}</span>
             )}
@@ -319,7 +319,7 @@ export default function CartDrawer() {
           <button
             type="button"
             onClick={closeCart}
-            className="rounded-full border border-gray-200 p-2 text-gray-500 transition-colors duration-200 hover:text-gray-900"
+            className="rounded-full border border-[var(--color-gray-200)] p-2 text-[var(--color-gray-500)] transition-colors duration-200 hover:text-[var(--color-gray-900)]"
             aria-label={t("cart.close")}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -329,15 +329,15 @@ export default function CartDrawer() {
         </div>
 
         {cart.length > 0 && (
-          <div className="border-b border-gray-200 bg-gray-50 px-5 py-4">
+          <div className="border-b border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-5 py-4">
             {qualifiesForFreeShipping ? (
               <p className="text-sm font-medium text-emerald-700">{t("cart.freeShipping")}</p>
             ) : (
               <div className="space-y-2">
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-[var(--color-gray-600)]">
                   {t("cart.addMore", { amount: formatCad(freeShippingRemaining) })}
                 </p>
-                <div className="h-1.5 w-full rounded-full bg-gray-200">
+                <div className="h-1.5 w-full rounded-full bg-[var(--color-gray-200)]">
                   <div className="h-full rounded-full bg-[var(--color-moon-gold)] transition-all duration-300" style={{ width: `${freeShippingProgress}%` }} />
                 </div>
               </div>
@@ -348,9 +348,9 @@ export default function CartDrawer() {
         <div className="flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto px-5 py-4">
             {cart.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-gray-500">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-gray-200 bg-gray-50">
-                  <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[var(--color-gray-500)]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[var(--color-gray-200)] bg-[var(--color-gray-50)]">
+                  <svg className="h-6 w-6 text-[var(--color-gray-400)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                   </svg>
                 </div>
@@ -358,7 +358,7 @@ export default function CartDrawer() {
                 <button
                   type="button"
                   onClick={closeCart}
-                  className="mt-1 rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700"
+                  className="mt-1 rounded-full border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)]"
                 >
                   {t("cart.continueShopping")}
                 </button>
@@ -379,19 +379,19 @@ export default function CartDrawer() {
                   const isMultiSize = (rawMeta.sizeMode === "multi" || rawMeta.sizeMode === '"multi"') && sizeRows.length > 0;
 
                   return (
-                    <article key={item._cartId} className="rounded-2xl border border-gray-200 p-4 transition-all duration-200 hover:shadow-sm">
+                    <article key={item._cartId} className="rounded-2xl border border-[var(--color-gray-200)] p-4 transition-all duration-200 hover:shadow-sm">
                       <div className="flex items-start gap-3">
-                        <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                        <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-[var(--color-gray-100)]">
                           <Image src={imageSrc} alt={item.name} fill className="object-cover" sizes="56px" />
                         </div>
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="truncate text-sm font-semibold text-gray-900">{item.name}</p>
-                              {item.slug && <p className="text-xs text-gray-500">{item.slug}</p>}
+                              <p className="truncate text-sm font-semibold text-[var(--color-gray-900)]">{item.name}</p>
+                              {item.slug && <p className="text-xs text-[var(--color-gray-500)]">{item.slug}</p>}
                               {isMultiSize && (
-                                <div className="mt-1 space-y-0.5 text-[11px] text-gray-500">
+                                <div className="mt-1 space-y-0.5 text-[11px] text-[var(--color-gray-500)]">
                                   {sizeRows.map((row, idx) => (
                                     <p key={`${item._cartId}-size-${idx}`}>
                                       #{idx + 1}: {row.width}&quot; x {row.height}&quot; x {row.quantity}
@@ -403,7 +403,7 @@ export default function CartDrawer() {
                             <button
                               type="button"
                               onClick={() => removeItem(item._cartId)}
-                              className="rounded-full p-1 text-gray-400 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900"
+                              className="rounded-full p-1 text-[var(--color-gray-400)] transition-colors duration-200 hover:bg-[var(--color-gray-100)] hover:text-[var(--color-gray-900)]"
                               aria-label={`Remove ${item.name}`}
                             >
                               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -422,7 +422,7 @@ export default function CartDrawer() {
                                   forceNewLine: true,
                                 })
                               }
-                              className="text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-500 transition-colors hover:text-gray-900"
+                              className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)] transition-colors hover:text-[var(--color-gray-900)]"
                             >
                               {t("cart.duplicate")}
                             </button>
@@ -433,25 +433,25 @@ export default function CartDrawer() {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, Math.max(1, item.quantity - 1))}
-                                className="h-10 w-10 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 transition-colors duration-200 hover:bg-gray-100"
+                                className="h-10 w-10 rounded-full border border-[var(--color-gray-300)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:bg-[var(--color-gray-100)]"
                                 aria-label="Decrease quantity"
                               >
                                 -
                               </button>
-                              <span className="min-w-8 text-center text-sm font-semibold text-gray-900">{item.quantity}</span>
+                              <span className="min-w-8 text-center text-sm font-semibold text-[var(--color-gray-900)]">{item.quantity}</span>
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, item.quantity + 1)}
                                 disabled={item.quantity >= 999}
-                                className="h-10 w-10 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 transition-colors duration-200 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="h-10 w-10 rounded-full border border-[var(--color-gray-300)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:bg-[var(--color-gray-100)] disabled:opacity-40 disabled:cursor-not-allowed"
                                 aria-label="Increase quantity"
                               >
                                 +
                               </button>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-semibold text-gray-900">{formatCad(lineTotal)}</p>
-                              {item.quantity > 1 && <p className="text-[11px] text-gray-500">{t("cart.each", { price: formatCad(unit) })}</p>}
+                              <p className="text-sm font-semibold text-[var(--color-gray-900)]">{formatCad(lineTotal)}</p>
+                              {item.quantity > 1 && <p className="text-[11px] text-[var(--color-gray-500)]">{t("cart.each", { price: formatCad(unit) })}</p>}
                             </div>
                           </div>
                         </div>
@@ -466,9 +466,9 @@ export default function CartDrawer() {
           {cart.length > 0 && <CartUpsell />}
 
           {cart.length > 0 && (
-            <div className="space-y-3 border-t border-gray-200 px-5 py-4">
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                <label htmlFor="promo" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+            <div className="space-y-3 border-t border-[var(--color-gray-200)] px-5 py-4">
+              <div className="rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3">
+                <label htmlFor="promo" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
                   {t("cart.promoCode")}
                 </label>
                 <div className="mt-2 flex gap-2">
@@ -477,27 +477,27 @@ export default function CartDrawer() {
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
                     placeholder={t("cart.enterCode")}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
+                    className="w-full rounded-lg border border-[var(--color-gray-300)] px-3 py-2 text-sm outline-none focus:border-[var(--color-gray-500)]"
                   />
                   <button
                     type="button"
                     onClick={handleApplyPromo}
                     disabled={promoLoading || !promoCode.trim()}
-                    className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-gray-600 disabled:opacity-50"
+                    className="rounded-lg border border-[var(--color-gray-300)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-600)] disabled:opacity-50"
                   >
                     {promoLoading ? "..." : t("cart.apply")}
                   </button>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
-                {t("cart.estimatedDelivery")} <span className="font-semibold text-gray-900">{getDeliveryWindow()}</span>
+              <div className="rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3 text-xs text-[var(--color-gray-600)]">
+                {t("cart.estimatedDelivery")} <span className="font-semibold text-[var(--color-gray-900)]">{getDeliveryWindow()}</span>
               </div>
 
-              <div className="space-y-2 text-sm text-gray-700">
+              <div className="space-y-2 text-sm text-[var(--color-gray-700)]">
                 <div className="flex items-center justify-between">
                   <span>{t("cart.subtotal")}</span>
-                  <span className="font-semibold text-gray-900">{formatCad(subtotal)}</span>
+                  <span className="font-semibold text-[var(--color-gray-900)]">{formatCad(subtotal)}</span>
                 </div>
                 {promoDiscount && (
                   <div className="flex items-center justify-between text-emerald-600">
@@ -506,7 +506,7 @@ export default function CartDrawer() {
                       <button
                         type="button"
                         onClick={() => { setPromoDiscount(null); setPromoCode(""); }}
-                        className="rounded-full p-0.5 text-gray-400 hover:text-gray-600"
+                        className="rounded-full p-0.5 text-[var(--color-gray-400)] hover:text-[var(--color-gray-600)]"
                         aria-label={t("cart.removePromo")}
                       >
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -519,13 +519,13 @@ export default function CartDrawer() {
                 )}
                 <div className="flex items-center justify-between">
                   <span>{t("cart.shipping")}</span>
-                  <span className="font-semibold text-gray-900">{shipping === 0 ? t("cart.free") : formatCad(shipping)}</span>
+                  <span className="font-semibold text-[var(--color-gray-900)]">{shipping === 0 ? t("cart.free") : formatCad(shipping)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>{t("cart.tax")}</span>
-                  <span className="font-semibold text-gray-900">{formatCad(tax)}</span>
+                  <span className="font-semibold text-[var(--color-gray-900)]">{formatCad(tax)}</span>
                 </div>
-                <div className="mt-3 flex items-center justify-between border-t border-gray-200 pt-3 text-base font-semibold text-gray-900">
+                <div className="mt-3 flex items-center justify-between border-t border-[var(--color-gray-200)] pt-3 text-base font-semibold text-[var(--color-gray-900)]">
                   <span>{t("cart.total")}</span>
                   <span>{formatCad(total)} CAD</span>
                 </div>
@@ -537,8 +537,8 @@ export default function CartDrawer() {
                   onClick={() => setCheckoutMode("stripe")}
                   className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] ${
                     checkoutMode === "stripe"
-                      ? "border-gray-900 bg-gray-900 text-white"
-                      : "border-gray-300 text-gray-600"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+                      : "border-[var(--color-gray-300)] text-[var(--color-gray-600)]"
                   }`}
                 >
                   {t("cart.payNow")}
@@ -548,8 +548,8 @@ export default function CartDrawer() {
                   onClick={() => setCheckoutMode("invoice")}
                   className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] ${
                     checkoutMode === "invoice"
-                      ? "border-gray-900 bg-gray-900 text-white"
-                      : "border-gray-300 text-gray-600"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+                      : "border-[var(--color-gray-300)] text-[var(--color-gray-600)]"
                   }`}
                 >
                   {t("cart.invoiceCheckout")}
@@ -557,26 +557,26 @@ export default function CartDrawer() {
               </div>
 
             {checkoutMode === "invoice" && (
-              <div className="space-y-2 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">{t("cart.invoiceDetails")}</p>
+              <div className="space-y-2 rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("cart.invoiceDetails")}</p>
                 <input
                   value={invoiceForm.companyName}
                   onChange={(e) => setInvoiceForm((prev) => ({ ...prev, companyName: e.target.value }))}
                   placeholder={t("cart.companyName")}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                  className="w-full rounded-lg border border-[var(--color-gray-300)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-gray-500)]"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     value={invoiceForm.contactName}
                     onChange={(e) => setInvoiceForm((prev) => ({ ...prev, contactName: e.target.value }))}
                     placeholder={t("cart.contactName")}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                    className="w-full rounded-lg border border-[var(--color-gray-300)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-gray-500)]"
                   />
                   <input
                     value={invoiceForm.email}
                     onChange={(e) => setInvoiceForm((prev) => ({ ...prev, email: e.target.value }))}
                     placeholder={t("cart.contactEmail")}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                    className="w-full rounded-lg border border-[var(--color-gray-300)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-gray-500)]"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -584,12 +584,12 @@ export default function CartDrawer() {
                     value={invoiceForm.poNumber}
                     onChange={(e) => setInvoiceForm((prev) => ({ ...prev, poNumber: e.target.value }))}
                     placeholder={t("cart.poNumber")}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                    className="w-full rounded-lg border border-[var(--color-gray-300)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-gray-500)]"
                   />
                   <select
                     value={invoiceForm.paymentTerms}
                     onChange={(e) => setInvoiceForm((prev) => ({ ...prev, paymentTerms: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                    className="w-full rounded-lg border border-[var(--color-gray-300)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-gray-500)]"
                   >
                     <option value="net15">Net 15</option>
                     <option value="net30">Net 30</option>
@@ -601,7 +601,7 @@ export default function CartDrawer() {
                   value={invoiceForm.notes}
                   onChange={(e) => setInvoiceForm((prev) => ({ ...prev, notes: e.target.value }))}
                   placeholder={t("cart.invoiceNotes")}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-500"
+                  className="w-full rounded-lg border border-[var(--color-gray-300)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-gray-500)]"
                 />
               </div>
             )}
@@ -620,7 +620,7 @@ export default function CartDrawer() {
                 type="button"
                 onClick={handleInvoiceCheckout}
                 disabled={invoiceSubmitting}
-                className="w-full rounded-full border border-gray-900 bg-white px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-900 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-full border border-[var(--color-gray-900)] bg-white px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-900)] transition-colors hover:bg-[var(--color-gray-100)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {invoiceSubmitting ? t("cart.processing") : t("cart.submitInvoiceOrder")}
               </button>
@@ -629,7 +629,7 @@ export default function CartDrawer() {
               <button
                 type="button"
                 onClick={closeCart}
-                className="w-full rounded-full border border-gray-300 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700"
+                className="w-full rounded-full border border-[var(--color-gray-300)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)]"
               >
                 {t("cart.continueShopping")}
               </button>

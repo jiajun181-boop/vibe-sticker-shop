@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { slugify, validateSlug } from "@/lib/slugify";
 import { logActivity } from "@/lib/activity-log";
+import { computeFromPrice } from "@/lib/pricing/from-price";
 
 const SUBSERIES_TAG_PREFIX = "subseries:";
 
@@ -36,6 +37,7 @@ export async function GET(
     where: { id },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
+      pricingPreset: true,
     },
   });
 
@@ -82,6 +84,8 @@ export async function PATCH(
     "keywords",
     "metaTitle",
     "metaDescription",
+    "displayFromPrice",
+    "pricingPresetId",
   ];
 
   const data: Record<string, unknown> = {};
@@ -136,8 +140,21 @@ export async function PATCH(
   const product = await prisma.product.update({
     where: { id },
     data,
-    include: { images: { orderBy: { sortOrder: "asc" } } },
+    include: { images: { orderBy: { sortOrder: "asc" } }, pricingPreset: true },
   });
+
+  // Auto-recompute minPrice when pricing-related fields change
+  const pricingFields = ["basePrice", "pricingConfig", "optionsConfig", "pricingPresetId"];
+  if (pricingFields.some((f) => f in data)) {
+    try {
+      const minPrice = computeFromPrice(product);
+      if (minPrice > 0 && minPrice !== product.minPrice) {
+        await prisma.product.update({ where: { id }, data: { minPrice } });
+      }
+    } catch {
+      // Non-critical — minPrice will be refreshed by next backfill run
+    }
+  }
 
   await logActivity({
     action: "product_update",

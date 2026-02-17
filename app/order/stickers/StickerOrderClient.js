@@ -360,7 +360,7 @@ export default function StickerOrderClient() {
       />
 
       {/* Page title */}
-      <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+      <h1 className="mb-8 text-2xl font-bold tracking-tight text-[var(--color-gray-900)] sm:text-3xl">
         {t("stickerOrder.title")}
       </h1>
 
@@ -377,13 +377,13 @@ export default function StickerOrderClient() {
                   onClick={() => selectCutting(ct.id)}
                   className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
                     cuttingId === ct.id
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white shadow-md"
+                      : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                   }`}
                 >
                   <CutIcon type={ct.icon} className="h-7 w-7" />
                   <span className="text-sm font-semibold">{t(`stickerOrder.type.${ct.id}`)}</span>
-                  <span className={`text-[11px] leading-tight ${cuttingId === ct.id ? "text-gray-300" : "text-gray-400"}`}>
+                  <span className={`text-[11px] leading-tight ${cuttingId === ct.id ? "text-[var(--color-gray-300)]" : "text-[var(--color-gray-400)]"}`}>
                     {t(`stickerOrder.typeDesc.${ct.id}`)}
                   </span>
                 </button>
@@ -411,7 +411,7 @@ export default function StickerOrderClient() {
             {isCustomSize && (
               <div className="mt-4 flex items-end gap-3">
                 <div className="flex-1">
-                  <label className="mb-1 block text-xs text-gray-500">{t("stickerOrder.width")}</label>
+                  <label className="mb-1 block text-xs text-[var(--color-gray-500)]">{t("stickerOrder.width")}</label>
                   <input
                     type="number"
                     min="0.1"
@@ -419,12 +419,12 @@ export default function StickerOrderClient() {
                     value={customW}
                     onChange={(e) => setCustomW(e.target.value)}
                     placeholder={unit === "in" ? '3.0"' : "7.6cm"}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                    className="w-full rounded-lg border border-[var(--color-gray-300)] px-3 py-2 text-sm focus:border-[var(--color-gray-900)] focus:outline-none focus:ring-1 focus:ring-gray-900"
                   />
                 </div>
-                <span className="pb-2 text-gray-400">×</span>
+                <span className="pb-2 text-[var(--color-gray-400)]">×</span>
                 <div className="flex-1">
-                  <label className="mb-1 block text-xs text-gray-500">{t("stickerOrder.height")}</label>
+                  <label className="mb-1 block text-xs text-[var(--color-gray-500)]">{t("stickerOrder.height")}</label>
                   <input
                     type="number"
                     min="0.1"
@@ -432,21 +432,21 @@ export default function StickerOrderClient() {
                     value={customH}
                     onChange={(e) => setCustomH(e.target.value)}
                     placeholder={unit === "in" ? '3.0"' : "7.6cm"}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                    className="w-full rounded-lg border border-[var(--color-gray-300)] px-3 py-2 text-sm focus:border-[var(--color-gray-900)] focus:outline-none focus:ring-1 focus:ring-gray-900"
                   />
                 </div>
-                <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+                <div className="flex rounded-lg border border-[var(--color-gray-300)] overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setUnit("in")}
-                    className={`px-3 py-2 text-xs font-medium transition ${unit === "in" ? "bg-gray-900 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`px-3 py-2 text-xs font-medium transition ${unit === "in" ? "bg-[var(--color-gray-900)] text-white" : "bg-white text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
                   >
                     in
                   </button>
                   <button
                     type="button"
                     onClick={() => setUnit("cm")}
-                    className={`px-3 py-2 text-xs font-medium transition ${unit === "cm" ? "bg-gray-900 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`px-3 py-2 text-xs font-medium transition ${unit === "cm" ? "bg-[var(--color-gray-900)] text-white" : "bg-white text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
                   >
                     cm
                   </button>
@@ -475,18 +475,18 @@ export default function StickerOrderClient() {
                     onClick={() => selectMaterial(mat.id)}
                     className={`relative rounded-xl border-2 px-3 py-3 text-left transition-all ${
                       materialId === mat.id
-                        ? "border-gray-900 bg-gray-50 shadow-sm"
-                        : "border-gray-200 bg-white hover:border-gray-400"
+                        ? "border-[var(--color-gray-900)] bg-[var(--color-gray-50)] shadow-sm"
+                        : "border-[var(--color-gray-200)] bg-white hover:border-[var(--color-gray-400)]"
                     }`}
                   >
-                    <span className="block text-sm font-medium text-gray-800">
+                    <span className="block text-sm font-medium text-[var(--color-gray-800)]">
                       {t(`stickerOrder.mat.${mat.id}`)}
                     </span>
                     {surcharge && (
                       <span className="mt-0.5 block text-[11px] text-amber-600 font-medium">{surcharge}</span>
                     )}
                     {materialId === mat.id && (
-                      <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gray-900" />
+                      <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--color-gray-900)]" />
                     )}
                   </button>
                 );
@@ -508,7 +508,7 @@ export default function StickerOrderClient() {
               ))}
             </div>
             <div className="mt-3 flex items-center gap-2">
-              <label className="text-xs text-gray-500">{t("stickerOrder.customQty")}:</label>
+              <label className="text-xs text-[var(--color-gray-500)]">{t("stickerOrder.customQty")}:</label>
               <input
                 type="number"
                 min="1"
@@ -519,18 +519,18 @@ export default function StickerOrderClient() {
                   trackOptionChange({ slug, option: "quantity", value: e.target.value, quantity: parseInt(e.target.value, 10) || 0 });
                 }}
                 placeholder="e.g. 750"
-                className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                className="w-28 rounded-lg border border-[var(--color-gray-300)] px-3 py-1.5 text-sm focus:border-[var(--color-gray-900)] focus:outline-none focus:ring-1 focus:ring-gray-900"
               />
             </div>
           </Section>
 
           {/* -------- File Upload (optional) -------- */}
           <Section label={t("stickerOrder.artwork")} optional>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="mb-3 text-xs text-gray-600">{t("stickerOrder.uploadHint")}</p>
+            <div className="rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-4">
+              <p className="mb-3 text-xs text-[var(--color-gray-600)]">{t("stickerOrder.uploadHint")}</p>
               {uploadedFile ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-800">{uploadedFile.name}</span>
+                  <span className="text-sm text-[var(--color-gray-800)]">{uploadedFile.name}</span>
                   <button
                     type="button"
                     onClick={() => setUploadedFile(null)}
@@ -563,8 +563,8 @@ export default function StickerOrderClient() {
 
         {/* ===================== RIGHT: Order summary sidebar (2/5) ===================== */}
         <aside className="hidden lg:col-span-2 lg:block">
-          <div className="sticky top-24 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-base font-bold text-gray-900">{t("stickerOrder.summary")}</h2>
+          <div className="sticky top-24 space-y-6 rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 shadow-sm">
+            <h2 className="text-base font-bold text-[var(--color-gray-900)]">{t("stickerOrder.summary")}</h2>
 
             <SummaryRows
               t={t}
@@ -582,7 +582,7 @@ export default function StickerOrderClient() {
 
             {/* Tier pricing table */}
             <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-gray-500">
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
                 {t("stickerOrder.volumeDiscounts")}
               </h3>
               <div className="space-y-1">
@@ -590,7 +590,7 @@ export default function StickerOrderClient() {
                   <div
                     key={row.qty}
                     className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-xs ${
-                      activeQty === row.qty ? "bg-gray-100 font-semibold text-gray-900" : "text-gray-500"
+                      activeQty === row.qty ? "bg-[var(--color-gray-100)] font-semibold text-[var(--color-gray-900)]" : "text-[var(--color-gray-500)]"
                     }`}
                   >
                     <span>{row.qty.toLocaleString()}+</span>
@@ -608,8 +608,8 @@ export default function StickerOrderClient() {
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart
-                    ? "bg-gray-900 text-white hover:bg-gray-800"
-                    : "cursor-not-allowed bg-gray-200 text-gray-400"
+                    ? "bg-[var(--color-gray-900)] text-white hover:bg-[var(--color-gray-800)]"
+                    : "cursor-not-allowed bg-[var(--color-gray-200)] text-[var(--color-gray-400)]"
                 }`}
               >
                 {t("stickerOrder.addToCart")}
@@ -620,8 +620,8 @@ export default function StickerOrderClient() {
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading
-                    ? "border-gray-900 text-gray-900 hover:bg-gray-50"
-                    : "cursor-not-allowed border-gray-200 text-gray-400"
+                    ? "border-[var(--color-gray-900)] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)]"
+                    : "cursor-not-allowed border-[var(--color-gray-200)] text-[var(--color-gray-400)]"
                 }`}
               >
                 {buyNowLoading ? t("stickerOrder.processing") : t("stickerOrder.buyNow")}
@@ -629,11 +629,11 @@ export default function StickerOrderClient() {
             </div>
 
             {/* Trust badges */}
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
+            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-[var(--color-gray-400)]">
               <span>{t("stickerOrder.badgeWaterproof")}</span>
-              <span className="text-gray-300">|</span>
+              <span className="text-[var(--color-gray-300)]">|</span>
               <span>{t("stickerOrder.badgeShipping")}</span>
-              <span className="text-gray-300">|</span>
+              <span className="text-[var(--color-gray-300)]">|</span>
               <span>{t("stickerOrder.badgeProof")}</span>
             </div>
           </div>
@@ -641,20 +641,20 @@ export default function StickerOrderClient() {
       </div>
 
       {/* ===================== MOBILE: Fixed bottom bar ===================== */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-gray-200)] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="flex-1 min-w-0">
             {quoteLoading ? (
-              <div className="h-5 w-20 animate-pulse rounded bg-gray-200" />
+              <div className="h-5 w-20 animate-pulse rounded bg-[var(--color-gray-200)]" />
             ) : quoteData ? (
               <>
-                <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
-                <p className="truncate text-[11px] text-gray-500">
+                <p className="text-lg font-bold text-[var(--color-gray-900)]">{formatCad(totalCents)}</p>
+                <p className="truncate text-[11px] text-[var(--color-gray-500)]">
                   {formatCad(unitCents)}/{t("stickerOrder.ea")} × {activeQty.toLocaleString()}
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">{t("stickerOrder.selectOptions")}</p>
+              <p className="text-sm text-[var(--color-gray-400)]">{t("stickerOrder.selectOptions")}</p>
             )}
           </div>
           <button
@@ -663,8 +663,8 @@ export default function StickerOrderClient() {
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart
-                ? "bg-gray-900 text-white hover:bg-gray-800"
-                : "cursor-not-allowed bg-gray-200 text-gray-400"
+                ? "bg-[var(--color-gray-900)] text-white hover:bg-[var(--color-gray-800)]"
+                : "cursor-not-allowed bg-[var(--color-gray-200)] text-[var(--color-gray-400)]"
             }`}
           >
             {t("stickerOrder.addToCart")}
@@ -675,8 +675,8 @@ export default function StickerOrderClient() {
             disabled={!canAddToCart || buyNowLoading}
             className={`shrink-0 rounded-full border-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart && !buyNowLoading
-                ? "border-gray-900 text-gray-900"
-                : "cursor-not-allowed border-gray-200 text-gray-400"
+                ? "border-[var(--color-gray-900)] text-[var(--color-gray-900)]"
+                : "cursor-not-allowed border-[var(--color-gray-200)] text-[var(--color-gray-400)]"
             }`}
           >
             {buyNowLoading ? "..." : t("stickerOrder.buyNow")}
@@ -696,8 +696,8 @@ function Section({ label, optional, children }) {
   return (
     <section>
       <div className="mb-3 flex items-baseline gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{label}</h2>
-        {optional && <span className="text-[10px] text-gray-400">({useTranslation().t("stickerOrder.optional")})</span>}
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{label}</h2>
+        {optional && <span className="text-[10px] text-[var(--color-gray-400)]">({useTranslation().t("stickerOrder.optional")})</span>}
       </div>
       {children}
     </section>
@@ -711,8 +711,8 @@ function Chip({ active, onClick, children }) {
       onClick={onClick}
       className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
         active
-          ? "border-gray-900 bg-gray-900 text-white"
-          : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"
+          ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+          : "border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)] hover:border-gray-500"
       }`}
     >
       {children}
@@ -745,18 +745,18 @@ function SummaryRows({
       <dl className="space-y-2 text-sm">
         {rows.map((r) => (
           <div key={r.label} className="flex justify-between">
-            <dt className="text-gray-500">{r.label}</dt>
-            <dd className="font-medium text-gray-800">{r.value}</dd>
+            <dt className="text-[var(--color-gray-500)]">{r.label}</dt>
+            <dd className="font-medium text-[var(--color-gray-800)]">{r.value}</dd>
           </div>
         ))}
       </dl>
 
-      <hr className="border-gray-100" />
+      <hr className="border-[var(--color-gray-100)]" />
 
       {quoteLoading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-4 animate-pulse rounded bg-gray-100" />
+            <div key={i} className="h-4 animate-pulse rounded bg-[var(--color-gray-100)]" />
           ))}
         </div>
       ) : quoteError ? (
@@ -764,25 +764,25 @@ function SummaryRows({
       ) : unitCents > 0 ? (
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <dt className="text-gray-500">{t("stickerOrder.unitPrice")}</dt>
-            <dd className="font-medium text-gray-800">{formatCad(unitCents)}</dd>
+            <dt className="text-[var(--color-gray-500)]">{t("stickerOrder.unitPrice")}</dt>
+            <dd className="font-medium text-[var(--color-gray-800)]">{formatCad(unitCents)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-gray-500">{t("stickerOrder.subtotal")}</dt>
-            <dd className="font-medium text-gray-800">{formatCad(subtotalCents)}</dd>
+            <dt className="text-[var(--color-gray-500)]">{t("stickerOrder.subtotal")}</dt>
+            <dd className="font-medium text-[var(--color-gray-800)]">{formatCad(subtotalCents)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-gray-500">{t("stickerOrder.tax")}</dt>
-            <dd className="text-gray-600">{formatCad(taxCents)}</dd>
+            <dt className="text-[var(--color-gray-500)]">{t("stickerOrder.tax")}</dt>
+            <dd className="text-[var(--color-gray-600)]">{formatCad(taxCents)}</dd>
           </div>
-          <hr className="border-gray-100" />
+          <hr className="border-[var(--color-gray-100)]" />
           <div className="flex justify-between text-base font-bold">
             <dt>{t("stickerOrder.total")}</dt>
             <dd>{formatCad(totalCents)}</dd>
           </div>
         </dl>
       ) : (
-        <p className="text-center text-xs text-gray-400">{t("stickerOrder.selectOptions")}</p>
+        <p className="text-center text-xs text-[var(--color-gray-400)]">{t("stickerOrder.selectOptions")}</p>
       )}
     </div>
   );

@@ -31,6 +31,8 @@ export async function GET(request: Request) {
         b2bApproved: true,
         b2bApprovedAt: true,
         emailVerified: true,
+        partnerTier: true,
+        partnerDiscount: true,
         createdAt: true,
         _count: { select: { orders: true } },
       },

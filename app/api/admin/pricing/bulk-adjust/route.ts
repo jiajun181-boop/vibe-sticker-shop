@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { validatePresetConfig } from "@/lib/pricing/validate-config";
 import { logActivity } from "@/lib/activity-log";
+import { computeFromPrice } from "@/lib/pricing/from-price";
 
 type AdjustFlags = {
   tiers: boolean;
@@ -293,6 +294,7 @@ export async function POST(request: NextRequest) {
     }
 
     let applied = 0;
+    let minPriceRefreshed = 0;
     if (mode === "apply" && updates.length) {
       await prisma.$transaction(updates);
       applied = updates.length;
@@ -311,6 +313,26 @@ export async function POST(request: NextRequest) {
           snapshots,
         },
       });
+
+      // Refresh minPrice for affected products
+      try {
+        const affectedProducts = await prisma.product.findMany({
+          where: { category, isActive: true, pricingPresetId: { not: null } },
+          include: { pricingPreset: true },
+        });
+        for (const p of affectedProducts) {
+          const fresh = computeFromPrice(p);
+          if (fresh > 0 && fresh !== p.minPrice) {
+            await prisma.product.update({
+              where: { id: p.id },
+              data: { minPrice: fresh },
+            });
+            minPriceRefreshed++;
+          }
+        }
+      } catch (e) {
+        console.warn("[Pricing bulk-adjust] minPrice refresh error:", e);
+      }
     }
 
     return NextResponse.json({
@@ -323,6 +345,7 @@ export async function POST(request: NextRequest) {
       skippedShared,
       invalidConfigs,
       applied,
+      minPriceRefreshed,
       results,
     });
   } catch (err) {

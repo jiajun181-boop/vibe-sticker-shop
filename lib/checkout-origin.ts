@@ -42,7 +42,7 @@ export function buildSafeRedirectUrls({
   statusToken,
 }: RedirectInput) {
   let safeSuccessUrl = `${baseOrigin}/success?session_id={CHECKOUT_SESSION_ID}&st=${statusToken}`;
-  let safeCancelUrl = `${baseOrigin}/cart`;
+  let safeCancelUrl = `${baseOrigin}/shop`;
 
   if (successUrl) {
     const parsed = ensureSameOriginUrl(successUrl, baseOrigin);

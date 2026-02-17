@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ALL_ROLES, ROLE_LABELS } from "@/lib/admin-permissions";
+import { ALL_ROLES, ROLE_LABELS, PERMISSION_MATRIX } from "@/lib/admin-permissions";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -9,6 +9,7 @@ export default function AdminUsersPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editId, setEditId] = useState(null);
   const [message, setMessage] = useState(null);
+  const [previewRole, setPreviewRole] = useState(null);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -50,19 +51,31 @@ export default function AdminUsersPage() {
 
       {/* Permission overview */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-        <h2 className="mb-3 text-sm font-semibold text-black">Role Overview</h2>
+        <h2 className="mb-1 text-sm font-semibold text-black">Role Overview</h2>
+        <p className="mb-3 text-[10px] text-[#999]">Click a role to see its permissions</p>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {ALL_ROLES.map((role) => {
             const count = users.filter((u) => u.role === role && u.isActive).length;
+            const isSelected = previewRole === role;
             return (
-              <div key={role} className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] px-3 py-2">
+              <button
+                key={role}
+                type="button"
+                onClick={() => setPreviewRole(isSelected ? null : role)}
+                className={`rounded-[3px] border px-3 py-2 text-left transition-colors ${isSelected ? "border-black bg-black/5" : "border-[#e0e0e0] bg-[#fafafa] hover:border-[#999]"}`}
+              >
                 <p className="text-xs font-semibold text-black">{ROLE_LABELS[role].en}</p>
                 <p className="text-[10px] text-[#999]">{ROLE_LABELS[role].zh}</p>
                 <p className="mt-1 text-lg font-bold text-black">{count}</p>
-              </div>
+              </button>
             );
           })}
         </div>
+        {previewRole && (
+          <div className="mt-3">
+            <RolePermissionPreview role={previewRole} />
+          </div>
+        )}
       </div>
 
       {/* User list */}
@@ -316,21 +329,76 @@ function Field({ label, value, onChange, type = "text", placeholder, required })
   );
 }
 
+const MODULE_LABELS = {
+  dashboard: "Dashboard",
+  orders: "Orders",
+  customers: "Customers",
+  b2b: "B2B Accounts",
+  products: "Products",
+  catalog: "Catalog",
+  pricing: "Pricing",
+  coupons: "Coupons",
+  production: "Production",
+  factories: "Factories",
+  analytics: "Analytics",
+  reports: "Reports",
+  media: "Media Library",
+  content: "Content / CMS",
+  settings: "Settings",
+  logs: "Activity Log",
+  users: "User Management",
+};
+
+const ACTION_BADGES = {
+  view: { label: "View", cls: "bg-blue-50 text-blue-700" },
+  edit: { label: "Edit", cls: "bg-amber-50 text-amber-700" },
+  approve: { label: "Approve", cls: "bg-purple-50 text-purple-700" },
+  admin: { label: "Full", cls: "bg-green-50 text-green-700" },
+};
+
+function RolePermissionPreview({ role }) {
+  const perms = PERMISSION_MATRIX[role];
+  if (!perms) return null;
+  const modules = Object.entries(perms);
+
+  return (
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
+      <p className="mb-2 text-[11px] font-semibold text-[#666]">
+        This role can access {modules.length} module{modules.length !== 1 ? "s" : ""}:
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {modules.map(([mod, level]) => {
+          const badge = ACTION_BADGES[level] || ACTION_BADGES.view;
+          return (
+            <span key={mod} className="inline-flex items-center gap-1 rounded-[2px] bg-white border border-[#e0e0e0] px-2 py-0.5 text-[11px]">
+              <span className="font-medium text-black">{MODULE_LABELS[mod] || mod}</span>
+              <span className={`rounded-[2px] px-1 py-px text-[9px] font-bold ${badge.cls}`}>{badge.label}</span>
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function RoleSelect({ value, onChange }) {
   return (
-    <div>
-      <label className="mb-1 block text-xs font-medium text-[#666]">Role</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-      >
-        {ALL_ROLES.map((r) => (
-          <option key={r} value={r}>
-            {ROLE_LABELS[r].en} ({ROLE_LABELS[r].zh})
-          </option>
-        ))}
-      </select>
+    <div className="space-y-2">
+      <div>
+        <label className="mb-1 block text-xs font-medium text-[#666]">Role</label>
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+        >
+          {ALL_ROLES.map((r) => (
+            <option key={r} value={r}>
+              {ROLE_LABELS[r].en} ({ROLE_LABELS[r].zh})
+            </option>
+          ))}
+        </select>
+      </div>
+      <RolePermissionPreview role={value} />
     </div>
   );
 }

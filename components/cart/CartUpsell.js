@@ -61,8 +61,8 @@ export default function CartUpsell() {
   if (suggestions.length === 0) return null;
 
   return (
-    <div className="border-t border-gray-200 bg-gray-50 px-5 py-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+    <div className="border-t border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-5 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
         {t("cart.youMayAlsoNeed")}
       </p>
       <div className="mt-3 space-y-2">
@@ -71,14 +71,14 @@ export default function CartUpsell() {
           return (
           <div
             key={item.slug}
-            className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-2"
+            className="flex items-center gap-3 rounded-xl border border-[var(--color-gray-200)] bg-white p-2"
           >
-            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+            <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-[var(--color-gray-100)]">
               <img src={imageSrc} alt={item.name} className="h-full w-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-gray-900">{item.name}</p>
-              <p className="text-[11px] text-gray-500">{formatCad(item.basePrice)}</p>
+              <p className="truncate text-xs font-semibold text-[var(--color-gray-900)]">{item.name}</p>
+              <p className="text-[11px] text-[var(--color-gray-500)]">{formatCad(item.basePrice)}</p>
             </div>
             <button
               type="button"

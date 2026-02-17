@@ -16,6 +16,14 @@ import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { useFavoritesStore } from "@/lib/favorites";
 
 const PAGE_SIZE_OPTIONS = [12, 24, 36];
+const HOT_PICK_SLUGS = [
+  "business-cards-classic",
+  "window-graphics",
+  "vehicle-wraps",
+  "brochures",
+  "die-cut-stickers",
+  "yard-signs",
+];
 
 const MATERIAL_OPTIONS = [
   { key: "paper", label: "Paper" },
@@ -58,32 +66,32 @@ function SmallCard({ catSlug, meta, count, previews, t }) {
   return (
     <Link
       href={meta?.href || `/shop/${catSlug}`}
-      className="group flex flex-col rounded-2xl border border-gray-200 bg-white p-4 hover-lift-subtle"
+      className="group flex flex-col rounded-2xl border border-[var(--color-gray-200)] bg-white p-4 hover-lift-subtle"
     >
       <span className="text-2xl">{meta?.icon || ""}</span>
-      <h3 className="mt-2 text-sm font-semibold text-gray-900 group-hover:text-[var(--color-moon-gold)] transition-colors">
+      <h3 className="mt-2 text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-moon-gold)] transition-colors">
         {t(`catalog.cat.${catSlug}`) !== `catalog.cat.${catSlug}` ? t(`catalog.cat.${catSlug}`) : (meta?.title || catSlug)}
       </h3>
       {count > 0 && (
-        <p className="mt-1 text-[11px] text-gray-400">
+        <p className="mt-1 text-[11px] text-[var(--color-gray-400)]">
           {count} {t("mp.landing.products")}
         </p>
       )}
       {previews.length > 0 && (
         <div className="mt-2 flex -space-x-1.5">
           {previews.map((url, i) => (
-            <div key={i} className="relative h-7 w-7 rounded-full border-2 border-white overflow-hidden bg-gray-100">
+            <div key={i} className="relative h-7 w-7 rounded-full border-2 border-white overflow-hidden bg-[var(--color-gray-100)]">
               <Image src={url} alt="" fill className="object-cover" sizes="28px" unoptimized={url.endsWith(".svg")} />
             </div>
           ))}
           {count > previews.length && (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-gray-100 label-xs font-bold text-gray-500">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[var(--color-gray-100)] label-xs font-bold text-[var(--color-gray-500)]">
               +{count - previews.length}
             </div>
           )}
         </div>
       )}
-      <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-500 group-hover:text-gray-900 transition-colors">
+      <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)] group-hover:text-[var(--color-gray-900)] transition-colors">
         {t("mp.landing.browse")}
         <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -97,20 +105,20 @@ function SmallCard({ catSlug, meta, count, previews, t }) {
 function ParentCard({ catSlug, meta, count, t }) {
   const subGroups = meta?.subGroups || [];
   return (
-    <div className="col-span-2 md:col-span-3 lg:col-span-4 rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-200 hover:shadow-lg hover:border-gray-300">
+    <div className="col-span-2 md:col-span-3 lg:col-span-4 rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 transition-all duration-200 hover:shadow-lg hover:border-[var(--color-gray-300)]">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <span className="text-2xl">{meta?.icon || ""}</span>
           <div>
-            <h3 className="text-base font-semibold text-gray-900">{t(`catalog.cat.${catSlug}`) !== `catalog.cat.${catSlug}` ? t(`catalog.cat.${catSlug}`) : (meta?.title || catSlug)}</h3>
+            <h3 className="text-base font-semibold text-[var(--color-gray-900)]">{t(`catalog.cat.${catSlug}`) !== `catalog.cat.${catSlug}` ? t(`catalog.cat.${catSlug}`) : (meta?.title || catSlug)}</h3>
             {count > 0 && (
-              <p className="text-[11px] text-gray-400">{count} {t("mp.landing.products")}</p>
+              <p className="text-[11px] text-[var(--color-gray-400)]">{count} {t("mp.landing.products")}</p>
             )}
           </div>
         </div>
         <Link
           href={`/shop/${catSlug}`}
-          className="flex-none rounded-full border border-gray-300 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-600 hover:border-gray-900 hover:text-gray-900 transition-colors"
+          className="flex-none rounded-full border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)] transition-colors"
         >
           {t("mp.landing.browse")}
         </Link>
@@ -121,7 +129,7 @@ function ParentCard({ catSlug, meta, count, t }) {
             <Link
               key={sg.slug}
               href={sg.href}
-              className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-white hover:text-gray-900"
+              className="rounded-full border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-1.5 text-xs font-medium text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-white hover:text-[var(--color-gray-900)]"
             >
               {t(`catalog.sub.${sg.slug}`) !== `catalog.sub.${sg.slug}` ? t(`catalog.sub.${sg.slug}`) : sg.title}
             </Link>
@@ -155,17 +163,17 @@ function CategoryGrid({ departments, departmentMeta, categoryMeta, categoryCount
         const isOpen = expandedDepts.has(dept.key);
 
         return (
-          <section key={dept.key} className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+          <section key={dept.key} className="rounded-2xl border border-[var(--color-gray-200)] bg-white overflow-hidden">
             <button
               type="button"
               onClick={() => toggleDept(dept.key)}
-              className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-gray-50"
+              className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[var(--color-gray-50)]"
             >
-              <h2 className="text-lg font-semibold tracking-tight text-gray-900">
+              <h2 className="text-lg font-semibold tracking-tight text-[var(--color-gray-900)]">
                 {t(`catalog.dept.${dept.key}`) !== `catalog.dept.${dept.key}` ? t(`catalog.dept.${dept.key}`) : (deptMeta?.title || dept.key)}
               </h2>
               <svg
-                className={`h-5 w-5 flex-shrink-0 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                className={`h-5 w-5 flex-shrink-0 text-[var(--color-gray-400)] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                 fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -173,12 +181,12 @@ function CategoryGrid({ departments, departmentMeta, categoryMeta, categoryCount
             </button>
 
             {isOpen && (
-              <div className="border-t border-gray-100 px-5 pb-5">
+              <div className="border-t border-[var(--color-gray-100)] px-5 pb-5">
                 {subSections ? (
                   <div className="mt-4 space-y-6">
                     {subSections.map((ss) => (
                       <div key={ss.label}>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 mb-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-3">
                           {ss.i18nKey ? t(ss.i18nKey) : ss.label}
                         </p>
                         <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -340,6 +348,16 @@ export default function ShopClient({
     const catSet = new Set(products.map((p) => p.category));
     return Object.keys(categoryMeta).filter((slug) => catSet.has(slug));
   }, [products, categoryMeta]);
+
+  const hotPicks = useMemo(() => {
+    const bySlug = new Map(products.map((p) => [p.slug, p]));
+    const picked = HOT_PICK_SLUGS.map((slug) => bySlug.get(slug)).filter(Boolean);
+    if (picked.length >= 6) return picked.slice(0, 6);
+    const fallback = sortProducts(products, "popular", categoryOrder).filter(
+      (p) => !picked.some((x) => x.id === p.id)
+    );
+    return [...picked, ...fallback.slice(0, 6 - picked.length)];
+  }, [products, categoryOrder]);
 
   function syncUrl(next) {
     isInternalUrlUpdate.current = true;
@@ -516,16 +534,16 @@ export default function ShopClient({
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 via-gray-50 to-white px-3 pb-16 pt-8 text-gray-900 sm:px-4 sm:pt-10">
+    <main className="min-h-screen bg-gradient-to-b from-[var(--color-gray-50)] via-gray-50 to-white px-3 pb-16 pt-8 text-[var(--color-gray-900)] sm:px-4 sm:pt-10">
       <div className="mx-auto max-w-7xl">
         <Breadcrumbs items={[{ label: t("shop.header") }]} />
 
-        <header className="mb-5 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm sm:mb-6">
+        <header className="mb-5 overflow-hidden rounded-3xl border border-[var(--color-gray-200)] bg-white shadow-sm sm:mb-6">
           <div className="grid gap-4 bg-[var(--color-ink-black)] p-4 text-white sm:grid-cols-2 sm:gap-8 sm:p-6">
             <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-gray-300">{t("shop.header")}</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gray-300)]">{t("shop.header")}</p>
               <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{t("shop.title")}</h1>
-              <p className="mt-1 text-[11px] font-black uppercase tracking-[0.25em] text-gray-300">
+              <p className="mt-1 text-[11px] font-black uppercase tracking-[0.25em] text-[var(--color-gray-300)]">
                 {t("shop.tagline")}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -535,9 +553,9 @@ export default function ShopClient({
               </div>
             </div>
             <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-200">{t("shop.searchPlaceholder")}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-200)]">{t("shop.searchPlaceholder")}</p>
               <div className="relative mt-2">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-gray-300)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
                 <input
@@ -550,7 +568,7 @@ export default function ShopClient({
                     syncUrl({ query: nextQ });
                   }}
                   placeholder={t("shop.searchPlaceholder")}
-                  className="w-full rounded-full border border-white/20 bg-white/95 pl-9 pr-4 py-3 text-sm text-gray-900 focus:border-white focus:outline-none"
+                  className="w-full rounded-full border border-white/20 bg-white/95 pl-9 pr-4 py-3 text-sm text-[var(--color-gray-900)] focus:border-white focus:outline-none"
                 />
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2">
@@ -564,7 +582,7 @@ export default function ShopClient({
                       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                     });
                   }}
-                  className="rounded-full bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-gray-900 hover:bg-gray-100"
+                  className="rounded-full bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)]"
                 >
                   打印物料
                 </button>
@@ -577,31 +595,57 @@ export default function ShopClient({
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-3 border-t border-gray-100 bg-white px-4 py-3 text-center sm:px-6">
+          <div className="grid grid-cols-3 border-t border-[var(--color-gray-100)] bg-white px-4 py-3 text-center sm:px-6">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.15em] text-gray-400">{t("shop.statsProducts")}</p>
-              <p className="text-sm font-semibold text-gray-900">{products.length}</p>
+              <p className="text-[11px] uppercase tracking-[0.15em] text-[var(--color-gray-400)]">{t("shop.statsProducts")}</p>
+              <p className="text-sm font-semibold text-[var(--color-gray-900)]">{products.length}</p>
             </div>
-            <div className="border-x border-gray-100">
-              <p className="text-[11px] uppercase tracking-[0.15em] text-gray-400">{t("shop.statsCategories")}</p>
-              <p className="text-sm font-semibold text-gray-900">{availableCategories.length}</p>
+            <div className="border-x border-[var(--color-gray-100)]">
+              <p className="text-[11px] uppercase tracking-[0.15em] text-[var(--color-gray-400)]">{t("shop.statsCategories")}</p>
+              <p className="text-sm font-semibold text-[var(--color-gray-900)]">{availableCategories.length}</p>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.15em] text-gray-400">{t("shop.statsMadeFor")}</p>
-              <p className="text-sm font-semibold text-gray-900">{USE_CASES.length} {t("shop.statsIndustries")}</p>
+              <p className="text-[11px] uppercase tracking-[0.15em] text-[var(--color-gray-400)]">{t("shop.statsMadeFor")}</p>
+              <p className="text-sm font-semibold text-[var(--color-gray-900)]">{USE_CASES.length} {t("shop.statsIndustries")}</p>
             </div>
           </div>
         </header>
 
+        <section className="mb-5 rounded-2xl border border-[var(--color-gray-200)] bg-white p-3 sm:mb-6 sm:p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-gray-500)]">
+              Hot Picks
+            </p>
+            <button
+              type="button"
+              onClick={switchToAllProducts}
+              className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]"
+            >
+              Browse All
+            </button>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {hotPicks.map((p) => (
+              <Link
+                key={p.id}
+                href={`/shop/${p.category}/${p.slug}`}
+                className="flex-none rounded-full border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-2 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-white hover:text-[var(--color-gray-900)]"
+              >
+                {p.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+
         <div className="mb-5 flex items-center gap-4 sm:mb-6">
-          <div className="inline-flex rounded-full border border-gray-300 p-0.5 text-xs font-semibold">
+          <div className="inline-flex rounded-full border border-[var(--color-gray-300)] p-0.5 text-xs font-semibold">
             <button
               onClick={() => {
                 setCatalogTab("products");
                 setBrowseAll(true);
                 setPage(1);
               }}
-              className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "products" ? "bg-[var(--color-ink-black)] text-white" : "text-gray-600 hover:text-gray-900"}`}
+              className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "products" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)]"}`}
             >
               Products ({products.length})
             </button>
@@ -611,7 +655,7 @@ export default function ShopClient({
                 setBrowseAll(false);
                 setPage(1);
               }}
-              className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "category" ? "bg-[var(--color-ink-black)] text-white" : "text-gray-600 hover:text-gray-900"}`}
+              className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "category" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)]"}`}
             >
               Catalog
             </button>
@@ -621,7 +665,7 @@ export default function ShopClient({
                 setBrowseAll(false);
                 setPage(1);
               }}
-              className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "material" ? "bg-[var(--color-ink-black)] text-white" : "text-gray-600 hover:text-gray-900"}`}
+              className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "material" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)]"}`}
             >
               打印物料
             </button>
@@ -630,7 +674,7 @@ export default function ShopClient({
 
         {isMaterialCatalog && (
           <div id="material-filter" className="mb-5 flex flex-wrap items-center gap-2 sm:mb-6">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">打印物料</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-gray-500)]">打印物料</span>
             <button
               type="button"
               onClick={() => {
@@ -639,7 +683,7 @@ export default function ShopClient({
                 syncUrl({ material: "" });
               }}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                !material ? "bg-[var(--color-ink-black)] text-white" : "border border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                !material ? "bg-[var(--color-ink-black)] text-white" : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
               }`}
             >
               All
@@ -656,7 +700,7 @@ export default function ShopClient({
                 className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
                   material === m.key
                     ? "bg-[var(--color-ink-black)] text-white"
-                    : "border border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                 }`}
               >
                 {m.label}
@@ -674,7 +718,7 @@ export default function ShopClient({
                   <button
                     type="button"
                     onClick={toggleAllDepts}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-600 transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
                   >
                     {allExpanded ? (
                       <>
@@ -705,7 +749,7 @@ export default function ShopClient({
                 />
               </>
             ) : (
-              <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
+              <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-10 text-center text-sm text-[var(--color-gray-500)]">
                 No categories found for this material. Try another material filter.
               </div>
             )}
@@ -722,7 +766,7 @@ export default function ShopClient({
                 className={`flex-none rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                   !categoryFilter
                     ? "bg-[var(--color-ink-black)] text-white"
-                    : "border border-gray-200 bg-white text-gray-600 hover:border-gray-400"
+                    : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
                 }`}
               >
                 {t("shop.all")} ({products.length})
@@ -736,7 +780,7 @@ export default function ShopClient({
                     className={`flex-none rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                       categoryFilter === catSlug
                         ? "bg-[var(--color-ink-black)] text-white"
-                        : "border border-gray-200 bg-white text-gray-600 hover:border-gray-400"
+                        : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
                     }`}
                   >
                     {meta?.icon} {t(`catalog.cat.${catSlug}`) !== `catalog.cat.${catSlug}` ? t(`catalog.cat.${catSlug}`) : (meta?.title || catSlug)} ({categoryCounts[catSlug] || 0})
@@ -757,20 +801,20 @@ export default function ShopClient({
                   </svg>
                   {t("shop.clearFilters")}
                 </button>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[var(--color-gray-500)]">
                   {t("shop.showing", { visible: visible.length, total: filtered.length })}
                 </p>
               </div>
             )}
 
             {/* Sort + View controls */}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-gray-200)] bg-white p-3 sm:p-4">
               <div className="flex items-center gap-3">
-                <label className="text-xs uppercase tracking-[0.2em] text-gray-500">{t("shop.sort")}</label>
+                <label className="text-xs uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("shop.sort")}</label>
                 <select
                   value={sortBy}
                   onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
-                  className="rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                  className="rounded-lg border border-[var(--color-gray-300)] px-2 py-1 text-sm"
                 >
                   <option value="popular">{t("shop.sortPopular")}</option>
                   <option value="price-asc">{t("shop.sortPriceAsc")}</option>
@@ -778,26 +822,26 @@ export default function ShopClient({
                   <option value="name">{t("shop.sortName")}</option>
                 </select>
 
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-[var(--color-gray-400)]">
                   {filtered.length} {t("mp.landing.products")}
                 </p>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="rounded-full border border-gray-300 p-0.5 text-xs">
-                  <button onClick={() => setViewMode("grid")} className={`rounded-full px-3 py-1 ${viewMode === "grid" ? "bg-[var(--color-ink-black)] text-white" : "text-gray-600"}`}>{t("shop.grid")}</button>
-                  <button onClick={() => setViewMode("list")} className={`rounded-full px-3 py-1 ${viewMode === "list" ? "bg-[var(--color-ink-black)] text-white" : "text-gray-600"}`}>{t("shop.list")}</button>
+                <div className="rounded-full border border-[var(--color-gray-300)] p-0.5 text-xs">
+                  <button onClick={() => setViewMode("grid")} className={`rounded-full px-3 py-1 ${viewMode === "grid" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)]"}`}>{t("shop.grid")}</button>
+                  <button onClick={() => setViewMode("list")} className={`rounded-full px-3 py-1 ${viewMode === "list" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)]"}`}>{t("shop.list")}</button>
                 </div>
               </div>
             </div>
 
             {visible.length === 0 && (
-              <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center">
-                <p className="text-sm font-medium text-gray-500">{t("shop.noResults")}</p>
+              <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-12 text-center">
+                <p className="text-sm font-medium text-[var(--color-gray-500)]">{t("shop.noResults")}</p>
                 <button
                   type="button"
                   onClick={clearAllFilters}
-                  className="mt-3 rounded-full border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:border-[var(--color-ink-black)]"
+                  className="mt-3 rounded-full border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)] hover:border-[var(--color-ink-black)]"
                 >
                   {t("shop.clearFilters")}
                 </button>
@@ -813,8 +857,8 @@ export default function ShopClient({
                 const rangeText = fromCents > 0 ? t("shop.priceFrom", { price: formatCad(fromCents) }) : "";
 
                 return (
-                  <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-gray-200 bg-white hover-lift-subtle ${viewMode === "list" ? "flex" : ""}`}>
-                    <Link href={href} className={`relative block bg-gray-100 ${viewMode === "list" ? "h-36 w-32 sm:h-44 sm:w-52 flex-shrink-0" : "aspect-[4/3]"}`}>
+                  <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white hover-lift-subtle ${viewMode === "list" ? "flex" : ""}`}>
+                    <Link href={href} className={`relative block bg-[var(--color-gray-100)] ${viewMode === "list" ? "h-36 w-32 sm:h-44 sm:w-52 flex-shrink-0" : "aspect-[4/3]"}`}>
                       <Image src={imageSrc} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" unoptimized={isSvgImage(imageSrc)} />
                       {product.sortOrder != null && product.sortOrder <= 2 && (
                         <span className="absolute top-2 right-2 bg-amber-500 text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full z-10">
@@ -833,14 +877,14 @@ export default function ShopClient({
                       }}
                       className="absolute top-2 left-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm transition-colors hover:bg-white"
                     >
-                      <svg className={`h-4 w-4 transition-colors ${isFavorite(product.slug) ? "fill-red-500 text-red-500" : "fill-none text-gray-600"}`} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className={`h-4 w-4 transition-colors ${isFavorite(product.slug) ? "fill-red-500 text-red-500" : "fill-none text-[var(--color-gray-600)]"}`} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                       </svg>
                     </button>
 
                     <div className="flex flex-1 flex-col p-3 sm:p-4">
                       <div className="flex items-center gap-2">
-                        <p className="label-xs text-gray-500">{categoryLabels[product.category] || product.category}</p>
+                        <p className="label-xs text-[var(--color-gray-500)]">{categoryLabels[product.category] || product.category}</p>
                         {(() => {
                           const tk = getTurnaround(product);
                           return (
@@ -850,8 +894,8 @@ export default function ShopClient({
                           );
                         })()}
                       </div>
-                      <h3 className="mt-1 min-h-[2.5rem] overflow-hidden body-sm font-semibold leading-5 text-gray-900">{product.name}</h3>
-                      <p className="mt-1 text-sm font-semibold text-gray-900">{rangeText}</p>
+                      <h3 className="mt-1 min-h-[2.5rem] overflow-hidden body-sm font-semibold leading-5 text-[var(--color-gray-900)]">{product.name}</h3>
+                      <p className="mt-1 text-sm font-semibold text-[var(--color-gray-900)]">{rangeText}</p>
 
                       <div className="mt-3 flex gap-2">
                         <Link
@@ -862,7 +906,7 @@ export default function ShopClient({
                         </Link>
                         <button
                           onClick={() => quickAdd(product)}
-                          className="rounded-full border border-gray-300 px-3 py-2 label-sm text-gray-700 transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
+                          className="rounded-full border border-[var(--color-gray-300)] px-3 py-2 label-sm text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
                         >
                           {t("shop.quickAdd")}
                         </button>
@@ -875,7 +919,7 @@ export default function ShopClient({
 
             {hasMore && (
               <div className="pt-2">
-                <button onClick={() => setPage((p) => p + 1)} className="rounded-full border border-gray-300 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:border-gray-900 hover:text-gray-900">
+                <button onClick={() => setPage((p) => p + 1)} className="rounded-full border border-[var(--color-gray-300)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]">
                   {t("shop.loadMore")}
                 </button>
               </div>

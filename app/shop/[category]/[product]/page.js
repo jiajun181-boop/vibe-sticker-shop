@@ -86,15 +86,27 @@ export async function generateMetadata({ params }) {
     include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
   });
   if (!p) return {};
-  const title = `${p.name} | La Lunar Printing Inc.`;
-  const description =
-    p.metaDescription || p.description ||
-    `Order custom ${p.name} online. Professional quality, fast turnaround in Toronto & the GTA.`;
+  const hasMetaTitle = typeof p.metaTitle === "string" && p.metaTitle.trim().length > 0;
+  const hasMetaDescription = typeof p.metaDescription === "string" && p.metaDescription.trim().length > 0;
+  const hasKeywords = Array.isArray(p.keywords) && p.keywords.length > 0;
+  const categoryLabel = String(p.category || "").replace(/-/g, " ");
+
+  const title = hasMetaTitle
+    ? p.metaTitle.trim()
+    : `${p.name} Printing | ${categoryLabel} | La Lunar Printing Inc.`;
+  const description = hasMetaDescription
+    ? p.metaDescription.trim()
+    : p.description ||
+      `Order ${p.name} online in Canada. Fast turnaround, production-ready file checks, and reliable delivery from La Lunar Printing Inc.`;
+  const keywords = hasKeywords
+    ? p.keywords
+    : [p.name, categoryLabel, "custom printing", "Toronto printing", "Canada print shop"];
   const image = p.images[0]?.url || `${SITE_URL}/og-image.png`;
   const canonical = `${SITE_URL}/shop/${category}/${slug}`;
   return {
     title,
     description,
+    keywords,
     alternates: { canonical },
     openGraph: {
       title,
@@ -156,9 +168,9 @@ export default async function ProductPage({ params }) {
       return product;
     });
 
-    // Compute fromPrice + quickAddQty for sub-product cards
+    // Use pre-computed minPrice for sub-product cards (write-time calculation).
     for (const p of dedupedProducts) {
-      p.fromPrice = computeFromPrice(p);
+      p.fromPrice = p.displayFromPrice || p.minPrice || computeFromPrice(p);
       p.quickAddQty = getSmartDefaults(p).minQuantity;
     }
 

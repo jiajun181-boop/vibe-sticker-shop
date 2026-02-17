@@ -524,18 +524,21 @@ export default function OrderDetailPage() {
               <div className="space-y-3">
                 <SelectField
                   label="Order Status"
+                  hint="Order lifecycle: draft \u2192 pending \u2192 paid \u2192 canceled / refunded"
                   value={status}
                   onChange={setStatus}
                   options={statusOptions}
                 />
                 <SelectField
                   label="Payment Status"
+                  hint="Payment state only \u2014 changes automatically when Stripe confirms"
                   value={paymentStatus}
                   onChange={setPaymentStatus}
                   options={paymentOptions}
                 />
                 <SelectField
                   label="Production Status"
+                  hint="Fulfillment progress: preflight \u2192 in production \u2192 ready to ship \u2192 shipped"
                   value={productionStatus}
                   onChange={setProductionStatus}
                   options={productionOptions}
@@ -611,6 +614,7 @@ export default function OrderDetailPage() {
                       </button>
                     ))}
                   </div>
+                  <p className="mt-1 text-[10px] text-[#999]">Normal = standard queue &middot; High = prioritize today &middot; Urgent = drop everything</p>
                 </div>
 
                 {/* Archive Toggle */}
@@ -639,6 +643,7 @@ export default function OrderDetailPage() {
                     onChange={handleEstimatedCompletionChange}
                     className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
+                  <p className="mt-1 text-[10px] text-[#999]">When the customer should expect their order ready</p>
                 </div>
               </div>
             </Section>
@@ -717,6 +722,9 @@ export default function OrderDetailPage() {
                 </div>
               </Section>
             )}
+
+            {/* Proof Management */}
+            <ProofSection orderId={id} />
 
             {/* Actions: Ship & Refund */}
             <OrderActions
@@ -878,7 +886,7 @@ function InfoField({ label, value }) {
   );
 }
 
-function SelectField({ label, value, onChange, options }) {
+function SelectField({ label, value, onChange, options, hint }) {
   return (
     <div>
       <label className="mb-1 block text-xs font-medium text-gray-600">
@@ -895,6 +903,7 @@ function SelectField({ label, value, onChange, options }) {
           </option>
         ))}
       </select>
+      {hint && <p className="mt-1 text-[10px] text-[#999]">{hint}</p>}
     </div>
   );
 }
@@ -946,6 +955,165 @@ function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
         Reject
       </button>
     </div>
+  );
+}
+
+/* ========== Proof Management ========== */
+const proofStatusColors = {
+  pending: "bg-yellow-100 text-yellow-700",
+  approved: "bg-green-100 text-green-700",
+  rejected: "bg-red-100 text-red-700",
+  revised: "bg-blue-100 text-blue-700",
+};
+
+function ProofSection({ orderId }) {
+  const [proofs, setProofs] = useState([]);
+  const [loadingProofs, setLoadingProofs] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const fetchProofs = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/proofs`);
+      if (res.ok) {
+        const data = await res.json();
+        setProofs(data);
+      }
+    } catch {
+      console.error("Failed to fetch proofs");
+    } finally {
+      setLoadingProofs(false);
+    }
+  }, [orderId]);
+
+  useEffect(() => {
+    fetchProofs();
+  }, [fetchProofs]);
+
+  async function handleUploadProof() {
+    if (!imageUrl.trim()) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/proofs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrl: imageUrl.trim(),
+          fileName: fileName.trim() || undefined,
+          notes: notes.trim() || undefined,
+        }),
+      });
+      if (res.ok) {
+        setImageUrl("");
+        setFileName("");
+        setNotes("");
+        fetchProofs();
+      }
+    } catch {
+      console.error("Failed to upload proof");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Section title={`Proofs (${proofs.length})`}>
+      <div className="space-y-3">
+        {/* Upload form */}
+        <div className="space-y-2 rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
+          <input
+            type="text"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="Image URL"
+            className="w-full rounded-[3px] border border-[#d0d0d0] px-2.5 py-1.5 text-xs outline-none focus:border-black"
+          />
+          <input
+            type="text"
+            value={fileName}
+            onChange={(e) => setFileName(e.target.value)}
+            placeholder="File name (optional)"
+            className="w-full rounded-[3px] border border-[#d0d0d0] px-2.5 py-1.5 text-xs outline-none focus:border-black"
+          />
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Notes (optional)"
+            rows={2}
+            className="w-full rounded-[3px] border border-[#d0d0d0] px-2.5 py-1.5 text-xs outline-none focus:border-black resize-none"
+          />
+          <button
+            type="button"
+            onClick={handleUploadProof}
+            disabled={submitting || !imageUrl.trim()}
+            className="w-full rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
+          >
+            {submitting ? "Uploading..." : "Upload Proof"}
+          </button>
+        </div>
+
+        {/* Proof list */}
+        {loadingProofs ? (
+          <p className="text-xs text-[#999]">Loading proofs...</p>
+        ) : proofs.length === 0 ? (
+          <p className="text-xs text-[#999]">No proofs yet</p>
+        ) : (
+          <div className="space-y-2">
+            {proofs.map((proof) => (
+              <div
+                key={proof.id}
+                className="rounded-[3px] border border-[#e0e0e0] p-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-[2px] bg-[#f5f5f5] px-2 py-0.5 text-[10px] font-semibold text-[#666]">
+                      v{proof.version}
+                    </span>
+                    <span
+                      className={`rounded-[2px] px-2 py-0.5 text-[10px] font-semibold ${
+                        proofStatusColors[proof.status] || "bg-[#f5f5f5] text-[#666]"
+                      }`}
+                    >
+                      {proof.status}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-[#999]">
+                    {new Date(proof.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                {proof.imageUrl && (
+                  <a
+                    href={proof.imageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 block"
+                  >
+                    <img
+                      src={proof.imageUrl}
+                      alt={proof.fileName || `Proof v${proof.version}`}
+                      className="h-24 w-full rounded-[3px] border border-[#e0e0e0] object-cover"
+                    />
+                  </a>
+                )}
+                {proof.notes && (
+                  <p className="mt-2 text-xs text-[#666]">
+                    <span className="font-medium text-black">Notes:</span> {proof.notes}
+                  </p>
+                )}
+                {proof.customerComment && (
+                  <p className="mt-1 text-xs text-[#666]">
+                    <span className="font-medium text-black">Customer:</span>{" "}
+                    {proof.customerComment}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Section>
   );
 }
 

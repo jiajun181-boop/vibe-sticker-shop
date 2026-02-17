@@ -30,7 +30,7 @@ export default function SizeSelector({
   return (
     <div>
       {label && (
-        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
           {label}
         </label>
       )}
@@ -40,7 +40,7 @@ export default function SizeSelector({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={placeholder}
-          className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm"
+          className="mt-2 w-full rounded-xl border border-[var(--color-gray-300)] bg-white px-3 py-2 text-sm"
         />
       )}
 
@@ -55,7 +55,7 @@ export default function SizeSelector({
               className={`rounded-xl border px-3 py-2 text-left text-sm transition-colors ${
                 selected
                   ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
-                  : "border-gray-200 bg-white text-gray-900 hover:bg-gray-50"
+                  : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)]"
               }`}
             >
               <div className="font-semibold leading-snug">
@@ -65,12 +65,12 @@ export default function SizeSelector({
                 )}
               </div>
               {(o.widthIn && o.heightIn) && (
-                <div className={`mt-0.5 text-xs ${selected ? "text-gray-200" : "text-gray-500"}`}>
+                <div className={`mt-0.5 text-xs ${selected ? "text-gray-200" : "text-[var(--color-gray-500)]"}`}>
                   {o.widthIn}" × {o.heightIn}"
                 </div>
               )}
               {o.notes && (
-                <div className={`mt-0.5 text-xs ${selected ? "text-gray-200" : "text-gray-500"}`}>
+                <div className={`mt-0.5 text-xs ${selected ? "text-gray-200" : "text-[var(--color-gray-500)]"}`}>
                   {o.notes}
                 </div>
               )}

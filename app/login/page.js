@@ -11,7 +11,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <main className="flex min-h-[70vh] items-center justify-center px-4 py-16">
-          <div className="text-sm text-gray-500">Loading...</div>
+          <div className="text-sm text-[var(--color-gray-500)]">Loading...</div>
         </main>
       }
     >
@@ -49,16 +49,16 @@ function LoginContent() {
   return (
     <main className="flex min-h-[70vh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm">
-        <h1 className="text-center text-lg font-semibold tracking-[0.25em] text-gray-900">
+        <h1 className="text-center text-lg font-semibold tracking-[0.25em] text-[var(--color-gray-900)]">
           {t("auth.login.title")}
         </h1>
-        <p className="mt-2 text-center text-sm text-gray-500">
+        <p className="mt-2 text-center text-sm text-[var(--color-gray-500)]">
           {t("auth.login.subtitle")}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <div>
-            <label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+            <label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
               {t("auth.login.email")}
             </label>
             <input
@@ -67,17 +67,17 @@ function LoginContent() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-500"
+              className="mt-1 w-full rounded-xl border border-[var(--color-gray-300)] px-4 py-3 text-sm outline-none focus:border-[var(--color-gray-500)]"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+              <label htmlFor="password" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
                 {t("auth.login.password")}
               </label>
-              <Link href="/forgot-password" className="text-xs text-gray-500 hover:text-gray-900">
+              <Link href="/forgot-password" className="text-xs text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]">
                 {t("auth.login.forgotPassword")}
               </Link>
             </div>
@@ -87,7 +87,7 @@ function LoginContent() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-500"
+              className="mt-1 w-full rounded-xl border border-[var(--color-gray-300)] px-4 py-3 text-sm outline-none focus:border-[var(--color-gray-500)]"
             />
           </div>
 
@@ -96,15 +96,15 @@ function LoginContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-full bg-gray-900 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="w-full rounded-full bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
           >
             {loading ? t("auth.login.signingIn") : t("auth.login.submit")}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-[var(--color-gray-500)]">
           {t("auth.login.noAccount")}{" "}
-          <Link href="/signup" className="font-semibold text-gray-900 hover:underline">
+          <Link href="/signup" className="font-semibold text-[var(--color-gray-900)] hover:underline">
             {t("auth.login.signUp")}
           </Link>
         </p>

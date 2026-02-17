@@ -4,17 +4,16 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
-const PRODUCT_TYPES = [
-  { id: "retractable-stand", label: "Retractable Banner Stand", slug: "retractable-banner-stand-premium", category: "display-stands", basePrice: 14500, unit: "per_piece" },
-  { id: "x-banner-sm", label: "X-Banner Stand (24x63)", slug: "x-banner-stand-standard", category: "display-stands", basePrice: 4500, unit: "per_piece" },
-  { id: "x-banner-lg", label: "X-Banner Stand (31x71)", slug: "x-banner-stand-large", category: "display-stands", basePrice: 6500, unit: "per_piece" },
-  { id: "tabletop-a4", label: "Tabletop Banner A4", slug: "tabletop-banner-a4", category: "display-stands", basePrice: 3500, unit: "per_piece" },
-  { id: "tabletop-a3", label: "Tabletop Banner A3", slug: "tabletop-banner-a3", category: "display-stands", basePrice: 5500, unit: "per_piece" },
-  { id: "vehicle-decals", label: "Vehicle Decals", slug: "custom-printed-vehicle-logo-decals", category: "vehicle-branding-advertising", basePrice: 1800, unit: "per_sqft" },
-  { id: "vehicle-wrap", label: "Vehicle Wrap (Print)", slug: "vehicle-wrap-print-only-quote", category: "vehicle-branding-advertising", basePrice: 2200, unit: "per_sqft" },
-  { id: "custom-stickers", label: "Custom Stickers", slug: "custom-cut-vinyl-lettering-any-text", category: "vehicle-branding-advertising", basePrice: 2000, unit: "per_piece" },
-  { id: "backdrop", label: "Backdrop Banner", slug: "trailer-box-truck-large-graphics", category: "vehicle-branding-advertising", basePrice: 1200, unit: "per_sqft" },
-  { id: "floor-graphics", label: "Floor Graphics", slug: "warehouse-floor-safety-graphics", category: "facility-asset-labels", basePrice: 1800, unit: "per_sqft" },
+// Hardcoded fallback — only used when server props are empty
+const FALLBACK_PRODUCTS = [
+  { slug: "retractable-banner-stand-premium", name: "Retractable Banner Stand", category: "banners-displays", basePrice: 14500, pricingUnit: "per_piece" },
+  { slug: "vinyl-banners", name: "Vinyl Banners", category: "banners-displays", basePrice: 3500, pricingUnit: "per_sqft" },
+  { slug: "business-cards-classic", name: "Business Cards (Classic)", category: "marketing-business-print", basePrice: 1299, pricingUnit: "per_piece" },
+  { slug: "die-cut-stickers", name: "Die-Cut Stickers", category: "stickers-labels-decals", basePrice: 5500, pricingUnit: "per_piece" },
+  { slug: "flyers", name: "Flyers", category: "marketing-business-print", basePrice: 1609, pricingUnit: "per_piece" },
+  { slug: "floor-graphics", name: "Floor Graphics", category: "windows-walls-floors", basePrice: 4000, pricingUnit: "per_sqft" },
+  { slug: "coroplast-yard-signs", name: "Yard Signs (Coroplast)", category: "signs-rigid-boards", basePrice: 2900, pricingUnit: "per_piece" },
+  { slug: "full-vehicle-wrap-design-print", name: "Vehicle Wrap", category: "vehicle-graphics-fleet", basePrice: 8000, pricingUnit: "per_sqft" },
 ];
 
 const SIZES_SQFT = [
@@ -30,17 +29,44 @@ const QTY_PRESETS = [1, 5, 10, 25, 50];
 const cad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-export default function QuoteCalculator() {
+function getFromPrice(p) {
+  return p.displayFromPrice || p.minPrice || p.basePrice || 0;
+}
+
+// Derive category slug for the shop link
+function shopHref(p) {
+  return `/shop/${p.category}/${p.slug}`;
+}
+
+export default function QuoteCalculator({ products: serverProducts }) {
   const { t } = useTranslation();
-  const [productId, setProductId] = useState(PRODUCT_TYPES[0].id);
+
+  const items = useMemo(() => {
+    const raw = Array.isArray(serverProducts) && serverProducts.length > 0
+      ? serverProducts
+      : FALLBACK_PRODUCTS;
+    return raw
+      .filter((p) => p && p.slug && (p.basePrice > 0 || p.minPrice > 0))
+      .map((p) => ({
+        slug: p.slug,
+        name: p.name,
+        category: p.category,
+        basePrice: getFromPrice(p),
+        unit: p.pricingUnit || "per_piece",
+        href: shopHref(p),
+      }));
+  }, [serverProducts]);
+
+  const [selectedSlug, setSelectedSlug] = useState(items[0]?.slug || "");
   const [sizeIdx, setSizeIdx] = useState(0);
   const [qty, setQty] = useState(1);
   const [rush, setRush] = useState(false);
 
-  const product = PRODUCT_TYPES.find((p) => p.id === productId);
+  const product = items.find((p) => p.slug === selectedSlug) || items[0];
   const size = SIZES_SQFT[Math.min(sizeIdx, SIZES_SQFT.length - 1)];
 
   const estimate = useMemo(() => {
+    if (!product) return 0;
     let base;
     if (product.unit === "per_sqft") {
       const sqft = (size.w * size.h) / 144;
@@ -51,10 +77,12 @@ export default function QuoteCalculator() {
     return Math.round(rush ? base * 1.3 : base);
   }, [product, size, qty, rush]);
 
-  const handleProductChange = (id) => {
-    setProductId(id);
+  const handleProductChange = (slug) => {
+    setSelectedSlug(slug);
     setSizeIdx(0);
   };
+
+  if (!product) return null;
 
   return (
     <section id="quote" className="bg-white rounded-3xl border border-[var(--color-gray-100)] shadow-lg overflow-hidden">
@@ -64,7 +92,7 @@ export default function QuoteCalculator() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-moon-gold)]" />
-              <span className="label-xs text-gray-400">
+              <span className="label-xs text-[var(--color-gray-400)]">
                 {t("quote.badge")}
               </span>
             </div>
@@ -75,15 +103,15 @@ export default function QuoteCalculator() {
 
           {/* Product type */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{t("quote.productType")}</label>
+            <label className="block text-xs font-bold text-[var(--color-gray-500)] uppercase mb-2">{t("quote.productType")}</label>
             <select
-              value={productId}
+              value={selectedSlug}
               onChange={(e) => handleProductChange(e.target.value)}
               className="w-full border border-[var(--color-gray-200)] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black bg-[var(--color-gray-50)] hover:bg-white transition-colors"
             >
-              {PRODUCT_TYPES.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label} — {t("quote.from")} {cad(p.basePrice)}{p.unit === "per_sqft" ? "/sqft" : ""}
+              {items.map((p) => (
+                <option key={p.slug} value={p.slug}>
+                  {p.name} — {t("quote.from")} {cad(p.basePrice)}
                 </option>
               ))}
             </select>
@@ -92,7 +120,7 @@ export default function QuoteCalculator() {
           {/* Size — only for per_sqft */}
           {product.unit === "per_sqft" && (
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{t("quote.size")}</label>
+              <label className="block text-xs font-bold text-[var(--color-gray-500)] uppercase mb-2">{t("quote.size")}</label>
               <div className="flex flex-wrap gap-2">
                 {SIZES_SQFT.map((s, i) => (
                   <button
@@ -113,7 +141,7 @@ export default function QuoteCalculator() {
 
           {/* Quantity */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{t("quote.quantity")}</label>
+            <label className="block text-xs font-bold text-[var(--color-gray-500)] uppercase mb-2">{t("quote.quantity")}</label>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setQty(Math.max(1, qty - 1))}
@@ -157,50 +185,47 @@ export default function QuoteCalculator() {
             </div>
             <div>
               <span className="text-sm font-bold group-hover:text-black transition-colors">{t("quote.rush")}</span>
-              <span className="label-xs text-gray-400 block">{t("quote.rushDesc")}</span>
+              <span className="label-xs text-[var(--color-gray-400)] block">{t("quote.rushDesc")}</span>
             </div>
           </label>
         </div>
 
         {/* Right — Price display */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-8 md:p-10 flex flex-col justify-between border-t md:border-t-0 md:border-l border-[var(--color-gray-100)]">
+        <div className="bg-gradient-to-br from-[var(--color-gray-50)] to-[var(--color-gray-100)] p-8 md:p-10 flex flex-col justify-between border-t md:border-t-0 md:border-l border-[var(--color-gray-100)]">
           <div className="space-y-6">
             <div>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t("quote.estimatedPrice")}</span>
+              <span className="text-xs font-bold text-[var(--color-gray-400)] uppercase tracking-widest">{t("quote.estimatedPrice")}</span>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-5xl md:text-6xl font-black tracking-tighter">
                   {cad(estimate)}
                 </span>
-                <span className="text-gray-400 text-sm">{t("quote.cad")}</span>
+                <span className="text-[var(--color-gray-400)] text-sm">{t("quote.cad")}</span>
               </div>
               {rush && (
                 <div className="inline-flex items-center gap-1.5 mt-2 bg-amber-50 text-amber-700 label-xs font-bold px-3 py-1 rounded-full">
                   <span>&#9889;</span> {t("quote.rushIncluded")}
                 </div>
               )}
-              {product.unit === "per_sqft" && (
-                <p className="text-xs text-gray-400 mt-2 font-mono">
-                  {cad(product.basePrice)}/sqft &times; {((size.w * size.h) / 144).toFixed(1)} sqft &times; {qty}
-                </p>
-              )}
-              {product.unit === "per_piece" && qty > 1 && (
-                <p className="text-xs text-gray-400 mt-2 font-mono">
-                  {cad(product.basePrice)}/ea &times; {qty}
+              {qty > 1 && (
+                <p className="text-xs text-[var(--color-gray-400)] mt-2 font-mono">
+                  {product.unit === "per_sqft"
+                    ? cad(Math.round(product.basePrice * (size.w * size.h) / 144))
+                    : cad(product.basePrice)}/{t("quote.each")} &times; {qty}
                 </p>
               )}
             </div>
 
             {/* Summary chips */}
             <div className="flex flex-wrap gap-2">
-              <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-gray-500 border border-[var(--color-gray-200)]">
-                {product.label}
+              <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
+                {product.name}
               </span>
               {product.unit === "per_sqft" && (
-                <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-gray-500 border border-[var(--color-gray-200)]">
+                <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
                   {size.label}
                 </span>
               )}
-              <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-gray-500 border border-[var(--color-gray-200)]">
+              <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
                 {t("quote.qty")}: {qty}
               </span>
               {rush && (
@@ -210,7 +235,7 @@ export default function QuoteCalculator() {
               )}
             </div>
 
-            <div className="space-y-1.5 text-xs text-gray-400">
+            <div className="space-y-1.5 text-xs text-[var(--color-gray-400)]">
               <p>{t("quote.hstNote")}</p>
               <p>{t("quote.finalNote")}</p>
             </div>
@@ -218,12 +243,12 @@ export default function QuoteCalculator() {
 
           <div className="mt-8 space-y-3">
             <Link
-              href={`/shop/${product.category}/${product.slug}`}
+              href={product.href}
               className="btn-dark-pill btn-lg block w-full text-center tracking-widest"
             >
               {t("quote.cta")}
             </Link>
-            <p className="text-center label-xs text-gray-400">
+            <p className="text-center label-xs text-[var(--color-gray-400)]">
               {t("quote.noObligation")}
             </p>
           </div>

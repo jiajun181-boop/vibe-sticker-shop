@@ -6,10 +6,10 @@ export const metadata = {
 export default function ReturnsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
-      <h1 className="text-3xl font-bold text-gray-900">Return &amp; Refund Policy</h1>
-      <p className="mt-2 text-sm text-gray-500">Last updated: February 2026</p>
+      <h1 className="text-3xl font-bold text-[var(--color-gray-900)]">Return &amp; Refund Policy</h1>
+      <p className="mt-2 text-sm text-[var(--color-gray-500)]">Last updated: February 2026</p>
 
-      <div className="prose prose-gray mt-8 max-w-none text-sm leading-relaxed text-gray-700 [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-gray-900 [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_h3]:text-gray-900 [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-1">
+      <div className="prose prose-gray mt-8 max-w-none text-sm leading-relaxed text-[var(--color-gray-700)] [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-[var(--color-gray-900)] [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_h3]:text-[var(--color-gray-900)] [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-1">
         <h2>Custom Products</h2>
         <p>
           All sales are final. Because all our products are custom-manufactured to your specifications, we do not
@@ -32,7 +32,7 @@ export default function ReturnsPage() {
           <li>Contact us within <strong>2 days of receiving your order</strong>.</li>
           <li>Provide 2&ndash;3 photos from different angles along with your order number.</li>
           <li>
-            Send to: <a href="mailto:info@lunarprint.ca" className="text-gray-900 underline">info@lunarprint.ca</a> or
+            Send to: <a href="mailto:info@lunarprint.ca" className="text-[var(--color-gray-900)] underline">info@lunarprint.ca</a> or
             WeChat: <strong>lunarprinting</strong>
           </li>
           <li>Our quality team will review your claim within 1&ndash;2 business days.</li>
@@ -77,8 +77,8 @@ export default function ReturnsPage() {
           For any return or refund inquiries:<br />
           <strong>La Lunar Printing Inc.</strong><br />
           11 Progress Ave #21, Scarborough, ON M1P 4S7, Canada<br />
-          Email: <a href="mailto:info@lunarprint.ca" className="text-gray-900 underline">info@lunarprint.ca</a><br />
-          Phone: <a href="tel:+16477834728" className="text-gray-900 underline">647-783-4728</a><br />
+          Email: <a href="mailto:info@lunarprint.ca" className="text-[var(--color-gray-900)] underline">info@lunarprint.ca</a><br />
+          Phone: <a href="tel:+16477834728" className="text-[var(--color-gray-900)] underline">647-783-4728</a><br />
           WeChat: lunarprinting
         </p>
       </div>

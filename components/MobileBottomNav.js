@@ -87,7 +87,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
       {/* Drawer */}
       <div className={`fixed inset-y-0 left-0 z-[61] w-80 bg-white shadow-2xl transition-transform duration-300 ease-out ${open ? "translate-x-0" : "-translate-x-full"}`}>
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[var(--color-gray-100)] px-5 py-4">
           <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--color-gray-800)]">
             {t("nav.categories")}
           </h2>
@@ -102,7 +102,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
           </button>
         </div>
 
-        <div className="border-b border-gray-100 px-4 py-3">
+        <div className="border-b border-[var(--color-gray-100)] px-4 py-3">
           <div className="mb-2 flex gap-2">
             <Link href="/quote" onClick={onClose} className="btn-primary-pill px-3 py-1.5 text-[10px]">
               {t("nav.getQuote")}
@@ -134,7 +134,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
             {currentCategories.map((catSlug) => {
               const cMeta = categoryMeta[catSlug];
               return (
-                <div key={catSlug} className="rounded-xl border border-gray-100 p-3">
+                <div key={catSlug} className="rounded-xl border border-[var(--color-gray-100)] p-3">
                   <Link
                     href={cMeta?.href || `/shop/${catSlug}`}
                     onClick={onClose}

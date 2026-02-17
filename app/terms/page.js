@@ -6,10 +6,10 @@ export const metadata = {
 export default function TermsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
-      <h1 className="text-3xl font-bold text-gray-900">Terms of Service</h1>
-      <p className="mt-2 text-sm text-gray-500">Last updated: February 2026</p>
+      <h1 className="text-3xl font-bold text-[var(--color-gray-900)]">Terms of Service</h1>
+      <p className="mt-2 text-sm text-[var(--color-gray-500)]">Last updated: February 2026</p>
 
-      <div className="prose prose-gray mt-8 max-w-none text-sm leading-relaxed text-gray-700 [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-gray-900 [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-1">
+      <div className="prose prose-gray mt-8 max-w-none text-sm leading-relaxed text-[var(--color-gray-700)] [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-[var(--color-gray-900)] [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-1">
         <h2>1. Acceptance of Terms</h2>
         <p>
           By accessing, browsing, or using the La Lunar Printing Inc. website (including placing orders), you agree
@@ -95,7 +95,7 @@ export default function TermsPage() {
         <p>
           We comply with Canada&apos;s Personal Information Protection and Electronic Documents Act (PIPEDA).
           Your personal data is not sold to third parties and is used only for transaction completion and service delivery.
-          See our <a href="/privacy" className="text-gray-900 underline">Privacy Policy</a> for full details.
+          See our <a href="/privacy" className="text-[var(--color-gray-900)] underline">Privacy Policy</a> for full details.
         </p>
 
         <h2>12. International Orders</h2>
@@ -113,8 +113,8 @@ export default function TermsPage() {
         <p>
           <strong>La Lunar Printing Inc.</strong><br />
           11 Progress Ave #21, Scarborough, ON M1P 4S7, Canada<br />
-          Phone: <a href="tel:+16477834728" className="text-gray-900 underline">647-783-4728</a><br />
-          Email: <a href="mailto:info@lunarprint.ca" className="text-gray-900 underline">info@lunarprint.ca</a><br />
+          Phone: <a href="tel:+16477834728" className="text-[var(--color-gray-900)] underline">647-783-4728</a><br />
+          Email: <a href="mailto:info@lunarprint.ca" className="text-[var(--color-gray-900)] underline">info@lunarprint.ca</a><br />
           Hours: Monday&ndash;Friday, 10:00 AM &ndash; 6:00 PM EST
         </p>
       </div>

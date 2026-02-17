@@ -46,7 +46,7 @@ const NEW_PRODUCTS = [
   },
   {
     slug: "frosted-matte-window-film",
-    name: "Frosted Matte Window Film",
+    name: "Frosted Privacy Window Film",
     category: "window-glass-films",
     description:
       "Adhesive-backed frosted matte film for permanent privacy and branding. Sandblasted glass effect with optional custom graphics. Durable for long-term interior or exterior use.",
@@ -62,7 +62,7 @@ const NEW_PRODUCTS = [
   },
   {
     slug: "holographic-iridescent-film",
-    name: "Holographic Iridescent Film",
+    name: "Iridescent Gradient Window Film",
     category: "window-glass-films",
     description:
       "Rainbow holographic film with colour-shifting effect. Turns sunlight into prismatic reflections. Perfect for window displays, event decor, and eye-catching storefronts.",
@@ -78,7 +78,7 @@ const NEW_PRODUCTS = [
   },
   {
     slug: "color-white-on-clear-vinyl",
-    name: "Colour + White on Clear Vinyl",
+    name: "Color + White on Clear Vinyl - Single-Sided",
     category: "window-glass-films",
     description:
       "Full-colour print with white ink backing on optically clear vinyl. Vibrant graphics visible from outside, clean look from inside. Standard for storefront window graphics.",
@@ -94,7 +94,7 @@ const NEW_PRODUCTS = [
   },
   {
     slug: "color-white-color-clear-vinyl",
-    name: "Colour + White + Colour on Clear Vinyl",
+    name: "Color + White + Color on Clear Vinyl - Double-Sided",
     category: "window-glass-films",
     description:
       "Double-sided print on clear vinyl — full-colour graphics visible from BOTH sides. White ink sandwiched between layers prevents bleed-through. Ideal for glass doors, partitions, and hanging window signs.",

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { computeFromPrice } from "@/lib/pricing/from-price";
 
 export async function POST(request: NextRequest) {
   const auth = await requirePermission(request, "pricing", "edit");
@@ -34,10 +35,29 @@ export async function POST(request: NextRequest) {
       data: { pricingPresetId: presetId },
     });
 
+    // Auto-recompute minPrice for affected products
+    let minPriceUpdated = 0;
+    try {
+      const affected = await prisma.product.findMany({
+        where: { category, pricingPresetId: presetId, isActive: true },
+        include: { pricingPreset: true },
+      });
+      for (const p of affected) {
+        const minPrice = computeFromPrice(p);
+        if (minPrice > 0) {
+          await prisma.product.update({ where: { id: p.id }, data: { minPrice } });
+          minPriceUpdated++;
+        }
+      }
+    } catch {
+      // Non-critical
+    }
+
     return NextResponse.json({
       category,
       preset: { id: preset.id, key: preset.key, name: preset.name },
       updated: result.count,
+      minPriceUpdated,
       overwriteExisting,
       activeOnly,
     });

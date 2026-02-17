@@ -27,7 +27,7 @@ const BUNDLES = [
     price: 54900,
     originalPrice: 66900,
     savings: 12000,
-    color: "from-gray-800 to-gray-950",
+    color: "from-[var(--color-gray-800)] to-gray-950",
     itemKeys: [
       "bundles.kit.premium.item1",
       "bundles.kit.premium.item2",
@@ -62,14 +62,14 @@ export default function BundlesSection() {
       <div className="text-center mb-10">
         <div className="flex items-center justify-center gap-2 mb-3">
           <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-moon-gold)]" />
-          <span className="label-xs text-gray-400">
+          <span className="label-xs text-[var(--color-gray-400)]">
             {t("bundles.badge")}
           </span>
         </div>
         <h2 className="heading-2">
           {t("bundles.title")}
         </h2>
-        <p className="text-gray-400 body-base mt-2 max-w-lg mx-auto">
+        <p className="text-[var(--color-gray-400)] body-base mt-2 max-w-lg mx-auto">
           {t("bundles.subtitle")}
         </p>
       </div>
@@ -106,7 +106,7 @@ export default function BundlesSection() {
             <div className="p-6">
               <ul className="space-y-2.5 mb-6">
                 {bundle.itemKeys.map((itemKey, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 body-sm text-gray-600">
+                  <li key={idx} className="flex items-start gap-2.5 body-sm text-[var(--color-gray-600)]">
                     <svg className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>

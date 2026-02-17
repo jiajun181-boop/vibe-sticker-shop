@@ -11,7 +11,7 @@ export default function VerifyEmailPage() {
     <Suspense
       fallback={
         <main className="flex min-h-[70vh] items-center justify-center px-4 py-16">
-          <div className="text-sm text-gray-500">Verifying...</div>
+          <div className="text-sm text-[var(--color-gray-500)]">Verifying...</div>
         </main>
       }
     >
@@ -53,18 +53,18 @@ function VerifyEmailContent() {
   return (
     <main className="flex min-h-[70vh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm text-center">
-        <h1 className="text-lg font-semibold tracking-[0.25em] text-gray-900">
+        <h1 className="text-lg font-semibold tracking-[0.25em] text-[var(--color-gray-900)]">
           {t("auth.verifyEmail.title")}
         </h1>
 
         {status === "verifying" && (
-          <p className="mt-6 text-sm text-gray-500">{t("auth.verifyEmail.verifying")}</p>
+          <p className="mt-6 text-sm text-[var(--color-gray-500)]">{t("auth.verifyEmail.verifying")}</p>
         )}
 
         {status === "success" && (
           <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-6">
             <p className="text-sm text-emerald-700">{t("auth.verifyEmail.success")}</p>
-            <Link href="/account" className="mt-4 inline-block text-sm font-semibold text-gray-900 hover:underline">
+            <Link href="/account" className="mt-4 inline-block text-sm font-semibold text-[var(--color-gray-900)] hover:underline">
               {t("account.nav.dashboard")}
             </Link>
           </div>
@@ -73,7 +73,7 @@ function VerifyEmailContent() {
         {status === "error" && (
           <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-6">
             <p className="text-sm text-red-600">{t("auth.verifyEmail.error")}</p>
-            <Link href="/account" className="mt-4 inline-block text-sm font-semibold text-gray-900 hover:underline">
+            <Link href="/account" className="mt-4 inline-block text-sm font-semibold text-[var(--color-gray-900)] hover:underline">
               {t("account.nav.dashboard")}
             </Link>
           </div>

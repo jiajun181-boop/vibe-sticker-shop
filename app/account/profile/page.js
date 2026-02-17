@@ -70,10 +70,10 @@ export default function ProfilePage() {
   if (authLoading || loading) {
     return (
       <div className="space-y-6">
-        <div className="h-7 w-48 animate-pulse rounded bg-gray-100" />
+        <div className="h-7 w-48 animate-pulse rounded bg-[var(--color-gray-100)]" />
         <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100" />
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-[var(--color-gray-100)]" />
           ))}
         </div>
       </div>
@@ -82,8 +82,8 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="rounded-xl border border-gray-200 p-8 text-center">
-        <p className="text-sm text-gray-500">{t("account.profile.loadError")}</p>
+      <div className="rounded-xl border border-[var(--color-gray-200)] p-8 text-center">
+        <p className="text-sm text-[var(--color-gray-500)]">{t("account.profile.loadError")}</p>
       </div>
     );
   }
@@ -95,7 +95,7 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold tracking-[0.15em] text-gray-900">
+      <h1 className="text-lg font-semibold tracking-[0.15em] text-[var(--color-gray-900)]">
         {t("account.profile.title")}
       </h1>
 
@@ -104,12 +104,12 @@ export default function ProfilePage() {
           className={`inline-block rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] ${
             profile.accountType === "B2B"
               ? "bg-blue-100 text-blue-700"
-              : "bg-gray-100 text-gray-600"
+              : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)]"
           }`}
         >
           {profile.accountType}
         </span>
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-[var(--color-gray-400)]">
           {t("account.profile.memberSince")}{" "}
           {new Date(profile.createdAt).toLocaleDateString("en-CA", {
             year: "numeric",
@@ -121,7 +121,7 @@ export default function ProfilePage() {
 
       <form onSubmit={handleSave} className="space-y-5">
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-400 mb-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1.5">
             {t("account.profile.name")}
           </label>
           <input
@@ -129,12 +129,12 @@ export default function ProfilePage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={100}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:border-gray-400 focus:ring-0"
+            className="w-full rounded-lg border border-[var(--color-gray-200)] px-3 py-2.5 text-sm text-[var(--color-gray-900)] outline-none transition-colors focus:border-[var(--color-gray-400)] focus:ring-0"
           />
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-400 mb-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1.5">
             {t("account.profile.email")}
           </label>
           <input
@@ -142,13 +142,13 @@ export default function ProfilePage() {
             value={profile.email}
             readOnly
             disabled
-            className="w-full rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5 text-sm text-gray-500 cursor-not-allowed"
+            className="w-full rounded-lg border border-[var(--color-gray-100)] bg-[var(--color-gray-50)] px-3 py-2.5 text-sm text-[var(--color-gray-500)] cursor-not-allowed"
           />
-          <p className="mt-1 text-xs text-gray-400">{t("account.profile.emailReadonly")}</p>
+          <p className="mt-1 text-xs text-[var(--color-gray-400)]">{t("account.profile.emailReadonly")}</p>
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-400 mb-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1.5">
             {t("account.profile.phone")}
           </label>
           <input
@@ -156,12 +156,12 @@ export default function ProfilePage() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             maxLength={30}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:border-gray-400 focus:ring-0"
+            className="w-full rounded-lg border border-[var(--color-gray-200)] px-3 py-2.5 text-sm text-[var(--color-gray-900)] outline-none transition-colors focus:border-[var(--color-gray-400)] focus:ring-0"
           />
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-400 mb-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1.5">
             {t("account.profile.company")}
           </label>
           <input
@@ -169,7 +169,7 @@ export default function ProfilePage() {
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
             maxLength={200}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:border-gray-400 focus:ring-0"
+            className="w-full rounded-lg border border-[var(--color-gray-200)] px-3 py-2.5 text-sm text-[var(--color-gray-900)] outline-none transition-colors focus:border-[var(--color-gray-400)] focus:ring-0"
           />
         </div>
 
@@ -177,7 +177,7 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={saving || !hasChanges}
-            className="rounded-full border border-gray-900 bg-gray-900 px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full border border-[var(--color-gray-900)] bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[var(--color-gray-800)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? t("account.profile.saving") : t("account.profile.save")}
           </button>

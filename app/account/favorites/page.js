@@ -37,19 +37,19 @@ export default function FavoritesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold tracking-[0.15em] text-gray-900">
+      <h1 className="text-lg font-semibold tracking-[0.15em] text-[var(--color-gray-900)]">
         {t("favorites.title")}
       </h1>
 
       {favorites.length === 0 ? (
-        <div className="rounded-2xl border border-gray-200 p-12 text-center">
-          <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="rounded-2xl border border-[var(--color-gray-200)] p-12 text-center">
+          <svg className="mx-auto h-12 w-12 text-[var(--color-gray-300)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
           </svg>
-          <p className="mt-4 text-sm text-gray-500">{t("favorites.empty")}</p>
+          <p className="mt-4 text-sm text-[var(--color-gray-500)]">{t("favorites.empty")}</p>
           <Link
             href="/shop"
-            className="mt-4 inline-block rounded-full border border-gray-300 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)] transition-colors"
+            className="mt-4 inline-block rounded-full border border-[var(--color-gray-300)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)] hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)] transition-colors"
           >
             {t("favorites.browseCta")}
           </Link>
@@ -64,9 +64,9 @@ export default function FavoritesPage() {
             return (
               <article
                 key={fav.slug}
-                className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-400 hover:shadow-lg"
+                className="group relative overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--color-gray-400)] hover:shadow-lg"
               >
-                <Link href={href} className="relative block aspect-[4/3] bg-gray-100">
+                <Link href={href} className="relative block aspect-[4/3] bg-[var(--color-gray-100)]">
                   <Image
                     src={imageSrc}
                     alt={fav.name}
@@ -92,11 +92,11 @@ export default function FavoritesPage() {
                 </button>
 
                 <div className="p-3 sm:p-4">
-                  <h3 className="min-h-[2.5rem] text-sm font-semibold leading-5 text-gray-900">
+                  <h3 className="min-h-[2.5rem] text-sm font-semibold leading-5 text-[var(--color-gray-900)]">
                     {fav.name}
                   </h3>
                   {priceText && (
-                    <p className="mt-1 text-sm font-semibold text-gray-900">{priceText}</p>
+                    <p className="mt-1 text-sm font-semibold text-[var(--color-gray-900)]">{priceText}</p>
                   )}
                   <div className="mt-3 flex gap-2">
                     <Link
@@ -108,7 +108,7 @@ export default function FavoritesPage() {
                     <button
                       type="button"
                       onClick={() => quickAdd(fav)}
-                      className="rounded-full border border-gray-300 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-700 transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
+                      className="rounded-full border border-[var(--color-gray-300)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
                     >
                       {t("shop.quickAdd")}
                     </button>

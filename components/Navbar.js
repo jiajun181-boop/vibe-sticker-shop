@@ -164,7 +164,7 @@ export default function Navbar({ catalogConfig }) {
     return (
       <div
         ref={refProp}
-        className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden"
+        className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg border border-[var(--color-gray-200)] bg-white shadow-lg overflow-hidden"
       >
         {searchLoading ? (
           <div className="px-4 py-3 text-sm text-[var(--color-gray-400)]">{t("search.loading")}</div>
@@ -176,7 +176,7 @@ export default function Navbar({ catalogConfig }) {
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handleResultClick(item.category, item.slug)}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gray-50"
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--color-gray-50)]"
               >
                 {item.image && (
                   <Image
@@ -201,7 +201,7 @@ export default function Navbar({ catalogConfig }) {
             <Link
               href={`/shop?q=${encodeURIComponent(searchQuery.trim())}`}
               onClick={clearSearch}
-              className="block border-t border-gray-100 px-4 py-2.5 text-center text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:bg-gray-50 hover:text-[var(--color-gray-800)]"
+              className="block border-t border-[var(--color-gray-100)] px-4 py-2.5 text-center text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:bg-[var(--color-gray-50)] hover:text-[var(--color-gray-800)]"
             >
               {t("search.viewAll")}
             </Link>
@@ -274,11 +274,11 @@ export default function Navbar({ catalogConfig }) {
               {t("nav.shop")}
             </Link>
             <div className={`absolute left-1/2 top-full z-40 w-[940px] -translate-x-1/2 pt-2 transition-all duration-200 ${shopMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}>
-              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+              <div className="overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-2xl">
                 <div className="grid grid-cols-[220px_1fr]">
-                  <div className="border-r border-gray-100 bg-gray-50/70 p-3">
+                  <div className="border-r border-[var(--color-gray-100)] bg-[var(--color-gray-50)]/70 p-3">
                     <p className="px-2 pb-2 label-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">
-                      Departments
+                      {t("nav.departments")}
                     </p>
                     <div className="space-y-1">
                       {safeDepartments.map((dept) => {
@@ -311,7 +311,7 @@ export default function Navbar({ catalogConfig }) {
                         href="/shop"
                         className="inline-flex items-center gap-1 rounded-full border border-[var(--color-gray-300)] px-3 py-1 label-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-800)] hover:text-[var(--color-gray-800)]"
                       >
-                        Explore All
+                        {t("nav.exploreAll")}
                       </Link>
                     </div>
 
@@ -319,7 +319,7 @@ export default function Navbar({ catalogConfig }) {
                       {activeCategories.slice(0, 6).map((catSlug) => {
                         const cMeta = categoryMeta?.[catSlug];
                         return (
-                          <div key={catSlug} className="rounded-xl border border-gray-100 bg-white p-3">
+                          <div key={catSlug} className="rounded-xl border border-[var(--color-gray-100)] bg-white p-3">
                             <div className="mb-2 flex items-center justify-between gap-3">
                               <Link href={`/shop/${catSlug}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-gray-800)] hover:text-black">
                                 <span>{cMeta?.icon || ""}</span>
@@ -334,7 +334,7 @@ export default function Navbar({ catalogConfig }) {
                                 <Link
                                   key={sg.slug}
                                   href={sg.href}
-                                  className={`truncate rounded-md px-2 py-1 text-xs hover:bg-gray-50 hover:text-[var(--color-gray-800)] ${
+                                  className={`truncate rounded-md px-2 py-1 text-xs hover:bg-[var(--color-gray-50)] hover:text-[var(--color-gray-800)] ${
                                     idx === 0
                                       ? "bg-[var(--color-paper-cream)] text-[var(--color-gray-800)]"
                                       : "text-[var(--color-gray-600)]"
@@ -365,16 +365,16 @@ export default function Navbar({ catalogConfig }) {
                   <Link
                     key={uc.slug}
                     href={`/ideas/${uc.slug}`}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--color-gray-700)] transition-colors hover:bg-gray-50"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--color-gray-700)] transition-colors hover:bg-[var(--color-gray-50)]"
                   >
                     <span>{uc.icon}</span>
                     <span>{t(`useCase.${uc.slug}.title`)}</span>
                   </Link>
                 ))}
-                <div className="mt-1 border-t border-gray-100 pt-1">
+                <div className="mt-1 border-t border-[var(--color-gray-100)] pt-1">
                   <Link
                     href="/ideas"
-                    className="flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold text-[var(--color-gray-600)] hover:text-[var(--color-gray-800)] hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold text-[var(--color-gray-600)] hover:text-[var(--color-gray-800)] hover:bg-[var(--color-gray-50)] transition-colors"
                   >
                     {t("ideas.viewAll")}
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

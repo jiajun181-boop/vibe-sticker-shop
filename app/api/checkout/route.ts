@@ -10,6 +10,7 @@ import {
   buildBaseOriginFromHeaders,
   buildSafeRedirectUrls,
 } from "@/lib/checkout-origin";
+import { getSessionFromRequest } from "@/lib/auth";
 
 let _stripe: Stripe | null = null;
 function getStripe() {
@@ -320,6 +321,21 @@ export async function POST(req: Request) {
 
     const subtotal = pricedItems.reduce((sum, item) => sum + item.lineTotal, 0);
 
+    // Partner discount — auto-applied for B2B partners
+    let partnerDiscount = 0;
+    let partnerUserId: string | null = null;
+    const session = getSessionFromRequest(req as any);
+    if (session?.userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { id: true, accountType: true, b2bApproved: true, partnerDiscount: true },
+      });
+      if (user?.accountType === "B2B" && user.b2bApproved && user.partnerDiscount > 0) {
+        partnerDiscount = Math.round(subtotal * (user.partnerDiscount / 100));
+        partnerUserId = user.id;
+      }
+    }
+
     // Validate coupon server-side and create Stripe discount
     let couponData: { id: string; code: string; discountAmount: number; stripeCouponId?: string } | null = null;
     if (promoCode) {
@@ -361,7 +377,8 @@ export async function POST(req: Request) {
       }
     }
 
-    const discountAmount = couponData?.discountAmount || 0;
+    const couponDiscount = couponData?.discountAmount || 0;
+    const discountAmount = couponDiscount + partnerDiscount;
     const afterDiscount = Math.max(0, subtotal - discountAmount);
 
     const FREE_SHIPPING_THRESHOLD = 15000;
@@ -398,14 +415,29 @@ export async function POST(req: Request) {
       }
     );
 
-    const session = await getStripe().checkout.sessions.create({
+    // Create Stripe coupon for partner discount (if applicable and no coupon already)
+    let partnerStripeCouponId: string | undefined;
+    if (partnerDiscount > 0) {
+      const partnerStripeCoupon = await getStripe().coupons.create({
+        amount_off: partnerDiscount,
+        currency: process.env.STRIPE_CURRENCY || "cad",
+        duration: "once",
+        name: "Partner Discount",
+      });
+      partnerStripeCouponId = partnerStripeCoupon.id;
+    }
+
+    // Build discounts array (Stripe allows multiple)
+    const stripeDiscounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];
+    if (couponData?.stripeCouponId) stripeDiscounts.push({ coupon: couponData.stripeCouponId });
+    if (partnerStripeCouponId) stripeDiscounts.push({ coupon: partnerStripeCouponId });
+
+    const stripeSession = await getStripe().checkout.sessions.create({
       line_items,
       mode: "payment",
       success_url: safeSuccessUrl,
       cancel_url: safeCancelUrl,
-      ...(couponData?.stripeCouponId && {
-        discounts: [{ coupon: couponData.stripeCouponId }],
-      }),
+      ...(stripeDiscounts.length > 0 && { discounts: stripeDiscounts }),
 
       billing_address_collection: "required",
       shipping_address_collection: {
@@ -457,10 +489,14 @@ export async function POST(req: Request) {
           couponId: couponData.id,
           couponCode: couponData.code,
         }),
+        ...(partnerUserId && {
+          partnerUserId,
+          partnerDiscount: partnerDiscount.toString(),
+        }),
       },
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: stripeSession.url });
   } catch (error) {
     console.error("Checkout Error:", error);
     if (error instanceof Error && error.message.includes("Redirect URLs")) {

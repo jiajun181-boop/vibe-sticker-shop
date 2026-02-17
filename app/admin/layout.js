@@ -32,7 +32,7 @@ const navGroups = [
   {
     labelKey: "admin.navGroup.products",
     items: [
-      { key: "admin.nav.catalogOps", href: "/admin/catalog-ops", icon: "catalog" },
+      { key: "admin.nav.catalogOps", href: "/admin/catalog-ops", icon: "catalog", sub: "Products & pricing" },
     ],
   },
   {
@@ -40,14 +40,14 @@ const navGroups = [
     items: [
       { key: "admin.nav.production", href: "/admin/production", icon: "printer" },
       { key: "admin.nav.factories", href: "/admin/factories", icon: "factory" },
-      { key: "admin.nav.qc", href: "/admin/qc", icon: "shield" },
+      { key: "admin.nav.qc", href: "/admin/qc", icon: "shield", sub: "Quality checks" },
     ],
   },
   {
     labelKey: "admin.navGroup.insights",
     items: [
       { key: "admin.nav.analytics", href: "/admin/analytics", icon: "chart" },
-      { key: "admin.nav.funnel", href: "/admin/funnel", icon: "funnel" },
+      { key: "admin.nav.funnel", href: "/admin/funnel", icon: "funnel", sub: "Conversion tracking" },
       { key: "admin.nav.salesReport", href: "/admin/reports/sales", icon: "report" },
       { key: "admin.nav.productionReport", href: "/admin/reports/production", icon: "report" },
     ],
@@ -55,7 +55,7 @@ const navGroups = [
   {
     labelKey: "admin.navGroup.marketing",
     items: [
-      { key: "admin.nav.content", href: "/admin/content", icon: "document" },
+      { key: "admin.nav.content", href: "/admin/content", icon: "document", sub: "Pages & banners" },
       { key: "admin.nav.coupons", href: "/admin/coupons", icon: "ticket" },
     ],
   },
@@ -64,7 +64,7 @@ const navGroups = [
     items: [
       { key: "admin.nav.media", href: "/admin/media", icon: "image" },
       { key: "admin.nav.users", href: "/admin/users", icon: "users" },
-      { key: "admin.nav.activityLog", href: "/admin/logs", icon: "clock" },
+      { key: "admin.nav.activityLog", href: "/admin/logs", icon: "clock", sub: "Change history" },
       { key: "admin.nav.settings", href: "/admin/settings", icon: "cog" },
     ],
   },
@@ -183,9 +183,11 @@ export default function AdminLayout({ children }) {
       if (res.ok) {
         const data = await res.json();
         setSession(data.user);
+      } else if (res.status === 401) {
+        window.location.href = `/admin/login?redirect=${encodeURIComponent(window.location.pathname)}`;
       }
     } catch {
-      // Ignore — legacy sessions won't have this endpoint
+      // Ignore — network errors shouldn't force logout
     }
   }, []);
 
@@ -263,8 +265,11 @@ export default function AdminLayout({ children }) {
                         : "border-l-2 border-l-transparent text-[#4b5563] font-medium hover:bg-[#f4f4f5] hover:text-[#111827]"
                     }`}
                   >
-                    <NavIcon name={item.icon} className="h-[18px] w-[18px]" />
-                    {t(item.key)}
+                    <NavIcon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
+                    <span className="min-w-0">
+                      <span className="block">{t(item.key)}</span>
+                      {item.sub && <span className="block text-[10px] font-normal text-[#9ca3af]">{item.sub}</span>}
+                    </span>
                   </Link>
                 ))}
               </div>

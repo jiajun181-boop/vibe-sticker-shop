@@ -10,7 +10,7 @@ export default function ResetPasswordPage() {
     <Suspense
       fallback={
         <main className="flex min-h-[70vh] items-center justify-center px-4 py-16">
-          <div className="text-sm text-gray-500">Loading...</div>
+          <div className="text-sm text-[var(--color-gray-500)]">Loading...</div>
         </main>
       }
     >
@@ -52,12 +52,12 @@ function ResetPasswordContent() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Reset failed");
+        setError(data.error || t("auth.resetPassword.error"));
         return;
       }
       setSuccess(true);
     } catch {
-      setError("Something went wrong");
+      setError(t("auth.resetPassword.errorGeneric"));
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,7 @@ function ResetPasswordContent() {
       <main className="flex min-h-[70vh] items-center justify-center px-4 py-16">
         <div className="text-center">
           <p className="text-sm text-red-600">{t("auth.resetPassword.invalidToken")}</p>
-          <Link href="/forgot-password" className="mt-4 inline-block text-sm font-semibold text-gray-900 hover:underline">
+          <Link href="/forgot-password" className="mt-4 inline-block text-sm font-semibold text-[var(--color-gray-900)] hover:underline">
             {t("auth.forgotPassword.title")}
           </Link>
         </div>
@@ -79,21 +79,21 @@ function ResetPasswordContent() {
   return (
     <main className="flex min-h-[70vh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm">
-        <h1 className="text-center text-lg font-semibold tracking-[0.25em] text-gray-900">
+        <h1 className="text-center text-lg font-semibold tracking-[0.25em] text-[var(--color-gray-900)]">
           {t("auth.resetPassword.title")}
         </h1>
 
         {success ? (
           <div className="mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center">
             <p className="text-sm text-emerald-700">{t("auth.resetPassword.success")}</p>
-            <Link href="/login" className="mt-4 inline-block text-sm font-semibold text-gray-900 hover:underline">
+            <Link href="/login" className="mt-4 inline-block text-sm font-semibold text-[var(--color-gray-900)] hover:underline">
               {t("auth.login.title")}
             </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div>
-              <label htmlFor="new-pw" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+              <label htmlFor="new-pw" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
                 {t("auth.resetPassword.newPassword")}
               </label>
               <input
@@ -102,11 +102,11 @@ function ResetPasswordContent() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-500"
+                className="mt-1 w-full rounded-xl border border-[var(--color-gray-300)] px-4 py-3 text-sm outline-none focus:border-[var(--color-gray-500)]"
               />
             </div>
             <div>
-              <label htmlFor="confirm-pw" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+              <label htmlFor="confirm-pw" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
                 {t("auth.resetPassword.confirmPassword")}
               </label>
               <input
@@ -115,14 +115,14 @@ function ResetPasswordContent() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-500"
+                className="mt-1 w-full rounded-xl border border-[var(--color-gray-300)] px-4 py-3 text-sm outline-none focus:border-[var(--color-gray-500)]"
               />
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-full bg-gray-900 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-gray-400"
+              className="w-full rounded-full bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
             >
               {loading ? "..." : t("auth.resetPassword.submit")}
             </button>

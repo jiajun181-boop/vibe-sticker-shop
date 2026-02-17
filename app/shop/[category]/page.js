@@ -299,9 +299,10 @@ export default async function CategoryPage({ params }) {
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
 
-  // Compute real "From" price and quick-add quantity for each product
+  // Use pre-computed minPrice for listings (write-time calculation).
+  // Falls back to computeFromPrice() only when minPrice is missing.
   for (const p of products) {
-    p.fromPrice = computeFromPrice(p);
+    p.fromPrice = p.displayFromPrice || p.minPrice || computeFromPrice(p);
     p.quickAddQty = getSmartDefaults(p).minQuantity;
   }
 

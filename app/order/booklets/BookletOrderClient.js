@@ -313,7 +313,7 @@ export default function BookletOrderClient() {
         ]}
       />
 
-      <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+      <h1 className="mb-8 text-2xl font-bold tracking-tight text-[var(--color-gray-900)] sm:text-3xl">
         {t("booklet.title")}
       </h1>
 
@@ -331,13 +331,13 @@ export default function BookletOrderClient() {
                   onClick={() => setBindingId(b.id)}
                   className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
                     bindingId === b.id
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white shadow-md"
+                      : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                   }`}
                 >
                   <BindingIcon type={b.icon} className="h-7 w-7" />
                   <span className="text-sm font-semibold">{t(`booklet.binding.${b.id}`)}</span>
-                  <span className={`text-[11px] leading-tight ${bindingId === b.id ? "text-gray-300" : "text-gray-400"}`}>
+                  <span className={`text-[11px] leading-tight ${bindingId === b.id ? "text-[var(--color-gray-300)]" : "text-[var(--color-gray-400)]"}`}>
                     {t(`booklet.bindingDesc.${b.id}`)}
                   </span>
                 </button>
@@ -366,7 +366,7 @@ export default function BookletOrderClient() {
               ))}
             </div>
             {binding.pageRule === "multiple-of-4" && (
-              <p className="mt-2 text-[11px] text-gray-400">{t("booklet.pageRuleSaddle")}</p>
+              <p className="mt-2 text-[11px] text-[var(--color-gray-400)]">{t("booklet.pageRuleSaddle")}</p>
             )}
           </Section>
 
@@ -380,13 +380,13 @@ export default function BookletOrderClient() {
                   onClick={() => setInteriorPaper(p.id)}
                   className={`relative rounded-xl border-2 px-3 py-3 text-left transition-all ${
                     interiorPaper === p.id
-                      ? "border-gray-900 bg-gray-50 shadow-sm"
-                      : "border-gray-200 bg-white hover:border-gray-400"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-50)] shadow-sm"
+                      : "border-[var(--color-gray-200)] bg-white hover:border-[var(--color-gray-400)]"
                   }`}
                 >
-                  <span className="block text-sm font-medium text-gray-800">{p.label}</span>
+                  <span className="block text-sm font-medium text-[var(--color-gray-800)]">{p.label}</span>
                   {interiorPaper === p.id && (
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gray-900" />
+                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--color-gray-900)]" />
                   )}
                 </button>
               ))}
@@ -406,16 +406,16 @@ export default function BookletOrderClient() {
                     onClick={() => setCoverPaper(p.id)}
                     className={`relative rounded-xl border-2 px-3 py-3 text-left transition-all ${
                       coverPaper === p.id
-                        ? "border-gray-900 bg-gray-50 shadow-sm"
-                        : "border-gray-200 bg-white hover:border-gray-400"
+                        ? "border-[var(--color-gray-900)] bg-[var(--color-gray-50)] shadow-sm"
+                        : "border-[var(--color-gray-200)] bg-white hover:border-[var(--color-gray-400)]"
                     }`}
                   >
-                    <span className="block text-sm font-medium text-gray-800">{displayLabel}</span>
+                    <span className="block text-sm font-medium text-[var(--color-gray-800)]">{displayLabel}</span>
                     {surcharge && (
                       <span className="mt-0.5 block text-[11px] font-medium text-amber-600">{surcharge}/ea</span>
                     )}
                     {coverPaper === p.id && (
-                      <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gray-900" />
+                      <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--color-gray-900)]" />
                     )}
                   </button>
                 );
@@ -438,27 +438,27 @@ export default function BookletOrderClient() {
                     disabled={disabled}
                     className={`relative rounded-xl border-2 px-3 py-3 text-left transition-all ${
                       disabled
-                        ? "cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300"
+                        ? "cursor-not-allowed border-[var(--color-gray-100)] bg-[var(--color-gray-50)] text-[var(--color-gray-300)]"
                         : coverCoating === c.id
-                          ? "border-gray-900 bg-gray-50 shadow-sm"
-                          : "border-gray-200 bg-white hover:border-gray-400"
+                          ? "border-[var(--color-gray-900)] bg-[var(--color-gray-50)] shadow-sm"
+                          : "border-[var(--color-gray-200)] bg-white hover:border-[var(--color-gray-400)]"
                     }`}
                   >
-                    <span className={`block text-sm font-medium ${disabled ? "text-gray-300" : "text-gray-800"}`}>
+                    <span className={`block text-sm font-medium ${disabled ? "text-[var(--color-gray-300)]" : "text-[var(--color-gray-800)]"}`}>
                       {displayLabel}
                     </span>
                     {surcharge && !disabled && (
                       <span className="mt-0.5 block text-[11px] font-medium text-amber-600">{surcharge}/ea</span>
                     )}
                     {coverCoating === c.id && !disabled && (
-                      <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gray-900" />
+                      <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--color-gray-900)]" />
                     )}
                   </button>
                 );
               })}
             </div>
             {isSelfCover && (
-              <p className="mt-2 text-[11px] text-gray-400">{t("booklet.selfCoverNoCoating")}</p>
+              <p className="mt-2 text-[11px] text-[var(--color-gray-400)]">{t("booklet.selfCoverNoCoating")}</p>
             )}
           </Section>
 
@@ -476,7 +476,7 @@ export default function BookletOrderClient() {
               ))}
             </div>
             <div className="mt-3 flex items-center gap-2">
-              <label className="text-xs text-gray-500">{t("booklet.customQty")}:</label>
+              <label className="text-xs text-[var(--color-gray-500)]">{t("booklet.customQty")}:</label>
               <input
                 type="number"
                 min="1"
@@ -484,18 +484,18 @@ export default function BookletOrderClient() {
                 value={customQty}
                 onChange={(e) => setCustomQty(e.target.value)}
                 placeholder="e.g. 75"
-                className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                className="w-28 rounded-lg border border-[var(--color-gray-300)] px-3 py-1.5 text-sm focus:border-[var(--color-gray-900)] focus:outline-none focus:ring-1 focus:ring-gray-900"
               />
             </div>
           </Section>
 
           {/* File Upload */}
           <Section label={t("booklet.artwork")} optional>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="mb-3 text-xs text-gray-600">{t("booklet.uploadHint")}</p>
+            <div className="rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-4">
+              <p className="mb-3 text-xs text-[var(--color-gray-600)]">{t("booklet.uploadHint")}</p>
               {uploadedFile ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-800">{uploadedFile.name}</span>
+                  <span className="text-sm text-[var(--color-gray-800)]">{uploadedFile.name}</span>
                   <button
                     type="button"
                     onClick={() => setUploadedFile(null)}
@@ -526,8 +526,8 @@ export default function BookletOrderClient() {
 
         {/* ── RIGHT: Summary ── */}
         <aside className="hidden lg:col-span-2 lg:block">
-          <div className="sticky top-24 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-base font-bold text-gray-900">{t("booklet.summary")}</h2>
+          <div className="sticky top-24 space-y-6 rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 shadow-sm">
+            <h2 className="text-base font-bold text-[var(--color-gray-900)]">{t("booklet.summary")}</h2>
 
             <dl className="space-y-2 text-sm">
               <Row label={t("booklet.binding.label")} value={t(`booklet.binding.${bindingId}`)} />
@@ -541,12 +541,12 @@ export default function BookletOrderClient() {
               <Row label={t("booklet.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "—"} />
             </dl>
 
-            <hr className="border-gray-100" />
+            <hr className="border-[var(--color-gray-100)]" />
 
             {quoteLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-4 animate-pulse rounded bg-gray-100" />
+                  <div key={i} className="h-4 animate-pulse rounded bg-[var(--color-gray-100)]" />
                 ))}
               </div>
             ) : quoteError ? (
@@ -565,18 +565,18 @@ export default function BookletOrderClient() {
                 )}
                 <Row label={t("booklet.subtotal")} value={formatCad(adjustedSubtotal)} />
                 <Row label="HST (13%)" value={formatCad(taxCents)} />
-                <div className="flex justify-between border-t border-gray-100 pt-2">
-                  <dt className="font-semibold text-gray-900">{t("booklet.total")}</dt>
-                  <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
+                <div className="flex justify-between border-t border-[var(--color-gray-100)] pt-2">
+                  <dt className="font-semibold text-[var(--color-gray-900)]">{t("booklet.total")}</dt>
+                  <dd className="text-lg font-bold text-[var(--color-gray-900)]">{formatCad(totalCents)}</dd>
                 </div>
                 <div className="pt-1">
-                  <p className="text-[11px] text-gray-400">
+                  <p className="text-[11px] text-[var(--color-gray-400)]">
                     {formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("booklet.each")}
                   </p>
                 </div>
               </dl>
             ) : (
-              <p className="text-xs text-gray-400">{t("booklet.selectOptions")}</p>
+              <p className="text-xs text-[var(--color-gray-400)]">{t("booklet.selectOptions")}</p>
             )}
 
             <div className="space-y-3">
@@ -586,8 +586,8 @@ export default function BookletOrderClient() {
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart
-                    ? "bg-gray-900 text-white hover:bg-gray-800"
-                    : "cursor-not-allowed bg-gray-200 text-gray-400"
+                    ? "bg-[var(--color-gray-900)] text-white hover:bg-[var(--color-gray-800)]"
+                    : "cursor-not-allowed bg-[var(--color-gray-200)] text-[var(--color-gray-400)]"
                 }`}
               >
                 {t("booklet.addToCart")}
@@ -598,19 +598,19 @@ export default function BookletOrderClient() {
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading
-                    ? "border-gray-900 text-gray-900 hover:bg-gray-50"
-                    : "cursor-not-allowed border-gray-200 text-gray-400"
+                    ? "border-[var(--color-gray-900)] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)]"
+                    : "cursor-not-allowed border-[var(--color-gray-200)] text-[var(--color-gray-400)]"
                 }`}
               >
                 {buyNowLoading ? t("booklet.processing") : t("booklet.buyNow")}
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
+            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-[var(--color-gray-400)]">
               <span>{t("booklet.badge.fullColor")}</span>
-              <span className="text-gray-300">|</span>
+              <span className="text-[var(--color-gray-300)]">|</span>
               <span>{t("booklet.badge.shipping")}</span>
-              <span className="text-gray-300">|</span>
+              <span className="text-[var(--color-gray-300)]">|</span>
               <span>{t("booklet.badge.proof")}</span>
             </div>
           </div>
@@ -618,20 +618,20 @@ export default function BookletOrderClient() {
       </div>
 
       {/* ── MOBILE: Bottom bar ── */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-gray-200)] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             {quoteLoading ? (
-              <div className="h-5 w-20 animate-pulse rounded bg-gray-200" />
+              <div className="h-5 w-20 animate-pulse rounded bg-[var(--color-gray-200)]" />
             ) : quoteData ? (
               <>
-                <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
-                <p className="truncate text-[11px] text-gray-500">
+                <p className="text-lg font-bold text-[var(--color-gray-900)]">{formatCad(totalCents)}</p>
+                <p className="truncate text-[11px] text-[var(--color-gray-500)]">
                   {activeQty.toLocaleString()} × {pageCount}pp {t(`booklet.binding.${bindingId}`)}
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">{t("booklet.selectOptions")}</p>
+              <p className="text-sm text-[var(--color-gray-400)]">{t("booklet.selectOptions")}</p>
             )}
           </div>
           <button
@@ -640,8 +640,8 @@ export default function BookletOrderClient() {
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart
-                ? "bg-gray-900 text-white hover:bg-gray-800"
-                : "cursor-not-allowed bg-gray-200 text-gray-400"
+                ? "bg-[var(--color-gray-900)] text-white hover:bg-[var(--color-gray-800)]"
+                : "cursor-not-allowed bg-[var(--color-gray-200)] text-[var(--color-gray-400)]"
             }`}
           >
             {t("booklet.addToCart")}
@@ -660,8 +660,8 @@ function Section({ label, optional, children }) {
   return (
     <section>
       <div className="mb-3 flex items-baseline gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{label}</h2>
-        {optional && <span className="text-[10px] text-gray-400">(optional)</span>}
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{label}</h2>
+        {optional && <span className="text-[10px] text-[var(--color-gray-400)]">(optional)</span>}
       </div>
       {children}
     </section>
@@ -675,8 +675,8 @@ function Chip({ active, onClick, children }) {
       onClick={onClick}
       className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
         active
-          ? "border-gray-900 bg-gray-900 text-white"
-          : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"
+          ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+          : "border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)] hover:border-gray-500"
       }`}
     >
       {children}
@@ -687,8 +687,8 @@ function Chip({ active, onClick, children }) {
 function Row({ label, value }) {
   return (
     <div className="flex justify-between">
-      <dt className="text-gray-500">{label}</dt>
-      <dd className="font-medium text-gray-800">{value}</dd>
+      <dt className="text-[var(--color-gray-500)]">{label}</dt>
+      <dd className="font-medium text-[var(--color-gray-800)]">{value}</dd>
     </div>
   );
 }

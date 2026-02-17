@@ -27,7 +27,7 @@ export async function generateMetadata({ params }) {
   const description = t(`ideas.${slug}.heroDescription`);
 
   return {
-    title: `${title} â€” Custom Printing | La Lunar Printing`,
+    title: `${title} \u2014 Custom Printing | La Lunar Printing`,
     description,
     alternates: { canonical: `${SITE_URL}/ideas/${slug}` },
     openGraph: {
@@ -113,31 +113,31 @@ export default async function UseCasePage({ params }) {
         </div>
         <div className="max-w-5xl mx-auto relative">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-xs text-gray-500 mb-6">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+          <nav className="flex items-center gap-2 text-xs text-[var(--color-gray-500)] mb-6">
+            <Link href="/" className="hover:text-white transition-colors">{t("nav.home")}</Link>
             <span>/</span>
-            <Link href="/ideas" className="hover:text-white transition-colors">Ideas</Link>
+            <Link href="/ideas" className="hover:text-white transition-colors">{t("nav.ideas")}</Link>
             <span>/</span>
-            <span className="text-gray-300">{t(`ideas.${slug}.title`)}</span>
+            <span className="text-[var(--color-gray-300)]">{t(`ideas.${slug}.title`)}</span>
           </nav>
 
           <div className="flex items-center gap-4 mb-4">
             <span className="text-5xl">{currentUseCase.icon}</span>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-1">
-                Essential to Your Brand
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-gray-500)] mb-1">
+                {t("common.essentialBrand")}
               </p>
               <h1 className="text-4xl md:text-5xl font-black tracking-tighter">
                 {t(`ideas.${slug}.title`)}
               </h1>
             </div>
           </div>
-          <p className="text-gray-400 max-w-2xl text-lg mt-4">
+          <p className="text-[var(--color-gray-400)] max-w-2xl text-lg mt-4">
             {t(`ideas.${slug}.heroDescription`)}
           </p>
-          <div className="mt-4 inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 text-xs font-bold text-gray-300">
+          <div className="mt-4 inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 text-xs font-bold text-[var(--color-gray-300)]">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            {sortedProducts.length} product{sortedProducts.length !== 1 ? "s" : ""} curated
+            {t("ideas.productsCurated", { count: sortedProducts.length })}
           </div>
         </div>
       </div>
@@ -151,8 +151,8 @@ export default async function UseCasePage({ params }) {
               href={`/ideas/${uc.slug}`}
               className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
                 uc.slug === slug
-                  ? "bg-gray-900 text-white"
-                  : "bg-white border border-gray-200 text-gray-600 hover:border-gray-400"
+                  ? "bg-[var(--color-gray-900)] text-white"
+                  : "bg-white border border-[var(--color-gray-200)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
               }`}
             >
               {uc.icon} {t(`ideas.${uc.slug}.title`)}
@@ -166,7 +166,7 @@ export default async function UseCasePage({ params }) {
         <div className="max-w-7xl mx-auto px-6 mb-12">
           <div className="flex items-center gap-2 mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">
               {t("ideas.tipsTitle")}
             </h2>
           </div>
@@ -174,13 +174,13 @@ export default async function UseCasePage({ params }) {
             {tips.map((tip, i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-gray-200 bg-white p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+                className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
               >
-                <div className="w-8 h-8 rounded-full bg-gray-900 text-white text-xs font-black flex items-center justify-center mb-3">
+                <div className="w-8 h-8 rounded-full bg-[var(--color-gray-900)] text-white text-xs font-black flex items-center justify-center mb-3">
                   {i + 1}
                 </div>
                 <h3 className="font-bold text-sm mb-2">{tip.title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">{tip.body}</p>
+                <p className="text-xs text-[var(--color-gray-500)] leading-relaxed">{tip.body}</p>
               </div>
             ))}
           </div>
@@ -192,21 +192,21 @@ export default async function UseCasePage({ params }) {
         <div className="max-w-7xl mx-auto px-6 mb-12">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">
               {t("solutions.bundlesTitle")}
             </h2>
           </div>
-          <p className="text-xs text-gray-500 mb-4">{t("solutions.bundlesSubtitle")}</p>
+          <p className="text-xs text-[var(--color-gray-500)] mb-4">{t("solutions.bundlesSubtitle")}</p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {SOLUTION_BUNDLES[slug].map((bundle) => (
-              <div key={bundle.id} className="rounded-2xl border border-gray-200 bg-white p-5">
+              <div key={bundle.id} className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-bold text-sm">{bundle.name}</h3>
-                  <span className="text-sm font-black text-gray-900">{bundle.priceHint}</span>
+                  <span className="text-sm font-black text-[var(--color-gray-900)]">{bundle.priceHint}</span>
                 </div>
                 <ul className="space-y-1.5 mb-4">
                   {bundle.items.map((item, i) => (
-                    <li key={i} className="flex items-center gap-2 text-xs text-gray-600">
+                    <li key={i} className="flex items-center gap-2 text-xs text-[var(--color-gray-600)]">
                       <svg className="h-3.5 w-3.5 flex-shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
@@ -216,7 +216,7 @@ export default async function UseCasePage({ params }) {
                 </ul>
                 <Link
                   href={`/quote?sku=${encodeURIComponent(bundle.id)}`}
-                  className="block w-full rounded-full bg-gray-900 py-2 text-center text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-black"
+                  className="block w-full rounded-full bg-[var(--color-gray-900)] py-2 text-center text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-black"
                 >
                   {t("solutions.getPackage")}
                 </Link>
@@ -229,21 +229,21 @@ export default async function UseCasePage({ params }) {
       {/* Products grid */}
       <div className="max-w-7xl mx-auto px-6 mb-14">
         <div className="text-center mb-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-2">
-            Handpicked for You
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-gray-400)] mb-2">
+            {t("ideas.handpicked")}
           </p>
           <h2 className="text-2xl md:text-3xl font-black tracking-tight">
             {t("ideas.productsTitle")}
           </h2>
         </div>
         {sortedProducts.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-lg font-semibold">No products found.</p>
+          <div className="text-center py-20 text-[var(--color-gray-400)]">
+            <p className="text-lg font-semibold">{t("ideas.noProducts")}</p>
             <Link
               href="/shop"
-              className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-black"
+              className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-[var(--color-gray-600)] hover:text-black"
             >
-              Browse All Products &rarr;
+              {t("common.browseAll")} &rarr;
             </Link>
           </div>
         ) : (
@@ -254,10 +254,10 @@ export default async function UseCasePage({ params }) {
                 <Link
                   key={product.id}
                   href={`/shop/${product.category}/${product.slug}`}
-                  className="group bg-white rounded-3xl p-5 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full"
+                  className="group bg-white rounded-3xl p-5 border border-[var(--color-gray-100)] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-full"
                 >
                   <div className="space-y-4">
-                    <div className="aspect-square bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-500">
+                    <div className="aspect-square bg-[var(--color-gray-50)] rounded-2xl overflow-hidden flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-500">
                       {img ? (
                         <Image
                           src={img}
@@ -277,20 +277,20 @@ export default async function UseCasePage({ params }) {
                         {product.name}
                       </h3>
                       {product.description && (
-                        <p className="text-xs text-gray-400 line-clamp-2">
+                        <p className="text-xs text-[var(--color-gray-400)] line-clamp-2">
                           {product.description}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="mt-5 pt-4 border-t border-gray-50 flex justify-between items-center">
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                      {product.basePrice > 0 ? "From" : "Get Quote"}
+                  <div className="mt-5 pt-4 border-t border-[var(--color-gray-50)] flex justify-between items-center">
+                    <div className="text-[10px] font-bold text-[var(--color-gray-400)] uppercase tracking-widest">
+                      {product.basePrice > 0 ? t("shop.fromLabel") : t("shop.getQuote")}
                     </div>
                     <div className="text-sm font-black">
                       {product.basePrice > 0
                         ? formatCad(product.basePrice)
-                        : "Custom"}
+                        : t("shop.custom")}
                     </div>
                   </div>
                 </Link>
@@ -311,7 +311,7 @@ export default async function UseCasePage({ params }) {
               <Link
                 key={r.tag}
                 href={`/shop/industry/${r.tag}`}
-                className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-all"
+                className="flex items-center gap-2 rounded-full border border-[var(--color-gray-200)] bg-white px-4 py-2 text-xs font-medium text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)] hover:bg-[var(--color-gray-900)] hover:text-white transition-all"
               >
                 <span>{r.icon}</span>
                 {r.title}
@@ -331,7 +331,7 @@ export default async function UseCasePage({ params }) {
             <Link
               key={uc.slug}
               href={`/ideas/${uc.slug}`}
-              className="group rounded-2xl border border-gray-200 bg-white p-5 text-center hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+              className="group rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 text-center hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
             >
               <span className="text-3xl block">{uc.icon}</span>
               <h3 className="mt-2 font-bold text-sm">{t(`ideas.${uc.slug}.title`)}</h3>
@@ -342,28 +342,28 @@ export default async function UseCasePage({ params }) {
 
       {/* CTA */}
       <div className="max-w-4xl mx-auto px-6">
-        <div className="rounded-3xl bg-gray-900 text-white p-8 md:p-12 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-3">
-            Your Print Partner
+        <div className="rounded-3xl bg-[var(--color-gray-900)] text-white p-8 md:p-12 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-gray-500)] mb-3">
+            {t("common.printPartner")}
           </p>
           <h2 className="text-2xl font-black tracking-tight">
             {t(`ideas.${slug}.cta`)}
           </h2>
-          <p className="mt-3 text-gray-400 max-w-xl mx-auto text-sm">
-            Professional quality, fast turnaround &mdash; everything your brand needs to stand out.
+          <p className="mt-3 text-[var(--color-gray-400)] max-w-xl mx-auto text-sm">
+            {t("ideas.ctaSubDescription")}
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               href="/quote"
-              className="bg-white text-black px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-colors"
+              className="bg-white text-black px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-[var(--color-gray-200)] transition-colors"
             >
-              Get a Free Quote
+              {t("ideas.getQuote")}
             </Link>
             <Link
               href="/shop"
               className="border border-white/30 text-white px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:border-white/70 transition-colors"
             >
-              Browse All Products
+              {t("common.browseAll")}
             </Link>
           </div>
         </div>

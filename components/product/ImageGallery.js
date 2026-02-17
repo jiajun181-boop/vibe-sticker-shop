@@ -71,7 +71,7 @@ export default function ImageGallery({ images, productName }) {
   return (
     <div className="space-y-3">
       <div
-        className="relative aspect-square overflow-hidden rounded-3xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 shadow-sm"
+        className="relative aspect-square overflow-hidden rounded-3xl border border-[var(--color-gray-200)] bg-gradient-to-br from-white to-gray-50 shadow-sm"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -89,7 +89,7 @@ export default function ImageGallery({ images, productName }) {
             unoptimized={activeImage.mimeType === "image/svg+xml" || activeImage.url.endsWith(".svg")}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
+          <div className="flex h-full w-full items-center justify-center text-sm text-[var(--color-gray-400)]">
             No image
           </div>
         )}
@@ -135,7 +135,7 @@ export default function ImageGallery({ images, productName }) {
               onClick={() => setActive(idx)}
               aria-label={`Select image ${idx + 1}`}
               className={`relative h-16 w-16 flex-none snap-start overflow-hidden rounded-xl border transition-all ${
-                idx === activeIndex ? "border-gray-900 ring-2 ring-gray-200" : "border-gray-200 hover:border-gray-300"
+                idx === activeIndex ? "border-[var(--color-gray-900)] ring-2 ring-gray-200" : "border-[var(--color-gray-200)] hover:border-[var(--color-gray-300)]"
               }`}
             >
               <Image

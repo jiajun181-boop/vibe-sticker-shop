@@ -17,14 +17,14 @@ export default async function QuotePage({ searchParams }) {
   const sku = (await searchParams)?.sku || "";
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-14 sm:px-6">
+    <main className="min-h-screen bg-[var(--color-gray-50)] px-4 py-14 sm:px-6">
       <div className="mx-auto max-w-3xl">
         <header className="mb-8 text-center">
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("contact.badge")}</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gray-500)]">{t("contact.badge")}</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-[var(--color-gray-900)] sm:text-4xl">
             {t("quote.pageTitle")}
           </h1>
-          <p className="mt-3 text-sm text-gray-500">{t("quote.pageSubtitle")}</p>
+          <p className="mt-3 text-sm text-[var(--color-gray-500)]">{t("quote.pageSubtitle")}</p>
         </header>
 
         <QuoteFormClient preselectedProduct={sku} categoryMeta={config.categoryMeta} />

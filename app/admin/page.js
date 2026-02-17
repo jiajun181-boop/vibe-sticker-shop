@@ -50,7 +50,7 @@ function Change({ current, previous }) {
 }
 
 /* ── Stat card ── */
-function StatCard({ label, value, change, sparkline }) {
+function StatCard({ label, subtitle, value, change, sparkline }) {
   return (
     <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
       <div className="flex items-start justify-between gap-3">
@@ -58,6 +58,7 @@ function StatCard({ label, value, change, sparkline }) {
           <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">{label}</p>
           <p className="mt-1 text-2xl font-bold text-black tabular-nums">{value}</p>
           {change}
+          {subtitle && <p className="mt-0.5 text-[10px] text-[#bbb]">{subtitle}</p>}
         </div>
         {sparkline && <Sparkline data={sparkline} />}
       </div>
@@ -127,17 +128,19 @@ export default function AdminDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label={t("admin.dashboard.todayOrders")}
+          subtitle="vs yesterday"
           value={stats.todayOrders}
           change={<Change current={stats.todayOrders} previous={stats.yesterdayOrders} />}
           sparkline={stats.dailyOrders}
         />
-        <StatCard label={t("admin.dashboard.pendingOrders")} value={stats.pendingOrders} />
+        <StatCard label={t("admin.dashboard.pendingOrders")} subtitle="awaiting action" value={stats.pendingOrders} />
         <StatCard
           label={t("admin.dashboard.monthRevenue")}
+          subtitle="this month"
           value={formatCad(stats.monthRevenue)}
           change={<Change current={stats.monthRevenue} previous={stats.prevMonthRevenue} />}
         />
-        <StatCard label={t("admin.dashboard.totalOrders")} value={stats.totalOrders} sparkline={stats.dailyOrders} />
+        <StatCard label={t("admin.dashboard.totalOrders")} subtitle="all time" value={stats.totalOrders} sparkline={stats.dailyOrders} />
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -155,7 +158,17 @@ export default function AdminDashboard() {
 
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="flex items-center justify-between border-b border-[#e0e0e0] px-5 py-4">
-          <h2 className="text-sm font-bold text-black">{t("admin.dashboard.recentOrders")}</h2>
+          <div>
+            <h2 className="text-sm font-bold text-black">{t("admin.dashboard.recentOrders")}</h2>
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+              {[["pending", "Pending"], ["paid", "Paid"], ["canceled", "Canceled"], ["refunded", "Refunded"]].map(([key, label]) => (
+                <span key={key} className="inline-flex items-center gap-1 text-[9px] text-[#999]">
+                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${key === "pending" ? "bg-yellow-400" : key === "paid" ? "bg-green-500" : key === "canceled" ? "bg-red-400" : "bg-purple-400"}`} />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
           <Link href="/admin/orders" className="text-xs font-medium text-black underline hover:no-underline">
             {t("admin.dashboard.viewAll")}
           </Link>

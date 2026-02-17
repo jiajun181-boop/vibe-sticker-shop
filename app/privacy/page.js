@@ -6,10 +6,10 @@ export const metadata = {
 export default function PrivacyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
-      <h1 className="text-3xl font-bold text-gray-900">Privacy Policy</h1>
-      <p className="mt-2 text-sm text-gray-500">Last updated: February 2026</p>
+      <h1 className="text-3xl font-bold text-[var(--color-gray-900)]">Privacy Policy</h1>
+      <p className="mt-2 text-sm text-[var(--color-gray-500)]">Last updated: February 2026</p>
 
-      <div className="prose prose-gray mt-8 max-w-none text-sm leading-relaxed text-gray-700 [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-gray-900 [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_h3]:text-gray-900 [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-1">
+      <div className="prose prose-gray mt-8 max-w-none text-sm leading-relaxed text-[var(--color-gray-700)] [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-[var(--color-gray-900)] [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_h3]:text-[var(--color-gray-900)] [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-1">
         <h2>1. Who We Are</h2>
         <p>
           La Lunar Printing Inc. (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is a custom printing company based in Toronto, Ontario, Canada.
@@ -97,8 +97,8 @@ export default function PrivacyPage() {
           For privacy inquiries or data requests:<br />
           <strong>La Lunar Printing Inc.</strong><br />
           11 Progress Ave #21, Scarborough, ON M1P 4S7, Canada<br />
-          Email: <a href="mailto:info@lunarprint.ca" className="text-gray-900 underline">info@lunarprint.ca</a><br />
-          Phone: <a href="tel:+16477834728" className="text-gray-900 underline">647-783-4728</a>
+          Email: <a href="mailto:info@lunarprint.ca" className="text-[var(--color-gray-900)] underline">info@lunarprint.ca</a><br />
+          Phone: <a href="tel:+16477834728" className="text-[var(--color-gray-900)] underline">647-783-4728</a>
         </p>
       </div>
     </div>

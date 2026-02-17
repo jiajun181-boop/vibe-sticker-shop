@@ -35,7 +35,7 @@ export default function StarRating({
 
   return (
     <div className={`relative inline-flex ${className}`} role="img" aria-label={label}>
-      <div className="flex gap-0.5 text-gray-200">
+      <div className="flex gap-0.5 text-[var(--color-gray-200)]">
         {Array.from({ length: max }, (_, i) => (
           <Star key={i} size={size} />
         ))}

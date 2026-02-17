@@ -14,7 +14,7 @@ const BADGE_MAP = {
   "x-banner-stand-large": { labelKey: "featured.badge.highImpact", color: "from-[var(--color-moon-blue)] to-[var(--color-moon-blue-deep)]" },
   "tabletop-banner-a4": { labelKey: "featured.badge.compact", color: "from-[var(--color-gray-600)] to-[var(--color-gray-800)]" },
   "tabletop-banner-a3": { labelKey: "featured.badge.popular", color: "from-[var(--color-moon-gold)] to-amber-600" },
-  "deluxe-tabletop-retractable-a3": { labelKey: "featured.badge.premium", color: "from-gray-700 to-gray-900" },
+  "deluxe-tabletop-retractable-a3": { labelKey: "featured.badge.premium", color: "from-[var(--color-gray-700)] to-[var(--color-gray-900)]" },
 };
 
 const SIZE_LABELS = {
@@ -50,7 +50,7 @@ export default function FeaturedBanner({ products }) {
 
   return (
     <section
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-black"
+      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--color-gray-900)] via-[var(--color-gray-800)] to-black"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -71,7 +71,7 @@ export default function FeaturedBanner({ products }) {
           </div>
           <Link
             href="/shop?category=display-stands"
-            className="label-xs text-gray-400 hover:text-white tracking-widest transition-colors"
+            className="label-xs text-[var(--color-gray-400)] hover:text-white tracking-widest transition-colors"
           >
             {t("featured.viewAll")} &rarr;
           </Link>
@@ -158,16 +158,16 @@ function FeaturedCard({ product, compact }) {
       </h3>
 
       {sizeLabel && (
-        <p className="label-xs text-gray-500 font-mono mb-2 tracking-normal">{sizeLabel}</p>
+        <p className="label-xs text-[var(--color-gray-500)] font-mono mb-2 tracking-normal">{sizeLabel}</p>
       )}
 
       {!compact && product.description && (
-        <p className="label-sm text-gray-400 line-clamp-2 mb-3 font-normal tracking-normal normal-case">{product.description}</p>
+        <p className="label-sm text-[var(--color-gray-400)] line-clamp-2 mb-3 font-normal tracking-normal normal-case">{product.description}</p>
       )}
 
       <div className="flex items-end justify-between mt-auto">
         <div>
-          <span className="label-xs text-gray-500 block">{t("home.from")}</span>
+          <span className="label-xs text-[var(--color-gray-500)] block">{t("home.from")}</span>
           <p className="text-white font-black text-base md:text-lg tracking-tight">
             {cad(product.basePrice)}
           </p>

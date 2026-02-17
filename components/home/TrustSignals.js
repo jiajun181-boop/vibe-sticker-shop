@@ -102,10 +102,10 @@ export default function TrustSignals() {
             <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-gradient-to-br from-[var(--color-moon-gold)] to-[var(--color-moon-gold-dark)] text-white flex items-center justify-center">
               {STAT_ICONS[stat.icon]}
             </div>
-            <div className="text-3xl md:text-4xl font-black tracking-tight text-gray-900">
+            <div className="text-3xl md:text-4xl font-black tracking-tight text-[var(--color-gray-900)]">
               <AnimatedCounter value={stat.value} suffix={stat.suffix} prefix={stat.prefix} text={stat.textKey ? t(stat.textKey) : undefined} />
             </div>
-            <p className="label-xs text-gray-400 mt-1.5 font-normal tracking-widest">{t(stat.labelKey)}</p>
+            <p className="label-xs text-[var(--color-gray-400)] mt-1.5 font-normal tracking-widest">{t(stat.labelKey)}</p>
           </div>
         ))}
       </div>
@@ -114,7 +114,7 @@ export default function TrustSignals() {
       <div className="bg-white rounded-2xl border border-[var(--color-gray-100)] p-6 md:p-8 overflow-hidden">
         <div className="flex items-center gap-2 mb-6">
           <StarRating value={5} size={16} />
-          <span className="label-xs text-gray-400 tracking-widest">
+          <span className="label-xs text-[var(--color-gray-400)] tracking-widest">
             {t("trust.customersSay")}
           </span>
         </div>
@@ -129,7 +129,7 @@ export default function TrustSignals() {
                   : "opacity-0 translate-y-4 pointer-events-none"
               }`}
             >
-              <blockquote className="text-gray-700 body-base leading-relaxed">
+              <blockquote className="text-[var(--color-gray-700)] body-base leading-relaxed">
                 &ldquo;{review.text}&rdquo;
               </blockquote>
               <div className="mt-3 flex items-center gap-2">
@@ -137,7 +137,7 @@ export default function TrustSignals() {
                   {review.name[0]}
                 </div>
                 <span className="body-sm font-bold">{review.name}</span>
-                <span className="body-sm text-gray-400">&mdash; {review.company}</span>
+                <span className="body-sm text-[var(--color-gray-400)]">&mdash; {review.company}</span>
               </div>
             </div>
           ))}

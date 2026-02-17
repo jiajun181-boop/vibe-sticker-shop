@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { validatePresetConfig } from "@/lib/pricing/validate-config";
+import { computeFromPrice } from "@/lib/pricing/from-price";
 
 // GET /api/admin/pricing/[id] — single preset with products
 export async function GET(
@@ -76,7 +77,30 @@ export async function PUT(
       data,
     });
 
-    return NextResponse.json(preset);
+    // Auto-refresh minPrice for all products using this preset
+    let minPriceRefreshed = 0;
+    if (config !== undefined) {
+      try {
+        const affected = await prisma.product.findMany({
+          where: { pricingPresetId: id, isActive: true },
+          include: { pricingPreset: true },
+        });
+        for (const p of affected) {
+          const fresh = computeFromPrice(p);
+          if (fresh > 0 && fresh !== p.minPrice) {
+            await prisma.product.update({
+              where: { id: p.id },
+              data: { minPrice: fresh },
+            });
+            minPriceRefreshed++;
+          }
+        }
+      } catch (e) {
+        console.warn("[Pricing] minPrice refresh non-critical error:", e);
+      }
+    }
+
+    return NextResponse.json({ ...preset, minPriceRefreshed });
   } catch (err: any) {
     if (err?.code === "P2025") {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -97,10 +121,10 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    // Nullify product references first
+    // Nullify product references and clear cached minPrice
     await prisma.product.updateMany({
       where: { pricingPresetId: id },
-      data: { pricingPresetId: null },
+      data: { pricingPresetId: null, minPrice: null },
     });
 
     await prisma.pricingPreset.delete({ where: { id } });

@@ -7,7 +7,7 @@ export default function ErrorPage({ error, reset }) {
   const { t } = useTranslation();
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-6 text-center text-gray-900">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-[var(--color-gray-50)] px-6 text-center text-[var(--color-gray-900)]">
       <div className="max-w-md">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
           <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -16,22 +16,22 @@ export default function ErrorPage({ error, reset }) {
           </svg>
         </div>
         <h1 className="text-2xl font-semibold">{t("error.generic.title")}</h1>
-        <p className="mt-3 text-sm text-gray-600">{t("error.generic.message")}</p>
+        <p className="mt-3 text-sm text-[var(--color-gray-600)]">{t("error.generic.message")}</p>
         {error?.message && (
-          <p className="mt-3 rounded-lg bg-gray-100 px-3 py-2 text-left text-xs text-gray-500 break-words">
+          <p className="mt-3 rounded-lg bg-[var(--color-gray-100)] px-3 py-2 text-left text-xs text-[var(--color-gray-500)] break-words">
             {error.message}
           </p>
         )}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button
             onClick={reset}
-            className="rounded-full bg-gray-900 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black"
+            className="rounded-full bg-[var(--color-gray-900)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black"
           >
             {t("error.generic.tryAgain")}
           </button>
           <Link
             href="/"
-            className="rounded-full border border-gray-300 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-700 transition-colors hover:bg-gray-50"
+            className="rounded-full border border-[var(--color-gray-300)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)] transition-colors hover:bg-[var(--color-gray-50)]"
           >
             {t("error.generic.goHome")}
           </Link>

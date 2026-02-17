@@ -18,7 +18,7 @@ export default function PricingTierGrid({
 }) {
   return (
     <div className="w-full space-y-4">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-gray-700)]">
         Volume Pricing
       </h3>
 
@@ -26,7 +26,7 @@ export default function PricingTierGrid({
         {tiers.map((tier, idx) => (
           <div
             key={idx}
-            className="group relative rounded-2xl border-2 border-gray-200 bg-white p-6 transition-all duration-300 hover:shadow-lg hover:border-[var(--color-ink-black)] hover:scale-105"
+            className="group relative rounded-2xl border-2 border-[var(--color-gray-200)] bg-white p-6 transition-all duration-300 hover:shadow-lg hover:border-[var(--color-ink-black)] hover:scale-105"
           >
             {/* Decorative ring on hover */}
             <div className="absolute -top-8 -right-8 w-16 h-16 border-2 border-[var(--color-ink-black)] rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-500" />
@@ -39,20 +39,20 @@ export default function PricingTierGrid({
             )}
 
             {/* Quantity Range */}
-            <p className="text-xs uppercase tracking-wide text-gray-600">{tier.quantity}</p>
+            <p className="text-xs uppercase tracking-wide text-[var(--color-gray-600)]">{tier.quantity}</p>
 
             {/* Unit Price */}
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-3xl font-bold text-[var(--color-ink-black)]">
                 ${tier.unitPrice}
               </span>
-              <span className="text-xs text-gray-500">/unit</span>
+              <span className="text-xs text-[var(--color-gray-500)]">/unit</span>
             </div>
 
             {/* Total for 50 units example */}
             {tier.total && (
-              <div className="mt-4 border-t border-gray-200 pt-4">
-                <p className="text-xs text-gray-600">50 units:</p>
+              <div className="mt-4 border-t border-[var(--color-gray-200)] pt-4">
+                <p className="text-xs text-[var(--color-gray-600)]">50 units:</p>
                 <p className="text-xl font-bold text-[var(--color-ink-black)]">
                   ${tier.total}
                 </p>
@@ -63,7 +63,7 @@ export default function PricingTierGrid({
       </div>
 
       {/* Savings indicator */}
-      <div className="text-center text-xs text-gray-600 mt-4">
+      <div className="text-center text-xs text-[var(--color-gray-600)] mt-4">
         Save up to <span className="font-bold text-[var(--color-ink-black)]">60%</span> with volume discounts
       </div>
     </div>

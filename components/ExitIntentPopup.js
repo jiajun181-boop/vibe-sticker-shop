@@ -86,7 +86,7 @@ export default function ExitIntentPopup() {
         <button
           type="button"
           onClick={dismiss}
-          className="absolute right-4 top-4 rounded-full p-1 text-gray-400 hover:text-gray-900"
+          className="absolute right-4 top-4 rounded-full p-1 text-[var(--color-gray-400)] hover:text-[var(--color-gray-900)]"
           aria-label="Close"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -101,7 +101,7 @@ export default function ExitIntentPopup() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-lg font-semibold text-gray-900">{t("exit.success")}</p>
+            <p className="text-lg font-semibold text-[var(--color-gray-900)]">{t("exit.success")}</p>
           </div>
         ) : (
           <>
@@ -109,8 +109,8 @@ export default function ExitIntentPopup() {
               <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-moon-gold)]">
                 <span className="text-2xl font-black text-white">10%</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">{t("exit.headline")}</h3>
-              <p className="mt-2 text-sm text-gray-600">{t("exit.subtext")}</p>
+              <h3 className="text-2xl font-bold text-[var(--color-gray-900)]">{t("exit.headline")}</h3>
+              <p className="mt-2 text-sm text-[var(--color-gray-600)]">{t("exit.subtext")}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-3">
@@ -120,7 +120,7 @@ export default function ExitIntentPopup() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("exit.placeholder")}
                 required
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-900"
+                className="w-full rounded-xl border border-[var(--color-gray-300)] px-4 py-3 text-sm outline-none focus:border-[var(--color-gray-900)]"
               />
               <button
                 type="submit"
@@ -133,7 +133,7 @@ export default function ExitIntentPopup() {
             <button
               type="button"
               onClick={dismiss}
-              className="mt-3 w-full text-center text-xs text-gray-400 hover:text-gray-600"
+              className="mt-3 w-full text-center text-xs text-[var(--color-gray-400)] hover:text-[var(--color-gray-600)]"
             >
               {t("exit.dismiss")}
             </button>

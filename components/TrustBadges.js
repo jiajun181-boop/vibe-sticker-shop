@@ -6,13 +6,13 @@ export function PaymentBadges() {
   const { t } = useTranslation();
   return (
     <div className="space-y-2 text-center">
-      <div className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400">
+      <div className="flex items-center justify-center gap-1.5 text-[11px] text-[var(--color-gray-400)]">
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
         </svg>
         {t("trust.secureCheckout")}
       </div>
-      <div className="flex items-center justify-center gap-2 text-[11px] font-bold tracking-wider text-gray-300">
+      <div className="flex items-center justify-center gap-2 text-[11px] font-bold tracking-wider text-[var(--color-gray-300)]">
         <span>VISA</span>
         <span>MC</span>
         <span>AMEX</span>
@@ -37,7 +37,7 @@ export function GuaranteeBadge() {
 export function TrustedBadge() {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center gap-1.5 text-xs text-gray-500">
+    <div className="flex items-center gap-1.5 text-xs text-[var(--color-gray-500)]">
       <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>

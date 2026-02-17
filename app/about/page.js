@@ -57,51 +57,51 @@ export default async function AboutPage() {
     <main className="min-h-screen bg-[var(--color-gray-50)] px-6 py-14 text-[var(--color-gray-800)]">
       <div className="mx-auto max-w-5xl space-y-10">
         {/* Hero with logo */}
-        <header className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
+        <header className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
           <div className="flex items-start gap-5">
             <Image src="/logo-lunarprint.png" alt="La Lunar Printing" width={64} height={64} className="h-16 w-16 shrink-0" />
             <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{t("about.badge")}</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gray-500)]">{t("about.badge")}</p>
               <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight">{t("about.title")}</h1>
-              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">{t("about.tagline")}</p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.25em] text-[var(--color-gray-400)]">{t("about.tagline")}</p>
             </div>
           </div>
-          <p className="mt-6 text-sm text-gray-600 leading-relaxed max-w-3xl">{t("about.body")}</p>
-          <p className="mt-4 text-sm text-gray-600 leading-relaxed max-w-3xl">{t("about.bodyExtended")}</p>
+          <p className="mt-6 text-sm text-[var(--color-gray-600)] leading-relaxed max-w-3xl">{t("about.body")}</p>
+          <p className="mt-4 text-sm text-[var(--color-gray-600)] leading-relaxed max-w-3xl">{t("about.bodyExtended")}</p>
         </header>
 
         {/* Why Work With Us */}
-        <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
           <h2 className="text-2xl font-semibold tracking-tight mb-6">{t("about.whyTitle")}</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {whyUs.map((usp) => (
-              <article key={usp.titleKey} className="rounded-2xl border border-gray-100 bg-gray-50 p-5">
+              <article key={usp.titleKey} className="rounded-2xl border border-[var(--color-gray-100)] bg-[var(--color-gray-50)] p-5">
                 <span className="text-2xl">{usp.icon}</span>
                 <h3 className="mt-3 text-sm font-bold">{t(usp.titleKey)}</h3>
-                <p className="mt-2 text-xs text-gray-500 leading-relaxed">{t(usp.bodyKey)}</p>
+                <p className="mt-2 text-xs text-[var(--color-gray-500)] leading-relaxed">{t(usp.bodyKey)}</p>
               </article>
             ))}
           </div>
         </section>
 
         {/* Our Commitment */}
-        <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
           <h2 className="text-2xl font-semibold tracking-tight">{t("about.commitmentTitle")}</h2>
-          <p className="mt-4 text-sm text-gray-600 leading-relaxed max-w-3xl">{t("about.commitmentBody")}</p>
-          <p className="mt-4 text-sm font-semibold text-gray-800">
+          <p className="mt-4 text-sm text-[var(--color-gray-600)] leading-relaxed max-w-3xl">{t("about.commitmentBody")}</p>
+          <p className="mt-4 text-sm font-semibold text-[var(--color-gray-800)]">
             {"\uD83D\uDC49"} {t("about.commitmentCta")}
           </p>
         </section>
 
         {/* Company Story / Founding */}
-        <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">{t("about.storyBadge")}</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">{t("about.storyBadge")}</span>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight">{t("about.storyTitle")}</h2>
-          <p className="mt-4 text-sm text-gray-600 leading-relaxed max-w-3xl">{t("about.storyBody1")}</p>
-          <p className="mt-3 text-sm text-gray-600 leading-relaxed max-w-3xl">{t("about.storyBody2")}</p>
+          <p className="mt-4 text-sm text-[var(--color-gray-600)] leading-relaxed max-w-3xl">{t("about.storyBody1")}</p>
+          <p className="mt-3 text-sm text-[var(--color-gray-600)] leading-relaxed max-w-3xl">{t("about.storyBody2")}</p>
 
           {/* Key stats */}
           <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -111,27 +111,27 @@ export default async function AboutPage() {
               { value: "500+", label: t("about.statClients") },
               { value: "GTA", label: t("about.statRegion") },
             ].map((stat) => (
-              <div key={stat.label} className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-center">
+              <div key={stat.label} className="rounded-xl border border-[var(--color-gray-100)] bg-[var(--color-gray-50)] p-4 text-center">
                 <p className="text-2xl font-black tracking-tight">{stat.value}</p>
-                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-400">{stat.label}</p>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)]">{stat.label}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* Timeline / Milestones */}
-        <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
           <h2 className="text-2xl font-semibold tracking-tight mb-8">{t("about.milestonesTitle")}</h2>
           <div className="relative">
-            <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200" />
+            <div className="absolute left-4 top-0 bottom-0 w-px bg-[var(--color-gray-200)]" />
             <div className="space-y-6">
               {milestones.map((m) => (
                 <div key={m.year} className="relative pl-12">
-                  <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-gray-900 text-white label-xs font-bold flex items-center justify-center">
+                  <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-[var(--color-gray-900)] text-white label-xs font-bold flex items-center justify-center">
                     {"\u2713"}
                   </div>
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">{m.year}</p>
-                  <p className="mt-1 text-sm text-gray-700">{t(m.key)}</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">{m.year}</p>
+                  <p className="mt-1 text-sm text-[var(--color-gray-700)]">{t(m.key)}</p>
                 </div>
               ))}
             </div>
@@ -139,25 +139,25 @@ export default async function AboutPage() {
         </section>
 
         {/* Equipment & Capabilities */}
-        <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">{t("about.equipBadge")}</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">{t("about.equipBadge")}</span>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight">{t("about.equipTitle")}</h2>
-          <p className="mt-3 text-sm text-gray-600 max-w-3xl">{t("about.equipBody")}</p>
+          <p className="mt-3 text-sm text-[var(--color-gray-600)] max-w-3xl">{t("about.equipBody")}</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {equipment.map((eq) => (
-              <div key={eq.key} className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
+              <div key={eq.key} className="flex items-start gap-3 rounded-xl border border-[var(--color-gray-100)] bg-[var(--color-gray-50)] p-4">
                 <span className="text-2xl">{eq.icon}</span>
-                <p className="text-sm text-gray-700">{t(eq.key)}</p>
+                <p className="text-sm text-[var(--color-gray-700)]">{t(eq.key)}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* Capabilities at a glance */}
-        <section className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
           <h2 className="text-2xl font-semibold tracking-tight">{t("about.galleryTitle")}</h2>
           <p className="mt-2 text-sm text-[var(--color-gray-500)]">{t("about.gallerySubtitle")}</p>
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -171,12 +171,12 @@ export default async function AboutPage() {
         </section>
 
         {/* Certifications & Compliance */}
-        <section className="rounded-3xl border border-gray-200 bg-white p-8">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8">
           <h2 className="text-2xl font-semibold tracking-tight">{t("about.certTitle")}</h2>
-          <p className="mt-3 text-sm text-gray-600">{t("about.certBody")}</p>
+          <p className="mt-3 text-sm text-[var(--color-gray-600)]">{t("about.certBody")}</p>
           <div className="mt-5 flex flex-wrap gap-3">
             {certifications.map((c) => (
-              <span key={c} className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-xs font-medium text-gray-700">
+              <span key={c} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-4 py-2 text-xs font-medium text-[var(--color-gray-700)]">
                 <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -187,23 +187,23 @@ export default async function AboutPage() {
         </section>
 
         {/* Quality Commitment */}
-        <section className="rounded-3xl border border-gray-200 bg-white p-8">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8">
           <h2 className="text-2xl font-semibold">{t("about.qualityTitle")}</h2>
-          <p className="mt-3 text-sm text-gray-600 leading-relaxed">{t("about.qualityBody")}</p>
+          <p className="mt-3 text-sm text-[var(--color-gray-600)] leading-relaxed">{t("about.qualityBody")}</p>
         </section>
 
         {/* CTA */}
-        <section className="rounded-3xl border border-gray-200 bg-gray-900 p-8 text-white relative overflow-hidden">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-[var(--color-gray-900)] p-8 text-white relative overflow-hidden">
           {/* Subtle brand watermark */}
           <div className="absolute top-4 right-4 opacity-[0.04]">
             <Image src="/logo-lunarprint.png" alt="" width={120} height={120} className="opacity-20" />
           </div>
           <h2 className="text-2xl font-semibold relative">{t("about.ctaTitle")}</h2>
-          <p className="mt-3 text-sm text-gray-200 relative">{t("about.ctaBody")}</p>
+          <p className="mt-3 text-sm text-[var(--color-gray-200)] relative">{t("about.ctaBody")}</p>
           <div className="mt-5 flex flex-wrap gap-3 relative">
             <Link
               href="/shop"
-              className="inline-block rounded-full bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-900 hover:bg-gray-100 transition-colors"
+              className="inline-block rounded-full bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
             >
               {t("about.ctaButton")}
             </Link>

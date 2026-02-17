@@ -3,12 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
 
+// Must match Prisma OrderStatus enum: draft, pending, paid, canceled, refunded
 const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
-  paid: ["processing", "cancelled"],
-  processing: ["shipped", "cancelled"],
-  shipped: ["delivered", "processing"],
-  delivered: [],
-  cancelled: [],
+  draft: ["pending", "paid", "canceled"],
+  pending: ["paid", "canceled"],
+  paid: ["canceled", "refunded"],
+  canceled: [],
   refunded: [],
 };
 

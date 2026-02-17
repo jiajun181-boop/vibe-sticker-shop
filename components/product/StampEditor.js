@@ -301,13 +301,13 @@ export default function StampEditor({
   return (
     <div className="space-y-4">
       {/* Canvas preview */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-3">
+      <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-3">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("stamp.preview")}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("stamp.preview")}</p>
           <button
             type="button"
             onClick={() => setShowRef((v) => !v)}
-            className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${showRef ? "bg-gray-900 text-white border-gray-900" : "text-gray-500 border-gray-300 hover:border-gray-500"}`}
+            className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${showRef ? "bg-[var(--color-gray-900)] text-white border-[var(--color-gray-900)]" : "text-[var(--color-gray-500)] border-[var(--color-gray-300)] hover:border-[var(--color-gray-500)]"}`}
           >
             {t("stamp.sizeReference")}
           </button>
@@ -319,12 +319,12 @@ export default function StampEditor({
             className="rounded-xl bg-white"
           />
         </div>
-        <p className="mt-2 text-center text-[10px] text-gray-400">{t("stamp.previewHint")}</p>
+        <p className="mt-2 text-center text-[10px] text-[var(--color-gray-400)]">{t("stamp.previewHint")}</p>
       </div>
 
       {/* Ink color presets */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 mb-2">{t("stamp.inkColor")}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)] mb-2">{t("stamp.inkColor")}</p>
         <div className="flex gap-2">
           {INK_COLORS.map((c) => (
             <button
@@ -332,7 +332,7 @@ export default function StampEditor({
               type="button"
               onClick={() => handleColorSelect(c.hex)}
               title={t(c.labelKey)}
-              className={`h-9 w-9 rounded-full border-2 transition-transform hover:scale-110 ${color === c.hex ? "border-gray-900 ring-2 ring-gray-300 scale-110" : "border-gray-200"}`}
+              className={`h-9 w-9 rounded-full border-2 transition-transform hover:scale-110 ${color === c.hex ? "border-[var(--color-gray-900)] ring-2 ring-gray-300 scale-110" : "border-[var(--color-gray-200)]"}`}
               style={{ backgroundColor: c.hex }}
             />
           ))}
@@ -343,8 +343,8 @@ export default function StampEditor({
       {shape === "round" && (
         <div>
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("stamp.curveAmount")}</p>
-            <span className="text-xs text-gray-500">{curveAmount}%</span>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("stamp.curveAmount")}</p>
+            <span className="text-xs text-[var(--color-gray-500)]">{curveAmount}%</span>
           </div>
           <input
             type="range"
@@ -354,20 +354,20 @@ export default function StampEditor({
             onChange={(e) => handleCurveChange(Number(e.target.value))}
             className="mt-1 w-full accent-gray-900"
           />
-          <p className="text-[10px] text-gray-400">{t("stamp.curveHint")}</p>
+          <p className="text-[10px] text-[var(--color-gray-400)]">{t("stamp.curveHint")}</p>
         </div>
       )}
 
       {/* Template selector */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 mb-2">{t("stamp.templates")}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)] mb-2">{t("stamp.templates")}</p>
         <div className="flex gap-1 mb-2">
           {STAMP_TEMPLATE_CATEGORIES.map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setTemplateCat(cat)}
-              className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${templateCat === cat ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${templateCat === cat ? "bg-[var(--color-gray-900)] text-white" : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-200)]"}`}
             >
               {t(`stamp.templateCat.${cat}`)}
             </button>
@@ -379,10 +379,10 @@ export default function StampEditor({
               key={tmpl.id}
               type="button"
               onClick={() => handleTemplateSelect(tmpl)}
-              className="rounded-xl border border-gray-200 px-2 py-2 text-left hover:border-gray-400 hover:bg-gray-50 transition-colors"
+              className="rounded-xl border border-[var(--color-gray-200)] px-2 py-2 text-left hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-50)] transition-colors"
             >
-              <span className="block text-xs font-semibold text-gray-900">{tmpl.label}</span>
-              <span className="block mt-0.5 text-[10px] text-gray-500 line-clamp-1">{tmpl.text.split("\n")[0]}</span>
+              <span className="block text-xs font-semibold text-[var(--color-gray-900)]">{tmpl.label}</span>
+              <span className="block mt-0.5 text-[10px] text-[var(--color-gray-500)] line-clamp-1">{tmpl.text.split("\n")[0]}</span>
             </button>
           ))}
         </div>
@@ -390,7 +390,7 @@ export default function StampEditor({
 
       {/* Logo upload */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 mb-2">{t("stamp.logo")}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)] mb-2">{t("stamp.logo")}</p>
         {!logoFile ? (
           <UploadButton
             endpoint="artworkUploader"
@@ -400,14 +400,14 @@ export default function StampEditor({
             }}
             onUploadError={(e) => console.error("[stamp logo]", e)}
             appearance={{
-              button: "!bg-gray-900 !text-white !text-xs !rounded-full !px-4 !py-2 !font-semibold hover:!bg-black",
-              allowedContent: "!text-[10px] !text-gray-400",
+              button: "!bg-[var(--color-gray-900)] !text-white !text-xs !rounded-full !px-4 !py-2 !font-semibold hover:!bg-black",
+              allowedContent: "!text-[10px] !text-[var(--color-gray-400)]",
             }}
           />
         ) : (
-          <div className="rounded-xl border border-gray-200 p-3 space-y-2">
+          <div className="rounded-xl border border-[var(--color-gray-200)] p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-900 truncate max-w-[200px]">{logoFile.name}</span>
+              <span className="text-xs text-[var(--color-gray-900)] truncate max-w-[200px]">{logoFile.name}</span>
               <button
                 type="button"
                 onClick={handleLogoRemove}
@@ -418,8 +418,8 @@ export default function StampEditor({
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-500">{t("stamp.logoSize")}</span>
-                <span className="text-[10px] text-gray-500">{logoScale}%</span>
+                <span className="text-[10px] text-[var(--color-gray-500)]">{t("stamp.logoSize")}</span>
+                <span className="text-[10px] text-[var(--color-gray-500)]">{logoScale}%</span>
               </div>
               <input
                 type="range"

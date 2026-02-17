@@ -14,6 +14,7 @@ import DualEntryHero from "@/components/home/DualEntryHero";
 import QuickOrderStrip from "@/components/home/QuickOrderStrip";
 import ReorderStrip from "@/components/home/ReorderStrip";
 import HomeScrollWrapper from "@/components/home/HomeScrollWrapper";
+import HomeLandingHighlights from "@/components/home/HomeLandingHighlights";
 
 export const revalidate = 60;
 
@@ -45,7 +46,7 @@ export default async function HomePage() {
   const config = await getCatalogConfig();
   const { homepageCategories, maxPerCategory, categoryMeta } = config;
 
-  const [products, totalCount, displayProducts] = await Promise.all([
+  const [products, totalCount, displayProducts, quoteProducts] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true, category: { in: homepageCategories } },
       include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
@@ -57,6 +58,35 @@ export default async function HomePage() {
       include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       take: 6,
+    }),
+    // Quote calculator: popular products with real pricing
+    prisma.product.findMany({
+      where: {
+        isActive: true,
+        slug: {
+          in: [
+            "retractable-banner-stand-premium",
+            "x-banner-stand-standard",
+            "tabletop-banner-a3",
+            "vinyl-banners",
+            "business-cards-classic",
+            "die-cut-stickers",
+            "coroplast-yard-signs",
+            "flyers",
+            "floor-graphics",
+            "full-vehicle-wrap-design-print",
+          ],
+        },
+      },
+      select: {
+        slug: true,
+        name: true,
+        category: true,
+        pricingUnit: true,
+        basePrice: true,
+        minPrice: true,
+        displayFromPrice: true,
+      },
     }),
   ]);
 
@@ -89,17 +119,22 @@ export default async function HomePage() {
         {/* 1. Hero */}
         <DualEntryHero totalCount={totalCount} />
 
-        {/* 2. Popular Products */}
+        {/* 2. Entry Highlights */}
+        <section className="bg-[linear-gradient(180deg,var(--color-paper-white),var(--color-gray-50))]">
+          <HomeLandingHighlights />
+        </section>
+
+        {/* 3. Popular Products */}
         <section className="py-20 bg-[var(--color-gray-50)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <QuickOrderStrip products={serializedQuickProducts} />
           </div>
         </section>
 
-        {/* 3. Reorder Strip (renders null for logged-out users) */}
+        {/* 4. Reorder Strip (renders null for logged-out users) */}
         <ReorderStrip />
 
-        {/* 4. Shop by Category */}
+        {/* 5. Shop by Category */}
         <section className="py-20 bg-white animate-on-scroll">
           <div className="max-w-7xl mx-auto px-6">
             <h2 className="heading-2 text-center mb-10">
@@ -134,7 +169,7 @@ export default async function HomePage() {
                         <span className="text-lg">{meta.icon}</span>
                         <h3 className="font-bold body-sm leading-tight">{meta.title}</h3>
                       </div>
-                      <p className="label-xs text-gray-400 mt-1 font-normal tracking-wide">
+                      <p className="label-xs text-[var(--color-gray-400)] mt-1 font-normal tracking-wide">
                         {t("home.categoryCount", { count: totalInCat })}
                       </p>
                     </div>
@@ -153,21 +188,21 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* 5. Shop by Use Case */}
+        {/* 6. Shop by Use Case */}
         <section className="py-20 bg-[var(--color-gray-50)] animate-on-scroll">
           <div className="max-w-7xl mx-auto px-6">
             <UseCaseSection />
           </div>
         </section>
 
-        {/* 6. Trust Signals */}
+        {/* 7. Trust Signals */}
         <section className="py-20 bg-white animate-on-scroll">
           <div className="max-w-7xl mx-auto px-6">
             <TrustSignals />
           </div>
         </section>
 
-        {/* 7. How It Works */}
+        {/* 8. How It Works */}
         <section className="py-20 bg-white animate-on-scroll">
           <div className="max-w-7xl mx-auto px-6">
             <HowItWorks />
@@ -177,7 +212,7 @@ export default async function HomePage() {
         {/* 9. Quote Calculator */}
         <section className="py-20 bg-[var(--color-gray-50)] animate-on-scroll">
           <div className="max-w-7xl mx-auto px-6">
-            <QuoteCalculator />
+            <QuoteCalculator products={quoteProducts} />
           </div>
         </section>
 

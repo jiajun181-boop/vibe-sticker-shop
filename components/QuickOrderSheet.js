@@ -107,18 +107,18 @@ export default function QuickOrderSheet({ open, onClose }) {
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="h-1 w-10 rounded-full bg-gray-300" />
+          <div className="h-1 w-10 rounded-full bg-[var(--color-gray-300)]" />
         </div>
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pb-3">
-          <h2 className="text-sm font-bold uppercase tracking-[0.15em] text-gray-900">
+          <h2 className="text-sm font-bold uppercase tracking-[0.15em] text-[var(--color-gray-900)]">
             Quick Order
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100"
+            className="rounded-full p-1.5 text-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)]"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -131,15 +131,15 @@ export default function QuickOrderSheet({ open, onClose }) {
           {/* Reorder Recent (if logged in) */}
           {orders.length > 0 && (
             <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-gray-400 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-2">
                 {t("account.recentOrders")}
               </p>
               <div className="space-y-2">
                 {orders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5">
+                  <div key={order.id} className="flex items-center justify-between rounded-xl bg-[var(--color-gray-50)] px-3 py-2.5">
                     <div>
-                      <p className="text-xs font-bold text-gray-900">#{order.id.slice(0, 8)}</p>
-                      <p className="text-[11px] text-gray-400">
+                      <p className="text-xs font-bold text-[var(--color-gray-900)]">#{order.id.slice(0, 8)}</p>
+                      <p className="text-[11px] text-[var(--color-gray-400)]">
                         {order._count?.items || 0} {t("account.orders.items")} · {formatCad(order.totalAmount)}
                       </p>
                     </div>
@@ -158,14 +158,14 @@ export default function QuickOrderSheet({ open, onClose }) {
           )}
 
           {/* Popular Products */}
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-gray-400 mb-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-2">
             {t("home.popularProducts")}
           </p>
           <div className="grid grid-cols-2 gap-2">
             {products.map((p) => (
-              <div key={p.id} className="rounded-xl border border-gray-100 bg-white p-2.5">
+              <div key={p.id} className="rounded-xl border border-[var(--color-gray-100)] bg-white p-2.5">
                 <Link href={`/shop/${p.category}/${p.slug}`} onClick={onClose}>
-                  <div className="aspect-square rounded-lg bg-gray-50 overflow-hidden mb-2">
+                  <div className="aspect-square rounded-lg bg-[var(--color-gray-50)] overflow-hidden mb-2">
                     {p.image ? (
                       <Image src={p.image} alt={p.imageAlt || p.name} width={120} height={120} className="h-full w-full object-cover" />
                     ) : (
@@ -173,9 +173,9 @@ export default function QuickOrderSheet({ open, onClose }) {
                     )}
                   </div>
                 </Link>
-                <p className="text-xs font-semibold text-gray-900 truncate">{p.name}</p>
+                <p className="text-xs font-semibold text-[var(--color-gray-900)] truncate">{p.name}</p>
                 {p.price > 0 && (
-                  <p className="text-[11px] text-gray-500 mt-0.5">{t("home.from")} {formatCad(p.price)}</p>
+                  <p className="text-[11px] text-[var(--color-gray-500)] mt-0.5">{t("home.from")} {formatCad(p.price)}</p>
                 )}
                 <button
                   type="button"
