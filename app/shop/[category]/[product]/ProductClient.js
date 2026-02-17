@@ -18,7 +18,7 @@ import dynamic from "next/dynamic";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import TemplateGallery from "@/components/product/TemplateGallery";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
-import { getSlaWindow } from "@/lib/sla";
+
 import { useFavoritesStore } from "@/lib/favorites";
 import RelatedLinks from "@/components/product/RelatedLinks";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
@@ -33,6 +33,19 @@ const HST_RATE = 0.13;
 const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
 const INCH_TO_CM = 2.54;
 const createSizeRowId = () => `sz_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+const normalizeInches = (value) => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value > 50 && value <= 500 ? value / 100 : value;
+  }
+  if (typeof value === "string") {
+    const cleaned = value.trim().replace(",", ".");
+    const parsed = Number(cleaned);
+    if (Number.isFinite(parsed)) {
+      return parsed > 50 && parsed <= 500 ? parsed / 100 : parsed;
+    }
+  }
+  return null;
+};
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -271,7 +284,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   const smartDefaults = useMemo(() => getSmartDefaults(product), [product]);
   const inventorySignal = useMemo(() => parseInventorySignal(product.optionsConfig), [product.optionsConfig]);
   const turnaroundKey = useMemo(() => getTurnaround(product), [product]);
-  const slaWindow = useMemo(() => getSlaWindow(turnaroundKey), [turnaroundKey]);
+
   const editorConfig = product.optionsConfig?.editor || null;
   const isTextEditor = editorConfig?.type === "text";
   const editorMode = editorConfig?.mode || "lettering"; // "lettering" | "box"
@@ -287,9 +300,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       .map((s) => ({
         label: s.label,
         shape: s.shape || "rect", // rect | round
-        widthIn: typeof s.widthIn === "number" ? s.widthIn : null,
-        heightIn: typeof s.heightIn === "number" ? s.heightIn : null,
-        diameterIn: typeof s.diameterIn === "number" ? s.diameterIn : null,
+        widthIn: normalizeInches(s.widthIn),
+        heightIn: normalizeInches(s.heightIn),
+        diameterIn: normalizeInches(s.diameterIn),
         mm: s.mm || null,
         details: s.details || null,
         type: s.type || null,
@@ -831,7 +844,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     }
   }, [quote]);
 
-  // Derive display prices from quote (fallback to basePrice estimate)
+  // Derive display prices from quote (fallback only when quote isn't required).
   const priceData = useMemo(() => {
     const activeQuote = quote || stableQuoteRef.current;
     const qty = multiSizeEnabled && useMultiSize ? totalMultiQty || 1 : Number(quantity) || 1;
@@ -841,6 +854,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       const unitAmount = activeQuote.unitCents || Math.round(subtotal / qty);
       const sqft = activeQuote.meta?.sqftPerUnit ?? null;
       return { unitAmount, subtotal, tax, total: subtotal + tax, sqft, breakdown: activeQuote.breakdown };
+    }
+
+    const quoteRequired =
+      Boolean(product.pricingPreset?.id) &&
+      (isTextEditor || dimensionsEnabled || sizeOptions.length > 0 || activeQuantityChoices.length > 0);
+    if (quoteRequired) {
+      return { unitAmount: null, subtotal: null, tax: null, total: null, sqft: null, breakdown: null, pending: true };
     }
 
     // If no quote and basePrice is missing, avoid showing misleading $0.01 pricing.
@@ -867,7 +887,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const subtotal = unitAmount * qty;
     const tax = Math.round(subtotal * HST_RATE);
     return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, breakdown: null };
-  }, [quote, quantity, product.basePrice, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal]);
+  }, [quote, quantity, product.basePrice, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal, product.pricingPreset?.id, isTextEditor, sizeOptions.length, activeQuantityChoices.length]);
 
   // Tier rows — quick client estimates for the tier table
   const estimateTierRows = useMemo(
@@ -1014,9 +1034,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     trackOptionChange({ slug: product.slug, option: "quantity", value: String(final), quantity: final, pricingModel: product.pricingPreset?.model });
   }
 
-  const canAddToCart = sizeValidation.valid && !priceData.unpriced;
+  const canAddToCart = sizeValidation.valid && !priceData.unpriced && !priceData.pending;
   const preTaxDisplay =
-    !priceData.unpriced && typeof priceData.subtotal === "number"
+    priceData.pending
+      ? "Calculating..."
+      : !priceData.unpriced && typeof priceData.subtotal === "number"
       ? formatCad(priceData.subtotal)
       : t("product.priceOnRequest");
   const quickSelection = useMemo(() => {
@@ -1180,8 +1202,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       total: priceData.total,
       currency: "CAD",
       turnaroundKey,
-      shipByLabel: slaWindow.shipByLabel,
-      deliveryLabel: slaWindow.deliveryLabel,
       selections: quickSelection.slice(0, 10),
     };
     const encoded = encodeURIComponent(JSON.stringify(payload));
@@ -1377,9 +1397,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             <div className="rounded-3xl border border-gray-200 bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 lg:sticky lg:top-24 flex flex-col">
               {/* ── PRICE + QUANTITY + ATC (always visible, order-1) ── */}
               <div className="order-1 rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-4 sm:p-5">
-                <div className="mb-3 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-900">Checkout Steps</p>
-                  <p className="text-xs font-medium text-gray-900">1. Configure  2. Upload  3. Checkout</p>
+                  <p className="text-xs font-medium text-gray-900">1. Configure  2. Customize  3. Checkout</p>
                 </div>
                 <div className="mb-2 flex flex-wrap gap-2">
                   <span className="badge-soft bg-emerald-100 text-emerald-700">Live Quote</span>
@@ -1406,6 +1426,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     >
                       {t("product.priceOnRequest")}
                     </a>
+                  ) : priceData.pending ? (
+                    <div>
+                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-900">Instant Quote</span>
+                      <span className="text-2xl font-bold text-gray-900">Calculating...</span>
+                    </div>
                   ) : (
                     <div>
                       <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-900">Instant Quote</span>
@@ -1421,7 +1446,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   )}
                 </div>
 
-                {!priceData.unpriced && (
+                {!priceData.unpriced && !priceData.pending && (
                   <p className="mt-1 text-xs text-gray-900">{t("quote.hstNote")}</p>
                 )}
 
@@ -1440,11 +1465,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   </p>
                 </div>
 
-                <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs">
-                  <p className="font-semibold uppercase tracking-[0.18em] text-blue-700">SLA Promise</p>
-                  <p className="mt-1 text-blue-900">Ship by <span className="font-semibold">{slaWindow.shipByLabel}</span></p>
-                  <p className="text-blue-900">Estimated delivery <span className="font-semibold">{slaWindow.deliveryLabel}</span></p>
-                </div>
 
                 {/* Quantity — always visible */}
                 <div className="mt-4">
@@ -1497,7 +1517,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   )}
                 </div>
 
-                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-gray-900">Step 3 - Checkout</p>
+                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-gray-900">Checkout</p>
                 {/* Add to Cart button */}
                 <div ref={addToCartRef} className="mt-4">
                   <button
@@ -1562,7 +1582,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   <p>2. Upload artwork now or after checkout</p>
                   <p>3. Checkout securely with live quote</p>
                 </div>
-                <div className="mt-2 flex gap-2 text-[11px]">
+                <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
                   <button
                     type="button"
                     onClick={handleDownloadQuotePdf}
@@ -2476,7 +2496,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               return (
                 <Link key={item.id} href={`/shop/${item.category}/${item.slug}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                   <div className="relative aspect-[4/3] bg-gray-100">
-                    <Image src={relatedImage} alt={item.images?.[0]?.alt || item.name} fill className="object-cover" sizes="25vw" unoptimized={isSvgImage(relatedImage)} />
+                    <Image src={relatedImage} alt={item.images?.[0]?.alt || item.name} fill className="object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" unoptimized={isSvgImage(relatedImage)} />
                   </div>
                   <div className="p-4">
                     <p className="text-sm font-semibold">{item.name}</p>
