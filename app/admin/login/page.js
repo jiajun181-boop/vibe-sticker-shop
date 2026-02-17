@@ -123,6 +123,9 @@ export default function AdminLoginPage() {
                   placeholder="Email"
                   required
                   autoFocus
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   className="w-full rounded-[3px] border border-[#d0d0d0] px-4 py-3 text-sm text-black placeholder-[#999] outline-none transition-colors focus:border-black"
                 />
               </div>
@@ -164,6 +167,9 @@ export default function AdminLoginPage() {
                       placeholder="Email"
                       required
                       autoFocus
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
                       className="w-full rounded-[3px] border border-[#d0d0d0] px-4 py-3 text-sm text-black placeholder-[#999] outline-none transition-colors focus:border-black"
                     />
                   </div>
