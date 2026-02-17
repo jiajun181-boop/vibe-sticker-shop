@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { validatePresetConfig } from "@/lib/pricing/validate-config";
+import { logActivity } from "@/lib/activity-log";
 
 type AdjustFlags = {
   tiers: boolean;
@@ -219,6 +221,7 @@ export async function POST(request: NextRequest) {
 
     const results: any[] = [];
     const updates: any[] = [];
+    const snapshots: Array<{ presetId: string; key: string; name: string; before: any; after: any }> = [];
     let skippedShared = 0;
     let invalidConfigs = 0;
 
@@ -273,6 +276,13 @@ export async function POST(request: NextRequest) {
       });
 
       if (mode === "apply") {
+        snapshots.push({
+          presetId: preset.id,
+          key: preset.key,
+          name: preset.name,
+          before: preset.config,
+          after: nextConfig,
+        });
         updates.push(
           prisma.pricingPreset.update({
             where: { id: preset.id },
@@ -286,6 +296,21 @@ export async function POST(request: NextRequest) {
     if (mode === "apply" && updates.length) {
       await prisma.$transaction(updates);
       applied = updates.length;
+      await logActivity({
+        action: "bulk_adjust_apply",
+        entity: "PricingBulkAdjust",
+        actor: auth.user?.email || "admin",
+        details: {
+          category,
+          percent,
+          flags,
+          includeSharedPresets,
+          applied,
+          touchedPresets: presets.length,
+          touchedProducts: categoryProducts.length,
+          snapshots,
+        },
+      });
     }
 
     return NextResponse.json({

@@ -59,6 +59,13 @@ function stripSubseriesTags(tags) {
   return tags.filter((t) => !(typeof t === "string" && t.startsWith(SUBSERIES_TAG_PREFIX)));
 }
 
+function resolveWorkflowState(tags, isActive) {
+  if (Array.isArray(tags) && tags.includes("workflow:pending_review")) return "pending_review";
+  if (Array.isArray(tags) && tags.includes("workflow:draft")) return "draft";
+  if (Array.isArray(tags) && tags.includes("workflow:published")) return "published";
+  return isActive ? "published" : "draft";
+}
+
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
     cents / 100
@@ -150,6 +157,8 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+  const [workflowState, setWorkflowState] = useState("draft");
+  const [workflowLoading, setWorkflowLoading] = useState(false);
 
   // Form state
   const [form, setForm] = useState({});
@@ -167,6 +176,7 @@ export default function ProductDetailPage() {
       if (!res.ok) { router.push("/admin/products"); return; }
       const data = await res.json();
       setProduct(data);
+      setWorkflowState(resolveWorkflowState(data.tags, data.isActive));
       setForm({
         name: data.name,
         slug: data.slug,
@@ -328,6 +338,48 @@ export default function ProductDetailPage() {
     } catch { showMsg("Failed to delete image", true); }
   }
 
+  async function handleSetPrimaryImage(imageId) {
+    try {
+      const res = await fetch(`/api/admin/products/${productId}/images`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ primaryImageId: imageId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showMsg(data.error || "Failed to set cover image", true);
+        return;
+      }
+      fetchProduct();
+      showMsg("Cover image updated");
+    } catch {
+      showMsg("Failed to set cover image", true);
+    }
+  }
+
+  async function handleWorkflow(action) {
+    setWorkflowLoading(true);
+    try {
+      const res = await fetch(`/api/admin/products/${productId}/workflow`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showMsg(data.error || "Workflow action failed", true);
+        return;
+      }
+      setWorkflowState(data.state || workflowState);
+      fetchProduct();
+      showMsg(`Workflow updated: ${data.state || action}`);
+    } catch {
+      showMsg("Workflow action failed", true);
+    } finally {
+      setWorkflowLoading(false);
+    }
+  }
+
   async function handleAssetUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -369,6 +421,14 @@ export default function ProductDetailPage() {
   if (!product) return null;
 
   const primaryImage = product.images?.[0];
+  const checklist = {
+    hasImage: Boolean(product.images?.length),
+    hasPrice: Boolean(product.pricingPresetId) || Number(product.basePrice) > 0,
+    hasDescription: String(form.description || "").trim().length >= 24,
+    hasSeo: Boolean(String(form.metaTitle || "").trim() && String(form.metaDescription || "").trim()),
+    hasSubseries: Boolean(form.subseries),
+  };
+  const checklistReady = Object.values(checklist).every(Boolean);
 
   return (
     <div className="space-y-6">
@@ -385,6 +445,9 @@ export default function ProductDetailPage() {
         </div>
         <span className={`rounded-[2px] px-3 py-1 text-xs font-medium ${product.isActive ? "bg-green-100 text-green-700" : "bg-[#f5f5f5] text-[#999]"}`}>
           {product.isActive ? "Active" : "Inactive"}
+        </span>
+        <span className="rounded-[2px] bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+          Workflow: {workflowState}
         </span>
       </div>
 
@@ -658,6 +721,36 @@ export default function ProductDetailPage() {
               {form.isActive ? "Deactivate" : "Activate"}
             </button>
           </div>
+
+          <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#666] mb-2">Workflow</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={workflowLoading}
+                onClick={() => handleWorkflow("save_draft")}
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-white disabled:opacity-50"
+              >
+                Save as Draft
+              </button>
+              <button
+                type="button"
+                disabled={workflowLoading}
+                onClick={() => handleWorkflow("submit_review")}
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-white disabled:opacity-50"
+              >
+                Submit for Review
+              </button>
+              <button
+                type="button"
+                disabled={workflowLoading}
+                onClick={() => handleWorkflow("publish")}
+                className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+              >
+                Publish
+              </button>
+            </div>
+          </div>
         </form>
 
         {/* ── Sidebar ── */}
@@ -675,6 +768,15 @@ export default function ProductDetailPage() {
                     <img src={img.url} alt={img.alt || product.name} className="h-24 w-full rounded-[3px] object-cover" />
                     {idx === 0 && (
                       <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">Primary</span>
+                    )}
+                    {idx !== 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleSetPrimaryImage(img.id)}
+                        className="absolute left-1 bottom-1 hidden rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-black transition-colors hover:bg-white group-hover:block"
+                      >
+                        Set Cover
+                      </button>
                     )}
                     <button type="button" onClick={() => handleDeleteImage(img.id)} className="absolute right-1 top-1 hidden rounded bg-red-500/80 p-0.5 text-white transition-colors hover:bg-red-600 group-hover:block">
                       <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -743,6 +845,20 @@ export default function ProductDetailPage() {
                 </div>
               )}
             </dl>
+          </div>
+
+          <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+            <h2 className="mb-3 text-sm font-semibold text-black">Pre-Launch Checklist</h2>
+            <div className="space-y-1.5 text-xs">
+              <div className={checklist.hasImage ? "text-green-700" : "text-red-600"}>{checklist.hasImage ? "✓" : "✕"} Has image</div>
+              <div className={checklist.hasPrice ? "text-green-700" : "text-red-600"}>{checklist.hasPrice ? "✓" : "✕"} Has price / preset</div>
+              <div className={checklist.hasDescription ? "text-green-700" : "text-red-600"}>{checklist.hasDescription ? "✓" : "✕"} Description length OK</div>
+              <div className={checklist.hasSeo ? "text-green-700" : "text-red-600"}>{checklist.hasSeo ? "✓" : "✕"} SEO title + description</div>
+              <div className={checklist.hasSubseries ? "text-green-700" : "text-red-600"}>{checklist.hasSubseries ? "✓" : "✕"} Subseries assigned</div>
+            </div>
+            <div className={`mt-3 rounded-[3px] px-2.5 py-2 text-xs font-semibold ${checklistReady ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
+              {checklistReady ? "Ready to publish" : "Not ready to publish"}
+            </div>
           </div>
         </div>
       </div>

@@ -190,7 +190,11 @@ export default function AdminLayout({ children }) {
   }, []);
 
   useEffect(() => {
-    if (pathname !== "/admin/login") fetchSession();
+    if (pathname === "/admin/login") return undefined;
+    const timer = setTimeout(() => {
+      fetchSession();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [pathname, fetchSession]);
 
   if (pathname === "/admin/login") {
@@ -330,6 +334,8 @@ export default function AdminLayout({ children }) {
             )}
             <Link
               href="/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-xs text-[#999] transition-colors hover:text-black"
             >
               {t("admin.viewStore")}

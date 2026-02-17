@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import ProductsPage from "@/app/admin/products/page";
 import CatalogPage from "@/app/admin/catalog/page";
 import PricingPage from "@/app/admin/pricing/page";
@@ -186,11 +187,11 @@ export default function CatalogOpsPage() {
           </span>
           <span className="ml-auto text-[#999]">
             Focus mode:{" "}
-            <a href="/admin/products" className="text-black underline hover:no-underline">Products</a>{" "}
+            <Link href="/admin/products" className="text-black underline hover:no-underline">Products</Link>{" "}
             ·{" "}
-            <a href="/admin/catalog" className="text-black underline hover:no-underline">Catalog</a>{" "}
+            <Link href="/admin/catalog" className="text-black underline hover:no-underline">Catalog</Link>{" "}
             ·{" "}
-            <a href="/admin/pricing" className="text-black underline hover:no-underline">Pricing</a>
+            <Link href="/admin/pricing" className="text-black underline hover:no-underline">Pricing</Link>
           </span>
         </div>
       </div>
@@ -201,3 +202,4 @@ export default function CatalogOpsPage() {
     </div>
   );
 }
+

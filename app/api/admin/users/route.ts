@@ -47,8 +47,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
     }
 
-    const existing = await prisma.adminUser.findUnique({
-      where: { email: normalizedEmail },
+    const existing = await prisma.adminUser.findFirst({
+      where: {
+        email: { equals: normalizedEmail, mode: "insensitive" },
+      },
+      select: { id: true },
     });
     if (existing) {
       return NextResponse.json({ error: "Email already exists" }, { status: 409 });

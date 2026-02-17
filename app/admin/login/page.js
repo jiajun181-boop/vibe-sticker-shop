@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
 
     try {
       const body = mode === "email"
-        ? { email, password }
+        ? { email: (email || "").trim().toLowerCase(), password: password || "" }
         : { password };
 
       const res = await fetch("/api/admin/login", {
@@ -119,12 +119,13 @@ export default function AdminLoginPage() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail((e.target.value || "").toLowerCase())}
                   placeholder="Email"
                   required
                   autoFocus
                   autoCapitalize="none"
                   autoCorrect="off"
+                  inputMode="email"
                   spellCheck={false}
                   className="w-full rounded-[3px] border border-[#d0d0d0] px-4 py-3 text-sm text-black placeholder-[#999] outline-none transition-colors focus:border-black"
                 />
@@ -163,12 +164,13 @@ export default function AdminLoginPage() {
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => setEmail((e.target.value || "").toLowerCase())}
                       placeholder="Email"
                       required
                       autoFocus
                       autoCapitalize="none"
                       autoCorrect="off"
+                      inputMode="email"
                       spellCheck={false}
                       className="w-full rounded-[3px] border border-[#d0d0d0] px-4 py-3 text-sm text-black placeholder-[#999] outline-none transition-colors focus:border-black"
                     />
@@ -183,6 +185,8 @@ export default function AdminLoginPage() {
                     placeholder="Password"
                     required
                     autoFocus={mode === "legacy"}
+                    autoCapitalize="none"
+                    autoCorrect="off"
                     className="w-full rounded-[3px] border border-[#d0d0d0] px-4 py-3 text-sm text-black placeholder-[#999] outline-none transition-colors focus:border-black"
                   />
                 </div>

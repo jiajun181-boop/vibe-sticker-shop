@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { logActivity } from "@/lib/activity-log";
 
 export async function GET(
   request: NextRequest,
@@ -34,6 +35,14 @@ export async function POST(
     return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
   }
 
+  const existing = await prisma.productImage.findFirst({
+    where: { productId: id, url },
+    orderBy: { sortOrder: "asc" },
+  });
+  if (existing) {
+    return NextResponse.json(existing, { status: 200 });
+  }
+
   // Get next sort order
   const lastImage = await prisma.productImage.findFirst({
     where: { productId: id },
@@ -62,6 +71,47 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
+
+  // Set image as primary cover: expects { primaryImageId: "..." }
+  if (body.primaryImageId) {
+    const targetId = String(body.primaryImageId);
+    const currentImages = await prisma.productImage.findMany({
+      where: { productId: id },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, sortOrder: true },
+    });
+    const target = currentImages.find((img) => img.id === targetId);
+    if (!target) {
+      return NextResponse.json({ error: "Image not found on this product" }, { status: 404 });
+    }
+
+    const reordered = [
+      targetId,
+      ...currentImages.filter((img) => img.id !== targetId).map((img) => img.id),
+    ];
+
+    await prisma.$transaction(
+      reordered.map((imgId, idx) =>
+        prisma.productImage.update({
+          where: { id: imgId },
+          data: { sortOrder: idx },
+        })
+      )
+    );
+
+    await logActivity({
+      action: "set_primary",
+      entity: "ProductImage",
+      entityId: targetId,
+      details: { productId: id, primaryImageId: targetId },
+    });
+
+    const images = await prisma.productImage.findMany({
+      where: { productId: id },
+      orderBy: { sortOrder: "asc" },
+    });
+    return NextResponse.json(images);
+  }
 
   // Bulk reorder: expects { order: [{ id: "...", sortOrder: 0 }, ...] }
   if (body.order && Array.isArray(body.order)) {

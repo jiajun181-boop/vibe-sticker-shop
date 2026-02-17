@@ -38,6 +38,10 @@ function MediaContent() {
   const [uploadAlt, setUploadAlt] = useState("");
   const [uploadTags, setUploadTags] = useState("");
   const [uploadPreview, setUploadPreview] = useState(null);
+  const [uploadProductQuery, setUploadProductQuery] = useState("");
+  const [uploadProductResults, setUploadProductResults] = useState([]);
+  const [uploadProductLoading, setUploadProductLoading] = useState(false);
+  const [uploadProductId, setUploadProductId] = useState("");
   const fileInputRef = useRef(null);
 
   // Detail modal
@@ -47,9 +51,22 @@ function MediaContent() {
   const [editFocalX, setEditFocalX] = useState(0.5);
   const [editFocalY, setEditFocalY] = useState(0.5);
   const [savingDetail, setSavingDetail] = useState(false);
+  const [detailProductQuery, setDetailProductQuery] = useState("");
+  const [detailProductResults, setDetailProductResults] = useState([]);
+  const [detailProductLoading, setDetailProductLoading] = useState(false);
+  const [detailProductId, setDetailProductId] = useState("");
+  const [linkingInDetail, setLinkingInDetail] = useState(false);
 
   // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [health, setHealth] = useState(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+
+  const [batchFiles, setBatchFiles] = useState([]);
+  const [batchAutoLink, setBatchAutoLink] = useState(true);
+  const [batchUploading, setBatchUploading] = useState(false);
+  const [batchReport, setBatchReport] = useState([]);
+  const batchInputRef = useRef(null);
 
   const page = parseInt(searchParams.get("page") || "1");
 
@@ -99,6 +116,10 @@ function MediaContent() {
     else fetchLegacy();
   }, [tab, fetchAssets, fetchLegacy]);
 
+  useEffect(() => {
+    if (tab === "assets") fetchHealth();
+  }, [tab, fetchHealth]);
+
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(updates)) {
@@ -116,6 +137,102 @@ function MediaContent() {
   function showMsg(text, isError = false) {
     setMessage({ text, isError });
     setTimeout(() => setMessage(null), 3000);
+  }
+
+  function filenameToSlug(fileName) {
+    return String(fileName || "")
+      .replace(/\.[^.]+$/, "")
+      .toLowerCase()
+      .replace(/[_\s]+/g, "-")
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  const fetchHealth = useCallback(async () => {
+    setHealthLoading(true);
+    try {
+      const res = await fetch("/api/admin/media/health");
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage({ text: data.error || "Failed to load media health", isError: true });
+        return;
+      }
+      setHealth(data);
+    } catch {
+      setMessage({ text: "Failed to load media health", isError: true });
+    } finally {
+      setHealthLoading(false);
+    }
+  }, []);
+
+  async function searchProducts(query, setLoadingFn, setResultsFn) {
+    const q = query.trim();
+    if (!q) {
+      setResultsFn([]);
+      return;
+    }
+    setLoadingFn(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("search", q);
+      params.set("active", "true");
+      params.set("limit", "12");
+      const res = await fetch(`/api/admin/products?${params}`);
+      const data = await res.json();
+      if (!res.ok) {
+        showMsg(data.error || "Product search failed", true);
+        setResultsFn([]);
+        return;
+      }
+      setResultsFn(data.products || []);
+    } catch {
+      showMsg("Product search failed", true);
+      setResultsFn([]);
+    } finally {
+      setLoadingFn(false);
+    }
+  }
+
+  async function findProductBySlugSlugOrName(slugGuess) {
+    const params = new URLSearchParams();
+    params.set("search", slugGuess);
+    params.set("active", "true");
+    params.set("limit", "20");
+    const res = await fetch(`/api/admin/products?${params}`);
+    const data = await res.json();
+    if (!res.ok) return null;
+    const list = data.products || [];
+    const exact = list.find((p) => p.slug === slugGuess);
+    return exact || list[0] || null;
+  }
+
+  async function linkAssetToProduct(asset, productId) {
+    if (!asset?.id || !productId) return;
+
+    const linkRes = await fetch(`/api/admin/assets/${asset.id}/links`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        entityType: "product",
+        entityId: productId,
+        purpose: "gallery",
+      }),
+    });
+    const linkData = await linkRes.json().catch(() => ({}));
+    if (!linkRes.ok) {
+      throw new Error(linkData?.error || "Failed to create asset link");
+    }
+
+    const imageRes = await fetch(`/api/admin/products/${productId}/images`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: asset.originalUrl, alt: asset.altText || null }),
+    });
+    const imageData = await imageRes.json().catch(() => ({}));
+    if (!imageRes.ok) {
+      throw new Error(imageData?.error || "Failed to add product image");
+    }
   }
 
   // ── File selection ──
@@ -155,18 +272,87 @@ function MediaContent() {
         showMsg("Asset uploaded successfully");
       }
 
+      if (uploadProductId) {
+        await linkAssetToProduct(data.asset, uploadProductId);
+        showMsg("Asset uploaded and linked to product");
+      }
+
       setShowUpload(false);
       setUploadFile(null);
       setUploadAlt("");
       setUploadTags("");
       setUploadPreview(null);
+      setUploadProductQuery("");
+      setUploadProductResults([]);
+      setUploadProductId("");
       fetchAssets();
     } catch (err) {
       console.error("Upload error:", err);
-      showMsg("Upload failed", true);
+      showMsg(err?.message || "Upload failed", true);
     } finally {
       setUploading(false);
     }
+  }
+
+  function handleBatchFileChange(e) {
+    const files = Array.from(e.target.files || []);
+    setBatchFiles(files);
+    setBatchReport([]);
+  }
+
+  async function handleBatchUpload(e) {
+    e.preventDefault();
+    if (!batchFiles.length) {
+      showMsg("Select batch files first", true);
+      return;
+    }
+    setBatchUploading(true);
+    const nextReport = [];
+
+    for (const file of batchFiles) {
+      const row = { fileName: file.name, status: "uploaded", product: null, error: null };
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("altText", uploadAlt.trim() || file.name);
+        formData.append("tags", uploadTags.trim() || "product");
+
+        const uploadRes = await fetch("/api/admin/assets", {
+          method: "POST",
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok) {
+          row.status = "failed";
+          row.error = uploadData?.error || "Upload failed";
+          nextReport.push(row);
+          continue;
+        }
+
+        if (batchAutoLink) {
+          const slugGuess = filenameToSlug(file.name);
+          const product = await findProductBySlugSlugOrName(slugGuess);
+          if (product?.id) {
+            await linkAssetToProduct(uploadData.asset, product.id);
+            row.status = "linked";
+            row.product = `${product.name} (${product.slug})`;
+          } else {
+            row.status = "uploaded_unmatched";
+            row.error = `No product match for ${slugGuess}`;
+          }
+        }
+      } catch (err) {
+        row.status = "failed";
+        row.error = err?.message || "Unknown error";
+      }
+      nextReport.push(row);
+      setBatchReport([...nextReport]);
+    }
+
+    setBatchUploading(false);
+    fetchAssets();
+    fetchHealth();
+    showMsg("Batch upload finished");
   }
 
   // ── Open detail ──
@@ -176,6 +362,9 @@ function MediaContent() {
     setEditTags((asset.tags || []).join(", "));
     setEditFocalX(asset.focalX ?? 0.5);
     setEditFocalY(asset.focalY ?? 0.5);
+    setDetailProductQuery("");
+    setDetailProductResults([]);
+    setDetailProductId("");
   }
 
   // ── Save detail ──
@@ -217,6 +406,7 @@ function MediaContent() {
       if (!res.ok) { showMsg("Failed to archive", true); return; }
       showMsg("Asset archived");
       fetchAssets();
+      fetchHealth();
     } catch {
       showMsg("Failed to archive", true);
     } finally {
@@ -231,6 +421,7 @@ function MediaContent() {
       if (!res.ok) { showMsg("Failed to delete", true); return; }
       showMsg("Image deleted");
       fetchLegacy();
+      fetchHealth();
     } catch {
       showMsg("Failed to delete", true);
     }
@@ -249,6 +440,21 @@ function MediaContent() {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / 1048576).toFixed(1)} MB`;
+  }
+
+  async function handleDetailLink() {
+    if (!selectedAsset || !detailProductId) return;
+    setLinkingInDetail(true);
+    try {
+      await linkAssetToProduct(selectedAsset, detailProductId);
+      showMsg("Asset linked to product");
+      fetchAssets();
+      fetchHealth();
+    } catch (err) {
+      showMsg(err?.message || "Failed to link asset", true);
+    } finally {
+      setLinkingInDetail(false);
+    }
   }
 
   return (
@@ -289,6 +495,69 @@ function MediaContent() {
           Legacy Images
         </button>
       </div>
+
+        {tab === "assets" && (
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-black">Image Health Check</h2>
+            <button
+              type="button"
+              onClick={fetchHealth}
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
+            >
+              {healthLoading ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
+          {!health ? (
+            <p className="text-xs text-[#999]">{healthLoading ? "Loading..." : "No health report yet."}</p>
+          ) : (
+            <>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
+                  <p className="text-[11px] text-[#666]">Total Assets</p>
+                  <p className="text-base font-semibold text-black">{health.summary.totalAssets}</p>
+                </div>
+                <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
+                  <p className="text-[11px] text-[#666]">Orphan Assets</p>
+                  <p className="text-base font-semibold text-black">{health.summary.orphanAssets}</p>
+                </div>
+                <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
+                  <p className="text-[11px] text-[#666]">Placeholder URLs</p>
+                  <p className="text-base font-semibold text-black">{health.summary.placeholderAssets}</p>
+                </div>
+                <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
+                  <p className="text-[11px] text-[#666]">Active Products Missing Image</p>
+                  <p className="text-base font-semibold text-black">{health.summary.activeProductsWithoutImage}</p>
+                </div>
+              </div>
+              {(health.orphanExamples?.length > 0 || health.missingImageProducts?.length > 0) && (
+                <div className="grid gap-2 lg:grid-cols-2">
+                  <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-[#666]">Orphan Assets</p>
+                    <div className="space-y-1 text-xs">
+                      {(health.orphanExamples || []).slice(0, 5).map((a) => (
+                        <div key={a.id} className="truncate text-[#666]" title={a.originalName}>
+                          {a.originalName}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-[#666]">Products Missing Image</p>
+                    <div className="space-y-1 text-xs">
+                      {(health.missingImageProducts || []).slice(0, 5).map((p) => (
+                        <Link key={p.id} href={`/admin/products/${p.id}`} className="block truncate text-black underline hover:no-underline" title={`${p.name} (${p.slug})`}>
+                          {p.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Search & Filters */}
       <div className="flex gap-2 flex-wrap">
@@ -494,6 +763,92 @@ function MediaContent() {
                 <input type="text" value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} placeholder="product, banner, hero..." className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
               </div>
 
+              <div className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-medium text-[#666]">Batch Upload + Auto Match</label>
+                  <button
+                    type="button"
+                    onClick={() => batchInputRef.current?.click()}
+                    className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1 text-[11px] font-medium text-black hover:bg-[#fafafa]"
+                  >
+                    Select files
+                  </button>
+                  <input
+                    ref={batchInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleBatchFileChange}
+                    className="hidden"
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-xs text-[#666]">
+                  <input
+                    type="checkbox"
+                    checked={batchAutoLink}
+                    onChange={(e) => setBatchAutoLink(e.target.checked)}
+                    className="rounded border-[#d0d0d0]"
+                  />
+                  Auto-link by filename to product slug
+                </label>
+                {batchFiles.length > 0 && (
+                  <p className="text-[11px] text-[#666]">{batchFiles.length} files selected</p>
+                )}
+                <button
+                  type="button"
+                  disabled={!batchFiles.length || batchUploading}
+                  onClick={handleBatchUpload}
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-semibold text-black hover:bg-[#fafafa] disabled:opacity-50"
+                >
+                  {batchUploading ? "Batch uploading..." : "Run Batch Upload"}
+                </button>
+                {batchReport.length > 0 && (
+                  <div className="max-h-28 overflow-auto rounded-[3px] border border-[#e0e0e0] p-2 text-[11px]">
+                    {batchReport.map((r, idx) => (
+                      <div key={`${r.fileName}-${idx}`} className="truncate">
+                        [{r.status}] {r.fileName}
+                        {r.product ? ` -> ${r.product}` : ""}
+                        {r.error ? ` (${r.error})` : ""}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
+                <label className="block text-xs font-medium text-[#666]">Optional: Link to Product</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={uploadProductQuery}
+                    onChange={(e) => setUploadProductQuery(e.target.value)}
+                    placeholder="Search product name or slug"
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => searchProducts(uploadProductQuery, setUploadProductLoading, setUploadProductResults)}
+                    className="rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-medium text-black hover:bg-[#fafafa]"
+                  >
+                    {uploadProductLoading ? "..." : "Find"}
+                  </button>
+                </div>
+                {uploadProductResults.length > 0 && (
+                  <select
+                    value={uploadProductId}
+                    onChange={(e) => setUploadProductId(e.target.value)}
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+                  >
+                    <option value="">Select product (optional)</option>
+                    {uploadProductResults.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.slug})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setShowUpload(false)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
                   Cancel
@@ -573,6 +928,48 @@ function MediaContent() {
                 <div>
                   <label className="block text-xs font-medium text-[#666] mb-1">Tags</label>
                   <input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} placeholder="Comma-separated tags" className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
+                </div>
+
+                <div className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
+                  <label className="block text-xs font-medium text-[#666]">Link This Asset to Product</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={detailProductQuery}
+                      onChange={(e) => setDetailProductQuery(e.target.value)}
+                      placeholder="Search product name or slug"
+                      className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => searchProducts(detailProductQuery, setDetailProductLoading, setDetailProductResults)}
+                      className="rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-medium text-black hover:bg-[#fafafa]"
+                    >
+                      {detailProductLoading ? "..." : "Find"}
+                    </button>
+                  </div>
+                  {detailProductResults.length > 0 && (
+                    <select
+                      value={detailProductId}
+                      onChange={(e) => setDetailProductId(e.target.value)}
+                      className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+                    >
+                      <option value="">Select product</option>
+                      {detailProductResults.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.slug})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <button
+                    type="button"
+                    disabled={!detailProductId || linkingInDetail}
+                    onClick={handleDetailLink}
+                    className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-semibold text-black hover:bg-[#fafafa] disabled:opacity-50"
+                  >
+                    {linkingInDetail ? "Linking..." : "Link to Selected Product"}
+                  </button>
                 </div>
 
                 <div className="flex gap-2 pt-2">

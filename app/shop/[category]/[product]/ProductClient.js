@@ -35,13 +35,19 @@ const INCH_TO_CM = 2.54;
 const createSizeRowId = () => `sz_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 const normalizeInches = (value) => {
   if (typeof value === "number" && Number.isFinite(value)) {
-    return value > 50 && value <= 500 ? value / 100 : value;
+    if (value >= 500 && value <= 5000) return value / 1000;
+    if (value > 50 && value < 500) return value / 100;
+    if (value > 10 && value <= 50) return value / 10;
+    return value;
   }
   if (typeof value === "string") {
     const cleaned = value.trim().replace(",", ".");
     const parsed = Number(cleaned);
     if (Number.isFinite(parsed)) {
-      return parsed > 50 && parsed <= 500 ? parsed / 100 : parsed;
+      if (parsed >= 500 && parsed <= 5000) return parsed / 1000;
+      if (parsed > 50 && parsed < 500) return parsed / 100;
+      if (parsed > 10 && parsed <= 50) return parsed / 10;
+      return parsed;
     }
   }
   return null;
@@ -63,13 +69,15 @@ function parseInventorySignal(optionsConfig) {
     if (available <= 0) {
       return {
         tone: "amber",
-        label: restockEta ? `Backorder • ETA ${restockEta}` : `Backorder • ships in ${leadDays > 0 ? `${leadDays} days` : "extended lead time"}`,
+        label: restockEta
+          ? `Backorder - ETA ${restockEta}`
+          : `Backorder - ships in ${leadDays > 0 ? `${leadDays} days` : "extended lead time"}`,
       };
     }
     if (available <= lowStockThreshold) {
-      return { tone: "amber", label: `Low stock • ${available} left` };
+      return { tone: "amber", label: `Low stock - ${available} left` };
     }
-    return { tone: "green", label: `In stock • ${available} available` };
+    return { tone: "green", label: `In stock - ${available} available` };
   }
 
   return null;
@@ -525,6 +533,14 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   const addToCartRef = useRef(null);
   const [stickyVisible, setStickyVisible] = useState(false);
 
+  // Prevent stale quote flash when navigating between different products.
+  useEffect(() => {
+    setQuote(null);
+    setQuoteLoading(false);
+    stableQuoteRef.current = null;
+    lastQuoteRequestKeyRef.current = "";
+  }, [product.slug]);
+
   const primaryImage = getProductImage(product);
   const imageList = useMemo(() => {
     if (Array.isArray(product.images) && product.images.length > 0) return product.images;
@@ -738,6 +754,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               totalCents,
               currency: "CAD",
               unitCents,
+              _productSlug: product.slug,
+              _requestKey: requestKey,
               breakdown,
               meta: {
                 model: "MULTI_SIZE",
@@ -764,7 +782,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           namesCount
         );
         if (!cancelled && data) {
-          setQuote(data);
+          setQuote({
+            ...data,
+            _productSlug: product.slug,
+            _requestKey: requestKey,
+          });
           trackQuoteLoaded({ slug: product.slug, quantity, pricingModel: data.meta?.model || product.pricingPreset?.model, totalCents: data.totalCents, unitCents: data.unitCents });
         }
       } catch {
@@ -839,19 +861,46 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   }, [isTextEditor, editorMode, editorSizeLabel, editorSizes]);
 
   useEffect(() => {
-    if (quote && typeof quote.totalCents === "number" && quote.totalCents > 0) {
+    if (
+      quote &&
+      quote._productSlug === product.slug &&
+      typeof quote.totalCents === "number" &&
+      quote.totalCents > 0
+    ) {
       stableQuoteRef.current = quote;
     }
-  }, [quote]);
+  }, [quote, product.slug]);
 
   // Derive display prices from quote (fallback only when quote isn't required).
   const priceData = useMemo(() => {
-    const activeQuote = quote || stableQuoteRef.current;
+    const liveQuote = quote && quote._productSlug === product.slug ? quote : null;
+    const cachedQuote =
+      stableQuoteRef.current && stableQuoteRef.current._productSlug === product.slug
+        ? stableQuoteRef.current
+        : null;
+    const activeQuote = liveQuote || cachedQuote;
     const qty = multiSizeEnabled && useMultiSize ? totalMultiQty || 1 : Number(quantity) || 1;
     if (activeQuote) {
-      const subtotal = activeQuote.totalCents;
+      let tierFloorCents = 0;
+      const presetModel = product?.pricingPreset?.model;
+      const presetConfig = product?.pricingPreset?.config;
+      if (presetModel === "QTY_TIERED" && Array.isArray(presetConfig?.tiers) && presetConfig.tiers.length > 0) {
+        const firstTier = [...presetConfig.tiers]
+          .filter((t) => t && typeof t === "object")
+          .sort((a, b) => Number(a.minQty || 0) - Number(b.minQty || 0))[0];
+        const minQty = Math.max(1, Number(firstTier?.minQty || 1));
+        const unitPrice = Number(firstTier?.unitPrice || 0);
+        if (Number.isFinite(unitPrice) && unitPrice > 0) {
+          tierFloorCents = Math.round(unitPrice * minQty * 100);
+        }
+      }
+
+      const minimumCents = Number(product?.pricingPreset?.config?.minimumPrice || 0) > 0
+        ? Math.round(Number(product.pricingPreset.config.minimumPrice) * 100)
+        : 0;
+      const subtotal = Math.max(Number(activeQuote.totalCents || 0), minimumCents, tierFloorCents);
       const tax = Math.round(subtotal * HST_RATE);
-      const unitAmount = activeQuote.unitCents || Math.round(subtotal / qty);
+      const unitAmount = Math.max(Number(activeQuote.unitCents || 0), Math.round(subtotal / qty));
       const sqft = activeQuote.meta?.sqftPerUnit ?? null;
       return { unitAmount, subtotal, tax, total: subtotal + tax, sqft, breakdown: activeQuote.breakdown };
     }
@@ -887,9 +936,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const subtotal = unitAmount * qty;
     const tax = Math.round(subtotal * HST_RATE);
     return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, breakdown: null };
-  }, [quote, quantity, product.basePrice, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal, product.pricingPreset?.id, isTextEditor, sizeOptions.length, activeQuantityChoices.length]);
+  }, [quote, quantity, product.basePrice, product.slug, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal, product.pricingPreset?.id, product.pricingPreset?.model, product.pricingPreset?.config, product.pricingPreset?.config?.minimumPrice, isTextEditor, sizeOptions.length, activeQuantityChoices.length]);
 
-  // Tier rows — quick client estimates for the tier table
+  // Tier rows â€” quick client estimates for the tier table
   const estimateTierRows = useMemo(
     () =>
       PRESET_QUANTITIES.map((q) => {
@@ -1269,7 +1318,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           </div>
         )}
 
-        {/* Mobile-only header — shows title before gallery on small screens */}
+        {/* Mobile-only header â€” shows title before gallery on small screens */}
         {!embedded && (
           <header className="lg:hidden">
             <div className="flex items-start gap-3">
@@ -1362,7 +1411,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           </div>
 
           <div className="space-y-6 lg:col-span-5 lg:self-start">
-            {/* Desktop-only header — hidden on mobile where it appears above the grid */}
+            {/* Desktop-only header â€” hidden on mobile where it appears above the grid */}
             {!embedded && (
               <header className="hidden lg:block">
                 <div className="flex items-start gap-3">
@@ -1395,11 +1444,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             )}
 
             <div className="rounded-3xl border border-gray-200 bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 lg:sticky lg:top-24 flex flex-col">
-              {/* ── PRICE + QUANTITY + ATC (always visible, order-1) ── */}
+              {/* â”€â”€ PRICE + QUANTITY + ATC (always visible, order-1) â”€â”€ */}
               <div className="order-1 rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-4 sm:p-5">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-900">Checkout Steps</p>
-                  <p className="text-xs font-medium text-gray-900">1. Configure  2. Customize  3. Checkout</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-900">Order Flow</p>
+                  <p className="text-xs font-medium text-gray-900">Configure options  -  Upload artwork  -  Checkout</p>
                 </div>
                 <div className="mb-2 flex flex-wrap gap-2">
                   <span className="badge-soft bg-emerald-100 text-emerald-700">Live Quote</span>
@@ -1446,10 +1495,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   )}
                 </div>
 
-                {!priceData.unpriced && !priceData.pending && (
-                  <p className="mt-1 text-xs text-gray-900">{t("quote.hstNote")}</p>
-                )}
-
                 <div className="mt-3 rounded-xl border border-gray-200 bg-white p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-900">Order Summary</p>
                   <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
@@ -1466,9 +1511,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 </div>
 
 
-                {/* Quantity — always visible */}
+                {/* Quantity â€” always visible */}
                 <div className="mt-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-900">Step 1 - {t("product.quantity")}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-900">{t("product.quantity")}</p>
                   {multiSizeEnabled && useMultiSize ? (
                     <p className="mt-2 text-sm text-gray-700">
                       {totalMultiQty} pcs across {sizeRows.length} sizes
@@ -1517,7 +1562,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   )}
                 </div>
 
-                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-gray-900">Checkout</p>
+                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-gray-900">Add to cart</p>
                 {/* Add to Cart button */}
                 <div ref={addToCartRef} className="mt-4">
                   <button
@@ -1600,9 +1645,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 </div>
               </div>
 
-              {/* ── OPTIONS (collapsed on mobile, order-2) ── */}
+              {/* â”€â”€ OPTIONS (collapsed on mobile, order-2) â”€â”€ */}
               <div className="order-2 mt-5 border-t border-gray-100 pt-4">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Step 2 - Customize options</p>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-900">Customize options</p>
 
                 {isTextEditor && (
                   <div className="mt-5 space-y-3">
@@ -1641,7 +1686,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               <p>
                                 <span className="font-semibold text-gray-900">{t("product.size")}: </span>
                                 <span>
-                                  {t("product.diameter")}: {selectedEditorSize.diameterIn}"{selectedEditorSize.mm?.d ? ` (${selectedEditorSize.mm.d}mm)` : ""}
+                                  {t("product.diameter")}: {selectedEditorSize.diameterIn}&quot;{selectedEditorSize.mm?.d ? ` (${selectedEditorSize.mm.d}mm)` : ""}
                                 </span>
                               </p>
                             )
@@ -1651,7 +1696,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               <p>
                                 <span className="font-semibold text-gray-900">{t("product.size")}: </span>
                                 <span>
-                                  {selectedEditorSize.widthIn}" x {selectedEditorSize.heightIn}"{selectedEditorSize.mm?.w && selectedEditorSize.mm?.h ? ` (${selectedEditorSize.mm.w} x ${selectedEditorSize.mm.h}mm)` : ""}
+                                  {selectedEditorSize.widthIn}&quot; x {selectedEditorSize.heightIn}&quot;{selectedEditorSize.mm?.w && selectedEditorSize.mm?.h ? ` (${selectedEditorSize.mm.w} x ${selectedEditorSize.mm.h}mm)` : ""}
                                 </span>
                               </p>
                             )
@@ -1952,7 +1997,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     {t("product.moreOptions")}
                   </span>
                   <span className="text-sm font-semibold text-gray-700">
-                    {showAdvancedOptions ? "−" : "+"}
+                    {showAdvancedOptions ? "-" : "+"}
                   </span>
                 </button>
 
@@ -2146,7 +2191,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         <div className="mt-2 grid grid-cols-2 gap-2">
                           {variantConfig.bases.map((base) => {
                             const anyOpt = Object.values(variantConfig.byBase[base])[0];
-                            const dims = anyOpt?.widthIn && anyOpt?.heightIn ? `${anyOpt.widthIn}" × ${anyOpt.heightIn}"` : (anyOpt?.notes || null);
+                            const dims = anyOpt?.widthIn && anyOpt?.heightIn ? `${anyOpt.widthIn}" x ${anyOpt.heightIn}"` : (anyOpt?.notes || null);
                             let minPrice = Infinity;
                             for (const opt of Object.values(variantConfig.byBase[base])) {
                               const p = getStartingUnitPrice(opt);
@@ -2204,7 +2249,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{uiConfig?.sizeToggleLabel || t("product.size")}</p>
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         {sizeOptions.map((o) => {
-                          const dims = o.widthIn && o.heightIn ? `${o.widthIn}" × ${o.heightIn}"` : null;
+                          const dims = o.widthIn && o.heightIn ? `${o.widthIn}" x ${o.heightIn}"` : null;
                           const subtitle = dims || o.notes || null;
                           const unitPrice = getStartingUnitPrice(o);
                           const selected = selectedSizeLabel === o.label;
@@ -2433,7 +2478,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           </div>
         </section>
 
-        {/* ── Quality Guarantee ── */}
+        {/* â”€â”€ Quality Guarantee â”€â”€ */}
         {!embedded && (
         <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
           <h2 className="text-lg font-semibold tracking-tight">{t("product.qualityGuarantee")}</h2>
@@ -2457,7 +2502,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         </section>
         )}
 
-        {/* ── North America Print Basics ── */}
+        {/* â”€â”€ North America Print Basics â”€â”€ */}
         {!embedded && (
         <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
           <h2 className="text-lg font-semibold tracking-tight">{t("product.printBasicsTitle")}</h2>

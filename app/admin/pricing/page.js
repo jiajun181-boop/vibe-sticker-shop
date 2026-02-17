@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -167,6 +167,12 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
   const [quickOverwrite, setQuickOverwrite] = useState(false);
   const [quickAssignLoading, setQuickAssignLoading] = useState(false);
   const [quickAssignMsg, setQuickAssignMsg] = useState(null);
+  const [anomalyLoading, setAnomalyLoading] = useState(false);
+  const [anomalyReport, setAnomalyReport] = useState(null);
+  const [rollbackLogs, setRollbackLogs] = useState([]);
+  const [rollbackTarget, setRollbackTarget] = useState("");
+  const [rollbackLoading, setRollbackLoading] = useState(false);
+  const [rollbackMsg, setRollbackMsg] = useState(null);
 
   useEffect(() => {
     if (embedded) return;
@@ -202,7 +208,9 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
   useEffect(() => {
     fetchPresets();
     fetchCategories();
-  }, []);
+    fetchAnomalies();
+    fetchRollbackLogs();
+  }, [fetchCategories, fetchRollbackLogs]);
 
   useEffect(() => {
     if (!quickPresetId && presets.length > 0) {
@@ -225,7 +233,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
     }
   }
 
-  async function fetchCategories() {
+  const fetchCategories = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/pricing/bulk-adjust");
       if (!res.ok) throw new Error("Failed to load categories");
@@ -237,7 +245,36 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
       console.error("Failed to load categories:", err);
       setCategories([]);
     }
+  }, [bulkCategory]);
+
+  async function fetchAnomalies() {
+    setAnomalyLoading(true);
+    try {
+      const res = await fetch("/api/admin/pricing/anomalies");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to load anomalies");
+      setAnomalyReport(data);
+    } catch (err) {
+      console.error("Failed to load pricing anomalies:", err);
+      setAnomalyReport(null);
+    } finally {
+      setAnomalyLoading(false);
+    }
   }
+
+  const fetchRollbackLogs = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/pricing/bulk-adjust/rollback");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to load rollback history");
+      const list = Array.isArray(data.logs) ? data.logs : [];
+      setRollbackLogs(list);
+      setRollbackTarget((prev) => prev || (list[0]?.id || ""));
+    } catch (err) {
+      console.error("Failed to load rollback history:", err);
+      setRollbackLogs([]);
+    }
+  }, []);
 
   function startEdit(preset) {
     setEditing(preset.id);
@@ -332,7 +369,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
           type: "success",
           text: `Applied to ${data.applied || 0} preset(s).`,
         });
-        await fetchPresets();
+        await Promise.all([fetchPresets(), fetchAnomalies(), fetchRollbackLogs()]);
       } else {
         setBulkMessage({
           type: "success",
@@ -378,6 +415,30 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
     }
   }
 
+  async function handleRollback() {
+    if (!rollbackTarget) {
+      setRollbackMsg({ type: "error", text: "Select a rollback entry first." });
+      return;
+    }
+    setRollbackLoading(true);
+    setRollbackMsg(null);
+    try {
+      const res = await fetch("/api/admin/pricing/bulk-adjust/rollback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logId: rollbackTarget }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Rollback failed");
+      setRollbackMsg({ type: "success", text: `Rollback done. Restored ${data.restoredPresets} presets.` });
+      await Promise.all([fetchPresets(), fetchAnomalies(), fetchRollbackLogs()]);
+    } catch (err) {
+      setRollbackMsg({ type: "error", text: err.message || "Rollback failed" });
+    } finally {
+      setRollbackLoading(false);
+    }
+  }
+
   function updateAdjustFlag(flag, checked) {
     setAdjustFlags((prev) => ({ ...prev, [flag]: checked }));
   }
@@ -413,6 +474,65 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
           {message.text}
         </div>
       )}
+
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-black">Pricing Integrity</h2>
+          <button
+            type="button"
+            onClick={fetchAnomalies}
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
+          >
+            {anomalyLoading ? "Checking..." : "Re-check"}
+          </button>
+        </div>
+        {anomalyReport ? (
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
+              <p className="text-[11px] text-[#666]">Preset anomalies</p>
+              <p className="text-base font-semibold text-black">{anomalyReport.summary?.presetAnomalies ?? 0}</p>
+            </div>
+            <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
+              <p className="text-[11px] text-[#666]">Products missing price</p>
+              <p className="text-base font-semibold text-black">{anomalyReport.summary?.productsMissingPrice ?? 0}</p>
+            </div>
+            <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
+              <p className="text-[11px] text-[#666]">Presets checked</p>
+              <p className="text-base font-semibold text-black">{anomalyReport.summary?.totalPresetsChecked ?? 0}</p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-[#999]">No report loaded yet.</p>
+        )}
+
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3 space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#666]">Rollback Last Bulk Change</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={rollbackTarget}
+              onChange={(e) => setRollbackTarget(e.target.value)}
+              className="rounded border border-[#d0d0d0] bg-white px-2 py-1 text-xs"
+            >
+              <option value="">Select bulk-adjust log</option>
+              {rollbackLogs.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {new Date(l.createdAt).toLocaleString()} | {l.category} | {l.percent}% | {l.applied}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleRollback}
+              disabled={!rollbackTarget || rollbackLoading}
+              className="rounded bg-black px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+            >
+              {rollbackLoading ? "Rolling back..." : "Rollback"}
+            </button>
+          </div>
+          {rollbackMsg && (
+            <p className={`text-xs ${rollbackMsg.type === "error" ? "text-red-600" : "text-green-700"}`}>{rollbackMsg.text}</p>
+          )}
+        </div>
+      </div>
 
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5 space-y-4">
         <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">

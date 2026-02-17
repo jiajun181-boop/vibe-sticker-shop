@@ -15,6 +15,8 @@ export async function POST(request: NextRequest) {
     const { email, password } = await request.json();
     const normalizedEmail =
       typeof email === "string" ? email.trim().toLowerCase() : "";
+    const normalizedPassword =
+      typeof password === "string" ? password.normalize("NFKC") : "";
 
     // ── New path: email + password login (AdminUser table) ──
     if (normalizedEmail) {
@@ -23,17 +25,30 @@ export async function POST(request: NextRequest) {
       const bcrypt = (await import("bcryptjs")).default;
       const { createAdminToken, COOKIE_NAME } = await import("@/lib/admin-auth");
 
-      const admin = await prisma.adminUser.findUnique({
-        where: { email: normalizedEmail },
+      const candidates = await prisma.adminUser.findMany({
+        where: {
+          email: { equals: normalizedEmail, mode: "insensitive" },
+          isActive: true,
+        },
+        orderBy: [{ lastLoginAt: "desc" }, { createdAt: "desc" }],
       });
-      if (!admin || !admin.isActive) {
+      if (!candidates.length) {
         return NextResponse.json(
           { error: "Invalid email or password" },
           { status: 401 }
         );
       }
-      const valid = await bcrypt.compare(password, admin.passwordHash);
-      if (!valid) {
+
+      let admin = null;
+      for (const candidate of candidates) {
+        const ok = await bcrypt.compare(normalizedPassword, candidate.passwordHash);
+        if (ok) {
+          admin = candidate;
+          break;
+        }
+      }
+
+      if (!admin) {
         return NextResponse.json(
           { error: "Invalid email or password" },
           { status: 401 }
@@ -71,7 +86,7 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-    if ((password || "").trim() !== adminPassword) {
+    if ((normalizedPassword || "").trim() !== adminPassword) {
       return NextResponse.json(
         { error: "Invalid password" },
         { status: 401 }

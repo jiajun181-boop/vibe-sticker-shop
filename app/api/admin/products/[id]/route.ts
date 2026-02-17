@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { slugify, validateSlug } from "@/lib/slugify";
+import { logActivity } from "@/lib/activity-log";
 
 const SUBSERIES_TAG_PREFIX = "subseries:";
 
@@ -136,6 +137,19 @@ export async function PATCH(
     where: { id },
     data,
     include: { images: { orderBy: { sortOrder: "asc" } } },
+  });
+
+  await logActivity({
+    action: "product_update",
+    entity: "Product",
+    entityId: id,
+    actor: auth.user?.email || "admin",
+    details: {
+      changedFields: Object.keys(data),
+      slug: product.slug,
+      name: product.name,
+      category: product.category,
+    },
   });
 
   return NextResponse.json(product);

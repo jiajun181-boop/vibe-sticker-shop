@@ -208,14 +208,14 @@ async function uploadToUploadThing(
   const apiKey = process.env.UPLOADTHING_TOKEN;
 
   if (!apiKey) {
-    // Dev fallback: store as local file reference
-    console.warn("[Assets] No UPLOADTHING_TOKEN — using placeholder URL");
-    return `/api/placeholder/${fileName}`;
+    throw new Error(
+      "UPLOADTHING_TOKEN is missing. Configure it in deployment env before uploading assets."
+    );
   }
 
   // Use UploadThing's server-side presigned upload flow
   const { UTApi } = await import("uploadthing/server");
-  const utapi = new UTApi();
+  const utapi = new UTApi({ token: apiKey });
 
   const arrayBuffer = buffer.buffer.slice(
     buffer.byteOffset,
