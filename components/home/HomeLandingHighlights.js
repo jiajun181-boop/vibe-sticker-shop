@@ -59,9 +59,6 @@ export default function HomeLandingHighlights() {
               <p className="label-xs text-[var(--color-gray-500)]">
                 {tx("home.shopByUseCase", "Shop by Use Case")}
               </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--color-gray-900)] sm:text-3xl">
-                Start From Your Goal
-              </h2>
             </div>
             <Link
               href="/shop"

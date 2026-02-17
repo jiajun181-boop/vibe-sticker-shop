@@ -8,6 +8,9 @@ import {
   computeSha256,
 } from "@/lib/asset-utils";
 
+// Allow longer execution time on Vercel for large uploads
+export const maxDuration = 30;
+
 /**
  * GET /api/admin/assets — Paginated asset list with search/filter.
  */
@@ -188,9 +191,10 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    console.error("[Assets POST] Error:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[Assets POST] Error:", message, err);
     return NextResponse.json(
-      { error: "Failed to upload asset" },
+      { error: `Failed to upload asset: ${message}` },
       { status: 500 }
     );
   }
@@ -198,7 +202,6 @@ export async function POST(request: NextRequest) {
 
 /**
  * Upload file to UploadThing via their server-side upload API.
- * Falls back to a data URL for local dev if UploadThing isn't configured.
  */
 async function uploadToUploadThing(
   buffer: Buffer,
@@ -214,18 +217,18 @@ async function uploadToUploadThing(
   }
 
   // Use UploadThing's server-side presigned upload flow
-  const { UTApi } = await import("uploadthing/server");
+  const { UTApi, UTFile } = await import("uploadthing/server");
   const utapi = new UTApi({ token: apiKey });
 
-  const arrayBuffer = buffer.buffer.slice(
-    buffer.byteOffset,
-    buffer.byteOffset + buffer.byteLength
-  ) as ArrayBuffer;
-  const utFile = new File([arrayBuffer], fileName, { type: mimeType });
+  // Use UTFile instead of native File to avoid Buffer pooling issues on Vercel
+  const utFile = new UTFile([new Uint8Array(buffer)], fileName, {
+    type: mimeType,
+  });
 
   const response = await utapi.uploadFiles(utFile);
 
   if (response.error) {
+    console.error("[UploadThing] Upload failed:", JSON.stringify(response.error));
     throw new Error(`UploadThing error: ${response.error.message}`);
   }
 
