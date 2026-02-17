@@ -63,6 +63,10 @@ function MediaContent() {
   const [bgRemovedPreview, setBgRemovedPreview] = useState(null);
   const [bgSaving, setBgSaving] = useState(false);
 
+  // Page-level drag-and-drop
+  const [pageDragOver, setPageDragOver] = useState(false);
+  const dragCounter = useRef(0);
+
   // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [health, setHealth] = useState(null);
@@ -400,8 +404,11 @@ function MediaContent() {
         const data = await res.json();
 
         if (!res.ok) {
-          setUploadFiles((prev) => prev.map((f) => f.id === entry.id ? { ...f, status: "error" } : f));
+          const errMsg = data.error || "Upload failed";
+          console.error("[Upload failed]", entry.file.name, errMsg);
+          setUploadFiles((prev) => prev.map((f) => f.id === entry.id ? { ...f, status: "error", errorMsg: errMsg } : f));
           errorCount++;
+          if (errorCount === 1) showMsg(errMsg, true);
           continue;
         }
 
@@ -683,7 +690,42 @@ function MediaContent() {
   }
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4 relative"
+      onDragEnter={(e) => {
+        e.preventDefault();
+        dragCounter.current++;
+        if (e.dataTransfer.types.includes("Files")) setPageDragOver(true);
+      }}
+      onDragOver={(e) => e.preventDefault()}
+      onDragLeave={(e) => {
+        e.preventDefault();
+        dragCounter.current--;
+        if (dragCounter.current <= 0) { dragCounter.current = 0; setPageDragOver(false); }
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        dragCounter.current = 0;
+        setPageDragOver(false);
+        if (e.dataTransfer.files?.length) {
+          setShowUpload(true);
+          // Small delay so addFiles runs after modal state is set
+          setTimeout(() => addFiles(e.dataTransfer.files), 50);
+        }
+      }}
+    >
+      {/* Page-level drop overlay */}
+      {pageDragOver && (
+        <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 pointer-events-none">
+          <div className="rounded-lg border-2 border-dashed border-white bg-black/60 px-12 py-8 text-center">
+            <svg className="mx-auto h-12 w-12 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <p className="mt-3 text-sm font-semibold text-white">Drop images to upload</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-black">Media Library</h1>
@@ -1046,7 +1088,7 @@ function MediaContent() {
                           <span className="flex-shrink-0 rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-600">Uploaded</span>
                         )}
                         {entry.status === "error" && (
-                          <span className="flex-shrink-0 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-500">Failed</span>
+                          <span className="flex-shrink-0 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-500" title={entry.errorMsg || ""}>{entry.errorMsg || "Failed"}</span>
                         )}
                       </div>
                     </div>
