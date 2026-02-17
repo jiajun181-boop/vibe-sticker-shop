@@ -15,10 +15,11 @@ export default function AdminLoginPage() {
     fetch("/api/admin/setup")
       .then((r) => r.json())
       .then((data) => {
-        setMode(data.needsSetup ? "setup" : "legacy");
+        // Default to email login for existing admin accounts.
+        setMode(data.needsSetup ? "setup" : "email");
       })
       .catch(() => {
-        setMode("legacy");
+        setMode("email");
       });
   }, []);
 
