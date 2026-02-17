@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -21,211 +20,23 @@ import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaro
 
 import { useFavoritesStore } from "@/lib/favorites";
 import RelatedLinks from "@/components/product/RelatedLinks";
+import RelatedProducts from "@/components/product/RelatedProducts";
+import ProductSpecsSection from "@/components/product/ProductSpecsSection";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
+import {
+  HST_RATE, PRESET_QUANTITIES, INCH_TO_CM,
+  createSizeRowId, normalizeInches, formatCad,
+  parseInventorySignal, applyAllowlist, getStartingUnitPrice,
+  normalizeCheckoutMeta, parseMaterials, parseFinishings,
+  parseAddons, parseScenes, parseSizeOptions, parseQuantityRange,
+  buildVariantConfig,
+} from "@/lib/product-helpers";
 
 const StampEditor = dynamic(() => import("@/components/product/StampEditor"), {
   ssr: false,
   loading: () => <div className="animate-pulse bg-gray-100 rounded-2xl h-64" />,
 });
-
-const HST_RATE = 0.13;
-const PRESET_QUANTITIES = [50, 100, 250, 500, 1000];
-const INCH_TO_CM = 2.54;
-const createSizeRowId = () => `sz_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-const normalizeInches = (value) => {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    if (value >= 500 && value <= 5000) return value / 1000;
-    if (value > 50 && value < 500) return value / 100;
-    if (value > 10 && value <= 50) return value / 10;
-    return value;
-  }
-  if (typeof value === "string") {
-    const cleaned = value.trim().replace(",", ".");
-    const parsed = Number(cleaned);
-    if (Number.isFinite(parsed)) {
-      if (parsed >= 500 && parsed <= 5000) return parsed / 1000;
-      if (parsed > 50 && parsed < 500) return parsed / 100;
-      if (parsed > 10 && parsed <= 50) return parsed / 10;
-      return parsed;
-    }
-  }
-  return null;
-};
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
-
-function parseInventorySignal(optionsConfig) {
-  if (!optionsConfig || typeof optionsConfig !== "object") return null;
-  const raw = optionsConfig.inventory;
-  if (!raw || typeof raw !== "object") return null;
-  const available = Number(raw.available);
-  const lowStockThreshold = Number(raw.lowStockThreshold ?? 5);
-  const restockEta = typeof raw.restockEta === "string" ? raw.restockEta : "";
-  const leadDays = Number(raw.leadDays ?? 0);
-
-  if (Number.isFinite(available)) {
-    if (available <= 0) {
-      return {
-        tone: "amber",
-        label: restockEta
-          ? `Backorder - ETA ${restockEta}`
-          : `Backorder - ships in ${leadDays > 0 ? `${leadDays} days` : "extended lead time"}`,
-      };
-    }
-    if (available <= lowStockThreshold) {
-      return { tone: "amber", label: `Low stock - ${available} left` };
-    }
-    return { tone: "green", label: `In stock - ${available} available` };
-  }
-
-  return null;
-}
-
-function applyAllowlist(items, allowIds) {
-  if (!Array.isArray(items)) return [];
-  if (!Array.isArray(allowIds)) return items;
-  const allow = new Set(allowIds.map(String));
-  return items.filter((x) => x && typeof x === "object" && allow.has(String(x.id)));
-}
-
-function getStartingUnitPrice(option) {
-  const pbq = option?.priceByQty;
-  if (!pbq || typeof pbq !== "object") return null;
-  const entries = Object.entries(pbq)
-    .map(([q, t]) => [Number(q), Number(t)])
-    .filter(([q, t]) => q > 0 && t > 0)
-    .sort((a, b) => a[0] - b[0]);
-  if (entries.length === 0) return null;
-  return Math.round(entries[0][1] / entries[0][0]);
-}
-
-function normalizeCheckoutMeta(meta) {
-  const input = meta && typeof meta === "object" ? meta : {};
-  const out = {};
-  for (const [k, v] of Object.entries(input)) {
-    if (v == null) continue;
-    if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
-      out[k] = v;
-      continue;
-    }
-    try {
-      out[k] = JSON.stringify(v);
-    } catch {
-      out[k] = String(v);
-    }
-  }
-  return out;
-}
-
-function parseMaterials(optionsConfig, presetConfig) {
-  // Priority: pricingPreset materials > optionsConfig materials
-  if (presetConfig && Array.isArray(presetConfig.materials) && presetConfig.materials.length > 0) {
-    return presetConfig.materials
-      .filter((m) => m && typeof m === "object" && m.id)
-      .map((m) => ({
-        id: m.id,
-        name: m.name || m.id,
-        multiplier: typeof m.multiplier === "number" ? m.multiplier : 1.0,
-      }));
-  }
-  if (!optionsConfig || typeof optionsConfig !== "object") return [];
-  const direct = Array.isArray(optionsConfig.materials) ? optionsConfig.materials : [];
-  return direct
-    .map((item) => {
-      if (typeof item === "string") return { id: item, name: item, multiplier: 1.0 };
-      if (item && typeof item === "object" && typeof item.label === "string")
-        return { id: item.id || item.label, name: item.label, multiplier: typeof item.multiplier === "number" ? item.multiplier : 1.0 };
-      return null;
-    })
-    .filter(Boolean);
-}
-
-function parseFinishings(presetConfig) {
-  if (!presetConfig || !Array.isArray(presetConfig.finishings)) return [];
-  return presetConfig.finishings
-    .filter((f) => f && typeof f === "object" && f.id)
-    .map((f) => ({
-      id: f.id,
-      name: f.name || f.id,
-      type: f.type || "flat",
-      price: typeof f.price === "number" ? f.price : 0,
-    }));
-}
-
-function parseAddons(optionsConfig, presetConfig) {
-  // Priority: pricingPreset addons > optionsConfig addons
-  if (presetConfig && Array.isArray(presetConfig.addons) && presetConfig.addons.length > 0) {
-    return presetConfig.addons
-      .filter((a) => a && typeof a === "object" && a.id)
-      .map((a) => ({
-        id: a.id,
-        name: a.name || a.id,
-        description: typeof a.description === "string" ? a.description : "",
-        price: typeof a.price === "number" ? a.price : 0,
-        type: a.type || "per_unit",
-      }));
-  }
-  if (!optionsConfig || typeof optionsConfig !== "object") return [];
-  const list = Array.isArray(optionsConfig.addons) ? optionsConfig.addons : [];
-  return list
-    .filter((addon) => addon && typeof addon === "object" && typeof addon.id === "string")
-    .map((addon) => ({
-      id: addon.id,
-      name: typeof addon.name === "string" ? addon.name : addon.id,
-      description: typeof addon.description === "string" ? addon.description : "",
-      price: typeof addon.price === "number" ? addon.price : 0,
-      type: addon.type || "per_unit",
-    }));
-}
-
-function parseScenes(optionsConfig) {
-  if (!optionsConfig || typeof optionsConfig !== "object") return [];
-  const scenes = Array.isArray(optionsConfig.scenes) ? optionsConfig.scenes : [];
-  return scenes
-    .filter((scene) => scene && typeof scene === "object" && typeof scene.id === "string")
-    .map((scene) => ({
-      id: scene.id,
-      label: typeof scene.label === "string" ? scene.label : scene.id,
-      description: typeof scene.description === "string" ? scene.description : "",
-      defaultMaterial: typeof scene.defaultMaterial === "string" ? scene.defaultMaterial : null,
-      defaultWidthIn: typeof scene.defaultWidthIn === "number" ? scene.defaultWidthIn : null,
-      defaultHeightIn: typeof scene.defaultHeightIn === "number" ? scene.defaultHeightIn : null,
-      defaultAddons: Array.isArray(scene.defaultAddons) ? scene.defaultAddons.filter((id) => typeof id === "string") : [],
-    }));
-}
-
-function parseSizeOptions(optionsConfig) {
-  if (!optionsConfig || typeof optionsConfig !== "object") return [];
-  const sizes = Array.isArray(optionsConfig.sizes) ? optionsConfig.sizes : [];
-  return sizes
-    .filter((item) => item && typeof item === "object" && typeof item.label === "string")
-    .map((item) => ({
-      id: typeof item.id === "string" ? item.id : item.label,
-      label: item.label,
-      displayLabel: typeof item.displayLabel === "string" ? item.displayLabel : null,
-      widthIn: typeof item.widthIn === "number" ? item.widthIn : null,
-      heightIn: typeof item.heightIn === "number" ? item.heightIn : null,
-      notes: typeof item.notes === "string" ? item.notes : "",
-      quantityChoices: Array.isArray(item.quantityChoices)
-        ? item.quantityChoices.map((q) => Number(q)).filter((q) => Number.isFinite(q) && q > 0)
-        : [],
-      priceByQty: item.priceByQty && typeof item.priceByQty === "object" ? item.priceByQty : null,
-      recommended: item.recommended === true,
-    }));
-}
-
-function parseQuantityRange(optionsConfig) {
-  if (!optionsConfig || typeof optionsConfig !== "object") return null;
-  const q = optionsConfig.quantityRange;
-  if (!q || typeof q !== "object") return null;
-  const min = Number(q.min);
-  const max = Number(q.max);
-  const step = Number(q.step || 1);
-  if (!Number.isFinite(min) || !Number.isFinite(max) || min <= 0 || max < min) return null;
-  return { min, max, step: Number.isFinite(step) && step > 0 ? step : 1 };
-}
 
 export default function ProductClient({ product, relatedProducts, embedded = false, catalogConfig }) {
   const addItem = useCartStore((s) => s.addItem);
@@ -259,36 +70,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   const scenes = parseScenes(product.optionsConfig);
   const sizeOptions = parseSizeOptions(product.optionsConfig);
   const quantityRange = parseQuantityRange(product.optionsConfig);
-  const variantConfig = useMemo(() => {
-    const regex = /^(.+)\s+-\s+(.+)$/;
-    const parsed = sizeOptions
-      .map((s) => {
-        const m = typeof s.label === "string" ? s.label.match(regex) : null;
-        if (!m) return null;
-        return { base: m[1], variant: m[2], option: s };
-      })
-      .filter(Boolean);
-
-    if (parsed.length < 2 || parsed.length !== sizeOptions.length)
-      return { enabled: false, bases: [], variants: [], byBase: {}, recommendedBases: new Set() };
-
-    const variantSet = new Set(parsed.map((p) => p.variant));
-    if (variantSet.size < 2)
-      return { enabled: false, bases: [], variants: [], byBase: {}, recommendedBases: new Set() };
-
-    const byBase = {};
-    const recommendedBases = new Set();
-    const seenBases = new Set();
-    const bases = [];
-    for (const p of parsed) {
-      if (!seenBases.has(p.base)) { bases.push(p.base); seenBases.add(p.base); }
-      if (!byBase[p.base]) byBase[p.base] = {};
-      byBase[p.base][p.variant] = p.option;
-      if (p.option.recommended) recommendedBases.add(p.base);
-    }
-    const variants = [...variantSet];
-    return { enabled: true, bases, variants, byBase, recommendedBases };
-  }, [sizeOptions]);
+  const variantConfig = useMemo(() => buildVariantConfig(sizeOptions), [sizeOptions]);
   const smartDefaults = useMemo(() => getSmartDefaults(product), [product]);
   const inventorySignal = useMemo(() => parseInventorySignal(product.optionsConfig), [product.optionsConfig]);
   const turnaroundKey = useMemo(() => getTurnaround(product), [product]);
@@ -1649,6 +1431,132 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               <div className="order-2 mt-5 border-t border-gray-100 pt-4">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-900">Customize options</p>
 
+                {isBusinessCard && (
+                  <div className="mb-5 space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-3 sm:p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-gray-300 bg-white px-2 py-1 text-[11px] font-semibold text-gray-700">Step 1: {t("bc.cardType")}</span>
+                      <span className="rounded-full border border-gray-300 bg-white px-2 py-1 text-[11px] font-semibold text-gray-700">
+                        Step 2: {cardType === "thick" ? t("bc.layers") : t("bc.sides")}
+                      </span>
+                      {multiNameConfig?.enabled && (
+                        <span className="rounded-full border border-gray-300 bg-white px-2 py-1 text-[11px] font-semibold text-gray-700">Step 3: {t("bc.names")}</span>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.cardType")}</p>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {cardTypes.map((ct) => (
+                          <button
+                            key={ct.id}
+                            type="button"
+                            onClick={() => setCardType(ct.id)}
+                            className={`rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
+                              cardType === ct.id
+                                ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                                : "border-gray-200 bg-white text-gray-900 hover:border-gray-400"
+                            }`}
+                          >
+                            <span className="block text-sm font-semibold">{t("bc.type." + ct.id) !== "bc.type." + ct.id ? t("bc.type." + ct.id) : ct.label}</span>
+                            <span className={`block text-[11px] ${cardType === ct.id ? "text-gray-300" : "text-gray-500"}`}>{t("bc.desc." + ct.id) !== "bc.desc." + ct.id ? t("bc.desc." + ct.id) : ct.desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {cardType !== "thick" && sidesOptions.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.sides")}</p>
+                        <div className="mt-2 flex gap-2">
+                          {sidesOptions.map((s) => (
+                            <button
+                              key={s.id}
+                              type="button"
+                              onClick={() => setSides(s.id)}
+                              className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
+                                sides === s.id
+                                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                              }`}
+                            >
+                              {t("bc.side." + s.id) !== "bc.side." + s.id ? t("bc.side." + s.id) : s.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {cardType === "thick" && thickLayers.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.layers")}</p>
+                        <div className="mt-2 flex gap-2">
+                          {thickLayers.map((l) => (
+                            <button
+                              key={l.id}
+                              type="button"
+                              onClick={() => setThickLayer(l.id)}
+                              className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
+                                thickLayer === l.id
+                                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                              }`}
+                            >
+                              {t("bc.layer." + l.id) !== "bc.layer." + l.id ? t("bc.layer." + l.id) : l.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {multiNameConfig?.enabled && (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.names")}</p>
+                        <p className="mt-1 text-xs text-gray-500">{t("bc.namesHint")}</p>
+                        <div className="mt-2 flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setNames((n) => Math.max(1, n - 1))}
+                            className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold"
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            value={names}
+                            min={1}
+                            max={multiNameConfig.maxNames || 20}
+                            onChange={(e) => {
+                              const v = Math.max(1, Math.min(multiNameConfig.maxNames || 20, Math.floor(Number(e.target.value) || 1)));
+                              setNames(v);
+                            }}
+                            className="w-16 rounded-xl border border-gray-300 px-2 py-2 text-center text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setNames((n) => Math.min(multiNameConfig.maxNames || 20, n + 1))}
+                            className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {names > 1 && (
+                          <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                            <p className="text-sm font-semibold text-emerald-800">
+                              {t("bc.totalCards", { names, qty: quantity, total: names * quantity })}
+                            </p>
+                            {quote?.meta?.savingsVsIndividual > 0 && (
+                              <p className="mt-1 text-sm font-semibold text-emerald-600">
+                                {t("bc.savings", { amount: formatCad(quote.meta.savingsVsIndividual) })}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {isTextEditor && (
                   <div className="mt-5 space-y-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("product.textEditor")}</p>
@@ -2014,126 +1922,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     </div>
                   )}
 
-              {isBusinessCard && (
-                <div className="mt-5 space-y-5">
-                  {/* Card Type Grid */}
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.cardType")}</p>
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      {cardTypes.map((ct) => (
-                        <button
-                          key={ct.id}
-                          type="button"
-                          onClick={() => setCardType(ct.id)}
-                          className={`rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
-                            cardType === ct.id
-                              ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
-                              : "border-gray-200 bg-white text-gray-900 hover:border-gray-400"
-                          }`}
-                        >
-                          <span className="block text-sm font-semibold">{t("bc.type." + ct.id) !== "bc.type." + ct.id ? t("bc.type." + ct.id) : ct.label}</span>
-                          <span className={`block text-[11px] ${cardType === ct.id ? "text-gray-300" : "text-gray-500"}`}>{t("bc.desc." + ct.id) !== "bc.desc." + ct.id ? t("bc.desc." + ct.id) : ct.desc}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Sides Radio (hidden for "thick" type) */}
-                  {cardType !== "thick" && sidesOptions.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.sides")}</p>
-                      <div className="mt-2 flex gap-2">
-                        {sidesOptions.map((s) => (
-                          <button
-                            key={s.id}
-                            type="button"
-                            onClick={() => setSides(s.id)}
-                            className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
-                              sides === s.id
-                                ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
-                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                            }`}
-                          >
-                            {t("bc.side." + s.id) !== "bc.side." + s.id ? t("bc.side." + s.id) : s.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Thick Layer Selector */}
-                  {cardType === "thick" && thickLayers.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.layers")}</p>
-                      <div className="mt-2 flex gap-2">
-                        {thickLayers.map((l) => (
-                          <button
-                            key={l.id}
-                            type="button"
-                            onClick={() => setThickLayer(l.id)}
-                            className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
-                              thickLayer === l.id
-                                ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
-                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                            }`}
-                          >
-                            {t("bc.layer." + l.id) !== "bc.layer." + l.id ? t("bc.layer." + l.id) : l.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Names Stepper */}
-                  {multiNameConfig?.enabled && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{t("bc.names")}</p>
-                      <p className="mt-1 text-xs text-gray-500">{t("bc.namesHint")}</p>
-                      <div className="mt-2 flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setNames((n) => Math.max(1, n - 1))}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold"
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          value={names}
-                          min={1}
-                          max={multiNameConfig.maxNames || 20}
-                          onChange={(e) => {
-                            const v = Math.max(1, Math.min(multiNameConfig.maxNames || 20, Math.floor(Number(e.target.value) || 1)));
-                            setNames(v);
-                          }}
-                          className="w-16 rounded-xl border border-gray-300 px-2 py-2 text-center text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setNames((n) => Math.min(multiNameConfig.maxNames || 20, n + 1))}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold"
-                        >
-                          +
-                        </button>
-                      </div>
-
-                      {names > 1 && (
-                        <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                          <p className="text-sm font-semibold text-emerald-800">
-                            {t("bc.totalCards", { names, qty: quantity, total: names * quantity })}
-                          </p>
-                          {quote?.meta?.savingsVsIndividual > 0 && (
-                            <p className="mt-1 text-sm font-semibold text-emerald-600">
-                              {t("bc.savings", { amount: formatCad(quote.meta.savingsVsIndividual) })}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* Multi-name stepper (for split products that have multiName but aren't the old combined card) */}
               {!isBusinessCard && showMultiName && (
                 <div className="mt-5">
@@ -2478,83 +2266,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           </div>
         </section>
 
-        {/* â”€â”€ Quality Guarantee â”€â”€ */}
-        {!embedded && (
-        <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
-          <h2 className="text-lg font-semibold tracking-tight">{t("product.qualityGuarantee")}</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z", title: t("product.qg300dpi"), desc: t("product.qg300dpiDesc") },
-              { icon: "M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z", title: t("product.qgTurnaround"), desc: t("product.qgTurnaroundDesc") },
-              { icon: "M11.42 15.17l-5.59-5.17a8.002 8.002 0 0111.77-1.01l.17.17M21 12a9 9 0 11-18 0 9 9 0 0118 0z", title: t("product.qgCustom"), desc: <Link href="/quote" className="text-gray-900 underline underline-offset-2 hover:text-black">{t("product.qgGetQuote")}</Link> },
-            ].map((item) => (
-              <div key={item.title} className="flex gap-3">
-                <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                </svg>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{item.title}</p>
-                  <p className="mt-0.5 text-xs text-gray-500">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-        )}
+        {!embedded && <ProductSpecsSection specs={specs} productSpecs={productSpecs} t={t} />}
 
-        {/* â”€â”€ North America Print Basics â”€â”€ */}
-        {!embedded && (
-        <section className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
-          <h2 className="text-lg font-semibold tracking-tight">{t("product.printBasicsTitle")}</h2>
-          <p className="mt-1 text-xs text-gray-500">{t("product.printBasicsSubtitle")}</p>
-          <dl className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              ["Bleed", t("product.pbBleed")],
-              ["Safe Area", t("product.pbSafeArea")],
-              ["CMYK", t("product.pbCMYK")],
-              ["DPI", t("product.pbDPI")],
-              ["Text Stock", t("product.pbTextStock")],
-              ["Cardstock", t("product.pbCardstock")],
-              ["Coating", t("product.pbCoating")],
-              ["Lamination", t("product.pbLamination")],
-              ["Turnaround", t("product.pbTurnaround")],
-              ["Proof", t("product.pbProof")],
-            ].map(([term, def]) => (
-              <div key={term} className="flex gap-2">
-                <dt className="text-xs font-semibold text-gray-900 whitespace-nowrap">{term}</dt>
-                <dd className="text-xs text-gray-500">{def}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-        )}
-
-        {!embedded && (
-        <section>
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">{t("product.relatedProducts")}</h2>
-            <Link href={`/shop?category=${product.category}`} className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 hover:text-gray-900">{t("product.viewCategory")}</Link>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {relatedProducts.map((item) => {
-              const relatedImage = getProductImage(item);
-              return (
-                <Link key={item.id} href={`/shop/${item.category}/${item.slug}`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-                  <div className="relative aspect-[4/3] bg-gray-100">
-                    <Image src={relatedImage} alt={item.images?.[0]?.alt || item.name} fill className="object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" unoptimized={isSvgImage(relatedImage)} />
-                  </div>
-                  <div className="p-4">
-                    <p className="text-sm font-semibold">{item.name}</p>
-                    {item.basePrice > 0 && (
-                      <p className="mt-1 text-xs text-gray-600">{t("product.from", { price: formatCad(item.basePrice) })}</p>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-        )}
+        {!embedded && <RelatedProducts product={product} relatedProducts={relatedProducts} t={t} />}
 
         {!embedded && <RelatedLinks product={product} catalogConfig={catalogConfig} />}
 
