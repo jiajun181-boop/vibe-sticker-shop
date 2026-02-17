@@ -1015,7 +1015,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   }
 
   const canAddToCart = sizeValidation.valid && !priceData.unpriced;
-  const totalDisplay = !priceData.unpriced && typeof priceData.total === "number" ? formatCad(priceData.total) : t("product.priceOnRequest");
+  const preTaxDisplay =
+    !priceData.unpriced && typeof priceData.subtotal === "number"
+      ? formatCad(priceData.subtotal)
+      : t("product.priceOnRequest");
   const quickSelection = useMemo(() => {
     const rows = [];
     rows.push({
@@ -1407,7 +1410,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     <div>
                       <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Instant Quote</span>
                       <span className="text-2xl font-bold text-gray-900">
-                        {formatCad(priceData.total)}
+                        {formatCad(priceData.subtotal)}
                       </span>
                       <span className="ml-1 text-xs text-gray-500">{t("product.cad")}</span>
                       {quoteLoading && <span className="ml-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400">Updating</span>}
@@ -1419,9 +1422,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 </div>
 
                 {!priceData.unpriced && (
-                  <p className="mt-1 text-xs text-gray-400">
-                    {t("product.subtotal")}: {formatCad(priceData.subtotal)} + {t("product.tax")}: {formatCad(priceData.tax)}
-                  </p>
+                  <p className="mt-1 text-xs text-gray-400">{t("quote.hstNote")}</p>
                 )}
 
                 <div className="mt-3 rounded-xl border border-gray-200 bg-white p-3">
@@ -2500,7 +2501,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           <div className="pb-safe fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 px-3 py-3 backdrop-blur md:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.08)] sm:px-4">
             <div className="flex items-center gap-3">
               <div className="min-w-0 shrink-0">
-                <p className="text-lg font-black">{totalDisplay}</p>
+                <p className="text-lg font-black">{preTaxDisplay}</p>
               </div>
               <div className="flex flex-1 gap-2">
                 <button
@@ -2526,4 +2527,3 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     </Wrapper>
   );
 }
-
