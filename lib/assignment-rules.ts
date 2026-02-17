@@ -75,7 +75,6 @@ export async function applyAssignmentRules(jobId: string): Promise<boolean> {
           }),
         ]);
 
-        console.log(`[AutoAssign] Job ${jobId} assigned by rule: ${rule.name}`);
         return true;
       }
     }

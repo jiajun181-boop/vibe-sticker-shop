@@ -33,9 +33,7 @@ async function requireAuthenticatedUpload({ req }) {
 export const ourFileRouter = {
   imageUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
     .middleware(requireAuthenticatedUpload)
-    .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Upload complete for user:", metadata?.uploadedBy);
-      console.log("file url", file.url);
+    .onUploadComplete(async ({ metadata }) => {
       return { uploadedBy: metadata?.uploadedBy };
     }),
 
@@ -44,9 +42,7 @@ export const ourFileRouter = {
     pdf: { maxFileSize: "16MB", maxFileCount: 1 },
   })
     .middleware(requireAuthenticatedUpload)
-    .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Artwork upload complete for user:", metadata?.uploadedBy);
-      console.log("file url", file.url);
+    .onUploadComplete(async ({ metadata }) => {
       return { uploadedBy: metadata?.uploadedBy };
     }),
 };

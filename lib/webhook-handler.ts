@@ -46,8 +46,6 @@ export async function handleCheckoutCompleted(
 ) {
   const sessionId = session.id;
 
-  console.log(`[Webhook] Processing session: ${sessionId}`);
-
   // 1. Idempotency check
   const existing = await prisma.order.findUnique({
     where: { stripeSessionId: sessionId },

@@ -63,7 +63,7 @@ const BANNERS_SEGMENTS = [
   {
     key: "banners",
     title: "Banners",
-    slugs: ["vinyl-banners", "mesh-banners", "pole-banners", "canvas-prints", "fabric-banners"],
+    slugs: ["vinyl-banners", "mesh-banners", "pole-banners", "fabric-banners"],
   },
   {
     key: "stands-displays",
@@ -73,7 +73,7 @@ const BANNERS_SEGMENTS = [
   {
     key: "outdoor-signage",
     title: "Outdoor & Signage",
-    slugs: ["flags-hardware", "a-frames-signs", "lawn-yard-signs", "tents-outdoor"],
+    slugs: ["flags-hardware", "tents-outdoor"],
   },
 ];
 
@@ -104,7 +104,7 @@ const STICKERS_SEGMENTS = [
   {
     key: "vinyl-specialty",
     title: "Vinyl & Specialty",
-    slugs: ["vinyl-lettering", "decals", "specialty"],
+    slugs: ["vinyl-lettering"],
   },
   {
     key: "safety-compliance",
@@ -150,7 +150,7 @@ const WINDOWS_WALLS_FLOORS_SEGMENTS = [
   {
     key: "wall-floor",
     title: "Wall & Floor Graphics",
-    slugs: ["wall-graphics", "floor-graphics"],
+    slugs: ["canvas-prints", "wall-graphics", "floor-graphics"],
   },
 ];
 

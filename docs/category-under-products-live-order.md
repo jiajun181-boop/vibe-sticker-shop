@@ -1,6 +1,6 @@
 # Category -> Under -> Products (Live Order)
 
-Generated: 2026-02-17T00:01:02.145Z
+Generated: 2026-02-17T00:20:19.351Z
 
 Total active products: **408**
 
@@ -188,7 +188,7 @@ Total active products: **408**
 - Product Inserts | product-inserts
 - Box Sleeves | box-sleeves
 
-## stickers-labels-decals | Stickers, Labels & Decals (65)
+## stickers-labels-decals | Stickers, Labels & Decals (61)
 
 ### die-cut-stickers (11)
 - Clear Stickers (Singles) | clear-singles
@@ -229,14 +229,6 @@ Total active products: **408**
 ### vinyl-lettering (2)
 - Transfer Vinyl Lettering | transfer-vinyl-lettering
 - Vinyl Lettering | vinyl-lettering
-
-### decals (3)
-- Floor Decals | floor-decals
-- Wall Decals | wall-decals
-- Window Decals | window-decals
-
-### specialty (1)
-- Magnets | magnets-flexible
 
 ### fire-emergency (3)
 - Emergency Exit Signs | emergency-exit-egress-signs-set
@@ -285,14 +277,17 @@ Total active products: **408**
 - Panel Labels | cable-panel-labels
 - Electrical Panel Directory Labels | electrical-panel-labels
 
-## signs-rigid-boards | Signs & Rigid Boards (62)
+## signs-rigid-boards | Signs & Rigid Boards (68)
 
-### yard-signs (10)
+### yard-signs (13)
+- H-Wire Stake | h-stake-wire
+- Real Estate Sign Frame | real-estate-frame
 - Coroplast Signs | coroplast-signs
 - Coroplast Yard Signs | coroplast-yard-signs
 - Directional Arrow Sign | directional-arrow-sign
 - Directional Arrow Signs | directional-arrow-signs
 - Double-Sided Lawn Signs | double-sided-lawn-signs
+- H-Stakes | h-stakes
 - Lawn Signs + H-Stake | lawn-signs-h-stake
 - Yard Sign | yard-sign
 - Yard Sign + H-Frame | yard-sign-h-frame
@@ -314,9 +309,12 @@ Total active products: **408**
 - Photo Board | photo-board
 - Tri-Fold Presentation Board | tri-fold-presentation-board
 
-### a-frame-signs (2)
+### a-frame-signs (5)
 - A-Frame Inserts | a-frame-insert-prints
 - A-Frame Sandwich Board | a-frame-sandwich-board
+- A-Frame Sidewalk Stand | a-frame-sign-stand
+- A-Frame Stand | a-frame-stand
+- Double-Sided A-Frame | a-frame-double-sided
 
 ### election-signs (1)
 - Election / Campaign Sign | election-campaign-sign
@@ -363,7 +361,7 @@ Total active products: **408**
 - Floor Standup Display | floor-standup-display
 - Face-in-Hole Photo Board | face-in-hole-board
 
-## banners-displays | Banners & Displays (83)
+## banners-displays | Banners & Displays (72)
 
 ### vinyl-banners (4)
 - 13oz Vinyl Banner | vinyl-banner-13oz
@@ -381,13 +379,6 @@ Total active products: **408**
 - Pole Banner Hardware Kit | pole-banner-hardware-kit
 - Pole Banners | pole-banners
 - Single-Sided Pole Banner | pole-banner-single-sided
-
-### canvas-prints (5)
-- Canvas Prints - Standard | canvas-prints-standard
-- Framed Canvas Prints | framed-canvas-prints
-- Gallery Wrap Canvas Prints | gallery-wrap-canvas-prints
-- Panoramic Canvas Prints | panoramic-canvas-prints
-- Split Panel Canvas Sets | split-panel-canvas-prints
 
 ### fabric-banners (3)
 - Double-Sided Fabric Banner | fabric-banner-double-sided
@@ -457,16 +448,6 @@ Total active products: **408**
 - Feather Flag — Large | feather-flag-large
 - Teardrop Flag — Medium | teardrop-flag-medium
 
-### a-frames-signs (3)
-- A-Frame Sidewalk Stand | a-frame-sign-stand
-- A-Frame Stand | a-frame-stand
-- Double-Sided A-Frame | a-frame-double-sided
-
-### lawn-yard-signs (3)
-- H-Wire Stake | h-stake-wire
-- Real Estate Sign Frame | real-estate-frame
-- H-Stakes | h-stakes
-
 ### tents-outdoor (5)
 - 10x10 Canopy Tent Frame | tent-frame-10x10
 - Canopy Tent Side Walls Set | tent-walls-set
@@ -474,7 +455,7 @@ Total active products: **408**
 - Tent Half Walls | tent-half-walls
 - Outdoor Canopy Tent 10×10 | outdoor-canopy-tent-10x10
 
-## windows-walls-floors | Windows, Walls & Floors (29)
+## windows-walls-floors | Windows, Walls & Floors (37)
 
 ### static-clings (2)
 - Clear Static Cling | clear-static-cling
@@ -502,12 +483,21 @@ Total active products: **408**
 - Window Lettering | window-lettering-cut-vinyl
 - Window Cut Vinyl Lettering | window-cut-vinyl-lettering
 
-### wall-graphics (3)
+### canvas-prints (5)
+- Canvas Prints - Standard | canvas-prints-standard
+- Framed Canvas Prints | framed-canvas-prints
+- Gallery Wrap Canvas Prints | gallery-wrap-canvas-prints
+- Panoramic Canvas Prints | panoramic-canvas-prints
+- Split Panel Canvas Sets | split-panel-canvas-prints
+
+### wall-graphics (4)
+- Wall Decals | wall-decals
 - Wall Graphics | wall-graphics
 - Wall Murals | wall-murals
 - Custom Wall Mural | wall-mural-graphic
 
-### floor-graphics (6)
+### floor-graphics (7)
+- Floor Decals | floor-decals
 - Floor Graphics | floor-graphics
 - Floor Graphics | lf-floor-graphics
 - Custom Floor Logo Graphic | floor-logo-graphic
@@ -515,13 +505,14 @@ Total active products: **408**
 - Floor Arrows | floor-direction-arrows-set
 - Floor Number Markers | floor-number-markers-set
 
-### window-graphics (4)
+### window-graphics (5)
 - Frosted Film | window-frosted
 - Full Window Graphics | full-window-graphics
 - Perforated Window Film | window-perforated
+- Window Decals | window-decals
 - Window Graphics | window-graphics
 
-## vehicle-graphics-fleet | Vehicle Graphics & Fleet (45)
+## vehicle-graphics-fleet | Vehicle Graphics & Fleet (46)
 
 ### vehicle-wraps (6)
 - Partial Wrap Graphics | partial-wrap-spot-graphics
@@ -547,9 +538,10 @@ Total active products: **408**
 - Custom Bumper Sticker | bumper-sticker-custom
 - Boat Registration Lettering | boat-lettering-registration
 
-### magnetic-signs (4)
+### magnetic-signs (5)
 - Magnetic Car Signs | magnetic-car-signs
 - Magnetic Truck Door Signs | magnetic-truck-door-signs
+- Magnets | magnets-flexible
 - Car Door Magnets (Pair) | car-door-magnets-pair
 - Magnetic Rooftop Car Topper | magnetic-rooftop-sign
 

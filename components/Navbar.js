@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
@@ -31,8 +31,12 @@ export default function Navbar({ catalogConfig }) {
   const desktopDropdownRef = useRef(null);
   const mobileDropdownRef = useRef(null);
   const mobileSearchWrapperRef = useRef(null);
+  const shopMenuWrapperRef = useRef(null);
+  const shopTriggerRef = useRef(null);
+  const shopOpenTimerRef = useRef(null);
+  const shopCloseTimerRef = useRef(null);
   const [shopMenuOpen, setShopMenuOpen] = useState(false);
-  const safeDepartments = departments || [];
+  const safeDepartments = useMemo(() => departments || [], [departments]);
   const [activeShopDept, setActiveShopDept] = useState(safeDepartments[0]?.key || "");
 
   useEffect(() => {
@@ -50,6 +54,38 @@ export default function Navbar({ catalogConfig }) {
       setActiveShopDept(safeDepartments[0].key);
     }
   }, [safeDepartments, activeShopDept]);
+
+  const clearShopMenuTimers = useCallback(() => {
+    if (shopOpenTimerRef.current) {
+      clearTimeout(shopOpenTimerRef.current);
+      shopOpenTimerRef.current = null;
+    }
+    if (shopCloseTimerRef.current) {
+      clearTimeout(shopCloseTimerRef.current);
+      shopCloseTimerRef.current = null;
+    }
+  }, []);
+
+  const openShopMenu = useCallback((delay = 80) => {
+    clearShopMenuTimers();
+    shopOpenTimerRef.current = setTimeout(() => {
+      setShopMenuOpen(true);
+      if (!activeShopDept && safeDepartments[0]?.key) {
+        setActiveShopDept(safeDepartments[0].key);
+      }
+    }, delay);
+  }, [activeShopDept, safeDepartments, clearShopMenuTimers]);
+
+  const closeShopMenu = useCallback((delay = 120) => {
+    clearShopMenuTimers();
+    shopCloseTimerRef.current = setTimeout(() => {
+      setShopMenuOpen(false);
+    }, delay);
+  }, [clearShopMenuTimers]);
+
+  useEffect(() => {
+    return () => clearShopMenuTimers();
+  }, [clearShopMenuTimers]);
 
   // Debounced instant search
   useEffect(() => {
@@ -115,17 +151,12 @@ export default function Navbar({ catalogConfig }) {
   const activeDept =
     safeDepartments.find((dept) => dept.key === activeShopDept) || safeDepartments[0] || null;
   const activeCategories = activeDept?.categories || [];
-  const featuredCategorySlug = activeCategories[0];
-  const featuredCategoryMeta = featuredCategorySlug ? categoryMeta?.[featuredCategorySlug] : null;
-  const getCategoryImage = useCallback(
-    (catSlug) => {
-      const cMeta = categoryMeta?.[catSlug];
-      const label = cMeta?.title || catSlug;
-      return `/api/product-image/${encodeURIComponent(catSlug)}?name=${encodeURIComponent(label)}&category=${encodeURIComponent(catSlug)}`;
-    },
-    [categoryMeta],
-  );
-
+  const activePrimaryHref = (() => {
+    const firstCategory = activeCategories[0];
+    if (!firstCategory) return "/shop";
+    const firstSub = categoryMeta?.[firstCategory]?.subGroups?.[0];
+    return firstSub?.href || `/shop/${firstCategory}`;
+  })();
   // Reusable search dropdown renderer
   const renderSearchDropdown = (refProp) => {
     if (searchQuery.trim().length < 2) return null;
@@ -196,16 +227,50 @@ export default function Navbar({ catalogConfig }) {
 
           {/* Shop mega-menu dropdown */}
           <div
+            ref={shopMenuWrapperRef}
             className="relative"
-            onMouseEnter={() => {
-              setShopMenuOpen(true);
-              if (!activeShopDept && safeDepartments[0]?.key) {
-                setActiveShopDept(safeDepartments[0].key);
+            onMouseEnter={() => openShopMenu(60)}
+            onMouseLeave={() => closeShopMenu(150)}
+            onFocusCapture={() => openShopMenu(0)}
+            onBlurCapture={(e) => {
+              const next = e.relatedTarget;
+              if (!shopMenuWrapperRef.current?.contains(next)) {
+                closeShopMenu(120);
               }
             }}
-            onMouseLeave={() => setShopMenuOpen(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                clearShopMenuTimers();
+                setShopMenuOpen(false);
+                shopTriggerRef.current?.focus();
+                return;
+              }
+              if (e.key === "Enter" && shopMenuOpen) {
+                e.preventDefault();
+                router.push(activePrimaryHref);
+                setShopMenuOpen(false);
+                return;
+              }
+              if (!safeDepartments.length) return;
+              if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+              e.preventDefault();
+              setShopMenuOpen(true);
+              const currentIndex = safeDepartments.findIndex((d) => d.key === activeShopDept);
+              const fallbackIndex = currentIndex < 0 ? 0 : currentIndex;
+              const nextIndex =
+                e.key === "ArrowDown"
+                  ? (fallbackIndex + 1) % safeDepartments.length
+                  : (fallbackIndex - 1 + safeDepartments.length) % safeDepartments.length;
+              setActiveShopDept(safeDepartments[nextIndex].key);
+            }}
           >
-            <Link href="/shop" className="transition-colors duration-200 hover:text-[var(--color-gray-800)]" aria-expanded={shopMenuOpen}>
+            <Link
+              ref={shopTriggerRef}
+              href="/shop"
+              className="transition-colors duration-200 hover:text-[var(--color-gray-800)]"
+              aria-expanded={shopMenuOpen}
+            >
               {t("nav.shop")}
             </Link>
             <div className={`absolute left-1/2 top-full z-40 w-[940px] -translate-x-1/2 pt-2 transition-all duration-200 ${shopMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}>
@@ -233,7 +298,7 @@ export default function Navbar({ catalogConfig }) {
                     </div>
                   </div>
                   <div className="p-4">
-                    <div className="mb-3 grid grid-cols-[1fr_auto] gap-3">
+                    <div className="mb-3 flex items-center justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link href="/quote" className="btn-primary-pill px-3 py-1.5 label-xs">
                           {t("nav.getQuote")}
@@ -241,89 +306,47 @@ export default function Navbar({ catalogConfig }) {
                         <Link href="/shop" className="btn-secondary-pill px-3 py-1.5 label-xs">
                           {t("nav.shopAll")}
                         </Link>
-                        <Link href="/contact" className="btn-secondary-pill px-3 py-1.5 label-xs">
-                          {t("nav.contact")}
-                        </Link>
                       </div>
                       <Link
                         href="/shop"
-                        className="inline-flex items-center gap-1 self-start rounded-full border border-[var(--color-gray-300)] px-3 py-1 label-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
+                        className="inline-flex items-center gap-1 rounded-full border border-[var(--color-gray-300)] px-3 py-1 label-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-800)] hover:text-[var(--color-gray-800)]"
                       >
                         Explore All
                       </Link>
                     </div>
-                    <div className="grid grid-cols-[1fr_220px] gap-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        {activeCategories.slice(0, 8).map((catSlug) => {
-                          const cMeta = categoryMeta?.[catSlug];
-                          return (
-                            <div key={catSlug} className="rounded-xl border border-gray-100 p-3">
-                              <Link href={`/shop/${catSlug}`} className="mb-2 block overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
-                                <Image
-                                  src={getCategoryImage(catSlug)}
-                                  alt={cMeta?.title || catSlug}
-                                  width={360}
-                                  height={140}
-                                  className="h-20 w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
-                                  unoptimized
-                                />
-                              </Link>
+
+                    <div className="space-y-3">
+                      {activeCategories.slice(0, 6).map((catSlug) => {
+                        const cMeta = categoryMeta?.[catSlug];
+                        return (
+                          <div key={catSlug} className="rounded-xl border border-gray-100 bg-white p-3">
+                            <div className="mb-2 flex items-center justify-between gap-3">
                               <Link href={`/shop/${catSlug}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-gray-800)] hover:text-black">
                                 <span>{cMeta?.icon || ""}</span>
                                 <span>{cMeta?.title || catSlug}</span>
                               </Link>
-                              <div className="mt-2 space-y-1">
-                                {(cMeta?.subGroups || []).slice(0, 4).map((sg) => (
-                                  <Link key={sg.slug} href={sg.href} className="block rounded-md px-1 py-0.5 text-xs text-[var(--color-gray-600)] hover:bg-gray-50 hover:text-[var(--color-gray-800)]">
-                                    {sg.title}
-                                  </Link>
-                                ))}
-                              </div>
-                              <Link href={`/shop/${catSlug}`} className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-gray-500)] hover:text-[var(--color-gray-800)]">
+                              <Link href={`/shop/${catSlug}`} className="text-[11px] font-semibold text-[var(--color-gray-500)] hover:text-[var(--color-gray-800)]">
                                 {t("nav.allIn", { category: cMeta?.title || catSlug })} &rarr;
                               </Link>
                             </div>
-                          );
-                        })}
-                      </div>
-                      <div className="rounded-xl border border-[var(--color-gray-200)] bg-gradient-to-b from-[var(--color-paper-cream)] to-white p-3">
-                        <p className="label-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-gray-400)]">
-                          Featured
-                        </p>
-                        <Link href={featuredCategorySlug ? `/shop/${featuredCategorySlug}` : "/shop"} className="mt-2 block overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
-                          <Image
-                            src={getCategoryImage(featuredCategorySlug || "shop")}
-                            alt={featuredCategoryMeta?.title || "Featured category"}
-                            width={260}
-                            height={160}
-                            className="h-24 w-full object-cover"
-                            unoptimized
-                          />
-                        </Link>
-                        <p className="mt-2 text-sm font-semibold text-[var(--color-gray-800)]">
-                          {featuredCategoryMeta?.title || "Shop by category"}
-                        </p>
-                        <p className="mt-1 text-xs text-[var(--color-gray-500)]">
-                          {featuredCategoryMeta?.subGroups?.[0]?.title || "Fast turnaround and business-ready print quality."}
-                        </p>
-                        <Link
-                          href={featuredCategorySlug ? `/shop/${featuredCategorySlug}` : "/shop"}
-                          className="mt-3 inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 text-[11px] font-semibold text-[var(--color-gray-700)] hover:border-gray-900 hover:text-[var(--color-gray-800)]"
-                        >
-                          View Category
-                        </Link>
-                        <div className="mt-4 space-y-1 border-t border-gray-100 pt-3">
-                          <Link href="/faq" className="block text-xs text-[var(--color-gray-600)] hover:text-[var(--color-gray-800)]">
-                            {t("nav.faq")}
-                          </Link>
-                          <Link href="/about" className="block text-xs text-[var(--color-gray-600)] hover:text-[var(--color-gray-800)]">
-                            {t("nav.about")}
-                          </Link>
-                          <Link href="/ideas" className="block text-xs text-[var(--color-gray-600)] hover:text-[var(--color-gray-800)]">
-                            {t("nav.solutions")}
-                          </Link>
-                        </div>
-                      </div>
+                            <div className="grid grid-cols-3 gap-1.5">
+                              {(cMeta?.subGroups || []).slice(0, 12).map((sg, idx) => (
+                                <Link
+                                  key={sg.slug}
+                                  href={sg.href}
+                                  className={`truncate rounded-md px-2 py-1 text-xs hover:bg-gray-50 hover:text-[var(--color-gray-800)] ${
+                                    idx === 0
+                                      ? "bg-[var(--color-paper-cream)] text-[var(--color-gray-800)]"
+                                      : "text-[var(--color-gray-600)]"
+                                  }`}
+                                >
+                                  {sg.title}
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -502,5 +525,3 @@ export default function Navbar({ catalogConfig }) {
     </header>
   );
 }
-
-
