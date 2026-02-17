@@ -13,6 +13,11 @@ const formatCad = (cents) =>
     cents / 100
   );
 
+// Categories that show the sticker configurator CTA banner
+const STICKER_CONFIGURATOR_CATEGORIES = new Set([
+  "stickers-labels-decals",
+]);
+
 const CATEGORY_USE_CASES = {
   "marketing-business-print": [
     { key: "grand-opening", label: "Grand Opening", hint: "flyers postcards door hanger", cta: "引流促销" },
@@ -226,6 +231,28 @@ export default function CategoryLandingClient({
             />
           </div>
         </header>
+
+        {/* Sticker configurator CTA */}
+        {STICKER_CONFIGURATOR_CATEGORIES.has(category) && (
+          <Link
+            href="/order/stickers"
+            className="mt-6 flex items-center gap-4 rounded-2xl border-2 border-gray-900 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 p-4 sm:p-5 text-white transition-all hover:shadow-xl hover:shadow-gray-900/20 group"
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10 sm:h-14 sm:w-14">
+              <svg className="h-7 w-7 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-black sm:text-lg">Build Your Custom Sticker</p>
+              <p className="mt-0.5 text-xs text-gray-300 sm:text-sm">Choose type, size, material & quantity — get instant pricing</p>
+            </div>
+            <div className="hidden sm:flex shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-900 transition-transform group-hover:scale-105">
+              Start Now
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+            </div>
+          </Link>
+        )}
 
         {useCaseCards.length > 0 && (
           <section className="mt-5 rounded-2xl border border-[var(--color-gray-200)] bg-white p-4">

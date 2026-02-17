@@ -3,11 +3,11 @@ import StickerOrderClient from "./StickerOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Stickers — Order Online | Vibe Sticker Shop",
+    title: "Custom Stickers & Labels — Build Your Order | La Lunar Printing",
     description:
       "Order custom die-cut, kiss-cut, sheet, roll, vinyl lettering and decal stickers online. Choose your size, material, and quantity — get instant pricing.",
     openGraph: {
-      title: "Custom Stickers — Order Online",
+      title: "Custom Stickers & Labels — Build Your Order",
       description:
         "Configure and order custom stickers in one step. Die-cut, kiss-cut, sheets, rolls, vinyl lettering, and decals.",
       url: "/order/stickers",
