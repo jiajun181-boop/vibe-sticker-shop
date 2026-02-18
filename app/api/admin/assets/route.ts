@@ -230,11 +230,24 @@ async function uploadToUploadThing(
     type: mimeType,
   });
 
-  const response = await utapi.uploadFiles(utFile);
+  let response;
+  try {
+    response = await utapi.uploadFiles(utFile);
+  } catch (uploadErr) {
+    const msg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr);
+    const cause = uploadErr instanceof Error && uploadErr.cause
+      ? JSON.stringify(uploadErr.cause, null, 2)
+      : "none";
+    console.error("[UploadThing] uploadFiles threw:", msg, "cause:", cause);
+    throw new Error(`UploadThing upload threw: ${msg} | cause: ${cause}`);
+  }
 
   if (response.error) {
-    console.error("[UploadThing] Upload failed:", JSON.stringify(response.error));
-    throw new Error(`UploadThing error: ${response.error.message}`);
+    const errDetail = JSON.stringify(response.error, null, 2);
+    console.error("[UploadThing] Upload failed:", errDetail);
+    throw new Error(
+      `UploadThing error: ${response.error.message} (code: ${response.error.code || "unknown"}) detail: ${errDetail}`
+    );
   }
 
   return response.data.ufsUrl || response.data.url;
