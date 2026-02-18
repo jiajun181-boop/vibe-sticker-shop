@@ -2591,7 +2591,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
         {/* Sticky mobile Add to Cart bar */}
         {stickyVisible && (
-          <div className="pb-safe fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--color-gray-200)] bg-white/95 px-3 py-3 backdrop-blur md:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.08)] sm:px-4">
+          <div
+            className="fixed left-2 right-2 z-[55] rounded-2xl border border-[var(--color-gray-200)] bg-white px-3 py-3 md:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.10)] sm:px-4"
+            style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom) + 8px)" }}
+          >
             <div className="flex items-center gap-3">
               <div className="min-w-0 shrink-0">
                 <p className="text-lg font-black">{preTaxDisplay}</p>

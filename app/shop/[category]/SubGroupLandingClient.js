@@ -2,10 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { ShapeIcon, getShapeBg } from "@/components/stickers/ShapeIcon";
+import DiscountBadge from "@/components/stickers/DiscountBadge";
+import TrustBadgeBar from "@/components/stickers/TrustBadgeBar";
+import MiniConfigurator from "@/components/stickers/MiniConfigurator";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -21,10 +25,22 @@ function hashCode(str) {
   return Math.abs(h);
 }
 
-function SubGroupCard({ group, t, maxCount }) {
+/* ─── Enhanced Sub-Group Card ─── */
+function SubGroupCard({ group, t, maxCount, stickerConfig, isExpanded, onExpand }) {
   const [hovered, setHovered] = useState(false);
   const inquiryCount = 5 + (hashCode(group.slug) % 42);
   const barWidth = maxCount > 0 ? Math.max(8, Math.round((group.count / maxCount) * 100)) : 0;
+  const hasConfigurator = !!stickerConfig;
+
+  const handleClick = useCallback(
+    (e) => {
+      if (hasConfigurator) {
+        e.preventDefault();
+        onExpand(isExpanded ? null : group.slug);
+      }
+    },
+    [hasConfigurator, isExpanded, onExpand, group.slug]
+  );
 
   return (
     <div
@@ -33,117 +49,43 @@ function SubGroupCard({ group, t, maxCount }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <Link
-        href={group.href}
-        className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-[var(--color-gray-400)]"
-      >
-        {/* Preview images or placeholder */}
-        <div className="relative aspect-[4/3] bg-[var(--color-gray-100)]">
-          {group.previews?.length > 0 ? (
-            <div className="grid h-full w-full grid-cols-3">
-              {group.previews.slice(0, 3).map((url, i) => (
-                <div key={i} className="relative overflow-hidden">
-                  <Image
-                    src={url}
-                    alt=""
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 768px) 33vw, 15vw"
-                    unoptimized={url.endsWith(".svg")}
-                  />
-                </div>
-              ))}
-              {group.previews.length < 3 &&
-                Array.from({ length: 3 - group.previews.length }).map((_, i) => (
-                  <div key={`empty-${i}`} className="bg-[var(--color-gray-50)]" />
-                ))}
-            </div>
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--color-gray-50)] to-[var(--color-gray-100)]">
-              <svg
-                className="h-10 w-10 text-[var(--color-gray-200)]"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                />
-              </svg>
-            </div>
-          )}
+      {hasConfigurator ? (
+        <button
+          type="button"
+          onClick={handleClick}
+          className={`group flex w-full flex-col overflow-hidden rounded-2xl border bg-white text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
+            isExpanded
+              ? "border-[var(--color-gray-900)] ring-2 ring-[var(--color-gray-900)]/10 shadow-lg"
+              : "border-[var(--color-gray-200)] hover:border-[var(--color-gray-400)]"
+          }`}
+        >
+          <CardInner
+            group={group}
+            t={t}
+            barWidth={barWidth}
+            inquiryCount={inquiryCount}
+            stickerConfig={stickerConfig}
+            ctaLabel="Configure"
+          />
+        </button>
+      ) : (
+        <Link
+          href={group.href}
+          className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-[var(--color-gray-400)]"
+        >
+          <CardInner
+            group={group}
+            t={t}
+            barWidth={barWidth}
+            inquiryCount={inquiryCount}
+            stickerConfig={null}
+            ctaLabel={t("mp.landing.browse")}
+          />
+        </Link>
+      )}
 
-          {/* Corner badges */}
-          {(group.hasNew || group.hasFeatured) && (
-            <div className="absolute top-2 left-2 flex gap-1">
-              {group.hasNew && (
-                <span className="rounded-md bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
-                  {t("shop.badge.new")}
-                </span>
-              )}
-              {group.hasFeatured && !group.hasNew && (
-                <span className="rounded-md bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
-                  {t("shop.badge.popular")}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Content */}
-        <div className="flex flex-1 flex-col p-3 sm:p-4">
-          <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-moon-gold)] transition-colors">
-            {group.title}
-          </h3>
-
-          {/* Product count + bar */}
-          {group.count > 0 && (
-            <div className="mt-1.5 flex items-center gap-2">
-              <div className="h-1 flex-1 rounded-full bg-[var(--color-gray-100)] overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-[var(--color-gray-300)] transition-all duration-500 group-hover:bg-gray-500"
-                  style={{ width: `${barWidth}%` }}
-                />
-              </div>
-              <span className="text-[10px] font-medium text-[var(--color-gray-400)] tabular-nums shrink-0">
-                {group.count}
-              </span>
-            </div>
-          )}
-
-          {/* Turnaround + Price badges */}
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {group.turnaround && (
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${turnaroundColor(group.turnaround)}`}>
-                {t(turnaroundI18nKey(group.turnaround))}
-              </span>
-            )}
-            {group.minPrice > 0 && (
-              <span className="text-[11px] font-semibold text-[var(--color-gray-700)]">
-                {t("product.from", { price: formatCad(group.minPrice) })}
-              </span>
-            )}
-          </div>
-
-          {/* Social proof */}
-          <p className="mt-1 text-[10px] text-[var(--color-gray-400)]">
-            {t("shop.inquiredRecently", { count: inquiryCount })}
-          </p>
-
-          <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] group-hover:text-[var(--color-gray-900)] transition-colors">
-            {t("mp.landing.browse")}
-            <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-          </span>
-        </div>
-      </Link>
-
-      {/* Hover preview popover (desktop only) */}
-      {hovered && group.topProducts?.length > 0 && (
+      {/* Hover preview popover (desktop only, non-configurator cards) */}
+      {!hasConfigurator && hovered && group.topProducts?.length > 0 && (
         <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-full z-20 mt-1 w-56 rounded-xl border border-[var(--color-gray-200)] bg-white p-3 shadow-xl pointer-events-none animate-in fade-in-0 zoom-in-95 duration-150">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)] mb-2">
             {t("shop.hoverViewProducts")}
@@ -184,6 +126,114 @@ function SubGroupCard({ group, t, maxCount }) {
   );
 }
 
+/* ─── Shared card inner content ─── */
+function CardInner({ group, t, barWidth, inquiryCount, stickerConfig, ctaLabel }) {
+  return (
+    <>
+      {/* Preview area */}
+      <div className="relative aspect-[4/3] bg-[var(--color-gray-100)]">
+        {stickerConfig ? (
+          /* Shape icon for sticker configurator cards */
+          <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${getShapeBg(stickerConfig.cuttingTypeId)}`}>
+            <ShapeIcon type={stickerConfig.cuttingTypeId} className="h-16 w-16 drop-shadow-sm" />
+          </div>
+        ) : group.previews?.length > 0 ? (
+          <div className="grid h-full w-full grid-cols-3">
+            {group.previews.slice(0, 3).map((url, i) => (
+              <div key={i} className="relative overflow-hidden">
+                <Image
+                  src={url}
+                  alt=""
+                  fill
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  sizes="(max-width: 768px) 33vw, 15vw"
+                  unoptimized={url.endsWith(".svg")}
+                />
+              </div>
+            ))}
+            {group.previews.length < 3 &&
+              Array.from({ length: 3 - group.previews.length }).map((_, i) => (
+                <div key={`empty-${i}`} className="bg-[var(--color-gray-50)]" />
+              ))}
+          </div>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--color-gray-50)] to-[var(--color-gray-100)]">
+            <svg className="h-10 w-10 text-[var(--color-gray-200)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+          </div>
+        )}
+
+        {/* Corner badges */}
+        <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+          {group.hasNew && (
+            <span className="rounded-md bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
+              {t("shop.badge.new")}
+            </span>
+          )}
+          {group.hasFeatured && !group.hasNew && (
+            <span className="rounded-md bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
+              {t("shop.badge.popular")}
+            </span>
+          )}
+          {stickerConfig && (
+            <DiscountBadge quantities={stickerConfig.quantities} />
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-moon-gold)] transition-colors">
+          {group.title}
+        </h3>
+
+        {/* Product count + bar */}
+        {group.count > 0 && (
+          <div className="mt-1.5 flex items-center gap-2">
+            <div className="h-1 flex-1 rounded-full bg-[var(--color-gray-100)] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[var(--color-gray-300)] transition-all duration-500 group-hover:bg-gray-500"
+                style={{ width: `${barWidth}%` }}
+              />
+            </div>
+            <span className="text-[10px] font-medium text-[var(--color-gray-400)] tabular-nums shrink-0">
+              {group.count}
+            </span>
+          </div>
+        )}
+
+        {/* Turnaround + Price badges */}
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {group.turnaround && (
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${turnaroundColor(group.turnaround)}`}>
+              {t(turnaroundI18nKey(group.turnaround))}
+            </span>
+          )}
+          {group.minPrice > 0 && (
+            <span className="text-[11px] font-semibold text-[var(--color-gray-700)]">
+              {t("product.from", { price: formatCad(group.minPrice) })}
+            </span>
+          )}
+        </div>
+
+        {/* Social proof */}
+        <p className="mt-1 text-[10px] text-[var(--color-gray-400)]">
+          {t("shop.inquiredRecently", { count: inquiryCount })}
+        </p>
+
+        <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] group-hover:text-[var(--color-gray-900)] transition-colors">
+          {ctaLabel}
+          <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </span>
+      </div>
+    </>
+  );
+}
+
+/* ─── Main Landing Client ─── */
 export default function SubGroupLandingClient({
   category,
   categoryTitle,
@@ -192,11 +242,16 @@ export default function SubGroupLandingClient({
   groupedSubGroups = [],
   siblingCategories = [],
   totalCount,
+  stickerConfigData = {},
 }) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [activeSlug, setActiveSlug] = useState(null);
+  const [expandedCard, setExpandedCard] = useState(null);
   const pillBarRef = useRef(null);
+  const expandRef = useRef(null);
+
+  const isStickersCategory = category === "stickers-labels-decals";
 
   const maxCount = useMemo(
     () => Math.max(...subGroups.map((sg) => sg.count || 0), 1),
@@ -216,7 +271,6 @@ export default function SubGroupLandingClient({
           if (entry.isIntersecting) {
             const slug = entry.target.id.replace("sg-", "");
             setActiveSlug(slug);
-            // scroll the active pill into view
             const pill = pillBarRef.current?.querySelector(`[data-pill="${slug}"]`);
             if (pill) pill.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
             break;
@@ -229,6 +283,17 @@ export default function SubGroupLandingClient({
     els.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, [subGroups]);
+
+  // Scroll expanded configurator into view
+  useEffect(() => {
+    if (expandedCard && expandRef.current) {
+      expandRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [expandedCard]);
+
+  const handleExpand = useCallback((slug) => {
+    setExpandedCard(slug);
+  }, []);
 
   const filteredSubGroups = useMemo(() => {
     if (!search.trim()) return subGroups;
@@ -266,6 +331,9 @@ export default function SubGroupLandingClient({
           <p className="mt-1 text-sm text-[var(--color-gray-500)]">
             {totalCount} {t("mp.landing.products")}
           </p>
+
+          {/* Trust badges for stickers category */}
+          {isStickersCategory && <TrustBadgeBar />}
 
           {/* Search */}
           <div className="relative mt-4 w-full sm:w-72">
@@ -315,18 +383,46 @@ export default function SubGroupLandingClient({
                   {segment.title}
                 </h2>
                 <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-                  {segment.items.map((group) => (
-                    <SubGroupCard key={group.slug} group={group} t={t} maxCount={maxCount} />
-                  ))}
+                  {segment.items.map((group) => {
+                    const config = stickerConfigData[group.slug] || null;
+                    const isExpanded = expandedCard === group.slug;
+                    return (
+                      <SubGroupCardWithExpand
+                        key={group.slug}
+                        group={group}
+                        t={t}
+                        maxCount={maxCount}
+                        stickerConfig={config}
+                        isExpanded={isExpanded}
+                        onExpand={handleExpand}
+                        expandRef={isExpanded ? expandRef : null}
+                        expandedCard={expandedCard}
+                      />
+                    );
+                  })}
                 </div>
               </section>
             ))}
           </div>
         ) : (
           <div className={`grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 ${subGroups.length > 4 ? "mt-4" : "mt-8"}`}>
-            {filteredSubGroups.map((group) => (
-              <SubGroupCard key={group.slug} group={group} t={t} maxCount={maxCount} />
-            ))}
+            {filteredSubGroups.map((group) => {
+              const config = stickerConfigData[group.slug] || null;
+              const isExpanded = expandedCard === group.slug;
+              return (
+                <SubGroupCardWithExpand
+                  key={group.slug}
+                  group={group}
+                  t={t}
+                  maxCount={maxCount}
+                  stickerConfig={config}
+                  isExpanded={isExpanded}
+                  onExpand={handleExpand}
+                  expandRef={isExpanded ? expandRef : null}
+                  expandedCard={expandedCard}
+                />
+              );
+            })}
           </div>
         )}
 
@@ -422,6 +518,34 @@ export default function SubGroupLandingClient({
   );
 }
 
+/* ─── Card + Expandable Mini-Configurator wrapper ─── */
+function SubGroupCardWithExpand({ group, t, maxCount, stickerConfig, isExpanded, onExpand, expandRef, expandedCard }) {
+  return (
+    <>
+      <SubGroupCard
+        group={group}
+        t={t}
+        maxCount={maxCount}
+        stickerConfig={stickerConfig}
+        isExpanded={isExpanded}
+        onExpand={onExpand}
+      />
+      {/* Expanded mini-configurator — spans full grid width */}
+      {isExpanded && stickerConfig && (
+        <div
+          ref={expandRef}
+          className="col-span-full animate-in slide-in-from-top-2 fade-in-0 duration-200"
+        >
+          <MiniConfigurator
+            cuttingTypeId={stickerConfig.cuttingTypeId}
+            onClose={() => onExpand(null)}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
 function QuickQuoteFAB({ t }) {
   const [show, setShow] = useState(false);
 
@@ -435,7 +559,8 @@ function QuickQuoteFAB({ t }) {
   return (
     <Link
       href="/quote"
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-[var(--color-gray-900)] px-5 py-3 pb-safe text-white shadow-lg transition-all hover:bg-black hover:shadow-xl hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-4 duration-300"
+      className="fixed right-4 z-50 flex items-center gap-2 rounded-xl bg-[var(--color-gray-900)] px-4 py-2.5 text-white shadow-lg transition-all hover:bg-black animate-in fade-in-0 slide-in-from-bottom-4 duration-300 md:hidden"
+      style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom) + 8px)" }}
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />

@@ -77,6 +77,8 @@ html, body {
   color: var(--foreground);
   font-family: var(--font-brand, system-ui), -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+  overflow-x: clip;
 }
 
 html {
@@ -196,6 +198,25 @@ input:focus, textarea:focus, select:focus {
 .hover-lift-subtle:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-medium);
+}
+
+@media (max-width: 767px) {
+  /* Performance-first mobile: disable expensive reveal/hover motion. */
+  .animate-on-scroll,
+  .animate-slide-left,
+  .animate-scale-in {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .hover-lift,
+  .hover-lift-subtle,
+  .hover-lift:hover,
+  .hover-lift-subtle:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════

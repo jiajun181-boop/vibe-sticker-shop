@@ -182,6 +182,83 @@ const PRODUCTS = [
       ],
     },
   },
+
+  // === New specialty products (sortOrder 14–18) ===
+  {
+    slug: "sticker-packs",
+    name: "Custom Sticker Packs",
+    description: "Pre-packaged sticker sets on sheets. Great for retail, events, and promotional bundles.",
+    basePrice: 3200,
+    sortOrder: 14,
+    optionsConfig: {
+      pricingModel: "OPTIONS_EXACT_QTY",
+      sizes: [
+        { label: '4" \u00d7 6"', w: 4, h: 6, priceByQty: { 10: 3200, 25: 5400, 50: 8700, 100: 14200, 250: 27400, 500: 43900 } },
+        { label: '5" \u00d7 7"', w: 5, h: 7, priceByQty: { 10: 3900, 25: 6500, 50: 10500, 100: 17500, 250: 32900, 500: 52700 } },
+        { label: '8.5" \u00d7 11"', w: 8.5, h: 11, priceByQty: { 10: 5400, 25: 8700, 50: 14200, 100: 24100, 250: 43900, 500: 71400 } },
+      ],
+    },
+  },
+  {
+    slug: "transfer-stickers",
+    name: "Transfer Stickers",
+    description: "Transfer vinyl stickers for smooth application on curved and textured surfaces.",
+    basePrice: 3500,
+    sortOrder: 15,
+    optionsConfig: {
+      pricingModel: "OPTIONS_EXACT_QTY",
+      sizes: [
+        { label: '2" \u00d7 2"', w: 2, h: 2, priceByQty: { 25: 3500, 50: 4700, 100: 7100, 250: 11900, 500: 19100, 1000: 29900 } },
+        { label: '3" \u00d7 3"', w: 3, h: 3, priceByQty: { 25: 4700, 50: 6600, 100: 9500, 250: 16700, 500: 26300, 1000: 41900 } },
+        { label: '4" \u00d7 4"', w: 4, h: 4, priceByQty: { 25: 5900, 50: 8300, 100: 11900, 250: 21500, 500: 33500, 1000: 53900 } },
+      ],
+    },
+  },
+  {
+    slug: "static-cling-stickers",
+    name: "Static Cling Stickers",
+    description: "Removable static cling stickers with no adhesive. Easy on, easy off \u2014 perfect for windows and glass.",
+    basePrice: 4300,
+    sortOrder: 16,
+    optionsConfig: {
+      pricingModel: "OPTIONS_EXACT_QTY",
+      sizes: [
+        { label: '3" \u00d7 3"', w: 3, h: 3, priceByQty: { 25: 4300, 50: 6100, 100: 8700, 250: 15300, 500: 24100, 1000: 38400 } },
+        { label: '4" \u00d7 4"', w: 4, h: 4, priceByQty: { 25: 5400, 50: 7600, 100: 10900, 250: 19700, 500: 30700, 1000: 49400 } },
+        { label: '6" \u00d7 6"', w: 6, h: 6, priceByQty: { 25: 7500, 50: 10600, 100: 15200, 250: 27500, 500: 42900, 1000: 69000 } },
+      ],
+    },
+  },
+  {
+    slug: "magnet-stickers",
+    name: "Magnet Stickers",
+    description: "Flexible magnetic vinyl stickers. Stick to any metal surface without adhesive \u2014 reusable and repositionable.",
+    basePrice: 2900,
+    sortOrder: 17,
+    optionsConfig: {
+      pricingModel: "OPTIONS_EXACT_QTY",
+      sizes: [
+        { label: '2" \u00d7 3.5"', w: 2, h: 3.5, priceByQty: { 10: 2900, 25: 4900, 50: 7900, 100: 12900, 250: 24900, 500: 39900 } },
+        { label: '4" \u00d7 6"', w: 4, h: 6, priceByQty: { 10: 4900, 25: 8900, 50: 14900, 100: 24900, 250: 44900, 500: 74900 } },
+        { label: '5" \u00d7 7"', w: 5, h: 7, priceByQty: { 10: 5900, 25: 10900, 50: 17900, 100: 29900, 250: 54900, 500: 89900 } },
+      ],
+    },
+  },
+  {
+    slug: "reflective-stickers",
+    name: "Reflective Stickers",
+    description: "High-visibility reflective vinyl stickers. Reflect light for safety and visibility in low-light conditions.",
+    basePrice: 3300,
+    sortOrder: 18,
+    optionsConfig: {
+      pricingModel: "OPTIONS_EXACT_QTY",
+      sizes: [
+        { label: '2" \u00d7 2"', w: 2, h: 2, priceByQty: { 25: 3300, 50: 4500, 100: 6800, 250: 11400, 500: 18300, 1000: 28600 } },
+        { label: '3" \u00d7 3"', w: 3, h: 3, priceByQty: { 25: 4500, 50: 6300, 100: 9100, 250: 16000, 500: 25200, 1000: 40100 } },
+        { label: '4" \u00d7 4"', w: 4, h: 4, priceByQty: { 25: 5600, 50: 7900, 100: 11400, 250: 20600, 500: 32100, 1000: 51600 } },
+      ],
+    },
+  },
 ];
 
 // ─── Main ────────────────────────────────────────────────────────

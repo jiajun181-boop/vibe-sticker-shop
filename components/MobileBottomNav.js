@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -80,12 +80,12 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-[60] bg-black/40 transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`fixed inset-0 z-[60] bg-black/40 ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={onClose}
       />
 
       {/* Drawer */}
-      <div className={`fixed inset-y-0 left-0 z-[61] w-80 bg-white shadow-2xl transition-transform duration-300 ease-out ${open ? "translate-x-0" : "-translate-x-full"}`}>
+      <div className={`fixed inset-y-0 left-0 z-[61] w-80 bg-white shadow-2xl transition-transform duration-200 ease-out ${open ? "translate-x-0" : "-translate-x-full"}`}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--color-gray-100)] px-5 py-4">
           <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--color-gray-800)]">
@@ -205,10 +205,34 @@ export default function MobileBottomNav({ catalogConfig }) {
 
   const [cartCount, setCartCount] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const navRef = useRef(null);
 
   useEffect(() => {
     setCartCount(storeCount);
   }, [storeCount]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const updateOffset = () => {
+      const h = Math.ceil(navRef.current?.offsetHeight || 72);
+      root.style.setProperty("--mobile-nav-offset", `${h}px`);
+    };
+
+    updateOffset();
+    window.addEventListener("resize", updateOffset);
+
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined" && navRef.current) {
+      ro = new ResizeObserver(updateOffset);
+      ro.observe(navRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateOffset);
+      if (ro) ro.disconnect();
+      root.style.setProperty("--mobile-nav-offset", "72px");
+    };
+  }, []);
 
   // Close drawers on route change
   useEffect(() => {
@@ -265,9 +289,9 @@ export default function MobileBottomNav({ catalogConfig }) {
       />
 
       {/* Spacer so content isn't hidden behind the fixed nav */}
-      <div className="h-16 md:hidden" />
+      <div className="md:hidden" style={{ height: "var(--mobile-nav-offset, 72px)" }} />
 
-      <nav className="fixed bottom-0 left-0 right-0 z-[50] border-t border-[var(--color-gray-200)] bg-white/95 backdrop-blur md:hidden pb-safe">
+      <nav ref={navRef} className="fixed bottom-0 left-0 right-0 z-[50] border-t border-[var(--color-gray-200)] bg-white md:hidden pb-safe">
         <div className="flex items-center justify-around px-1 py-1.5">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -298,7 +322,7 @@ export default function MobileBottomNav({ catalogConfig }) {
                   key={tab.key}
                   type="button"
                   onClick={tab.action}
-                  className="flex-1 flex items-center justify-center py-1 transition-colors"
+                  className="flex-1 flex items-center justify-center py-1.5 transition-colors"
                 >
                   {content}
                 </button>
@@ -309,7 +333,7 @@ export default function MobileBottomNav({ catalogConfig }) {
               <Link
                 key={tab.key}
                 href={tab.href}
-                className="flex-1 flex items-center justify-center py-1 transition-colors"
+                className="flex-1 flex items-center justify-center py-1.5 transition-colors"
               >
                 {content}
               </Link>

@@ -7,14 +7,11 @@ import { OrganizationSchema, WebSiteSchema } from "@/components/JsonLd";
 import HowItWorks from "@/components/home/HowItWorks";
 import FeaturedBanner from "@/components/home/FeaturedBanner";
 import TrustSignals from "@/components/home/TrustSignals";
-import BundlesSection from "@/components/home/BundlesSection";
 import QuoteCalculator from "@/components/home/QuoteCalculator";
-import UseCaseSection from "@/components/home/UseCaseSection";
 import DualEntryHero from "@/components/home/DualEntryHero";
 import QuickOrderStrip from "@/components/home/QuickOrderStrip";
 import ReorderStrip from "@/components/home/ReorderStrip";
 import HomeScrollWrapper from "@/components/home/HomeScrollWrapper";
-import HomeLandingHighlights from "@/components/home/HomeLandingHighlights";
 
 export const revalidate = 60;
 
@@ -119,12 +116,7 @@ export default async function HomePage() {
         {/* 1. Hero */}
         <DualEntryHero totalCount={totalCount} />
 
-        {/* 2. Entry Highlights */}
-        <section className="bg-[linear-gradient(180deg,var(--color-paper-white),var(--color-gray-50))]">
-          <HomeLandingHighlights />
-        </section>
-
-        {/* 3. Popular Products */}
+        {/* 2. Popular Products */}
         <section className="py-20 bg-[var(--color-gray-50)]">
           <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <QuickOrderStrip products={serializedQuickProducts} />
@@ -188,23 +180,10 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* 6. Shop by Use Case */}
-        <section className="py-20 bg-[var(--color-gray-50)] animate-on-scroll">
-          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
-            <UseCaseSection />
-          </div>
-        </section>
-
-        {/* 7. Trust Signals */}
+        {/* 5. Trust Signals + How It Works */}
         <section className="py-20 bg-white animate-on-scroll">
-          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4 space-y-16">
             <TrustSignals />
-          </div>
-        </section>
-
-        {/* 8. How It Works */}
-        <section className="py-20 bg-white animate-on-scroll">
-          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <HowItWorks />
           </div>
         </section>
@@ -225,12 +204,6 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* 11. Bundles */}
-        <section className="py-20 bg-[var(--color-gray-50)] animate-on-scroll">
-          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
-            <BundlesSection />
-          </div>
-        </section>
       </div>
     </HomeScrollWrapper>
   );

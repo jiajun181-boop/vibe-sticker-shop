@@ -219,6 +219,18 @@ export default async function ProductPage({ params }) {
     );
   }
 
+  // ── Old slug redirect: child product slug → variant page with ?style= ──
+  // Must come BEFORE sub-product and regular product lookups, because
+  // these slugs (e.g. "die-cut-singles") exist in the DB and would
+  // otherwise render as standalone product pages.
+  const variantParent = getVariantParent(decodedSlug);
+  if (variantParent) {
+    const parentConfig = getVariantConfig(variantParent);
+    if (parentConfig && parentConfig.category === decodedCategory) {
+      redirect(`/shop/${decodedCategory}/${variantParent}?style=${decodedSlug}`);
+    }
+  }
+
   // ── Sub-product landing: parent slug → show child products as card grid ──
   const subCfg = getSubProducts(decodedSlug);
   if (subCfg) {
@@ -285,11 +297,10 @@ export default async function ProductPage({ params }) {
   }
 
   // ── Category configurator: check all configurator types via unified router ──
-  // Skip configurator redirect for custom-stickers — those products have their own detail pages.
   const configurator = getConfiguratorForSlug(decodedSlug);
-  if (configurator && decodedCategory !== "custom-stickers") {
+  if (configurator) {
     const CONFIGURATOR_COMPONENTS = {
-      stickers: <StickerOrderClient defaultType={configurator.defaultValue} />,
+      stickers: <StickerOrderClient defaultType={configurator.defaultValue} lockedType={true} />,
       booklets: <BookletOrderClient defaultBinding={configurator.defaultValue} />,
       ncr: <NcrOrderClient defaultType={configurator.defaultValue} />,
       banners: <BannerOrderClient defaultType={configurator.defaultValue} />,
@@ -326,12 +337,6 @@ export default async function ProductPage({ params }) {
   });
 
   if (!product) {
-    // Old slug redirect: if this slug belongs to a variant page, redirect there
-    const variantParent = getVariantParent(decodedSlug);
-    if (variantParent) {
-      redirect(`/shop/${decodedCategory}/${variantParent}?style=${decodedSlug}`);
-    }
-
     // Try finding in any category and redirect
     const fallback = await prisma.product.findUnique({
       where: { slug: decodedSlug },

@@ -27,6 +27,9 @@ const STICKER_COST_PLUS_CONFIG = {
     "holographic":     { costPerSqft: 0.85, label: "Holographic Film" },
     "reflective":      { costPerSqft: 0.40, label: "Reflective Vinyl" },
     "floor-vinyl":     { costPerSqft: 0.75, label: "Floor Vinyl + Anti-Slip Lam" },
+    "transfer-vinyl":  { costPerSqft: 0.45, label: "Transfer Vinyl" },
+    "static-cling-white": { costPerSqft: 0.44, label: "Static Cling (White)" },
+    "magnetic-vinyl":  { costPerSqft: 1.00, label: "Magnetic Vinyl" },
   },
   defaultMaterial: "white-vinyl",
 
@@ -129,6 +132,26 @@ const PRODUCT_DEFAULTS = {
   "floor-decals": {
     material: "floor-vinyl", printMode: "cmyk", cutType: "contour",
     minDimensionIn: 1, maxWidthIn: 53, maxHeightIn: 53,
+  },
+  "sticker-packs": {
+    material: "white-vinyl", printMode: "cmyk", cutType: "rectangular",
+    minDimensionIn: 2, maxWidthIn: 12, maxHeightIn: 18,
+  },
+  "transfer-stickers": {
+    material: "transfer-vinyl", printMode: "cmyk", cutType: "contour",
+    minDimensionIn: 0.5, maxWidthIn: 53, maxHeightIn: 53,
+  },
+  "static-cling-stickers": {
+    material: "static-cling-white", printMode: "cmyk", cutType: "contour",
+    minDimensionIn: 1, maxWidthIn: 47, maxHeightIn: 47,
+  },
+  "magnet-stickers": {
+    material: "magnetic-vinyl", printMode: "cmyk", cutType: "rectangular",
+    minDimensionIn: 1, maxWidthIn: 24, maxHeightIn: 36,
+  },
+  "reflective-stickers": {
+    material: "reflective", printMode: "cmyk", cutType: "contour",
+    minDimensionIn: 0.5, maxWidthIn: 53, maxHeightIn: 53,
   },
   // Roll labels: outsourced, NO custom sizes
   // "roll-labels", "clear-labels", "kraft-paper-labels" → skip

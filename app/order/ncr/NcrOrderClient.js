@@ -485,7 +485,10 @@ export default function NcrOrderClient({ defaultType }) {
       </div>
 
       {/* ── MOBILE: Fixed bottom bar ── */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-gray-200)] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
+      <div
+        className="fixed inset-x-0 z-40 border-t border-[var(--color-gray-200)] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden"
+        style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom))" }}
+      >
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             {quoteLoading ? (
@@ -506,7 +509,7 @@ export default function NcrOrderClient({ defaultType }) {
             type="button"
             onClick={handleAddToCart}
             disabled={!canAddToCart}
-            className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
+            className={`shrink-0 rounded-xl px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart
                 ? "bg-[var(--color-gray-900)] text-white hover:bg-[var(--color-gray-800)]"
                 : "cursor-not-allowed bg-[var(--color-gray-200)] text-[var(--color-gray-400)]"
@@ -517,7 +520,7 @@ export default function NcrOrderClient({ defaultType }) {
         </div>
       </div>
 
-      <div className="h-20 lg:hidden" />
+      <div className="lg:hidden" style={{ height: "calc(var(--mobile-nav-offset, 72px) + 80px)" }} />
 
       {/* ── Numbering Modal ── */}
       {showNumberModal && (

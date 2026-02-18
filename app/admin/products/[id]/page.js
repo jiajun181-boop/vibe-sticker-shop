@@ -494,7 +494,10 @@ export default function ProductDetailPage() {
 
   async function handleImageDrop(e) {
     e.preventDefault();
+    e.stopPropagation();
     e.currentTarget.classList.remove("ring-2", "ring-black");
+    const types = Array.from(e.dataTransfer?.types || []);
+    if (!types.includes("Files")) return;
     const files = Array.from(e.dataTransfer.files || []).filter((f) => f.type.startsWith("image/"));
     if (files.length === 0) return;
     await processFileUploads(files);
@@ -1082,7 +1085,12 @@ export default function ProductDetailPage() {
           {/* Images — drag & drop zone */}
           <div
             className="rounded-[3px] border border-[#e0e0e0] bg-white p-5 transition-all"
-            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("ring-2", "ring-black"); }}
+            onDragOver={(e) => {
+              const types = Array.from(e.dataTransfer?.types || []);
+              if (!types.includes("Files")) return;
+              e.preventDefault();
+              e.currentTarget.classList.add("ring-2", "ring-black");
+            }}
             onDragLeave={(e) => { e.currentTarget.classList.remove("ring-2", "ring-black"); }}
             onDrop={handleImageDrop}
           >
@@ -1097,10 +1105,35 @@ export default function ProductDetailPage() {
                   <div
                     key={img.id}
                     draggable
-                    onDragStart={() => setDragIdx(idx)}
-                    onDragOver={(e) => { e.preventDefault(); setDropIdx(idx); }}
-                    onDragLeave={() => setDropIdx(null)}
-                    onDragEnd={() => { if (dragIdx !== null && dropIdx !== null) handleReorderImages(dragIdx, dropIdx); setDragIdx(null); setDropIdx(null); }}
+                    onDragStart={(e) => {
+                      setDragIdx(idx);
+                      e.dataTransfer.effectAllowed = "move";
+                      e.dataTransfer.setData("text/image-index", String(idx));
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDropIdx(idx);
+                      e.dataTransfer.dropEffect = "move";
+                    }}
+                    onDragLeave={() => {
+                      setDropIdx((prev) => (prev === idx ? null : prev));
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const raw = e.dataTransfer.getData("text/image-index");
+                      const from = dragIdx !== null ? dragIdx : Number(raw);
+                      if (Number.isInteger(from) && from >= 0 && from !== idx) {
+                        handleReorderImages(from, idx);
+                      }
+                      setDragIdx(null);
+                      setDropIdx(null);
+                    }}
+                    onDragEnd={() => {
+                      setDragIdx(null);
+                      setDropIdx(null);
+                    }}
                     className={`group relative cursor-grab active:cursor-grabbing ${dropIdx === idx && dragIdx !== idx ? "ring-2 ring-black rounded-[3px]" : ""} ${dragIdx === idx ? "opacity-40" : ""}`}
                   >
                     <img src={img.url} alt={img.alt || product.name} className="h-24 w-full rounded-[3px] object-cover" />

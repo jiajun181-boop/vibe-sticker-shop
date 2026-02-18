@@ -238,7 +238,7 @@ export default function Navbar({ catalogConfig }) {
   return (
     <header
       ref={navRef}
-      className="sticky top-[var(--promo-offset,0px)] z-[50] w-full border-b border-[var(--color-gray-200)] bg-[var(--color-paper-white)]/90 backdrop-blur-lg backdrop-saturate-150"
+      className="sticky top-[var(--promo-offset,0px)] z-[50] w-full border-b border-[var(--color-gray-200)] bg-[var(--color-paper-white)] backdrop-blur-none md:bg-[var(--color-paper-white)]/90 md:backdrop-blur-lg md:backdrop-saturate-150"
     >
       <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2.5">

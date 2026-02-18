@@ -36,7 +36,10 @@ export default function MobileBottomBar({
 }) {
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-lg lg:hidden">
+      <div
+        className="fixed inset-x-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] lg:hidden"
+        style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom))" }}
+      >
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             {quoteLoading ? (
@@ -66,7 +69,7 @@ export default function MobileBottomBar({
                 type="button"
                 onClick={onAddToCart}
                 disabled={!canAddToCart}
-                className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
+                className={`shrink-0 rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
                   canAddToCart
                     ? "bg-gray-900 text-white shadow-lg hover:bg-gray-800"
                     : "cursor-not-allowed bg-gray-200 text-gray-400"
@@ -79,7 +82,7 @@ export default function MobileBottomBar({
                   type="button"
                   onClick={onBuyNow}
                   disabled={!canAddToCart || buyNowLoading}
-                  className={`shrink-0 rounded-full border-2 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                  className={`shrink-0 rounded-xl border-2 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
                     canAddToCart && !buyNowLoading
                       ? "border-gray-900 text-gray-900"
                       : "cursor-not-allowed border-gray-200 text-gray-400"
@@ -93,7 +96,7 @@ export default function MobileBottomBar({
         </div>
       </div>
       {/* Bottom spacing */}
-      <div className="h-20 lg:hidden" />
+      <div className="lg:hidden" style={{ height: "calc(var(--mobile-nav-offset, 72px) + 80px)" }} />
     </>
   );
 }

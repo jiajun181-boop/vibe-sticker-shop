@@ -5,6 +5,7 @@ import { SUB_PRODUCT_CONFIG, getSubProductsForCategory } from "@/lib/subProductC
 import { getTurnaround } from "@/lib/turnaroundConfig";
 import { computeFromPrice } from "@/lib/pricing/from-price";
 import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
+import { getCuttingTypeForSlug, getCuttingType } from "@/lib/sticker-order-config";
 import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
 
@@ -27,6 +28,7 @@ const CATEGORY_ALIASES = Object.freeze({
   "marketing-prints": "marketing-business-print",
   "retail-promo": "marketing-business-print",
   "packaging": "marketing-business-print",
+  "custom-stickers": "stickers-labels-decals",
   "stickers-labels": "stickers-labels-decals",
   "safety-warning-decals": "stickers-labels-decals",
   "facility-asset-labels": "stickers-labels-decals",
@@ -364,7 +366,14 @@ export default async function CategoryPage({ params }) {
         placementMatching.length === 0 && subCfg
           ? products.filter((p) => subCfg.dbSlugs.includes(p.slug))
           : [];
-      const matching = placementMatching.length > 0 ? placementMatching : fallbackMatching;
+      // Direct slug match: when subGroup slug IS a product slug (e.g. canvas-prints)
+      const directMatch =
+        placementMatching.length === 0 && fallbackMatching.length === 0
+          ? products.filter((p) => p.slug === sg.slug)
+          : [];
+      const matching = placementMatching.length > 0 ? placementMatching
+        : fallbackMatching.length > 0 ? fallbackMatching
+        : directMatch;
 
       const prices = matching.map((p) => p.fromPrice || p.basePrice).filter((p) => p > 0);
       const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
@@ -420,6 +429,23 @@ export default async function CategoryPage({ params }) {
         })).filter((segment) => segment.items.length > 0)
       : [];
 
+    // Build sticker configurator data for stickers-labels-decals sub-groups
+    const stickerConfigData = {};
+    if (decoded === "stickers-labels-decals") {
+      for (const sg of orderedSubGroupData) {
+        const ctId = getCuttingTypeForSlug(sg.slug);
+        if (ctId) {
+          const ct = getCuttingType(ctId);
+          stickerConfigData[sg.slug] = {
+            cuttingTypeId: ctId,
+            quantities: ct.quantities,
+            materials: ct.materials,
+            sizes: ct.sizes,
+          };
+        }
+      }
+    }
+
     return (
       <SubGroupLandingClient
         category={decoded}
@@ -429,6 +455,7 @@ export default async function CategoryPage({ params }) {
         groupedSubGroups={groupedSubGroups}
         siblingCategories={siblingCategories}
         totalCount={products.length}
+        stickerConfigData={stickerConfigData}
       />
     );
   }

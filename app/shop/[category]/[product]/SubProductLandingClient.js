@@ -65,12 +65,12 @@ function ProductCardGrid({ product, href, selectedSpec, t }) {
   const price = product.fromPrice || product.basePrice;
 
   return (
-    <Link
-      href={href}
+    <article
       className={`group overflow-hidden rounded-2xl border bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
         selectedSpec === product.slug ? "border-[var(--color-gray-900)] ring-1 ring-[var(--color-gray-900)]" : "border-[var(--color-gray-200)]"
       }`}
     >
+      <Link href={href} className="block">
       <div className="relative aspect-[4/3] bg-[var(--color-gray-100)]">
         {image?.url ? (
           <Image
@@ -109,14 +109,20 @@ function ProductCardGrid({ product, href, selectedSpec, t }) {
         {price > 0 && (
           <p className="mt-2 text-sm font-bold text-[var(--color-gray-900)]">{t("product.from", { price: formatCad(price) })}</p>
         )}
-        <div className="mt-2 flex items-center gap-2">
+      </div>
+      </Link>
+      <div className="px-3 pb-3 sm:px-4 sm:pb-4">
+        <div className="mt-1 flex items-center gap-2">
           <QuickAddButton product={product} />
-          <span className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
+          <Link
+            href={href}
+            className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black"
+          >
             {t("mp.landing.viewOrder")}
-          </span>
+          </Link>
         </div>
       </div>
-    </Link>
+    </article>
   );
 }
 
@@ -127,12 +133,12 @@ function ProductCardList({ product, href, selectedSpec, t }) {
   const price = product.fromPrice || product.basePrice;
 
   return (
-    <Link
-      href={href}
+    <article
       className={`group flex overflow-hidden rounded-2xl border bg-white transition-all duration-200 hover:shadow-lg ${
         selectedSpec === product.slug ? "border-[var(--color-gray-900)] ring-1 ring-[var(--color-gray-900)]" : "border-[var(--color-gray-200)]"
       }`}
     >
+      <Link href={href} className="flex min-w-0 flex-1 overflow-hidden">
       <div className="relative w-32 sm:w-40 shrink-0 bg-[var(--color-gray-100)]">
         {image?.url ? (
           <Image
@@ -151,7 +157,7 @@ function ProductCardList({ product, href, selectedSpec, t }) {
           </div>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
+      <div className="flex min-w-0 flex-1 flex-col p-3 sm:p-4">
         <div className="flex items-start gap-2">
           <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${turnaroundColor(tk)}`}>
             {t(turnaroundI18nKey(tk))}
@@ -171,15 +177,16 @@ function ProductCardList({ product, href, selectedSpec, t }) {
           {price > 0 && (
             <span className="text-sm font-bold text-[var(--color-gray-900)]">{t("product.from", { price: formatCad(price) })}</span>
           )}
-          <div className="ml-auto flex items-center gap-2">
-            <QuickAddButton product={product} />
-            <span className="rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
-              {t("mp.landing.viewOrder")}
-            </span>
-          </div>
+          <span className="ml-auto rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
+            {t("mp.landing.viewOrder")}
+          </span>
         </div>
       </div>
-    </Link>
+      </Link>
+      <div className="flex items-end p-3 sm:p-4">
+        <QuickAddButton product={product} />
+      </div>
+    </article>
   );
 }
 
@@ -196,7 +203,8 @@ function QuickQuoteFAB({ t }) {
   return (
     <Link
       href="/quote"
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-[var(--color-gray-900)] px-5 py-3 pb-safe text-white shadow-lg transition-all hover:bg-black hover:shadow-xl hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-4 duration-300"
+      className="fixed right-4 z-50 flex items-center gap-2 rounded-xl bg-[var(--color-gray-900)] px-4 py-2.5 text-white shadow-lg transition-all hover:bg-black animate-in fade-in-0 slide-in-from-bottom-4 duration-300 md:hidden"
+      style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom) + 8px)" }}
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />

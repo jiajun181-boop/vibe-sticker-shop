@@ -304,6 +304,43 @@ async function main() {
     console.log(`  OK  ${p.slug.padEnd(30)} $${price.toFixed(2)}`);
   }
 
+  // ── Ensure catalog.config in DB includes canvas-prints ──
+  const catalogRow = await prisma.setting.findUnique({ where: { key: "catalog.config" } });
+  if (catalogRow) {
+    const val = catalogRow.value;
+    let changed = false;
+    if (!val.homepageCategories?.includes("canvas-prints")) {
+      const idx = val.homepageCategories?.indexOf("windows-walls-floors") ?? -1;
+      if (idx >= 0) val.homepageCategories.splice(idx, 0, "canvas-prints");
+      else val.homepageCategories?.push("canvas-prints");
+      changed = true;
+    }
+    if (!val.departments?.find(d => d.key === "canvas-prints")) {
+      const idx = val.departments?.findIndex(d => d.key === "windows-walls-floors") ?? -1;
+      const dept = { key: "canvas-prints", categories: ["canvas-prints"] };
+      if (idx >= 0) val.departments.splice(idx, 0, dept);
+      else val.departments?.push(dept);
+      changed = true;
+    }
+    if (!val.categoryMeta?.["canvas-prints"]) {
+      if (!val.categoryMeta) val.categoryMeta = {};
+      val.categoryMeta["canvas-prints"] = {
+        title: "Canvas Prints", icon: "\uD83D\uDDBC\uFE0F",
+        subGroups: PRODUCTS.map(p => ({ slug: p.slug, title: p.name, href: `/shop/canvas-prints/${p.slug}` })),
+      };
+      changed = true;
+    }
+    if (!val.departmentMeta?.["canvas-prints"]) {
+      if (!val.departmentMeta) val.departmentMeta = {};
+      val.departmentMeta["canvas-prints"] = { title: "Canvas Prints" };
+      changed = true;
+    }
+    if (changed) {
+      await prisma.setting.update({ where: { key: "catalog.config" }, data: { value: val } });
+      console.log("\n  Updated catalog.config in DB to include canvas-prints");
+    }
+  }
+
   // ── Example pricing table ──
   console.log("\n\n===== CANVAS PRICING EXAMPLES =====\n");
   console.log("Product".padEnd(24), "Size".padEnd(14), "Qty".padStart(4), "Retail".padStart(10), "Unit".padStart(10));

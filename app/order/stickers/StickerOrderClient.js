@@ -10,6 +10,7 @@ import { validateDimensions } from "@/lib/materialLimits";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { ShapeIcon } from "@/components/stickers/ShapeIcon";
 import {
   CUTTING_TYPES,
   getCuttingType,
@@ -34,51 +35,7 @@ const formatCad = (cents) =>
     currency: "CAD",
   }).format(cents / 100);
 
-// Shape illustrations for the type cards
-const SHAPE_ILLUSTRATIONS = {
-  "die-cut": (
-    <svg viewBox="0 0 80 80" fill="none" className="h-12 w-12">
-      <path d="M40 8C25 8 14 20 12 32c-2 14 6 26 18 32 6 3 14 4 20 0 8-5 14-14 16-24 2-12-6-24-18-30a20 20 0 0 0-8-2z" fill="#FCD34D" stroke="#92400E" strokeWidth="1.5" strokeDasharray="4 3" />
-      <path d="M30 36l6 6 14-14" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  "kiss-cut": (
-    <svg viewBox="0 0 80 80" fill="none" className="h-12 w-12">
-      <rect x="8" y="8" width="64" height="64" rx="6" fill="#E0E7FF" stroke="#4338CA" strokeWidth="1.5" />
-      <rect x="18" y="18" width="44" height="44" rx="22" fill="#C7D2FE" stroke="#4338CA" strokeWidth="1.5" strokeDasharray="4 3" />
-      <circle cx="40" cy="40" r="8" fill="#818CF8" />
-    </svg>
-  ),
-  sheets: (
-    <svg viewBox="0 0 80 80" fill="none" className="h-12 w-12">
-      <rect x="8" y="8" width="64" height="64" rx="4" fill="#ECFDF5" stroke="#059669" strokeWidth="1.5" />
-      <rect x="14" y="14" width="22" height="22" rx="4" fill="#A7F3D0" stroke="#059669" strokeWidth="1" />
-      <rect x="44" y="14" width="22" height="22" rx="4" fill="#A7F3D0" stroke="#059669" strokeWidth="1" />
-      <rect x="14" y="44" width="22" height="22" rx="4" fill="#A7F3D0" stroke="#059669" strokeWidth="1" />
-      <rect x="44" y="44" width="22" height="22" rx="4" fill="#A7F3D0" stroke="#059669" strokeWidth="1" />
-    </svg>
-  ),
-  "roll-labels": (
-    <svg viewBox="0 0 80 80" fill="none" className="h-12 w-12">
-      <ellipse cx="40" cy="40" rx="32" ry="18" fill="#FEF3C7" stroke="#D97706" strokeWidth="1.5" />
-      <ellipse cx="40" cy="40" rx="12" ry="18" fill="#FDE68A" stroke="#D97706" strokeWidth="1" />
-      <circle cx="40" cy="40" r="6" fill="#FBBF24" stroke="#D97706" strokeWidth="1" />
-    </svg>
-  ),
-  "vinyl-lettering": (
-    <svg viewBox="0 0 80 80" fill="none" className="h-12 w-12">
-      <rect x="8" y="20" width="64" height="40" rx="4" fill="#F3E8FF" stroke="#7C3AED" strokeWidth="1.5" />
-      <text x="40" y="48" textAnchor="middle" fill="#7C3AED" fontSize="22" fontWeight="bold" fontFamily="sans-serif">ABC</text>
-    </svg>
-  ),
-  decals: (
-    <svg viewBox="0 0 80 80" fill="none" className="h-12 w-12">
-      <rect x="8" y="8" width="64" height="64" rx="8" fill="#FEE2E2" stroke="#DC2626" strokeWidth="1.5" />
-      <rect x="16" y="16" width="48" height="48" rx="4" fill="#FECACA" stroke="#DC2626" strokeWidth="1" strokeDasharray="4 3" />
-      <path d="M32 40h16M40 32v16" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  ),
-};
+// Shape illustrations are now in @/components/stickers/ShapeIcon
 
 function normalizeCheckoutMeta(meta) {
   const input = meta && typeof meta === "object" ? meta : {};
@@ -97,10 +54,19 @@ function normalizeCheckoutMeta(meta) {
 /* ============================================================================
    MAIN COMPONENT — StickerYou-style product configurator
    ============================================================================ */
-export default function StickerOrderClient({ defaultType }) {
+export default function StickerOrderClient({ defaultType, lockedType = false }) {
   const { t } = useTranslation();
   const searchParams = useSearchParams();
   const { addItem, openCart } = useCartStore();
+
+  // When lockedType is true, only show the single cutting type matching defaultType
+  const visibleCuttingTypes = useMemo(() => {
+    if (lockedType && defaultType) {
+      const match = CUTTING_TYPES.filter((ct) => ct.id === defaultType);
+      return match.length > 0 ? match : CUTTING_TYPES;
+    }
+    return CUTTING_TYPES;
+  }, [lockedType, defaultType]);
 
   // --- State ---
   const [cuttingId, setCuttingId] = useState(defaultType || searchParams.get("type") || "die-cut");
@@ -416,36 +382,47 @@ export default function StickerOrderClient({ defaultType }) {
           <div className="space-y-6 lg:col-span-2">
 
             {/* ── STEP 1: Product Type ── */}
-            <ConfigStep number={1} title={t("stickerOrder.cuttingType")} subtitle="What kind of sticker do you need?">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {CUTTING_TYPES.map((ct) => (
-                  <button
-                    key={ct.id}
-                    type="button"
-                    onClick={() => selectCutting(ct.id)}
-                    className={`group relative flex flex-col items-center gap-2.5 rounded-2xl border-2 p-4 text-center transition-all duration-200 ${
-                      cuttingId === ct.id
-                        ? "border-gray-900 bg-gray-900 text-white shadow-lg shadow-gray-900/20 scale-[1.02]"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
-                    }`}
-                  >
-                    {/* Selected indicator */}
-                    {cuttingId === ct.id && (
-                      <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+            {visibleCuttingTypes.length > 1 ? (
+              <ConfigStep number={1} title={t("stickerOrder.cuttingType")} subtitle="What kind of sticker do you need?">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {visibleCuttingTypes.map((ct) => (
+                    <button
+                      key={ct.id}
+                      type="button"
+                      onClick={() => selectCutting(ct.id)}
+                      className={`group relative flex flex-col items-center gap-2.5 rounded-2xl border-2 p-4 text-center transition-all duration-200 ${
+                        cuttingId === ct.id
+                          ? "border-gray-900 bg-gray-900 text-white shadow-lg shadow-gray-900/20 scale-[1.02]"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
+                      }`}
+                    >
+                      {/* Selected indicator */}
+                      {cuttingId === ct.id && (
+                        <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                        </span>
+                      )}
+                      <div className={`transition-transform duration-200 ${cuttingId === ct.id ? "scale-110" : "group-hover:scale-105"}`}>
+                        <ShapeIcon type={ct.id} className="h-12 w-12" />
+                      </div>
+                      <span className="text-sm font-bold">{t(`stickerOrder.type.${ct.id}`)}</span>
+                      <span className={`text-[11px] leading-snug ${cuttingId === ct.id ? "text-gray-300" : "text-gray-400"}`}>
+                        {t(`stickerOrder.typeDesc.${ct.id}`)}
                       </span>
-                    )}
-                    <div className={`transition-transform duration-200 ${cuttingId === ct.id ? "scale-110" : "group-hover:scale-105"}`}>
-                      {SHAPE_ILLUSTRATIONS[ct.id]}
-                    </div>
-                    <span className="text-sm font-bold">{t(`stickerOrder.type.${ct.id}`)}</span>
-                    <span className={`text-[11px] leading-snug ${cuttingId === ct.id ? "text-gray-300" : "text-gray-400"}`}>
-                      {t(`stickerOrder.typeDesc.${ct.id}`)}
-                    </span>
-                  </button>
-                ))}
+                    </button>
+                  ))}
+                </div>
+              </ConfigStep>
+            ) : (
+              /* Single locked type — show as compact header instead of selector */
+              <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                <div className="shrink-0"><ShapeIcon type={cuttingId} className="h-12 w-12" /></div>
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{t(`stickerOrder.type.${cuttingId}`)}</p>
+                  <p className="text-xs text-gray-500">{t(`stickerOrder.typeDesc.${cuttingId}`)}</p>
+                </div>
               </div>
-            </ConfigStep>
+            )}
 
             {/* ── STEP 2: Size ── */}
             <ConfigStep number={2} title={t("stickerOrder.size")} subtitle="Select a recommended size or enter custom dimensions">
@@ -712,13 +689,7 @@ export default function StickerOrderClient({ defaultType }) {
               {/* Live preview area */}
               <div className="flex items-center justify-center rounded-xl bg-gray-50 p-6">
                 <div className="transition-all duration-300">
-                  {SHAPE_ILLUSTRATIONS[cuttingId] ? (
-                    <div className="scale-[2] transform">
-                      {SHAPE_ILLUSTRATIONS[cuttingId]}
-                    </div>
-                  ) : (
-                    <div className="h-20 w-20 rounded-xl bg-gray-200" />
-                  )}
+                  <ShapeIcon type={cuttingId} className="h-24 w-24" />
                 </div>
               </div>
 
@@ -847,7 +818,10 @@ export default function StickerOrderClient({ defaultType }) {
       {/* ================================================================
           MOBILE — Fixed bottom price bar
           ================================================================ */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-lg lg:hidden">
+      <div
+        className="fixed inset-x-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] lg:hidden"
+        style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom))" }}
+      >
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             {quoteLoading ? (
@@ -867,7 +841,7 @@ export default function StickerOrderClient({ defaultType }) {
             type="button"
             onClick={handleAddToCart}
             disabled={!canAddToCart}
-            className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
+            className={`shrink-0 rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
               canAddToCart
                 ? "bg-gray-900 text-white shadow-lg hover:bg-gray-800"
                 : "cursor-not-allowed bg-gray-200 text-gray-400"
@@ -879,7 +853,7 @@ export default function StickerOrderClient({ defaultType }) {
             type="button"
             onClick={handleBuyNow}
             disabled={!canAddToCart || buyNowLoading}
-            className={`shrink-0 rounded-full border-2 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+            className={`shrink-0 rounded-xl border-2 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
               canAddToCart && !buyNowLoading
                 ? "border-gray-900 text-gray-900"
                 : "cursor-not-allowed border-gray-200 text-gray-400"
@@ -891,7 +865,7 @@ export default function StickerOrderClient({ defaultType }) {
       </div>
 
       {/* Bottom spacing for mobile bar */}
-      <div className="h-20 lg:hidden" />
+      <div className="lg:hidden" style={{ height: "calc(var(--mobile-nav-offset, 72px) + 80px)" }} />
     </main>
   );
 }
