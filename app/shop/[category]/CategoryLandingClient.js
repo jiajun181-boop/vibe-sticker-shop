@@ -29,7 +29,7 @@ const CATEGORY_USE_CASES = {
     { key: "compliance", label: "Compliance", hint: "dot mc unit ids", cta: "合规标识" },
     { key: "partial", label: "Budget Partial Wrap", hint: "door panel graphics magnets", cta: "预算友好" },
   ],
-  "custom-stickers": [
+  "stickers-labels-decals": [
     { key: "brand-logo", label: "Brand & Logo", hint: "die-cut stickers packaging labels", cta: "Brand" },
     { key: "events-giveaways", label: "Events & Giveaways", hint: "sticker sheets handouts", cta: "Events" },
     { key: "outdoor-vehicle", label: "Outdoor & Vehicle", hint: "bumper stickers decals vinyl", cta: "Outdoor" },
@@ -243,7 +243,7 @@ export default function CategoryLandingClient({
 
         {useCaseCards.length > 0 && (
           <section className="mt-5 rounded-2xl border border-[var(--color-gray-200)] bg-white p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">Shop by Use Case</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("home.shopByUseCase")}</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               {useCaseCards.map((card) => (
                 <button

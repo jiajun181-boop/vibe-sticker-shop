@@ -277,7 +277,7 @@ function Step2({ form, update, t }) {
               type="text"
               value={QUANTITY_PRESETS.includes(Number(form.quantity)) ? "" : form.quantity}
               onChange={(e) => update("quantity", e.target.value)}
-              placeholder="Custom"
+              placeholder={t("quote.step2.customQty")}
               className="w-20 rounded-lg border border-[var(--color-gray-200)] px-3 py-1.5 text-xs text-[var(--color-gray-900)] placeholder:text-[var(--color-gray-400)] focus:border-[var(--color-gray-900)] focus:outline-none"
             />
           </div>
@@ -454,7 +454,7 @@ function Step4({ form, t, categoryMeta }) {
       label: t("quote.step4.specs"),
       value: [
         form.width || form.height ? `${form.width || "?"} × ${form.height || "?"}` : null,
-        form.quantity ? `Qty: ${form.quantity}` : null,
+        form.quantity ? `${t("quote.step2.quantity")}: ${form.quantity}` : null,
         form.material || null,
         form.colorMode === "full" ? t("quote.step2.fullColor") : t("quote.step2.oneColor"),
       ]
@@ -465,7 +465,7 @@ function Step4({ form, t, categoryMeta }) {
       label: t("quote.step4.timeline"),
       value: [
         form.neededBy || null,
-        form.isRush ? "⚡ Rush" : null,
+        form.isRush ? t("quote.step3.rush") : null,
       ]
         .filter(Boolean)
         .join(" · ") || "—",

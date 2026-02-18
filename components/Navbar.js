@@ -184,14 +184,17 @@ export default function Navbar({ catalogConfig }) {
   // Reusable search dropdown renderer
   const renderSearchDropdown = (refProp) => {
     if (searchQuery.trim().length < 2) return null;
-    if (!searchResults.length && !searchLoading) return null;
     return (
       <div
         ref={refProp}
+        role="listbox"
+        aria-label={t("search.results")}
         className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg border border-[var(--color-gray-200)] bg-white shadow-lg overflow-hidden"
       >
         {searchLoading ? (
           <div className="px-4 py-3 text-sm text-[var(--color-gray-400)]">{t("search.loading")}</div>
+        ) : !searchResults.length ? (
+          <div className="px-4 py-3 text-sm text-[var(--color-gray-400)]">{t("search.noResults")}</div>
         ) : (
           <>
             {searchResults.map((item) => (
