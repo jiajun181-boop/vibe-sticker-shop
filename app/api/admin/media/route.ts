@@ -130,7 +130,7 @@ export async function DELETE(request: NextRequest) {
     // Check if this is the last image for its product
     const image = await prisma.productImage.findUnique({
       where: { id },
-      select: { productId: true },
+      select: { productId: true, url: true },
     });
     if (image) {
       const siblingCount = await prisma.productImage.count({
@@ -144,6 +144,24 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
+    // Delete from UploadThing CDN if it's a UT file
+    if (image?.url) {
+      try {
+        // Extract file key from UploadThing URL patterns:
+        // https://utfs.io/f/FILEKEY or https://KEY.ufs.sh/f/FILEKEY
+        const urlStr = image.url;
+        const keyMatch = urlStr.match(/\/f\/([a-zA-Z0-9_-]+)/);
+        if (keyMatch) {
+          const { UTApi } = await import("uploadthing/server");
+          const utapi = new UTApi();
+          await utapi.deleteFiles([keyMatch[1]]);
+        }
+      } catch (utErr) {
+        // Log but don't block DB deletion if UT delete fails
+        console.warn("[Media DELETE] UploadThing cleanup failed:", utErr);
+      }
+    }
+
     await prisma.productImage.delete({
       where: { id },
     });
@@ -152,6 +170,7 @@ export async function DELETE(request: NextRequest) {
       action: "delete",
       entity: "ProductImage",
       entityId: id,
+      details: { url: image?.url },
     });
 
     return NextResponse.json({ success: true });
