@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requirePermission } from "@/lib/admin-auth";
 
 /**
- * GET /api/admin/debug-env — Check if critical env vars are set (admin only).
- * Does NOT expose actual values — only presence and basic shape.
+ * GET /api/admin/debug-env — Check env vars and test UploadThing token parsing.
  */
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, "media", "view");
@@ -12,6 +11,8 @@ export async function GET(request: NextRequest) {
   const token = process.env.UPLOADTHING_TOKEN || "";
   let tokenStatus = "missing";
   let tokenDecoded = null;
+  let reencodeChanges = false;
+  let effectParseResult = "not tested";
 
   if (token) {
     try {
@@ -23,6 +24,29 @@ export async function GET(request: NextRequest) {
         appId: decoded.appId,
         regions: decoded.regions,
       };
+
+      // Check if re-encoding changes the token
+      const clean = Buffer.from(
+        Buffer.from(token, "base64").toString("utf-8")
+      ).toString("base64");
+      reencodeChanges = clean !== token;
+
+      // Test if UTApi can actually parse the token
+      try {
+        const { UTApi } = await import("uploadthing/server");
+        // Try with clean token
+        process.env.UPLOADTHING_TOKEN = clean;
+        const utapi = new UTApi();
+        // Force token resolution by listing files (lightweight)
+        await utapi.listFiles({ limit: 1 });
+        effectParseResult = "ok";
+      } catch (e) {
+        effectParseResult =
+          e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200);
+      } finally {
+        // Restore original
+        process.env.UPLOADTHING_TOKEN = token;
+      }
     } catch {
       tokenStatus = "malformed";
       tokenDecoded = {
@@ -38,6 +62,8 @@ export async function GET(request: NextRequest) {
     env: process.env.NODE_ENV,
     uploadthingToken: tokenStatus,
     tokenDetails: tokenDecoded,
+    reencodeChanges,
+    effectParseResult,
     uploadthingUrl: process.env.UPLOADTHING_URL || "not set",
     hasVercelEnv: !!process.env.VERCEL,
     vercelEnv: process.env.VERCEL_ENV || "not set",
