@@ -117,18 +117,12 @@ export default function AccountDashboard() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <div className="rounded-xl border border-[var(--color-gray-200)] p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">
             {t("account.stats.totalOrders")}
           </p>
           <p className="mt-1 text-2xl font-semibold text-[var(--color-gray-900)]">{stats.total}</p>
-        </div>
-        <div className="rounded-xl border border-[var(--color-gray-200)] p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">
-            {t("account.stats.totalSpent")}
-          </p>
-          <p className="mt-1 text-2xl font-semibold text-[var(--color-gray-900)]">{formatCad(stats.spent)}</p>
         </div>
       </div>
 

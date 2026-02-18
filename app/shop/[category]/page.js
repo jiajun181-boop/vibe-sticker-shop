@@ -57,7 +57,7 @@ const MARKETING_SEGMENTS = [
   {
     key: "retail-events-packaging",
     title: "Retail, Events & Packaging",
-    slugs: ["menus", "rack-cards", "door-hangers", "tickets-coupons", "retail-tags", "tags", "inserts-packaging", "certificates", "greeting-cards", "invitation-cards", "loyalty-cards", "shelf-displays", "table-tents"],
+    slugs: ["menus", "rack-cards", "door-hangers", "tickets-coupons", "tags", "inserts-packaging", "certificates", "greeting-invitation-cards", "shelf-displays", "table-tents"],
   },
 ];
 
@@ -124,17 +124,17 @@ const SIGNS_SEGMENTS = [
   {
     key: "outdoor-signs",
     title: "Outdoor Signs",
-    slugs: ["yard-signs", "real-estate-signs", "election-signs"],
+    slugs: ["yard-lawn-signs", "real-estate-signs"],
   },
   {
     key: "indoor-portable",
     title: "Indoor & Portable Signs",
-    slugs: ["foam-board-signs", "a-frame-signs"],
+    slugs: ["a-frames-signs", "display-tabletop"],
   },
   {
-    key: "event-display",
-    title: "Event & Display Boards",
-    slugs: ["event-boards", "display-signs"],
+    key: "event-specialty",
+    title: "Event & Specialty",
+    slugs: ["event-photo-boards", "business-property", "by-material"],
   },
 ];
 
@@ -152,7 +152,7 @@ const WINDOWS_WALLS_FLOORS_SEGMENTS = [
   {
     key: "wall-floor",
     title: "Wall & Floor Graphics",
-    slugs: ["canvas-prints", "wall-graphics", "floor-graphics"],
+    slugs: ["wall-graphics", "floor-graphics"],
   },
 ];
 
@@ -231,7 +231,7 @@ function dedupeByNormalizedName(list) {
 
 function prioritizeSubGroups(category, groups) {
   if (category !== "signs-rigid-boards" && category !== "rigid-signs") return groups;
-  const priority = ["yard-signs", "real-estate-signs", "election-signs"];
+  const priority = ["yard-lawn-signs", "real-estate-signs"];
   const rank = new Map(priority.map((slug, i) => [slug, i]));
   return [...groups].sort((a, b) => {
     const ra = rank.has(a.slug) ? rank.get(a.slug) : Number.MAX_SAFE_INTEGER;
@@ -275,14 +275,37 @@ export default async function CategoryPage({ params }) {
 
   const meta = config.categoryMeta[decoded];
 
-  // Collect categories to fetch: main + any cross-category sub-groups
-  // (e.g. marketing-prints page also needs business-cards & stamps products)
+  // Collect categories to fetch: main + legacy aliases + cross-category sub-groups
   const categoriesToFetch = [decoded];
+
+  // Include legacy DB category names (products may still use old names)
+  for (const [legacy, target] of Object.entries(CATEGORY_ALIASES)) {
+    if (target === decoded && !categoriesToFetch.includes(legacy)) {
+      categoriesToFetch.push(legacy);
+    }
+  }
+
+  // Cross-category sub-groups (e.g. marketing-prints also needs stamps products)
   if (meta?.subGroups) {
     for (const sg of meta.subGroups) {
       const subCfg = SUB_PRODUCT_CONFIG[sg.slug];
       if (subCfg && subCfg.category !== decoded && !categoriesToFetch.includes(subCfg.category)) {
         categoriesToFetch.push(subCfg.category);
+      }
+    }
+  }
+
+  // Cross-category product sharing — shared products appear in both category pages
+  const CROSS_FETCH = {
+    "stickers-labels-decals": ["vehicle-graphics-fleet"],
+    "vehicle-graphics-fleet": ["stickers-labels-decals"],
+  };
+  for (const xCat of CROSS_FETCH[decoded] || []) {
+    if (!categoriesToFetch.includes(xCat)) categoriesToFetch.push(xCat);
+    // Also include legacy aliases for the cross-fetched category
+    for (const [legacy, target] of Object.entries(CATEGORY_ALIASES)) {
+      if (target === xCat && !categoriesToFetch.includes(legacy)) {
+        categoriesToFetch.push(legacy);
       }
     }
   }

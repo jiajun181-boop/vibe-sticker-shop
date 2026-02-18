@@ -70,6 +70,20 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-brand, system-ui), -apple-system, sans-serif;
+
+  /* Map Tailwind gray-* to warm brand palette so `bg-gray-50` and
+     `bg-[var(--color-gray-50)]` render identically. */
+  --color-gray-50: #f8f6f0;
+  --color-gray-100: #efece3;
+  --color-gray-200: #e0dbd0;
+  --color-gray-300: #cbc4b6;
+  --color-gray-400: #9a9184;
+  --color-gray-500: #716960;
+  --color-gray-600: #564f47;
+  --color-gray-700: #3d372f;
+  --color-gray-800: #272320;
+  --color-gray-900: #1a1714;
+  --color-gray-950: #0d0c0a;
 }
 
 html, body {
@@ -229,8 +243,8 @@ input:focus, textarea:focus, select:focus {
 .btn-lg { padding: 1rem 2rem; font-size: 13px; }
 
 .btn-primary-pill {
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-moon-gold-light), var(--color-moon-gold), var(--color-moon-gold-dark));
+  border-radius: 0.75rem;
+  background: var(--color-gray-900);
   color: #fff;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -239,8 +253,9 @@ input:focus, textarea:focus, select:focus {
               box-shadow var(--duration-fast) var(--ease-out-cubic);
 }
 .btn-primary-pill:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-gold-glow);
+  transform: translateY(-1px);
+  background: var(--color-gray-800);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .btn-secondary-pill {

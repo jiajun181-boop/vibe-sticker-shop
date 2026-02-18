@@ -4,8 +4,12 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 import { resizeImageFile } from "@/lib/client-image-resize";
+
+const TextOverlayModal = dynamic(() => import("@/components/admin/TextOverlayModal"), { ssr: false });
+const CropModal = dynamic(() => import("@/components/admin/CropModal"), { ssr: false });
 
 const categories = [
   { value: "fleet-compliance-id", label: "Fleet Compliance & ID" },
@@ -174,6 +178,12 @@ export default function ProductDetailPage() {
   const [dragIdx, setDragIdx] = useState(null); // drag-to-reorder
   const [dropIdx, setDropIdx] = useState(null);
   const assetFileRef = useRef(null);
+  const replaceFileRef = useRef(null);
+  const [replacingImageId, setReplacingImageId] = useState(null);
+  const [bgRemovingId, setBgRemovingId] = useState(null);
+  const [compressingId, setCompressingId] = useState(null);
+  const [textOverlayImg, setTextOverlayImg] = useState(null); // {id, url}
+  const [cropImg, setCropImg] = useState(null); // {id, url}
 
   const fetchProduct = useCallback(async () => {
     try {
@@ -381,6 +391,239 @@ export default function ProductDetailPage() {
       const res = await fetch(`/api/admin/products/${productId}/images?imageId=${imageId}`, { method: "DELETE" });
       if (res.ok) { fetchProduct(); showMsg("Image deleted"); }
     } catch { showMsg("Failed to delete image", true); }
+  }
+
+  function triggerReplaceImage(imageId) {
+    setReplacingImageId(imageId);
+    if (replaceFileRef.current) replaceFileRef.current.value = "";
+    replaceFileRef.current?.click();
+  }
+
+  async function handleReplaceFile(e) {
+    const file = e.target.files?.[0];
+    if (!file || !replacingImageId) return;
+    const imageId = replacingImageId;
+    setReplacingImageId(null);
+
+    // Find the old image's sort position
+    const oldIdx = (product.images || []).findIndex((img) => img.id === imageId);
+    const sortPos = oldIdx >= 0 ? oldIdx : 0;
+
+    setUploadingAsset(true);
+    setUploadQueue([{ id: "replace", name: file.name, status: "uploading" }]);
+    try {
+      // 1. Upload new image (appended at end)
+      await uploadSingleAsset(file);
+
+      // 2. Delete old image
+      await fetch(`/api/admin/products/${productId}/images?imageId=${imageId}`, { method: "DELETE" });
+
+      // 3. Fetch fresh image list directly (not via state)
+      const res = await fetch(`/api/admin/products/${productId}`);
+      const data = await res.json();
+      const freshImages = data.images || [];
+
+      // 4. Reorder so the new image (last) moves to the old position
+      if (freshImages.length >= 2) {
+        const imgs = [...freshImages];
+        const newImg = imgs.pop();
+        imgs.splice(sortPos, 0, newImg);
+        const order = imgs.map((img, i) => ({ id: img.id, sortOrder: i }));
+        await fetch(`/api/admin/products/${productId}/images`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order }),
+        });
+      }
+
+      // 5. Final refresh
+      fetchProduct();
+
+      setUploadQueue([{ id: "replace", name: file.name, status: "done" }]);
+      showMsg("Image replaced");
+      setTimeout(() => setUploadQueue([]), 2000);
+    } catch {
+      setUploadQueue([{ id: "replace", name: file.name, status: "error" }]);
+      showMsg("Failed to replace image", true);
+      fetchProduct();
+    } finally {
+      setUploadingAsset(false);
+    }
+  }
+
+  async function handleRemoveBg(imageId, imageUrl) {
+    if (bgRemovingId) return;
+    setBgRemovingId(imageId);
+    try {
+      const { removeBackground } = await import("@imgly/background-removal");
+      const blob = await removeBackground(imageUrl, { output: { format: "image/png" } });
+      const file = new File([blob], `${product?.name || "image"}-nobg.png`, { type: "image/png" });
+
+      // Upload as new asset
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("altText", `${product?.name || "Product"} (no background)`);
+      formData.append("tags", "product,background-removed");
+      const uploadRes = await fetch("/api/admin/assets", { method: "POST", body: formData });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadData.error || "Upload failed");
+
+      const asset = uploadData.asset;
+      await fetch(`/api/admin/assets/${asset.id}/links`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entityType: "product", entityId: productId, purpose: "gallery" }),
+      });
+      await fetch(`/api/admin/products/${productId}/images`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: asset.originalUrl, alt: `${product?.name || "Product"} (no background)` }),
+      });
+
+      // Delete original and put new image in its place
+      const oldIdx = (product.images || []).findIndex((img) => img.id === imageId);
+      const sortPos = oldIdx >= 0 ? oldIdx : 0;
+      await fetch(`/api/admin/products/${productId}/images?imageId=${imageId}`, { method: "DELETE" });
+
+      const res = await fetch(`/api/admin/products/${productId}`);
+      const data = await res.json();
+      const freshImages = data.images || [];
+      if (freshImages.length >= 2) {
+        const imgs = [...freshImages];
+        const newImg = imgs.pop();
+        imgs.splice(sortPos, 0, newImg);
+        const order = imgs.map((img, i) => ({ id: img.id, sortOrder: i }));
+        await fetch(`/api/admin/products/${productId}/images`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order }),
+        });
+      }
+
+      fetchProduct();
+      showMsg("Background removed & replaced");
+    } catch (err) {
+      console.error("Background removal failed:", err);
+      showMsg("Background removal failed", true);
+    } finally {
+      setBgRemovingId(null);
+    }
+  }
+
+  async function handleCompressImage(imageId, imageUrl) {
+    if (compressingId) return;
+    setCompressingId(imageId);
+    try {
+      // 1. Fetch the image
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => {
+          // Retry without crossOrigin
+          const img2 = new window.Image();
+          img2.onload = () => { Object.assign(img, { naturalWidth: img2.naturalWidth, naturalHeight: img2.naturalHeight, _el: img2 }); resolve(); };
+          img2.onerror = reject;
+          img2.src = imageUrl;
+        };
+        img.src = imageUrl;
+      });
+
+      const srcEl = img._el || img;
+      const { naturalWidth: w, naturalHeight: h } = srcEl;
+
+      // 2. Determine target size — cap to 1600px, quality 0.80 WebP
+      const maxDim = 1600;
+      const quality = 0.80;
+      const ratio = Math.min(maxDim / w, maxDim / h, 1);
+      const newW = Math.round(w * ratio);
+      const newH = Math.round(h * ratio);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = newW;
+      canvas.height = newH;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(srcEl, 0, 0, newW, newH);
+
+      const blob = await new Promise((resolve) =>
+        canvas.toBlob((b) => resolve(b), "image/webp", quality)
+      );
+      if (!blob) throw new Error("Canvas toBlob failed");
+
+      const file = new File([blob], `compressed-${Date.now()}.webp`, { type: "image/webp" });
+
+      // 3. Upload compressed version
+      const oldIdx = (product.images || []).findIndex((im) => im.id === imageId);
+      const sortPos = oldIdx >= 0 ? oldIdx : 0;
+
+      await uploadSingleAsset(file);
+
+      // 4. Delete old image
+      await fetch(`/api/admin/products/${productId}/images?imageId=${imageId}`, { method: "DELETE" });
+
+      // 5. Reorder so compressed image takes the old position
+      const res = await fetch(`/api/admin/products/${productId}`);
+      const data = await res.json();
+      const freshImages = data.images || [];
+      if (freshImages.length >= 2) {
+        const imgs = [...freshImages];
+        const newImg = imgs.pop();
+        imgs.splice(sortPos, 0, newImg);
+        const order = imgs.map((im, i) => ({ id: im.id, sortOrder: i }));
+        await fetch(`/api/admin/products/${productId}/images`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order }),
+        });
+      }
+
+      fetchProduct();
+      const savedPct = blob.size < 1024 ? `${blob.size}B` : `${Math.round(blob.size / 1024)}KB`;
+      showMsg(`Compressed to ${newW}×${newH} (${savedPct})`);
+    } catch (err) {
+      console.error("Compress failed:", err);
+      showMsg("Compress failed", true);
+    } finally {
+      setCompressingId(null);
+    }
+  }
+
+  async function handleTextOverlaySave(file, replaceImageId) {
+    try {
+      // Upload the new image
+      await uploadSingleAsset(file);
+
+      if (replaceImageId) {
+        // Find the old image's sort position
+        const oldIdx = (product.images || []).findIndex((img) => img.id === replaceImageId);
+        const sortPos = oldIdx >= 0 ? oldIdx : 0;
+
+        // Delete old image
+        await fetch(`/api/admin/products/${productId}/images?imageId=${replaceImageId}`, { method: "DELETE" });
+
+        // Fetch fresh image list and reorder
+        const res = await fetch(`/api/admin/products/${productId}`);
+        const data = await res.json();
+        const freshImages = data.images || [];
+        if (freshImages.length >= 2) {
+          const imgs = [...freshImages];
+          const newImg = imgs.pop();
+          imgs.splice(sortPos, 0, newImg);
+          const order = imgs.map((img, i) => ({ id: img.id, sortOrder: i }));
+          await fetch(`/api/admin/products/${productId}/images`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order }),
+          });
+        }
+      }
+
+      fetchProduct();
+      showMsg(replaceImageId ? "Image replaced with text overlay" : "Text overlay image added");
+    } catch {
+      showMsg("Failed to save text overlay", true);
+      fetchProduct();
+    }
   }
 
   async function handleSetPrimaryImage(imageId) {
@@ -1134,26 +1377,110 @@ export default function ProductDetailPage() {
                       setDragIdx(null);
                       setDropIdx(null);
                     }}
-                    className={`group relative cursor-grab active:cursor-grabbing ${dropIdx === idx && dragIdx !== idx ? "ring-2 ring-black rounded-[3px]" : ""} ${dragIdx === idx ? "opacity-40" : ""}`}
+                    className={`group relative overflow-hidden rounded-[3px] border border-[#e0e0e0] ${dropIdx === idx && dragIdx !== idx ? "ring-2 ring-black" : ""} ${dragIdx === idx ? "opacity-40" : ""}`}
                   >
-                    <img src={img.url} alt={img.alt || product.name} className="h-24 w-full rounded-[3px] object-cover" />
-                    {idx === 0 && (
-                      <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">Primary</span>
-                    )}
-                    {idx !== 0 && (
-                      <button
-                        type="button"
-                        onClick={() => handleSetPrimaryImage(img.id)}
-                        className="absolute left-1 bottom-1 hidden rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-black transition-colors hover:bg-white group-hover:block"
-                      >
-                        Set Cover
-                      </button>
-                    )}
-                    <button type="button" onClick={() => handleDeleteImage(img.id)} className="absolute right-1 top-1 hidden rounded bg-red-500/80 p-0.5 text-white transition-colors hover:bg-red-600 group-hover:block">
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+                    {/* Image thumbnail — draggable area */}
+                    <div className="relative cursor-grab active:cursor-grabbing">
+                      <img src={img.url} alt={img.alt || product.name} className="h-28 w-full object-cover" />
+                      {idx === 0 && (
+                        <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">Cover</span>
+                      )}
+                      {(bgRemovingId === img.id || compressingId === img.id) && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        </div>
+                      )}
+                    </div>
+                    {/* Action bar — always visible, touch-friendly */}
+                    <div className="flex items-center justify-between bg-[#fafafa] px-1 py-1">
+                      {/* Left: reorder arrows */}
+                      <div className="flex gap-0.5">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => handleReorderImages(idx, idx - 1)}
+                          title="Move up"
+                          className="rounded p-1 text-[#666] hover:bg-[#e0e0e0] disabled:opacity-25"
+                        >
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === product.images.length - 1}
+                          onClick={() => handleReorderImages(idx, idx + 1)}
+                          title="Move down"
+                          className="rounded p-1 text-[#666] hover:bg-[#e0e0e0] disabled:opacity-25"
+                        >
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                      {/* Right: action buttons */}
+                      <div className="flex gap-0.5">
+                        {idx !== 0 && (
+                          <button type="button" onClick={() => handleSetPrimaryImage(img.id)} title="Set as cover" className="rounded p-1 text-[#666] hover:bg-[#e0e0e0]">
+                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveBg(img.id, img.url)}
+                          disabled={!!bgRemovingId}
+                          title="Remove background"
+                          className="rounded p-1 text-[#666] hover:bg-[#e0e0e0] disabled:opacity-40"
+                        >
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTextOverlayImg({ id: img.id, url: img.url })}
+                          title="Add text overlay"
+                          className="rounded p-1 text-[#666] hover:bg-[#e0e0e0]"
+                        >
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 5h14M12 5v14" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCompressImage(img.id, img.url)}
+                          disabled={!!compressingId}
+                          title="Compress image"
+                          className="rounded p-1 text-[#666] hover:bg-[#e0e0e0] disabled:opacity-40"
+                        >
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCropImg({ id: img.id, url: img.url })}
+                          title="Crop image"
+                          className="rounded p-1 text-[#666] hover:bg-[#e0e0e0]"
+                        >
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 3.75H6A2.25 2.25 0 003.75 6v1.5M16.5 3.75H18A2.25 2.25 0 0120.25 6v1.5M16.5 20.25H18A2.25 2.25 0 0020.25 18v-1.5M7.5 20.25H6A2.25 2.25 0 013.75 18v-1.5" />
+                          </svg>
+                        </button>
+                        <button type="button" onClick={() => triggerReplaceImage(img.id)} title="Replace image" className="rounded p-1 text-[#666] hover:bg-[#e0e0e0]">
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                        <button type="button" onClick={() => handleDeleteImage(img.id)} title="Delete image" className="rounded p-1 text-red-500 hover:bg-red-50">
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1198,6 +1525,7 @@ export default function ProductDetailPage() {
                 {uploadingAsset ? "Uploading..." : "Upload Images"}
               </button>
               <input ref={assetFileRef} type="file" accept="image/*" multiple onChange={handleAssetUpload} className="hidden" />
+              <input ref={replaceFileRef} type="file" accept="image/*" onChange={handleReplaceFile} className="hidden" />
             </div>
 
             {/* Legacy: Add by URL */}
@@ -1259,6 +1587,24 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Text Overlay Modal */}
+      {textOverlayImg && (
+        <TextOverlayModal
+          image={textOverlayImg}
+          onSave={handleTextOverlaySave}
+          onClose={() => setTextOverlayImg(null)}
+        />
+      )}
+
+      {/* Crop Modal */}
+      {cropImg && (
+        <CropModal
+          image={cropImg}
+          onSave={handleTextOverlaySave}
+          onClose={() => setCropImg(null)}
+        />
+      )}
     </div>
   );
 }

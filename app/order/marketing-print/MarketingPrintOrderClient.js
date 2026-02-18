@@ -17,6 +17,9 @@ import {
   useConfiguratorCart,
 } from "@/components/configurator";
 
+const formatCad = (cents) =>
+  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+
 export default function MarketingPrintOrderClient({ defaultType }) {
   const { t } = useTranslation();
 
@@ -53,33 +56,31 @@ export default function MarketingPrintOrderClient({ defaultType }) {
   const heightIn = selectedSize?.h ?? 2;
   const effectiveQty = customQty ? Math.max(1, parseInt(customQty) || 0) : quantity;
 
-  // Build slug for quote API
-  const quoteSlug = typeId;
-
   // --- Quote ---
-  const { quoteData, quoteLoading, quoteError, unitCents, subtotalCents, taxCents, totalCents } =
-    useConfiguratorQuote({
-      slug: quoteSlug,
-      quantity: effectiveQty,
-      widthIn,
-      heightIn,
-      material: paperId,
-      extra: {
-        sizeLabel: selectedSize?.label,
-        finishings: finishing !== "none" ? [finishing] : [],
-        sides,
-      },
-      enabled: effectiveQty > 0,
-    });
+  const quote = useConfiguratorQuote({
+    slug: typeId,
+    quantity: effectiveQty,
+    widthIn,
+    heightIn,
+    material: paperId,
+    extra: {
+      sizeLabel: selectedSize?.label,
+      finishings: finishing !== "none" ? [finishing] : [],
+      sides,
+    },
+    enabled: effectiveQty > 0,
+  });
+
+  const canAddToCart = quote.quoteData && !quote.quoteLoading && effectiveQty > 0;
 
   // --- Cart ---
   const buildCartItem = useCallback(() => {
     if (effectiveQty <= 0) return null;
     return {
-      id: quoteSlug,
-      slug: quoteSlug,
+      id: typeId,
+      slug: typeId,
       name: `${printType.label} — ${selectedSize?.label || "Custom"}`,
-      price: unitCents || 0,
+      price: quote.unitCents || 0,
       quantity: effectiveQty,
       image: null,
       options: {
@@ -91,193 +92,237 @@ export default function MarketingPrintOrderClient({ defaultType }) {
         finishing,
       },
     };
-  }, [effectiveQty, quoteSlug, printType, selectedSize, unitCents, widthIn, heightIn, paperId, sides, finishing]);
+  }, [effectiveQty, typeId, printType, selectedSize, quote.unitCents, widthIn, heightIn, paperId, sides, finishing]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
     successMessage: `${printType.label} added to cart!`,
   });
 
+  // --- Summary lines ---
+  const summaryLines = [
+    { label: "Product", value: printType.label },
+    { label: "Size", value: selectedSize?.label },
+    { label: "Paper", value: printType.papers.find((p) => p.id === paperId)?.label },
+    { label: "Sides", value: sides === "double" ? "Double-Sided" : "Single-Sided" },
+    finishing !== "none" && { label: "Finishing", value: FINISHING_LABELS[finishing] },
+    { label: "Quantity", value: effectiveQty.toLocaleString() },
+  ].filter(Boolean);
+
+  // Dynamic step numbering
+  const hasSidesStep = printType.sides.length > 1;
+  let step = 0;
+
   // --- Render ---
   return (
-    <div className="mx-auto max-w-[1600px] px-4 py-8 lg:flex lg:gap-8">
-      {/* Left: Configurator Steps */}
-      <div className="flex-1 space-y-6">
-        <ConfigHero
-          title={t("marketingPrint.title", "Marketing & Business Printing")}
-          subtitle={t("marketingPrint.subtitle", "Business cards, flyers, postcards, brochures & more")}
-        />
+    <main className="min-h-screen bg-[var(--color-gray-50)]">
+      <ConfigHero
+        breadcrumbs={[
+          { label: t("nav.shop"), href: "/shop" },
+          { label: t("marketingPrint.breadcrumb", "Marketing & Print"), href: "/shop/marketing-business-print" },
+          { label: t("marketingPrint.order", "Order") },
+        ]}
+        title={t("marketingPrint.title", "Marketing & Business Printing")}
+        subtitle={t("marketingPrint.subtitle", "Business cards, flyers, postcards, brochures & more")}
+        badges={[
+          t("marketingPrint.badgeFullColor", "Full colour printing"),
+          t("marketingPrint.badgeShipping", "Fast shipping"),
+          t("marketingPrint.badgeProof", "Free digital proof"),
+        ]}
+      />
 
-        {/* Step 1: Print Type */}
-        <ConfigStep step={1} title={t("marketingPrint.type", "Product Type")}>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-            {PRINT_TYPES.map((pt) => (
-              <button
-                key={pt.id}
-                onClick={() => handleTypeChange(pt.id)}
-                className={`rounded-lg border-2 px-3 py-2 text-sm font-medium transition ${
-                  typeId === pt.id
-                    ? "border-gray-900 bg-gray-900 text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {pt.label}
-              </button>
-            ))}
+      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+        <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+          {/* LEFT COLUMN */}
+          <div className="space-y-6 lg:col-span-2">
+
+            {/* Step 1: Print Type */}
+            <ConfigStep number={++step} title={t("marketingPrint.type", "Product Type")}>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                {PRINT_TYPES.map((pt) => (
+                  <button
+                    key={pt.id}
+                    type="button"
+                    onClick={() => handleTypeChange(pt.id)}
+                    className={`rounded-xl border-2 px-3 py-2.5 text-sm font-bold transition-all duration-150 ${
+                      typeId === pt.id
+                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    {pt.label}
+                  </button>
+                ))}
+              </div>
+            </ConfigStep>
+
+            {/* Step 2: Size */}
+            <ConfigStep number={++step} title={t("marketingPrint.size", "Size")}>
+              <div className="flex flex-wrap gap-2">
+                {printType.sizes.map((s, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSizeIdx(idx)}
+                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                      sizeIdx === idx
+                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </ConfigStep>
+
+            {/* Step 3: Paper / Stock */}
+            <ConfigStep number={++step} title={t("marketingPrint.paper", "Paper / Stock")}>
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                {printType.papers.map((p) => {
+                  const isActive = paperId === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setPaperId(p.id)}
+                      className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
+                        isActive
+                          ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
+                          : "border-gray-200 bg-white hover:border-gray-400"
+                      }`}
+                    >
+                      {isActive && (
+                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
+                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                        </span>
+                      )}
+                      <span className="text-sm font-bold text-gray-800">{p.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </ConfigStep>
+
+            {/* Step 4: Sides (conditional) */}
+            {hasSidesStep && (
+              <ConfigStep number={++step} title={t("marketingPrint.sides", "Print Sides")}>
+                <div className="flex gap-2">
+                  {["single", "double"].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setSides(s)}
+                      className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                        sides === s
+                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                      }`}
+                    >
+                      {s === "single"
+                        ? t("marketingPrint.singleSided", "Single-Sided")
+                        : t("marketingPrint.doubleSided", "Double-Sided")}
+                    </button>
+                  ))}
+                </div>
+              </ConfigStep>
+            )}
+
+            {/* Step 5: Finishing */}
+            <ConfigStep number={hasSidesStep ? ++step : ++step} title={t("marketingPrint.finishing", "Finishing")}>
+              <div className="flex flex-wrap gap-2">
+                {printType.finishings.map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setFinishing(f)}
+                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                      finishing === f
+                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    {FINISHING_LABELS[f] || f}
+                  </button>
+                ))}
+              </div>
+            </ConfigStep>
+
+            {/* Step 6: Quantity */}
+            <ConfigStep number={++step} title={t("marketingPrint.quantity", "Quantity")}>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                {printType.quantities.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => { setQuantity(q); setCustomQty(""); }}
+                    className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
+                      quantity === q && !customQty
+                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    <span className="text-base font-black">{q >= 1000 ? `${q / 1000}K` : q}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <label className="text-xs font-medium text-gray-500">{t("marketingPrint.customQty", "Custom")}:</label>
+                <input
+                  type="number"
+                  min={1}
+                  placeholder="e.g. 200"
+                  value={customQty}
+                  onChange={(e) => setCustomQty(e.target.value)}
+                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                />
+              </div>
+            </ConfigStep>
+
+            {/* Step 7: Upload Artwork */}
+            <ConfigStep number={++step} title={t("marketingPrint.artwork", "Upload Artwork")} optional>
+              <ArtworkUpload
+                uploadedFile={uploadedFile}
+                onUploaded={setUploadedFile}
+                onRemove={() => setUploadedFile(null)}
+                t={t}
+              />
+            </ConfigStep>
           </div>
-        </ConfigStep>
 
-        {/* Step 2: Size */}
-        <ConfigStep step={2} title={t("marketingPrint.size", "Size")}>
-          <div className="flex flex-wrap gap-2">
-            {printType.sizes.map((s, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSizeIdx(idx)}
-                className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition ${
-                  sizeIdx === idx
-                    ? "border-gray-900 bg-gray-900 text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </ConfigStep>
-
-        {/* Step 3: Paper / Stock */}
-        <ConfigStep step={3} title={t("marketingPrint.paper", "Paper / Stock")}>
-          <div className="flex flex-wrap gap-2">
-            {printType.papers.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setPaperId(p.id)}
-                className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition ${
-                  paperId === p.id
-                    ? "border-gray-900 bg-gray-900 text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </ConfigStep>
-
-        {/* Step 4: Sides */}
-        {printType.sides.length > 1 && (
-          <ConfigStep step={4} title={t("marketingPrint.sides", "Print Sides")}>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSides("single")}
-                className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition ${
-                  sides === "single"
-                    ? "border-gray-900 bg-gray-900 text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {t("marketingPrint.singleSided", "Single-Sided")}
-              </button>
-              <button
-                onClick={() => setSides("double")}
-                className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition ${
-                  sides === "double"
-                    ? "border-gray-900 bg-gray-900 text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {t("marketingPrint.doubleSided", "Double-Sided")}
-              </button>
-            </div>
-          </ConfigStep>
-        )}
-
-        {/* Step 5: Finishing */}
-        <ConfigStep step={printType.sides.length > 1 ? 5 : 4} title={t("marketingPrint.finishing", "Finishing")}>
-          <div className="flex flex-wrap gap-2">
-            {printType.finishings.map((f) => (
-              <button
-                key={f}
-                onClick={() => setFinishing(f)}
-                className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition ${
-                  finishing === f
-                    ? "border-gray-900 bg-gray-900 text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {FINISHING_LABELS[f] || f}
-              </button>
-            ))}
-          </div>
-        </ConfigStep>
-
-        {/* Step 6: Quantity */}
-        <ConfigStep step={printType.sides.length > 1 ? 6 : 5} title={t("marketingPrint.quantity", "Quantity")}>
-          <div className="flex flex-wrap gap-2">
-            {printType.quantities.map((q) => (
-              <button
-                key={q}
-                onClick={() => { setQuantity(q); setCustomQty(""); }}
-                className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition ${
-                  quantity === q && !customQty
-                    ? "border-gray-900 bg-gray-900 text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {q.toLocaleString()}
-              </button>
-            ))}
-            <input
-              type="number"
-              min={1}
-              placeholder="Custom"
-              value={customQty}
-              onChange={(e) => setCustomQty(e.target.value)}
-              className="w-24 rounded-lg border-2 border-gray-200 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-            />
-          </div>
-        </ConfigStep>
-
-        {/* Step 7: Upload Artwork */}
-        <ConfigStep step={printType.sides.length > 1 ? 7 : 6} title={t("marketingPrint.artwork", "Upload Artwork")}>
-          <ArtworkUpload
-            file={uploadedFile}
-            onFileChange={setUploadedFile}
-            accept=".pdf,.ai,.eps,.psd,.png,.jpg,.jpeg,.tiff,.svg"
+          {/* RIGHT COLUMN */}
+          <PricingSidebar
+            summaryLines={summaryLines}
+            quoteLoading={quote.quoteLoading}
+            quoteError={quote.quoteError}
+            unitCents={quote.unitCents}
+            subtotalCents={quote.subtotalCents}
+            taxCents={quote.taxCents}
+            totalCents={quote.totalCents}
+            canAddToCart={canAddToCart}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            buyNowLoading={buyNowLoading}
+            badges={[
+              t("marketingPrint.badgeFullColor", "Full colour"),
+              t("marketingPrint.badgeShipping", "Fast shipping"),
+            ]}
+            t={t}
           />
-        </ConfigStep>
+        </div>
       </div>
 
-      {/* Right: Pricing Sidebar */}
-      <PricingSidebar
-        productName={printType.label}
-        specs={[
-          { label: "Size", value: selectedSize?.label },
-          { label: "Paper", value: printType.papers.find((p) => p.id === paperId)?.label },
-          { label: "Sides", value: sides === "double" ? "Double-Sided" : "Single-Sided" },
-          finishing !== "none" && { label: "Finishing", value: FINISHING_LABELS[finishing] },
-          { label: "Quantity", value: effectiveQty.toLocaleString() },
-        ].filter(Boolean)}
-        unitCents={unitCents}
-        subtotalCents={subtotalCents}
-        taxCents={taxCents}
-        totalCents={totalCents}
-        loading={quoteLoading}
-        error={quoteError}
-        onAddToCart={handleAddToCart}
-        onBuyNow={handleBuyNow}
-        buyNowLoading={buyNowLoading}
-      />
-
-      {/* Mobile bottom bar */}
       <MobileBottomBar
-        totalCents={totalCents}
-        loading={quoteLoading}
+        quoteLoading={quote.quoteLoading}
+        hasQuote={!!quote.quoteData}
+        totalCents={quote.totalCents}
+        summaryText={quote.quoteData ? `${formatCad(quote.unitCents)}/ea × ${effectiveQty}` : null}
+        canAddToCart={canAddToCart}
         onAddToCart={handleAddToCart}
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
+        t={t}
       />
-    </div>
+    </main>
   );
 }

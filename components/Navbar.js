@@ -482,9 +482,12 @@ export default function Navbar({ catalogConfig }) {
             authUser ? (
               <Link
                 href="/account"
-                className="hidden md:inline-flex rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
+                className="hidden md:inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
               >
-                {t("nav.account")}
+                <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+                <span className="max-w-[120px] truncate">{authUser.companyName || authUser.name || t("nav.account")}</span>
               </Link>
             ) : (
               <Link

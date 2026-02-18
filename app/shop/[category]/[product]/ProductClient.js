@@ -7,10 +7,10 @@ import { useCartStore } from "@/lib/store";
 import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { validateDimensions } from "@/lib/materialLimits";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { UploadButton } from "@/utils/uploadthing";
 import { PaymentBadges } from "@/components/TrustBadges";
+import { MobileBottomBar, ArtworkUpload } from "@/components/configurator";
 import ImageGallery from "@/components/product/ImageGallery";
-import { trackAddToCart, trackOptionChange, trackQuoteLoaded, trackBuyNow, trackUploadStarted, trackUploadCompleted } from "@/lib/analytics";
+import { trackAddToCart, trackOptionChange, trackQuoteLoaded, trackBuyNow, trackUploadStarted } from "@/lib/analytics";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { useRecentlyViewedStore } from "@/lib/recently-viewed";
 import dynamic from "next/dynamic";
@@ -168,7 +168,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [selectedFinishings, setSelectedFinishings] = useState([]);
   const [wantsFinishing, setWantsFinishing] = useState(false);
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [selectedSizeLabel, setSelectedSizeLabel] = useState(sizeOptions[0]?.label || "");
   const [variantBase, setVariantBase] = useState("");
   const [variantValue, setVariantValue] = useState("");
@@ -441,16 +440,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     if (next && next !== material) setMaterial(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
-
-  // Auto-open More Options when this product relies on option selection for quoting.
-  useEffect(() => {
-    const shouldOpen =
-      sizeOptions.length > 0 ||
-      (!hideMaterials && materials.length > 0) ||
-      (!hideAddons && addons.length > 0) ||
-      (!hideFinishings && finishings.length > 0);
-    setShowAdvancedOptions(shouldOpen);
-  }, [product.slug, sizeOptions.length, hideMaterials, materials.length, hideAddons, addons.length, hideFinishings, finishings.length]);
 
   // Sticky mobile ATC bar - show when original button scrolls out of view
   useEffect(() => {
@@ -2166,23 +2155,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 </div>
               )}
 
-              <div className="mt-5 border-t border-[var(--color-gray-100)] pt-4 md:border-0 md:pt-0">
-                <button
-                  type="button"
-                  onClick={() => setShowAdvancedOptions((prev) => !prev)}
-                  aria-expanded={showAdvancedOptions}
-                  aria-controls="product-advanced-options"
-                  className="flex w-full items-center justify-between rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-2 text-left"
-                >
-                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
-                    {t("product.moreOptions")}
-                  </span>
-                  <span className="text-sm font-semibold text-[var(--color-gray-700)]">
-                    {showAdvancedOptions ? "-" : "+"}
-                  </span>
-                </button>
-
-                <div id="product-advanced-options" className={`${showAdvancedOptions ? "mt-4 block" : "hidden"} space-y-5 md:mt-5`}>
+              <div className="mt-5 space-y-5">
                   {scenes.length > 0 && (
                     <div>
                       <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.scene")}</label>
@@ -2525,51 +2498,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
                   <div className="space-y-2">
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.artworkUpload")}</p>
-
-                <div className="rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3">
-                  <p className="mb-2 text-xs text-[var(--color-gray-600)]">{t("product.uploadHint")}</p>
-                  <UploadButton
-                    endpoint="artworkUploader"
-                    onUploadBegin={() => {
-                      trackUploadStarted({ slug: product.slug });
-                    }}
-                    onClientUploadComplete={(res) => {
-                      const first = Array.isArray(res) ? res[0] : null;
-                      if (!first) return;
-                      setUploadedArtwork({
-                        url: first.url || null,
-                        key: first.key || null,
-                        name: first.name || null,
-                        mime: first.type || first.mime || null,
-                        size: first.size || null,
-                      });
-                      trackUploadCompleted({ slug: product.slug, fileName: first.name, fileSize: first.size });
-                    }}
-                    onUploadError={(e) => {
-                      console.error("[uploadthing]", e);
-                      showErrorToast(e?.message || "Upload failed. Please try again.");
-                    }}
-                  />
-
-                  {uploadedArtwork?.url && (
-                    <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-[var(--color-gray-200)] bg-white px-3 py-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-semibold text-[var(--color-gray-900)]">{t("product.uploaded", { name: uploadedArtwork.name || "File" })}</p>
-                        <a href={uploadedArtwork.url} target="_blank" rel="noreferrer" className="truncate text-[11px] text-[var(--color-gray-500)] underline">
-                          {uploadedArtwork.url}
-                        </a>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setUploadedArtwork(null)}
-                        className="rounded-xl border border-[var(--color-gray-300)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)]"
-                      >
-                        {t("product.removeUpload")}
-                      </button>
-                    </div>
-                  )}
-                </div>
-
+                    <ArtworkUpload
+                      uploadedFile={uploadedArtwork}
+                      onUploaded={(file) => setUploadedArtwork({ ...file, mime: null })}
+                      onRemove={() => setUploadedArtwork(null)}
+                      onBegin={() => trackUploadStarted({ slug: product.slug })}
+                      t={t}
+                    />
                   </div>
                 </div>
               </div>
@@ -2591,34 +2526,17 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
         {/* Sticky mobile Add to Cart bar */}
         {stickyVisible && (
-          <div
-            className="fixed left-2 right-2 z-[55] rounded-2xl border border-[var(--color-gray-200)] bg-white px-3 py-3 md:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.10)] sm:px-4"
-            style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom) + 8px)" }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="min-w-0 shrink-0">
-                <p className="text-lg font-black">{preTaxDisplay}</p>
-              </div>
-              <div className="flex flex-1 gap-2">
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={!canAddToCart}
-                  className={`flex-1 rounded-xl px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.14em] transition-all duration-200 ${!canAddToCart ? "border border-[var(--color-gray-200)] bg-[var(--color-gray-100)] text-[var(--color-gray-400)] cursor-not-allowed" : added ? "border border-emerald-600 bg-emerald-600 text-white" : "border border-[var(--color-ink-black)] bg-white text-[var(--color-ink-black)] hover:bg-[var(--color-gray-50)]"}`}
-                >
-                  {added ? t("product.added") : t("product.addToCart")}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleBuyNow}
-                  disabled={!canAddToCart || buyNowLoading}
-                  className={`flex-1 rounded-xl px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all duration-200 ${!canAddToCart || buyNowLoading ? "bg-[var(--color-gray-300)] cursor-not-allowed" : "bg-[var(--color-moon-gold)] hover:bg-[#9a7548]"}`}
-                >
-                  {buyNowLoading ? "..." : "Buy Now"}
-                </button>
-              </div>
-            </div>
-          </div>
+          <MobileBottomBar
+            quoteLoading={!!priceData.pending}
+            hasQuote={!priceData.unpriced && !priceData.pending && typeof priceData.total === "number"}
+            totalCents={priceData.total || 0}
+            summaryText={preTaxDisplay}
+            canAddToCart={canAddToCart}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            buyNowLoading={buyNowLoading}
+            t={t}
+          />
         )}
     </Wrapper>
   );

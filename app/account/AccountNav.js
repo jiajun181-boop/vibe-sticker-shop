@@ -9,7 +9,7 @@ const navItems = [
   { key: "account.nav.dashboard", href: "/account" },
   { key: "account.nav.orders", href: "/account/orders" },
   { key: "account.nav.addresses", href: "/account/addresses" },
-  { key: "account.nav.profile", href: "/account/profile" },
+  { key: "account.nav.profile", href: "/account/profile", b2bOnly: true },
   { key: "account.nav.favorites", href: "/account/favorites" },
   { key: "account.nav.templates", href: "/account/templates", label: "Templates" },
   { key: "account.nav.support", href: "/account/support", label: "Support" },
@@ -17,8 +17,10 @@ const navItems = [
 
 export default function AccountNav() {
   const pathname = usePathname();
+  const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const { t } = useTranslation();
+  const isB2b = user?.accountType === "B2B";
 
   const handleLogout = async () => {
     await logout();
@@ -31,7 +33,7 @@ export default function AccountNav() {
         {t("account.title")}
       </h2>
       <nav className="mt-4 flex flex-row gap-1 overflow-x-auto md:flex-col">
-        {navItems.map((item) => {
+        {navItems.filter((item) => !item.b2bOnly || isB2b).map((item) => {
           const active = pathname === item.href;
           return (
             <Link

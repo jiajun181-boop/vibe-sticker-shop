@@ -154,7 +154,7 @@ export default function PricingSidebar({
                 type="button"
                 onClick={onAddToCart}
                 disabled={!canAddToCart}
-                className={`w-full rounded-full px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
                   canAddToCart
                     ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20 hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
                     : "cursor-not-allowed bg-gray-200 text-gray-400"
@@ -166,7 +166,7 @@ export default function PricingSidebar({
                 type="button"
                 onClick={onBuyNow}
                 disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full rounded-xl border-2 px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
                   canAddToCart && !buyNowLoading
                     ? "border-gray-900 text-gray-900 hover:bg-gray-50 active:scale-[0.98]"
                     : "cursor-not-allowed border-gray-200 text-gray-400"
