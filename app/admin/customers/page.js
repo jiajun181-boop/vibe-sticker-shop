@@ -179,7 +179,7 @@ function CustomersContent() {
                         {customer.name || "\u2014"}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-block rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                        <span className="inline-block rounded-xl bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
                           {customer.orderCount}
                         </span>
                       </td>
@@ -230,7 +230,7 @@ function CustomersContent() {
                     </span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                    <span className="rounded-xl bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
                       {customer.orderCount}{" "}
                       {customer.orderCount === 1 ? "order" : "orders"}
                     </span>

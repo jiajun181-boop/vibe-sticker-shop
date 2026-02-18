@@ -33,6 +33,7 @@ const navGroups = [
     labelKey: "admin.navGroup.products",
     items: [
       { key: "admin.nav.catalogOps", href: "/admin/catalog-ops", icon: "catalog", sub: "Products & pricing" },
+      { key: "admin.nav.materials", href: "/admin/materials", icon: "package", sub: "Cost per sqft" },
     ],
   },
   {
@@ -41,6 +42,7 @@ const navGroups = [
       { key: "admin.nav.production", href: "/admin/production", icon: "printer" },
       { key: "admin.nav.factories", href: "/admin/factories", icon: "factory" },
       { key: "admin.nav.qc", href: "/admin/qc", icon: "shield", sub: "Quality checks" },
+      { key: "admin.nav.inventory", href: "/admin/inventory", icon: "package", sub: "Stock levels" },
     ],
   },
   {
@@ -64,6 +66,8 @@ const navGroups = [
     items: [
       { key: "admin.nav.media", href: "/admin/media", icon: "image" },
       { key: "admin.nav.users", href: "/admin/users", icon: "users" },
+      { key: "admin.nav.support", href: "/admin/support", icon: "ticket", sub: "Customer tickets" },
+      { key: "admin.nav.apiKeys", href: "/admin/api-keys", icon: "cog", sub: "B2B API access" },
       { key: "admin.nav.activityLog", href: "/admin/logs", icon: "clock", sub: "Change history" },
       { key: "admin.nav.settings", href: "/admin/settings", icon: "cog" },
     ],

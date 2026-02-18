@@ -45,9 +45,9 @@ export default function ReorderStrip() {
   if (loading || orders.length === 0) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+    <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4 py-10">
     <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-4 sm:p-5">
-      <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-3">
+      <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)] mb-3">
         {t("account.recentOrders")}
       </h3>
       <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide">

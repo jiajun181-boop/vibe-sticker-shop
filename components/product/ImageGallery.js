@@ -120,7 +120,7 @@ export default function ImageGallery({ images, productName }) {
         )}
 
         {canNav && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-white/30 bg-black/60 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-xl border border-white/30 bg-black/60 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur">
             {clamp(activeIndex + 1, 1, list.length)} / {list.length}
           </div>
         )}

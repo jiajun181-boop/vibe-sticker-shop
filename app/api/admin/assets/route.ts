@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "40");
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "40")));
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
     const tag = searchParams.get("tag") || "";
@@ -193,8 +193,11 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[Assets POST] Error:", message, err);
+    const publicError = process.env.NODE_ENV === "production"
+      ? "Failed to upload asset"
+      : `Failed to upload asset: ${message}`;
     return NextResponse.json(
-      { error: `Failed to upload asset: ${message}` },
+      { error: publicError },
       { status: 500 }
     );
   }
@@ -273,3 +276,4 @@ function normalizeUploadThingToken(raw: string | undefined): string {
 
   return token;
 }
+

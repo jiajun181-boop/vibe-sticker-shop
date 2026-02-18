@@ -214,7 +214,7 @@ export default function FunnelPage() {
 function MetricCard({ label, value, sublabel, change, changeLabel }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-600">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-600">{label}</p>
       <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
       <div className="mt-1 flex items-center gap-2">
         {sublabel && <p className="text-xs text-gray-600">{sublabel}</p>}

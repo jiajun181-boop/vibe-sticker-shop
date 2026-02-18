@@ -50,7 +50,7 @@ export default function QuickAddButton({ product }) {
     <button
       type="button"
       onClick={handleClick}
-      className={`inline-flex items-center justify-center gap-1 rounded-full px-3 py-2 min-h-[36px] text-[10px] font-semibold uppercase tracking-[0.15em] transition-all duration-200 ${
+      className={`inline-flex items-center justify-center gap-1 rounded-full px-3 py-2 min-h-[36px] text-[10px] font-semibold uppercase tracking-[0.14em] transition-all duration-200 ${
         added
           ? "bg-emerald-600 text-white"
           : "border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"

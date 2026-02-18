@@ -36,8 +36,18 @@ function detectLocale(request: NextRequest): string {
   return DEFAULT_LOCALE;
 }
 
+const PUBLIC_ADMIN_API_ROUTES = ["/api/admin/login", "/api/admin/setup"];
+
 export default async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
+
+  // Protect admin API routes (except login/setup) at the edge
+  if (path.startsWith("/api/admin") && !PUBLIC_ADMIN_API_ROUTES.includes(path)) {
+    const valid = await isValidAdminJwt(request);
+    if (!valid) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
 
   // i18n URL routing: /zh/xxx → rewrite to /xxx + set locale cookie
   if (path.startsWith("/zh")) {
@@ -91,7 +101,9 @@ export default async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Run on all page routes, exclude static/api/_next
+    // Run on all page routes, exclude static/_next
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)",
+    // Also run on admin API routes for edge-level auth
+    "/api/admin/:path*",
   ],
 };

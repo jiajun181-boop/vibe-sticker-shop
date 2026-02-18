@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
   const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
   const search = searchParams.get("search");
   const sort = searchParams.get("sort") || "totalSpent";
   const order = searchParams.get("order") || "desc";
@@ -47,7 +47,10 @@ export async function GET(request: NextRequest) {
       lastOrder: "lastorder",
       firstOrder: "firstorder",
     };
-    const sortCol = sortColumnMap[sort] || "totalspent";
+    // Only allow mapped keys — never pass user input to Prisma.raw
+    const sortCol = Object.prototype.hasOwnProperty.call(sortColumnMap, sort)
+      ? sortColumnMap[sort]
+      : "totalspent";
     const orderDir = order === "asc" ? Prisma.sql`ASC` : Prisma.sql`DESC`;
 
     // Get paginated customer aggregates

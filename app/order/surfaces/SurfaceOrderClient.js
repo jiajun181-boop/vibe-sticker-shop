@@ -33,6 +33,7 @@ export default function SurfaceOrderClient({ defaultType }) {
   const [customH, setCustomH] = useState("");
   const [unit, setUnit] = useState("in");
   const [materialId, setMaterialId] = useState(surfaceType.materials[0].id);
+  const [cutType, setCutType] = useState(surfaceType.cutTypes?.[0] || "rectangular");
   const [finishing, setFinishing] = useState(surfaceType.defaultFinishing);
   const [quantity, setQuantity] = useState(surfaceType.quantities[0] ?? 1);
   const [customQty, setCustomQty] = useState("");
@@ -68,6 +69,7 @@ export default function SurfaceOrderClient({ defaultType }) {
     setCustomW("");
     setCustomH("");
     setMaterialId(surfaceType.materials[0].id);
+    setCutType(surfaceType.cutTypes?.[0] || "rectangular");
     setFinishing(surfaceType.defaultFinishing);
     setQuantity(surfaceType.quantities[0] ?? 1);
     setCustomQty("");
@@ -91,13 +93,24 @@ export default function SurfaceOrderClient({ defaultType }) {
     return (FINISHING_OPTIONS[finishing]?.surcharge ?? 0) * activeQty;
   }, [finishing, activeQty]);
 
-  // Quote
+  // Resolve printMode from selected material's config
+  const selectedMat = useMemo(
+    () => surfaceType.materials.find((m) => m.id === materialId),
+    [surfaceType, materialId]
+  );
+
+  // Quote — pass cutType + printMode for COST_PLUS pricing
+  const quoteExtra = useMemo(
+    () => ({ cutType, ...(selectedMat?.printMode ? { printMode: selectedMat.printMode } : {}) }),
+    [cutType, selectedMat]
+  );
   const quote = useConfiguratorQuote({
     slug: surfaceType.defaultSlug,
     quantity: activeQty,
     widthIn,
     heightIn,
     material: materialId,
+    extra: quoteExtra,
     enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 
@@ -126,12 +139,13 @@ export default function SurfaceOrderClient({ defaultType }) {
         height: heightIn,
         sizeLabel,
         material: materialId,
+        cutType,
         finishing: finishing !== "none" ? finishing : null,
         fileName: uploadedFile?.name || null,
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.subtotalCents, activeQty, typeId, widthIn, heightIn, isCustomSize, sizeIdx, surfaceType, materialId, finishing, uploadedFile, t]);
+  }, [quote.quoteData, quote.subtotalCents, activeQty, typeId, widthIn, heightIn, isCustomSize, sizeIdx, surfaceType, materialId, cutType, finishing, uploadedFile, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -160,11 +174,23 @@ export default function SurfaceOrderClient({ defaultType }) {
     { label: t("surface.material"), value: surfaceType.materials.find((m) => m.id === materialId)?.label || materialId },
     { label: t("surface.quantity"), value: activeQty > 0 ? activeQty.toLocaleString() : "—" },
   ];
+  if (surfaceType.cutTypes && surfaceType.cutTypes.length > 1) {
+    summaryLines.push({ label: "Cut Type", value: cutType === "contour" ? "Contour Cut" : "Rectangular" });
+  }
   if (finishing && finishing !== "none") {
     summaryLines.push({ label: t("surface.finishing"), value: FINISHING_OPTIONS[finishing]?.label || finishing });
   }
 
   const extraRows = [];
+  // Show COST_PLUS breakdown lines from quote data
+  if (quote.quoteData?.meta?.model === "COST_PLUS" && Array.isArray(quote.quoteData.breakdown)) {
+    for (const line of quote.quoteData.breakdown) {
+      extraRows.push({
+        label: line.label,
+        value: `$${(line.amount / 100).toFixed(2)}`,
+      });
+    }
+  }
   if (finishingSurcharge > 0) {
     extraRows.push({ label: t("surface.finishingSurcharge"), value: `+ $${(finishingSurcharge / 100).toFixed(2)}` });
   }
@@ -187,7 +213,7 @@ export default function SurfaceOrderClient({ defaultType }) {
         badges={[t("surface.badgeDurable"), t("surface.badgeShipping"), t("surface.badgeProof")]}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           <div className="space-y-6 lg:col-span-2">
 
@@ -195,7 +221,7 @@ export default function SurfaceOrderClient({ defaultType }) {
             <ConfigStep number={stepNum++} title={t("surface.type.label")} subtitle={t("surface.type.subtitle")}>
               {Object.entries(typesByApp).map(([app, types]) => (
                 <div key={app} className="mb-4 last:mb-0">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
                     {APPLICATION_LABELS[app] || app}
                   </p>
                   <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
@@ -291,7 +317,7 @@ export default function SurfaceOrderClient({ defaultType }) {
                       )}
                       <span className="text-sm font-bold text-gray-800">{mat.label}</span>
                       {surcharge && (
-                        <span className="inline-flex w-fit rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                        <span className="inline-flex w-fit rounded-xl bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
                           {surcharge}
                         </span>
                       )}
@@ -301,7 +327,40 @@ export default function SurfaceOrderClient({ defaultType }) {
               </div>
             </ConfigStep>
 
-            {/* Step 4: Finishing (if available) */}
+            {/* Step: Cut Type (if multiple options) */}
+            {surfaceType.cutTypes && surfaceType.cutTypes.length > 1 && (
+              <ConfigStep number={stepNum++} title="Cut Type" subtitle="Choose how your graphic will be trimmed">
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                  {surfaceType.cutTypes.map((ct) => {
+                    const isActive = cutType === ct;
+                    const label = ct === "contour" ? "Contour Cut" : "Rectangular";
+                    const desc = ct === "contour" ? "Cut around your design shape" : "Standard straight-edge cut";
+                    return (
+                      <button
+                        key={ct}
+                        type="button"
+                        onClick={() => setCutType(ct)}
+                        className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
+                          isActive
+                            ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
+                            : "border-gray-200 bg-white hover:border-gray-400"
+                        }`}
+                      >
+                        {isActive && (
+                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
+                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          </span>
+                        )}
+                        <span className="text-sm font-bold text-gray-800">{label}</span>
+                        <span className="text-[11px] text-gray-500">{desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </ConfigStep>
+            )}
+
+            {/* Step: Finishing (if available) */}
             {surfaceType.finishings.length > 0 && (
               <ConfigStep number={stepNum++} title={t("surface.finishing")} subtitle={t("surface.finishingSubtitle")}>
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">

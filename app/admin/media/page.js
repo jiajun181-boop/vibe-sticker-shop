@@ -802,7 +802,7 @@ function MediaContent() {
               {(health.orphanExamples?.length > 0 || health.missingImageProducts?.length > 0) && (
                 <div className="grid gap-2 lg:grid-cols-2">
                   <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-[#666]">Unused Images</p>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#666]">Unused Images</p>
                     <div className="space-y-1 text-xs">
                       {(health.orphanExamples || []).slice(0, 5).map((a) => (
                         <div key={a.id} className="truncate text-[#666]" title={a.originalName}>
@@ -812,7 +812,7 @@ function MediaContent() {
                     </div>
                   </div>
                   <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-[#666]">Products Missing Image</p>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#666]">Products Missing Image</p>
                     <div className="space-y-1 text-xs">
                       {(health.missingImageProducts || []).slice(0, 5).map((p) => (
                         <Link key={p.id} href={`/admin/products/${p.id}`} className="block truncate text-black underline hover:no-underline" title={`${p.name} (${p.slug})`}>

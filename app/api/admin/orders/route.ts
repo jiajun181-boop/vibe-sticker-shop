@@ -9,12 +9,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
     const status = searchParams.get("status");
     const search = searchParams.get("search");
-    const sort = searchParams.get("sort") || "createdAt";
-    const order = searchParams.get("order") || "desc";
+    const ALLOWED_SORT_FIELDS = ["createdAt", "updatedAt", "totalAmount", "status", "customerName", "customerEmail"];
+    const rawSort = searchParams.get("sort") || "createdAt";
+    const sort = ALLOWED_SORT_FIELDS.includes(rawSort) ? rawSort : "createdAt";
+    const rawOrder = searchParams.get("order") || "desc";
+    const order = rawOrder === "asc" ? "asc" : "desc";
 
     const where: Record<string, unknown> = {};
 

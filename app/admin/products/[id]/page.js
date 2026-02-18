@@ -1047,7 +1047,7 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#666] mb-2">Workflow</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#666] mb-2">Workflow</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"

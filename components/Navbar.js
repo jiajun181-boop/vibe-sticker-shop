@@ -30,6 +30,7 @@ export default function Navbar({ catalogConfig }) {
   const [searchLoading, setSearchLoading] = useState(false);
   const desktopDropdownRef = useRef(null);
   const mobileDropdownRef = useRef(null);
+  const navRef = useRef(null);
   const mobileSearchWrapperRef = useRef(null);
   const shopMenuWrapperRef = useRef(null);
   const shopTriggerRef = useRef(null);
@@ -86,6 +87,29 @@ export default function Navbar({ catalogConfig }) {
   useEffect(() => {
     return () => clearShopMenuTimers();
   }, [clearShopMenuTimers]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const updateNavOffset = () => {
+      const h = Math.ceil(navRef.current?.offsetHeight || 0);
+      root.style.setProperty("--nav-offset", `${h}px`);
+    };
+
+    updateNavOffset();
+    window.addEventListener("resize", updateNavOffset);
+
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined" && navRef.current) {
+      ro = new ResizeObserver(updateNavOffset);
+      ro.observe(navRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateNavOffset);
+      if (ro) ro.disconnect();
+      root.style.setProperty("--nav-offset", "0px");
+    };
+  }, []);
 
   // Debounced instant search
   useEffect(() => {
@@ -212,12 +236,15 @@ export default function Navbar({ catalogConfig }) {
   };
 
   return (
-    <header className="sticky top-0 z-[50] w-full border-b border-[var(--color-gray-200)] bg-[var(--color-paper-white)]/90 backdrop-blur-lg backdrop-saturate-150">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+    <header
+      ref={navRef}
+      className="sticky top-[var(--promo-offset,0px)] z-[50] w-full border-b border-[var(--color-gray-200)] bg-[var(--color-paper-white)]/90 backdrop-blur-lg backdrop-saturate-150"
+    >
+      <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2.5">
           <Image src="/logo-lunarprint.png" alt="La Lunar Printing" width={32} height={32} className="h-8 w-8" priority />
           <div className="hidden sm:block">
-            <span className="block text-sm font-semibold uppercase tracking-[0.3em] text-[var(--color-gray-800)] leading-tight">La Lunar</span>
+            <span className="block text-sm font-semibold uppercase tracking-[0.22em] text-[var(--color-gray-800)] leading-tight">La Lunar</span>
             <span className="block label-xs font-medium text-[var(--color-gray-400)] leading-tight tracking-[0.25em]">Printing Inc.</span>
           </div>
         </Link>
@@ -277,7 +304,7 @@ export default function Navbar({ catalogConfig }) {
               <div className="overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-2xl">
                 <div className="grid grid-cols-[220px_1fr]">
                   <div className="border-r border-[var(--color-gray-100)] bg-[var(--color-gray-50)]/70 p-3">
-                    <p className="px-2 pb-2 label-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">
+                    <p className="px-2 pb-2 label-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">
                       {t("nav.departments")}
                     </p>
                     <div className="space-y-1">
@@ -309,7 +336,7 @@ export default function Navbar({ catalogConfig }) {
                       </div>
                       <Link
                         href="/shop"
-                        className="inline-flex items-center gap-1 rounded-full border border-[var(--color-gray-300)] px-3 py-1 label-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-800)] hover:text-[var(--color-gray-800)]"
+                        className="inline-flex items-center gap-1 rounded-xl border border-[var(--color-gray-300)] px-3 py-1 label-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-800)] hover:text-[var(--color-gray-800)]"
                       >
                         {t("nav.exploreAll")}
                       </Link>
@@ -402,7 +429,7 @@ export default function Navbar({ catalogConfig }) {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={t("nav.searchPlaceholder")}
-                    className="w-48 rounded-full border border-[var(--color-gray-300)] px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[var(--color-moon-blue)]"
+                    className="w-48 rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[var(--color-moon-blue)]"
                     onBlur={() => { if (!searchQuery && !searchResults.length) setSearchOpen(false); }}
                   />
                   <button
@@ -433,7 +460,7 @@ export default function Navbar({ catalogConfig }) {
             <button
               type="button"
               onClick={() => setLocale(locale === "en" ? "zh" : "en")}
-              className="rounded-full border border-[var(--color-gray-300)] px-2.5 py-1.5 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
+              className="rounded-xl border border-[var(--color-gray-300)] px-2.5 py-1.5 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
               aria-label="Switch language"
             >
               {locale === "en" ? "中文" : "EN"}
@@ -452,14 +479,14 @@ export default function Navbar({ catalogConfig }) {
             authUser ? (
               <Link
                 href="/account"
-                className="hidden md:inline-flex rounded-full border border-[var(--color-gray-300)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
+                className="hidden md:inline-flex rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
               >
                 {t("nav.account")}
               </Link>
             ) : (
               <Link
                 href="/login"
-                className="hidden md:inline-flex rounded-full border border-[var(--color-gray-300)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
+                className="hidden md:inline-flex rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
               >
                 {t("nav.login")}
               </Link>
@@ -482,7 +509,7 @@ export default function Navbar({ catalogConfig }) {
           <button
             type="button"
             onClick={openCart}
-            className="relative flex items-center gap-2 rounded-full border border-[var(--color-gray-300)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-800)] transition-colors duration-200 hover:border-[var(--color-moon-blue)]"
+            className="relative flex items-center gap-2 rounded-xl border border-[var(--color-gray-300)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-800)] transition-colors duration-200 hover:border-[var(--color-moon-blue)]"
           >
             <span>{t("nav.cart")}</span>
             <span

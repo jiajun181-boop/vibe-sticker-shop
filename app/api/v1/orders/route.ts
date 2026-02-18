@@ -34,6 +34,26 @@ export async function POST(req: NextRequest) {
 
   const { email, name, items } = result.data;
 
+  // Validate all products exist and are active
+  for (const item of items) {
+    const product = await prisma.product.findFirst({
+      where: { id: item.productId, isActive: true },
+      select: { id: true, name: true },
+    });
+    if (!product) {
+      return NextResponse.json(
+        { error: `Product not found or inactive: ${item.productId}` },
+        { status: 400 }
+      );
+    }
+    if (item.unitAmount < 50) {
+      return NextResponse.json(
+        { error: `Invalid price for product ${item.productId}: minimum $0.50 per unit` },
+        { status: 400 }
+      );
+    }
+  }
+
   // Stock check
   const stockCheck = await checkStock(items.map((i) => ({ productId: i.productId, quantity: i.quantity })));
   if (!stockCheck.ok) {

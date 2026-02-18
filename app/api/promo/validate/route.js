@@ -27,7 +27,7 @@ export async function POST(req) {
     }
 
     const now = new Date();
-    if (now < coupon.validFrom || now > coupon.validTo) {
+    if ((coupon.validFrom && now < coupon.validFrom) || (coupon.validTo && now > coupon.validTo)) {
       return NextResponse.json({ error: "Promo code has expired" }, { status: 400 });
     }
 

@@ -37,7 +37,7 @@ function MaterialsEditor({ materials, onChange, t }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-xs font-semibold text-[#666] uppercase tracking-widest">{t("pricing.materials")}</span>
+          <span className="text-xs font-semibold text-[#666] uppercase tracking-[0.14em]">{t("pricing.materials")}</span>
           <p className="text-[11px] text-[#999] mt-0.5">{t("pricing.materialsDesc")}</p>
         </div>
         <button type="button" onClick={addRow} className="text-xs text-black underline hover:no-underline">{t("pricing.addMaterial")}</button>
@@ -95,7 +95,7 @@ function FinishingsEditor({ finishings, onChange, t }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-xs font-semibold text-[#666] uppercase tracking-widest">{t("pricing.finishings")}</span>
+          <span className="text-xs font-semibold text-[#666] uppercase tracking-[0.14em]">{t("pricing.finishings")}</span>
           <p className="text-[11px] text-[#999] mt-0.5">{t("pricing.finishingsDesc")}</p>
         </div>
         <button type="button" onClick={addRow} className="text-xs text-black underline hover:no-underline">{t("pricing.addFinishing")}</button>
@@ -506,7 +506,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
         )}
 
         <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#666]">Rollback Last Bulk Change</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#666]">Rollback Last Bulk Change</p>
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={rollbackTarget}
@@ -537,7 +537,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5 space-y-4">
         <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-widest text-[#666]">Quick Assign Preset</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#666]">Quick Assign Preset</span>
             <select
               value={quickPresetId}
               onChange={(e) => setQuickPresetId(e.target.value)}
@@ -586,7 +586,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
 
         <div className="grid gap-3 md:grid-cols-3">
           <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-[#999]">Category</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#999]">Category</span>
             <select
               value={bulkCategory}
               onChange={(e) => setBulkCategory(e.target.value)}
@@ -601,7 +601,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
           </label>
 
           <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-[#999]">Percent Change</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#999]">Percent Change</span>
             <div className="mt-1 flex items-center rounded-[3px] border border-[#d0d0d0] px-3 py-2">
               <input
                 type="number"
@@ -781,7 +781,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
               {isEditing && (
                 <div className="border-t border-[#e0e0e0] px-5 py-4 space-y-4 bg-[#fafafa]">
                   <label className="block">
-                    <span className="text-xs font-semibold text-[#666] uppercase tracking-widest">
+                    <span className="text-xs font-semibold text-[#666] uppercase tracking-[0.14em]">
                       Preset Name
                     </span>
                     <input
@@ -810,7 +810,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
                   )}
 
                   <label className="block">
-                    <span className="text-xs font-semibold text-[#666] uppercase tracking-widest">
+                    <span className="text-xs font-semibold text-[#666] uppercase tracking-[0.14em]">
                       Config JSON
                     </span>
                     <textarea
@@ -825,7 +825,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
                     <button
                       onClick={() => handleSave(preset.id)}
                       disabled={saving}
-                      className="px-5 py-2 rounded-[3px] bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-[#222] disabled:bg-[#999]"
+                      className="px-5 py-2 rounded-[3px] bg-black text-white text-xs font-bold uppercase tracking-[0.14em] hover:bg-[#222] disabled:bg-[#999]"
                     >
                       {saving ? "Saving..." : "Save Changes"}
                     </button>

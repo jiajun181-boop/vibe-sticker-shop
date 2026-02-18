@@ -91,7 +91,7 @@ function SmallCard({ catSlug, meta, count, previews, t }) {
           )}
         </div>
       )}
-      <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)] group-hover:text-[var(--color-gray-900)] transition-colors">
+      <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] group-hover:text-[var(--color-gray-900)] transition-colors">
         {t("mp.landing.browse")}
         <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -118,7 +118,7 @@ function ParentCard({ catSlug, meta, count, t }) {
         </div>
         <Link
           href={`/shop/${catSlug}`}
-          className="flex-none rounded-full border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)] transition-colors"
+          className="flex-none rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)] transition-colors"
         >
           {t("mp.landing.browse")}
         </Link>
@@ -129,7 +129,7 @@ function ParentCard({ catSlug, meta, count, t }) {
             <Link
               key={sg.slug}
               href={sg.href}
-              className="rounded-full border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-1.5 text-xs font-medium text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-white hover:text-[var(--color-gray-900)]"
+              className="rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-1.5 text-xs font-medium text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-white hover:text-[var(--color-gray-900)]"
             >
               {t(`catalog.sub.${sg.slug}`) !== `catalog.sub.${sg.slug}` ? t(`catalog.sub.${sg.slug}`) : sg.title}
             </Link>
@@ -186,7 +186,7 @@ function CategoryGrid({ departments, departmentMeta, categoryMeta, categoryCount
                   <div className="mt-4 space-y-6">
                     {subSections.map((ss) => (
                       <div key={ss.label}>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-3">
                           {ss.i18nKey ? t(ss.i18nKey) : ss.label}
                         </p>
                         <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -535,7 +535,7 @@ export default function ShopClient({
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[var(--color-gray-50)] via-gray-50 to-white px-3 pb-16 pt-8 text-[var(--color-gray-900)] sm:px-4 sm:pt-10">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-[1600px]">
         <Breadcrumbs items={[{ label: t("shop.header") }]} />
 
         <header className="mb-5 overflow-hidden rounded-3xl border border-[var(--color-gray-200)] bg-white shadow-sm sm:mb-6">
@@ -553,7 +553,7 @@ export default function ShopClient({
               </div>
             </div>
             <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-200)]">{t("shop.searchPlaceholder")}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-200)]">{t("shop.searchPlaceholder")}</p>
               <div className="relative mt-2">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-gray-300)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -582,13 +582,13 @@ export default function ShopClient({
                       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                     });
                   }}
-                  className="rounded-full bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)]"
+                  className="rounded-xl bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)]"
                 >
                   打印物料
                 </button>
                 <Link
                   href="/quote"
-                  className="rounded-full border border-white/30 bg-transparent px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.15em] text-white hover:bg-white/10 hover:border-white/50 transition-colors"
+                  className="rounded-xl border border-white/30 bg-transparent px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-white/10 hover:border-white/50 transition-colors"
                 >
                   {t("shop.getQuote")}
                 </Link>
@@ -597,15 +597,15 @@ export default function ShopClient({
           </div>
           <div className="grid grid-cols-3 border-t border-[var(--color-gray-100)] bg-white px-4 py-3 text-center sm:px-6">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.15em] text-[var(--color-gray-400)]">{t("shop.statsProducts")}</p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-gray-400)]">{t("shop.statsProducts")}</p>
               <p className="text-sm font-semibold text-[var(--color-gray-900)]">{products.length}</p>
             </div>
             <div className="border-x border-[var(--color-gray-100)]">
-              <p className="text-[11px] uppercase tracking-[0.15em] text-[var(--color-gray-400)]">{t("shop.statsCategories")}</p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-gray-400)]">{t("shop.statsCategories")}</p>
               <p className="text-sm font-semibold text-[var(--color-gray-900)]">{availableCategories.length}</p>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.15em] text-[var(--color-gray-400)]">{t("shop.statsMadeFor")}</p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-gray-400)]">{t("shop.statsMadeFor")}</p>
               <p className="text-sm font-semibold text-[var(--color-gray-900)]">{USE_CASES.length} {t("shop.statsIndustries")}</p>
             </div>
           </div>
@@ -619,7 +619,7 @@ export default function ShopClient({
             <button
               type="button"
               onClick={switchToAllProducts}
-              className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]"
+              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]"
             >
               Browse All
             </button>
@@ -629,7 +629,7 @@ export default function ShopClient({
               <Link
                 key={p.id}
                 href={`/shop/${p.category}/${p.slug}`}
-                className="flex-none rounded-full border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-2 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-white hover:text-[var(--color-gray-900)]"
+                className="flex-none rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-2 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-white hover:text-[var(--color-gray-900)]"
               >
                 {p.name}
               </Link>
@@ -718,7 +718,7 @@ export default function ShopClient({
                   <button
                     type="button"
                     onClick={toggleAllDepts}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
                   >
                     {allExpanded ? (
                       <>
@@ -794,7 +794,7 @@ export default function ShopClient({
               <div className="flex items-center gap-3">
                 <button
                   onClick={clearAllFilters}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-ink-black)] px-4 py-1.5 text-xs font-semibold text-white hover:bg-black transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-ink-black)] px-4 py-1.5 text-xs font-semibold text-white hover:bg-black transition-colors"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -810,7 +810,7 @@ export default function ShopClient({
             {/* Sort + View controls */}
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-gray-200)] bg-white p-3 sm:p-4">
               <div className="flex items-center gap-3">
-                <label className="text-xs uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("shop.sort")}</label>
+                <label className="text-xs uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("shop.sort")}</label>
                 <select
                   value={sortBy}
                   onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
@@ -841,7 +841,7 @@ export default function ShopClient({
                 <button
                   type="button"
                   onClick={clearAllFilters}
-                  className="mt-3 rounded-full border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)] hover:border-[var(--color-ink-black)]"
+                  className="mt-3 rounded-xl border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)] hover:border-[var(--color-ink-black)]"
                 >
                   {t("shop.clearFilters")}
                 </button>
@@ -861,11 +861,11 @@ export default function ShopClient({
                     <Link href={href} className={`relative block bg-[var(--color-gray-100)] ${viewMode === "list" ? "h-36 w-32 sm:h-44 sm:w-52 flex-shrink-0" : "aspect-[4/3]"}`}>
                       <Image src={imageSrc} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" unoptimized={isSvgImage(imageSrc)} />
                       {product.sortOrder != null && product.sortOrder <= 2 && (
-                        <span className="absolute top-2 right-2 bg-amber-500 text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full z-10">
+                        <span className="absolute top-2 right-2 bg-amber-500 text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-xl z-10">
                           {t("shop.popular")}
                         </span>
                       )}
-                      {isOutOfStock && <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-semibold text-white">{t("shop.outOfStock")}</span>}
+                      {isOutOfStock && <span className="absolute left-2 top-2 rounded-xl bg-red-600 px-2.5 py-1 text-[11px] font-semibold text-white">{t("shop.outOfStock")}</span>}
                     </Link>
                     <button
                       type="button"
@@ -900,13 +900,13 @@ export default function ShopClient({
                       <div className="mt-3 flex gap-2">
                         <Link
                           href={href}
-                          className="flex-1 rounded-full bg-[var(--color-ink-black)] px-3 py-2 text-center label-sm text-white transition-colors hover:bg-black"
+                          className="flex-1 rounded-xl bg-[var(--color-ink-black)] px-3 py-2 text-center label-sm text-white transition-colors hover:bg-black"
                         >
                           {t("shop.viewDetails")}
                         </Link>
                         <button
                           onClick={() => quickAdd(product)}
-                          className="rounded-full border border-[var(--color-gray-300)] px-3 py-2 label-sm text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
+                          className="rounded-xl border border-[var(--color-gray-300)] px-3 py-2 label-sm text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
                         >
                           {t("shop.quickAdd")}
                         </button>
@@ -919,7 +919,7 @@ export default function ShopClient({
 
             {hasMore && (
               <div className="pt-2">
-                <button onClick={() => setPage((p) => p + 1)} className="rounded-full border border-[var(--color-gray-300)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]">
+                <button onClick={() => setPage((p) => p + 1)} className="rounded-xl border border-[var(--color-gray-300)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]">
                   {t("shop.loadMore")}
                 </button>
               </div>

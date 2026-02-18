@@ -55,17 +55,17 @@ export default function InteracCheckoutPage() {
   if (submitted) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <div className="mb-4 text-5xl">✅</div>
-        <h1 className="mb-2 text-2xl font-bold">Order Placed!</h1>
+        <div className="mb-4 text-4xl font-semibold text-gray-900">Order Confirmed</div>
+        <h1 className="mb-2 text-2xl font-bold">Order Placed</h1>
         <p className="mb-4 text-gray-600">
-          Order #{submitted.orderId?.slice(0, 8)} — {formatCad(submitted.totalAmount)}
+          Order #{submitted.orderId?.slice(0, 8)} - {formatCad(submitted.totalAmount)}
         </p>
         <p className="mb-6 text-gray-600">
-          We've sent Interac e-Transfer instructions to your email. Your order will be processed once payment is received.
+          We sent Interac e-Transfer instructions to your email. Your order will be processed after payment is received.
         </p>
         <a
           href="/shop"
-          className="inline-block rounded-lg bg-gray-900 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+          className="inline-block rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-gray-800"
         >
           Continue Shopping
         </a>
@@ -86,12 +86,11 @@ export default function InteracCheckoutPage() {
         </div>
       ) : (
         <>
-          {/* Order summary */}
-          <div className="mb-6 rounded-xl border border-gray-200 p-4">
-            <h2 className="mb-3 text-sm font-semibold uppercase text-gray-500">Order Summary</h2>
+          <div className="mb-6 rounded-2xl border border-gray-200 p-4">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-gray-500">Order Summary</h2>
             {cart.map((item) => (
               <div key={item._cartId} className="flex justify-between border-b border-gray-100 py-2 text-sm">
-                <span>{item.name} × {item.quantity}</span>
+                <span>{item.name} x {item.quantity}</span>
                 <span>{formatCad(item.price * item.quantity)}</span>
               </div>
             ))}
@@ -110,7 +109,7 @@ export default function InteracCheckoutPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                className="w-full rounded-xl border-2 border-gray-200 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
               />
             </div>
             <div>
@@ -120,7 +119,7 @@ export default function InteracCheckoutPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                className="w-full rounded-xl border-2 border-gray-200 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
               />
             </div>
 
@@ -129,7 +128,7 @@ export default function InteracCheckoutPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-gray-900 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+              className="w-full rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
             >
               {loading ? "Placing Order..." : "Place Order with Interac e-Transfer"}
             </button>

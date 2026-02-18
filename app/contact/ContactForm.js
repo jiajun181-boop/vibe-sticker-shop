@@ -31,10 +31,10 @@ export default function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 space-y-4">
+    <form onSubmit={handleSubmit} className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-8 space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1">
-          <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">{t("contact.form.name")} *</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">{t("contact.form.name")} *</span>
           <input
             required
             value={form.name}
@@ -44,7 +44,7 @@ export default function ContactForm() {
           />
         </label>
         <label className="space-y-1">
-          <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">{t("contact.form.email")} *</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">{t("contact.form.email")} *</span>
           <input
             required
             type="email"
@@ -57,7 +57,7 @@ export default function ContactForm() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1">
-          <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">{t("contact.form.phone")}</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">{t("contact.form.phone")}</span>
           <input
             value={form.phone}
             onChange={set("phone")}
@@ -66,7 +66,7 @@ export default function ContactForm() {
           />
         </label>
         <label className="space-y-1">
-          <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">{t("contact.form.company")}</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">{t("contact.form.company")}</span>
           <input
             value={form.company}
             onChange={set("company")}
@@ -76,7 +76,7 @@ export default function ContactForm() {
         </label>
       </div>
       <label className="block space-y-1">
-        <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">{t("contact.form.message")} *</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">{t("contact.form.message")} *</span>
         <textarea
           required
           rows={5}
@@ -89,7 +89,7 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-full bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black disabled:bg-[var(--color-gray-400)]"
+        className="w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black disabled:bg-[var(--color-gray-400)]"
       >
         {loading ? t("contact.form.sending") : t("contact.form.submit")}
       </button>

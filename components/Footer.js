@@ -61,7 +61,7 @@ function FooterColumn({ title, links, defaultOpen = false }) {
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between py-3 md:pointer-events-none md:py-0"
       >
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--color-gray-500)]">{title}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-gray-500)]">{title}</p>
         <svg
           className={`h-4 w-4 text-[var(--color-gray-400)] transition-transform md:hidden ${open ? "rotate-180" : ""}`}
           fill="none"
@@ -228,6 +228,7 @@ export default function Footer({ locale = "en" }) {
         { label: t("footer.contactUs"), href: "/contact" },
         { label: t("footer.orderStatus"), href: "/track-order" },
         { label: t("footer.shipping"), href: "/returns" },
+        { label: t("footer.wholesale"), href: "/wholesale" },
         { label: t("footer.company"), href: "/about" },
       ],
     },
@@ -256,12 +257,12 @@ export default function Footer({ locale = "en" }) {
           <div className="flex items-center gap-3">
             <Image src="/logo-lunarprint.png" alt="La Lunar Printing" width={40} height={40} className="h-10 w-10" />
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[var(--color-gray-800)] leading-tight">La Lunar Printing</p>
-              <p className="mt-0.5 label-sm uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("footer.tagline")}</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--color-gray-800)] leading-tight">La Lunar Printing</p>
+              <p className="mt-0.5 label-sm uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("footer.tagline")}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 text-[var(--color-gray-500)]">
-            <span className="label-sm uppercase tracking-[0.15em]">{t("footer.madeIn")}</span>
+            <span className="label-sm uppercase tracking-[0.14em]">{t("footer.madeIn")}</span>
             <span className="rounded-md border border-[var(--color-gray-300)] px-2 py-0.5 label-xs font-semibold">CA</span>
           </div>
         </div>
@@ -277,7 +278,7 @@ export default function Footer({ locale = "en" }) {
         <div className="mt-8 border-t border-[var(--color-gray-200)] pt-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="max-w-sm">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("footer.newsletterTitle")}</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("footer.newsletterTitle")}</p>
               <NewsletterForm t={t} />
             </div>
             <div className="flex items-center gap-3">

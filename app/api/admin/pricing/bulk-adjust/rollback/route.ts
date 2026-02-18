@@ -59,13 +59,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Rollback source log not found" }, { status: 404 });
     }
 
-    const snapshots = Array.isArray(log.details?.snapshots) ? log.details.snapshots : [];
-    if (!snapshots.length) {
+    const rawSnapshots = Array.isArray(log.details?.snapshots) ? log.details.snapshots : [];
+    if (!rawSnapshots.length) {
       return NextResponse.json({ error: "No snapshots found in rollback source" }, { status: 400 });
     }
 
+    // Validate snapshot structure before writing back
+    const snapshots = rawSnapshots.filter(
+      (s: any) =>
+        s &&
+        typeof s.presetId === "string" &&
+        s.presetId.length > 0 &&
+        s.before !== undefined &&
+        s.before !== null &&
+        typeof s.before === "object"
+    );
+
+    if (!snapshots.length) {
+      return NextResponse.json({ error: "No valid snapshots in rollback source" }, { status: 400 });
+    }
+
+    // Verify all referenced presets actually exist
+    const presetIds = snapshots.map((s: any) => s.presetId);
+    const existingPresets = await prisma.pricingPreset.findMany({
+      where: { id: { in: presetIds } },
+      select: { id: true },
+    });
+    const existingIds = new Set(existingPresets.map((p) => p.id));
+    const validSnapshots = snapshots.filter((s: any) => existingIds.has(s.presetId));
+
+    if (!validSnapshots.length) {
+      return NextResponse.json({ error: "None of the referenced pricing presets exist" }, { status: 400 });
+    }
+
     await prisma.$transaction(
-      snapshots.map((s: any) =>
+      validSnapshots.map((s: any) =>
         prisma.pricingPreset.update({
           where: { id: s.presetId },
           data: { config: s.before },
@@ -79,11 +107,11 @@ export async function POST(request: NextRequest) {
       actor: auth.user?.email || "admin",
       details: {
         sourceLogId: log.id,
-        restoredPresets: snapshots.length,
+        restoredPresets: validSnapshots.length,
       },
     });
 
-    return NextResponse.json({ ok: true, restoredPresets: snapshots.length });
+    return NextResponse.json({ ok: true, restoredPresets: validSnapshots.length });
   } catch (err) {
     console.error("[Pricing rollback] POST failed:", err);
     return NextResponse.json({ error: "Failed to rollback bulk adjustment" }, { status: 500 });

@@ -303,7 +303,7 @@ export default function StampEditor({
       {/* Canvas preview */}
       <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-3">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("stamp.preview")}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("stamp.preview")}</p>
           <button
             type="button"
             onClick={() => setShowRef((v) => !v)}
@@ -324,7 +324,7 @@ export default function StampEditor({
 
       {/* Ink color presets */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)] mb-2">{t("stamp.inkColor")}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.inkColor")}</p>
         <div className="flex gap-2">
           {INK_COLORS.map((c) => (
             <button
@@ -343,7 +343,7 @@ export default function StampEditor({
       {shape === "round" && (
         <div>
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("stamp.curveAmount")}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("stamp.curveAmount")}</p>
             <span className="text-xs text-[var(--color-gray-500)]">{curveAmount}%</span>
           </div>
           <input
@@ -360,7 +360,7 @@ export default function StampEditor({
 
       {/* Template selector */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)] mb-2">{t("stamp.templates")}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.templates")}</p>
         <div className="flex gap-1 mb-2">
           {STAMP_TEMPLATE_CATEGORIES.map((cat) => (
             <button
@@ -390,7 +390,7 @@ export default function StampEditor({
 
       {/* Logo upload */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)] mb-2">{t("stamp.logo")}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.logo")}</p>
         {!logoFile ? (
           <UploadButton
             endpoint="artworkUploader"

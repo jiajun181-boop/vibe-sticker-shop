@@ -97,7 +97,7 @@ export default async function AboutPage() {
         <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">{t("about.storyBadge")}</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">{t("about.storyBadge")}</span>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight">{t("about.storyTitle")}</h2>
           <p className="mt-4 text-sm text-[var(--color-gray-600)] leading-relaxed max-w-3xl">{t("about.storyBody1")}</p>
@@ -113,7 +113,7 @@ export default async function AboutPage() {
             ].map((stat) => (
               <div key={stat.label} className="rounded-xl border border-[var(--color-gray-100)] bg-[var(--color-gray-50)] p-4 text-center">
                 <p className="text-2xl font-black tracking-tight">{stat.value}</p>
-                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)]">{stat.label}</p>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)]">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -130,7 +130,7 @@ export default async function AboutPage() {
                   <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-[var(--color-gray-900)] text-white label-xs font-bold flex items-center justify-center">
                     {"\u2713"}
                   </div>
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">{m.year}</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">{m.year}</p>
                   <p className="mt-1 text-sm text-[var(--color-gray-700)]">{t(m.key)}</p>
                 </div>
               ))}
@@ -142,7 +142,7 @@ export default async function AboutPage() {
         <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">{t("about.equipBadge")}</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">{t("about.equipBadge")}</span>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight">{t("about.equipTitle")}</h2>
           <p className="mt-3 text-sm text-[var(--color-gray-600)] max-w-3xl">{t("about.equipBody")}</p>
@@ -176,7 +176,7 @@ export default async function AboutPage() {
           <p className="mt-3 text-sm text-[var(--color-gray-600)]">{t("about.certBody")}</p>
           <div className="mt-5 flex flex-wrap gap-3">
             {certifications.map((c) => (
-              <span key={c} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-4 py-2 text-xs font-medium text-[var(--color-gray-700)]">
+              <span key={c} className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-4 py-2 text-xs font-medium text-[var(--color-gray-700)]">
                 <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -203,13 +203,13 @@ export default async function AboutPage() {
           <div className="mt-5 flex flex-wrap gap-3 relative">
             <Link
               href="/shop"
-              className="inline-block rounded-full bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
+              className="inline-block rounded-xl bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
             >
               {t("about.ctaButton")}
             </Link>
             <Link
               href="/contact"
-              className="inline-block rounded-full border border-white/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white hover:border-white/70 transition-colors"
+              className="inline-block rounded-xl border border-white/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:border-white/70 transition-colors"
             >
               {t("about.ctaContact")}
             </Link>

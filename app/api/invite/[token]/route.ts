@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { setSessionCookie, generateToken, hashToken } from "@/lib/auth";
+import { setSessionCookie } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildB2bApprovedHtml } from "@/lib/email/templates/b2b-approved";
 
@@ -121,8 +121,6 @@ export async function POST(
 
   // Create new user
   const hashedPassword = await bcrypt.hash(password, 12);
-  const emailVerifyToken = generateToken();
-  const emailVerifyTokenHash = hashToken(emailVerifyToken);
 
   const user = await prisma.user.create({
     data: {
@@ -134,8 +132,6 @@ export async function POST(
       b2bApproved: true,
       b2bApprovedAt: new Date(),
       emailVerified: true, // Invited = trusted
-      emailVerifyToken: emailVerifyTokenHash,
-      emailVerifyExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
       companyName: companyName?.trim() || invite.companyName,
       companyRole: companyRole?.trim() || null,
       partnerTier: invite.tier,

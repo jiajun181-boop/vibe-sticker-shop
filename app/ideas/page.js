@@ -44,7 +44,7 @@ export default async function IdeasPage() {
           <span className="text-[300px] font-black tracking-tighter select-none">IDEAS</span>
         </div>
         <div className="max-w-5xl mx-auto text-center relative">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-gray-500)] mb-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--color-gray-500)] mb-4">
             {t("common.essentialBrand")}
           </p>
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter">
@@ -53,16 +53,16 @@ export default async function IdeasPage() {
           <p className="mt-4 text-[var(--color-gray-400)] max-w-2xl mx-auto text-lg">
             {t("ideas.subtitle")}
           </p>
-          <p className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+          <p className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
             {t("ideas.heroTagline")}
           </p>
         </div>
       </div>
 
       {/* Use Cases section */}
-      <div className="max-w-7xl mx-auto px-6 mt-14">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4 mt-14">
         <div className="text-center mb-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-gray-400)] mb-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--color-gray-400)] mb-2">
             {t("ideas.curatedCollections")}
           </p>
           <h2 className="text-2xl md:text-3xl font-black tracking-tight">
@@ -83,7 +83,7 @@ export default async function IdeasPage() {
               <p className="mt-1 text-xs text-[var(--color-gray-400)]">
                 {t(`useCase.${uc.slug}.subtitle`)}
               </p>
-              <span className="mt-3 inline-block text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--color-gray-500)] group-hover:text-black transition-colors">
+              <span className="mt-3 inline-block text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--color-gray-500)] group-hover:text-black transition-colors">
                 {t("ideas.browseProducts")} &rarr;
               </span>
             </Link>
@@ -92,7 +92,7 @@ export default async function IdeasPage() {
       </div>
 
       {/* Tagline divider */}
-      <div className="max-w-7xl mx-auto px-6 my-10">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4 my-10">
         <div className="text-center">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--color-gray-400)]">
             {t("ideas.qualityTagline")}
@@ -101,9 +101,9 @@ export default async function IdeasPage() {
       </div>
 
       {/* Industries section */}
-      <div className="max-w-7xl mx-auto px-6 mb-14">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4 mb-14">
         <div className="text-center mb-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-gray-400)] mb-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--color-gray-400)] mb-2">
             {t("ideas.industrySolutions")}
           </p>
           <h2 className="text-2xl md:text-3xl font-black tracking-tight">
@@ -127,7 +127,7 @@ export default async function IdeasPage() {
                 <p className="mt-1 text-xs text-[var(--color-gray-400)] line-clamp-2">
                   {meta.description}
                 </p>
-                <span className="mt-2 inline-block text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--color-gray-500)] group-hover:text-black transition-colors">
+                <span className="mt-2 inline-block text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--color-gray-500)] group-hover:text-black transition-colors">
                   {t("ideas.exploreIndustry")} &rarr;
                 </span>
               </Link>
@@ -139,7 +139,7 @@ export default async function IdeasPage() {
       {/* CTA */}
       <div className="max-w-4xl mx-auto px-6">
         <div className="rounded-3xl bg-[var(--color-gray-900)] text-white p-8 md:p-12 text-center relative overflow-hidden">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--color-gray-500)] mb-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--color-gray-500)] mb-3">
             {t("ideas.ctaBadge")}
           </p>
           <h2 className="text-2xl md:text-3xl font-black tracking-tight">
@@ -151,13 +151,13 @@ export default async function IdeasPage() {
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               href="/contact"
-              className="bg-white text-black px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-[var(--color-gray-200)] transition-colors"
+              className="bg-white text-black px-6 py-3 rounded-xl text-xs font-black uppercase tracking-[0.14em] hover:bg-[var(--color-gray-200)] transition-colors"
             >
               {t("ideas.getQuote")}
             </Link>
             <Link
               href="/shop"
-              className="border border-white/30 text-white px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:border-white/70 transition-colors"
+              className="border border-white/30 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-[0.14em] hover:border-white/70 transition-colors"
             >
               {t("common.browseAll")}
             </Link>

@@ -110,7 +110,9 @@ function LockIcon({ unlocking }) {
 
 function LoginContent() {
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || searchParams.get("from") || "/admin";
+  const rawRedirect = searchParams.get("redirect") || searchParams.get("from") || "/admin";
+  // Prevent open redirect: only allow relative paths starting with /admin
+  const redirectTo = rawRedirect.startsWith("/admin") && !rawRedirect.startsWith("//") ? rawRedirect : "/admin";
 
   const [mode, setMode] = useState("loading"); // "loading" | "setup" | "email"
   const [name, setName] = useState("");
@@ -272,7 +274,7 @@ function LoginContent() {
           <div className="mb-8 flex flex-col items-center gap-4">
             <LockIcon unlocking={unlocking} />
             <div className="text-center">
-              <h1 className="text-xs font-bold uppercase tracking-[0.3em] text-white/80">
+              <h1 className="text-xs font-bold uppercase tracking-[0.22em] text-white/80">
                 {mode === "setup" ? "ADMIN SETUP" : "ADMIN"}
               </h1>
               <p className="mt-1.5 text-[11px] text-white/30">

@@ -133,7 +133,7 @@ function SubGroupCard({ group, t, maxCount }) {
             {t("shop.inquiredRecently", { count: inquiryCount })}
           </p>
 
-          <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)] group-hover:text-[var(--color-gray-900)] transition-colors">
+          <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] group-hover:text-[var(--color-gray-900)] transition-colors">
             {t("mp.landing.browse")}
             <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -145,7 +145,7 @@ function SubGroupCard({ group, t, maxCount }) {
       {/* Hover preview popover (desktop only) */}
       {hovered && group.topProducts?.length > 0 && (
         <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-full z-20 mt-1 w-56 rounded-xl border border-[var(--color-gray-200)] bg-white p-3 shadow-xl pointer-events-none animate-in fade-in-0 zoom-in-95 duration-150">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)] mb-2">
             {t("shop.hoverViewProducts")}
           </p>
           <div className="space-y-2">
@@ -249,7 +249,7 @@ export default function SubGroupLandingClient({
 
   return (
     <main className="bg-[var(--color-gray-50)] pb-20 pt-10 text-[var(--color-gray-900)]">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
@@ -335,7 +335,7 @@ export default function SubGroupLandingClient({
             <p className="text-sm text-[var(--color-gray-500)]">{t("shop.noResults")}</p>
             <button
               onClick={() => setSearch("")}
-              className="mt-3 rounded-full border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
+              className="mt-3 rounded-xl border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
             >
               {t("shop.clearFilters")}
             </button>
@@ -372,7 +372,7 @@ export default function SubGroupLandingClient({
         <div className="mt-12 text-center">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -384,7 +384,7 @@ export default function SubGroupLandingClient({
         {/* Info Footer */}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.qualityTitle")}
             </h3>
             <ul className="mt-3 space-y-2 text-sm text-[var(--color-gray-700)]">
@@ -399,17 +399,17 @@ export default function SubGroupLandingClient({
             </ul>
           </div>
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.turnaroundTitle")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">{t("mp.landing.turnaroundText")}</p>
           </div>
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.customTitle")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">{t("mp.landing.customText")}</p>
-            <Link href="/quote" className="mt-3 inline-block rounded-full bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-white hover:bg-black">
+            <Link href="/quote" className="mt-3 inline-block rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-black">
               {t("home.cta.quote")}
             </Link>
           </div>
@@ -435,7 +435,7 @@ function QuickQuoteFAB({ t }) {
   return (
     <Link
       href="/quote"
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-[var(--color-gray-900)] px-5 py-3 pb-safe text-white shadow-lg transition-all hover:bg-black hover:shadow-xl hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-4 duration-300"
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-[var(--color-gray-900)] px-5 py-3 pb-safe text-white shadow-lg transition-all hover:bg-black hover:shadow-xl hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-4 duration-300"
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />

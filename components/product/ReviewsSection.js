@@ -250,7 +250,7 @@ export default function ReviewsSection({ productId, productName }) {
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="self-start rounded-full border border-[var(--color-gray-900)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-gray-900)] transition-colors hover:bg-[var(--color-gray-900)] hover:text-white"
+            className="self-start rounded-xl border border-[var(--color-gray-900)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-gray-900)] transition-colors hover:bg-[var(--color-gray-900)] hover:text-white"
           >
             Write a Review
           </button>
@@ -362,7 +362,7 @@ export default function ReviewsSection({ productId, productName }) {
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-full bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {submitting ? "Submitting..." : "Submit Review"}
               </button>
@@ -372,7 +372,7 @@ export default function ReviewsSection({ productId, productName }) {
                   setShowForm(false);
                   setFormError(null);
                 }}
-                className="rounded-full border border-[var(--color-gray-300)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-gray-700)] transition-colors hover:bg-[var(--color-gray-50)]"
+                className="rounded-xl border border-[var(--color-gray-300)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-gray-700)] transition-colors hover:bg-[var(--color-gray-50)]"
               >
                 Cancel
               </button>
@@ -441,7 +441,7 @@ export default function ReviewsSection({ productId, productName }) {
                   {review.customerName || "Anonymous"}
                 </span>
                 {review.isVerified && (
-                  <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                  <span className="inline-flex items-center gap-0.5 rounded-xl bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
                     <svg
                       className="h-3 w-3"
                       viewBox="0 0 20 20"
@@ -482,7 +482,7 @@ export default function ReviewsSection({ productId, productName }) {
           type="button"
           onClick={handleLoadMore}
           disabled={loadingMore}
-          className="mt-4 w-full rounded-full border border-[var(--color-gray-300)] px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-700)] transition-colors hover:bg-[var(--color-gray-50)] disabled:opacity-50"
+          className="mt-4 w-full rounded-xl border border-[var(--color-gray-300)] px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)] transition-colors hover:bg-[var(--color-gray-50)] disabled:opacity-50"
         >
           {loadingMore ? "Loading..." : "Load More Reviews"}
         </button>

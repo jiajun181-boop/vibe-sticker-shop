@@ -24,8 +24,8 @@ export default function DualEntryHero({ totalCount }) {
         <Image src="/logo-lunarprint.png" alt="" width={400} height={400} />
       </div>
 
-      <div className="max-w-7xl mx-auto relative text-center">
-        <div className="animate-on-scroll inline-flex items-center gap-2 border border-[var(--color-gray-200)] bg-white px-3 py-1 rounded-full label-xs text-[var(--color-gray-600)] mb-5">
+      <div className="max-w-[1600px] mx-auto relative text-center">
+        <div className="animate-on-scroll inline-flex items-center gap-2 border border-[var(--color-gray-200)] bg-white px-3 py-1 rounded-xl label-xs text-[var(--color-gray-600)] mb-5">
           <Image src="/logo-lunarprint.png" alt="" width={16} height={16} className="h-4 w-4" />
           {t("home.badge")}
         </div>
@@ -37,7 +37,7 @@ export default function DualEntryHero({ totalCount }) {
           {t("home.subheadline")}
         </p>
 
-        <div className="animate-on-scroll delay-3 inline-flex items-center gap-2 border border-[var(--color-gray-200)] bg-white rounded-full px-4 py-1.5 label-xs text-[var(--color-gray-600)] mt-5">
+        <div className="animate-on-scroll delay-3 inline-flex items-center gap-2 border border-[var(--color-gray-200)] bg-white rounded-xl px-4 py-1.5 label-xs text-[var(--color-gray-600)] mt-5">
           <span className="w-2 h-2 rounded-full bg-[var(--color-moon-blue)] animate-pulse" />
           {t("home.productsAvailable", { count: totalCount })}
         </div>
@@ -45,13 +45,13 @@ export default function DualEntryHero({ totalCount }) {
         <div className="animate-on-scroll delay-4 mt-10 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/shop"
-            className="btn-primary-pill btn-md font-black tracking-[0.15em]"
+            className="btn-primary-pill btn-md font-black tracking-[0.14em]"
           >
             {t("home.cta.shop")}
           </Link>
           <Link
             href="/quote"
-            className="btn-secondary-pill btn-md font-black tracking-[0.15em]"
+            className="btn-secondary-pill btn-md font-black tracking-[0.14em]"
           >
             {t("home.cta.quote")}
           </Link>

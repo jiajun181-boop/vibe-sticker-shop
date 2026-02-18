@@ -44,12 +44,12 @@ export default async function QuotePrintPage({ searchParams }) {
       <header className="border-b border-[var(--color-gray-200)] pb-5">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--color-gray-500)]">La Lunar Printing Inc.</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--color-gray-500)]">La Lunar Printing Inc.</p>
             <h1 className="mt-2 text-3xl font-bold">Quote</h1>
             <p className="mt-1 text-sm text-[var(--color-gray-500)]">Generated {new Date(data.generatedAt || Date.now()).toLocaleString("en-CA")}</p>
           </div>
           <div className="text-right">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--color-gray-500)]">Reference</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--color-gray-500)]">Reference</p>
             <p className="font-mono text-xs">{data.productSlug || "-"}</p>
           </div>
         </div>
@@ -57,21 +57,21 @@ export default async function QuotePrintPage({ searchParams }) {
 
       <section className="mt-6 grid gap-6 md:grid-cols-2">
         <div className="rounded-xl border border-[var(--color-gray-200)] p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">Product</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">Product</p>
           <p className="mt-2 text-lg font-semibold">{data.productName || "-"}</p>
           <p className="mt-1 text-xs text-[var(--color-gray-500)]">Category: {data.category || "-"}</p>
           <p className="mt-1 text-xs text-[var(--color-gray-500)]">Qty: {data.quantity || "-"}</p>
         </div>
 
         <div className="rounded-xl border border-[var(--color-gray-200)] p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">SLA Window</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">SLA Window</p>
           <p className="mt-2 text-sm">Ship by: <span className="font-semibold">{data.shipByLabel || "-"}</span></p>
           <p className="mt-1 text-sm">Delivery estimate: <span className="font-semibold">{data.deliveryLabel || "-"}</span></p>
         </div>
       </section>
 
       <section className="mt-6 rounded-xl border border-[var(--color-gray-200)] p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">Configuration</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">Configuration</p>
         <div className="mt-3 grid gap-2 md:grid-cols-2">
           {selections.map((row, idx) => (
             <div key={`${row.label || "row"}-${idx}`} className="flex items-center justify-between rounded-lg border border-[var(--color-gray-100)] px-3 py-2 text-sm">
@@ -83,7 +83,7 @@ export default async function QuotePrintPage({ searchParams }) {
       </section>
 
       <section className="mt-6 rounded-xl border border-[var(--color-gray-200)] p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">Pricing (CAD)</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">Pricing (CAD)</p>
         <div className="mt-3 space-y-2 text-sm">
           <div className="flex items-center justify-between">
             <span className="text-[var(--color-gray-500)]">Unit</span>

@@ -93,7 +93,7 @@ function ResetPasswordContent() {
         ) : (
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div>
-              <label htmlFor="new-pw" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+              <label htmlFor="new-pw" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
                 {t("auth.resetPassword.newPassword")}
               </label>
               <input
@@ -106,7 +106,7 @@ function ResetPasswordContent() {
               />
             </div>
             <div>
-              <label htmlFor="confirm-pw" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+              <label htmlFor="confirm-pw" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
                 {t("auth.resetPassword.confirmPassword")}
               </label>
               <input
@@ -122,7 +122,7 @@ function ResetPasswordContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-full bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
+              className="w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
             >
               {loading ? "..." : t("auth.resetPassword.submit")}
             </button>

@@ -12,7 +12,7 @@ export default function TemplateGallery({ templates }) {
 
   return (
     <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-      <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+      <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
         {t("bc.templates")}
       </h3>
       <p className="mt-1 text-xs text-[var(--color-gray-500)]">{t("bc.templatesHint")}</p>

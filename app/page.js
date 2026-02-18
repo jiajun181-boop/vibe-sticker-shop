@@ -126,7 +126,7 @@ export default async function HomePage() {
 
         {/* 3. Popular Products */}
         <section className="py-20 bg-[var(--color-gray-50)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <QuickOrderStrip products={serializedQuickProducts} />
           </div>
         </section>
@@ -136,7 +136,7 @@ export default async function HomePage() {
 
         {/* 5. Shop by Category */}
         <section className="py-20 bg-white animate-on-scroll">
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <h2 className="heading-2 text-center mb-10">
               {t("home.shopByCategory")}
             </h2>
@@ -180,7 +180,7 @@ export default async function HomePage() {
             <div className="text-center pt-10">
               <Link
                 href="/shop"
-                className="btn-primary-pill btn-md inline-block font-black tracking-widest"
+                className="btn-primary-pill btn-md inline-block font-black tracking-[0.14em]"
               >
                 {t("home.browseAll", { count: totalCount })}
               </Link>
@@ -190,28 +190,28 @@ export default async function HomePage() {
 
         {/* 6. Shop by Use Case */}
         <section className="py-20 bg-[var(--color-gray-50)] animate-on-scroll">
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <UseCaseSection />
           </div>
         </section>
 
         {/* 7. Trust Signals */}
         <section className="py-20 bg-white animate-on-scroll">
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <TrustSignals />
           </div>
         </section>
 
         {/* 8. How It Works */}
         <section className="py-20 bg-white animate-on-scroll">
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <HowItWorks />
           </div>
         </section>
 
         {/* 9. Quote Calculator */}
         <section className="py-20 bg-[var(--color-gray-50)] animate-on-scroll">
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <QuoteCalculator products={quoteProducts} />
           </div>
         </section>
@@ -219,7 +219,7 @@ export default async function HomePage() {
         {/* 10. Featured Display Products */}
         {displayProducts.length > 0 && (
           <section className="py-20 bg-white animate-on-scroll">
-            <div className="max-w-7xl mx-auto px-6">
+            <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
               <FeaturedBanner products={displayProducts} />
             </div>
           </section>
@@ -227,7 +227,7 @@ export default async function HomePage() {
 
         {/* 11. Bundles */}
         <section className="py-20 bg-[var(--color-gray-50)] animate-on-scroll">
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <BundlesSection />
           </div>
         </section>

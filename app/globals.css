@@ -79,6 +79,11 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+html {
+  /* Keep hash-link / in-page scroll targets below sticky promo + navbar stack. */
+  scroll-padding-top: calc(var(--promo-offset, 0px) + var(--nav-offset, 72px) + 8px);
+}
+
 /* Keep global page canvases white without flattening all small gray UI surfaces. */
 [class~="min-h-screen"][class~="bg-gray-50"] {
   background-color: #fff;
@@ -203,11 +208,11 @@ input:focus, textarea:focus, select:focus {
 .btn-lg { padding: 1rem 2rem; font-size: 13px; }
 
 .btn-primary-pill {
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   background: linear-gradient(135deg, var(--color-moon-gold-light), var(--color-moon-gold), var(--color-moon-gold-dark));
   color: #fff;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   transition: transform var(--duration-fast) var(--ease-spring),
               box-shadow var(--duration-fast) var(--ease-out-cubic);
@@ -218,12 +223,12 @@ input:focus, textarea:focus, select:focus {
 }
 
 .btn-secondary-pill {
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   border: 1.5px solid var(--color-gray-300);
   background: var(--color-paper-white);
   color: var(--color-gray-700);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   transition: border-color var(--duration-fast) var(--ease-out-cubic),
               color var(--duration-fast) var(--ease-out-cubic),
@@ -238,12 +243,12 @@ input:focus, textarea:focus, select:focus {
 }
 
 .btn-outline-pill {
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   border: 1.5px solid var(--color-gray-300);
   background: transparent;
   color: var(--color-gray-700);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   transition: border-color var(--duration-fast) var(--ease-out-cubic),
               color var(--duration-fast) var(--ease-out-cubic),
@@ -258,11 +263,11 @@ input:focus, textarea:focus, select:focus {
 }
 
 .btn-dark-pill {
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   background: var(--color-ink-black);
   color: #fff;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   transition: transform var(--duration-fast) var(--ease-spring),
               box-shadow var(--duration-fast) var(--ease-out-cubic),

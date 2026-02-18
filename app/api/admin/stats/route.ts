@@ -46,7 +46,15 @@ export async function GET(request: NextRequest) {
     prisma.order.findMany({
       take: 8,
       orderBy: { createdAt: "desc" },
-      include: { _count: { select: { items: true } } },
+      select: {
+        id: true,
+        status: true,
+        paymentStatus: true,
+        totalAmount: true,
+        createdAt: true,
+        customerName: true,
+        _count: { select: { items: true } },
+      },
     }),
     ...dayBounds.map(({ start, end }) =>
       prisma.order.count({ where: { createdAt: { gte: start, lt: end } } })

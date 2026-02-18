@@ -10,7 +10,7 @@ export default function ConfigStep({ number, title, subtitle, optional, children
           <div className="flex items-baseline gap-2">
             <h2 className="text-base font-bold text-gray-900">{title}</h2>
             {optional && (
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-400">
+              <span className="rounded-xl bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-400">
                 Optional
               </span>
             )}

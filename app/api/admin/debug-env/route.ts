@@ -31,21 +31,15 @@ export async function GET(request: NextRequest) {
       ).toString("base64");
       reencodeChanges = clean !== token;
 
-      // Test if UTApi can actually parse the token
+      // Test if UTApi can actually parse the token (read-only, no env mutation)
       try {
         const { UTApi } = await import("uploadthing/server");
-        // Try with clean token
-        process.env.UPLOADTHING_TOKEN = clean;
-        const utapi = new UTApi();
-        // Force token resolution by listing files (lightweight)
+        const utapi = new UTApi({ token: clean });
         await utapi.listFiles({ limit: 1 });
         effectParseResult = "ok";
       } catch (e) {
         effectParseResult =
           e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200);
-      } finally {
-        // Restore original
-        process.env.UPLOADTHING_TOKEN = token;
       }
     } catch {
       tokenStatus = "malformed";

@@ -197,7 +197,7 @@ export default function SignOrderClient({ defaultType }) {
         badges={[t("sign.badgeWeatherproof"), t("sign.badgeShipping"), t("sign.badgeProof")]}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           <div className="space-y-6 lg:col-span-2">
 
@@ -255,7 +255,7 @@ export default function SignOrderClient({ defaultType }) {
                       )}
                       <span className="text-sm font-bold text-gray-800">{mat.label}</span>
                       {surcharge && (
-                        <span className="inline-flex w-fit rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                        <span className="inline-flex w-fit rounded-xl bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
                           {surcharge}
                         </span>
                       )}

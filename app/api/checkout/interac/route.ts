@@ -13,7 +13,7 @@ const InteracSchema = z.object({
     quantity: z.number().int().positive(),
     unitAmount: z.number().int().nonnegative(),
     meta: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
-  })).min(1),
+  })).min(1).max(50),
   email: z.string().email(),
   name: z.string().min(1),
 });
@@ -27,6 +27,27 @@ export async function POST(req: Request) {
     }
 
     const { items, email, name } = result.data;
+
+    // Verify all products exist and are active, enforce minimum price
+    for (const item of items) {
+      const product = await prisma.product.findFirst({
+        where: { id: item.productId, isActive: true },
+        select: { id: true, name: true },
+      });
+      if (!product) {
+        return NextResponse.json(
+          { error: `Product not found or inactive: ${item.name}` },
+          { status: 400 }
+        );
+      }
+      if (item.unitAmount < 50) {
+        return NextResponse.json(
+          { error: `Invalid price for ${item.name}` },
+          { status: 400 }
+        );
+      }
+    }
+
     const subtotal = items.reduce((sum, item) => sum + item.unitAmount * item.quantity, 0);
     const taxAmount = Math.round(subtotal * 0.13);
     const shippingAmount = subtotal >= 15000 ? 0 : 1500;

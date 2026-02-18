@@ -33,7 +33,7 @@ export default function PricingTierGrid({
 
             {/* Badge */}
             {tier.badge && (
-              <div className="mb-3 inline-block bg-[var(--color-ink-black)] px-3 py-1 text-xs font-bold uppercase tracking-wider text-white rounded-full">
+              <div className="mb-3 inline-block bg-[var(--color-ink-black)] px-3 py-1 text-xs font-bold uppercase tracking-wider text-white rounded-xl">
                 {tier.badge}
               </div>
             )}

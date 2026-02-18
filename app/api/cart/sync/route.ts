@@ -21,6 +21,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    // Validate and sanitize cart items to prevent storing arbitrary data
+    const MAX_CART_ITEMS = 50;
+    const sanitizedCart = cart.slice(0, MAX_CART_ITEMS).filter(
+      (item: any) =>
+        item &&
+        typeof item === "object" &&
+        typeof item.id === "string" &&
+        typeof item.name === "string" &&
+        typeof item.price === "number" &&
+        typeof item.quantity === "number"
+    ).map((item: any) => ({
+      id: String(item.id).slice(0, 100),
+      name: String(item.name).slice(0, 200),
+      price: Number(item.price),
+      quantity: Math.min(999, Math.max(1, Number(item.quantity))),
+      ...(item.options && typeof item.options === "object" ? { options: item.options } : {}),
+      ...(item._cartId && typeof item._cartId === "string" ? { _cartId: String(item._cartId).slice(0, 50) } : {}),
+    }));
+
+    if (sanitizedCart.length === 0) {
+      return NextResponse.json({ ok: false, error: "Invalid cart data" }, { status: 400 });
+    }
+
     // Look up user email if not provided
     let customerEmail = email;
     if (!customerEmail) {
@@ -44,7 +67,7 @@ export async function POST(req: Request) {
       await prisma.abandonedCart.update({
         where: { id: existing.id },
         data: {
-          cartJson: cart,
+          cartJson: sanitizedCart,
           email: customerEmail,
           updatedAt: new Date(),
         },
@@ -55,7 +78,7 @@ export async function POST(req: Request) {
         data: {
           userId: session.userId,
           email: customerEmail,
-          cartJson: cart,
+          cartJson: sanitizedCart,
           recoveryToken,
         },
       });

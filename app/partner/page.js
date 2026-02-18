@@ -89,7 +89,7 @@ function PartnerDashboard() {
               <p className="mt-1 text-sm text-white/70">{user.email}</p>
             </div>
             <div className="text-right">
-              <div className="rounded-full bg-white/20 px-4 py-1.5 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
+              <div className="rounded-xl bg-white/20 px-4 py-1.5 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
                 {TIER_LABELS[tier]} Partner
               </div>
               {user.partnerDiscount > 0 && (

@@ -1,11 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { adminLoginLimiter, getClientIp } from "@/lib/rate-limit";
+import { checkDbRateLimit, recordLoginAttempt } from "@/lib/db-rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request);
+
+    // Fast in-memory check (works within warm instances)
     const { success } = adminLoginLimiter.check(ip);
     if (!success) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+
+    // DB-backed check (persists across cold starts)
+    const dbCheck = await checkDbRateLimit(ip, {
+      windowMs: 15 * 60 * 1000,
+      max: 5,
+      route: "admin-login",
+    });
+    if (!dbCheck.success) {
       return NextResponse.json(
         { error: "Too many login attempts. Please try again later." },
         { status: 429 }
@@ -33,6 +50,7 @@ export async function POST(request: NextRequest) {
         orderBy: [{ lastLoginAt: "desc" }, { createdAt: "desc" }],
       });
       if (!candidates.length) {
+        recordLoginAttempt(ip, "admin-login", false).catch(() => {});
         return NextResponse.json(
           { error: "Invalid email or password" },
           { status: 401 }
@@ -49,11 +67,14 @@ export async function POST(request: NextRequest) {
       }
 
       if (!admin) {
+        recordLoginAttempt(ip, "admin-login", false).catch(() => {});
         return NextResponse.json(
           { error: "Invalid email or password" },
           { status: 401 }
         );
       }
+
+      recordLoginAttempt(ip, "admin-login", true).catch(() => {});
 
       // Update last login
       await prisma.adminUser.update({
@@ -86,12 +107,17 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-    if ((normalizedPassword || "").trim() !== adminPassword) {
+    const inputBuf = Buffer.from((normalizedPassword || "").trim());
+    const expectedBuf = Buffer.from(adminPassword);
+    if (inputBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(inputBuf, expectedBuf)) {
+      recordLoginAttempt(ip, "admin-login", false).catch(() => {});
       return NextResponse.json(
         { error: "Invalid password" },
         { status: 401 }
       );
     }
+
+    recordLoginAttempt(ip, "admin-login", true).catch(() => {});
 
     const { createAdminToken, COOKIE_NAME } = await import("@/lib/admin-auth");
     const token = await createAdminToken({

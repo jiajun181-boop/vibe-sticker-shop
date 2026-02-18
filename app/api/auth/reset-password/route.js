@@ -16,9 +16,7 @@ export async function POST(request) {
 
     const tokenHash = hashToken(token);
     const user = await prisma.user.findFirst({
-      where: {
-        OR: [{ passwordResetToken: tokenHash }, { passwordResetToken: token }],
-      },
+      where: { passwordResetToken: tokenHash },
     });
 
     if (!user || !user.passwordResetExpires || user.passwordResetExpires < new Date()) {

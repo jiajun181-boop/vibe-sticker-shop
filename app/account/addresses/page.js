@@ -152,13 +152,13 @@ export default function AddressesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold tracking-[0.15em] text-[var(--color-gray-900)]">
+        <h1 className="text-lg font-semibold tracking-[0.14em] text-[var(--color-gray-900)]">
           {t("account.addresses.title")}
         </h1>
         {!showForm && (
           <button
             onClick={handleAdd}
-            className="rounded-full border border-[var(--color-gray-900)] bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[var(--color-gray-800)]"
+            className="rounded-xl border border-[var(--color-gray-900)] bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-[var(--color-gray-800)]"
           >
             {t("account.addresses.add")}
           </button>
@@ -174,7 +174,7 @@ export default function AddressesPage() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1">
                 {t("account.addresses.label")}
               </label>
               <select
@@ -189,7 +189,7 @@ export default function AddressesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1">
                 {t("account.addresses.fullName")}
               </label>
               <input
@@ -200,7 +200,7 @@ export default function AddressesPage() {
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1">
                 {t("account.addresses.company")}
               </label>
               <input
@@ -211,7 +211,7 @@ export default function AddressesPage() {
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1">
                 {t("account.addresses.phone")}
               </label>
               <input
@@ -224,7 +224,7 @@ export default function AddressesPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1">
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1">
               {t("account.addresses.address1")}
             </label>
             <input
@@ -237,7 +237,7 @@ export default function AddressesPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1">
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1">
               {t("account.addresses.address2")}
             </label>
             <input
@@ -250,7 +250,7 @@ export default function AddressesPage() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1">
                 {t("account.addresses.city")}
               </label>
               <input
@@ -262,7 +262,7 @@ export default function AddressesPage() {
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1">
                 {t("account.addresses.province")}
               </label>
               <select
@@ -277,7 +277,7 @@ export default function AddressesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1">
                 {t("account.addresses.postalCode")}
               </label>
               <input
@@ -304,14 +304,14 @@ export default function AddressesPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-full bg-[var(--color-gray-900)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[var(--color-gray-800)] disabled:opacity-50"
+              className="rounded-xl bg-[var(--color-gray-900)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-[var(--color-gray-800)] disabled:opacity-50"
             >
               {saving ? t("account.profile.saving") : t("account.profile.save")}
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="rounded-full border border-[var(--color-gray-200)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)] transition-colors hover:bg-[var(--color-gray-50)]"
+              className="rounded-xl border border-[var(--color-gray-200)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)] transition-colors hover:bg-[var(--color-gray-50)]"
             >
               {t("account.addresses.cancel")}
             </button>
@@ -338,12 +338,12 @@ export default function AddressesPage() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   {addr.label && (
-                    <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
                       {addr.label}
                     </span>
                   )}
                   {addr.isDefaultShipping && (
-                    <span className="rounded-full bg-[var(--color-gray-900)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+                    <span className="rounded-xl bg-[var(--color-gray-900)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
                       {t("account.addresses.default")}
                     </span>
                   )}

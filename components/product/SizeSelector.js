@@ -30,7 +30,7 @@ export default function SizeSelector({
   return (
     <div>
       {label && (
-        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+        <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
           {label}
         </label>
       )}

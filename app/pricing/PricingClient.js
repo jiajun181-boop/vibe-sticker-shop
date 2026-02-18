@@ -121,7 +121,7 @@ function SubGroupCard({ sg, t }) {
             <p className="mt-1 text-xs font-medium text-[var(--color-primary-600)]">{fromLabel}</p>
           )}
           {hasTiers && (
-            <span className="mt-1 inline-block rounded-full bg-[var(--color-gray-100)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-gray-500)] uppercase tracking-wider">
+            <span className="mt-1 inline-block rounded-xl bg-[var(--color-gray-100)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-gray-500)] uppercase tracking-wider">
               {sg.pricingModel === "AREA_TIERED" ? t("pricing.areaBased") : t("pricing.qtyTiers")}
             </span>
           )}

@@ -16,13 +16,13 @@ export async function generateMetadata() {
 export default async function ContactPage() {
   const t = await getServerT();
   return (
-    <main className="min-h-screen bg-[var(--color-gray-50)] px-6 py-14 text-[var(--color-gray-800)]">
-      <div className="mx-auto max-w-5xl space-y-10">
-        <header className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8">
-          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gray-500)]">{t("contact.badge")}</p>
+    <main className="min-h-screen bg-[var(--color-gray-50)] px-4 py-14 text-[var(--color-gray-800)] sm:px-6">
+      <div className="mx-auto max-w-[1400px] space-y-10 2xl:px-4">
+        <header className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-8">
+          <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("contact.badge")}</p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight">{t("contact.title")}</h1>
           <p className="mt-4 text-sm text-[var(--color-gray-600)]">{t("contact.subtitle")}</p>
-          <p className="mt-3 text-[10px] font-black uppercase tracking-[0.25em] text-[var(--color-gray-400)]">
+          <p className="mt-3 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--color-gray-400)]">
             {t("common.brandTagline")}
           </p>
         </header>
@@ -31,7 +31,7 @@ export default async function ContactPage() {
           <ContactForm />
 
           <div className="space-y-6">
-            <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 space-y-4">
+            <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-8 space-y-4">
               <h2 className="text-lg font-semibold">{t("contact.info.title")}</h2>
               <div className="space-y-4 text-sm text-[var(--color-gray-600)]">
                 <div className="flex items-start gap-3">
@@ -53,7 +53,7 @@ export default async function ContactPage() {
                     <p className="font-semibold text-[var(--color-gray-900)]">{t("contact.info.phone")}</p>
                     <a href="tel:+16477834728" className="hover:text-[var(--color-gray-900)]">647-783-4728 (English)</a>
                     <br />
-                    <a href="tel:+16478869288" className="hover:text-[var(--color-gray-900)]">647-886-9288 (中文)</a>
+                    <a href="tel:+16478869288" className="hover:text-[var(--color-gray-900)]">647-886-9288 (Chinese)</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -77,7 +77,7 @@ export default async function ContactPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8">
+            <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-8">
               <h2 className="text-lg font-semibold">{t("contact.hours.title")}</h2>
               <div className="mt-3 space-y-2 text-sm text-[var(--color-gray-600)]">
                 <div className="flex justify-between">
@@ -95,7 +95,7 @@ export default async function ContactPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-2 overflow-hidden">
+            <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-2 overflow-hidden">
               <iframe
                 title="La Lunar Printing Inc. Location"
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2881.5!2d-79.2645!3d43.7735!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89d4ce80c1f5c26d%3A0x0!2s11+Progress+Ave+%2321%2C+Scarborough%2C+ON+M1P+4S7!5e0!3m2!1sen!2sca!4v1700000000000"
@@ -110,7 +110,7 @@ export default async function ContactPage() {
                 href="https://www.google.com/maps/dir/?api=1&destination=11+Progress+Ave+%2321,+Scarborough,+ON+M1P+4S7"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 flex items-center justify-center gap-2 rounded-2xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black"
+                className="mt-2 flex items-center justify-center gap-2 rounded-2xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -125,3 +125,4 @@ export default async function ContactPage() {
     </main>
   );
 }
+

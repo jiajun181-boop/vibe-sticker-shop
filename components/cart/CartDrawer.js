@@ -311,15 +311,15 @@ export default function CartDrawer() {
       >
         <div className="flex items-center justify-between border-b border-[var(--color-gray-200)] px-5 py-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold tracking-[0.25em] text-[var(--color-gray-800)]">{t("cart.title")}</h2>
+            <h2 className="text-sm font-semibold tracking-[0.16em] text-[var(--color-gray-800)]">{t("cart.title")}</h2>
             {cart.length > 0 && (
-              <span className="rounded-full bg-[var(--color-moon-blue-deep)] px-2 py-0.5 text-[10px] font-semibold text-white">{cart.length}</span>
+              <span className="rounded-xl bg-[var(--color-moon-blue-deep)] px-2 py-0.5 text-[10px] font-semibold text-white">{cart.length}</span>
             )}
           </div>
           <button
             type="button"
             onClick={closeCart}
-            className="rounded-full border border-[var(--color-gray-200)] p-2 text-[var(--color-gray-500)] transition-colors duration-200 hover:text-[var(--color-gray-900)]"
+            className="rounded-xl border border-[var(--color-gray-200)] p-2 text-[var(--color-gray-500)] transition-colors duration-200 hover:bg-[var(--color-gray-50)] hover:text-[var(--color-gray-900)]"
             aria-label={t("cart.close")}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -349,7 +349,7 @@ export default function CartDrawer() {
           <div className="flex-1 overflow-y-auto px-5 py-4">
             {cart.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[var(--color-gray-500)]">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[var(--color-gray-200)] bg-[var(--color-gray-50)]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)]">
                   <svg className="h-6 w-6 text-[var(--color-gray-400)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                   </svg>
@@ -358,7 +358,7 @@ export default function CartDrawer() {
                 <button
                   type="button"
                   onClick={closeCart}
-                  className="mt-1 rounded-full border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)]"
+                  className="mt-1 rounded-xl border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)]"
                 >
                   {t("cart.continueShopping")}
                 </button>
@@ -403,7 +403,7 @@ export default function CartDrawer() {
                             <button
                               type="button"
                               onClick={() => removeItem(item._cartId)}
-                              className="rounded-full p-1 text-[var(--color-gray-400)] transition-colors duration-200 hover:bg-[var(--color-gray-100)] hover:text-[var(--color-gray-900)]"
+                              className="rounded-lg p-1 text-[var(--color-gray-400)] transition-colors duration-200 hover:bg-[var(--color-gray-100)] hover:text-[var(--color-gray-900)]"
                               aria-label={`Remove ${item.name}`}
                             >
                               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -422,7 +422,7 @@ export default function CartDrawer() {
                                   forceNewLine: true,
                                 })
                               }
-                              className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)] transition-colors hover:text-[var(--color-gray-900)]"
+                              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] transition-colors hover:text-[var(--color-gray-900)]"
                             >
                               {t("cart.duplicate")}
                             </button>
@@ -433,7 +433,7 @@ export default function CartDrawer() {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, Math.max(1, item.quantity - 1))}
-                                className="h-10 w-10 rounded-full border border-[var(--color-gray-300)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:bg-[var(--color-gray-100)]"
+                                className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)]"
                                 aria-label="Decrease quantity"
                               >
                                 -
@@ -443,7 +443,7 @@ export default function CartDrawer() {
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, item.quantity + 1)}
                                 disabled={item.quantity >= 999}
-                                className="h-10 w-10 rounded-full border border-[var(--color-gray-300)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:bg-[var(--color-gray-100)] disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)] disabled:opacity-40 disabled:cursor-not-allowed"
                                 aria-label="Increase quantity"
                               >
                                 +
@@ -468,7 +468,7 @@ export default function CartDrawer() {
           {cart.length > 0 && (
             <div className="space-y-3 border-t border-[var(--color-gray-200)] px-5 py-4">
               <div className="rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3">
-                <label htmlFor="promo" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+                <label htmlFor="promo" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
                   {t("cart.promoCode")}
                 </label>
                 <div className="mt-2 flex gap-2">
@@ -477,13 +477,13 @@ export default function CartDrawer() {
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
                     placeholder={t("cart.enterCode")}
-                    className="w-full rounded-lg border border-[var(--color-gray-300)] px-3 py-2 text-sm outline-none focus:border-[var(--color-gray-500)]"
+                    className="w-full rounded-xl border-2 border-[var(--color-gray-200)] bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-gray-500)]"
                   />
                   <button
                     type="button"
                     onClick={handleApplyPromo}
                     disabled={promoLoading || !promoCode.trim()}
-                    className="rounded-lg border border-[var(--color-gray-300)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-600)] disabled:opacity-50"
+                    className="rounded-xl border-2 border-[var(--color-gray-200)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-400)] disabled:opacity-50"
                   >
                     {promoLoading ? "..." : t("cart.apply")}
                   </button>
@@ -506,7 +506,7 @@ export default function CartDrawer() {
                       <button
                         type="button"
                         onClick={() => { setPromoDiscount(null); setPromoCode(""); }}
-                        className="rounded-full p-0.5 text-[var(--color-gray-400)] hover:text-[var(--color-gray-600)]"
+                        className="rounded-lg p-0.5 text-[var(--color-gray-400)] hover:text-[var(--color-gray-600)]"
                         aria-label={t("cart.removePromo")}
                       >
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -535,7 +535,7 @@ export default function CartDrawer() {
                 <button
                   type="button"
                   onClick={() => setCheckoutMode("stripe")}
-                  className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] ${
+                  className={`rounded-xl border-2 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${
                     checkoutMode === "stripe"
                       ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
                       : "border-[var(--color-gray-300)] text-[var(--color-gray-600)]"
@@ -546,7 +546,7 @@ export default function CartDrawer() {
                 <button
                   type="button"
                   onClick={() => setCheckoutMode("invoice")}
-                  className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] ${
+                  className={`rounded-xl border-2 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${
                     checkoutMode === "invoice"
                       ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
                       : "border-[var(--color-gray-300)] text-[var(--color-gray-600)]"
@@ -558,7 +558,7 @@ export default function CartDrawer() {
 
             {checkoutMode === "invoice" && (
               <div className="space-y-2 rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("cart.invoiceDetails")}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("cart.invoiceDetails")}</p>
                 <input
                   value={invoiceForm.companyName}
                   onChange={(e) => setInvoiceForm((prev) => ({ ...prev, companyName: e.target.value }))}
@@ -620,7 +620,7 @@ export default function CartDrawer() {
                 type="button"
                 onClick={handleInvoiceCheckout}
                 disabled={invoiceSubmitting}
-                className="w-full rounded-full border border-[var(--color-gray-900)] bg-white px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-900)] transition-colors hover:bg-[var(--color-gray-100)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-xl border border-[var(--color-gray-900)] bg-white px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-900)] transition-colors hover:bg-[var(--color-gray-100)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {invoiceSubmitting ? t("cart.processing") : t("cart.submitInvoiceOrder")}
               </button>
@@ -629,7 +629,7 @@ export default function CartDrawer() {
               <button
                 type="button"
                 onClick={closeCart}
-                className="w-full rounded-full border border-[var(--color-gray-300)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)]"
+                className="w-full rounded-xl border border-[var(--color-gray-300)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)]"
               >
                 {t("cart.continueShopping")}
               </button>

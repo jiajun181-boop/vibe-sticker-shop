@@ -7,7 +7,7 @@ export default function GuaranteeInfo() {
   const { t } = useTranslation();
   return (
     <div className="rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-4 space-y-2">
-      <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+      <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
         {t("guarantee.title")}
       </h3>
       <ul className="space-y-1.5 text-xs text-[var(--color-gray-600)]">

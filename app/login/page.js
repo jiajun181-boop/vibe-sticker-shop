@@ -58,7 +58,7 @@ function LoginContent() {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <div>
-            <label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+            <label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
               {t("auth.login.email")}
             </label>
             <input
@@ -74,7 +74,7 @@ function LoginContent() {
 
           <div>
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+              <label htmlFor="password" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
                 {t("auth.login.password")}
               </label>
               <Link href="/forgot-password" className="text-xs text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]">
@@ -96,7 +96,7 @@ function LoginContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-full bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
+            className="w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
           >
             {loading ? t("auth.login.signingIn") : t("auth.login.submit")}
           </button>

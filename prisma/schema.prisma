@@ -191,6 +191,34 @@ model PricingPreset {
   @@index([model, isActive])
 }
 
+model Material {
+  id           String   @id @default(cuid())
+  sortOrder    Int      @default(0)
+  type         String   // "Adhesive Vinyl", "Non-Adhesive", "Banner"
+  name         String
+  family       String?  // "Frontlit", "Mesh", "Double-Sided"
+  rollSpec     String?  // "54"×150' | 4mil | Gloss | Perm"
+  minWidthIn   Float?   @default(9)
+  widthIn      Float?
+  minLengthFt  Float?   @default(10)
+  lengthFt     Float?
+  lengthIn     Float?
+  thickness    String?  // mil or gsm
+  texture      String?
+  rollCost     Float    @default(0)
+  sqftPerRoll  Float    @default(0)
+  costPerSqft  Float    @default(0)
+  costPerSqm   Float    @default(0)
+  lamination   String?
+  printMode    String   @default("cmyk")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([type, isActive])
+  @@index([sortOrder])
+}
+
 model ProductImage {
   id        String   @id @default(cuid())
   productId String
@@ -584,6 +612,7 @@ enum PricingModel {
   AREA_TIERED
   QTY_TIERED
   QTY_OPTIONS
+  COST_PLUS
 }
 
 enum ColorMode {
@@ -860,4 +889,15 @@ model TicketMessage {
   createdAt  DateTime      @default(now())
 
   @@index([ticketId, createdAt])
+}
+
+// Rate limiting — persists across serverless cold starts
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  ip        String
+  route     String   // e.g. "admin-login", "auth-login", "forgot-password"
+  success   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([ip, route, createdAt])
 }

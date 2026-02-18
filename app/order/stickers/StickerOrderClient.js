@@ -199,6 +199,7 @@ export default function StickerOrderClient({ defaultType }) {
         widthIn,
         heightIn,
         material: materialId,
+        sizeLabel: !isCustomSize ? cutting.sizes[sizeIdx]?.label : undefined,
       }),
       signal: ac.signal,
     })
@@ -219,7 +220,7 @@ export default function StickerOrderClient({ defaultType }) {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [slug, widthIn, heightIn, activeQty, materialId, dimErrors]);
+  }, [slug, widthIn, heightIn, activeQty, materialId, dimErrors, isCustomSize, cutting, sizeIdx]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -374,7 +375,7 @@ export default function StickerOrderClient({ defaultType }) {
     <main className="min-h-screen bg-[var(--color-gray-50)]">
       {/* Hero header */}
       <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 lg:px-8">
           <Breadcrumbs
             items={[
               { label: t("nav.shop"), href: "/shop" },
@@ -407,7 +408,7 @@ export default function StickerOrderClient({ defaultType }) {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* ================================================================
               LEFT COLUMN — Configurator Steps (2/3)
@@ -588,7 +589,7 @@ export default function StickerOrderClient({ defaultType }) {
                       </span>
                       <span className="text-[11px] leading-snug text-gray-400">{hint}</span>
                       {surcharge && (
-                        <span className="mt-0.5 inline-flex w-fit rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                        <span className="mt-0.5 inline-flex w-fit rounded-xl bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
                           {surcharge}
                         </span>
                       )}
@@ -722,7 +723,7 @@ export default function StickerOrderClient({ defaultType }) {
               </div>
 
               {/* Summary title */}
-              <h2 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">
+              <h2 className="text-sm font-black uppercase tracking-[0.16em] text-gray-400">
                 {t("stickerOrder.summary")}
               </h2>
 
@@ -781,7 +782,7 @@ export default function StickerOrderClient({ defaultType }) {
                     const panel = e.currentTarget.nextElementSibling;
                     panel.classList.toggle("hidden");
                   }}
-                  className="flex w-full items-center justify-between text-xs font-bold uppercase tracking-[0.15em] text-gray-400 hover:text-gray-600"
+                  className="flex w-full items-center justify-between text-xs font-bold uppercase tracking-[0.14em] text-gray-400 hover:text-gray-600"
                 >
                   <span>{t("stickerOrder.volumeDiscounts")}</span>
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
@@ -909,7 +910,7 @@ function ConfigStep({ number, title, subtitle, optional, children }) {
           <div className="flex items-baseline gap-2">
             <h2 className="text-base font-bold text-gray-900">{title}</h2>
             {optional && (
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-400">
+              <span className="rounded-xl bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-400">
                 Optional
               </span>
             )}

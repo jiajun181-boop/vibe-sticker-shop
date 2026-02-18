@@ -304,7 +304,7 @@ export default function BookletOrderClient({ defaultBinding }) {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
@@ -584,7 +584,7 @@ export default function BookletOrderClient({ defaultBinding }) {
                 type="button"
                 onClick={handleAddToCart}
                 disabled={!canAddToCart}
-                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
+                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] transition-all ${
                   canAddToCart
                     ? "bg-[var(--color-gray-900)] text-white hover:bg-[var(--color-gray-800)]"
                     : "cursor-not-allowed bg-[var(--color-gray-200)] text-[var(--color-gray-400)]"
@@ -596,7 +596,7 @@ export default function BookletOrderClient({ defaultBinding }) {
                 type="button"
                 onClick={handleBuyNow}
                 disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
+                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] transition-all ${
                   canAddToCart && !buyNowLoading
                     ? "border-[var(--color-gray-900)] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)]"
                     : "cursor-not-allowed border-[var(--color-gray-200)] text-[var(--color-gray-400)]"
@@ -660,7 +660,7 @@ function Section({ label, optional, children }) {
   return (
     <section>
       <div className="mb-3 flex items-baseline gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{label}</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{label}</h2>
         {optional && <span className="text-[10px] text-[var(--color-gray-400)]">(optional)</span>}
       </div>
       {children}

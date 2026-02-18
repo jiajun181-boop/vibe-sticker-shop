@@ -18,6 +18,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (orderIds.length > 500) {
+      return NextResponse.json(
+        { error: "Maximum 500 orders per export" },
+        { status: 400 }
+      );
+    }
 
     // Fetch all matching orders with their items
     const orders = await prisma.order.findMany({

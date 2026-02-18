@@ -194,7 +194,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
         <div className="bg-gradient-to-br from-[var(--color-gray-50)] to-[var(--color-gray-100)] p-8 md:p-10 flex flex-col justify-between border-t md:border-t-0 md:border-l border-[var(--color-gray-100)]">
           <div className="space-y-6">
             <div>
-              <span className="text-xs font-bold text-[var(--color-gray-400)] uppercase tracking-widest">{t("quote.estimatedPrice")}</span>
+              <span className="text-xs font-bold text-[var(--color-gray-400)] uppercase tracking-[0.14em]">{t("quote.estimatedPrice")}</span>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-5xl md:text-6xl font-black tracking-tighter">
                   {cad(estimate)}
@@ -202,7 +202,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
                 <span className="text-[var(--color-gray-400)] text-sm">{t("quote.cad")}</span>
               </div>
               {rush && (
-                <div className="inline-flex items-center gap-1.5 mt-2 bg-amber-50 text-amber-700 label-xs font-bold px-3 py-1 rounded-full">
+                <div className="inline-flex items-center gap-1.5 mt-2 bg-amber-50 text-amber-700 label-xs font-bold px-3 py-1 rounded-xl">
                   <span>&#9889;</span> {t("quote.rushIncluded")}
                 </div>
               )}
@@ -217,19 +217,19 @@ export default function QuoteCalculator({ products: serverProducts }) {
 
             {/* Summary chips */}
             <div className="flex flex-wrap gap-2">
-              <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
+              <span className="bg-white px-3 py-1.5 rounded-xl label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
                 {product.name}
               </span>
               {product.unit === "per_sqft" && (
-                <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
+                <span className="bg-white px-3 py-1.5 rounded-xl label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
                   {size.label}
                 </span>
               )}
-              <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
+              <span className="bg-white px-3 py-1.5 rounded-xl label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
                 {t("quote.qty")}: {qty}
               </span>
               {rush && (
-                <span className="bg-amber-50 px-3 py-1.5 rounded-full label-xs font-bold text-amber-700 border border-amber-200">
+                <span className="bg-amber-50 px-3 py-1.5 rounded-xl label-xs font-bold text-amber-700 border border-amber-200">
                   {t("quote.rush24h")}
                 </span>
               )}
@@ -244,7 +244,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
           <div className="mt-8 space-y-3">
             <Link
               href={product.href}
-              className="btn-dark-pill btn-lg block w-full text-center tracking-widest"
+              className="btn-dark-pill btn-lg block w-full text-center tracking-[0.14em]"
             >
               {t("quote.cta")}
             </Link>

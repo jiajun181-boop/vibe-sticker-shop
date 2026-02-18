@@ -92,7 +92,7 @@ export default function TrackOrderClient() {
       {/* Search Form */}
       <form onSubmit={handleSubmit} className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 space-y-4">
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)] mb-1">
+          <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] mb-1">
             {t("track.orderRef")}
           </label>
           <input
@@ -105,7 +105,7 @@ export default function TrackOrderClient() {
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)] mb-1">
+          <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] mb-1">
             {t("track.email")}
           </label>
           <input
@@ -120,7 +120,7 @@ export default function TrackOrderClient() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-full bg-[var(--color-gray-900)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-black transition-colors disabled:opacity-50"
+          className="w-full rounded-xl bg-[var(--color-gray-900)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:bg-black transition-colors disabled:opacity-50"
         >
           {loading ? t("track.searching") : t("track.submit")}
         </button>
@@ -158,7 +158,7 @@ export default function TrackOrderClient() {
           {/* Items */}
           {order.items && order.items.length > 0 && (
             <div className="border-t border-[var(--color-gray-100)] pt-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-2">{t("track.items")}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)] mb-2">{t("track.items")}</p>
               <div className="space-y-2">
                 {order.items.map((item, i) => (
                   <div key={i} className="flex justify-between text-sm">
@@ -181,7 +181,7 @@ export default function TrackOrderClient() {
 
           {Array.isArray(order.timeline) && order.timeline.length > 0 && (
             <div className="border-t border-[var(--color-gray-100)] pt-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-2">{t("track.timeline")}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)] mb-2">{t("track.timeline")}</p>
               <div className="space-y-2">
                 {order.timeline.map((event) => (
                   <div key={event.id} className="flex items-start gap-2">

@@ -64,18 +64,17 @@ export async function POST(
       },
     });
 
-    // Update order
-    const newRefundTotal = order.refundAmount + amountCents;
-    const isFullRefund = newRefundTotal >= order.totalAmount;
-
+    // Atomic update with optimistic concurrency check to prevent race conditions
     const updated = await prisma.order.update({
-      where: { id },
+      where: { id, refundAmount: order.refundAmount },
       data: {
-        refundAmount: newRefundTotal,
-        paymentStatus: isFullRefund ? "refunded" : "partially_refunded",
-        status: isFullRefund ? "refunded" : order.status,
+        refundAmount: { increment: amountCents },
+        paymentStatus: (order.refundAmount + amountCents) >= order.totalAmount ? "refunded" : "partially_refunded",
+        status: (order.refundAmount + amountCents) >= order.totalAmount ? "refunded" : order.status,
       },
     });
+    const newRefundTotal = updated.refundAmount;
+    const isFullRefund = newRefundTotal >= order.totalAmount;
 
     // Timeline event
     await prisma.orderTimeline.create({

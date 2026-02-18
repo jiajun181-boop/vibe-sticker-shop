@@ -28,6 +28,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate enum values
+    const VALID_STATUSES = ["draft", "pending", "paid", "canceled", "refunded"];
+    const VALID_PRODUCTION = ["not_started", "preflight", "in_production", "ready_to_ship", "shipped", "completed", "on_hold", "canceled"];
+
+    if (status !== undefined && !VALID_STATUSES.includes(status)) {
+      return NextResponse.json(
+        { error: `Invalid status value: ${status}` },
+        { status: 400 }
+      );
+    }
+    if (productionStatus !== undefined && !VALID_PRODUCTION.includes(productionStatus)) {
+      return NextResponse.json(
+        { error: `Invalid productionStatus value: ${productionStatus}` },
+        { status: 400 }
+      );
+    }
+
     // Build the data object with only provided fields
     const data: Record<string, unknown> = {};
     if (status !== undefined) data.status = status;

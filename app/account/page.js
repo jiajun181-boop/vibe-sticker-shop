@@ -79,7 +79,7 @@ export default function AccountDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold tracking-[0.15em] text-[var(--color-gray-900)]">
+      <h1 className="text-lg font-semibold tracking-[0.14em] text-[var(--color-gray-900)]">
         {t("account.welcome", { name: user?.name || "" })}
       </h1>
 
@@ -107,13 +107,13 @@ export default function AccountDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border border-[var(--color-gray-200)] p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">
             {t("account.stats.totalOrders")}
           </p>
           <p className="mt-1 text-2xl font-semibold text-[var(--color-gray-900)]">{stats.total}</p>
         </div>
         <div className="rounded-xl border border-[var(--color-gray-200)] p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">
             {t("account.stats.totalSpent")}
           </p>
           <p className="mt-1 text-2xl font-semibold text-[var(--color-gray-900)]">{formatCad(stats.spent)}</p>
@@ -123,12 +123,12 @@ export default function AccountDashboard() {
       {/* Recent Orders */}
       <div>
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold tracking-[0.15em] text-[var(--color-gray-900)]">
+          <h2 className="text-sm font-semibold tracking-[0.14em] text-[var(--color-gray-900)]">
             {t("account.recentOrders")}
           </h2>
           {orders.length > 0 && (
             <Link href="/account/orders" className="text-xs font-semibold text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]">
-              {t("account.nav.orders")} →
+              {t("account.nav.orders")} &rarr;
             </Link>
           )}
         </div>
@@ -144,7 +144,7 @@ export default function AccountDashboard() {
             <p className="text-sm text-[var(--color-gray-500)]">{t("account.orders.empty")}</p>
             <Link
               href="/shop"
-              className="mt-3 inline-block rounded-full border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
+              className="mt-3 inline-block rounded-xl border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
             >
               {t("cart.continueShopping")}
             </Link>
@@ -170,7 +170,7 @@ export default function AccountDashboard() {
                   <div className="text-right">
                     <p className="text-sm font-semibold text-[var(--color-gray-900)]">{formatCad(order.totalAmount)}</p>
                     <span
-                      className={`inline-block mt-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${
+                      className={`inline-block mt-0.5 rounded-xl px-2 py-0.5 text-[11px] font-semibold uppercase ${
                         STATUS_COLORS[order.status] || "bg-[var(--color-gray-100)] text-[var(--color-gray-500)]"
                       }`}
                     >
@@ -182,7 +182,7 @@ export default function AccountDashboard() {
                       type="button"
                       onClick={(e) => handleReorder(e, order.id)}
                       disabled={reordering === order.id}
-                      className="shrink-0 rounded-full border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)] disabled:opacity-50"
+                      className="shrink-0 rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)] disabled:opacity-50"
                     >
                       {reordering === order.id ? t("orders.reordering") : t("orders.reorder")}
                     </button>
@@ -196,3 +196,4 @@ export default function AccountDashboard() {
     </div>
   );
 }
+

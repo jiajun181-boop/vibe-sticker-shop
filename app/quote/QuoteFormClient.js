@@ -64,7 +64,7 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
   if (submitted) {
     return (
       <div className="mx-auto max-w-xl text-center">
-        <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-10">
+        <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-10">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
             <svg className="h-7 w-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -73,12 +73,12 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
           <h2 className="text-2xl font-bold text-[var(--color-gray-900)]">{t("quote.success.title")}</h2>
           <p className="mt-2 text-sm text-[var(--color-gray-500)]">{t("quote.success.message")}</p>
           <div className="mt-6 rounded-xl bg-[var(--color-gray-50)] px-4 py-3">
-            <p className="text-xs uppercase tracking-[0.15em] text-[var(--color-gray-400)]">{t("quote.success.reference")}</p>
+            <p className="text-xs uppercase tracking-[0.14em] text-[var(--color-gray-400)]">{t("quote.success.reference")}</p>
             <p className="mt-1 text-xl font-bold text-[var(--color-gray-900)]">{reference}</p>
           </div>
           <a
             href="/shop"
-            className="mt-6 inline-block rounded-full bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black"
+            className="mt-6 inline-block rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black"
           >
             {t("cart.continueShopping")}
           </a>
@@ -117,7 +117,7 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
         </div>
       </div>
 
-      <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-6 sm:p-8">
+      <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 sm:p-8">
         {/* Step 1: Product selection */}
         {step === 1 && <Step1 form={form} update={update} t={t} categoryMeta={categoryMeta} />}
 
@@ -136,7 +136,7 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
             <button
               type="button"
               onClick={() => setStep((s) => s - 1)}
-              className="rounded-full border border-[var(--color-gray-300)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+              className="rounded-xl border border-[var(--color-gray-300)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
             >
               {t("quote.back")}
             </button>
@@ -149,7 +149,7 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
               type="button"
               onClick={() => setStep((s) => s + 1)}
               disabled={!canNext()}
-              className="rounded-full bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t("quote.next")}
             </button>
@@ -158,7 +158,7 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
               type="button"
               onClick={handleSubmit}
               disabled={submitting || !form.name || !form.email}
-              className="rounded-full bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting ? t("quote.step4.submitting") : t("quote.step4.submit")}
             </button>
@@ -202,7 +202,7 @@ function Step1({ form, update, t, categoryMeta }) {
       </div>
 
       <div className="mt-4">
-        <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+        <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
           {t("quote.step1.describe")}
         </label>
         <textarea
@@ -228,7 +228,7 @@ function Step2({ form, update, t }) {
         {/* Dimensions */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+            <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
               {t("quote.step2.width")}
             </label>
             <input
@@ -240,7 +240,7 @@ function Step2({ form, update, t }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+            <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
               {t("quote.step2.height")}
             </label>
             <input
@@ -255,7 +255,7 @@ function Step2({ form, update, t }) {
 
         {/* Quantity */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+          <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
             {t("quote.step2.quantity")}
           </label>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -285,7 +285,7 @@ function Step2({ form, update, t }) {
 
         {/* Material */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+          <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
             {t("quote.step2.material")}
           </label>
           <input
@@ -299,7 +299,7 @@ function Step2({ form, update, t }) {
 
         {/* Color mode */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+          <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
             {t("quote.step2.colorMode")}
           </label>
           <div className="mt-2 flex gap-2">
@@ -325,7 +325,7 @@ function Step2({ form, update, t }) {
 
         {/* File upload hint */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+          <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
             {t("quote.step2.uploadArtwork")}
           </label>
           <p className="mt-1 text-xs text-[var(--color-gray-400)]">
@@ -347,7 +347,7 @@ function Step3({ form, update, t }) {
       <div className="mt-6 space-y-5">
         {/* Needed by */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+          <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
             {t("quote.step3.neededBy")}
           </label>
           <input
@@ -386,7 +386,7 @@ function Step3({ form, update, t }) {
         {/* Contact fields */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+            <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
               {t("quote.step3.name")} *
             </label>
             <input
@@ -399,7 +399,7 @@ function Step3({ form, update, t }) {
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+            <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
               {t("quote.step3.email")} *
             </label>
             <input
@@ -412,7 +412,7 @@ function Step3({ form, update, t }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+            <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
               {t("quote.step3.phone")}
             </label>
             <input
@@ -424,7 +424,7 @@ function Step3({ form, update, t }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-500)]">
+            <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
               {t("quote.step3.company")}
             </label>
             <input
@@ -484,7 +484,7 @@ function Step4({ form, t, categoryMeta }) {
       <div className="mt-6 space-y-4">
         {sections.map((s) => (
           <div key={s.label} className="rounded-xl bg-[var(--color-gray-50)] px-4 py-3">
-            <p className="text-xs uppercase tracking-[0.15em] text-[var(--color-gray-400)]">{s.label}</p>
+            <p className="text-xs uppercase tracking-[0.14em] text-[var(--color-gray-400)]">{s.label}</p>
             <p className="mt-1 text-sm font-medium text-[var(--color-gray-900)]">{s.value}</p>
           </div>
         ))}

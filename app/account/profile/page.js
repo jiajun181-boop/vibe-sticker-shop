@@ -95,13 +95,13 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold tracking-[0.15em] text-[var(--color-gray-900)]">
+      <h1 className="text-lg font-semibold tracking-[0.14em] text-[var(--color-gray-900)]">
         {t("account.profile.title")}
       </h1>
 
       <div className="flex flex-wrap items-center gap-3">
         <span
-          className={`inline-block rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] ${
+          className={`inline-block rounded-xl px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${
             profile.accountType === "B2B"
               ? "bg-blue-100 text-blue-700"
               : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)]"
@@ -121,7 +121,7 @@ export default function ProfilePage() {
 
       <form onSubmit={handleSave} className="space-y-5">
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1.5">
             {t("account.profile.name")}
           </label>
           <input
@@ -134,7 +134,7 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1.5">
             {t("account.profile.email")}
           </label>
           <input
@@ -148,7 +148,7 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1.5">
             {t("account.profile.phone")}
           </label>
           <input
@@ -161,7 +161,7 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-1.5">
             {t("account.profile.company")}
           </label>
           <input
@@ -177,7 +177,7 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={saving || !hasChanges}
-            className="rounded-full border border-[var(--color-gray-900)] bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[var(--color-gray-800)] disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl border border-[var(--color-gray-900)] bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-[var(--color-gray-800)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? t("account.profile.saving") : t("account.profile.save")}
           </button>

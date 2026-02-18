@@ -112,7 +112,7 @@ export default function QuickOrderSheet({ open, onClose }) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pb-3">
-          <h2 className="text-sm font-bold uppercase tracking-[0.15em] text-[var(--color-gray-900)]">
+          <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[var(--color-gray-900)]">
             Quick Order
           </h2>
           <button
@@ -131,7 +131,7 @@ export default function QuickOrderSheet({ open, onClose }) {
           {/* Reorder Recent (if logged in) */}
           {orders.length > 0 && (
             <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)] mb-2">
                 {t("account.recentOrders")}
               </p>
               <div className="space-y-2">
@@ -147,7 +147,7 @@ export default function QuickOrderSheet({ open, onClose }) {
                       type="button"
                       onClick={() => handleReorder(order.id)}
                       disabled={reordering === order.id}
-                      className="rounded-full bg-[var(--color-moon-blue-deep)] px-3 py-1.5 text-[11px] font-semibold text-white disabled:opacity-50"
+                      className="rounded-xl bg-[var(--color-moon-blue-deep)] px-3 py-1.5 text-[11px] font-semibold text-white disabled:opacity-50"
                     >
                       {reordering === order.id ? t("orders.reordering") : t("orders.reorder")}
                     </button>
@@ -158,7 +158,7 @@ export default function QuickOrderSheet({ open, onClose }) {
           )}
 
           {/* Popular Products */}
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-400)] mb-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)] mb-2">
             {t("home.popularProducts")}
           </p>
           <div className="grid grid-cols-2 gap-2">

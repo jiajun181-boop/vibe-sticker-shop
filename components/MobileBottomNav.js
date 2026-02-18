@@ -88,7 +88,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
       <div className={`fixed inset-y-0 left-0 z-[61] w-80 bg-white shadow-2xl transition-transform duration-300 ease-out ${open ? "translate-x-0" : "-translate-x-full"}`}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--color-gray-100)] px-5 py-4">
-          <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--color-gray-800)]">
+          <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--color-gray-800)]">
             {t("nav.categories")}
           </h2>
           <button

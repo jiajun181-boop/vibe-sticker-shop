@@ -11,7 +11,7 @@ import {
   buildSafeRedirectUrls,
 } from "@/lib/checkout-origin";
 import { getSessionFromRequest } from "@/lib/auth";
-import { checkStock, reserveStock } from "@/lib/inventory";
+import { checkAndReserveStock } from "@/lib/inventory";
 
 let _stripe: Stripe | null = null;
 function getStripe() {
@@ -322,12 +322,12 @@ export async function POST(req: Request) {
 
     const subtotal = pricedItems.reduce((sum, item) => sum + item.lineTotal, 0);
 
-    // Stock validation for inventory-tracked products
-    const stockCheck = await checkStock(
+    // Atomic stock check + reservation (prevents TOCTOU race conditions)
+    const stockResult = await checkAndReserveStock(
       pricedItems.map((item) => ({ productId: item.productId, quantity: item.quantity }))
     );
-    if (!stockCheck.ok) {
-      const issue = stockCheck.issues[0];
+    if (!stockResult.ok) {
+      const issue = stockResult.issues[0];
       return NextResponse.json(
         {
           error: `${issue.productName} only has ${issue.available_quantity} available (requested ${issue.requested})`,
@@ -336,11 +336,6 @@ export async function POST(req: Request) {
         { status: 409 }
       );
     }
-
-    // Reserve stock during checkout
-    await reserveStock(
-      pricedItems.map((item) => ({ productId: item.productId, quantity: item.quantity }))
-    );
 
     // Partner discount — auto-applied for B2B partners
     let partnerDiscount = 0;
@@ -365,7 +360,7 @@ export async function POST(req: Request) {
       });
       if (coupon && coupon.isActive) {
         const now = new Date();
-        const isValid = now >= coupon.validFrom && now <= coupon.validTo;
+        const isValid = (!coupon.validFrom || now >= coupon.validFrom) && (!coupon.validTo || now <= coupon.validTo);
         const hasUsesLeft = !coupon.maxUses || coupon.usedCount < coupon.maxUses;
         const meetsMinimum = !coupon.minAmount || subtotal >= coupon.minAmount;
 

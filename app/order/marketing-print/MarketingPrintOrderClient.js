@@ -100,7 +100,7 @@ export default function MarketingPrintOrderClient({ defaultType }) {
 
   // --- Render ---
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 lg:flex lg:gap-8">
+    <div className="mx-auto max-w-[1600px] px-4 py-8 lg:flex lg:gap-8">
       {/* Left: Configurator Steps */}
       <div className="flex-1 space-y-6">
         <ConfigHero

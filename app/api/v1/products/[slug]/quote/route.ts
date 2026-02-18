@@ -25,6 +25,8 @@ export async function POST(
   }
 
   try {
+    // API v1 users are B2B — apply B2B markup for COST_PLUS pricing
+    body.isB2B = true;
     const quote = quoteProduct(product, body);
     return NextResponse.json(quote);
   } catch (err: any) {

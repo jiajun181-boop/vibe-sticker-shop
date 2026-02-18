@@ -64,7 +64,7 @@ export default function SignupPage() {
           <button
             type="button"
             onClick={() => setAccountType("B2C")}
-            className={`flex-1 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] transition-colors ${
+            className={`flex-1 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors ${
               accountType === "B2C" ? "bg-[var(--color-gray-900)] text-white" : "text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]"
             }`}
           >
@@ -73,7 +73,7 @@ export default function SignupPage() {
           <button
             type="button"
             onClick={() => setAccountType("B2B")}
-            className={`flex-1 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] transition-colors ${
+            className={`flex-1 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors ${
               accountType === "B2B" ? "bg-[var(--color-gray-900)] text-white" : "text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]"
             }`}
           >
@@ -89,7 +89,7 @@ export default function SignupPage() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+            <label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
               {t("auth.signup.name")}
             </label>
             <input
@@ -103,7 +103,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="signup-email" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+            <label htmlFor="signup-email" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
               {t("auth.signup.email")}
             </label>
             <input
@@ -120,7 +120,7 @@ export default function SignupPage() {
           {accountType === "B2B" && (
             <>
               <div>
-                <label htmlFor="companyName" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+                <label htmlFor="companyName" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
                   {t("auth.signup.companyName")}
                 </label>
                 <input
@@ -132,7 +132,7 @@ export default function SignupPage() {
                 />
               </div>
               <div>
-                <label htmlFor="companyRole" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+                <label htmlFor="companyRole" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
                   {t("auth.signup.companyRole")}
                 </label>
                 <input
@@ -148,7 +148,7 @@ export default function SignupPage() {
           )}
 
           <div>
-            <label htmlFor="signup-password" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+            <label htmlFor="signup-password" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
               {t("auth.signup.password")}
             </label>
             <input
@@ -162,7 +162,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="confirm-password" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+            <label htmlFor="confirm-password" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
               {t("auth.signup.confirmPassword")}
             </label>
             <input
@@ -180,7 +180,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-full bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
+            className="w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
           >
             {loading ? t("auth.signup.creating") : t("auth.signup.submit")}
           </button>

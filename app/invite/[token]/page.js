@@ -83,7 +83,7 @@ export default function InviteAcceptPage() {
             </div>
             <h1 className="text-lg font-semibold text-[#1a1816]">Invitation Invalid</h1>
             <p className="mt-2 text-sm text-[#716960]">{errorMsg}</p>
-            <a href="/contact" className="mt-6 inline-block rounded-full bg-[#1a1816] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#3d372f]">
+            <a href="/contact" className="mt-6 inline-block rounded-xl bg-[#1a1816] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#3d372f]">
               Contact Us
             </a>
           </div>
@@ -111,7 +111,7 @@ export default function InviteAcceptPage() {
                 <span className="font-semibold text-[#1a1816]">{TIER_LABELS[invite.tier] || "Bronze"}</span>
               </div>
               {invite.discount > 0 && (
-                <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <div className="rounded-xl bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                   {invite.discount}% wholesale discount
                 </div>
               )}

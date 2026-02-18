@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Bulk-apply optionsConfig for windows-walls-floors products.
+ * Bulk-apply optionsConfig for window-glass-films products (10 new products).
  *
  * Run:  node scripts/seed-options-windows.mjs           (dry-run)
  * Run:  node scripts/seed-options-windows.mjs --apply   (write to DB)
@@ -12,85 +12,72 @@ const apply = process.argv.includes("--apply");
 
 // ─── Templates ───────────────────────────────────────────────────
 
-// Window films — AREA_TIERED (page auto-shows width/height)
-const FROSTED_FILM = {
+// Series 1: Light Effect
+const TRANSPARENT_COLOR = {
   materials: [
-    { id: "frosted-vinyl", name: "Frosted Vinyl (adhesive)", multiplier: 1.0 },
-    { id: "frosted-static-cling", name: "Frosted Static Cling (removable)", multiplier: 1.1 },
+    { id: "transparent-cmyk", name: "Transparent Film (CMYK, no white ink)", multiplier: 1.0 },
   ],
 };
 
-const PRIVACY_FILM = {
+const DICHROIC = {
   materials: [
-    { id: "frosted-vinyl", name: "Frosted Vinyl", multiplier: 1.0 },
-    { id: "etched-glass-vinyl", name: "Etched Glass Vinyl", multiplier: 1.15 },
-    { id: "frosted-static-cling", name: "Frosted Static Cling (removable)", multiplier: 1.1 },
+    { id: "dichroic-standard", name: "Standard Dichroic Film", multiplier: 1.0 },
+    { id: "dichroic-premium", name: "Premium Multi-Shift Dichroic", multiplier: 1.25 },
   ],
 };
 
-const CLEAR_STATIC = {
+const GRADIENT = {
   materials: [
-    { id: "clear-static-cling", name: "Clear Static Cling (removable)", multiplier: 1.0 },
-    { id: "clear-vinyl", name: "Clear Adhesive Vinyl", multiplier: 0.95 },
+    { id: "gradient-clear-to-color", name: "Clear to Color Gradient", multiplier: 1.0 },
+    { id: "gradient-clear-to-frost", name: "Clear to Frosted Gradient", multiplier: 1.1 },
   ],
 };
 
-const PERFORATED_FILM = {
-  materials: [
-    { id: "perforated-vinyl", name: "Perforated Vinyl (one-way vision)", multiplier: 1.0 },
-    { id: "perforated-vinyl-hd", name: "Perforated Vinyl HD (micro-perf)", multiplier: 1.2 },
-  ],
-};
-
+// Series 2: Vision Control
 const ONE_WAY_VISION = {
   materials: [
-    { id: "perforated-vinyl", name: "Perforated Vinyl", multiplier: 1.0 },
-    { id: "perforated-vinyl-hd", name: "HD Micro-Perf Vinyl", multiplier: 1.2 },
+    { id: "perforated-50", name: "50/50 Perforation (standard)", multiplier: 1.0 },
+    { id: "perforated-65", name: "65/35 Perforation (more see-through)", multiplier: 1.1 },
   ],
 };
 
-const FULL_WINDOW = {
+const BLOCKOUT = {
   materials: [
-    { id: "clear-vinyl", name: "Clear Vinyl", multiplier: 1.0 },
-    { id: "perforated-vinyl", name: "Perforated Vinyl (one-way vision)", multiplier: 1.1 },
-    { id: "static-cling", name: "Static Cling (removable)", multiplier: 1.15 },
+    { id: "blockout-black", name: "Black-Back Blockout Vinyl", multiplier: 1.0 },
+    { id: "blockout-grey", name: "Grey-Back Blockout Vinyl", multiplier: 1.0 },
   ],
 };
 
-const HOLOGRAPHIC_FILM = {
+// Series 3: Frosted & Specialty
+const FROSTED_PRINTED = {
   materials: [
-    { id: "holographic-film", name: "Holographic Film", multiplier: 1.0 },
-    { id: "iridescent-film", name: "Iridescent Film", multiplier: 1.1 },
+    { id: "frosted-white-ink", name: "Frosted Film + White Ink Print", multiplier: 1.0 },
   ],
 };
 
-const COLOR_ON_CLEAR = {
+const FROSTED_STATIC_CLING = {
   materials: [
-    { id: "clear-vinyl", name: "Clear Vinyl (adhesive)", multiplier: 1.0 },
-    { id: "clear-static-cling", name: "Clear Static Cling (removable)", multiplier: 1.1 },
+    { id: "frosted-cling", name: "Frosted Static Cling (no adhesive)", multiplier: 1.0 },
   ],
 };
 
-const WHITE_ON_CLEAR = {
+// Series 4: Standard Opaque
+const STANDARD_WHITE = {
   materials: [
-    { id: "white-on-clear-vinyl", name: "White on Clear Vinyl", multiplier: 1.0 },
+    { id: "white-vinyl", name: "White Vinyl (full opaque)", multiplier: 1.0 },
   ],
 };
 
-const VEHICLE_WINDOW_TINT = {
+const DOUBLE_SIDED = {
   materials: [
-    { id: "perforated-vinyl", name: "Perforated Vinyl", multiplier: 1.0 },
-    { id: "tint-film", name: "Tint Film", multiplier: 0.9 },
+    { id: "cwc-clear-vinyl", name: "Color+White+Color on Clear Vinyl", multiplier: 1.0 },
   ],
 };
 
-// Window decals — QTY_TIERED (small items sold per piece)
-const WINDOW_DECALS = {
-  quantityChoices: [5, 10, 25, 50, 100, 250],
+const STATIC_CLING_STD = {
   materials: [
-    { id: "clear-vinyl", name: "Clear Vinyl", multiplier: 1.0 },
-    { id: "white-vinyl", name: "White Vinyl", multiplier: 0.95 },
-    { id: "static-cling", name: "Static Cling (removable)", multiplier: 1.1 },
+    { id: "clear-cling", name: "Clear Static Cling", multiplier: 1.0 },
+    { id: "white-cling", name: "White Static Cling", multiplier: 1.0 },
   ],
 };
 
@@ -140,7 +127,6 @@ const FLOOR_SAFETY = {
   ],
 };
 
-// Floor sets (arrows, numbers) — smaller fixed-size items
 const FLOOR_SET = {
   quantityChoices: [1, 2, 5, 10, 25],
   materials: [
@@ -152,26 +138,17 @@ const FLOOR_SET = {
 // ─── Slug → template mapping ─────────────────────────────────────
 
 const SLUG_MAP = {
-  // === Window films (AREA_TIERED) ===
-  "frosted-matte-window-film": FROSTED_FILM,
-  "frosted-privacy-film": PRIVACY_FILM,
-  "frosted-privacy-window-film": PRIVACY_FILM,
-  "frosted-static-cling": CLEAR_STATIC,
-  "clear-static-cling": CLEAR_STATIC,
-  "perforated-window-film": PERFORATED_FILM,
-  "window-perforated": PERFORATED_FILM,
-  "window-graphics-perforated": PERFORATED_FILM,
-  "one-way-vision-graphics": ONE_WAY_VISION,
-  "full-window-graphics": FULL_WINDOW,
-  "window-frosted": PRIVACY_FILM,
-  "window-graphics": FULL_WINDOW,
-  "holographic-iridescent-film": HOLOGRAPHIC_FILM,
-  "color-white-color-clear-vinyl": COLOR_ON_CLEAR,
-  "color-white-on-clear-vinyl": WHITE_ON_CLEAR,
-  "vehicle-window-tint-graphic": VEHICLE_WINDOW_TINT,
-
-  // === Window decals (QTY_TIERED) ===
-  "window-decals": WINDOW_DECALS,
+  // === Window films (10 new products) ===
+  "window-graphics-transparent-color": TRANSPARENT_COLOR,
+  "dichroic-window-film": DICHROIC,
+  "gradient-window-film": GRADIENT,
+  "one-way-vision": ONE_WAY_VISION,
+  "window-graphics-blockout": BLOCKOUT,
+  "frosted-window-graphics": FROSTED_PRINTED,
+  "static-cling-frosted": FROSTED_STATIC_CLING,
+  "window-graphics-standard": STANDARD_WHITE,
+  "window-graphics-double-sided": DOUBLE_SIDED,
+  "static-cling-standard": STATIC_CLING_STD,
 
   // === Wall graphics (AREA_TIERED) ===
   "wall-graphics": WALL_GRAPHICS,
@@ -186,7 +163,7 @@ const SLUG_MAP = {
   "lf-floor-graphics": FLOOR_GRAPHIC,
   "warehouse-floor-safety-graphics": FLOOR_SAFETY,
 
-  // === Floor sets (AREA_TIERED but sold in sets) ===
+  // === Floor sets ===
   "floor-direction-arrows-set": FLOOR_SET,
   "floor-number-markers-set": FLOOR_SET,
 };
@@ -194,13 +171,17 @@ const SLUG_MAP = {
 // ─── Main ────────────────────────────────────────────────────────
 
 async function main() {
+  // Query both categories
   const products = await prisma.product.findMany({
-    where: { isActive: true, category: "windows-walls-floors" },
+    where: {
+      isActive: true,
+      category: { in: ["window-glass-films", "windows-walls-floors"] },
+    },
     select: { id: true, slug: true, optionsConfig: true },
     orderBy: { slug: "asc" },
   });
 
-  console.log(`${apply ? "APPLY" : "DRY-RUN"} — ${products.length} products in windows-walls-floors\n`);
+  console.log(`${apply ? "APPLY" : "DRY-RUN"} — ${products.length} products found\n`);
 
   let updated = 0;
   let skipped = 0;

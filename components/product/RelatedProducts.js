@@ -12,7 +12,7 @@ export default function RelatedProducts({ product, relatedProducts, t }) {
     <section>
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-2xl font-semibold">{t("product.relatedProducts")}</h2>
-        <Link href={`/shop?category=${product.category}`} className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)]">{t("product.viewCategory")}</Link>
+        <Link href={`/shop?category=${product.category}`} className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)]">{t("product.viewCategory")}</Link>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {relatedProducts.map((item) => {

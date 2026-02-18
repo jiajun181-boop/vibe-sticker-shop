@@ -18,11 +18,8 @@ export async function GET() {
 
   return NextResponse.json(
     {
-      app: "vibe-sticker-shop",
-      commitSha: commitSha || "unknown",
+      app: "lunarprint",
       commitShort: commitSha ? commitSha.slice(0, 7) : "unknown",
-      branch: branch || "unknown",
-      env: process.env.VERCEL_ENV || process.env.NODE_ENV || "unknown",
       generatedAt: new Date().toISOString(),
     },
     {

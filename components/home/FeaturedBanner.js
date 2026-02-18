@@ -65,13 +65,13 @@ export default function FeaturedBanner({ products }) {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-[var(--color-moon-gold)] animate-pulse" />
-            <h2 className="text-white label-xs tracking-[0.2em]">
+            <h2 className="text-white label-xs tracking-[0.16em]">
               {t("featured.title")}
             </h2>
           </div>
           <Link
             href="/shop?category=display-stands"
-            className="label-xs text-[var(--color-gray-400)] hover:text-white tracking-widest transition-colors"
+            className="label-xs text-[var(--color-gray-400)] hover:text-white tracking-[0.14em] transition-colors"
           >
             {t("featured.viewAll")} &rarr;
           </Link>
@@ -172,7 +172,7 @@ function FeaturedCard({ product, compact }) {
             {cad(product.basePrice)}
           </p>
         </div>
-        <span className="bg-white/10 text-white label-xs px-3 py-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity whitespace-nowrap tracking-wide">
+        <span className="bg-white/10 text-white label-xs px-3 py-1.5 rounded-xl opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity whitespace-nowrap tracking-wide">
           {t("featured.customize")} &rarr;
         </span>
       </div>

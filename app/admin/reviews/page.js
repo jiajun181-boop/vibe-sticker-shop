@@ -242,7 +242,7 @@ function ReviewsContent() {
                     {review.customerName || review.customerEmail || "Anonymous"}
                   </span>
                   {review.isVerified && (
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                    <span className="inline-flex items-center gap-0.5 rounded-xl bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
                       <svg
                         className="h-3 w-3"
                         viewBox="0 0 20 20"

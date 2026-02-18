@@ -16,10 +16,18 @@ export async function GET(
       return NextResponse.json({ error: "Cart not found" }, { status: 404 });
     }
 
+    // Mark as recovered so cron stops sending follow-up emails
+    if (!cart.recoveredAt) {
+      await prisma.abandonedCart.update({
+        where: { id: cart.id },
+        data: { recoveredAt: new Date() },
+      });
+    }
+
     return NextResponse.json({
       cart: cart.cartJson,
       email: cart.email,
-      recoveredAt: cart.recoveredAt,
+      recoveredAt: cart.recoveredAt || new Date(),
     });
   } catch (err) {
     console.error("[CartRecover] Error:", err);

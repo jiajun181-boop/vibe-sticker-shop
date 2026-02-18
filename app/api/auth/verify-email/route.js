@@ -12,9 +12,7 @@ export async function POST(request) {
 
     const tokenHash = hashToken(token);
     const user = await prisma.user.findFirst({
-      where: {
-        OR: [{ emailVerifyToken: tokenHash }, { emailVerifyToken: token }],
-      },
+      where: { emailVerifyToken: tokenHash },
     });
 
     if (!user || !user.emailVerifyExpires || user.emailVerifyExpires < new Date()) {

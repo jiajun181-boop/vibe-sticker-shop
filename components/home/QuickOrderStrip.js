@@ -190,7 +190,7 @@ export default function QuickOrderStrip({ products }) {
       className="popular-marquee-wrap rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-paper-white)] p-4 md:p-6"
     >
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="text-center label-sm tracking-[0.2em] text-[var(--color-gray-500)]">
+        <h3 className="text-center label-sm tracking-[0.16em] text-[var(--color-gray-500)]">
           {t("home.popularProducts")}
         </h3>
         <div className="flex items-center gap-2">

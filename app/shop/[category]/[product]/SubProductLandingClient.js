@@ -98,7 +98,7 @@ function ProductCardGrid({ product, href, selectedSpec, t }) {
         </span>
         <h3 className="text-sm font-semibold text-[var(--color-gray-900)] leading-snug">{product.name}</h3>
         {selectedSpec === product.slug && (
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-600)]">Selected spec</p>
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)]">Selected spec</p>
         )}
         {product.description && (
           <p className="mt-1 text-[11px] text-[var(--color-gray-500)] line-clamp-2">{product.description}</p>
@@ -111,7 +111,7 @@ function ProductCardGrid({ product, href, selectedSpec, t }) {
         )}
         <div className="mt-2 flex items-center gap-2">
           <QuickAddButton product={product} />
-          <span className="inline-block rounded-full bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white transition-colors group-hover:bg-black">
+          <span className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
             {t("mp.landing.viewOrder")}
           </span>
         </div>
@@ -157,7 +157,7 @@ function ProductCardList({ product, href, selectedSpec, t }) {
             {t(turnaroundI18nKey(tk))}
           </span>
           {selectedSpec === product.slug && (
-            <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-600)]">Selected</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)]">Selected</span>
           )}
         </div>
         <h3 className="mt-1 text-sm font-semibold text-[var(--color-gray-900)] leading-snug">{product.name}</h3>
@@ -173,7 +173,7 @@ function ProductCardList({ product, href, selectedSpec, t }) {
           )}
           <div className="ml-auto flex items-center gap-2">
             <QuickAddButton product={product} />
-            <span className="rounded-full bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white transition-colors group-hover:bg-black">
+            <span className="rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
               {t("mp.landing.viewOrder")}
             </span>
           </div>
@@ -196,7 +196,7 @@ function QuickQuoteFAB({ t }) {
   return (
     <Link
       href="/quote"
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-[var(--color-gray-900)] px-5 py-3 pb-safe text-white shadow-lg transition-all hover:bg-black hover:shadow-xl hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-4 duration-300"
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-[var(--color-gray-900)] px-5 py-3 pb-safe text-white shadow-lg transition-all hover:bg-black hover:shadow-xl hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-4 duration-300"
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
@@ -227,7 +227,7 @@ export default function SubProductLandingClient({
 
   return (
     <main className="bg-[var(--color-gray-50)] pb-20 pt-10 text-[var(--color-gray-900)]">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
@@ -370,7 +370,7 @@ export default function SubProductLandingClient({
         <div className="mt-10 text-center">
           <Link
             href={`/shop/${category}`}
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -382,7 +382,7 @@ export default function SubProductLandingClient({
         {/* Info Footer */}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.qualityTitle")}
             </h3>
             <ul className="mt-3 space-y-2 text-sm text-[var(--color-gray-700)]">
@@ -408,7 +408,7 @@ export default function SubProductLandingClient({
           </div>
 
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.turnaroundTitle")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
@@ -417,7 +417,7 @@ export default function SubProductLandingClient({
           </div>
 
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.customTitle")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
@@ -425,7 +425,7 @@ export default function SubProductLandingClient({
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-white hover:bg-black"
+              className="mt-3 inline-block rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-black"
             >
               {t("home.cta.quote")}
             </Link>

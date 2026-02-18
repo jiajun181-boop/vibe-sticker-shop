@@ -64,7 +64,7 @@ export default function AccountOrdersPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold tracking-[0.15em] text-[var(--color-gray-900)]">
+      <h1 className="text-lg font-semibold tracking-[0.14em] text-[var(--color-gray-900)]">
         {t("account.orders.title")}
       </h1>
 
@@ -79,7 +79,7 @@ export default function AccountOrdersPage() {
           <p className="text-sm text-[var(--color-gray-500)]">{t("account.orders.empty")}</p>
           <Link
             href="/shop"
-            className="mt-3 inline-block rounded-full border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
+            className="mt-3 inline-block rounded-xl border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
           >
             {t("cart.continueShopping")}
           </Link>
@@ -100,7 +100,7 @@ export default function AccountOrdersPage() {
                       month: "short",
                       day: "numeric",
                     })}
-                    {" · "}
+                    {" | "}
                     {order._count?.items || 0} {t("account.orders.items")}
                   </p>
                 </Link>
@@ -108,7 +108,7 @@ export default function AccountOrdersPage() {
                   <div className="text-right">
                     <p className="text-sm font-semibold text-[var(--color-gray-900)]">{formatCad(order.totalAmount)}</p>
                     <span
-                      className={`inline-block mt-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${
+                      className={`inline-block mt-0.5 rounded-xl px-2 py-0.5 text-[11px] font-semibold uppercase ${
                         STATUS_COLORS[order.status] || "bg-[var(--color-gray-100)] text-[var(--color-gray-500)]"
                       }`}
                     >
@@ -120,7 +120,7 @@ export default function AccountOrdersPage() {
                       type="button"
                       onClick={(e) => handleReorder(e, order.id)}
                       disabled={reordering === order.id}
-                      className="shrink-0 rounded-full border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)] disabled:opacity-50"
+                      className="shrink-0 rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)] disabled:opacity-50"
                     >
                       {reordering === order.id ? t("orders.reordering") : t("orders.reorder")}
                     </button>
@@ -137,9 +137,9 @@ export default function AccountOrdersPage() {
                 type="button"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="rounded-lg border border-[var(--color-gray-300)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-600)] disabled:opacity-40"
+                className="rounded-xl border-2 border-[var(--color-gray-200)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-400)] disabled:opacity-40"
               >
-                ←
+                Prev
               </button>
               <span className="text-xs text-[var(--color-gray-500)]">
                 {page} / {totalPages}
@@ -148,9 +148,9 @@ export default function AccountOrdersPage() {
                 type="button"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="rounded-lg border border-[var(--color-gray-300)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-600)] disabled:opacity-40"
+                className="rounded-xl border-2 border-[var(--color-gray-200)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-400)] disabled:opacity-40"
               >
-                →
+                Next
               </button>
             </div>
           )}

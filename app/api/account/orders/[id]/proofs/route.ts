@@ -18,13 +18,17 @@ export async function GET(
   const { id } = await params;
 
   try {
-    // Verify order belongs to the user
+    // Verify order belongs to the user (match userId or email)
     const order = await prisma.order.findUnique({
       where: { id },
-      select: { userId: true },
+      select: { userId: true, customerEmail: true },
+    });
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { email: true },
     });
 
-    if (!order || order.userId !== session.userId) {
+    if (!order || (order.userId !== session.userId && order.customerEmail !== user?.email)) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
@@ -71,13 +75,17 @@ export async function POST(
       );
     }
 
-    // Verify order belongs to user
+    // Verify order belongs to user (match userId or email)
     const order = await prisma.order.findUnique({
       where: { id },
-      select: { userId: true, productionStatus: true },
+      select: { userId: true, customerEmail: true, productionStatus: true },
+    });
+    const ownerUser = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { email: true },
     });
 
-    if (!order || order.userId !== session.userId) {
+    if (!order || (order.userId !== session.userId && order.customerEmail !== ownerUser?.email)) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 

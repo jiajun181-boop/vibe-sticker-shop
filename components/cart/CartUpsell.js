@@ -9,7 +9,7 @@ import { getProductImage } from "@/lib/product-image";
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-// Complementary product rules: category → suggested categories/slugs
+// Complementary product rules: category -> suggested categories/slugs
 const COMPLEMENT_RULES = {
   "rigid-signs": ["display-stands"],
   "banners-displays": ["display-stands"],
@@ -62,7 +62,7 @@ export default function CartUpsell() {
 
   return (
     <div className="border-t border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-5 py-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
         {t("cart.youMayAlsoNeed")}
       </p>
       <div className="mt-3 space-y-2">
@@ -97,7 +97,7 @@ export default function CartUpsell() {
                 });
                 showSuccessToast(`${item.name} added`);
               }}
-              className="rounded-full bg-[var(--color-moon-blue-deep)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white hover:bg-[var(--color-ink-black)]"
+              className="rounded-xl bg-[var(--color-moon-blue-deep)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white hover:bg-[var(--color-ink-black)]"
             >
               {t("cart.quickAdd")}
             </button>

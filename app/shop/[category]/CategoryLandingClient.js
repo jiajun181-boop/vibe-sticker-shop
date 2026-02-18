@@ -16,6 +16,7 @@ const formatCad = (cents) =>
 // Categories that show the sticker configurator CTA banner
 const STICKER_CONFIGURATOR_CATEGORIES = new Set([
   "stickers-labels-decals",
+  "custom-stickers",
 ]);
 
 const CATEGORY_USE_CASES = {
@@ -33,6 +34,11 @@ const CATEGORY_USE_CASES = {
     { key: "fleet-branding", label: "Fleet Branding", hint: "vehicle wraps decals", cta: "车队广告" },
     { key: "compliance", label: "Compliance", hint: "dot mc unit ids", cta: "合规标识" },
     { key: "partial", label: "Budget Partial Wrap", hint: "door panel graphics magnets", cta: "预算友好" },
+  ],
+  "custom-stickers": [
+    { key: "brand-logo", label: "Brand & Logo", hint: "die-cut stickers packaging labels", cta: "Brand" },
+    { key: "events-giveaways", label: "Events & Giveaways", hint: "sticker sheets handouts", cta: "Events" },
+    { key: "outdoor-vehicle", label: "Outdoor & Vehicle", hint: "bumper stickers decals vinyl", cta: "Outdoor" },
   ],
 };
 
@@ -96,20 +102,20 @@ function ProductCard({ product, t, compact }) {
             {product.description}
           </p>
         )}
-        {product.basePrice > 0 && (
+        {(product.fromPrice || product.basePrice) > 0 && (
           <p className={`font-bold text-[var(--color-gray-900)] ${compact ? "mt-1 text-xs" : "mt-2 text-sm"}`}>
-            {t("product.from", { price: formatCad(product.basePrice) })}
+            {t("product.from", { price: formatCad(product.fromPrice || product.basePrice) })}
           </p>
         )}
         {!compact ? (
           <div className="mt-2 flex items-center gap-2">
             <QuickAddButton product={product} />
-            <span className="inline-block rounded-full bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white transition-colors group-hover:bg-black">
+            <span className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
               {t("mp.landing.viewOrder")}
             </span>
           </div>
         ) : (
-          <span className="mt-1.5 inline-block rounded-full bg-[var(--color-gray-900)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-white transition-colors group-hover:bg-black">
+          <span className="mt-1.5 inline-block rounded-xl bg-[var(--color-gray-900)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
             {t("mp.landing.viewOrder")}
           </span>
         )}
@@ -181,7 +187,7 @@ export default function CategoryLandingClient({
 
   return (
     <main className="bg-[var(--color-gray-50)] pb-20 pt-10 text-[var(--color-gray-900)]">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
@@ -204,7 +210,7 @@ export default function CategoryLandingClient({
 
             {/* Sort */}
             <div className="flex items-center gap-2">
-              <label className="text-xs uppercase tracking-[0.15em] text-[var(--color-gray-400)]">{t("shop.sort")}</label>
+              <label className="text-xs uppercase tracking-[0.14em] text-[var(--color-gray-400)]">{t("shop.sort")}</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -227,7 +233,7 @@ export default function CategoryLandingClient({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("shop.searchCategory") || "Search products..."}
-              className="w-full rounded-full border border-[var(--color-gray-200)] bg-white pl-9 pr-4 py-2 text-sm focus:border-[var(--color-gray-400)] focus:outline-none"
+              className="w-full rounded-xl border border-[var(--color-gray-200)] bg-white pl-9 pr-4 py-2 text-sm focus:border-[var(--color-gray-400)] focus:outline-none"
             />
           </div>
         </header>
@@ -245,9 +251,9 @@ export default function CategoryLandingClient({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-base font-black sm:text-lg">Build Your Custom Sticker</p>
-              <p className="mt-0.5 text-xs text-gray-300 sm:text-sm">Choose type, size, material & quantity — get instant pricing</p>
+              <p className="mt-0.5 text-xs text-gray-300 sm:text-sm">Choose type, size, material & quantity - get instant pricing</p>
             </div>
-            <div className="hidden sm:flex shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-900 transition-transform group-hover:scale-105">
+            <div className="hidden sm:flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-900 transition-transform group-hover:scale-105">
               Start Now
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
             </div>
@@ -256,9 +262,7 @@ export default function CategoryLandingClient({
 
         {useCaseCards.length > 0 && (
           <section className="mt-5 rounded-2xl border border-[var(--color-gray-200)] bg-white p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-gray-500)]">
-              按用途选购
-            </p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">Shop by Use Case</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               {useCaseCards.map((card) => (
                 <button
@@ -280,7 +284,7 @@ export default function CategoryLandingClient({
           <div className="mt-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <button
               onClick={() => setActiveFilter(null)}
-              className={`flex-none rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              className={`flex-none rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                 activeFilter === null
                   ? "bg-[var(--color-gray-900)] text-white"
                   : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
@@ -294,7 +298,7 @@ export default function CategoryLandingClient({
                 onClick={() =>
                   setActiveFilter(activeFilter === group.slug ? null : group.slug)
                 }
-                className={`flex-none rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                className={`flex-none rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                   activeFilter === group.slug
                     ? "bg-[var(--color-gray-900)] text-white"
                     : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
@@ -309,14 +313,14 @@ export default function CategoryLandingClient({
         {/* Turnaround filter chips */}
         {hasTurnaroundFilters && (
           <div className={`${hasFilters ? "mt-3" : "mt-5"} flex gap-2 overflow-x-auto pb-1 scrollbar-hide`}>
-            <span className="flex-none self-center text-[10px] uppercase tracking-[0.15em] text-[var(--color-gray-400)] mr-1">
+            <span className="flex-none self-center text-[10px] uppercase tracking-[0.14em] text-[var(--color-gray-400)] mr-1">
               {t("shop.turnaround")}
             </span>
             {turnaroundGroups.map((tg) => (
               <button
                 key={tg.key}
                 onClick={() => setTurnaroundFilter(turnaroundFilter === tg.key ? null : tg.key)}
-                className={`flex-none rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                className={`flex-none rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
                   turnaroundFilter === tg.key
                     ? turnaroundColor(tg.key)
                     : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
@@ -341,7 +345,7 @@ export default function CategoryLandingClient({
             {(activeFilter || turnaroundFilter) && (
               <button
                 onClick={() => { setActiveFilter(null); setTurnaroundFilter(null); }}
-                className="mt-3 rounded-full border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
+                className="mt-3 rounded-xl border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
               >
                 {t("shop.clearFilters")}
               </button>
@@ -353,7 +357,7 @@ export default function CategoryLandingClient({
         <div className="mt-12 text-center">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -365,7 +369,7 @@ export default function CategoryLandingClient({
         {/* Info Footer */}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.qualityTitle")}
             </h3>
             <ul className="mt-3 space-y-2 text-sm text-[var(--color-gray-700)]">
@@ -391,7 +395,7 @@ export default function CategoryLandingClient({
           </div>
 
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.turnaroundTitle")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
@@ -400,7 +404,7 @@ export default function CategoryLandingClient({
           </div>
 
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.customTitle")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
@@ -408,7 +412,7 @@ export default function CategoryLandingClient({
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-white hover:bg-black"
+              className="mt-3 inline-block rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-black"
             >
               {t("home.cta.quote")}
             </Link>
@@ -418,3 +422,5 @@ export default function CategoryLandingClient({
     </main>
   );
 }
+
+

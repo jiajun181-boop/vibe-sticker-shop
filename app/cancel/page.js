@@ -25,13 +25,13 @@ export default function CancelPage() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/shop"
-            className="inline-flex items-center justify-center rounded-full bg-[var(--color-gray-900)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black"
+            className="inline-flex items-center justify-center rounded-xl bg-[var(--color-gray-900)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black"
           >
             {t("cancel.continueShopping")}
           </Link>
           <Link
             href="/contact"
-            className="inline-flex items-center justify-center rounded-full border border-[var(--color-gray-300)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)]"
+            className="inline-flex items-center justify-center rounded-xl border border-[var(--color-gray-300)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)]"
           >
             {t("cancel.needHelp")}
           </Link>

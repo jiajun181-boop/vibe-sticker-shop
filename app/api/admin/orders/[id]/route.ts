@@ -80,12 +80,14 @@ export async function PATCH(
       }
     }
 
+    // Fetch current order for validation
+    const current = await prisma.order.findUnique({ where: { id }, select: { status: true, paidAt: true } });
+    if (!current) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
     // Validate order status transitions
     if (data.status && typeof data.status === "string") {
-      const current = await prisma.order.findUnique({ where: { id }, select: { status: true, paidAt: true } });
-      if (!current) {
-        return NextResponse.json({ error: "Order not found" }, { status: 404 });
-      }
       const allowed = VALID_STATUS_TRANSITIONS[current.status];
       if (allowed && !allowed.includes(data.status as string)) {
         return NextResponse.json(
@@ -93,16 +95,11 @@ export async function PATCH(
           { status: 400 }
         );
       }
+    }
 
-      // If marking as paid, set paidAt
-      if (data.paymentStatus === "paid" && !current.paidAt) {
-        data.paidAt = new Date();
-      }
-    } else if (data.paymentStatus === "paid") {
-      const existing = await prisma.order.findUnique({ where: { id }, select: { paidAt: true } });
-      if (existing && !existing.paidAt) {
-        data.paidAt = new Date();
-      }
+    // Set paidAt whenever paymentStatus becomes "paid"
+    if (data.paymentStatus === "paid" && !current.paidAt) {
+      data.paidAt = new Date();
     }
 
     const order = await prisma.order.update({

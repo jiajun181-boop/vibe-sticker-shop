@@ -62,6 +62,8 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reordering, setReordering] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateSaved, setTemplateSaved] = useState(false);
   const [proofs, setProofs] = useState([]);
   const [proofsLoading, setProofsLoading] = useState(true);
   const [proofComments, setProofComments] = useState({});
@@ -212,13 +214,46 @@ export default function OrderDetailPage() {
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Invoice
           </a>
+          <button
+            type="button"
+            disabled={savingTemplate || templateSaved}
+            onClick={async () => {
+              setSavingTemplate(true);
+              try {
+                const res = await fetch("/api/account/templates", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    name: `Order #${order.id.slice(0, 8)}`,
+                    items: order.items?.map((item) => ({
+                      productId: item.productId,
+                      productName: item.productName,
+                      quantity: item.quantity,
+                      unitPrice: item.unitPrice,
+                      options: item.meta || {},
+                    })),
+                  }),
+                });
+                if (!res.ok) throw new Error();
+                setTemplateSaved(true);
+              } catch {
+                setError("Failed to save template");
+              } finally {
+                setSavingTemplate(false);
+              }
+            }}
+            className="flex items-center gap-2 rounded-xl border border-[var(--color-gray-200)] px-5 py-3 text-sm font-semibold text-[var(--color-gray-700)] hover:bg-[var(--color-gray-50)] transition-colors disabled:opacity-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            {templateSaved ? "Saved!" : savingTemplate ? "Saving..." : "Save as Template"}
+          </button>
         </div>
       )}
 
       {/* Items */}
       <div className="rounded-xl border border-[var(--color-gray-200)]">
         <div className="border-b border-[var(--color-gray-200)] px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">
             {t("account.orders.items")}
           </p>
         </div>
@@ -280,7 +315,7 @@ export default function OrderDetailPage() {
       {!proofsLoading && proofs.length > 0 && (
         <div className="rounded-xl border border-[var(--color-gray-200)]">
           <div className="border-b border-[var(--color-gray-200)] px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">
               Proof Review
             </p>
           </div>
@@ -407,7 +442,7 @@ export default function OrderDetailPage() {
       {/* Timeline */}
       {order.timeline && order.timeline.length > 0 && (
         <div className="rounded-xl border border-[var(--color-gray-200)] p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-400)] mb-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)] mb-3">
             {t("account.orders.timeline")}
           </p>
           <div className="space-y-3">

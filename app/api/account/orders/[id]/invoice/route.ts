@@ -377,8 +377,12 @@ export async function GET(
       });
     }
 
-    // Verify ownership
-    if (order.userId !== session.userId) {
+    // Verify ownership: must match userId or email
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { email: true },
+    });
+    if (order.userId !== session.userId && order.customerEmail !== user?.email) {
       return new Response(JSON.stringify({ error: "Order not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },

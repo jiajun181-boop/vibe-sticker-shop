@@ -46,3 +46,5 @@ next-env.d.ts
 nul
 /exports/
 /tmp/
+build.log
+

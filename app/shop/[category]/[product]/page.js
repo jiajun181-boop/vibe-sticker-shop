@@ -7,8 +7,12 @@ import { getProductAssets } from "@/lib/assets";
 import { computeFromPrice } from "@/lib/pricing/from-price";
 import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import { getConfiguratorForSlug } from "@/lib/configurator-router";
+import { getVariantConfig, getVariantParent, getVariantChildSlugs } from "@/lib/variantProductConfig";
+import { getSceneConfig } from "@/lib/sceneConfig";
 import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
+import VariantProductPage from "./VariantProductPage";
+import SceneLandingPage from "./SceneLandingPage";
 import StickerOrderClient from "@/app/order/stickers/StickerOrderClient";
 import BookletOrderClient from "@/app/order/booklets/BookletOrderClient";
 import NcrOrderClient from "@/app/order/ncr/NcrOrderClient";
@@ -16,6 +20,7 @@ import BannerOrderClient from "@/app/order/banners/BannerOrderClient";
 import SignOrderClient from "@/app/order/signs/SignOrderClient";
 import VehicleOrderClient from "@/app/order/vehicle/VehicleOrderClient";
 import SurfaceOrderClient from "@/app/order/surfaces/SurfaceOrderClient";
+import CanvasOrderClient from "@/app/order/canvas/CanvasOrderClient";
 import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
 
@@ -71,6 +76,32 @@ function choosePreferredSpec(existing, candidate, familyKey) {
 export async function generateMetadata({ params }) {
   const { category, product: slug } = await params;
   const decodedSlug = safeDecode(slug);
+
+  // Scene page metadata
+  const sceneCfg = getSceneConfig(decodedSlug);
+  if (sceneCfg) {
+    const url = `${SITE_URL}/shop/${category}/${slug}`;
+    return {
+      title: sceneCfg.metaTitle,
+      description: sceneCfg.metaDescription,
+      alternates: { canonical: url },
+      openGraph: { title: sceneCfg.metaTitle, description: sceneCfg.metaDescription, url, type: "website" },
+      twitter: { card: "summary_large_image", title: sceneCfg.metaTitle, description: sceneCfg.metaDescription },
+    };
+  }
+
+  // Variant page metadata
+  const variantCfg = getVariantConfig(decodedSlug);
+  if (variantCfg) {
+    const url = `${SITE_URL}/shop/${category}/${slug}`;
+    return {
+      title: variantCfg.metaTitle,
+      description: variantCfg.metaDescription,
+      alternates: { canonical: url },
+      openGraph: { title: variantCfg.metaTitle, description: variantCfg.metaDescription, url, type: "website" },
+      twitter: { card: "summary_large_image", title: variantCfg.metaTitle, description: variantCfg.metaDescription },
+    };
+  }
 
   // Sub-product landing metadata
   const subCfg = getSubProducts(decodedSlug);
@@ -138,6 +169,56 @@ export default async function ProductPage({ params }) {
   const { category, product: slug } = await params;
   const decodedSlug = safeDecode(slug);
   const decodedCategory = safeDecode(category);
+
+  // ── Scene landing page: SEO content page with embedded product ──
+  const sceneCfg = getSceneConfig(decodedSlug);
+  if (sceneCfg) {
+    const product = await prisma.product.findFirst({
+      where: { slug: sceneCfg.defaultVariantSlug, isActive: true },
+      include: { images: { orderBy: { sortOrder: "asc" } }, pricingPreset: true },
+    });
+    if (product) {
+      const assetImages = await getProductAssets(product.id);
+      const safeProduct = toClientSafe(product);
+      if (assetImages.length > 0) safeProduct.images = assetImages;
+      return (
+        <SceneLandingPage
+          sceneConfig={sceneCfg}
+          product={safeProduct}
+          category={decodedCategory}
+        />
+      );
+    }
+  }
+
+  // ── Variant page: style selector with embedded ProductClient ──
+  const variantCfg = getVariantConfig(decodedSlug);
+  if (variantCfg) {
+    const childSlugs = getVariantChildSlugs(decodedSlug);
+    const childProducts = await prisma.product.findMany({
+      where: { slug: { in: childSlugs }, isActive: true },
+      include: { images: { orderBy: { sortOrder: "asc" } }, pricingPreset: true },
+    });
+
+    const productMap = {};
+    for (const p of childProducts) {
+      const assetImages = await getProductAssets(p.id);
+      const safe = toClientSafe(p);
+      if (assetImages.length > 0) safe.images = assetImages;
+      productMap[p.slug] = safe;
+    }
+
+    return (
+      <Suspense>
+        <VariantProductPage
+          variantConfig={variantCfg}
+          productMap={productMap}
+          category={decodedCategory}
+        />
+      </Suspense>
+    );
+  }
+
   // ── Sub-product landing: parent slug → show child products as card grid ──
   const subCfg = getSubProducts(decodedSlug);
   if (subCfg) {
@@ -204,8 +285,9 @@ export default async function ProductPage({ params }) {
   }
 
   // ── Category configurator: check all configurator types via unified router ──
+  // Skip configurator redirect for custom-stickers — those products have their own detail pages.
   const configurator = getConfiguratorForSlug(decodedSlug);
-  if (configurator) {
+  if (configurator && decodedCategory !== "custom-stickers") {
     const CONFIGURATOR_COMPONENTS = {
       stickers: <StickerOrderClient defaultType={configurator.defaultValue} />,
       booklets: <BookletOrderClient defaultBinding={configurator.defaultValue} />,
@@ -213,6 +295,7 @@ export default async function ProductPage({ params }) {
       banners: <BannerOrderClient defaultType={configurator.defaultValue} />,
       signs: <SignOrderClient defaultType={configurator.defaultValue} />,
       vehicle: <VehicleOrderClient defaultType={configurator.defaultValue} />,
+      canvas: <CanvasOrderClient defaultType={configurator.defaultValue} />,
       surfaces: <SurfaceOrderClient defaultType={configurator.defaultValue} />,
       "marketing-print": <MarketingPrintOrderClient defaultType={configurator.defaultValue} />,
     };
@@ -243,6 +326,12 @@ export default async function ProductPage({ params }) {
   });
 
   if (!product) {
+    // Old slug redirect: if this slug belongs to a variant page, redirect there
+    const variantParent = getVariantParent(decodedSlug);
+    if (variantParent) {
+      redirect(`/shop/${decodedCategory}/${variantParent}?style=${decodedSlug}`);
+    }
+
     // Try finding in any category and redirect
     const fallback = await prisma.product.findUnique({
       where: { slug: decodedSlug },

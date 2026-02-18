@@ -38,6 +38,58 @@ const StampEditor = dynamic(() => import("@/components/product/StampEditor"), {
   loading: () => <div className="animate-pulse bg-[var(--color-gray-100)] rounded-2xl h-64" />,
 });
 
+const MAX_SIZE_BOXES = 10;
+
+function SizeGrid({ sizeOptions, selectedSizeLabel, onSelect, getStartingUnitPrice, formatCad, label, t }) {
+  const [showAll, setShowAll] = useState(false);
+  const hasMore = sizeOptions.length > MAX_SIZE_BOXES;
+  const visible = hasMore && !showAll ? sizeOptions.slice(0, MAX_SIZE_BOXES) : sizeOptions;
+
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{label}</p>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {visible.map((o) => {
+          const dims = o.widthIn && o.heightIn ? `${o.widthIn}" x ${o.heightIn}"` : null;
+          const subtitle = dims || o.notes || null;
+          const unitPrice = getStartingUnitPrice(o);
+          const selected = selectedSizeLabel === o.label;
+          return (
+            <button
+              key={o.label}
+              type="button"
+              onClick={() => onSelect(o.label)}
+              className={`relative rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
+                selected
+                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                  : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-900)] hover:border-[var(--color-gray-400)]"
+              }`}
+            >
+              {o.recommended && (
+                <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 label-xs font-bold uppercase tracking-wider ${
+                  selected ? "bg-white text-[var(--color-ink-black)]" : "bg-[var(--color-ink-black)] text-white"
+                }`}>{"\u2605"}</span>
+              )}
+              <span className="block text-sm font-semibold">{o.displayLabel || o.label}</span>
+              {subtitle && <span className={`mt-0.5 block text-[11px] ${selected ? "text-[var(--color-gray-300)]" : "text-[var(--color-gray-500)]"}`}>{subtitle}</span>}
+              {unitPrice && <span className={`mt-1 block text-xs font-bold ${selected ? "text-[var(--color-gray-200)]" : "text-[var(--color-gray-700)]"}`}>{t("product.from", { price: formatCad(unitPrice) })}/ea</span>}
+            </button>
+          );
+        })}
+      </div>
+      {hasMore && !showAll && (
+        <button
+          type="button"
+          onClick={() => setShowAll(true)}
+          className="mt-2 text-xs font-semibold text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)] transition-colors"
+        >
+          {t("product.moreSizes", { count: sizeOptions.length - MAX_SIZE_BOXES })}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function ProductClient({ product, relatedProducts, embedded = false, catalogConfig }) {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
@@ -101,6 +153,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   }, [editorConfig, product.optionsConfig]);
   const [editorSizeLabel, setEditorSizeLabel] = useState(editorSizes[0]?.label || "");
   const dimensionsEnabled = isPerSqft || isTextEditor;
+  const allowCustomSize = product.optionsConfig?.allowCustomSize === true;
+  const [isCustomSize, setIsCustomSize] = useState(false);
+  const costPlusDefaults = product.optionsConfig?.costPlusDefaults || null;
 
   const [quantity, setQuantity] = useState(quantityRange?.min || smartDefaults.minQuantity || 1);
   const [material, setMaterial] = useState(() => {
@@ -290,6 +345,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   }, [materials, sizeOptions, variantConfig]);
 
   const activeQuantityChoices = useMemo(() => {
+    // Custom size mode: no preset qty choices → free-form input
+    if (isCustomSize) return [];
+
     const fromSize = selectedSize?.quantityChoices || [];
     if (Array.isArray(fromSize) && fromSize.length > 0) return [...new Set(fromSize)].sort((a, b) => a - b);
 
@@ -412,7 +470,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       setStickyVisible(false);
       return undefined;
     }
-  }, []);
+  }, [product.slug]);
 
   const widthDisplay = unit === "in" ? widthIn : Number((widthIn * INCH_TO_CM).toFixed(2));
   const heightDisplay = unit === "in" ? heightIn : Number((heightIn * INCH_TO_CM).toFixed(2));
@@ -624,7 +682,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   const requestQuote = useCallback(
     async (slug, qty, w, h, mat, sizeLabel, addonIds, finishingIds, namesCount) => {
       const body = { slug, quantity: qty };
-      if (dimensionsEnabled) {
+      if (dimensionsEnabled || isCustomSize) {
         body.widthIn = w;
         body.heightIn = h;
       }
@@ -642,7 +700,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       if (!res.ok) return null;
       return res.json();
     },
-    [dimensionsEnabled]
+    [dimensionsEnabled, isCustomSize]
   );
 
   useEffect(() => {
@@ -652,13 +710,15 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     }
     let cancelled = false;
     clearTimeout(debounceRef.current);
-    const sizeLabel = isBusinessCard
-      ? bcSizeLabel
-      : isTextEditor && editorMode === "box"
-        ? editorSizeLabel
-        : sizeOptions.length > 0
-          ? selectedSizeLabel
-          : null;
+    const sizeLabel = isCustomSize
+      ? null
+      : isBusinessCard
+        ? bcSizeLabel
+        : isTextEditor && editorMode === "box"
+          ? editorSizeLabel
+          : sizeOptions.length > 0
+            ? selectedSizeLabel
+            : null;
 
     const isMulti = multiSizeEnabled && useMultiSize;
     const namesCount = showMultiName && names > 1 ? names : undefined;
@@ -681,6 +741,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     const requestKey = JSON.stringify({
       slug: product.slug,
       isMulti,
+      isCustomSize,
       quantity: Number(quantity),
       widthIn: Number(widthIn),
       heightIn: Number(heightIn),
@@ -701,6 +762,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
     const canUseExactLocalOnly =
       !isMulti &&
+      !isCustomSize &&
       !dimensionsEnabled &&
       selectedAddons.length === 0 &&
       selectedFinishings.length === 0 &&
@@ -805,7 +867,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       cancelled = true;
       clearTimeout(debounceRef.current);
     };
-  }, [product.slug, quantity, widthIn, heightIn, material, selectedAddons, selectedFinishings, visibleAddons, finishings, editorSizeLabel, selectedSizeLabel, sizeOptions.length, isTextEditor, editorMode, sizeValidation.valid, requestQuote, isBusinessCard, bcSizeLabel, showMultiName, names, multiSizeEnabled, useMultiSize, sizeRows, dimensionsEnabled, selectedSize]);
+  }, [product.slug, quantity, widthIn, heightIn, material, selectedAddons, selectedFinishings, visibleAddons, finishings, editorSizeLabel, selectedSizeLabel, sizeOptions.length, isTextEditor, editorMode, sizeValidation.valid, requestQuote, isBusinessCard, bcSizeLabel, showMultiName, names, multiSizeEnabled, useMultiSize, sizeRows, dimensionsEnabled, selectedSize, isCustomSize]);
 
   // Scene presets for banner families (material + common size + addon defaults).
   useEffect(() => {
@@ -949,7 +1011,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     return { unitAmount, subtotal, tax, total: subtotal + tax, sqft: null, breakdown: null };
   }, [quote, quantity, product.basePrice, product.slug, widthIn, heightIn, isPerSqft, dimensionsEnabled, multiSizeEnabled, useMultiSize, totalMultiQty, multiSqftTotal, product.pricingPreset?.id, product.pricingPreset?.model, product.pricingPreset?.config, product.pricingPreset?.config?.minimumPrice, isTextEditor, sizeOptions.length, activeQuantityChoices.length, localQuoteFallback, quoteError]);
 
-  // Tier rows â€” quick client estimates for the tier table
+  // Tier rows - quick client estimates for the tier table
   const estimateTierRows = useMemo(
     () =>
       PRESET_QUANTITIES.map((q) => {
@@ -1117,8 +1179,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       label: "Qty",
       value: multiSizeEnabled && useMultiSize ? `${totalMultiQty} pcs (${sizeRows.length} sizes)` : `${quantity} pcs`,
     });
-    if (dimensionsEnabled && !useMultiSize && widthIn && heightIn) {
-      rows.push({ label: "Size", value: `${Number(widthIn).toFixed(2)} in x ${Number(heightIn).toFixed(2)} in` });
+    if ((dimensionsEnabled || isCustomSize) && !useMultiSize && widthIn && heightIn) {
+      rows.push({ label: "Size", value: `${Number(widthIn).toFixed(2)} in x ${Number(heightIn).toFixed(2)} in${isCustomSize ? " (custom)" : ""}` });
     }
     if (material) rows.push({ label: "Material", value: material });
     if (selectedSize?.displayLabel || selectedSize?.label || bcSizeLabel) {
@@ -1209,9 +1271,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         ? { names, totalQty: names * Number(quantity) }
         : {};
 
-    const effectiveSizeLabel = isBusinessCard
-      ? bcSizeLabel
-      : selectedSize?.label || null;
+    const effectiveSizeLabel = isCustomSize
+      ? `${widthIn}" × ${heightIn}" (custom)`
+      : isBusinessCard
+        ? bcSizeLabel
+        : selectedSize?.label || null;
 
     return {
       productId: product.id,
@@ -1221,8 +1285,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       quantity: effectiveQty,
       image: primaryImage,
       meta: {
-        width: dimensionsEnabled ? widthIn : null,
-        height: dimensionsEnabled ? heightIn : null,
+        width: (dimensionsEnabled || isCustomSize) ? widthIn : null,
+        height: (dimensionsEnabled || isCustomSize) ? heightIn : null,
         sizeMode: sizeRowsMeta ? "multi" : "single",
         sizeRows: sizeRowsMeta,
         material,
@@ -1240,8 +1304,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       id: product.id,
       price: priceData.unitAmount,
       options: {
-        width: dimensionsEnabled ? widthIn : null,
-        height: dimensionsEnabled ? heightIn : null,
+        width: (dimensionsEnabled || isCustomSize) ? widthIn : null,
+        height: (dimensionsEnabled || isCustomSize) ? heightIn : null,
         sizeMode: sizeRowsMeta ? "multi" : "single",
         sizeRows: sizeRowsMeta,
         material,
@@ -1324,7 +1388,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
   return (
     <Wrapper className={embedded ? "text-[var(--color-gray-800)]" : "bg-[radial-gradient(circle_at_top,_var(--color-gray-50),_var(--color-gray-100)_45%,_var(--color-gray-50))] pb-20 pt-10 text-[var(--color-gray-800)]"}>
-      <div className={embedded ? "mx-auto max-w-6xl space-y-6 lg:space-y-10 px-4 sm:px-6" : "mx-auto max-w-7xl space-y-6 lg:space-y-8 px-4 sm:px-6"}>
+      <div className={embedded ? "mx-auto max-w-6xl space-y-6 lg:space-y-10 px-4 sm:px-6" : "mx-auto max-w-[1600px] space-y-6 lg:space-y-8 px-4 sm:px-6 2xl:px-4"}>
         {!embedded && (
           <Breadcrumbs items={[
             { label: t("product.shop"), href: "/shop" },
@@ -1339,7 +1403,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           </div>
         )}
 
-        {/* Mobile-only header â€” shows title before gallery on small screens */}
+        {/* Mobile-only header - shows title before gallery on small screens */}
         {!embedded && (
           <header className="lg:hidden">
             <div className="flex items-start gap-3">
@@ -1367,7 +1431,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   </span>
                 );
               })()}
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+              <span className="inline-flex items-center gap-1 rounded-xl bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 {t("trust.madeToOrder")}
               </span>
@@ -1376,15 +1440,15 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           </header>
         )}
 
-        <section className="grid gap-6 lg:gap-9 lg:grid-cols-12">
-          <div className="space-y-4 lg:col-span-7">
+        <section className="grid gap-6 lg:gap-8 xl:gap-10 lg:grid-cols-12">
+          <div className="space-y-4 lg:col-span-8">
             <ImageGallery images={imageList} productName={product.name} />
 
             {templateGallery && <TemplateGallery templates={templateGallery} />}
 
             {productSpecs ? (
               <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white/95 p-4 shadow-sm sm:p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">{t("bc.specs")}</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">{t("bc.specs")}</h3>
                 <div className="mt-3 divide-y divide-[var(--color-gray-100)]">
                   {productSpecs.dimensions && (
                     <div className="flex items-center justify-between py-2 text-sm">
@@ -1418,7 +1482,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               </div>
             ) : specs.length > 0 ? (
               <div className="hidden lg:block rounded-3xl border border-[var(--color-gray-200)] bg-white/95 p-4 shadow-sm sm:p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">{t("product.specifications")}</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">{t("product.specifications")}</h3>
                 <div className="mt-3 divide-y divide-[var(--color-gray-100)]">
                   {specs.map(([k, v]) => (
                     <div key={k} className="flex items-center justify-between py-2 text-sm">
@@ -1431,8 +1495,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             ) : null}
           </div>
 
-          <div className="space-y-6 lg:col-span-5 lg:self-start">
-            {/* Desktop-only header â€” hidden on mobile where it appears above the grid */}
+          <div className="space-y-6 lg:col-span-4 lg:self-start">
+            {/* Desktop-only header - hidden on mobile where it appears above the grid */}
             {!embedded && (
               <header className="hidden lg:block">
                 <div className="flex items-start gap-3">
@@ -1455,7 +1519,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     {t(turnaroundI18nKey(turnaroundKey))}
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                  <span className="inline-flex items-center gap-1 rounded-xl bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     {t("trust.madeToOrder")}
                   </span>
@@ -1465,8 +1529,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             )}
 
             <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 lg:sticky lg:top-24 flex flex-col">
-              {/* â”€â”€ PRICE + QUANTITY + ATC (always visible, order-1) â”€â”€ */}
-              <div className="order-1 rounded-2xl border border-[var(--color-gray-200)] bg-gradient-to-b from-[var(--color-gray-50)] to-white p-4 sm:p-5">
+              {/* PRICE + QUANTITY + ATC (always visible, order-1) */}
+              <div className="order-1 rounded-2xl border border-[var(--color-gray-200)] bg-white p-4 sm:p-5">
                 {inventorySignal && (
                   <div className="mb-3">
                     <span
@@ -1508,30 +1572,30 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
                 {/* Quantity */}
                 <div className="mt-4">
-                  <p className="text-xs font-medium text-[var(--color-gray-500)]">{t("product.quantity")}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.quantity")}</p>
                   {multiSizeEnabled && useMultiSize ? (
                     <p className="mt-2 text-sm text-[var(--color-gray-700)]">
                       {totalMultiQty} pcs across {sizeRows.length} sizes
                     </p>
                   ) : activeQuantityChoices.length > 0 ? (
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
                       <button
                         onClick={() => {
                           const idx = activeQuantityChoices.indexOf(quantity);
                           const next = idx > 0 ? activeQuantityChoices[idx - 1] : activeQuantityChoices[0];
                           setQuantityValue(next);
                         }}
-                        className="h-9 w-9 rounded-full border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-50)]"
+                        className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]"
                       >
                         -
                       </button>
                       <select
                         value={String(quantity)}
                         onChange={(e) => setQuantityValue(Number(e.target.value))}
-                        className="w-32 rounded-xl border border-[var(--color-gray-300)] bg-white px-3 py-2 text-center text-sm font-semibold text-[var(--color-gray-800)]"
+                        className="min-w-[140px] flex-1 rounded-xl border-2 border-[var(--color-gray-200)] bg-white px-3 py-2.5 text-center text-sm font-semibold text-[var(--color-gray-900)] transition-colors hover:border-[var(--color-gray-400)] sm:w-36 sm:flex-none"
                       >
                         {activeQuantityChoices.map((q) => (
-                          <option key={q} value={q}>{q}{q === smartDefaults.minQuantity ? " ★" : ""}</option>
+                          <option key={q} value={q}>{q}{q === smartDefaults.minQuantity ? " \u2605" : ""}</option>
                         ))}
                       </select>
                       <button
@@ -1543,16 +1607,16 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               : activeQuantityChoices[activeQuantityChoices.length - 1];
                           setQuantityValue(next);
                         }}
-                        className="h-9 w-9 rounded-full border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-50)]"
+                        className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]"
                       >
                         +
                       </button>
                     </div>
                   ) : (
-                    <div className="mt-2 flex items-center gap-2">
-                      <button onClick={() => setQuantityValue(quantity - (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-50)]">-</button>
-                      <input type="number" value={quantity} onChange={(e) => setQuantityValue(e.target.value)} className="w-24 rounded-xl border border-[var(--color-gray-300)] bg-white px-3 py-2 text-center text-sm font-semibold text-[var(--color-gray-800)]" />
-                      <button onClick={() => setQuantityValue(quantity + (quantityRange?.step || 1))} className="h-9 w-9 rounded-full border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-50)]">+</button>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <button onClick={() => setQuantityValue(quantity - (quantityRange?.step || 1))} className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]">-</button>
+                      <input type="number" value={quantity} onChange={(e) => setQuantityValue(e.target.value)} className="min-w-[140px] flex-1 rounded-xl border-2 border-[var(--color-gray-200)] bg-white px-3 py-2.5 text-center text-sm font-semibold text-[var(--color-gray-900)] transition-colors hover:border-[var(--color-gray-400)] sm:w-36 sm:flex-none" />
+                      <button onClick={() => setQuantityValue(quantity + (quantityRange?.step || 1))} className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]">+</button>
                     </div>
                   )}
                 </div>
@@ -1596,39 +1660,38 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   </button>
                 </div>
 
-                <div className="mt-3 flex items-center justify-center gap-4 text-xs text-[var(--color-gray-500)]">
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs">
                   <button
                     type="button"
                     onClick={handleDownloadQuotePdf}
                     disabled={priceData.unpriced}
-                    className="underline hover:text-[var(--color-gray-700)] disabled:no-underline disabled:opacity-40"
+                    className="rounded-lg border border-[var(--color-gray-200)] px-3 py-1.5 font-medium text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-300)] hover:text-[var(--color-gray-800)] disabled:opacity-40"
                   >
                     Save Quote
                   </button>
-                  <span className="text-[var(--color-gray-300)]">|</span>
-                  <Link href="/quote" className="underline hover:text-[var(--color-gray-700)]">
+                  <Link href="/quote" className="rounded-lg border border-[var(--color-gray-200)] px-3 py-1.5 font-medium text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-300)] hover:text-[var(--color-gray-800)]">
                     Custom Quote
                   </Link>
                 </div>
               </div>
 
-              {/* â”€â”€ OPTIONS (collapsed on mobile, order-2) â”€â”€ */}
+              {/* OPTIONS (collapsed on mobile, order-2) */}
               <div className="order-2 mt-5 border-t border-[var(--color-gray-100)] pt-4">
 
                 {isBusinessCard && (
                   <div className="mb-5 space-y-4 rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3 sm:p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-[var(--color-gray-300)] bg-white px-2 py-1 text-[11px] font-semibold text-[var(--color-gray-700)]">Step 1: {t("bc.cardType")}</span>
-                      <span className="rounded-full border border-[var(--color-gray-300)] bg-white px-2 py-1 text-[11px] font-semibold text-[var(--color-gray-700)]">
+                      <span className="rounded-xl border border-[var(--color-gray-300)] bg-white px-2 py-1 text-[11px] font-semibold text-[var(--color-gray-700)]">Step 1: {t("bc.cardType")}</span>
+                      <span className="rounded-xl border border-[var(--color-gray-300)] bg-white px-2 py-1 text-[11px] font-semibold text-[var(--color-gray-700)]">
                         Step 2: {cardType === "thick" ? t("bc.layers") : t("bc.sides")}
                       </span>
                       {multiNameConfig?.enabled && (
-                        <span className="rounded-full border border-[var(--color-gray-300)] bg-white px-2 py-1 text-[11px] font-semibold text-[var(--color-gray-700)]">Step 3: {t("bc.names")}</span>
+                        <span className="rounded-xl border border-[var(--color-gray-300)] bg-white px-2 py-1 text-[11px] font-semibold text-[var(--color-gray-700)]">Step 3: {t("bc.names")}</span>
                       )}
                     </div>
 
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("bc.cardType")}</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("bc.cardType")}</p>
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         {cardTypes.map((ct) => (
                           <button
@@ -1650,7 +1713,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
                     {cardType !== "thick" && sidesOptions.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("bc.sides")}</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("bc.sides")}</p>
                         <div className="mt-2 flex gap-2">
                           {sidesOptions.map((s) => (
                             <button
@@ -1672,7 +1735,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
                     {cardType === "thick" && thickLayers.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("bc.layers")}</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("bc.layers")}</p>
                         <div className="mt-2 flex gap-2">
                           {thickLayers.map((l) => (
                             <button
@@ -1694,13 +1757,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
                     {multiNameConfig?.enabled && (
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("bc.names")}</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("bc.names")}</p>
                         <p className="mt-1 text-xs text-[var(--color-gray-500)]">{t("bc.namesHint")}</p>
                         <div className="mt-2 flex items-center gap-3">
                           <button
                             type="button"
                             onClick={() => setNames((n) => Math.max(1, n - 1))}
-                            className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-gray-300)] text-sm font-semibold"
+                            className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-sm font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]"
                           >
                             -
                           </button>
@@ -1713,12 +1776,12 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               const v = Math.max(1, Math.min(multiNameConfig.maxNames || 20, Math.floor(Number(e.target.value) || 1)));
                               setNames(v);
                             }}
-                            className="w-16 rounded-xl border border-[var(--color-gray-300)] px-2 py-2 text-center text-sm"
+                            className="w-24 rounded-xl border-2 border-[var(--color-gray-200)] px-2 py-2 text-center text-sm font-semibold text-[var(--color-gray-900)]"
                           />
                           <button
                             type="button"
                             onClick={() => setNames((n) => Math.min(multiNameConfig.maxNames || 20, n + 1))}
-                            className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-gray-300)] text-sm font-semibold"
+                            className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-sm font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]"
                           >
                             +
                           </button>
@@ -1743,7 +1806,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
                 {isTextEditor && (
                   <div className="mt-5 space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("product.textEditor")}</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.textEditor")}</p>
 
                     {editorMode === "box" && editorSizes.length > 0 && (
                       <label className="text-xs text-[var(--color-gray-600)]">
@@ -1763,7 +1826,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     {editorMode === "box" && selectedEditorSize && (
                       <div className="rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-4">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("product.modelDetails")}</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.modelDetails")}</p>
                           <p className="text-xs font-semibold text-[var(--color-gray-900)]">{selectedEditorSize.label}</p>
                         </div>
                         <div className="mt-3 space-y-1 text-xs text-[var(--color-gray-700)]">
@@ -1847,10 +1910,22 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("product.sizeUnit")}</p>
-                      <div className="rounded-full border border-[var(--color-gray-300)] p-1 text-xs">
-                        <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)]"}`}>{t("product.inches")}</button>
-                        <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)]"}`}>{t("product.cm")}</button>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.sizeUnit")}</p>
+                      <div className="flex rounded-xl border-2 border-[var(--color-gray-200)] bg-white p-1 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setUnit("in")}
+                          className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "in" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
+                        >
+                          {t("product.inches")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setUnit("cm")}
+                          className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "cm" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
+                        >
+                          {t("product.cm")}
+                        </button>
                       </div>
                     </div>
 
@@ -1953,7 +2028,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               {isPerSqft && !isTextEditor && (
                 <div className="mt-5 space-y-3">
                   <div className="flex items-center justify-between rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">More Size</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">Multi-Size</p>
                     <button
                       type="button"
                       onClick={() => {
@@ -1969,17 +2044,29 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         }
                         setUseMultiSize((prev) => !prev);
                       }}
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${useMultiSize ? "bg-[var(--color-ink-black)] text-white" : "border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)]"}`}
+                      className={`rounded-lg px-3 py-1 text-xs font-semibold ${useMultiSize ? "bg-[var(--color-ink-black)] text-white" : "border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)]"}`}
                     >
                       {useMultiSize ? "On" : "Off"}
                     </button>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("product.sizeUnit")}</p>
-                    <div className="rounded-full border border-[var(--color-gray-300)] p-1 text-xs">
-                      <button onClick={() => setUnit("in")} className={`rounded-full px-3 py-1 ${unit === "in" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)]"}`}>{t("product.inches")}</button>
-                      <button onClick={() => setUnit("cm")} className={`rounded-full px-3 py-1 ${unit === "cm" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)]"}`}>{t("product.cm")}</button>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.sizeUnit")}</p>
+                    <div className="flex rounded-xl border-2 border-[var(--color-gray-200)] bg-white p-1 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setUnit("in")}
+                        className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "in" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
+                      >
+                        {t("product.inches")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUnit("cm")}
+                        className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "cm" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
+                      >
+                        {t("product.cm")}
+                      </button>
                     </div>
                   </div>
 
@@ -2083,9 +2170,11 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 <button
                   type="button"
                   onClick={() => setShowAdvancedOptions((prev) => !prev)}
+                  aria-expanded={showAdvancedOptions}
+                  aria-controls="product-advanced-options"
                   className="flex w-full items-center justify-between rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-2 text-left"
                 >
-                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-600)]">
+                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
                     {t("product.moreOptions")}
                   </span>
                   <span className="text-sm font-semibold text-[var(--color-gray-700)]">
@@ -2093,10 +2182,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   </span>
                 </button>
 
-                <div className={`${showAdvancedOptions ? "mt-4 block" : "hidden"} space-y-5 md:mt-5`}>
+                <div id="product-advanced-options" className={`${showAdvancedOptions ? "mt-4 block" : "hidden"} space-y-5 md:mt-5`}>
                   {scenes.length > 0 && (
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("product.scene")}</label>
+                      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.scene")}</label>
                       <select value={sceneId} onChange={(e) => setSceneId(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--color-gray-300)] px-3 py-2 text-sm">
                         {scenes.map((scene) => (
                           <option key={scene.id} value={scene.id}>{scene.label}</option>
@@ -2109,13 +2198,13 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               {/* Multi-name stepper (for split products that have multiName but aren't the old combined card) */}
               {!isBusinessCard && showMultiName && (
                 <div className="mt-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("bc.names")}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("bc.names")}</p>
                   <p className="mt-1 text-xs text-[var(--color-gray-500)]">{t("bc.namesHint")}</p>
                   <div className="mt-2 flex items-center gap-3">
                     <button
                       type="button"
                       onClick={() => setNames((n) => Math.max(1, n - 1))}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-gray-300)] text-sm font-semibold"
+                      className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-sm font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]"
                     >
                       -
                     </button>
@@ -2128,12 +2217,12 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         const v = Math.max(1, Math.min(multiNameConfig.maxNames || 20, Math.floor(Number(e.target.value) || 1)));
                         setNames(v);
                       }}
-                      className="w-16 rounded-xl border border-[var(--color-gray-300)] px-2 py-2 text-center text-sm"
+                      className="w-24 rounded-xl border-2 border-[var(--color-gray-200)] px-2 py-2 text-center text-sm font-semibold text-[var(--color-gray-900)]"
                     />
                     <button
                       type="button"
                       onClick={() => setNames((n) => Math.min(multiNameConfig.maxNames || 20, n + 1))}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-gray-300)] text-sm font-semibold"
+                      className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-sm font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]"
                     >
                       +
                     </button>
@@ -2159,7 +2248,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   {variantConfig.enabled ? (
                     <>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("product.size")}</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.size")}</p>
                         <div className="mt-2 grid grid-cols-2 gap-2">
                           {variantConfig.bases.map((base) => {
                             const anyOpt = Object.values(variantConfig.byBase[base])[0];
@@ -2185,7 +2274,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                 {isRec && (
                                   <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 label-xs font-bold uppercase tracking-wider ${
                                     selected ? "bg-white text-[var(--color-ink-black)]" : "bg-[var(--color-ink-black)] text-white"
-                                  }`}>★</span>
+                                  }`}>{"\u2605"}</span>
                                 )}
                                 <span className="block text-sm font-semibold">{base}</span>
                                 {dims && <span className={`mt-0.5 block text-[11px] ${selected ? "text-[var(--color-gray-300)]" : "text-[var(--color-gray-500)]"}`}>{dims}</span>}
@@ -2197,7 +2286,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       </div>
 
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{uiConfig?.variantLabel || t("product.color")}</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{uiConfig?.variantLabel || t("product.color")}</p>
                         <div className="mt-2 flex gap-2">
                           {variantValueOptions.map((v) => (
                             <button
@@ -2217,50 +2306,91 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       </div>
                     </>
                   ) : (
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{uiConfig?.sizeToggleLabel || t("product.size")}</p>
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        {sizeOptions.map((o) => {
-                          const dims = o.widthIn && o.heightIn ? `${o.widthIn}" x ${o.heightIn}"` : null;
-                          const subtitle = dims || o.notes || null;
-                          const unitPrice = getStartingUnitPrice(o);
-                          const selected = selectedSizeLabel === o.label;
-                          return (
-                            <button
-                              key={o.label}
-                              type="button"
-                              onClick={() => {
-                                setSelectedSizeLabel(o.label);
-                                trackOptionChange({ slug: product.slug, option: "size", value: o.label, quantity, pricingModel: product.pricingPreset?.model });
-                              }}
-                              className={`relative rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
-                                selected
-                                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
-                                  : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-900)] hover:border-[var(--color-gray-400)]"
-                              }`}
-                            >
-                              {o.recommended && (
-                                <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 label-xs font-bold uppercase tracking-wider ${
-                                  selected ? "bg-white text-[var(--color-ink-black)]" : "bg-[var(--color-ink-black)] text-white"
-                                }`}>★</span>
+                    <>
+                      {!isCustomSize && (
+                        <SizeGrid
+                          sizeOptions={sizeOptions}
+                          selectedSizeLabel={selectedSizeLabel}
+                          onSelect={(label) => {
+                            setIsCustomSize(false);
+                            setSelectedSizeLabel(label);
+                            trackOptionChange({ slug: product.slug, option: "size", value: label, quantity, pricingModel: product.pricingPreset?.model });
+                          }}
+                          getStartingUnitPrice={getStartingUnitPrice}
+                          formatCad={formatCad}
+                          label={uiConfig?.sizeToggleLabel || t("product.size")}
+                          t={t}
+                        />
+                      )}
+
+                      {allowCustomSize && (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsCustomSize(!isCustomSize);
+                              if (!isCustomSize) {
+                                const min = costPlusDefaults?.minDimensionIn || 1;
+                                setWidthIn(Math.max(widthIn, min));
+                                setHeightIn(Math.max(heightIn, min));
+                              }
+                            }}
+                            className={`w-full rounded-xl border-2 px-3 py-2.5 text-sm font-semibold transition-all ${
+                              isCustomSize
+                                ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                                : "border-dashed border-[var(--color-gray-300)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
+                            }`}
+                          >
+                            {isCustomSize ? "Custom Size" : "Custom Size..."}
+                          </button>
+
+                          {isCustomSize && (
+                            <div className="mt-3 space-y-3">
+                              <div className="grid grid-cols-2 gap-3">
+                                <label className="text-xs font-medium text-[var(--color-gray-600)]">
+                                  Width (in)
+                                  <input
+                                    type="number"
+                                    min={costPlusDefaults?.minDimensionIn || 0.5}
+                                    max={costPlusDefaults?.maxWidthIn || 53}
+                                    step="0.25"
+                                    value={widthIn}
+                                    onChange={(e) => setSizeValue("w", e.target.value)}
+                                    className="mt-1 w-full rounded-xl border border-[var(--color-gray-300)] px-3 py-2 text-sm"
+                                  />
+                                </label>
+                                <label className="text-xs font-medium text-[var(--color-gray-600)]">
+                                  Height (in)
+                                  <input
+                                    type="number"
+                                    min={costPlusDefaults?.minDimensionIn || 0.5}
+                                    max={costPlusDefaults?.maxHeightIn || 53}
+                                    step="0.25"
+                                    value={heightIn}
+                                    onChange={(e) => setSizeValue("h", e.target.value)}
+                                    className="mt-1 w-full rounded-xl border border-[var(--color-gray-300)] px-3 py-2 text-sm"
+                                  />
+                                </label>
+                              </div>
+                              {costPlusDefaults?.minDimensionIn && (
+                                <p className="text-[11px] text-[var(--color-gray-500)]">
+                                  Min {costPlusDefaults.minDimensionIn}" &times; {costPlusDefaults.minDimensionIn}" &mdash; Max {costPlusDefaults.maxWidthIn || 53}" &times; {costPlusDefaults.maxHeightIn || 53}"
+                                </p>
                               )}
-                              <span className="block text-sm font-semibold">{o.displayLabel || o.label}</span>
-                              {subtitle && <span className={`mt-0.5 block text-[11px] ${selected ? "text-[var(--color-gray-300)]" : "text-[var(--color-gray-500)]"}`}>{subtitle}</span>}
-                              {unitPrice && <span className={`mt-1 block text-xs font-bold ${selected ? "text-[var(--color-gray-200)]" : "text-[var(--color-gray-700)]"}`}>{t("product.from", { price: formatCad(unitPrice) })}/ea</span>}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
                   )}
 
-                  {selectedSize?.notes && <p className="text-xs text-[var(--color-gray-500)]">{selectedSize.notes}</p>}
+                  {selectedSize?.notes && !isCustomSize && <p className="text-xs text-[var(--color-gray-500)]">{selectedSize.notes}</p>}
                 </div>
               )}
 
               {!hideMaterials && materials.length > 0 && (
                 <div className="mt-5">
-                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("product.material")}</label>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.material")}</p>
                   <div className="mt-2 space-y-1.5">
                     {materials.map((m) => {
                       const selected = material === m.id;
@@ -2281,7 +2411,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             {m.multiplier !== 1.0 && <span className="ml-1 text-xs text-[var(--color-gray-500)]">(+{Math.round((m.multiplier - 1) * 100)}%)</span>}
                           </span>
                           {isPopular && (
-                            <span className="inline-block rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
+                            <span className="inline-block rounded-xl bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
                               {t("product.popular")}
                             </span>
                           )}
@@ -2294,7 +2424,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
                   {!hideAddons && visibleAddons.length > 0 && (
                     <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("product.addons")}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.addons")}</p>
                   <div className="space-y-2">
                     {visibleAddons.map((addon) => {
                       const addonChecked = selectedAddons.includes(addon.id);
@@ -2316,7 +2446,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         <span className="flex-1">
                           <span className="font-medium text-[var(--color-gray-900)]">
                             {t("bc.addon." + addon.id) !== "bc.addon." + addon.id ? t("bc.addon." + addon.id) : addon.name}
-                            {addon.recommended && <span className="ml-1.5 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 label-xs font-bold uppercase tracking-wide text-amber-700">{t("product.popular")}</span>}
+                            {addon.recommended && <span className="ml-1.5 inline-block rounded-xl bg-amber-100 px-1.5 py-0.5 label-xs font-bold uppercase tracking-wide text-amber-700">{t("product.popular")}</span>}
                           </span>
                           {addon.description && <span className="block text-xs text-[var(--color-gray-500)]">{addon.description}</span>}
                           {addon.price > 0 && (
@@ -2334,7 +2464,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
                   {!hideFinishings && finishings.length > 0 && (
                     <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("product.finishing")}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.finishing")}</p>
                   <div className="flex gap-2">
                     {[false, true].map((val) => (
                       <button
@@ -2378,7 +2508,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             <span className="flex-1">
                               <span className="font-medium text-[var(--color-gray-900)]">
                                 {f.name}
-                                {f.recommended && <span className="ml-1.5 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 label-xs font-bold uppercase tracking-wide text-amber-700">{t("product.popular")}</span>}
+                                {f.recommended && <span className="ml-1.5 inline-block rounded-xl bg-amber-100 px-1.5 py-0.5 label-xs font-bold uppercase tracking-wide text-amber-700">{t("product.popular")}</span>}
                               </span>
                               <span className="block text-xs text-[var(--color-gray-500)]">
                                 {f.type === "flat" ? `$${f.price.toFixed(2)} ${t("product.pricingFlat")}` : f.type === "per_unit" ? `$${f.price.toFixed(2)}/${t("product.pricingUnit")}` : `$${f.price.toFixed(2)}/${t("product.pricingSqft")}`}
@@ -2394,7 +2524,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
 
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("product.artworkUpload")}</label>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.artworkUpload")}</p>
 
                 <div className="rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3">
                   <p className="mb-2 text-xs text-[var(--color-gray-600)]">{t("product.uploadHint")}</p>
@@ -2417,6 +2547,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     }}
                     onUploadError={(e) => {
                       console.error("[uploadthing]", e);
+                      showErrorToast(e?.message || "Upload failed. Please try again.");
                     }}
                   />
 
@@ -2431,7 +2562,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       <button
                         type="button"
                         onClick={() => setUploadedArtwork(null)}
-                        className="rounded-full border border-[var(--color-gray-300)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)]"
+                        className="rounded-xl border border-[var(--color-gray-300)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)]"
                       >
                         {t("product.removeUpload")}
                       </button>
@@ -2470,7 +2601,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   type="button"
                   onClick={handleAddToCart}
                   disabled={!canAddToCart}
-                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-200 ${!canAddToCart ? "border border-[var(--color-gray-200)] bg-[var(--color-gray-100)] text-[var(--color-gray-400)] cursor-not-allowed" : added ? "border border-emerald-600 bg-emerald-600 text-white" : "border border-[var(--color-ink-black)] bg-white text-[var(--color-ink-black)] hover:bg-[var(--color-gray-50)]"}`}
+                  className={`flex-1 rounded-xl px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.14em] transition-all duration-200 ${!canAddToCart ? "border border-[var(--color-gray-200)] bg-[var(--color-gray-100)] text-[var(--color-gray-400)] cursor-not-allowed" : added ? "border border-emerald-600 bg-emerald-600 text-white" : "border border-[var(--color-ink-black)] bg-white text-[var(--color-ink-black)] hover:bg-[var(--color-gray-50)]"}`}
                 >
                   {added ? t("product.added") : t("product.addToCart")}
                 </button>
@@ -2478,7 +2609,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   type="button"
                   onClick={handleBuyNow}
                   disabled={!canAddToCart || buyNowLoading}
-                  className={`flex-1 rounded-full px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.15em] text-white transition-all duration-200 ${!canAddToCart || buyNowLoading ? "bg-[var(--color-gray-300)] cursor-not-allowed" : "bg-[var(--color-moon-gold)] hover:bg-[#9a7548]"}`}
+                  className={`flex-1 rounded-xl px-3 py-3.5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all duration-200 ${!canAddToCart || buyNowLoading ? "bg-[var(--color-gray-300)] cursor-not-allowed" : "bg-[var(--color-moon-gold)] hover:bg-[#9a7548]"}`}
                 >
                   {buyNowLoading ? "..." : "Buy Now"}
                 </button>
@@ -2489,3 +2620,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     </Wrapper>
   );
 }
+
+
+
+

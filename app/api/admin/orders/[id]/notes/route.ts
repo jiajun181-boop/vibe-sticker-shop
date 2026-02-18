@@ -19,6 +19,12 @@ export async function POST(
     );
   }
 
+  // Verify order exists
+  const order = await prisma.order.findUnique({ where: { id }, select: { id: true } });
+  if (!order) {
+    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  }
+
   const note = await prisma.orderNote.create({
     data: {
       orderId: id,

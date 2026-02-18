@@ -105,7 +105,7 @@ export default function TrustSignals() {
             <div className="text-3xl md:text-4xl font-black tracking-tight text-[var(--color-gray-900)]">
               <AnimatedCounter value={stat.value} suffix={stat.suffix} prefix={stat.prefix} text={stat.textKey ? t(stat.textKey) : undefined} />
             </div>
-            <p className="label-xs text-[var(--color-gray-400)] mt-1.5 font-normal tracking-widest">{t(stat.labelKey)}</p>
+            <p className="label-xs text-[var(--color-gray-400)] mt-1.5 font-normal tracking-[0.14em]">{t(stat.labelKey)}</p>
           </div>
         ))}
       </div>
@@ -114,7 +114,7 @@ export default function TrustSignals() {
       <div className="bg-white rounded-2xl border border-[var(--color-gray-100)] p-6 md:p-8 overflow-hidden">
         <div className="flex items-center gap-2 mb-6">
           <StarRating value={5} size={16} />
-          <span className="label-xs text-[var(--color-gray-400)] tracking-widest">
+          <span className="label-xs text-[var(--color-gray-400)] tracking-[0.14em]">
             {t("trust.customersSay")}
           </span>
         </div>

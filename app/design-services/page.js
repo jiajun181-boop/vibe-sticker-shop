@@ -44,7 +44,7 @@ export default async function DesignServicesPage() {
         <div className="grid gap-6 md:grid-cols-2">
           {/* Standard */}
           <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8">
-            <div className="inline-block rounded-full bg-[var(--color-gray-100)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[var(--color-gray-500)] mb-4">
+            <div className="inline-block rounded-xl bg-[var(--color-gray-100)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--color-gray-500)] mb-4">
               Standard
             </div>
             <h2 className="text-xl font-semibold">Standard Design</h2>
@@ -74,7 +74,7 @@ export default async function DesignServicesPage() {
 
           {/* Premium */}
           <section className="rounded-3xl border-2 border-[var(--color-gray-900)] bg-white p-8 relative">
-            <div className="inline-block rounded-full bg-[var(--color-gray-900)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white mb-4">
+            <div className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white mb-4">
               Premium
             </div>
             <h2 className="text-xl font-semibold">Premium Custom Design</h2>
@@ -140,13 +140,13 @@ export default async function DesignServicesPage() {
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href="/contact"
-              className="inline-block rounded-full bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
+              className="inline-block rounded-xl bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
             >
               Contact Us
             </Link>
             <a
               href="mailto:info@lunarprint.ca"
-              className="inline-block rounded-full border border-white/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white hover:border-white/70 transition-colors"
+              className="inline-block rounded-xl border border-white/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:border-white/70 transition-colors"
             >
               info@lunarprint.ca
             </a>

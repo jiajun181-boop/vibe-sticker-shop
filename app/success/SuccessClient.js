@@ -176,7 +176,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
           </div>
 
           <div className="mb-6 rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-4">
-            <p className="mb-1 text-[11px] uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("success.orderRef")}</p>
+            <p className="mb-1 text-[11px] uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("success.orderRef")}</p>
             <p className="break-all font-mono text-xs font-medium text-[var(--color-gray-800)]">{sessionId}</p>
           </div>
 
@@ -185,20 +185,20 @@ export default function SuccessClient({ sessionId, statusToken }) {
               <button
                 type="button"
                 onClick={() => setRetryToken((v) => v + 1)}
-                className="block w-full rounded-full border border-[var(--color-gray-300)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)]"
+                className="block w-full rounded-xl border border-[var(--color-gray-300)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)]"
               >
                 {t("success.retryStatus")}
               </button>
             )}
             <Link
               href="/shop"
-              className="block w-full rounded-full bg-[var(--color-gray-900)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black"
+              className="block w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black"
             >
               {t("success.backToCart")}
             </Link>
             <Link
               href="/shop"
-              className="block w-full rounded-full border border-[var(--color-gray-300)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)]"
+              className="block w-full rounded-xl border border-[var(--color-gray-300)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)]"
             >
               {t("success.continueShopping")}
             </Link>
@@ -222,7 +222,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
         </div>
 
         <div className="rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-4 mb-6">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--color-gray-500)] mb-1">{t("success.orderRef")}</p>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-1">{t("success.orderRef")}</p>
           <p className="font-mono text-xs font-medium text-[var(--color-gray-800)] break-all">{sessionId}</p>
           {customerEmail && (
             <p className="mt-2 text-xs text-[var(--color-gray-500)]">
@@ -250,7 +250,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
         )}
 
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 mb-6">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 mb-3">{t("success.whatNext")}</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700 mb-3">{t("success.whatNext")}</h3>
           <div className="space-y-3">
             {[
               { step: "1", text: t("success.step1") },
@@ -268,7 +268,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
         </div>
 
         <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-4 mb-6">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">{t("success.orderTimeline")}</h3>
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("success.orderTimeline")}</h3>
           <div className="space-y-3">
             {timelinePlan.map((step) => (
               <div key={step.title} className="flex items-start justify-between gap-3 border-b border-[var(--color-gray-100)] pb-2 last:border-b-0 last:pb-0">
@@ -284,7 +284,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
 
         <Link
           href="/shop"
-          className="block w-full rounded-full bg-[var(--color-gray-900)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-black"
+          className="block w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black"
         >
           {t("success.continueShopping")}
         </Link>

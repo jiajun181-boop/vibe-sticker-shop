@@ -11,6 +11,8 @@ const navItems = [
   { key: "account.nav.addresses", href: "/account/addresses" },
   { key: "account.nav.profile", href: "/account/profile" },
   { key: "account.nav.favorites", href: "/account/favorites" },
+  { key: "account.nav.templates", href: "/account/templates", label: "Templates" },
+  { key: "account.nav.support", href: "/account/support", label: "Support" },
 ];
 
 export default function AccountNav() {
@@ -24,8 +26,8 @@ export default function AccountNav() {
   };
 
   return (
-    <aside className="w-full shrink-0 md:w-48">
-      <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--color-gray-400)]">
+    <aside className="w-full shrink-0 md:w-56">
+      <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">
         {t("account.title")}
       </h2>
       <nav className="mt-4 flex flex-row gap-1 overflow-x-auto md:flex-col">

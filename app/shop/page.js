@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
+import { computeFromPrice } from "@/lib/pricing/from-price";
 import ShopClient from "./ShopClient";
 import ShopLoading from "./loading";
 
@@ -44,11 +45,16 @@ export default async function ShopPage({ searchParams }) {
   const [products, config] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true },
-      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+      include: { images: { take: 1, orderBy: { sortOrder: "asc" } }, pricingPreset: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     }),
     getCatalogConfig(),
   ]);
+
+  // Compute fromPrice for products that use formula-based pricing
+  for (const p of products) {
+    p.fromPrice = p.displayFromPrice || p.minPrice || computeFromPrice(p);
+  }
 
   // Count products per category for the grid view
   const categoryCounts = {};

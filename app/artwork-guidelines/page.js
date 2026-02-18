@@ -124,13 +124,13 @@ export default async function ArtworkGuidelinesPage() {
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href="/contact"
-              className="inline-block rounded-full bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
+              className="inline-block rounded-xl bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
             >
               Contact Us
             </Link>
             <Link
               href="/shop"
-              className="inline-block rounded-full border border-white/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white hover:border-white/70 transition-colors"
+              className="inline-block rounded-xl border border-white/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:border-white/70 transition-colors"
             >
               Browse Products
             </Link>

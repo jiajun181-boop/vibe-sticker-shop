@@ -37,7 +37,7 @@ export default function FavoritesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold tracking-[0.15em] text-[var(--color-gray-900)]">
+      <h1 className="text-lg font-semibold tracking-[0.14em] text-[var(--color-gray-900)]">
         {t("favorites.title")}
       </h1>
 
@@ -49,7 +49,7 @@ export default function FavoritesPage() {
           <p className="mt-4 text-sm text-[var(--color-gray-500)]">{t("favorites.empty")}</p>
           <Link
             href="/shop"
-            className="mt-4 inline-block rounded-full border border-[var(--color-gray-300)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-700)] hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)] transition-colors"
+            className="mt-4 inline-block rounded-xl border border-[var(--color-gray-300)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)] hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)] transition-colors"
           >
             {t("favorites.browseCta")}
           </Link>
@@ -101,14 +101,14 @@ export default function FavoritesPage() {
                   <div className="mt-3 flex gap-2">
                     <Link
                       href={href}
-                      className="flex-1 rounded-full bg-[var(--color-ink-black)] px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.15em] text-white transition-colors hover:bg-black"
+                      className="flex-1 rounded-xl bg-[var(--color-ink-black)] px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black"
                     >
                       {t("shop.viewDetails")}
                     </Link>
                     <button
                       type="button"
                       onClick={() => quickAdd(fav)}
-                      className="rounded-full border border-[var(--color-gray-300)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
+                      className="rounded-xl border border-[var(--color-gray-300)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
                     >
                       {t("shop.quickAdd")}
                     </button>
