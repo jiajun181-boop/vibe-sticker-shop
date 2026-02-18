@@ -150,9 +150,29 @@ export async function DELETE(
     return NextResponse.json({ error: "imageId is required" }, { status: 400 });
   }
 
+  // Fetch image URL before deleting so we can clean up UploadThing CDN
+  const image = await prisma.productImage.findUnique({
+    where: { id: imageId, productId: id },
+    select: { url: true },
+  });
+
   await prisma.productImage.delete({
     where: { id: imageId, productId: id },
   });
+
+  // Permanently delete from UploadThing CDN
+  if (image?.url) {
+    try {
+      const keyMatch = image.url.match(/\/f\/([a-zA-Z0-9_-]+)/);
+      if (keyMatch) {
+        const { UTApi } = await import("uploadthing/server");
+        const utapi = new UTApi();
+        await utapi.deleteFiles([keyMatch[1]]);
+      }
+    } catch (utErr) {
+      console.warn("[Product Image DELETE] UploadThing cleanup failed:", utErr);
+    }
+  }
 
   return NextResponse.json({ success: true });
 }
