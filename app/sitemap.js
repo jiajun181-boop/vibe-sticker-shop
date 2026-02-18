@@ -65,11 +65,20 @@ export default async function sitemap() {
     priority: 0.7,
   }));
 
-  return [
+  const allPages = [
     ...staticPages,
     ...categoryPages,
     ...ideaPages,
     ...industryPages,
     ...productPages,
   ];
+
+  // Add /zh/ variants for all pages
+  const zhPages = allPages.map((page) => ({
+    ...page,
+    url: page.url.replace(SITE_URL, `${SITE_URL}/zh`),
+    priority: Math.max(0.1, (page.priority || 0.5) - 0.1),
+  }));
+
+  return [...allPages, ...zhPages];
 }

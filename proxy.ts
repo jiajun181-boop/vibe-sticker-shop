@@ -38,6 +38,21 @@ function detectLocale(request: NextRequest): string {
 
 export default async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
+
+  // i18n URL routing: /zh/xxx → rewrite to /xxx + set locale cookie
+  if (path.startsWith("/zh")) {
+    const strippedPath = path.replace(/^\/zh/, "") || "/";
+    const url = request.nextUrl.clone();
+    url.pathname = strippedPath;
+    const response = NextResponse.rewrite(url);
+    response.cookies.set("locale", "zh", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
+    return response;
+  }
+
   const response = NextResponse.next();
 
   // Auto-detect locale on first visit (no locale cookie yet)

@@ -16,6 +16,7 @@ import BannerOrderClient from "@/app/order/banners/BannerOrderClient";
 import SignOrderClient from "@/app/order/signs/SignOrderClient";
 import VehicleOrderClient from "@/app/order/vehicle/VehicleOrderClient";
 import SurfaceOrderClient from "@/app/order/surfaces/SurfaceOrderClient";
+import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
 
 export const revalidate = 60;
@@ -213,6 +214,7 @@ export default async function ProductPage({ params }) {
       signs: <SignOrderClient defaultType={configurator.defaultValue} />,
       vehicle: <VehicleOrderClient defaultType={configurator.defaultValue} />,
       surfaces: <SurfaceOrderClient defaultType={configurator.defaultValue} />,
+      "marketing-print": <MarketingPrintOrderClient defaultType={configurator.defaultValue} />,
     };
     return (
       <Suspense

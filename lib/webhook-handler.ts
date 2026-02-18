@@ -4,6 +4,8 @@ import { validateAmountReconciliation } from "./calculate-order-totals";
 import { applyAssignmentRules } from "./assignment-rules";
 import { sendEmail } from "./email/resend";
 import { buildOrderConfirmationHtml } from "./email/templates/order-confirmation";
+import { decrementStock } from "./inventory";
+import { sendOrderSms } from "./notifications/sms-notifications";
 
 function toNumberOrNull(v: unknown) {
   if (typeof v === "number" && Number.isFinite(v)) return v;
@@ -203,10 +205,29 @@ export async function handleCheckoutCompleted(
           where: { id: order.id },
           data: { userId: existingUser.id },
         });
+
+        // Mark any abandoned cart as recovered
+        await prisma.abandonedCart.updateMany({
+          where: { userId: existingUser.id, recoveredAt: null },
+          data: { recoveredAt: new Date(), checkoutSessionId: sessionId },
+        });
       }
     }
   } catch (linkError) {
     console.error("[Webhook] Failed to link order to user:", linkError);
+  }
+
+  // 7b. Decrement inventory for tracked products
+  try {
+    const stockItems = items.map((item: any) => ({
+      productId: item.productId || "",
+      quantity: item.quantity || 1,
+    })).filter((item: any) => item.productId);
+    if (stockItems.length > 0) {
+      await decrementStock(stockItems);
+    }
+  } catch (stockErr) {
+    console.error("[Webhook] Failed to decrement stock:", stockErr);
   }
 
   // 8. Auto-create production jobs for each order item
@@ -252,6 +273,9 @@ export async function handleCheckoutCompleted(
   } catch (emailError) {
     console.error("[Webhook] Failed to send confirmation email:", emailError);
   }
+
+  // 10. Send SMS notification (non-blocking)
+  sendOrderSms(order.id, "order_confirmed").catch(() => {});
 
   console.log(`[Webhook] Order created: ${order.id}`);
   return order;

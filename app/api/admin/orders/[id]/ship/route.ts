@@ -73,6 +73,12 @@ export async function POST(
       console.error("[Ship] Email send failed:", emailErr);
     }
 
+    // Send SMS notification (non-blocking)
+    try {
+      const { sendOrderSms } = await import("@/lib/notifications/sms-notifications");
+      sendOrderSms(id, "order_shipped", { trackingNumber }).catch(() => {});
+    } catch {}
+
     return NextResponse.json({ success: true, order: updated });
   } catch (err) {
     console.error("[Ship] Error:", err);

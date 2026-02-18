@@ -71,11 +71,20 @@ model User {
   referrals            User[]       @relation("Referrals")
   inviteCode           String?      @unique       // unique code for sharing
 
+  // SMS opt-in
+  smsOptIn             Boolean      @default(false)
+  smsPhone             String?
+
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
   addresses            Address[]
   orders               Order[]
   sentInvites          PartnerInvite[] @relation("InviteSender")
+  abandonedCarts       AbandonedCart[]
+  orderTemplates       OrderTemplate[]
+  pushSubscriptions    PushSubscription[]
+  apiKeys              ApiKey[]
+  supportTickets       SupportTicket[]
 
   @@index([accountType, b2bApproved])
   @@index([inviteCode])
@@ -147,6 +156,12 @@ model Product {
   optionsConfig   Json?
   pricingPresetId String?
   pricingPreset   PricingPreset?  @relation(fields: [pricingPresetId], references: [id])
+  // Inventory tracking
+  trackInventory  Boolean         @default(false)
+  stockQuantity   Int             @default(0)
+  lowStockThreshold Int           @default(10)
+  reservedQuantity Int            @default(0)
+
   isActive        Boolean         @default(true)
   sortOrder       Int             @default(0)
   metaTitle       String?
@@ -585,6 +600,21 @@ enum NoteAuthorType {
   system
 }
 
+enum TicketStatus {
+  open
+  in_progress
+  waiting_customer
+  resolved
+  closed
+}
+
+enum TicketPriority {
+  low
+  normal
+  high
+  urgent
+}
+
 enum JobStatus {
   queued
   assigned
@@ -712,4 +742,122 @@ model QCReport {
   @@index([resolution])
   @@index([severity])
   @@index([createdAt])
+}
+
+// ── Abandoned Cart Recovery ──
+
+model AbandonedCart {
+  id            String    @id @default(cuid())
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email         String
+  cartJson      Json
+  recoveryToken String    @unique
+  emailsSent    Int       @default(0)
+  lastEmailAt   DateTime?
+  recoveredAt   DateTime?
+  checkoutSessionId String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([email])
+  @@index([recoveryToken])
+  @@index([recoveredAt])
+  @@index([createdAt])
+}
+
+// ── B2B Order Templates ──
+
+model OrderTemplate {
+  id          String              @id @default(cuid())
+  userId      String
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  items       OrderTemplateItem[]
+  lastUsedAt  DateTime?
+  useCount    Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([userId])
+}
+
+model OrderTemplateItem {
+  id          String        @id @default(cuid())
+  templateId  String
+  template    OrderTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  productId   String?
+  productName String
+  quantity    Int           @default(1)
+  options     Json?
+  sortOrder   Int           @default(0)
+
+  @@index([templateId])
+}
+
+// ── Push Notifications ──
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ── API Keys (B2B Bulk API) ──
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  keyHash     String    @unique
+  keyPrefix   String
+  lastUsedAt  DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([keyHash])
+}
+
+// ── Support Tickets ──
+
+model SupportTicket {
+  id          String         @id @default(cuid())
+  userId      String?
+  user        User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email       String
+  subject     String
+  orderId     String?
+  status      TicketStatus   @default(open)
+  priority    TicketPriority @default(normal)
+  messages    TicketMessage[]
+  closedAt    DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([email])
+  @@index([createdAt])
+}
+
+model TicketMessage {
+  id         String        @id @default(cuid())
+  ticketId   String
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorType NoteAuthorType
+  authorName String?
+  body       String
+  attachments String[]     @default([])
+  createdAt  DateTime      @default(now())
+
+  @@index([ticketId, createdAt])
 }

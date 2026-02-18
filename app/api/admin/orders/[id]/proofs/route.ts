@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { sendOrderNotification } from "@/lib/notifications/order-notifications";
 
 /**
  * GET /api/admin/orders/[id]/proofs
@@ -94,6 +95,9 @@ export async function POST(
         actor: auth.user?.name || auth.user?.email || "admin",
       },
     });
+
+    // Send proof ready notification (non-blocking)
+    sendOrderNotification(id, "proof_ready", { proofUrl: imageUrl }).catch(() => {});
 
     return NextResponse.json({ proof }, { status: 201 });
   } catch (err) {

@@ -208,23 +208,10 @@ async function uploadToUploadThing(
   fileName: string,
   mimeType: string
 ): Promise<string> {
-  const rawToken = process.env.UPLOADTHING_TOKEN;
-  if (!rawToken) {
-    throw new Error(
-      "UPLOADTHING_TOKEN is missing. Configure it in deployment env."
-    );
-  }
-
-  // Re-encode token as clean standard base64 to work around Effect's
-  // strict Uint8ArrayFromBase64 decoder that rejects some valid tokens.
-  // Then write it back to process.env so UTApi's env provider picks it up.
-  const cleanToken = Buffer.from(
-    Buffer.from(rawToken, "base64").toString("utf-8")
-  ).toString("base64");
-  process.env.UPLOADTHING_TOKEN = cleanToken;
+  const token = normalizeUploadThingToken(process.env.UPLOADTHING_TOKEN);
 
   const { UTApi, UTFile } = await import("uploadthing/server");
-  const utapi = new UTApi();
+  const utapi = new UTApi({ token });
 
   const utFile = new UTFile([new Uint8Array(buffer)], fileName, {
     type: mimeType,
@@ -251,4 +238,38 @@ async function uploadToUploadThing(
   }
 
   return response.data.ufsUrl || response.data.url;
+}
+
+function normalizeUploadThingToken(raw: string | undefined): string {
+  if (!raw) {
+    throw new Error("UPLOADTHING_TOKEN is missing. Configure it in deployment env.");
+  }
+
+  let token = raw.trim();
+
+  if (token.toUpperCase().startsWith("UPLOADTHING_TOKEN=")) {
+    token = token.slice("UPLOADTHING_TOKEN=".length).trim();
+  }
+
+  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+    token = token.slice(1, -1).trim();
+  }
+
+  let decoded: string;
+  try {
+    decoded = Buffer.from(token, "base64").toString("utf8");
+  } catch {
+    throw new Error("UPLOADTHING_TOKEN is not valid base64.");
+  }
+
+  try {
+    const parsed = JSON.parse(decoded) as { apiKey?: string; appId?: string; regions?: string[] };
+    if (!parsed?.apiKey || !parsed?.appId || !Array.isArray(parsed?.regions)) {
+      throw new Error("missing fields");
+    }
+  } catch {
+    throw new Error("UPLOADTHING_TOKEN is invalid. Use the Quick Copy token value (starts with eyJ...), not sk_live.");
+  }
+
+  return token;
 }

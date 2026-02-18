@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { logActivity } from "@/lib/activity-log";
+import { sendOrderNotification } from "@/lib/notifications/order-notifications";
 
 /**
  * GET /api/admin/qc/[id]
@@ -109,6 +110,11 @@ export async function PATCH(
       actor: auth.user?.email || "admin",
       details: { resolution, orderId: report.orderId },
     });
+
+    // Send quality passed notification when accepted (non-blocking)
+    if (resolution === "accepted") {
+      sendOrderNotification(report.orderId, "quality_passed").catch(() => {});
+    }
 
     return NextResponse.json(updated);
   } catch (err) {

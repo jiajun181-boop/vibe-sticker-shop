@@ -11,6 +11,7 @@ import {
   buildSafeRedirectUrls,
 } from "@/lib/checkout-origin";
 import { getSessionFromRequest } from "@/lib/auth";
+import { checkStock, reserveStock } from "@/lib/inventory";
 
 let _stripe: Stripe | null = null;
 function getStripe() {
@@ -321,6 +322,26 @@ export async function POST(req: Request) {
 
     const subtotal = pricedItems.reduce((sum, item) => sum + item.lineTotal, 0);
 
+    // Stock validation for inventory-tracked products
+    const stockCheck = await checkStock(
+      pricedItems.map((item) => ({ productId: item.productId, quantity: item.quantity }))
+    );
+    if (!stockCheck.ok) {
+      const issue = stockCheck.issues[0];
+      return NextResponse.json(
+        {
+          error: `${issue.productName} only has ${issue.available_quantity} available (requested ${issue.requested})`,
+          code: "INSUFFICIENT_STOCK",
+        },
+        { status: 409 }
+      );
+    }
+
+    // Reserve stock during checkout
+    await reserveStock(
+      pricedItems.map((item) => ({ productId: item.productId, quantity: item.quantity }))
+    );
+
     // Partner discount — auto-applied for B2B partners
     let partnerDiscount = 0;
     let partnerUserId: string | null = null;
@@ -435,6 +456,7 @@ export async function POST(req: Request) {
     const stripeSession = await getStripe().checkout.sessions.create({
       line_items,
       mode: "payment",
+      payment_method_types: ["card", "link"],
       success_url: safeSuccessUrl,
       cancel_url: safeCancelUrl,
       ...(stripeDiscounts.length > 0 && { discounts: stripeDiscounts }),

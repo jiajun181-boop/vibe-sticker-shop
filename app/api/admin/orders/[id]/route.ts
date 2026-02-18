@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
+import { sendOrderNotification } from "@/lib/notifications/order-notifications";
 
 // Must match Prisma OrderStatus enum: draft, pending, paid, canceled, refunded
 const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
@@ -128,6 +129,18 @@ export async function PATCH(
       actor: "admin",
       details: data as Record<string, unknown>,
     });
+
+    // Trigger order status notification emails (non-blocking)
+    if (data.productionStatus) {
+      const statusMap: Record<string, string> = {
+        in_production: "production_started",
+        ready_to_ship: "ready_to_ship",
+      };
+      const notifType = statusMap[data.productionStatus as string];
+      if (notifType) {
+        sendOrderNotification(id, notifType as any).catch(() => {});
+      }
+    }
 
     return NextResponse.json(order);
   } catch (error) {

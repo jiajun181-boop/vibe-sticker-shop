@@ -17,6 +17,9 @@ const dmSans = DM_Sans({
 
 import AuthInit from "@/components/AuthInit";
 import ScrollToTop from "@/components/ScrollToTop";
+import TawkToWidget from "@/components/TawkToWidget";
+import HreflangTags from "@/components/HreflangTags";
+import PushNotificationPrompt from "@/components/PushNotificationPrompt";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
 
@@ -64,6 +67,7 @@ export default async function RootLayout({ children }) {
     <html lang={locale}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <HreflangTags />
       </head>
       <body className={`${dmSans.variable} antialiased`}>
         <SkipLink />
@@ -76,6 +80,8 @@ export default async function RootLayout({ children }) {
 
         <AuthInit />
         <Analytics />
+        <TawkToWidget />
+        <PushNotificationPrompt />
       </body>
     </html>
   );
