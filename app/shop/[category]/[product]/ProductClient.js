@@ -2506,7 +2506,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       t={t}
                     />
                   </div>
-                </div>
               </div>
 
             </div>
