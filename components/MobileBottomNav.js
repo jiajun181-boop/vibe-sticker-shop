@@ -258,10 +258,10 @@ export default function MobileBottomNav({ catalogConfig }) {
       action: () => setDrawerOpen(true),
     },
     {
-      key: "search",
-      label: t("mobileNav.search"),
-      icon: SearchIcon,
-      href: "/shop?focus=search",
+      key: "shop",
+      label: t("mobileNav.shop"),
+      icon: ShopIcon,
+      href: "/shop",
     },
     {
       key: "account",

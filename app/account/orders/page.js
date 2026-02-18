@@ -9,13 +9,25 @@ import { showSuccessToast, showErrorToast } from "@/components/Toast";
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-const STATUS_COLORS = {
-  paid: "bg-emerald-100 text-emerald-700",
-  pending: "bg-amber-100 text-amber-700",
-  canceled: "bg-red-100 text-red-700",
-  refunded: "bg-[var(--color-gray-100)] text-[var(--color-gray-600)]",
-  draft: "bg-[var(--color-gray-100)] text-[var(--color-gray-500)]",
+const STATUS_STYLES = {
+  paid: { bg: "bg-emerald-100 text-emerald-700", icon: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
+  pending: { bg: "bg-amber-100 text-amber-700", icon: "M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" },
+  canceled: { bg: "bg-red-100 text-red-700", icon: "M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
+  refunded: { bg: "bg-[var(--color-gray-100)] text-[var(--color-gray-600)]", icon: "M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" },
+  draft: { bg: "bg-[var(--color-gray-100)] text-[var(--color-gray-500)]", icon: "M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" },
 };
+
+function StatusBadge({ status, t }) {
+  const style = STATUS_STYLES[status] || STATUS_STYLES.draft;
+  return (
+    <span className={`inline-flex items-center gap-1 mt-0.5 rounded-xl px-2 py-0.5 text-[11px] font-semibold uppercase ${style.bg}`}>
+      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d={style.icon} />
+      </svg>
+      {t(`orders.status.${status}`) || status}
+    </span>
+  );
+}
 
 export default function AccountOrdersPage() {
   const { t } = useTranslation();
@@ -75,11 +87,17 @@ export default function AccountOrdersPage() {
           ))}
         </div>
       ) : orders.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-[var(--color-gray-200)] p-8 text-center">
-          <p className="text-sm text-[var(--color-gray-500)]">{t("account.orders.empty")}</p>
+        <div className="mt-6 rounded-xl border border-dashed border-[var(--color-gray-300)] p-10 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-gray-100)]">
+            <svg className="h-6 w-6 text-[var(--color-gray-400)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-[var(--color-gray-700)]">{t("account.orders.empty")}</p>
+          <p className="mt-1 text-xs text-[var(--color-gray-400)]">{t("account.orders.emptyHint")}</p>
           <Link
             href="/shop"
-            className="mt-3 inline-block rounded-xl border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
+            className="mt-4 inline-block rounded-xl bg-[var(--color-gray-900)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:bg-black"
           >
             {t("cart.continueShopping")}
           </Link>
@@ -107,13 +125,7 @@ export default function AccountOrdersPage() {
                 <div className="flex items-center gap-3">
                   <div className="text-right">
                     <p className="text-sm font-semibold text-[var(--color-gray-900)]">{formatCad(order.totalAmount)}</p>
-                    <span
-                      className={`inline-block mt-0.5 rounded-xl px-2 py-0.5 text-[11px] font-semibold uppercase ${
-                        STATUS_COLORS[order.status] || "bg-[var(--color-gray-100)] text-[var(--color-gray-500)]"
-                      }`}
-                    >
-                      {order.status}
-                    </span>
+                    <StatusBadge status={order.status} t={t} />
                   </div>
                   {order.status === "paid" && (
                     <button
@@ -137,9 +149,9 @@ export default function AccountOrdersPage() {
                 type="button"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="rounded-xl border-2 border-[var(--color-gray-200)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-400)] disabled:opacity-40"
+                className="rounded-xl border border-[var(--color-gray-200)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-400)] hover:text-[var(--color-gray-900)] disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Prev
+                {t("orders.prev")}
               </button>
               <span className="text-xs text-[var(--color-gray-500)]">
                 {page} / {totalPages}
@@ -148,9 +160,9 @@ export default function AccountOrdersPage() {
                 type="button"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="rounded-xl border-2 border-[var(--color-gray-200)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-400)] disabled:opacity-40"
+                className="rounded-xl border border-[var(--color-gray-200)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-400)] hover:text-[var(--color-gray-900)] disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Next
+                {t("orders.next")}
               </button>
             </div>
           )}

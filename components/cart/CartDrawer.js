@@ -389,7 +389,6 @@ export default function CartDrawer() {
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="truncate text-sm font-semibold text-[var(--color-gray-900)]">{item.name}</p>
-                              {item.slug && <p className="text-xs text-[var(--color-gray-500)]">{item.slug}</p>}
                               {isMultiSize && (
                                 <div className="mt-1 space-y-0.5 text-[11px] text-[var(--color-gray-500)]">
                                   {sizeRows.map((row, idx) => (
@@ -433,8 +432,8 @@ export default function CartDrawer() {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, Math.max(1, item.quantity - 1))}
-                                className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)]"
-                                aria-label="Decrease quantity"
+                                className="h-8 w-8 rounded-lg border border-[var(--color-gray-200)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)]"
+                                aria-label={t("cart.decreaseQty")}
                               >
                                 -
                               </button>
@@ -443,8 +442,8 @@ export default function CartDrawer() {
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, item.quantity + 1)}
                                 disabled={item.quantity >= 999}
-                                className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)] disabled:opacity-40 disabled:cursor-not-allowed"
-                                aria-label="Increase quantity"
+                                className="h-8 w-8 rounded-lg border border-[var(--color-gray-200)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)] disabled:opacity-40 disabled:cursor-not-allowed"
+                                aria-label={t("cart.increaseQty")}
                               >
                                 +
                               </button>
@@ -529,30 +528,37 @@ export default function CartDrawer() {
                   <span>{t("cart.total")}</span>
                   <span>{formatCad(total)} CAD</span>
                 </div>
+                <p className="mt-1 text-[10px] text-[var(--color-gray-400)]">{t("cart.priceVerified")}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setCheckoutMode("stripe")}
-                  className={`rounded-xl border-2 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                  className={`rounded-xl border-2 px-3 py-2 text-left transition-colors ${
                     checkoutMode === "stripe"
                       ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
-                      : "border-[var(--color-gray-300)] text-[var(--color-gray-600)]"
+                      : "border-[var(--color-gray-300)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-500)]"
                   }`}
                 >
-                  {t("cart.payNow")}
+                  <span className="block text-[10px] font-semibold uppercase tracking-[0.14em]">{t("cart.payNow")}</span>
+                  <span className={`block text-[9px] mt-0.5 ${checkoutMode === "stripe" ? "text-gray-300" : "text-[var(--color-gray-400)]"}`}>
+                    {t("cart.payNowDesc")}
+                  </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setCheckoutMode("invoice")}
-                  className={`rounded-xl border-2 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                  className={`rounded-xl border-2 px-3 py-2 text-left transition-colors ${
                     checkoutMode === "invoice"
                       ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
-                      : "border-[var(--color-gray-300)] text-[var(--color-gray-600)]"
+                      : "border-[var(--color-gray-300)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-500)]"
                   }`}
                 >
-                  {t("cart.invoiceCheckout")}
+                  <span className="block text-[10px] font-semibold uppercase tracking-[0.14em]">{t("cart.invoiceCheckout")}</span>
+                  <span className={`block text-[9px] mt-0.5 ${checkoutMode === "invoice" ? "text-gray-300" : "text-[var(--color-gray-400)]"}`}>
+                    {t("cart.invoiceDesc")}
+                  </span>
                 </button>
               </div>
 
