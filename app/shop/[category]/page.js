@@ -83,7 +83,7 @@ const VEHICLE_GRAPHICS_FLEET_SEGMENTS = [
   {
     key: "vehicle-branding",
     title: "Vehicle Branding",
-    slugs: ["vehicle-wraps", "door-panel-graphics", "vehicle-decals", "vehicle-graphics", "magnetic-signs"],
+    slugs: ["vehicle-wraps", "door-panel-graphics", "vehicle-decals", "magnetic-signs"],
   },
   {
     key: "fleet-packages",

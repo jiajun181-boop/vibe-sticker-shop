@@ -250,6 +250,7 @@ export default function SubGroupLandingClient({
   const [expandedCard, setExpandedCard] = useState(null);
   const pillBarRef = useRef(null);
   const expandRef = useRef(null);
+  const lastActiveSlugRef = useRef(null);
 
   const isStickersCategory = category === "stickers-labels-decals";
 
@@ -270,9 +271,15 @@ export default function SubGroupLandingClient({
         for (const entry of entries) {
           if (entry.isIntersecting) {
             const slug = entry.target.id.replace("sg-", "");
+            if (lastActiveSlugRef.current === slug) break;
+            lastActiveSlugRef.current = slug;
             setActiveSlug(slug);
             const pill = pillBarRef.current?.querySelector(`[data-pill="${slug}"]`);
-            if (pill) pill.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+            if (pill && pillBarRef.current) {
+              const bar = pillBarRef.current;
+              const left = pill.offsetLeft - (bar.clientWidth - pill.clientWidth) / 2;
+              bar.scrollTo({ left: Math.max(0, left), behavior: "auto" });
+            }
             break;
           }
         }

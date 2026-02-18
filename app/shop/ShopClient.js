@@ -296,17 +296,21 @@ export default function ShopClient({
 
   // Restore scroll position from sessionStorage on mount
   useEffect(() => {
-    const saved = sessionStorage.getItem("shop-scroll-y");
-    if (saved) {
-      const y = parseInt(saved, 10);
-      if (!isNaN(y) && y > 0) {
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            window.scrollTo(0, y);
-          }, 100);
-        });
-      }
+    const nav = performance.getEntriesByType("navigation")?.[0];
+    const isBackForwardNav = nav?.type === "back_forward";
+    if (!isBackForwardNav) {
+      sessionStorage.removeItem("shop-scroll-y");
+      return;
     }
+
+    const saved = sessionStorage.getItem("shop-scroll-y");
+    if (!saved) return;
+    const y = parseInt(saved, 10);
+    if (isNaN(y) || y <= 0) return;
+
+    requestAnimationFrame(() => {
+      window.scrollTo(0, y);
+    });
   }, []);
 
   const isFiltering = !!(query.trim() || tag || useCase);
