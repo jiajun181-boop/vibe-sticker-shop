@@ -23,7 +23,6 @@ export default function ImageCropper({
   useEffect(() => {
     if (!imageUrl) { setImg(null); return; }
     const image = new Image();
-    image.crossOrigin = "anonymous";
     image.onload = () => {
       setImg(image);
       setZoom(1);

@@ -27,7 +27,6 @@ export default function SplitPanelPreview({
       return;
     }
     const img = new Image();
-    img.crossOrigin = "anonymous";
     img.onload = () => setLoadedImg(img);
     img.onerror = () => setLoadedImg(null);
     img.src = imageUrl;
