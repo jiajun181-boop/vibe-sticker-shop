@@ -43,9 +43,9 @@ function ProductCard({ product, t, compact }) {
   const imageSrc = getProductImage(product, product.category);
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+    <article className="group overflow-hidden rounded-md border border-[var(--color-gray-200)] bg-white transition-colors duration-200 hover:border-[var(--color-gray-300)]">
       <Link href={href} className="block">
-        <div className={`relative bg-[var(--color-gray-100)] ${compact ? "aspect-square" : "aspect-[4/3]"}`}>
+        <div className={`relative bg-[var(--color-gray-100)] ${compact ? "aspect-square" : "aspect-square sm:aspect-[4/3]"}`}>
           {imageSrc ? (
             <Image
               src={imageSrc}
@@ -56,7 +56,7 @@ function ProductCard({ product, t, compact }) {
               unoptimized={isSvgImage(imageSrc)}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--color-gray-100)] to-[var(--color-gray-200)]">
+            <div className="flex h-full w-full items-center justify-center bg-[var(--color-gray-50)]">
               <div className="text-center px-3">
                 <svg
                   className="mx-auto h-8 w-8 text-[var(--color-gray-300)]"
@@ -79,16 +79,16 @@ function ProductCard({ product, t, compact }) {
           )}
         </div>
 
-        <div className={compact ? "p-2.5" : "p-3 sm:p-4"}>
+        <div className={compact ? "p-2.5" : "p-2.5 sm:p-4"}>
           {!compact && (() => {
             const tk = getTurnaround(product);
             return (
-              <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold mb-1 ${turnaroundColor(tk)}`}>
+              <span className={`inline-block rounded-sm px-2 py-0.5 text-[10px] font-semibold mb-1 ${turnaroundColor(tk)}`}>
                 {t(turnaroundI18nKey(tk))}
               </span>
             );
           })()}
-          <h3 className={`font-semibold text-[var(--color-gray-900)] leading-snug ${compact ? "text-xs" : "text-sm"}`}>
+          <h3 className={`font-semibold text-[var(--color-gray-900)] leading-snug ${compact ? "text-xs" : "text-xs sm:text-sm"}`}>
             {product.name}
           </h3>
           {!compact && product.description && (
@@ -109,7 +109,7 @@ function ProductCard({ product, t, compact }) {
             <QuickAddButton product={product} />
             <Link
               href={href}
-              className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black"
+              className="inline-block rounded-sm bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black"
             >
               {t("mp.landing.viewOrder")}
             </Link>
@@ -119,7 +119,7 @@ function ProductCard({ product, t, compact }) {
         <div className="px-2.5 pb-2.5">
           <Link
             href={href}
-            className="mt-1.5 inline-block rounded-xl bg-[var(--color-gray-900)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black"
+            className="mt-1.5 inline-block rounded-sm bg-[var(--color-gray-900)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black"
           >
             {t("mp.landing.viewOrder")}
           </Link>
@@ -191,7 +191,7 @@ export default function CategoryLandingClient({
   const useCaseCards = CATEGORY_USE_CASES[category] || [];
 
   return (
-    <main className="bg-[var(--color-gray-50)] pb-20 pt-10 text-[var(--color-gray-900)]">
+    <main className="bg-white pb-20 pt-10 text-[var(--color-gray-900)]">
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
         <Breadcrumbs
           items={[
@@ -219,7 +219,7 @@ export default function CategoryLandingClient({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="rounded-lg border border-[var(--color-gray-300)] bg-white px-2 py-1.5 text-sm focus:border-[var(--color-gray-900)] focus:outline-none"
+                className="rounded-sm border border-[var(--color-gray-300)] bg-white px-2 py-1.5 text-sm focus:border-[var(--color-gray-900)] focus:outline-none"
               >
                 <option value="popular">{t("shop.sortPopular")}</option>
                 <option value="price-asc">{t("shop.sortPriceAsc")}</option>
@@ -238,13 +238,13 @@ export default function CategoryLandingClient({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("shop.searchCategory") || "Search products..."}
-              className="w-full rounded-xl border border-[var(--color-gray-200)] bg-white pl-9 pr-4 py-2 text-sm focus:border-[var(--color-gray-400)] focus:outline-none"
+              className="w-full rounded-sm border border-[var(--color-gray-200)] bg-white pl-9 pr-4 py-2 text-sm focus:border-[var(--color-gray-400)] focus:outline-none"
             />
           </div>
         </header>
 
         {useCaseCards.length > 0 && (
-          <section className="mt-5 rounded-2xl border border-[var(--color-gray-200)] bg-white p-4">
+          <section className="mt-5 rounded-md border border-[var(--color-gray-200)] bg-white p-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("home.shopByUseCase")}</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               {useCaseCards.map((card) => (
@@ -252,7 +252,7 @@ export default function CategoryLandingClient({
                   key={card.key}
                   type="button"
                   onClick={() => setSearchQuery(card.hint)}
-                  className="rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3 text-left transition-colors hover:border-[var(--color-gray-400)] hover:bg-white"
+                  className="rounded-sm border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3 text-left transition-colors hover:border-[var(--color-gray-400)] hover:bg-white"
                 >
                   <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-500)]">{card.cta}</p>
                   <p className="mt-1 text-sm font-semibold text-[var(--color-gray-900)]">{card.label}</p>
@@ -267,7 +267,7 @@ export default function CategoryLandingClient({
           <div className="mt-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <button
               onClick={() => setActiveFilter(null)}
-              className={`flex-none rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              className={`flex-none rounded-sm px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                 activeFilter === null
                   ? "bg-[var(--color-gray-900)] text-white"
                   : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
@@ -281,7 +281,7 @@ export default function CategoryLandingClient({
                 onClick={() =>
                   setActiveFilter(activeFilter === group.slug ? null : group.slug)
                 }
-                className={`flex-none rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                className={`flex-none rounded-sm px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                   activeFilter === group.slug
                     ? "bg-[var(--color-gray-900)] text-white"
                     : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
@@ -303,7 +303,7 @@ export default function CategoryLandingClient({
               <button
                 key={tg.key}
                 onClick={() => setTurnaroundFilter(turnaroundFilter === tg.key ? null : tg.key)}
-                className={`flex-none rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
+                className={`flex-none rounded-sm px-3 py-1.5 text-xs font-semibold transition-colors ${
                   turnaroundFilter === tg.key
                     ? turnaroundColor(tg.key)
                     : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
@@ -317,7 +317,7 @@ export default function CategoryLandingClient({
 
         {/* Product grid — compact on mobile to show more products */}
         {filtered.length > 0 ? (
-          <div className="mt-6 grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 xl:grid-cols-4">
             {filtered.map((product) => (
               <ProductCard key={product.id} product={product} t={t} compact={false} />
             ))}
@@ -328,7 +328,7 @@ export default function CategoryLandingClient({
             {(activeFilter || turnaroundFilter) && (
               <button
                 onClick={() => { setActiveFilter(null); setTurnaroundFilter(null); }}
-                className="mt-3 rounded-xl border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
+                className="mt-3 rounded-sm border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
               >
                 {t("shop.clearFilters")}
               </button>
@@ -340,7 +340,7 @@ export default function CategoryLandingClient({
         <div className="mt-12 text-center">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+            className="inline-flex items-center gap-2 rounded-sm border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -351,7 +351,7 @@ export default function CategoryLandingClient({
 
         {/* Info Footer */}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+          <div className="rounded-md border border-[var(--color-gray-200)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.qualityTitle")}
             </h3>
@@ -377,7 +377,7 @@ export default function CategoryLandingClient({
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+          <div className="rounded-md border border-[var(--color-gray-200)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.turnaroundTitle")}
             </h3>
@@ -386,7 +386,7 @@ export default function CategoryLandingClient({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+          <div className="rounded-md border border-[var(--color-gray-200)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.customTitle")}
             </h3>
@@ -395,7 +395,7 @@ export default function CategoryLandingClient({
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-black"
+              className="mt-3 inline-block rounded-sm bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-black"
             >
               {t("home.cta.quote")}
             </Link>
