@@ -45,19 +45,19 @@ const FLATTENED_SUBGROUP_CATEGORIES = new Set(["packaging"]);
 
 const MARKETING_SEGMENTS = [
   {
-    key: "business-essentials",
-    title: "Business Essentials",
-    slugs: ["business-cards", "letterhead", "notepads", "bookmarks", "calendars", "envelopes", "stamps", "ncr-forms", "order-forms", "waivers-releases"],
-  },
-  {
     key: "marketing-materials",
     title: "Marketing Materials",
-    slugs: ["flyers", "postcards", "brochures", "booklets", "posters", "presentation-folders"],
+    slugs: ["flyers", "brochures", "door-hangers", "greeting-invitation-cards", "tickets-coupons", "menus", "posters", "postcards", "inserts-packaging", "rack-cards", "booklets", "bookmarks", "calendars"],
   },
   {
-    key: "retail-events-packaging",
-    title: "Retail, Events & Packaging",
-    slugs: ["menus", "rack-cards", "door-hangers", "tickets-coupons", "tags", "inserts-packaging", "certificates", "greeting-invitation-cards", "shelf-displays", "table-tents"],
+    key: "business-essentials",
+    title: "Business Essentials",
+    slugs: ["business-cards", "stamps", "letterhead", "envelopes", "notepads", "ncr-forms", "order-forms", "waivers-releases", "certificates", "presentation-folders"],
+  },
+  {
+    key: "retail-pos",
+    title: "Retail & Point of Sale",
+    slugs: ["shelf-displays", "table-tents"],
   },
 ];
 
