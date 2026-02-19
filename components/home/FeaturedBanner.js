@@ -50,28 +50,22 @@ export default function FeaturedBanner({ products }) {
 
   return (
     <section
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--color-gray-900)] via-[var(--color-gray-800)] to-black"
+      className="relative overflow-hidden rounded-md border border-[var(--color-gray-200)] bg-white"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* Background glow */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <div className="absolute -top-32 -right-32 w-96 h-96 bg-[var(--color-moon-blue)] rounded-full blur-[128px]" />
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-[var(--color-moon-gold)] rounded-full blur-[128px]" />
-      </div>
-
-      <div className="relative z-10 p-8 md:p-12">
+      <div className="relative z-10 p-6 md:p-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-[var(--color-moon-gold)] animate-pulse" />
-            <h2 className="text-white label-xs tracking-[0.16em]">
+            <div className="h-1.5 w-1.5 rounded-full bg-[var(--color-gray-500)]" />
+            <h2 className="label-xs tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("featured.title")}
             </h2>
           </div>
           <Link
             href="/shop?category=display-stands"
-            className="label-xs text-[var(--color-gray-400)] hover:text-white tracking-[0.14em] transition-colors"
+            className="label-xs tracking-[0.14em] text-[var(--color-gray-500)] transition-colors hover:text-[var(--color-gray-800)]"
           >
             {t("featured.viewAll")} &rarr;
           </Link>
@@ -128,24 +122,24 @@ function FeaturedCard({ product, compact }) {
   return (
     <Link
       href={`/shop/${product.category}/${product.slug}`}
-      className="group block bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 md:p-5 hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
+      className="group block rounded-md border border-[var(--color-gray-200)] bg-white p-4 md:p-5 transition-colors duration-200 hover:border-[var(--color-gray-300)]"
     >
       {/* Badge */}
       {badge && (
-        <div className={`inline-block bg-gradient-to-r ${badge.color} text-white label-xs px-2.5 py-1 rounded-full mb-3`}>
+        <div className="mb-3 inline-block rounded-sm border border-[var(--color-gray-300)] bg-[var(--color-gray-50)] px-2.5 py-1 label-xs text-[var(--color-gray-700)]">
           {t(badge.labelKey)}
         </div>
       )}
 
       {/* Image */}
-      <div className={`${compact ? "aspect-[3/4]" : "aspect-[4/5]"} rounded-xl bg-white/5 mb-3 md:mb-4 overflow-hidden flex items-center justify-center`}>
+      <div className={`${compact ? "aspect-[3/4]" : "aspect-[4/5]"} mb-3 overflow-hidden rounded-sm bg-[var(--color-gray-50)] md:mb-4 flex items-center justify-center`}>
         {img ? (
           <Image
             src={img}
             alt={product.name}
             width={400}
             height={500}
-            className="w-full h-full object-cover rounded-xl group-hover:scale-110 transition-transform duration-500"
+            className="h-full w-full rounded-sm object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <span className="text-3xl opacity-20">&#128444;</span>
@@ -153,7 +147,7 @@ function FeaturedCard({ product, compact }) {
       </div>
 
       {/* Info */}
-      <h3 className={`text-white font-bold ${compact ? "body-sm" : "body-base"} leading-tight mb-1 group-hover:text-[var(--color-moon-gold)] transition-colors`}>
+      <h3 className={`mb-1 leading-tight text-[var(--color-gray-900)] font-semibold ${compact ? "body-sm" : "body-base"}`}>
         {product.name}
       </h3>
 
@@ -162,17 +156,17 @@ function FeaturedCard({ product, compact }) {
       )}
 
       {!compact && product.description && (
-        <p className="label-sm text-[var(--color-gray-400)] line-clamp-2 mb-3 font-normal tracking-normal normal-case">{product.description}</p>
+        <p className="mb-3 line-clamp-2 text-xs font-normal tracking-normal text-[var(--color-gray-500)]">{product.description}</p>
       )}
 
       <div className="flex items-end justify-between mt-auto">
         <div>
-          <span className="label-xs text-[var(--color-gray-500)] block">{t("home.from")}</span>
-          <p className="text-white font-black text-base md:text-lg tracking-tight">
+          <span className="label-xs block text-[var(--color-gray-500)]">{t("home.from")}</span>
+          <p className="text-base font-bold tracking-tight text-[var(--color-gray-900)] md:text-lg">
             {cad(product.basePrice)}
           </p>
         </div>
-        <span className="bg-white/10 text-white label-xs px-3 py-1.5 rounded-xl opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity whitespace-nowrap tracking-wide">
+        <span className="whitespace-nowrap rounded-sm border border-[var(--color-gray-300)] bg-[var(--color-gray-50)] px-3 py-1.5 label-xs tracking-wide text-[var(--color-gray-700)] opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
           {t("featured.customize")} &rarr;
         </span>
       </div>

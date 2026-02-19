@@ -15,11 +15,11 @@ const TABS = [
 const CATEGORY_OPTIONS = [
   { value: "all", label: "All Categories" },
   { value: "marketing-business-print", label: "Marketing & Business Print" },
-  { value: "stickers-labels-decals", label: "Stickers, Labels & Decals" },
+  { value: "stickers-labels-decals", label: "Stickers & Labels" },
   { value: "signs-rigid-boards", label: "Signs & Rigid Boards" },
   { value: "banners-displays", label: "Banners & Displays" },
-  { value: "windows-walls-floors", label: "Windows, Walls & Floors" },
-  { value: "vehicle-graphics-fleet", label: "Vehicle Graphics & Fleet" },
+  { value: "windows-walls-floors", label: "Windows/Walls/Floors Decals" },
+  { value: "vehicle-graphics-fleet", label: "Vehicle & Fleet Graphics" },
 ];
 
 export default function CatalogOpsPage() {

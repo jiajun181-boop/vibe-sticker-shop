@@ -97,9 +97,9 @@ export default function TrustSignals() {
         {STATS.map((stat) => (
           <div
             key={stat.labelKey}
-            className="bg-white rounded-2xl border border-[var(--color-gray-100)] p-5 md:p-6 text-center hover-lift-subtle"
+            className="rounded-md border border-[var(--color-gray-200)] bg-white p-5 text-center md:p-6 hover-lift-subtle"
           >
-            <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-gradient-to-br from-[var(--color-moon-gold)] to-[var(--color-moon-gold-dark)] text-white flex items-center justify-center">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-sm border border-[var(--color-gray-300)] bg-[var(--color-gray-50)] text-[var(--color-gray-700)]">
               {STAT_ICONS[stat.icon]}
             </div>
             <div className="text-3xl md:text-4xl font-black tracking-tight text-[var(--color-gray-900)]">
@@ -111,7 +111,7 @@ export default function TrustSignals() {
       </div>
 
       {/* Reviews */}
-      <div className="bg-white rounded-2xl border border-[var(--color-gray-100)] p-6 md:p-8 overflow-hidden">
+      <div className="overflow-hidden rounded-md border border-[var(--color-gray-200)] bg-white p-6 md:p-8">
         <div className="flex items-center gap-2 mb-6">
           <StarRating value={5} size={16} />
           <span className="label-xs text-[var(--color-gray-400)] tracking-[0.14em]">
@@ -133,11 +133,11 @@ export default function TrustSignals() {
                 &ldquo;{review.text}&rdquo;
               </blockquote>
               <div className="mt-3 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-[var(--color-moon-blue-deep)] flex items-center justify-center label-xs text-white">
+                <div className="flex h-6 w-6 items-center justify-center rounded-sm border border-[var(--color-gray-300)] bg-[var(--color-gray-50)] label-xs text-[var(--color-gray-700)]">
                   {review.name[0]}
                 </div>
                 <span className="body-sm font-bold">{review.name}</span>
-                <span className="body-sm text-[var(--color-gray-400)]">&mdash; {review.company}</span>
+                <span className="body-sm text-[var(--color-gray-400)]">- {review.company}</span>
               </div>
             </div>
           ))}

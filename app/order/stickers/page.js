@@ -3,13 +3,13 @@ import StickerOrderClient from "./StickerOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Stickers & Labels — Build Your Order | La Lunar Printing",
+    title: "Stickers & Labels - Build Your Order | La Lunar Printing",
     description:
-      "Order custom die-cut, kiss-cut, sheet, roll, vinyl lettering and decal stickers online. Choose your size, material, and quantity — get instant pricing.",
+      "Order die-cut, kiss-cut, sheet, and roll stickers and labels online. Choose size, material, and quantity with instant pricing.",
     openGraph: {
-      title: "Custom Stickers & Labels — Build Your Order",
+      title: "Stickers & Labels - Build Your Order",
       description:
-        "Configure and order custom stickers in one step. Die-cut, kiss-cut, sheets, rolls, vinyl lettering, and decals.",
+        "Configure and order stickers and labels in one step: die-cut, kiss-cut, sheets, rolls, and vinyl lettering.",
       url: "/order/stickers",
     },
   };

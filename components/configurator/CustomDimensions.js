@@ -26,7 +26,7 @@ export default function CustomDimensions({
   t,
 }) {
   return (
-    <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+    <div className="mt-4 rounded-sm border border-gray-200 bg-white p-4">
       <div className="flex items-end gap-3">
         <div className="flex-1">
           <label className="mb-1.5 block text-xs font-medium text-gray-500">
@@ -39,7 +39,7 @@ export default function CustomDimensions({
             value={customW}
             onChange={(e) => onChangeW(e.target.value)}
             placeholder={unit === "in" ? '3.0"' : "7.6cm"}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+            className="w-full rounded-sm border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
           />
         </div>
         <span className="pb-3 text-lg font-light text-gray-300">&times;</span>
@@ -54,11 +54,11 @@ export default function CustomDimensions({
             value={customH}
             onChange={(e) => onChangeH(e.target.value)}
             placeholder={unit === "in" ? '3.0"' : "7.6cm"}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+            className="w-full rounded-sm border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
           />
         </div>
         {/* Unit toggle */}
-        <div className="flex overflow-hidden rounded-lg border border-gray-300">
+        <div className="flex overflow-hidden rounded-sm border border-gray-300">
           {["in", "cm"].map((u) => (
             <button
               key={u}
@@ -85,7 +85,7 @@ export default function CustomDimensions({
       )}
       {/* Dimension errors */}
       {dimErrors.length > 0 && (
-        <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+        <div className="mt-2 rounded-sm border border-red-200 bg-red-50 px-3 py-2">
           {dimErrors.map((e, i) => (
             <p key={i} className="text-xs font-medium text-red-600">{e}</p>
           ))}

@@ -17,11 +17,11 @@ Generated: 2026-02-16T18:34:06.331Z
 | Category | Title | Products | Subgroups | Non-zero Subgroups |
 |---|---:|---:|---:|---:|
 | marketing-business-print | Marketing & Business Print | 112 | 26 | 26 |
-| stickers-labels-decals | Stickers, Labels & Decals | 65 | 15 | 15 |
+| stickers-labels-decals | Stickers & Labels | 65 | 15 | 15 |
 | signs-rigid-boards | Signs & Rigid Boards | 42 | 6 | 6 |
 | banners-displays | Banners & Displays | 67 | 12 | 12 |
-| windows-walls-floors | Windows, Walls & Floors | 30 | 8 | 8 |
-| vehicle-graphics-fleet | Vehicle Graphics & Fleet | 44 | 10 | 10 |
+| windows-walls-floors | Windows/Walls/Floors Decals | 30 | 8 | 8 |
+| vehicle-graphics-fleet | Vehicle & Fleet Graphics | 44 | 10 | 10 |
 
 ## Marketing & Business Print (marketing-business-print)
 
@@ -54,7 +54,7 @@ Generated: 2026-02-16T18:34:06.331Z
 | Packaging Tags & Labels (`tags) | 4 | placement | hang-tags | tags-hang-tags | hang-tags-custom | label-sets |
 | Packaging Inserts & Seals (`inserts-packaging) | 6 | placement | packaging-inserts | thank-you-cards | product-inserts | sticker-seals | packing-slips |
 
-## Stickers, Labels & Decals (stickers-labels-decals)
+## Stickers & Labels (stickers-labels-decals)
 
 | Subgroup | Count | Mode | Sample Slugs |
 |---|---:|---|---|
@@ -102,7 +102,7 @@ Generated: 2026-02-16T18:34:06.331Z
 | Lawn & Yard Signs (`lawn-yard-signs) | 3 | placement | real-estate-frame | h-stakes | h-stake-wire |
 | Tents & Outdoor (`tents-outdoor) | 3 | placement | tent-walls-set | outdoor-canopy-tent-10x10 | tent-frame-10x10 |
 
-## Windows, Walls & Floors (windows-walls-floors)
+## Windows/Walls/Floors Decals (windows-walls-floors)
 
 | Subgroup | Count | Mode | Sample Slugs |
 |---|---:|---|---|
@@ -115,7 +115,7 @@ Generated: 2026-02-16T18:34:06.331Z
 | Floor Graphics (`floor-graphics) | 6 | placement | floor-number-markers-set | warehouse-floor-safety-graphics | floor-graphics | lf-floor-graphics | floor-logo-graphic |
 | Architectural Window Graphics (`window-graphics) | 4 | placement | window-graphics | full-window-graphics | window-frosted | window-perforated |
 
-## Vehicle Graphics & Fleet (vehicle-graphics-fleet)
+## Vehicle & Fleet Graphics (vehicle-graphics-fleet)
 
 | Subgroup | Count | Mode | Sample Slugs |
 |---|---:|---|---|

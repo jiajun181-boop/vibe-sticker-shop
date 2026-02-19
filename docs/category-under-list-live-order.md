@@ -33,7 +33,7 @@ Generated: 2026-02-17T00:20:19.353Z
 - tags (4)
 - inserts-packaging (6)
 
-## stickers-labels-decals | Stickers, Labels & Decals (61)
+## stickers-labels-decals | Stickers & Labels (61)
 - die-cut-stickers (11)
 - kiss-cut-singles (1)
 - sticker-pages (5)
@@ -69,7 +69,7 @@ Generated: 2026-02-17T00:20:19.353Z
 - flags-hardware (12)
 - tents-outdoor (5)
 
-## windows-walls-floors | Windows, Walls & Floors (37)
+## windows-walls-floors | Windows/Walls/Floors Decals (37)
 - static-clings (2)
 - adhesive-films (4)
 - one-way-vision (4)
@@ -80,7 +80,7 @@ Generated: 2026-02-17T00:20:19.353Z
 - floor-graphics (7)
 - window-graphics (5)
 
-## vehicle-graphics-fleet | Vehicle Graphics & Fleet (46)
+## vehicle-graphics-fleet | Vehicle & Fleet Graphics (46)
 - vehicle-wraps (6)
 - door-panel-graphics (5)
 - vehicle-decals (7)

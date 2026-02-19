@@ -107,7 +107,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
             <select
               value={selectedSlug}
               onChange={(e) => handleProductChange(e.target.value)}
-              className="w-full border border-[var(--color-gray-200)] rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black bg-[var(--color-gray-50)] hover:bg-white transition-colors"
+              className="w-full border border-[var(--color-gray-200)] rounded-sm px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black bg-[var(--color-gray-50)] hover:bg-white transition-colors"
             >
               {items.map((p) => (
                 <option key={p.slug} value={p.slug}>
@@ -126,7 +126,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
                   <button
                     key={s.label}
                     onClick={() => setSizeIdx(i)}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                    className={`px-4 py-2.5 rounded-sm text-xs font-bold border transition-all ${
                       sizeIdx === i
                         ? "bg-[var(--color-ink-black)] text-white border-[var(--color-ink-black)]"
                         : "bg-[var(--color-gray-50)] text-[var(--color-gray-600)] border-[var(--color-gray-200)] hover:border-[var(--color-gray-400)]"
@@ -145,7 +145,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setQty(Math.max(1, qty - 1))}
-                className="w-10 h-10 rounded-xl border border-[var(--color-gray-200)] font-bold text-lg hover:bg-[var(--color-gray-50)] transition-colors flex items-center justify-center"
+                className="w-10 h-10 rounded-sm border border-[var(--color-gray-200)] font-bold text-lg hover:bg-[var(--color-gray-50)] transition-colors flex items-center justify-center"
               >
                 -
               </button>
@@ -154,11 +154,11 @@ export default function QuoteCalculator({ products: serverProducts }) {
                 min={1}
                 value={qty}
                 onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-20 text-center border border-[var(--color-gray-200)] rounded-xl py-2.5 text-sm font-black focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-20 text-center border border-[var(--color-gray-200)] rounded-sm py-2.5 text-sm font-black focus:outline-none focus:ring-2 focus:ring-black"
               />
               <button
                 onClick={() => setQty(qty + 1)}
-                className="w-10 h-10 rounded-xl border border-[var(--color-gray-200)] font-bold text-lg hover:bg-[var(--color-gray-50)] transition-colors flex items-center justify-center"
+                className="w-10 h-10 rounded-sm border border-[var(--color-gray-200)] font-bold text-lg hover:bg-[var(--color-gray-50)] transition-colors flex items-center justify-center"
               >
                 +
               </button>
@@ -167,7 +167,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
                   <button
                     key={n}
                     onClick={() => setQty(n)}
-                    className={`px-3 py-1.5 rounded-lg label-xs font-bold transition-all ${
+                    className={`px-3 py-1.5 rounded-sm label-xs font-bold transition-all ${
                       qty === n ? "bg-[var(--color-ink-black)] text-white" : "bg-[var(--color-gray-100)] text-[var(--color-gray-500)] hover:bg-[var(--color-gray-200)]"
                     }`}
                   >
@@ -202,7 +202,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
                 <span className="text-[var(--color-gray-400)] text-sm">{t("quote.cad")}</span>
               </div>
               {rush && (
-                <div className="inline-flex items-center gap-1.5 mt-2 bg-amber-50 text-amber-700 label-xs font-bold px-3 py-1 rounded-xl">
+                <div className="inline-flex items-center gap-1.5 mt-2 bg-amber-50 text-amber-700 label-xs font-bold px-3 py-1 rounded-sm">
                   <span>&#9889;</span> {t("quote.rushIncluded")}
                 </div>
               )}
@@ -217,19 +217,19 @@ export default function QuoteCalculator({ products: serverProducts }) {
 
             {/* Summary chips */}
             <div className="flex flex-wrap gap-2">
-              <span className="bg-white px-3 py-1.5 rounded-xl label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
+              <span className="bg-white px-3 py-1.5 rounded-sm label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
                 {product.name}
               </span>
               {product.unit === "per_sqft" && (
-                <span className="bg-white px-3 py-1.5 rounded-xl label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
+                <span className="bg-white px-3 py-1.5 rounded-sm label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
                   {size.label}
                 </span>
               )}
-              <span className="bg-white px-3 py-1.5 rounded-xl label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
+              <span className="bg-white px-3 py-1.5 rounded-sm label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
                 {t("quote.qty")}: {qty}
               </span>
               {rush && (
-                <span className="bg-amber-50 px-3 py-1.5 rounded-xl label-xs font-bold text-amber-700 border border-amber-200">
+                <span className="bg-amber-50 px-3 py-1.5 rounded-sm label-xs font-bold text-amber-700 border border-amber-200">
                   {t("quote.rush24h")}
                 </span>
               )}

@@ -133,7 +133,7 @@ export default function InviteAcceptPage() {
                 required
                 autoFocus
                 placeholder="Full name"
-                className="w-full rounded-lg border border-[#e0dbd0] px-4 py-2.5 text-sm text-[#1a1816] outline-none focus:border-[#c49340] focus:ring-1 focus:ring-[#c49340]/30"
+                className="w-full rounded-lg border border-[#e0dbd0] px-4 py-2.5 text-sm text-[#1a1816] outline-none focus:border-[#7A1028] focus:ring-1 focus:ring-[#7A1028]/30"
               />
             </div>
 
@@ -147,7 +147,7 @@ export default function InviteAcceptPage() {
                   required
                   minLength={8}
                   placeholder="Min 8 characters"
-                  className="w-full rounded-lg border border-[#e0dbd0] px-4 py-2.5 pr-10 text-sm text-[#1a1816] outline-none focus:border-[#c49340] focus:ring-1 focus:ring-[#c49340]/30"
+                  className="w-full rounded-lg border border-[#e0dbd0] px-4 py-2.5 pr-10 text-sm text-[#1a1816] outline-none focus:border-[#7A1028] focus:ring-1 focus:ring-[#7A1028]/30"
                 />
                 <button
                   type="button"
@@ -177,7 +177,7 @@ export default function InviteAcceptPage() {
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="Company name"
-                  className="w-full rounded-lg border border-[#e0dbd0] px-4 py-2.5 text-sm text-[#1a1816] outline-none focus:border-[#c49340] focus:ring-1 focus:ring-[#c49340]/30"
+                  className="w-full rounded-lg border border-[#e0dbd0] px-4 py-2.5 text-sm text-[#1a1816] outline-none focus:border-[#7A1028] focus:ring-1 focus:ring-[#7A1028]/30"
                 />
               </div>
               <div>
@@ -187,7 +187,7 @@ export default function InviteAcceptPage() {
                   value={companyRole}
                   onChange={(e) => setCompanyRole(e.target.value)}
                   placeholder="e.g. Owner, Buyer"
-                  className="w-full rounded-lg border border-[#e0dbd0] px-4 py-2.5 text-sm text-[#1a1816] outline-none focus:border-[#c49340] focus:ring-1 focus:ring-[#c49340]/30"
+                  className="w-full rounded-lg border border-[#e0dbd0] px-4 py-2.5 text-sm text-[#1a1816] outline-none focus:border-[#7A1028] focus:ring-1 focus:ring-[#7A1028]/30"
                 />
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function InviteAcceptPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="(optional)"
-                className="w-full rounded-lg border border-[#e0dbd0] px-4 py-2.5 text-sm text-[#1a1816] outline-none focus:border-[#c49340] focus:ring-1 focus:ring-[#c49340]/30"
+                className="w-full rounded-lg border border-[#e0dbd0] px-4 py-2.5 text-sm text-[#1a1816] outline-none focus:border-[#7A1028] focus:ring-1 focus:ring-[#7A1028]/30"
               />
             </div>
 

@@ -49,16 +49,16 @@ export default function PromoBar() {
   if (hidden) return null;
 
   return (
-    <div ref={barRef} className="sticky top-0 z-[60] w-full bg-[var(--color-ink-black)] text-white">
-      <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-2 text-xs sm:px-6 lg:px-8 sm:text-sm">
-        <p className="font-medium">{t("promo.text")}</p>
+    <div ref={barRef} className="sticky top-0 z-[60] w-full bg-[var(--color-lime)] text-[var(--color-ink-black)]">
+      <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-2.5 text-xs sm:px-6 lg:px-8 sm:text-sm">
+        <p className="font-semibold tracking-wide">{t("promo.text")}</p>
         <button
           type="button"
           onClick={handleClose}
-          className="ml-4 rounded-xl border border-white/30 px-2 py-0.5 text-xs transition-colors duration-200 hover:border-white/70"
+          className="ml-4 px-2 py-0.5 text-xs font-bold opacity-60 transition-opacity duration-200 hover:opacity-100"
           aria-label="Dismiss promo"
         >
-          x
+          &times;
         </button>
       </div>
     </div>

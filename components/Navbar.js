@@ -241,19 +241,19 @@ export default function Navbar({ catalogConfig }) {
   return (
     <header
       ref={navRef}
-      className="sticky top-[var(--promo-offset,0px)] z-[50] w-full border-b border-[var(--color-gray-200)] bg-[var(--color-paper-white)] backdrop-blur-none md:bg-[var(--color-paper-white)]/90 md:backdrop-blur-lg md:backdrop-saturate-150"
+      className="sticky top-[var(--promo-offset,0px)] z-[50] w-full border-b border-[var(--color-gray-200)] bg-white"
     >
-      <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2.5">
           <Image src="/logo-lunarprint.png" alt="La Lunar Printing" width={32} height={32} className="h-8 w-8" priority />
           <div className="hidden sm:block">
-            <span className="block text-sm font-semibold uppercase tracking-[0.22em] text-[var(--color-gray-800)] leading-tight">La Lunar</span>
+            <span className="block text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-800)] leading-tight">La Lunar</span>
             <span className="block label-xs font-medium text-[var(--color-gray-400)] leading-tight tracking-[0.25em]">Printing Inc.</span>
           </div>
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-[var(--color-gray-600)] md:flex">
-          <Link href="/" className="transition-colors duration-200 hover:text-[var(--color-gray-800)] border-b-2 border-transparent hover:border-[var(--color-moon-gold)] pb-0.5">{t("nav.home")}</Link>
+          <Link href="/" className="transition-colors duration-200 hover:text-[var(--color-gray-800)]">{t("nav.home")}</Link>
 
           {/* Shop mega-menu dropdown */}
           <div
@@ -303,10 +303,10 @@ export default function Navbar({ catalogConfig }) {
             >
               {t("nav.shop")}
             </Link>
-            <div className={`absolute left-1/2 top-full z-40 w-[940px] -translate-x-1/2 pt-2 transition-all duration-200 ${shopMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}>
-              <div className="overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-2xl">
-                <div className="grid grid-cols-[220px_1fr]">
-                  <div className="border-r border-[var(--color-gray-100)] bg-[var(--color-gray-50)]/70 p-3">
+            <div className={`absolute left-1/2 top-full z-40 w-[860px] -translate-x-1/2 pt-2 transition-all duration-200 ${shopMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}>
+              <div className="overflow-hidden rounded-md border border-[var(--color-gray-200)] bg-white shadow-lg">
+                <div className="grid grid-cols-[200px_1fr]">
+                  <div className="border-r border-[var(--color-gray-100)] bg-[var(--color-gray-50)] p-3">
                     <p className="px-2 pb-2 label-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">
                       {t("nav.departments")}
                     </p>
@@ -319,7 +319,7 @@ export default function Navbar({ catalogConfig }) {
                             type="button"
                             onMouseEnter={() => setActiveShopDept(dept.key)}
                             onFocus={() => setActiveShopDept(dept.key)}
-                            className={`w-full rounded-xl px-3 py-2 text-left text-sm transition-colors ${selected ? "bg-white font-semibold text-[var(--color-gray-800)] shadow-sm ring-1 ring-gray-200" : "text-[var(--color-gray-600)] hover:bg-white hover:text-[var(--color-gray-800)]"}`}
+                            className={`w-full rounded-sm px-3 py-2 text-left text-sm transition-colors ${selected ? "bg-white font-semibold text-[var(--color-gray-800)] ring-1 ring-[var(--color-gray-200)]" : "text-[var(--color-gray-600)] hover:bg-white hover:text-[var(--color-gray-800)]"}`}
                           >
                             {departmentMeta?.[dept.key]?.title || dept.key}
                           </button>
@@ -339,7 +339,7 @@ export default function Navbar({ catalogConfig }) {
                       </div>
                       <Link
                         href="/shop"
-                        className="inline-flex items-center gap-1 rounded-xl border border-[var(--color-gray-300)] px-3 py-1 label-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-800)] hover:text-[var(--color-gray-800)]"
+                        className="inline-flex items-center gap-1 rounded-sm border border-[var(--color-gray-300)] px-3 py-1 label-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-800)] hover:text-[var(--color-gray-800)]"
                       >
                         {t("nav.exploreAll")}
                       </Link>
@@ -349,7 +349,7 @@ export default function Navbar({ catalogConfig }) {
                       {activeCategories.slice(0, 6).map((catSlug) => {
                         const cMeta = categoryMeta?.[catSlug];
                         return (
-                          <div key={catSlug} className="rounded-xl border border-[var(--color-gray-100)] bg-white p-3">
+                          <div key={catSlug} className="rounded-sm border border-[var(--color-gray-100)] bg-white p-3">
                             <div className="mb-2 flex items-center justify-between gap-3">
                               <Link href={`/shop/${catSlug}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-gray-800)] hover:text-black">
                                 <span>{cMeta?.icon || ""}</span>
@@ -364,7 +364,7 @@ export default function Navbar({ catalogConfig }) {
                                 <Link
                                   key={sg.slug}
                                   href={sg.href}
-                                  className={`truncate rounded-md px-2 py-1 text-xs hover:bg-[var(--color-gray-50)] hover:text-[var(--color-gray-800)] ${
+                                  className={`truncate rounded-sm px-2 py-1 text-xs hover:bg-[var(--color-gray-50)] hover:text-[var(--color-gray-800)] ${
                                     idx === 0
                                       ? "bg-[var(--color-paper-cream)] text-[var(--color-gray-800)]"
                                       : "text-[var(--color-gray-600)]"

@@ -117,7 +117,7 @@ export default async function HomePage() {
         <DualEntryHero totalCount={totalCount} />
 
         {/* 2. Popular Products */}
-        <section className="py-20 bg-[var(--color-gray-50)]">
+        <section className="py-20 bg-white">
           <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <QuickOrderStrip products={serializedQuickProducts} />
           </div>
@@ -141,9 +141,9 @@ export default async function HomePage() {
                   <Link
                     key={category}
                     href={`/shop/${category}`}
-                    className="group overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white hover-lift"
+                    className="group overflow-hidden rounded-md border border-[var(--color-gray-200)] bg-white hover-lift-subtle"
                   >
-                    <div className="aspect-[4/3] bg-[var(--color-gray-100)] overflow-hidden flex items-center justify-center">
+                    <div className="aspect-[4/3] bg-[var(--color-gray-50)] overflow-hidden flex items-center justify-center">
                       {previewImg ? (
                         <Image
                           src={previewImg}

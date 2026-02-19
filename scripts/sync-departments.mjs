@@ -18,11 +18,11 @@ const NEW_DEPARTMENTS = [
 
 const NEW_DEPARTMENT_META = {
   "marketing-business-print": { title: "Marketing & Business Print" },
-  "stickers-labels-decals": { title: "Stickers, Labels & Decals" },
+  "stickers-labels-decals": { title: "Stickers & Labels" },
   "signs-rigid-boards": { title: "Signs & Rigid Boards" },
   "banners-displays": { title: "Banners & Displays" },
-  "windows-walls-floors": { title: "Windows, Walls & Floors" },
-  "vehicle-graphics-fleet": { title: "Vehicle Graphics & Fleet" },
+  "windows-walls-floors": { title: "Windows/Walls/Floors Decals" },
+  "vehicle-graphics-fleet": { title: "Vehicle & Fleet Graphics" },
 };
 
 async function main() {

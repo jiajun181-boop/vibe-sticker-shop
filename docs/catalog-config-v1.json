@@ -69,7 +69,7 @@
       ]
     },
     "stickers-labels-decals": {
-      "title": "Stickers, Labels & Decals",
+      "title": "Stickers & Labels",
       "icon": "label",
       "subGroups": [
         { "slug": "die-cut-stickers", "title": "Die-Cut", "href": "/shop/stickers-labels-decals/die-cut-stickers" },
@@ -120,7 +120,7 @@
       ]
     },
     "windows-walls-floors": {
-      "title": "Windows, Walls & Floors",
+      "title": "Windows/Walls/Floors Decals",
       "icon": "surface",
       "subGroups": [
         { "slug": "static-clings", "title": "Static Clings", "href": "/shop/windows-walls-floors/static-clings" },
@@ -134,7 +134,7 @@
       ]
     },
     "vehicle-graphics-fleet": {
-      "title": "Vehicle Graphics & Fleet",
+      "title": "Vehicle & Fleet Graphics",
       "icon": "fleet",
       "subGroups": [
         { "slug": "vehicle-wraps", "title": "Vehicle Wraps", "href": "/shop/vehicle-graphics-fleet/vehicle-wraps" },
@@ -152,10 +152,10 @@
   },
   "departmentMeta": {
     "marketing-business-print": { "title": "Marketing & Business Print" },
-    "stickers-labels-decals": { "title": "Stickers, Labels & Decals" },
+    "stickers-labels-decals": { "title": "Stickers & Labels" },
     "signs-rigid-boards": { "title": "Signs & Rigid Boards" },
     "banners-displays": { "title": "Banners & Displays" },
-    "windows-walls-floors": { "title": "Windows, Walls & Floors" },
-    "vehicle-graphics-fleet": { "title": "Vehicle Graphics & Fleet" }
+    "windows-walls-floors": { "title": "Windows/Walls/Floors Decals" },
+    "vehicle-graphics-fleet": { "title": "Vehicle & Fleet Graphics" }
   }
 }

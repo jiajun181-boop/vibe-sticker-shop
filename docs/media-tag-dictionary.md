@@ -52,7 +52,7 @@ Use lowercase English tags only, comma-separated.
 - `stamps`
 - `tickets-coupons`
 
-### Stickers, Labels & Decals
+### Stickers & Labels
 - `die-cut-stickers`
 - `kiss-cut-singles`
 - `sticker-pages`
@@ -81,7 +81,7 @@ Use lowercase English tags only, comma-separated.
 - `flags-hardware`
 - `tents-outdoor`
 
-### Windows, Walls & Floors
+### Windows/Walls/Floors Decals
 - `window-graphics`
 - `window-lettering`
 - `one-way-vision`
@@ -90,7 +90,7 @@ Use lowercase English tags only, comma-separated.
 - `floor-graphics`
 - `canvas-prints`
 
-### Vehicle Graphics & Fleet
+### Vehicle & Fleet Graphics
 - `vehicle-wraps`
 - `vehicle-decals`
 - `door-panel-graphics`

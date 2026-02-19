@@ -7,7 +7,10 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-// ── Flyer baseline pricing (4.25" × 5.5" = 23.375 sq in) ──
+// ── Baseline pricing ──
+// Base area = quarter-letter (4.25×5.5 = 23.375 sq in).
+// Tables reduced ~35% vs original to give attractive "from" prices.
+// Area scaling dampened: ratio^0.55 for ratio>1 so large formats aren't 4× price.
 const BASE_AREA = 4.25 * 5.5; // 23.375
 const QTY_ALL = [25, 50, 75, 100, 250, 500, 750, 1000, 2500, 5000, 10000];
 const QTY_MEDIUM = [50, 100, 250, 500, 1000, 2500, 5000];
@@ -16,16 +19,19 @@ const QTY_BOOKLET = [25, 50, 100, 250, 500, 1000, 2500];
 const QTY_BULK = [250, 500, 1000, 2500, 5000, 10000];
 
 const SINGLE = {
-  25: 17.04, 50: 23.99, 75: 29.38, 100: 35.26, 250: 67.58,
-  500: 87.16, 750: 102.83, 1000: 116.54, 2500: 156.10, 5000: 222.81, 10000: 388.82,
+  25: 10.99, 50: 15.49, 75: 18.99, 100: 22.99, 250: 43.99,
+  500: 56.99, 750: 66.99, 1000: 75.99, 2500: 100.99, 5000: 143.99, 10000: 249.99,
 };
 const DOUBLE = {
-  25: 19.23, 50: 27.07, 75: 33.15, 100: 39.78, 250: 76.24,
-  500: 98.34, 750: 116.02, 1000: 131.49, 2500: 161.91, 5000: 243.05, 10000: 433.90,
+  25: 12.49, 50: 17.49, 75: 21.49, 100: 25.99, 250: 49.49,
+  500: 63.99, 750: 74.99, 1000: 84.99, 2500: 114.99, 5000: 159.99, 10000: 279.99,
 };
 
 function scalePBQ(w, h, baseTable, multiplier = 1.0, qtys = null) {
-  const ratio = (w * h) / BASE_AREA;
+  const rawRatio = (w * h) / BASE_AREA;
+  // Dampen area ratio: large formats don't cost proportionally more.
+  // ratio<=1 (small items): keep linear. ratio>1: use power curve.
+  const ratio = rawRatio <= 1 ? rawRatio : Math.pow(rawRatio, 0.55);
   const result = {};
   for (const q of (qtys || QTY_ALL)) {
     if (baseTable[q] == null) continue;
@@ -133,12 +139,13 @@ const PRODUCTS = {
 
   // ━━━━━━━━━ POSTERS ━━━━━━━━━
   "posters": {
-    description: "Large-format poster printing with vivid full-colour on premium gloss or matte paper. Sizes from 11\" × 17\" tabloid to 24\" × 36\". Ideal for retail signage, trade show displays, concert promotions, office décor, and event advertising. Optional lamination for durability. Same-week turnaround in Toronto and the GTA.",
+    description: "Large-format poster printing with vivid full-colour on premium gloss or matte paper. Sizes from 11\" × 17\" tabloid to 36\" × 48\". Ideal for retail signage, trade show displays, concert promotions, office décor, and event advertising. Optional lamination for durability. Same-week turnaround in Toronto and the GTA.",
     sizes: [
       ssOnly('11" × 17" (Tabloid)', 11, 17),
       ssOnly('13" × 19"', 13, 19),
       ssOnly('18" × 24"', 18, 24, { recommended: true }),
       ssOnly('24" × 36"', 24, 36),
+      ssOnly('36" × 48"', 36, 48),
     ],
     addons: [],
     quantityRange: { min: 1, max: 500, step: 1 },
@@ -150,20 +157,22 @@ const PRODUCTS = {
   "booklets": {
     description: "Custom booklet and catalogue printing with saddle-stitch, perfect binding, or Wire-O options. Page counts from 8 to 48 pages (multiples of 4). Premium coated stock with full-colour throughout — ideal for product catalogues, event programs, training manuals, lookbooks, and corporate reports. Serving Toronto, the GTA, and all of Ontario.",
     sizes: [
+      // Market ref: Zoom Printing 5.5×8.5 8pg 25qty = $180, 100qty = $245
+      // We target ~80% of market to be competitive but not lose money.
       // 5.5" × 8.5" (Half Letter)
-      dsOnly('5.5" × 8.5" — 8 Pages', 5.5, 8.5, { mult: 4, qtys: QTY_BOOKLET }),
-      dsOnly('5.5" × 8.5" — 12 Pages', 5.5, 8.5, { mult: 6, qtys: QTY_BOOKLET }),
-      dsOnly('5.5" × 8.5" — 16 Pages', 5.5, 8.5, { mult: 8, qtys: QTY_BOOKLET }),
-      dsOnly('5.5" × 8.5" — 24 Pages', 5.5, 8.5, { mult: 12, qtys: QTY_BOOKLET }),
-      dsOnly('5.5" × 8.5" — 32 Pages', 5.5, 8.5, { mult: 16, qtys: QTY_BOOKLET }),
-      dsOnly('5.5" × 8.5" — 48 Pages', 5.5, 8.5, { mult: 24, qtys: QTY_BOOKLET }),
+      dsOnly('5.5" × 8.5" — 8 Pages', 5.5, 8.5, { mult: 8, qtys: QTY_BOOKLET }),
+      dsOnly('5.5" × 8.5" — 12 Pages', 5.5, 8.5, { mult: 10, qtys: QTY_BOOKLET }),
+      dsOnly('5.5" × 8.5" — 16 Pages', 5.5, 8.5, { mult: 12, qtys: QTY_BOOKLET }),
+      dsOnly('5.5" × 8.5" — 24 Pages', 5.5, 8.5, { mult: 16, qtys: QTY_BOOKLET }),
+      dsOnly('5.5" × 8.5" — 32 Pages', 5.5, 8.5, { mult: 20, qtys: QTY_BOOKLET }),
+      dsOnly('5.5" × 8.5" — 48 Pages', 5.5, 8.5, { mult: 28, qtys: QTY_BOOKLET }),
       // 8.5" × 11" (Letter)
-      dsOnly('8.5" × 11" — 8 Pages', 8.5, 11, { mult: 4, qtys: QTY_BOOKLET, recommended: true }),
-      dsOnly('8.5" × 11" — 12 Pages', 8.5, 11, { mult: 6, qtys: QTY_BOOKLET }),
-      dsOnly('8.5" × 11" — 16 Pages', 8.5, 11, { mult: 8, qtys: QTY_BOOKLET }),
-      dsOnly('8.5" × 11" — 24 Pages', 8.5, 11, { mult: 12, qtys: QTY_BOOKLET }),
-      dsOnly('8.5" × 11" — 32 Pages', 8.5, 11, { mult: 16, qtys: QTY_BOOKLET }),
-      dsOnly('8.5" × 11" — 48 Pages', 8.5, 11, { mult: 24, qtys: QTY_BOOKLET }),
+      dsOnly('8.5" × 11" — 8 Pages', 8.5, 11, { mult: 8, qtys: QTY_BOOKLET, recommended: true }),
+      dsOnly('8.5" × 11" — 12 Pages', 8.5, 11, { mult: 10, qtys: QTY_BOOKLET }),
+      dsOnly('8.5" × 11" — 16 Pages', 8.5, 11, { mult: 12, qtys: QTY_BOOKLET }),
+      dsOnly('8.5" × 11" — 24 Pages', 8.5, 11, { mult: 16, qtys: QTY_BOOKLET }),
+      dsOnly('8.5" × 11" — 32 Pages', 8.5, 11, { mult: 20, qtys: QTY_BOOKLET }),
+      dsOnly('8.5" × 11" — 48 Pages', 8.5, 11, { mult: 28, qtys: QTY_BOOKLET }),
     ],
     addons: [],
     quantityRange: { min: 25, max: 2500, step: 1 },
@@ -221,10 +230,12 @@ const PRODUCTS = {
   "presentation-folders": {
     description: "Professional presentation folder printing with glued pockets and optional business card slits. 9\" × 12\" standard and 9\" × 14.5\" legal sizes on premium 14pt cardstock. Gloss, matte, or soft-touch lamination with optional foil stamping. Ideal for corporate meetings, sales proposals, real estate packages, and legal firms in Toronto, Mississauga, and the GTA.",
     sizes: [
-      dsOnly('9" × 12" Standard', 9, 12, { mult: 3, qtys: [100, 250, 500, 1000, 2500], recommended: true }),
-      dsOnly('9" × 12" w/ Business Card Slit', 9, 12, { mult: 3.2, qtys: [100, 250, 500, 1000, 2500] }),
-      dsOnly('9" × 14.5" Legal', 9, 14.5, { mult: 3.3, qtys: [100, 250, 500, 1000, 2500] }),
-      dsOnly('9" × 14.5" Legal w/ Business Card Slit', 9, 14.5, { mult: 3.5, qtys: [100, 250, 500, 1000, 2500] }),
+      // Market ref: Zoom 9×12 1-side 100qty=$480, 2-side=$525; CopyCave ~$426/100.
+      // Pocket construction + gluing is expensive. Target ~65-70% of market.
+      dsOnly('9" × 12" Standard', 9, 12, { mult: 5, qtys: [100, 250, 500, 1000, 2500], recommended: true }),
+      dsOnly('9" × 12" w/ Business Card Slit', 9, 12, { mult: 5.5, qtys: [100, 250, 500, 1000, 2500] }),
+      dsOnly('9" × 14.5" Legal', 9, 14.5, { mult: 5.5, qtys: [100, 250, 500, 1000, 2500] }),
+      dsOnly('9" × 14.5" Legal w/ Business Card Slit', 9, 14.5, { mult: 6, qtys: [100, 250, 500, 1000, 2500] }),
     ],
     addons: [],
     quantityRange: { min: 100, max: 2500, step: 1 },
@@ -263,14 +274,16 @@ const PRODUCTS = {
   "notepads": {
     description: "Custom notepad printing with chipboard backing and glued edge. Available in 25, 50, and 100 sheet counts in multiple sizes. Great for trade shows, conference giveaways, office supplies, and branded merchandise. Full-colour cover page with your logo. Serving businesses across Toronto, Ontario, and Canada.",
     sizes: [
-      ssOnly('4.25" × 5.5" — 25 Sheets', 4.25, 5.5, { mult: 25, qtys: QTY_SMALL }),
-      ssOnly('4.25" × 5.5" — 50 Sheets', 4.25, 5.5, { mult: 50, qtys: QTY_SMALL }),
-      ssOnly('5.5" × 8.5" — 25 Sheets', 5.5, 8.5, { mult: 25, qtys: QTY_SMALL }),
-      ssOnly('5.5" × 8.5" — 50 Sheets', 5.5, 8.5, { mult: 50, qtys: QTY_SMALL, recommended: true }),
-      ssOnly('5.5" × 8.5" — 100 Sheets', 5.5, 8.5, { mult: 100, qtys: QTY_SMALL }),
-      ssOnly('8.5" × 11" — 25 Sheets', 8.5, 11, { mult: 25, qtys: QTY_SMALL }),
-      ssOnly('8.5" × 11" — 50 Sheets', 8.5, 11, { mult: 50, qtys: QTY_SMALL }),
-      ssOnly('8.5" × 11" — 100 Sheets', 8.5, 11, { mult: 100, qtys: QTY_SMALL }),
+      // Notepads: sheets are thin bond paper on chipboard. Much cheaper per-sheet than cardstock.
+      // mult reflects pad assembly cost, NOT per-sheet cardstock price.
+      ssOnly('4.25" × 5.5" — 25 Sheets', 4.25, 5.5, { mult: 2.5, qtys: QTY_SMALL }),
+      ssOnly('4.25" × 5.5" — 50 Sheets', 4.25, 5.5, { mult: 3.5, qtys: QTY_SMALL }),
+      ssOnly('5.5" × 8.5" — 25 Sheets', 5.5, 8.5, { mult: 2.5, qtys: QTY_SMALL }),
+      ssOnly('5.5" × 8.5" — 50 Sheets', 5.5, 8.5, { mult: 3.5, qtys: QTY_SMALL, recommended: true }),
+      ssOnly('5.5" × 8.5" — 100 Sheets', 5.5, 8.5, { mult: 5, qtys: QTY_SMALL }),
+      ssOnly('8.5" × 11" — 25 Sheets', 8.5, 11, { mult: 2.5, qtys: QTY_SMALL }),
+      ssOnly('8.5" × 11" — 50 Sheets', 8.5, 11, { mult: 3.5, qtys: QTY_SMALL }),
+      ssOnly('8.5" × 11" — 100 Sheets', 8.5, 11, { mult: 5, qtys: QTY_SMALL }),
     ],
     addons: [],
     quantityRange: { min: 25, max: 1000, step: 1 },
@@ -381,18 +394,24 @@ const PRODUCTS = {
   // ━━━━━━━━━ CALENDARS ━━━━━━━━━
   // Table: 5×7, half letter | Wall: half letter, letter
   "calendars": {
-    description: "Custom calendar printing — desk and wall formats with Wire-O or saddle-stitch binding. Full-colour on every page with premium coated stock. Available in desk (5\" × 7\", 5.5\" × 8.5\") and wall (5.5\" × 8.5\", 8.5\" × 11\") sizes. Perfect for corporate gifts, promotional items, and year-end marketing. Serving Toronto businesses and organizations across Ontario.",
+    description: "Custom calendar printing — desk and wall formats with Wire-O binding. Full-colour on every page with premium 100lb coated stock and 14pt cardstock tent base. Available in desk (5\" × 7\" to 8.5\" × 11\") and wall (8.5\" × 11\" to 12\" × 12\") sizes. 13 pages (cover + 12 months). Perfect for corporate gifts, promotional items, and year-end marketing. Serving Toronto businesses and organizations across Ontario.",
     sizes: [
-      // Desk / Table calendars
-      dsOnly('5" × 7" Desk — 12 Months', 5, 7, { mult: 13, qtys: QTY_SMALL }),
-      dsOnly('5.5" × 8.5" Desk — 12 Months', 5.5, 8.5, { mult: 13, qtys: QTY_SMALL, recommended: true }),
-      // Wall calendars
-      dsOnly('5.5" × 8.5" Wall — 12 Months', 5.5, 8.5, { mult: 13, qtys: QTY_SMALL }),
-      dsOnly('8.5" × 11" Wall — 12 Months', 8.5, 11, { mult: 13, qtys: QTY_SMALL }),
+      // Market ref: Zoom wall 8.5×11 28pg 50qty=$860 ($17.20/ea), 100qty=$995 ($9.95/ea).
+      // Deluxe: 50qty=$268 ($5.36/ea). VistaPrint single ~$13-25.
+      // Our 13-page calendars — desk is cheaper (smaller+tent), wall costs more.
+      // Desk calendars (Wire-O + tent base)
+      dsOnly('5" × 7" Desk — 13 Pages', 5, 7, { mult: 8, qtys: QTY_SMALL }),
+      dsOnly('6" × 8" Desk — 13 Pages', 6, 8, { mult: 8, qtys: QTY_SMALL }),
+      dsOnly('8.5" × 5.5" Desk — 13 Pages', 8.5, 5.5, { mult: 8, qtys: QTY_SMALL, recommended: true }),
+      dsOnly('8.5" × 11" Desk — 13 Pages', 8.5, 11, { mult: 8, qtys: QTY_SMALL }),
+      // Wall calendars (Wire-O, hole-punched) — larger format, more expensive
+      dsOnly('8.5" × 11" Wall — 13 Pages', 8.5, 11, { mult: 10, qtys: QTY_SMALL }),
+      dsOnly('11" × 17" Wall — 13 Pages', 11, 17, { mult: 10, qtys: QTY_SMALL }),
+      dsOnly('12" × 12" Wall — 13 Pages', 12, 12, { mult: 10, qtys: QTY_SMALL }),
     ],
     addons: [],
     quantityRange: { min: 25, max: 1000, step: 1 },
-    ui: baseUI({ sizeMode: "dropdown", allowedAddons: [], finishingMode: "multi", allowedFinishings: ["lam_gloss", "lam_matte", "staple_binding", "wire_o_binding"] }),
+    ui: baseUI({ sizeMode: "dropdown", allowedAddons: [], finishingMode: "multi", allowedFinishings: ["lam_gloss", "lam_matte", "wire_o_binding"] }),
   },
 
   // ━━━━━━━━━ PRODUCT INSERTS ━━━━━━━━━
@@ -425,12 +444,13 @@ const PRODUCTS = {
     description: "Custom printed box sleeves and product wraps for retail packaging, gift boxes, and product bundling. Standard rectangular sizes or custom die-cut shapes for unique packaging. Full-colour CMYK on sturdy cardstock with optional gloss or matte lamination. Ideal for cosmetics, food packaging, candles, and retail products in Toronto and the GTA.",
     sizes: [
       // Rectangular standard sizes
-      dsOnly('3" × 3" × 6" (Small)', 12, 6, { mult: 2, qtys: [100, 250, 500, 1000, 2500] }),
-      dsOnly('4" × 4" × 6" (Medium)', 16, 6, { mult: 2, qtys: [100, 250, 500, 1000, 2500], recommended: true }),
-      dsOnly('3" × 3" × 8" (Tall)', 12, 8, { mult: 2, qtys: [100, 250, 500, 1000, 2500] }),
-      dsOnly('4" × 4" × 8" (Large)', 16, 8, { mult: 2, qtys: [100, 250, 500, 1000, 2500] }),
+      // Box sleeves: die-cut + folding + gluing. Dampened area already helps.
+      dsOnly('3" × 3" × 6" (Small)', 12, 6, { mult: 1.2, qtys: [100, 250, 500, 1000, 2500] }),
+      dsOnly('4" × 4" × 6" (Medium)', 16, 6, { mult: 1.2, qtys: [100, 250, 500, 1000, 2500], recommended: true }),
+      dsOnly('3" × 3" × 8" (Tall)', 12, 8, { mult: 1.2, qtys: [100, 250, 500, 1000, 2500] }),
+      dsOnly('4" × 4" × 8" (Large)', 16, 8, { mult: 1.2, qtys: [100, 250, 500, 1000, 2500] }),
       // Custom die-cut (异形)
-      dsOnly('Custom Die-Cut Shape', 12, 8, { mult: 3, qtys: [250, 500, 1000, 2500], notes: "Custom shape — contact for exact quote" }),
+      dsOnly('Custom Die-Cut Shape', 12, 8, { mult: 1.8, qtys: [250, 500, 1000, 2500], notes: "Custom shape — contact for exact quote" }),
     ],
     addons: [],
     quantityRange: { min: 100, max: 2500, step: 1 },
@@ -528,7 +548,11 @@ async function main() {
 
     const sizeCount = config.sizes.length;
     const finishings = config.ui.allowedFinishings?.length || 0;
-    console.log(`  + ${slug} -- ${sizeCount} sizes, ${finishings} finishings, SEO desc updated`);
+    // Find cheapest "from" price
+    const allPrices = config.sizes.flatMap(s => s.priceByQty ? Object.values(s.priceByQty) : []);
+    const fromCents = allPrices.length ? Math.min(...allPrices) : 0;
+    const fromStr = fromCents ? `from $${(fromCents / 100).toFixed(2)}` : 'no pricing';
+    console.log(`  + ${slug.padEnd(25)} ${String(sizeCount).padStart(2)} sizes  ${fromStr}`);
     updated++;
   }
 

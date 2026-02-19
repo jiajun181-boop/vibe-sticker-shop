@@ -48,7 +48,7 @@ export default function PricingSidebar({
       <div className="sticky top-24 space-y-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         {/* Preview area */}
         {previewSlot && (
-          <div className="flex items-center justify-center rounded-xl bg-gray-50 p-6">
+          <div className="flex items-center justify-center rounded-sm bg-gray-50 p-6">
             {previewSlot}
           </div>
         )}
@@ -106,7 +106,7 @@ export default function PricingSidebar({
             </div>
           </div>
         ) : (
-          <div className="rounded-xl bg-gray-50 px-4 py-6 text-center">
+          <div className="rounded-sm bg-gray-50 px-4 py-6 text-center">
             <p className="text-xs text-gray-400">{t?.("configurator.selectOptions") || "Select your options for pricing"}</p>
           </div>
         )}
@@ -126,7 +126,7 @@ export default function PricingSidebar({
               {volumeRows.map((row) => (
                 <div
                   key={row.qty}
-                  className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-xs transition-colors ${
+                  className={`flex items-center justify-between rounded-sm px-3 py-1.5 text-xs transition-colors ${
                     activeQty === row.qty ? "bg-gray-100 font-bold text-gray-900" : "text-gray-500"
                   }`}
                 >
@@ -144,7 +144,7 @@ export default function PricingSidebar({
             <button
               type="button"
               onClick={onRequestQuote}
-              className="w-full rounded-xl bg-gray-900 px-4 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-gray-900/20 transition-all duration-200 hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
+              className="w-full rounded-sm bg-gray-900 px-4 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-gray-900/20 transition-all duration-200 hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
             >
               {t?.("configurator.requestQuote") || "Request a Quote"}
             </button>
@@ -154,7 +154,7 @@ export default function PricingSidebar({
                 type="button"
                 onClick={onAddToCart}
                 disabled={!canAddToCart}
-                className={`w-full rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
                   canAddToCart
                     ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20 hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
                     : "cursor-not-allowed bg-gray-200 text-gray-400"
@@ -166,7 +166,7 @@ export default function PricingSidebar({
                 type="button"
                 onClick={onBuyNow}
                 disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-xl border-2 px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full rounded-sm border-2 px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
                   canAddToCart && !buyNowLoading
                     ? "border-gray-900 text-gray-900 hover:bg-gray-50 active:scale-[0.98]"
                     : "cursor-not-allowed border-gray-200 text-gray-400"

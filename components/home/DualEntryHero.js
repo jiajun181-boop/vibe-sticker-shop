@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useScrollAnimation } from "@/lib/useScrollAnimation";
 
@@ -12,53 +11,38 @@ export default function DualEntryHero({ totalCount }) {
   return (
     <div
       ref={ref}
-      className="pt-20 pb-16 md:pt-28 md:pb-20 px-4 sm:px-6 relative overflow-hidden bg-[linear-gradient(180deg,var(--color-paper-cream),var(--color-paper-white))]"
+      className="pt-28 pb-24 md:pt-40 md:pb-32 px-4 sm:px-6 relative bg-white"
     >
-      {/* Double glow halos */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full bg-[var(--color-moon-gold)] opacity-[0.06] blur-[100px]" />
-        <div className="absolute -top-20 left-1/3 w-[500px] h-[300px] rounded-full bg-[var(--color-moon-blue)] opacity-[0.04] blur-[80px]" />
-      </div>
-
-      <div className="absolute -right-20 -top-20 opacity-[0.08] pointer-events-none">
-        <Image src="/logo-lunarprint.png" alt="" width={400} height={400} />
-      </div>
-
-      <div className="max-w-[1600px] mx-auto relative text-center">
-        <div className="animate-on-scroll inline-flex items-center gap-2 border border-[var(--color-gray-200)] bg-white px-3 py-1 rounded-xl label-xs text-[var(--color-gray-600)] mb-5">
-          <Image src="/logo-lunarprint.png" alt="" width={16} height={16} className="h-4 w-4" />
+      <div className="max-w-3xl mx-auto text-center">
+        <p className="animate-on-scroll label-xs text-[var(--color-gray-400)] mb-8 tracking-[0.18em]">
           {t("home.badge")}
-        </div>
+        </p>
 
-        <h1 className="animate-on-scroll delay-1 heading-display text-[var(--color-gray-800)]">
+        <h1 className="animate-on-scroll delay-1 heading-display text-[var(--color-ink-black)]">
           {t("home.headline")}
         </h1>
-        <p className="animate-on-scroll delay-2 text-[var(--color-gray-600)] max-w-xl mx-auto mt-4 body-lg">
+        <p className="animate-on-scroll delay-2 text-[var(--color-gray-500)] max-w-2xl mx-auto mt-6 body-lg leading-relaxed">
           {t("home.subheadline")}
         </p>
 
-        <div className="animate-on-scroll delay-3 inline-flex items-center gap-2 border border-[var(--color-gray-200)] bg-white rounded-xl px-4 py-1.5 label-xs text-[var(--color-gray-600)] mt-5">
-          <span className="w-2 h-2 rounded-full bg-[var(--color-moon-blue)] animate-pulse" />
-          {t("home.productsAvailable", { count: totalCount })}
-        </div>
-
-        <div className="animate-on-scroll delay-4 mt-10 flex flex-wrap items-center justify-center gap-3">
+        <div className="animate-on-scroll delay-3 mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
             href="/shop"
-            className="btn-primary-pill btn-md font-black tracking-[0.14em]"
+            className="btn-primary-pill btn-md tracking-[0.14em]"
           >
             {t("home.cta.shop")}
           </Link>
           <Link
             href="/quote"
-            className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+            className="inline-flex items-center gap-2 border-b-2 border-[var(--color-ink-black)] px-1 pb-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-ink-black)] transition-colors hover:border-[var(--color-moon-gold)] hover:text-[var(--color-moon-gold)]"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-            </svg>
             {t("home.cta.quote")}
           </Link>
         </div>
+
+        <p className="animate-on-scroll delay-4 label-xs text-[var(--color-gray-400)] mt-8 tracking-[0.15em]">
+          {t("home.productsAvailable", { count: totalCount })}
+        </p>
       </div>
     </div>
   );

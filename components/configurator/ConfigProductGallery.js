@@ -12,7 +12,7 @@ export default function ConfigProductGallery({ images }) {
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 pt-6 sm:px-6 lg:px-8">
-      <div className="overflow-hidden rounded-xl bg-gray-50">
+      <div className="overflow-hidden rounded-sm bg-gray-50">
         {/* Main image */}
         <div className="relative aspect-[16/9] w-full sm:aspect-[21/9]">
           <Image

@@ -188,7 +188,7 @@ Total active products: **408**
 - Product Inserts | product-inserts
 - Box Sleeves | box-sleeves
 
-## stickers-labels-decals | Stickers, Labels & Decals (61)
+## stickers-labels-decals | Stickers & Labels (61)
 
 ### die-cut-stickers (11)
 - Clear Stickers (Singles) | clear-singles
@@ -455,7 +455,7 @@ Total active products: **408**
 - Tent Half Walls | tent-half-walls
 - Outdoor Canopy Tent 10×10 | outdoor-canopy-tent-10x10
 
-## windows-walls-floors | Windows, Walls & Floors (37)
+## windows-walls-floors | Windows/Walls/Floors Decals (37)
 
 ### static-clings (2)
 - Clear Static Cling | clear-static-cling
@@ -512,7 +512,7 @@ Total active products: **408**
 - Window Decals | window-decals
 - Window Graphics | window-graphics
 
-## vehicle-graphics-fleet | Vehicle Graphics & Fleet (46)
+## vehicle-graphics-fleet | Vehicle & Fleet Graphics (46)
 
 ### vehicle-wraps (6)
 - Partial Wrap Graphics | partial-wrap-spot-graphics

@@ -117,21 +117,21 @@ function PartnerDashboard() {
 
         {/* Quick actions */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Link href="/shop" className="flex items-center gap-3 rounded-xl border border-[#e0dbd0] bg-white p-4 transition-colors hover:border-[#c49340]">
+          <Link href="/shop" className="flex items-center gap-3 rounded-xl border border-[#e0dbd0] bg-white p-4 transition-colors hover:border-[#7A1028]">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f8f6f0] text-lg">🛒</div>
             <div>
               <p className="text-sm font-semibold text-[#1a1816]">Browse Shop</p>
               <p className="text-[11px] text-[#9a9184]">Order with partner pricing</p>
             </div>
           </Link>
-          <Link href="/quote" className="flex items-center gap-3 rounded-xl border border-[#e0dbd0] bg-white p-4 transition-colors hover:border-[#c49340]">
+          <Link href="/quote" className="flex items-center gap-3 rounded-xl border border-[#e0dbd0] bg-white p-4 transition-colors hover:border-[#7A1028]">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f8f6f0] text-lg">📋</div>
             <div>
               <p className="text-sm font-semibold text-[#1a1816]">Request Quote</p>
               <p className="text-[11px] text-[#9a9184]">Custom or bulk orders</p>
             </div>
           </Link>
-          <Link href="/account/profile" className="flex items-center gap-3 rounded-xl border border-[#e0dbd0] bg-white p-4 transition-colors hover:border-[#c49340]">
+          <Link href="/account/profile" className="flex items-center gap-3 rounded-xl border border-[#e0dbd0] bg-white p-4 transition-colors hover:border-[#7A1028]">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f8f6f0] text-lg">⚙️</div>
             <div>
               <p className="text-sm font-semibold text-[#1a1816]">Account Settings</p>
@@ -144,12 +144,12 @@ function PartnerDashboard() {
         <div className="mt-6 rounded-xl border border-[#e0dbd0] bg-white">
           <div className="flex items-center justify-between border-b border-[#e0dbd0] px-6 py-4">
             <h2 className="text-sm font-semibold text-[#1a1816]">Recent Orders</h2>
-            <Link href="/account" className="text-xs font-medium text-[#c49340] hover:underline">View all</Link>
+            <Link href="/account" className="text-xs font-medium text-[#7A1028] hover:underline">View all</Link>
           </div>
 
           {orders.length === 0 ? (
             <div className="px-6 py-8 text-center text-sm text-[#9a9184]">
-              No orders yet. <Link href="/shop" className="text-[#c49340] hover:underline">Start shopping</Link>
+              No orders yet. <Link href="/shop" className="text-[#7A1028] hover:underline">Start shopping</Link>
             </div>
           ) : (
             <div className="divide-y divide-[#e0dbd0]">

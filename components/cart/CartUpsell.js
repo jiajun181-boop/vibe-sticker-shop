@@ -71,7 +71,7 @@ export default function CartUpsell() {
           return (
           <div
             key={item.slug}
-            className="flex items-center gap-3 rounded-xl border border-[var(--color-gray-200)] bg-white p-2"
+            className="flex items-center gap-3 rounded-sm border border-[var(--color-gray-200)] bg-white p-2"
           >
             <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-[var(--color-gray-100)]">
               <img src={imageSrc} alt={item.name} className="h-full w-full object-cover" />
@@ -97,7 +97,7 @@ export default function CartUpsell() {
                 });
                 showSuccessToast(`${item.name} added`);
               }}
-              className="rounded-xl bg-[var(--color-moon-blue-deep)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white hover:bg-[var(--color-ink-black)]"
+              className="rounded-sm bg-[var(--color-moon-blue-deep)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white hover:bg-[var(--color-ink-black)]"
             >
               {t("cart.quickAdd")}
             </button>

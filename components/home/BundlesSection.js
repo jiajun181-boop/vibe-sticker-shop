@@ -117,7 +117,7 @@ export default function BundlesSection() {
 
               <Link
                 href={bundle.href}
-                className={`block w-full text-center py-3.5 rounded-xl font-black uppercase label-sm tracking-[0.14em] transition-colors ${
+                className={`block w-full text-center py-3.5 rounded-sm font-black uppercase label-sm tracking-[0.14em] transition-colors ${
                   bundle.popular
                     ? "btn-dark-pill"
                     : "bg-[var(--color-gray-100)] text-[var(--color-gray-700)] hover:bg-[var(--color-gray-200)]"

@@ -205,7 +205,7 @@ const PRESETS = [
 
 const SLUG_TO_PRESET = {};
 
-// Windows, Walls & Floors
+// Windows/Walls/Floors Decals
 const WINDOW_FILM_SLUGS = [
   "clear-static-cling", "frosted-static-cling",
   "frosted-matte-window-film", "holographic-iridescent-film",
@@ -228,7 +228,7 @@ const WALL_FLOOR_SLUGS = [
   "floor-number-markers-set",
 ];
 
-// Vehicle Graphics & Fleet
+// Vehicle & Fleet Graphics
 const VEHICLE_WRAP_SLUGS = [
   "full-vehicle-wrap-design-print", "vehicle-wrap-print-only-quote",
   "partial-wrap-spot-graphics", "vehicle-roof-wrap",

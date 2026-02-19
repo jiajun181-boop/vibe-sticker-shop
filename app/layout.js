@@ -1,5 +1,5 @@
 import "./globals.css";
-import { DM_Sans } from "next/font/google";
+import { Poppins, EB_Garamond } from "next/font/google";
 import CartDrawer from "@/components/cart/CartDrawer";
 import { Toaster } from "@/components/Toast";
 import { getServerLocale } from "@/lib/i18n/server";
@@ -8,10 +8,17 @@ import Analytics from "@/components/Analytics";
 import SkipLink from "@/components/SkipLink";
 import AppChrome from "@/components/AppChrome";
 
-const dmSans = DM_Sans({
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-brand",
+  display: "swap",
+});
+
+const ebGaramond = EB_Garamond({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-brand",
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -69,7 +76,7 @@ export default async function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <HreflangTags />
       </head>
-      <body className={`${dmSans.variable} antialiased`}>
+      <body className={`${poppins.variable} ${ebGaramond.variable} antialiased`}>
         <SkipLink />
         <AppChrome catalogConfig={catalogConfig} locale={locale}>
           {children}

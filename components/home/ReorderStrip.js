@@ -54,7 +54,7 @@ export default function ReorderStrip() {
         {orders.map((order) => (
           <div
             key={order.id}
-            className="flex-none w-56 snap-start rounded-xl border border-[var(--color-gray-100)] bg-[var(--color-gray-50)] p-3"
+            className="flex-none w-56 snap-start rounded-sm border border-[var(--color-gray-100)] bg-[var(--color-gray-50)] p-3"
           >
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold text-[var(--color-gray-900)]">#{order.id.slice(0, 8)}</p>

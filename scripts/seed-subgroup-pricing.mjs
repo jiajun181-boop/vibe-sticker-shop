@@ -293,7 +293,7 @@ const SUBGROUP_PRESETS = [
   },
 
   // ════════════════════════════════════════════════════════════════════
-  // 2. Stickers, Labels & Decals
+  // 2. Stickers & Labels
   // ════════════════════════════════════════════════════════════════════
   {
     key: "sg_die_cut_stickers",
@@ -635,7 +635,7 @@ const SUBGROUP_PRESETS = [
   },
 
   // ════════════════════════════════════════════════════════════════════
-  // 5. Windows, Walls & Floors
+  // 5. Windows/Walls/Floors Decals
   // ════════════════════════════════════════════════════════════════════
   {
     key: "sg_static_clings",
@@ -732,7 +732,7 @@ const SUBGROUP_PRESETS = [
   },
 
   // ════════════════════════════════════════════════════════════════════
-  // 6. Vehicle Graphics & Fleet
+  // 6. Vehicle & Fleet Graphics
   // ════════════════════════════════════════════════════════════════════
   {
     key: "sg_vehicle_wraps",
@@ -871,7 +871,7 @@ const SUBGROUP_TO_PRESET = {
   "calendars": "sg_calendars",
   "menus": "sg_menus",
 
-  // Stickers, Labels & Decals
+  // Stickers & Labels
   "die-cut-stickers": "sg_die_cut_stickers",
   "kiss-cut-singles": "sg_kiss_cut_singles",
   "sticker-pages": "sg_sticker_pages",
@@ -906,7 +906,7 @@ const SUBGROUP_TO_PRESET = {
   "flags-hardware": "sg_flags_hardware",
   "tents-outdoor": "sg_tents_outdoor",
 
-  // Windows, Walls & Floors
+  // Windows/Walls/Floors Decals
   "static-clings": "sg_static_clings",
   "adhesive-films": "sg_adhesive_films",
   "one-way-vision": "sg_one_way_vision",
@@ -917,7 +917,7 @@ const SUBGROUP_TO_PRESET = {
   "floor-graphics": "sg_floor_graphics",
   "window-graphics": "sg_window_graphics",
 
-  // Vehicle Graphics & Fleet
+  // Vehicle & Fleet Graphics
   "vehicle-wraps": "sg_vehicle_wraps",
   "door-panel-graphics": "sg_door_panel_graphics",
   "vehicle-decals": "sg_vehicle_decals",

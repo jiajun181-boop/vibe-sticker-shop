@@ -100,7 +100,7 @@ const VEHICLE_GRAPHICS_FLEET_SEGMENTS = [
 const STICKERS_SEGMENTS = [
   {
     key: "custom-stickers",
-    title: "Custom Stickers & Labels",
+    title: "Stickers & Labels",
     slugs: ["die-cut-stickers", "kiss-cut-singles", "sticker-pages", "sticker-rolls"],
   },
   {
