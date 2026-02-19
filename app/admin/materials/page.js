@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import QuoteSimulatorCard from "@/components/admin/QuoteSimulatorCard";
+import HardwarePricingTable from "@/components/admin/HardwarePricingTable";
 
 const TYPE_COLORS = {
   "Adhesive Vinyl": "bg-blue-100 text-blue-800",
@@ -107,15 +109,9 @@ function TiersEditor({ label, tiers, onChange, maxKey = "maxSqft", unit = "sqft"
   );
 }
 
-function FormulaCard() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+function FormulaCard({ data, setData, loading }) {
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/admin/materials/formula").then((r) => r.json()).then(setData).finally(() => setLoading(false));
-  }, []);
 
   const save = async (patch) => {
     setSaving(true);
@@ -315,6 +311,8 @@ export default function MaterialsPage() {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState("all");
   const [saving, setSaving] = useState(null);
+  const [formulaConfig, setFormulaConfig] = useState(null);
+  const [formulaLoading, setFormulaLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     try {
@@ -329,6 +327,13 @@ export default function MaterialsPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    fetch("/api/admin/materials/formula")
+      .then((r) => r.json())
+      .then(setFormulaConfig)
+      .finally(() => setFormulaLoading(false));
+  }, []);
 
   const filtered = useMemo(() => {
     if (filterType === "all") return materials;
@@ -437,7 +442,13 @@ export default function MaterialsPage() {
       <InkSettingsCard ink={inkSettings} onSave={setInkSettings} />
 
       {/* Pricing formula */}
-      <FormulaCard />
+      <FormulaCard data={formulaConfig} setData={setFormulaConfig} loading={formulaLoading} />
+
+      {/* Quote simulator */}
+      <QuoteSimulatorCard formulaConfig={formulaConfig} materials={materials} />
+
+      {/* Hardware pricing */}
+      <HardwarePricingTable />
 
       {/* Filter tabs */}
       <div className="flex gap-2">
