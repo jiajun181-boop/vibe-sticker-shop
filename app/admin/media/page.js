@@ -630,7 +630,7 @@ function MediaContent() {
     }
   }
 
-  // ── Archive asset ──
+  // ── Archive asset (soft delete) ──
   async function handleArchive() {
     if (!deleteTarget) return;
     try {
@@ -641,6 +641,22 @@ function MediaContent() {
       fetchHealth();
     } catch {
       showMsg("Failed to archive", true);
+    } finally {
+      setDeleteTarget(null);
+    }
+  }
+
+  // ── Permanent delete (DB + UploadThing) ──
+  async function handlePermanentDelete() {
+    if (!deleteTarget) return;
+    try {
+      const res = await fetch(`/api/admin/assets/${deleteTarget.id}?permanent=true`, { method: "DELETE" });
+      if (!res.ok) { showMsg("Failed to delete permanently", true); return; }
+      showMsg("Asset permanently deleted");
+      fetchAssets();
+      fetchHealth();
+    } catch {
+      showMsg("Failed to delete permanently", true);
     } finally {
       setDeleteTarget(null);
     }
@@ -1397,23 +1413,23 @@ function MediaContent() {
         </div>
       )}
 
-      {/* ── Archive Confirmation ── */}
+      {/* ── Delete / Archive Confirmation ── */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setDeleteTarget(null); }}>
           <div className="bg-white rounded-[3px] shadow-lg w-full max-w-sm mx-4 p-6">
-            <h2 className="text-sm font-semibold text-black mb-2">Archive Asset</h2>
-            <p className="text-sm text-[#666] mb-1">
-              This will soft-delete the asset. It can be restored later.
-            </p>
+            <h2 className="text-sm font-semibold text-black mb-2">Delete Asset</h2>
             <p className="text-xs text-[#999] mb-4 truncate">
               {deleteTarget.originalName}
             </p>
-            <div className="flex items-center justify-end gap-2">
-              <button type="button" onClick={() => setDeleteTarget(null)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
-                Cancel
+            <div className="flex flex-col gap-2">
+              <button type="button" onClick={handleArchive} className="w-full rounded-[3px] border border-[#d0d0d0] py-2.5 text-xs font-medium text-black hover:bg-[#fafafa]">
+                Archive (can restore later)
               </button>
-              <button type="button" onClick={handleArchive} className="rounded-[3px] bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700">
-                Archive
+              <button type="button" onClick={handlePermanentDelete} className="w-full rounded-[3px] bg-red-600 py-2.5 text-xs font-semibold text-white hover:bg-red-700">
+                Permanent Delete
+              </button>
+              <button type="button" onClick={() => setDeleteTarget(null)} className="w-full rounded-[3px] border border-[#d0d0d0] py-2.5 text-xs font-medium text-[#999] hover:bg-[#fafafa]">
+                Cancel
               </button>
             </div>
           </div>

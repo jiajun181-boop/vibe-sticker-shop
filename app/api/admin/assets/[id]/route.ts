@@ -115,7 +115,8 @@ export async function PATCH(
 }
 
 /**
- * DELETE /api/admin/assets/[id] — Soft-delete (archive) an asset.
+ * DELETE /api/admin/assets/[id] — Soft-delete (archive) or permanent delete.
+ * Pass ?permanent=true to hard-delete from DB and UploadThing.
  */
 export async function DELETE(
   request: NextRequest,
@@ -125,8 +126,41 @@ export async function DELETE(
   if (!auth.authenticated) return auth.response;
 
   const { id } = await params;
+  const permanent = request.nextUrl.searchParams.get("permanent") === "true";
 
   try {
+    if (permanent) {
+      const asset = await prisma.asset.findUnique({ where: { id } });
+      if (!asset) {
+        return NextResponse.json({ error: "Asset not found" }, { status: 404 });
+      }
+
+      // Delete from UploadThing CDN
+      try {
+        const keyMatch = asset.originalUrl.match(/\/f\/([a-zA-Z0-9_-]+)/);
+        if (keyMatch) {
+          const { UTApi } = await import("uploadthing/server");
+          const utapi = new UTApi();
+          await utapi.deleteFiles([keyMatch[1]]);
+        }
+      } catch (utErr) {
+        console.warn("[Asset DELETE] UploadThing cleanup failed:", utErr);
+      }
+
+      // Delete from DB (cascade removes AssetLinks)
+      await prisma.asset.delete({ where: { id } });
+
+      await logActivity({
+        action: "delete",
+        entity: "Asset",
+        entityId: id,
+        details: { originalName: asset.originalName, permanent: true },
+      });
+
+      return NextResponse.json({ success: true, permanent: true });
+    }
+
+    // Soft-delete (archive)
     const asset = await prisma.asset.update({
       where: { id },
       data: {
@@ -146,7 +180,7 @@ export async function DELETE(
   } catch (err) {
     console.error("[Asset DELETE] Error:", err);
     return NextResponse.json(
-      { error: "Failed to archive asset" },
+      { error: "Failed to delete asset" },
       { status: 500 }
     );
   }
