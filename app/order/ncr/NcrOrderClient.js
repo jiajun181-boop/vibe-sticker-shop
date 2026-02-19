@@ -6,6 +6,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   ConfigStep,
   ConfigHero,
+  ConfigProductGallery,
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
@@ -36,7 +37,7 @@ const QUANTITIES = [100, 250, 500, 1000, 2500, 5000];
 
 // ─── Main Component ───
 
-export default function NcrOrderClient({ defaultType }) {
+export default function NcrOrderClient({ defaultType, productImages }) {
   const { t } = useTranslation();
 
   // Form state
@@ -176,6 +177,7 @@ export default function NcrOrderClient({ defaultType }) {
         subtitle={t("ncr.subtitle", "Duplicate, triplicate & invoice forms — carbonless NCR printing")}
         badges={[t("ncr.badge.carbonless"), t("ncr.badge.shipping")]}
       />
+      <ConfigProductGallery images={productImages} />
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">

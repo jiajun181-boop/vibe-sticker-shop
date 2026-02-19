@@ -299,16 +299,26 @@ export default async function ProductPage({ params }) {
   // ── Category configurator: check all configurator types via unified router ──
   const configurator = getConfiguratorForSlug(decodedSlug);
   if (configurator) {
+    // Fetch product images for configurator display
+    const cfgProduct = await prisma.product.findFirst({
+      where: { slug: decodedSlug, isActive: true },
+      include: { images: { orderBy: { sortOrder: "asc" } } },
+    });
+    const cfgAssetImages = cfgProduct ? await getProductAssets(cfgProduct.id) : [];
+    const cfgImages = cfgAssetImages.length > 0
+      ? cfgAssetImages
+      : toClientSafe(cfgProduct?.images || []);
+
     const CONFIGURATOR_COMPONENTS = {
-      stickers: <StickerOrderClient defaultType={configurator.defaultValue} lockedType={true} />,
-      booklets: <BookletOrderClient defaultBinding={configurator.defaultValue} />,
-      ncr: <NcrOrderClient defaultType={configurator.defaultValue} />,
-      banners: <BannerOrderClient defaultType={configurator.defaultValue} />,
-      signs: <SignOrderClient defaultType={configurator.defaultValue} />,
-      vehicle: <VehicleOrderClient defaultType={configurator.defaultValue} />,
-      canvas: <CanvasOrderClient defaultType={configurator.defaultValue} />,
-      surfaces: <SurfaceOrderClient defaultType={configurator.defaultValue} />,
-      "marketing-print": <MarketingPrintOrderClient defaultType={configurator.defaultValue} />,
+      stickers: <StickerOrderClient defaultType={configurator.defaultValue} lockedType={true} productImages={cfgImages} />,
+      booklets: <BookletOrderClient defaultBinding={configurator.defaultValue} productImages={cfgImages} />,
+      ncr: <NcrOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
+      banners: <BannerOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
+      signs: <SignOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
+      vehicle: <VehicleOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
+      canvas: <CanvasOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
+      surfaces: <SurfaceOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
+      "marketing-print": <MarketingPrintOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
     };
     return (
       <Suspense

@@ -10,6 +10,7 @@ import ImageCropper from "@/components/canvas/ImageCropper";
 import {
   ConfigStep,
   ConfigHero,
+  ConfigProductGallery,
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
@@ -41,7 +42,7 @@ const TYPE_DESCRIPTIONS = {
   "split-5": "Pentaptych — image split across 5 panels",
 };
 
-export default function CanvasOrderClient({ defaultType }) {
+export default function CanvasOrderClient({ defaultType, productImages }) {
   const { t } = useTranslation();
 
   // --- State ---
@@ -298,6 +299,7 @@ export default function CanvasOrderClient({ defaultType }) {
         subtitle={t("canvas.subtitle")}
         badges={["Epson Pigment Ink", "Free Shipping $99+", "Digital Proof"]}
       />
+      <ConfigProductGallery images={productImages} />
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">

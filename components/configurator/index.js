@@ -7,3 +7,4 @@ export { default as ArtworkUpload } from "./ArtworkUpload";
 export { default as CustomDimensions } from "./CustomDimensions";
 export { default as useConfiguratorQuote } from "./useConfiguratorQuote";
 export { default as useConfiguratorCart } from "./useConfiguratorCart";
+export { default as ConfigProductGallery } from "./ConfigProductGallery";

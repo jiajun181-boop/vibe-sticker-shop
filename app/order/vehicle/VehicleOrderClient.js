@@ -10,6 +10,7 @@ import {
 import {
   ConfigStep,
   ConfigHero,
+  ConfigProductGallery,
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
@@ -20,7 +21,7 @@ import {
 
 const INCH_TO_CM = 2.54;
 
-export default function VehicleOrderClient({ defaultType }) {
+export default function VehicleOrderClient({ defaultType, productImages }) {
   const { t } = useTranslation();
 
   // --- State ---
@@ -201,6 +202,7 @@ export default function VehicleOrderClient({ defaultType }) {
         subtitle={t("vehicle.subtitle")}
         badges={[t("vehicle.badgeDurable"), t("vehicle.badgeShipping"), t("vehicle.badgeProof")]}
       />
+      <ConfigProductGallery images={productImages} />
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">

@@ -10,6 +10,7 @@ import {
 import {
   ConfigStep,
   ConfigHero,
+  ConfigProductGallery,
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
@@ -21,7 +22,7 @@ import {
 const INCH_TO_CM = 2.54;
 const APPLICATION_LABELS = { window: "Window", wall: "Wall", floor: "Floor" };
 
-export default function SurfaceOrderClient({ defaultType }) {
+export default function SurfaceOrderClient({ defaultType, productImages }) {
   const { t } = useTranslation();
 
   // --- State ---
@@ -212,6 +213,7 @@ export default function SurfaceOrderClient({ defaultType }) {
         subtitle={t("surface.subtitle")}
         badges={[t("surface.badgeDurable"), t("surface.badgeShipping"), t("surface.badgeProof")]}
       />
+      <ConfigProductGallery images={productImages} />
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">

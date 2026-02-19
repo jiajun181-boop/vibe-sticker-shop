@@ -10,6 +10,7 @@ import {
 import {
   ConfigStep,
   ConfigHero,
+  ConfigProductGallery,
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
@@ -20,7 +21,7 @@ import {
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-export default function MarketingPrintOrderClient({ defaultType }) {
+export default function MarketingPrintOrderClient({ defaultType, productImages }) {
   const { t } = useTranslation();
 
   // --- State ---
@@ -130,6 +131,7 @@ export default function MarketingPrintOrderClient({ defaultType }) {
           t("marketingPrint.badgeProof", "Free digital proof"),
         ]}
       />
+      <ConfigProductGallery images={productImages} />
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">

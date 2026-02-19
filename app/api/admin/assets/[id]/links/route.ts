@@ -33,6 +33,15 @@ export async function POST(
       return NextResponse.json({ error: "Asset not found" }, { status: 404 });
     }
 
+    // Check for existing duplicate link
+    const existing = await prisma.assetLink.findFirst({
+      where: { assetId, entityType, entityId, purpose: purpose || "gallery" },
+      include: { asset: true },
+    });
+    if (existing) {
+      return NextResponse.json(existing, { status: 200 });
+    }
+
     // Auto-increment sortOrder if not provided
     let finalSortOrder = sortOrder ?? 0;
     if (sortOrder === undefined || sortOrder === null) {

@@ -5,6 +5,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   ConfigStep,
   ConfigHero,
+  ConfigProductGallery,
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
@@ -111,7 +112,7 @@ function BindingIcon({ type, className = "h-7 w-7" }) {
 
 // ─── Main Component ───
 
-export default function BookletOrderClient({ defaultBinding }) {
+export default function BookletOrderClient({ defaultBinding, productImages }) {
   const { t } = useTranslation();
 
   const [bindingId, setBindingId] = useState(defaultBinding || "saddle-stitch");
@@ -255,6 +256,7 @@ export default function BookletOrderClient({ defaultBinding }) {
         subtitle={t("booklet.subtitle", "Custom booklets, catalogues & programs — saddle stitch, perfect bound or wire-o")}
         badges={[t("booklet.badge.fullColor"), t("booklet.badge.shipping"), t("booklet.badge.proof")]}
       />
+      <ConfigProductGallery images={productImages} />
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">

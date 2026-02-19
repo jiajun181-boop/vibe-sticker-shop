@@ -17,6 +17,7 @@ import {
 import {
   ConfigStep,
   ConfigHero,
+  ConfigProductGallery,
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
@@ -30,7 +31,7 @@ const INCH_TO_CM = 2.54;
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-export default function StickerOrderClient({ defaultType, lockedType = false }) {
+export default function StickerOrderClient({ defaultType, lockedType = false, productImages }) {
   const { t } = useTranslation();
   const searchParams = useSearchParams();
 
@@ -227,6 +228,7 @@ export default function StickerOrderClient({ defaultType, lockedType = false }) 
         subtitle="Choose your type, size, material and quantity — get instant pricing and order online."
         badges={[t("stickerOrder.badgeWaterproof"), t("stickerOrder.badgeShipping"), t("stickerOrder.badgeProof")]}
       />
+      <ConfigProductGallery images={productImages} />
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">

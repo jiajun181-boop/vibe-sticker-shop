@@ -549,7 +549,7 @@ model AssetLink {
 
   createdAt   DateTime     @default(now())
 
-  @@unique([assetId, entityType, entityId, purpose, sortOrder])
+  @@unique([assetId, entityType, entityId, purpose])
   @@index([entityType, entityId, sortOrder])
   @@index([assetId])
 }
