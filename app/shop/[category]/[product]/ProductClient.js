@@ -1513,8 +1513,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             )}
 
             <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 lg:sticky lg:top-24 flex flex-col">
-              {/* PRICE + QUANTITY + ATC (always visible, order-1) */}
-              <div className="order-1 rounded-2xl border border-[var(--color-gray-200)] bg-white p-4 sm:p-5">
+              {/* PRICE + QUANTITY (always visible, order-1) */}
+              <div className="order-1">
                 {inventorySignal && (
                   <div className="mb-3">
                     <span
@@ -1528,8 +1528,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     </span>
                   </div>
                 )}
-                {/* Price display */}
-                <div>
+                {/* Price display (no card border) */}
+                <div className="px-1">
                   {priceData.unpriced ? (
                     <a
                       href={`/quote?product=${product.slug}&name=${encodeURIComponent(product.name)}`}
@@ -1554,8 +1554,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   )}
                 </div>
 
-                {/* Quantity */}
-                <div className="mt-4">
+                {/* Quantity (separate block) */}
+                <div className="mt-4 rounded-2xl border border-[var(--color-gray-200)] bg-white p-4 sm:p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.quantity")}</p>
                   {multiSizeEnabled && useMultiSize ? (
                     <p className="mt-2 text-sm text-[var(--color-gray-700)]">
