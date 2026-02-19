@@ -7,6 +7,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import QuickAddButton from "@/components/product/QuickAddButton";
+import { getProductImage, isSvgImage } from "@/lib/product-image";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -39,19 +40,20 @@ const CATEGORY_USE_CASES = {
 function ProductCard({ product, t, compact }) {
   const href = `/shop/${product.category}/${product.slug}`;
   const image = product.images?.[0];
+  const imageSrc = getProductImage(product, product.category);
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
       <Link href={href} className="block">
         <div className={`relative bg-[var(--color-gray-100)] ${compact ? "aspect-square" : "aspect-[4/3]"}`}>
-          {image?.url ? (
+          {imageSrc ? (
             <Image
-              src={image.url}
+              src={imageSrc}
               alt={image.alt || product.name}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
-              unoptimized={image.url.endsWith(".svg")}
+              unoptimized={isSvgImage(imageSrc)}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--color-gray-100)] to-[var(--color-gray-200)]">

@@ -358,8 +358,8 @@ export default function SubGroupLandingClient({
 
         {/* Quick-jump pill bar */}
         {subGroups.length > 4 && (
-          <div className="sticky top-[64px] z-10 -mx-4 px-4 sm:-mx-6 sm:px-6 mt-6 pb-3 bg-[var(--color-gray-50)]/95 backdrop-blur-sm border-b border-[var(--color-gray-200)]/50">
-            <div ref={pillBarRef} className="flex gap-2 overflow-x-auto scrollbar-hide scroll-fade py-1">
+          <div className="sticky top-[calc(var(--promo-offset,0px)+var(--nav-offset,72px)+8px)] z-10 -mx-4 mt-6 border-b border-[var(--color-gray-200)]/50 bg-[var(--color-gray-50)]/95 px-4 pb-3 backdrop-blur-sm pointer-events-none sm:-mx-6 sm:px-6">
+            <div ref={pillBarRef} className="flex gap-2 overflow-x-auto scrollbar-hide scroll-fade py-1 pointer-events-auto">
               {subGroups.map((group) => (
                 <button
                   key={group.slug}

@@ -8,6 +8,7 @@ import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaro
 import Breadcrumbs from "@/components/Breadcrumbs";
 import QuickAddButton from "@/components/product/QuickAddButton";
 import { useSearchParams } from "next/navigation";
+import { getProductImage, isSvgImage } from "@/lib/product-image";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -60,6 +61,7 @@ function ListIcon({ className }) {
 
 function ProductCardGrid({ product, href, selectedSpec, t }) {
   const image = product.images?.[0];
+  const imageSrc = getProductImage(product, product.category);
   const sizeCount = product.optionsConfig?.sizes?.length || 0;
   const tk = getTurnaround(product);
   const price = product.fromPrice || product.basePrice;
@@ -72,14 +74,14 @@ function ProductCardGrid({ product, href, selectedSpec, t }) {
     >
       <Link href={href} className="block">
       <div className="relative aspect-[4/3] bg-[var(--color-gray-100)]">
-        {image?.url ? (
+        {imageSrc ? (
           <Image
-            src={image.url}
+            src={imageSrc}
             alt={image.alt || product.name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
-            unoptimized={image.url.endsWith(".svg")}
+            unoptimized={isSvgImage(imageSrc)}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--color-gray-100)] to-[var(--color-gray-200)]">
@@ -128,6 +130,7 @@ function ProductCardGrid({ product, href, selectedSpec, t }) {
 
 function ProductCardList({ product, href, selectedSpec, t }) {
   const image = product.images?.[0];
+  const imageSrc = getProductImage(product, product.category);
   const sizeCount = product.optionsConfig?.sizes?.length || 0;
   const tk = getTurnaround(product);
   const price = product.fromPrice || product.basePrice;
@@ -140,14 +143,14 @@ function ProductCardList({ product, href, selectedSpec, t }) {
     >
       <Link href={href} className="flex min-w-0 flex-1 overflow-hidden">
       <div className="relative w-32 sm:w-40 shrink-0 bg-[var(--color-gray-100)]">
-        {image?.url ? (
+        {imageSrc ? (
           <Image
-            src={image.url}
+            src={imageSrc}
             alt={image.alt || product.name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="160px"
-            unoptimized={image.url.endsWith(".svg")}
+            unoptimized={isSvgImage(imageSrc)}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--color-gray-100)] to-[var(--color-gray-200)]">

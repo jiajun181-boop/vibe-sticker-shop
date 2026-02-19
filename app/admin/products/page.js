@@ -369,16 +369,42 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     if (categoryFilter !== "all") params.set("category", categoryFilter);
     if (search) params.set("search", search);
 
-    const catalogParams = new URLSearchParams(params);
-    catalogParams.set("page", "1");
-    catalogParams.set("limit", "1000");
-
     try {
-      const [res, catalogRes] = await Promise.all([
-        fetch(`/api/admin/products?${params}`),
-        fetch(`/api/admin/products?${catalogParams}`),
-      ]);
-      const [data, catalogData] = await Promise.all([res.json(), catalogRes.json()]);
+      const listRes = fetch(`/api/admin/products?${params}`);
+      const firstCatalogPageParams = new URLSearchParams();
+      firstCatalogPageParams.set("page", "1");
+      firstCatalogPageParams.set("limit", "100");
+      if (categoryFilter !== "all") firstCatalogPageParams.set("category", categoryFilter);
+      if (search) firstCatalogPageParams.set("search", search);
+      const catalogFirstRes = fetch(`/api/admin/products?${firstCatalogPageParams}`);
+
+      const [res, firstCatalogRes] = await Promise.all([listRes, catalogFirstRes]);
+      const [data, firstCatalogData] = await Promise.all([res.json(), firstCatalogRes.json()]);
+
+      let allCatalogProducts = Array.isArray(firstCatalogData?.products)
+        ? [...firstCatalogData.products]
+        : [];
+      const totalCatalogPages = Number(firstCatalogData?.pagination?.totalPages || 1);
+
+      if (totalCatalogPages > 1) {
+        const pageRequests = [];
+        for (let p = 2; p <= totalCatalogPages; p += 1) {
+          const nextParams = new URLSearchParams(firstCatalogPageParams.toString());
+          nextParams.set("page", String(p));
+          pageRequests.push(fetch(`/api/admin/products?${nextParams}`));
+        }
+        const pageResponses = await Promise.all(pageRequests);
+        const pageBodies = await Promise.all(pageResponses.map((r) => r.json()));
+        for (const body of pageBodies) {
+          if (Array.isArray(body?.products) && body.products.length) {
+            allCatalogProducts.push(...body.products);
+          }
+        }
+      }
+
+      const dedupedCatalogProducts = Array.from(
+        new Map(allCatalogProducts.map((p) => [p.id, p])).values()
+      );
       try {
         const cfgRes = await fetch("/api/admin/catalog");
         if (cfgRes.ok) {
@@ -398,7 +424,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       }
       setProducts(data.products || []);
       setPagination(data.pagination || null);
-      setCatalogProducts(catalogData.products || []);
+      setCatalogProducts(dedupedCatalogProducts);
     } catch (err) {
       console.error("Failed to load products:", err);
     } finally {

@@ -1534,7 +1534,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   </div>
                 )}
                 {/* Price display */}
-                <div className="flex items-baseline justify-between">
+                <div>
                   {priceData.unpriced ? (
                     <a
                       href={`/quote?product=${product.slug}&name=${encodeURIComponent(product.name)}`}
@@ -1545,17 +1545,19 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   ) : priceData.pending ? (
                     <span className="text-2xl font-bold text-[var(--color-gray-900)]">Calculating...</span>
                   ) : (
-                    <div>
+                    <div className="flex flex-wrap items-end gap-2">
                       <span className="text-2xl font-bold text-[var(--color-gray-900)]">
                         {priceData.isEstimate ? "~\u2009" : ""}{formatCad(priceData.subtotal)}
                       </span>
                       <span className="ml-1 text-xs text-[var(--color-gray-500)]">{t("product.cad")}</span>
+                      {priceData.unitAmount != null && (
+                        <span className="text-[11px] text-[var(--color-gray-600)]">
+                          {priceData.isEstimate ? "~\u2009" : ""}{formatCad(priceData.unitAmount)} {t("product.unit")}
+                        </span>
+                      )}
                       {priceData.isEstimate && !quoteLoading && <span className="ml-2 text-[10px] text-[var(--color-gray-400)]">Est.</span>}
                       {quoteLoading && !hasResolvedQuote && <span className="ml-2 text-xs text-[var(--color-gray-400)]">updating...</span>}
                     </div>
-                  )}
-                  {!priceData.unpriced && priceData.unitAmount != null && (
-                    <span className="text-xs text-[var(--color-gray-900)]">{priceData.isEstimate ? "~\u2009" : ""}{formatCad(priceData.unitAmount)} {t("product.unit")}</span>
                   )}
                 </div>
 
@@ -1567,101 +1569,24 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       {totalMultiQty} pcs across {sizeRows.length} sizes
                     </p>
                   ) : activeQuantityChoices.length > 0 ? (
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => {
-                          const idx = activeQuantityChoices.indexOf(quantity);
-                          const next = idx > 0 ? activeQuantityChoices[idx - 1] : activeQuantityChoices[0];
-                          setQuantityValue(next);
-                        }}
-                        className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]"
-                      >
-                        -
-                      </button>
+                    <div className="mt-2">
                       <select
                         value={String(quantity)}
                         onChange={(e) => setQuantityValue(Number(e.target.value))}
-                        className="min-w-[140px] flex-1 rounded-xl border-2 border-[var(--color-gray-200)] bg-white px-3 py-2.5 text-center text-sm font-semibold text-[var(--color-gray-900)] transition-colors hover:border-[var(--color-gray-400)] sm:w-36 sm:flex-none"
+                        className="w-full rounded-xl border-2 border-[var(--color-gray-200)] bg-white px-3 py-2.5 text-center text-sm font-semibold text-[var(--color-gray-900)] transition-colors hover:border-[var(--color-gray-400)]"
                       >
                         {activeQuantityChoices.map((q) => (
                           <option key={q} value={q}>{q}{q === smartDefaults.minQuantity ? " \u2605" : ""}</option>
                         ))}
                       </select>
-                      <button
-                        onClick={() => {
-                          const idx = activeQuantityChoices.indexOf(quantity);
-                          const next =
-                            idx >= 0 && idx < activeQuantityChoices.length - 1
-                              ? activeQuantityChoices[idx + 1]
-                              : activeQuantityChoices[activeQuantityChoices.length - 1];
-                          setQuantityValue(next);
-                        }}
-                        className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]"
-                      >
-                        +
-                      </button>
                     </div>
                   ) : (
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <button onClick={() => setQuantityValue(quantity - (quantityRange?.step || 1))} className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]">-</button>
-                      <input type="number" value={quantity} onChange={(e) => setQuantityValue(e.target.value)} className="min-w-[140px] flex-1 rounded-xl border-2 border-[var(--color-gray-200)] bg-white px-3 py-2.5 text-center text-sm font-semibold text-[var(--color-gray-900)] transition-colors hover:border-[var(--color-gray-400)] sm:w-36 sm:flex-none" />
-                      <button onClick={() => setQuantityValue(quantity + (quantityRange?.step || 1))} className="h-10 w-10 rounded-xl border-2 border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)]">+</button>
+                    <div className="mt-2">
+                      <input type="number" value={quantity} onChange={(e) => setQuantityValue(e.target.value)} className="w-full rounded-xl border-2 border-[var(--color-gray-200)] bg-white px-3 py-2.5 text-center text-sm font-semibold text-[var(--color-gray-900)] transition-colors hover:border-[var(--color-gray-400)]" />
                     </div>
                   )}
                 </div>
 
-                {/* Add to Cart button */}
-                <div ref={addToCartRef} className="mt-5">
-                  <button
-                    onClick={handleAddToCart}
-                    disabled={!canAddToCart}
-                    className={`btn-primary-pill w-full px-4 py-3.5 text-sm ${
-                      !canAddToCart
-                        ? "bg-[var(--color-gray-300)] cursor-not-allowed"
-                        : added
-                          ? "bg-emerald-600"
-                          : ""
-                    }`}
-                  >
-                    {!canAddToCart
-                      ? priceData.pending
-                        ? "Calculating..."
-                        : priceData.unpriced
-                          ? t("product.priceOnRequest")
-                          : t("product.fixSizeErrors")
-                      : added
-                        ? t("product.added")
-                        : t("product.addToCart")}
-                  </button>
-                </div>
-                <div className="mt-2">
-                  <button
-                    type="button"
-                    onClick={handleBuyNow}
-                    disabled={!canAddToCart || buyNowLoading}
-                    className={`btn-secondary-pill w-full px-4 py-3 text-xs transition-all ${
-                      !canAddToCart || buyNowLoading
-                        ? "cursor-not-allowed border-[var(--color-gray-200)] bg-[var(--color-gray-100)] text-[var(--color-gray-400)]"
-                        : ""
-                    }`}
-                  >
-                    {buyNowLoading ? "Processing..." : "Buy Now"}
-                  </button>
-                </div>
-
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs">
-                  <button
-                    type="button"
-                    onClick={handleDownloadQuotePdf}
-                    disabled={priceData.unpriced}
-                    className="rounded-lg border border-[var(--color-gray-200)] px-3 py-1.5 font-medium text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-300)] hover:text-[var(--color-gray-800)] disabled:opacity-40"
-                  >
-                    Save Quote
-                  </button>
-                  <Link href="/quote" className="rounded-lg border border-[var(--color-gray-200)] px-3 py-1.5 font-medium text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-300)] hover:text-[var(--color-gray-800)]">
-                    Custom Quote
-                  </Link>
-                </div>
               </div>
 
               {/* OPTIONS (collapsed on mobile, order-2) */}
@@ -2505,6 +2430,54 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       onBegin={() => trackUploadStarted({ slug: product.slug })}
                       t={t}
                     />
+                  </div>
+                  <div ref={addToCartRef} className="space-y-2">
+                    <button
+                      onClick={handleAddToCart}
+                      disabled={!canAddToCart}
+                      className={`btn-primary-pill w-full px-4 py-3.5 text-sm ${
+                        !canAddToCart
+                          ? "bg-[var(--color-gray-300)] cursor-not-allowed"
+                          : added
+                            ? "bg-emerald-600"
+                            : ""
+                      }`}
+                    >
+                      {!canAddToCart
+                        ? priceData.pending
+                          ? "Calculating..."
+                          : priceData.unpriced
+                            ? t("product.priceOnRequest")
+                            : t("product.fixSizeErrors")
+                        : added
+                          ? t("product.added")
+                          : t("product.addToCart")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleBuyNow}
+                      disabled={!canAddToCart || buyNowLoading}
+                      className={`btn-secondary-pill w-full px-4 py-3 text-xs transition-all ${
+                        !canAddToCart || buyNowLoading
+                          ? "cursor-not-allowed border-[var(--color-gray-200)] bg-[var(--color-gray-100)] text-[var(--color-gray-400)]"
+                          : ""
+                      }`}
+                    >
+                      {buyNowLoading ? "Processing..." : "Buy Now"}
+                    </button>
+                    <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={handleDownloadQuotePdf}
+                        disabled={priceData.unpriced}
+                        className="rounded-lg border border-[var(--color-gray-200)] px-3 py-1.5 font-medium text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-300)] hover:text-[var(--color-gray-800)] disabled:opacity-40"
+                      >
+                        Save Quote
+                      </button>
+                      <Link href="/quote" className="rounded-lg border border-[var(--color-gray-200)] px-3 py-1.5 font-medium text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-300)] hover:text-[var(--color-gray-800)]">
+                        Custom Quote
+                      </Link>
+                    </div>
                   </div>
               </div>
 
