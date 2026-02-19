@@ -157,6 +157,29 @@ export async function handleCheckoutCompleted(
       });
     }
 
+    // Create auto-generated proofs for items with confirmed die-cut contours
+    for (const item of items) {
+      const meta = item?.meta && typeof item.meta === "object" ? item.meta : null;
+      const proofConfirmed = meta?.proofConfirmed === true || meta?.proofConfirmed === "true";
+      if (!proofConfirmed) continue;
+
+      const proofImageUrl = meta?.processedImageUrl || meta?.artworkUrl || meta?.fileUrl;
+      if (!proofImageUrl) continue;
+
+      await tx.orderProof.create({
+        data: {
+          orderId: newOrder.id,
+          version: 1,
+          imageUrl: proofImageUrl,
+          fileName: meta?.fileName ? `proof-${meta.fileName}` : "auto-proof.png",
+          notes: `Customer-confirmed proof — auto-generated contour with ${meta?.bleedMm || 3}mm bleed`,
+          status: "approved",
+          reviewedAt: new Date(),
+          uploadedBy: "customer",
+        },
+      });
+    }
+
     // Create system note
     await tx.orderNote.create({
       data: {

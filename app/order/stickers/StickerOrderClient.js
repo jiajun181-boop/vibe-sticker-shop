@@ -22,6 +22,7 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
+  ProofPreview,
   useConfiguratorQuote,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -57,6 +58,8 @@ export default function StickerOrderClient({ defaultType, lockedType = false, pr
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
   const [dimErrors, setDimErrors] = useState([]);
+  const [proofConfirmed, setProofConfirmed] = useState(false);
+  const [contourData, setContourData] = useState(null);
 
   // Derived dimensions
   const isCustomSize = sizeIdx === -1;
@@ -120,7 +123,9 @@ export default function StickerOrderClient({ defaultType, lockedType = false, pr
     enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 
-  const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
+  // Die-cut/kiss-cut require proof confirmation when artwork is uploaded
+  const requiresProof = ["die-cut", "kiss-cut"].includes(cuttingId) && uploadedFile;
+  const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0 && (!requiresProof || proofConfirmed);
 
   // --- Tier pricing rows ---
   const tierRows = useMemo(() => {
@@ -151,10 +156,14 @@ export default function StickerOrderClient({ defaultType, lockedType = false, pr
         material: materialId,
         materialName: t(`stickerOrder.mat.${materialId}`),
         fileName: uploadedFile?.name || null,
+        proofConfirmed: proofConfirmed || false,
+        contourSvg: contourData?.contourSvg || null,
+        bleedMm: contourData?.bleedMm || null,
+        processedImageUrl: contourData?.processedImageUrl || null,
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.unitCents, activeQty, cuttingId, widthIn, heightIn, isCustomSize, sizeIdx, cutting, slug, materialId, uploadedFile, t]);
+  }, [quote.quoteData, quote.unitCents, activeQty, cuttingId, widthIn, heightIn, isCustomSize, sizeIdx, cutting, slug, materialId, uploadedFile, proofConfirmed, contourData, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -435,12 +444,41 @@ export default function StickerOrderClient({ defaultType, lockedType = false, pr
             <ConfigStep number={5} title={t("stickerOrder.artwork")} subtitle="Upload now or send later — it's optional" optional>
               <ArtworkUpload
                 uploadedFile={uploadedFile}
-                onUploaded={setUploadedFile}
-                onRemove={() => setUploadedFile(null)}
+                onUploaded={(file) => {
+                  setUploadedFile(file);
+                  setProofConfirmed(false);
+                  setContourData(null);
+                }}
+                onRemove={() => {
+                  setUploadedFile(null);
+                  setProofConfirmed(false);
+                  setContourData(null);
+                }}
                 onBegin={() => trackUploadStarted({ slug })}
                 t={t}
               />
             </ConfigStep>
+
+            {/* STEP 6: Proof Preview (die-cut / kiss-cut only, when artwork uploaded) */}
+            {uploadedFile && ["die-cut", "kiss-cut"].includes(cuttingId) && (
+              <ProofPreview
+                uploadedFile={uploadedFile}
+                widthIn={widthIn}
+                heightIn={heightIn}
+                cuttingId={cuttingId}
+                materialId={materialId}
+                onConfirmProof={(data) => {
+                  setContourData(data);
+                  setProofConfirmed(true);
+                }}
+                onRejectProof={() => {
+                  setUploadedFile(null);
+                  setProofConfirmed(false);
+                  setContourData(null);
+                }}
+                t={t}
+              />
+            )}
           </div>
 
           {/* RIGHT COLUMN — Sticky Price Summary (1/3) */}
