@@ -48,3 +48,6 @@ nul
 /tmp/
 build.log
 
+
+# Terminal Paste Image folder
+.cp-images/
