@@ -348,7 +348,6 @@ export default function SubGroupLandingClient({
                         key={group.slug}
                         group={group}
                         t={t}
-                        
                         stickerConfig={config}
                         isExpanded={isExpanded}
                         onExpand={handleExpand}
@@ -371,7 +370,6 @@ export default function SubGroupLandingClient({
                   key={group.slug}
                   group={group}
                   t={t}
-                  
                   stickerConfig={config}
                   isExpanded={isExpanded}
                   onExpand={handleExpand}
@@ -482,7 +480,6 @@ function SubGroupCardWithExpand({ group, t, stickerConfig, isExpanded, onExpand,
       <SubGroupCard
         group={group}
         t={t}
-        
         stickerConfig={stickerConfig}
         isExpanded={isExpanded}
         onExpand={onExpand}

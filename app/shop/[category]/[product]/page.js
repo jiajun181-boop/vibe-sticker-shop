@@ -268,7 +268,10 @@ export default async function ProductPage({ params }) {
         return { ...product, name: "Table Calendars" };
       }
       return product;
-    });
+    })
+      // Exclude the parent landing slug itself from spec cards.
+      // Example: /shop/.../flyers should list only concrete flyer specs.
+      .filter((p) => p.slug !== decodedSlug);
 
     // Use pre-computed minPrice for sub-product cards (write-time calculation).
     for (const p of dedupedProducts) {
@@ -318,7 +321,7 @@ export default async function ProductPage({ params }) {
       vehicle: <VehicleOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
       canvas: <CanvasOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
       surfaces: <SurfaceOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
-      "marketing-print": <MarketingPrintOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
+      "marketing-print": <MarketingPrintOrderClient defaultType={configurator.defaultValue} hideTypeSelector={true} productImages={cfgImages} />,
     };
     return (
       <Suspense
