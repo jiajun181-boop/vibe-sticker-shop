@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
+import { turnaroundI18nKey } from "@/lib/turnaroundConfig";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { ShapeIcon, getShapeBg } from "@/components/stickers/ShapeIcon";
 import DiscountBadge from "@/components/stickers/DiscountBadge";
@@ -16,20 +16,9 @@ const formatCad = (cents) =>
     cents / 100
   );
 
-// Deterministic pseudo-random number from a string (for social proof)
-function hashCode(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h);
-}
-
-/* ─── Enhanced Sub-Group Card ─── */
-function SubGroupCard({ group, t, maxCount, stickerConfig, isExpanded, onExpand }) {
+/* ─── Sub-Group Card ─── */
+function SubGroupCard({ group, t, stickerConfig, isExpanded, onExpand }) {
   const [hovered, setHovered] = useState(false);
-  const inquiryCount = 5 + (hashCode(group.slug) % 42);
-  const barWidth = maxCount > 0 ? Math.max(8, Math.round((group.count / maxCount) * 100)) : 0;
   const hasConfigurator = !!stickerConfig;
 
   const handleClick = useCallback(
@@ -62,8 +51,6 @@ function SubGroupCard({ group, t, maxCount, stickerConfig, isExpanded, onExpand 
           <CardInner
             group={group}
             t={t}
-            barWidth={barWidth}
-            inquiryCount={inquiryCount}
             stickerConfig={stickerConfig}
             ctaLabel="Configure"
           />
@@ -76,8 +63,6 @@ function SubGroupCard({ group, t, maxCount, stickerConfig, isExpanded, onExpand 
           <CardInner
             group={group}
             t={t}
-            barWidth={barWidth}
-            inquiryCount={inquiryCount}
             stickerConfig={null}
             ctaLabel={t("mp.landing.browse")}
           />
@@ -127,7 +112,7 @@ function SubGroupCard({ group, t, maxCount, stickerConfig, isExpanded, onExpand 
 }
 
 /* ─── Shared card inner content ─── */
-function CardInner({ group, t, barWidth, inquiryCount, stickerConfig, ctaLabel }) {
+function CardInner({ group, t, stickerConfig, ctaLabel }) {
   return (
     <>
       {/* Preview area */}
@@ -166,16 +151,6 @@ function CardInner({ group, t, barWidth, inquiryCount, stickerConfig, ctaLabel }
 
         {/* Corner badges */}
         <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-          {group.hasNew && (
-            <span className="rounded-md bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
-              {t("shop.badge.new")}
-            </span>
-          )}
-          {group.hasFeatured && !group.hasNew && (
-            <span className="rounded-md bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
-              {t("shop.badge.popular")}
-            </span>
-          )}
           {stickerConfig && (
             <DiscountBadge quantities={stickerConfig.quantities} />
           )}
@@ -188,39 +163,19 @@ function CardInner({ group, t, barWidth, inquiryCount, stickerConfig, ctaLabel }
           {group.title}
         </h3>
 
-        {/* Product count + bar */}
-        {group.count > 0 && (
-          <div className="mt-1.5 flex items-center gap-2">
-            <div className="h-1 flex-1 rounded-full bg-[var(--color-gray-100)] overflow-hidden">
-              <div
-                className="h-full rounded-full bg-[var(--color-gray-300)] transition-all duration-500 group-hover:bg-gray-500"
-                style={{ width: `${barWidth}%` }}
-              />
-            </div>
-            <span className="text-[10px] font-medium text-[var(--color-gray-400)] tabular-nums shrink-0">
-              {group.count}
-            </span>
-          </div>
-        )}
-
-        {/* Turnaround + Price badges */}
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {group.turnaround && (
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${turnaroundColor(group.turnaround)}`}>
-              {t(turnaroundI18nKey(group.turnaround))}
-            </span>
-          )}
+        {/* Price + turnaround */}
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
           {group.minPrice > 0 && (
             <span className="text-[11px] font-semibold text-[var(--color-gray-700)]">
               {t("product.from", { price: formatCad(group.minPrice) })}
             </span>
           )}
+          {group.turnaround && (
+            <span className="text-[10px] text-[var(--color-gray-400)]">
+              {t(turnaroundI18nKey(group.turnaround))}
+            </span>
+          )}
         </div>
-
-        {/* Social proof */}
-        <p className="mt-1 text-[10px] text-[var(--color-gray-400)]">
-          {t("shop.inquiredRecently", { count: inquiryCount })}
-        </p>
 
         <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] group-hover:text-[var(--color-gray-900)] transition-colors">
           {ctaLabel}
@@ -253,11 +208,6 @@ export default function SubGroupLandingClient({
   const lastActiveSlugRef = useRef(null);
 
   const isStickersCategory = category === "stickers-labels-decals";
-
-  const maxCount = useMemo(
-    () => Math.max(...subGroups.map((sg) => sg.count || 0), 1),
-    [subGroups]
-  );
 
   // IntersectionObserver to track which sub-group card is in view
   useEffect(() => {
@@ -398,7 +348,7 @@ export default function SubGroupLandingClient({
                         key={group.slug}
                         group={group}
                         t={t}
-                        maxCount={maxCount}
+                        
                         stickerConfig={config}
                         isExpanded={isExpanded}
                         onExpand={handleExpand}
@@ -421,7 +371,7 @@ export default function SubGroupLandingClient({
                   key={group.slug}
                   group={group}
                   t={t}
-                  maxCount={maxCount}
+                  
                   stickerConfig={config}
                   isExpanded={isExpanded}
                   onExpand={handleExpand}
@@ -526,13 +476,13 @@ export default function SubGroupLandingClient({
 }
 
 /* ─── Card + Expandable Mini-Configurator wrapper ─── */
-function SubGroupCardWithExpand({ group, t, maxCount, stickerConfig, isExpanded, onExpand, expandRef, expandedCard }) {
+function SubGroupCardWithExpand({ group, t, stickerConfig, isExpanded, onExpand, expandRef, expandedCard }) {
   return (
     <>
       <SubGroupCard
         group={group}
         t={t}
-        maxCount={maxCount}
+        
         stickerConfig={stickerConfig}
         isExpanded={isExpanded}
         onExpand={onExpand}
