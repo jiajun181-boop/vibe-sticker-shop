@@ -1554,8 +1554,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   )}
                 </div>
 
-                {/* Quantity (separate block) */}
-                <div className="mt-4 rounded-2xl border border-[var(--color-gray-200)] bg-white p-4 sm:p-5">
+                {/* Quantity (separate, no container card) */}
+                <div className="mt-4 px-1">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.quantity")}</p>
                   {multiSizeEnabled && useMultiSize ? (
                     <p className="mt-2 text-sm text-[var(--color-gray-700)]">
