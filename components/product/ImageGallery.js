@@ -20,7 +20,23 @@ export default function ImageGallery({ images, productName }) {
   const safeName = productName || "Product image";
 
   const [active, setActive] = useState(0);
-  const activeIndex = list.length > 0 ? active % list.length : 0;
+  const [failed, setFailed] = useState(() => new Set());
+  const listKey = useMemo(() => list.map((img) => img.url).join("|"), [list]);
+
+  useEffect(() => {
+    setActive(0);
+    setFailed(new Set());
+  }, [listKey]);
+
+  const activeIndex = useMemo(() => {
+    if (list.length === 0) return 0;
+    const normalized = ((active % list.length) + list.length) % list.length;
+    if (!failed.has(normalized)) return normalized;
+    for (let i = 0; i < list.length; i += 1) {
+      if (!failed.has(i)) return i;
+    }
+    return normalized;
+  }, [active, list.length, failed]);
   const activeImage = list[activeIndex] || null;
 
   const canNav = list.length > 1;
@@ -81,6 +97,14 @@ export default function ImageGallery({ images, productName }) {
             alt={activeImage.alt || safeName}
             fill
             className="object-cover transition-transform duration-500 hover:scale-[1.02]"
+            onError={() => {
+              setFailed((prev) => {
+                if (prev.has(activeIndex)) return prev;
+                const next = new Set(prev);
+                next.add(activeIndex);
+                return next;
+              });
+            }}
             style={{
               objectPosition: `${(activeImage.focalX ?? 0.5) * 100}% ${(activeImage.focalY ?? 0.5) * 100}%`,
             }}
@@ -142,13 +166,26 @@ export default function ImageGallery({ images, productName }) {
                 src={img.url}
                 alt={img.alt || safeName}
                 fill
-                className="object-cover"
+                className={`object-cover ${failed.has(idx) ? "opacity-0" : ""}`}
+                onError={() => {
+                  setFailed((prev) => {
+                    if (prev.has(idx)) return prev;
+                    const next = new Set(prev);
+                    next.add(idx);
+                    return next;
+                  });
+                }}
                 style={{
                   objectPosition: `${(img.focalX ?? 0.5) * 100}% ${(img.focalY ?? 0.5) * 100}%`,
                 }}
                 sizes="64px"
                 unoptimized={img.mimeType === "image/svg+xml" || img.url.endsWith(".svg")}
               />
+              {failed.has(idx) && (
+                <span className="absolute inset-0 flex items-center justify-center bg-[var(--color-gray-100)] text-[10px] font-semibold text-[var(--color-gray-500)]">
+                  ERR
+                </span>
+              )}
             </button>
           ))}
         </div>

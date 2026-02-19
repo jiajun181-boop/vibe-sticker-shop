@@ -389,8 +389,20 @@ export default function ProductDetailPage() {
     if (!confirm("Delete this image?")) return;
     try {
       const res = await fetch(`/api/admin/products/${productId}/images?imageId=${imageId}`, { method: "DELETE" });
-      if (res.ok) { fetchProduct(); showMsg("Image deleted"); }
-    } catch { showMsg("Failed to delete image", true); }
+      if (res.ok) {
+        fetchProduct();
+        showMsg("Image deleted");
+        return;
+      }
+      let errorMsg = "Failed to delete image";
+      try {
+        const data = await res.json();
+        if (data?.error) errorMsg = data.error;
+      } catch {}
+      showMsg(errorMsg, true);
+    } catch {
+      showMsg("Failed to delete image", true);
+    }
   }
 
   function triggerReplaceImage(imageId) {

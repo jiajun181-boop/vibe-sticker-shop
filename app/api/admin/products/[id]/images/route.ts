@@ -150,15 +150,57 @@ export async function DELETE(
     return NextResponse.json({ error: "imageId is required" }, { status: 400 });
   }
 
-  // Fetch image URL before deleting so we can clean up UploadThing CDN
-  const image = await prisma.productImage.findUnique({
+  // Ensure this image belongs to the current product.
+  const image = await prisma.productImage.findFirst({
     where: { id: imageId, productId: id },
-    select: { url: true },
+    select: { id: true, url: true },
+  });
+  if (!image) {
+    return NextResponse.json({ error: "Image not found for this product" }, { status: 404 });
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.productImage.delete({
+      where: { id: image.id },
+    });
+
+    // Keep sortOrder dense after deletion so "first image = cover" remains stable.
+    const remaining = await tx.productImage.findMany({
+      where: { productId: id },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true },
+    });
+
+    if (remaining.length > 0) {
+      await Promise.all(
+        remaining.map((img, idx) =>
+          tx.productImage.update({
+            where: { id: img.id },
+            data: { sortOrder: idx },
+          })
+        )
+      );
+    }
   });
 
-  await prisma.productImage.delete({
-    where: { id: imageId, productId: id },
-  });
+  // Also remove matching asset-system links for this product.
+  // The storefront prefers AssetLink images when present, so deleting only
+  // legacy ProductImage can appear as "not deleted" on the frontend.
+  if (image.url) {
+    const links = await prisma.assetLink.findMany({
+      where: {
+        entityType: "product",
+        entityId: id,
+        asset: { originalUrl: image.url },
+      },
+      select: { id: true },
+    });
+    if (links.length > 0) {
+      await prisma.assetLink.deleteMany({
+        where: { id: { in: links.map((l) => l.id) } },
+      });
+    }
+  }
 
   // Permanently delete from UploadThing CDN
   if (image?.url) {

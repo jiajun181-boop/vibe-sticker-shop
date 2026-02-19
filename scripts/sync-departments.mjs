@@ -21,7 +21,7 @@ const NEW_DEPARTMENT_META = {
   "stickers-labels-decals": { title: "Stickers & Labels" },
   "signs-rigid-boards": { title: "Signs & Rigid Boards" },
   "banners-displays": { title: "Banners & Displays" },
-  "windows-walls-floors": { title: "Windows/Walls/Floors Decals" },
+  "windows-walls-floors": { title: "Windows, Walls & Floors Decals" },
   "vehicle-graphics-fleet": { title: "Vehicle & Fleet Graphics" },
 };
 

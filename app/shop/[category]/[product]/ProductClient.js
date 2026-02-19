@@ -27,7 +27,7 @@ import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import {
   HST_RATE, PRESET_QUANTITIES, INCH_TO_CM,
   createSizeRowId, normalizeInches, formatCad,
-  parseInventorySignal, applyAllowlist, getStartingUnitPrice,
+  parseInventorySignal, applyAllowlist,
   normalizeCheckoutMeta, parseMaterials, parseFinishings,
   parseAddons, parseScenes, parseSizeOptions, parseQuantityRange,
   buildVariantConfig,
@@ -40,7 +40,7 @@ const StampEditor = dynamic(() => import("@/components/product/StampEditor"), {
 
 const MAX_SIZE_BOXES = 10;
 
-function SizeGrid({ sizeOptions, selectedSizeLabel, onSelect, getStartingUnitPrice, formatCad, label, t }) {
+function SizeGrid({ sizeOptions, selectedSizeLabel, onSelect, label, t }) {
   const [showAll, setShowAll] = useState(false);
   const hasMore = sizeOptions.length > MAX_SIZE_BOXES;
   const visible = hasMore && !showAll ? sizeOptions.slice(0, MAX_SIZE_BOXES) : sizeOptions;
@@ -50,9 +50,6 @@ function SizeGrid({ sizeOptions, selectedSizeLabel, onSelect, getStartingUnitPri
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{label}</p>
       <div className="mt-2 grid grid-cols-2 gap-2">
         {visible.map((o) => {
-          const dims = o.widthIn && o.heightIn ? `${o.widthIn}" x ${o.heightIn}"` : null;
-          const subtitle = dims || o.notes || null;
-          const unitPrice = getStartingUnitPrice(o);
           const selected = selectedSizeLabel === o.label;
           return (
             <button
@@ -71,8 +68,6 @@ function SizeGrid({ sizeOptions, selectedSizeLabel, onSelect, getStartingUnitPri
                 }`}>{"\u2605"}</span>
               )}
               <span className="block text-sm font-semibold">{o.displayLabel || o.label}</span>
-              {subtitle && <span className={`mt-0.5 block text-[11px] ${selected ? "text-[var(--color-gray-300)]" : "text-[var(--color-gray-500)]"}`}>{subtitle}</span>}
-              {unitPrice && <span className={`mt-1 block text-xs font-bold ${selected ? "text-[var(--color-gray-200)]" : "text-[var(--color-gray-700)]"}`}>{t("product.from", { price: formatCad(unitPrice) })}/ea</span>}
             </button>
           );
         })}
@@ -1545,19 +1540,17 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                   ) : priceData.pending ? (
                     <span className="text-2xl font-bold text-[var(--color-gray-900)]">Calculating...</span>
                   ) : (
-                    <div className="flex flex-wrap items-end gap-2">
+                    <div>
                       <span className="text-2xl font-bold text-[var(--color-gray-900)]">
                         {priceData.isEstimate ? "~\u2009" : ""}{formatCad(priceData.subtotal)}
                       </span>
                       <span className="ml-1 text-xs text-[var(--color-gray-500)]">{t("product.cad")}</span>
-                      {priceData.unitAmount != null && (
-                        <span className="text-[11px] text-[var(--color-gray-600)]">
-                          {priceData.isEstimate ? "~\u2009" : ""}{formatCad(priceData.unitAmount)} {t("product.unit")}
-                        </span>
-                      )}
                       {priceData.isEstimate && !quoteLoading && <span className="ml-2 text-[10px] text-[var(--color-gray-400)]">Est.</span>}
                       {quoteLoading && !hasResolvedQuote && <span className="ml-2 text-xs text-[var(--color-gray-400)]">updating...</span>}
                     </div>
+                  )}
+                  {!priceData.unpriced && priceData.unitAmount != null && (
+                    <p className="mt-1 text-xs text-[var(--color-gray-700)]">{priceData.isEstimate ? "~\u2009" : ""}{formatCad(priceData.unitAmount)} {t("product.unit")}</p>
                   )}
                 </div>
 
@@ -2149,13 +2142,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.size")}</p>
                         <div className="mt-2 grid grid-cols-2 gap-2">
                           {variantConfig.bases.map((base) => {
-                            const anyOpt = Object.values(variantConfig.byBase[base])[0];
-                            const dims = anyOpt?.widthIn && anyOpt?.heightIn ? `${anyOpt.widthIn}" x ${anyOpt.heightIn}"` : (anyOpt?.notes || null);
-                            let minPrice = Infinity;
-                            for (const opt of Object.values(variantConfig.byBase[base])) {
-                              const p = getStartingUnitPrice(opt);
-                              if (p !== null) minPrice = Math.min(minPrice, p);
-                            }
                             const isRec = variantConfig.recommendedBases.has(base);
                             const selected = variantBase === base;
                             return (
@@ -2175,8 +2161,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                   }`}>{"\u2605"}</span>
                                 )}
                                 <span className="block text-sm font-semibold">{base}</span>
-                                {dims && <span className={`mt-0.5 block text-[11px] ${selected ? "text-[var(--color-gray-300)]" : "text-[var(--color-gray-500)]"}`}>{dims}</span>}
-                                {minPrice < Infinity && <span className={`mt-1 block text-xs font-bold ${selected ? "text-[var(--color-gray-200)]" : "text-[var(--color-gray-700)]"}`}>{t("product.from", { price: formatCad(minPrice) })}/ea</span>}
                               </button>
                             );
                           })}
@@ -2214,8 +2198,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             setSelectedSizeLabel(label);
                             trackOptionChange({ slug: product.slug, option: "size", value: label, quantity, pricingModel: product.pricingPreset?.model });
                           }}
-                          getStartingUnitPrice={getStartingUnitPrice}
-                          formatCad={formatCad}
                           label={uiConfig?.sizeToggleLabel || t("product.size")}
                           t={t}
                         />
