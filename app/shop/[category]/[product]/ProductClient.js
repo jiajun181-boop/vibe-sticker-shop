@@ -2264,7 +2264,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     </>
                   )}
 
-                  {selectedSize?.notes && !isCustomSize && <p className="text-xs text-[var(--color-gray-500)]">{selectedSize.notes}</p>}
                 </div>
               )}
 
