@@ -131,7 +131,7 @@ function CardInner({ group, t, barWidth, inquiryCount, stickerConfig, ctaLabel }
   return (
     <>
       {/* Preview area */}
-      <div className="relative aspect-[4/3] bg-[var(--color-gray-100)]">
+      <div className="relative aspect-square sm:aspect-[4/3] bg-[var(--color-gray-100)]">
         {stickerConfig ? (
           /* Shape icon for sticker configurator cards */
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${getShapeBg(stickerConfig.cuttingTypeId)}`}>
@@ -183,8 +183,8 @@ function CardInner({ group, t, barWidth, inquiryCount, stickerConfig, ctaLabel }
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-moon-gold)] transition-colors">
+      <div className="flex flex-1 flex-col p-2.5 sm:p-4">
+        <h3 className="text-xs sm:text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-moon-gold)] transition-colors">
           {group.title}
         </h3>
 
@@ -389,7 +389,7 @@ export default function SubGroupLandingClient({
                 <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">
                   {segment.title}
                 </h2>
-                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 xl:grid-cols-4">
                   {segment.items.map((group) => {
                     const config = stickerConfigData[group.slug] || null;
                     const isExpanded = expandedCard === group.slug;
@@ -412,7 +412,7 @@ export default function SubGroupLandingClient({
             ))}
           </div>
         ) : (
-          <div className={`grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 ${subGroups.length > 4 ? "mt-4" : "mt-8"}`}>
+          <div className={`grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 xl:grid-cols-4 ${subGroups.length > 4 ? "mt-4" : "mt-8"}`}>
             {filteredSubGroups.map((group) => {
               const config = stickerConfigData[group.slug] || null;
               const isExpanded = expandedCard === group.slug;
