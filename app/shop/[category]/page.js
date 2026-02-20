@@ -8,6 +8,7 @@ import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import { getCuttingTypeForSlug, getCuttingType } from "@/lib/sticker-order-config";
 import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
+import SignsCategoryClient from "./SignsCategoryClient";
 
 export const revalidate = 120;
 
@@ -92,21 +93,30 @@ const STICKERS_SEGMENTS = [
   },
 ];
 
-const SIGNS_SEGMENTS = [
+const SIGNS_PRODUCT_SECTIONS = [
   {
-    key: "coroplast-signs",
+    key: "coroplast",
     title: "Coroplast Signs",
-    slugs: ["real-estate-signs", "yard-lawn-signs", "construction-signs", "custom-coroplast"],
+    description: "Durable outdoor signage \u2014 weatherproof, UV resistant",
+    productSlugs: ["yard-sign", "real-estate-sign", "construction-site-signs", "coroplast-signs"],
+    noImageGradient: "from-sky-100 to-emerald-100",
+    noImageIcon: "\uD83E\uDEA7",
   },
   {
-    key: "foam-board-displays",
+    key: "foam-board",
     title: "Foam Board Displays",
-    slugs: ["event-photo-boards", "event-signs", "presentation-boards", "custom-foam-board"],
+    description: "Lightweight indoor boards \u2014 events, presentations, photo props",
+    productSlugs: ["selfie-frame-board", "welcome-sign-board", "tri-fold-presentation-board", "foam-board"],
+    noImageGradient: "from-orange-100 to-amber-100",
+    noImageIcon: "\uD83D\uDDBC\uFE0F",
   },
   {
     key: "accessories",
     title: "Accessories",
-    slugs: ["a-frames-signs", "sign-stakes", "real-estate-frames"],
+    description: "Stands, stakes & frames for your signs",
+    productSlugs: ["a-frame-sign-stand", "h-stakes", "real-estate-frame"],
+    noImageGradient: "from-gray-200 to-gray-300",
+    noImageIcon: "\uD83D\uDD27",
   },
 ];
 
@@ -239,13 +249,15 @@ export async function generateMetadata({ params }) {
   if (!meta) return {};
 
   const CATEGORY_TITLES = {
-    "stickers-labels-decals": "Custom Stickers & Labels Toronto | La Lunar Printing",
+    "stickers-labels-decals": "Stickers & Labels | La Lunar Printing",
+    "signs-rigid-boards": "Custom Signs & Display Boards Toronto | Coroplast & Foam Board | La Lunar Printing",
   };
   const title = CATEGORY_TITLES[decoded] || `${meta.title} | La Lunar Printing`;
 
   const CATEGORY_DESCRIPTIONS = {
     "stickers-labels-decals": "Custom die-cut stickers, kiss-cut stickers, sticker sheets, roll labels & vinyl lettering. Waterproof, UV-protected. Fast turnaround in Toronto.",
     "banners-displays": "Custom printed vinyl banners, mesh banners, roll-up stands, and display solutions in Toronto. Same day available.",
+    "signs-rigid-boards": "Custom printed Coroplast signs and foam board displays in Toronto. Real estate signs, yard signs, event backdrops, photo boards. Same day available. Free GTA delivery.",
   };
   const description = CATEGORY_DESCRIPTIONS[decoded]
     || `Custom ${meta.title.toLowerCase()} printing — professional quality, fast turnaround in Toronto & the GTA.`;
@@ -326,6 +338,29 @@ export default async function CategoryPage({ params }) {
   for (const p of products) {
     p.fromPrice = p.displayFromPrice || p.minPrice || computeFromPrice(p);
     p.quickAddQty = getSmartDefaults(p).minQuantity;
+  }
+
+  // Signs & Display Boards — flat sectioned layout (no sub-group landings)
+  if (decoded === "signs-rigid-boards") {
+    const sections = SIGNS_PRODUCT_SECTIONS.map((section) => {
+      const slugSet = new Set(section.productSlugs);
+      const sectionProducts = products.filter((p) => slugSet.has(p.slug));
+      // Sort by the order defined in productSlugs
+      sectionProducts.sort((a, b) => section.productSlugs.indexOf(a.slug) - section.productSlugs.indexOf(b.slug));
+      return {
+        ...section,
+        products: sectionProducts,
+      };
+    }).filter((s) => s.products.length > 0);
+
+    return (
+      <SignsCategoryClient
+        category={decoded}
+        categoryTitle={meta?.title || "Signs & Display Boards"}
+        sections={toClientSafe(sections)}
+        totalCount={products.length}
+      />
+    );
   }
 
   // If category has sub-groups, render sub-group card landing instead of flat product list
@@ -434,7 +469,6 @@ export default async function CategoryPage({ params }) {
     const SEGMENT_MAP = {
       "marketing-business-print": MARKETING_SEGMENTS,
       "stickers-labels-decals": STICKERS_SEGMENTS,
-      "signs-rigid-boards": SIGNS_SEGMENTS,
       "banners-displays": BANNERS_DISPLAYS_SEGMENTS,
       "windows-walls-floors": WINDOWS_WALLS_FLOORS_SEGMENTS,
       "vehicle-graphics-fleet": VEHICLE_GRAPHICS_FLEET_SEGMENTS,
