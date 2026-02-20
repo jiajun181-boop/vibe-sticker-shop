@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Greeting Cards — Order Online | Vibe Sticker Shop",
+    title: "Custom Greeting Cards — Order Online | La Lunar Printing",
     description:
       "Order custom greeting cards with matching envelopes. Premium paper, full color, scored and folded.",
     openGraph: {

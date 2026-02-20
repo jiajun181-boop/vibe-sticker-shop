@@ -4,7 +4,7 @@ import DecalOrderClient from "./DecalOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Decals — Order Online | Vibe Sticker Shop",
+    title: "Custom Decals — Order Online | La Lunar Printing",
     description:
       "Order custom adhesive decals for windows, walls, and floors. Indoor and outdoor options with clear, white, and perforated vinyl.",
     openGraph: {

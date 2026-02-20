@@ -4,7 +4,7 @@ import FabricBannerOrderClient from "./FabricBannerOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Fabric Banners — Order Online | Vibe Sticker Shop",
+    title: "Custom Fabric Banners — Order Online | La Lunar Printing",
     description: "Order custom fabric banners for trade shows, events, and indoor displays.",
     openGraph: { title: "Custom Fabric Banners — Order Online", url: "/order/fabric-banners" },
   };

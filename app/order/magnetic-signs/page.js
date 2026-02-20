@@ -4,7 +4,7 @@ import MagneticSignOrderClient from "./MagneticSignOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Magnetic Signs — Order Online | Vibe Sticker Shop",
+    title: "Custom Magnetic Signs — Order Online | La Lunar Printing",
     description: "Order custom magnetic signs for vehicles, removable and repositionable.",
     openGraph: { title: "Custom Magnetic Signs — Order Online", url: "/order/magnetic-signs" },
   };

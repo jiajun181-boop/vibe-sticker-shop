@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Envelopes — Order Online | Vibe Sticker Shop",
+    title: "Custom Envelopes — Order Online | La Lunar Printing",
     description:
       "Order custom printed envelopes online. Business, invitation, and catalog sizes with window and full-color printing options.",
     openGraph: {

@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Rack Cards — Order Online | Vibe Sticker Shop",
+    title: "Custom Rack Cards — Order Online | La Lunar Printing",
     description:
       "Order custom rack cards for brochure holders and displays. Full color on premium card stock.",
     openGraph: {

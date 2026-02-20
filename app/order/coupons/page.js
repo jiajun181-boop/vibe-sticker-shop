@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Coupons — Order Online | Vibe Sticker Shop",
+    title: "Custom Coupons — Order Online | La Lunar Printing",
     description:
       "Order custom printed coupons and vouchers with optional perforation and sequential numbering.",
     openGraph: {

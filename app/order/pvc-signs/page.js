@@ -4,7 +4,7 @@ import PvcSignOrderClient from "./PvcSignOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom PVC Signs — Order Online | Vibe Sticker Shop",
+    title: "Custom PVC Signs — Order Online | La Lunar Printing",
     description: "Order custom PVC (Sintra) signs for indoor and outdoor signage.",
     openGraph: { title: "Custom PVC Signs — Order Online", description: "Configure and order custom PVC signs. Choose thickness, size, and print options.", url: "/order/pvc-signs" },
   };

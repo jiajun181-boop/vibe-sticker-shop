@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Flyers — Order Online | Vibe Sticker Shop",
+    title: "Custom Flyers — Order Online | La Lunar Printing",
     description:
       "Order custom flyers online. Small, standard, and tabloid sizes on premium paper stocks with optional coating and double-sided printing.",
     openGraph: {

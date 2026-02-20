@@ -4,7 +4,7 @@ import FoamBoardOrderClient from "./FoamBoardOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Foam Board Signs — Order Online | Vibe Sticker Shop",
+    title: "Custom Foam Board Signs — Order Online | La Lunar Printing",
     description: "Order custom foam board signs for displays, presentations, and indoor signage.",
     openGraph: { title: "Custom Foam Board Signs — Order Online", description: "Configure and order custom foam board signs. Choose thickness, size, and print options.", url: "/order/foam-board-signs" },
   };

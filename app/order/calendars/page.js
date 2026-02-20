@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Calendars — Order Online | Vibe Sticker Shop",
+    title: "Custom Calendars — Order Online | La Lunar Printing",
     description:
       "Order custom desk calendars and wall calendars online. Wire-O binding, premium paper, full color printing.",
     openGraph: {

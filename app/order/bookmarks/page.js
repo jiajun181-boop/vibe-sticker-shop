@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Bookmarks — Order Online | Vibe Sticker Shop",
+    title: "Custom Bookmarks — Order Online | La Lunar Printing",
     description:
       "Order custom printed bookmarks. Premium card stock with optional lamination and tassel hole.",
     openGraph: {

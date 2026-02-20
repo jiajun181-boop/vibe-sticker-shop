@@ -4,7 +4,7 @@ import IndustrialLabelOrderClient from "./IndustrialLabelOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Industrial & Asset Labels — Order Online | Vibe Sticker Shop",
+    title: "Industrial & Asset Labels — Order Online | La Lunar Printing",
     description: "Order custom industrial labels — asset tags, pipe markers, warehouse labels, and cable labels.",
     openGraph: { title: "Industrial & Asset Labels — Order Online", description: "Configure and order custom industrial labels. Choose type, material, size, and quantity.", url: "/order/industrial-labels" },
   };

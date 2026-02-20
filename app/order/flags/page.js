@@ -4,7 +4,7 @@ import FlagOrderClient from "./FlagOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Flags & Feather Banners — Order Online | Vibe Sticker Shop",
+    title: "Custom Flags & Feather Banners — Order Online | La Lunar Printing",
     description: "Order custom feather flags, teardrop flags, and rectangular flags.",
     openGraph: { title: "Custom Flags — Order Online", url: "/order/flags" },
   };

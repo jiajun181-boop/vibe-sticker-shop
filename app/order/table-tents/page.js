@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Table Tents — Order Online | Vibe Sticker Shop",
+    title: "Custom Table Tents — Order Online | La Lunar Printing",
     description:
       "Order custom printed table tents for restaurants, events, and retail displays.",
     openGraph: {

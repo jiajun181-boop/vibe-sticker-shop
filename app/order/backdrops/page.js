@@ -4,7 +4,7 @@ import BackdropOrderClient from "./BackdropOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Backdrops & Pop-Ups — Order Online | Vibe Sticker Shop",
+    title: "Custom Backdrops & Pop-Ups — Order Online | La Lunar Printing",
     description: "Order custom backdrops and pop-up displays for events, photos, and trade shows.",
     openGraph: { title: "Custom Backdrops — Order Online", url: "/order/backdrops" },
   };

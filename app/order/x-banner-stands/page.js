@@ -4,7 +4,7 @@ import XBannerStandOrderClient from "./XBannerStandOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "X-Banner Stands — Order Online | Vibe Sticker Shop",
+    title: "X-Banner Stands — Order Online | La Lunar Printing",
     description: "Order custom X-banner stands — lightweight and portable display solution.",
     openGraph: { title: "X-Banner Stands — Order Online", url: "/order/x-banner-stands" },
   };

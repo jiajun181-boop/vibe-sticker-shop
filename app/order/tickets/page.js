@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Tickets — Order Online | Vibe Sticker Shop",
+    title: "Custom Tickets — Order Online | La Lunar Printing",
     description:
       "Order custom event tickets and raffle tickets with tear-off stubs and sequential numbering.",
     openGraph: {

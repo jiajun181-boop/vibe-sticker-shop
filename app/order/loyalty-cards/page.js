@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Loyalty Cards — Order Online | Vibe Sticker Shop",
+    title: "Custom Loyalty Cards — Order Online | La Lunar Printing",
     description:
       "Order custom printed loyalty and rewards cards with punch options.",
     openGraph: {

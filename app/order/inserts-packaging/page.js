@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Packaging Inserts & Seals — Order Online | Vibe Sticker Shop",
+    title: "Packaging Inserts & Seals — Order Online | La Lunar Printing",
     description:
       "Order custom packaging inserts, thank-you cards, and branded seals.",
     openGraph: {

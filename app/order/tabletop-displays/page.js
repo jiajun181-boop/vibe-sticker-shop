@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Tabletop Displays — Order Online | Vibe Sticker Shop",
+    title: "Tabletop Displays — Order Online | La Lunar Printing",
     description:
       "Order custom tabletop displays for trade shows, retail counters, and events.",
     openGraph: {

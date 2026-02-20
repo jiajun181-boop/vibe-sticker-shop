@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Door Hangers — Order Online | Vibe Sticker Shop",
+    title: "Custom Door Hangers — Order Online | La Lunar Printing",
     description:
       "Order custom door hangers with optional tear-off perforation. Premium card stock, full color printing.",
     openGraph: {

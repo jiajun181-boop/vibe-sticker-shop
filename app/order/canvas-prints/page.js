@@ -4,7 +4,7 @@ import CanvasPrintOrderClient from "./CanvasPrintOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Canvas Prints — Order Online | Vibe Sticker Shop",
+    title: "Custom Canvas Prints — Order Online | La Lunar Printing",
     description: "Order custom canvas prints for wall art, photography, and business displays.",
     openGraph: { title: "Custom Canvas Prints — Order Online", url: "/order/canvas-prints" },
   };

@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Menus — Order Online | Vibe Sticker Shop",
+    title: "Custom Menus — Order Online | La Lunar Printing",
     description:
       "Order custom restaurant menus online. Flat, folded, laminated, and takeout insert options on premium paper stocks.",
     openGraph: {

@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Waivers & Releases — Order Online | Vibe Sticker Shop",
+    title: "Custom Waivers & Releases — Order Online | La Lunar Printing",
     description:
       "Order custom printed waivers and release forms with optional numbering and binding.",
     openGraph: {

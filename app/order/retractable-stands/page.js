@@ -4,7 +4,7 @@ import RetractableStandOrderClient from "./RetractableStandOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Retractable Banner Stands — Order Online | Vibe Sticker Shop",
+    title: "Retractable Banner Stands — Order Online | La Lunar Printing",
     description: "Order custom retractable roll-up banner stands for trade shows and events.",
     openGraph: { title: "Retractable Banner Stands — Order Online", url: "/order/retractable-stands" },
   };

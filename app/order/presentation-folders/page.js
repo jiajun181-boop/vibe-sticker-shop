@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Presentation Folders — Order Online | Vibe Sticker Shop",
+    title: "Custom Presentation Folders — Order Online | La Lunar Printing",
     description:
       "Order custom presentation folders with pockets and business card slits. Premium card stock with coating options.",
     openGraph: {

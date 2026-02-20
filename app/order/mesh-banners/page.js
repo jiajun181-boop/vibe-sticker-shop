@@ -4,7 +4,7 @@ import MeshBannerOrderClient from "./MeshBannerOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Mesh Banners — Order Online | Vibe Sticker Shop",
+    title: "Custom Mesh Banners — Order Online | La Lunar Printing",
     description: "Order custom mesh banners — wind-resistant for fences and outdoor use.",
     openGraph: { title: "Custom Mesh Banners — Order Online", url: "/order/mesh-banners" },
   };

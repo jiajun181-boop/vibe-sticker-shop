@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Notepads — Order Online | Vibe Sticker Shop",
+    title: "Custom Notepads — Order Online | La Lunar Printing",
     description:
       "Order custom printed notepads. Choose page count, size, and binding style for branded office stationery.",
     openGraph: {

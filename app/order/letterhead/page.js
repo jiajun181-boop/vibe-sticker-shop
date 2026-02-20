@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Letterhead — Order Online | Vibe Sticker Shop",
+    title: "Custom Letterhead — Order Online | La Lunar Printing",
     description:
       "Order custom letterhead on premium bond and offset papers. Professional business stationery with full color printing.",
     openGraph: {

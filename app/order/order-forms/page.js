@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Order Forms — Order Online | Vibe Sticker Shop",
+    title: "Custom Order Forms — Order Online | La Lunar Printing",
     description:
       "Order custom printed order forms with optional numbering and padding.",
     openGraph: {

@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Invitation Cards — Order Online | Vibe Sticker Shop",
+    title: "Custom Invitation Cards — Order Online | La Lunar Printing",
     description:
       "Order custom invitation cards for weddings, events, and parties. Premium paper with optional foil and envelopes.",
     openGraph: {

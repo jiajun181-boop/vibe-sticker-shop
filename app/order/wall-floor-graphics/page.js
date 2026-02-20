@@ -4,7 +4,7 @@ import WallFloorGraphicOrderClient from "./WallFloorGraphicOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Wall & Floor Graphics — Order Online | Vibe Sticker Shop",
+    title: "Custom Wall & Floor Graphics — Order Online | La Lunar Printing",
     description: "Order custom wall graphics, wall murals, and floor graphics for branding and wayfinding.",
     openGraph: { title: "Custom Wall & Floor Graphics — Order Online", url: "/order/wall-floor-graphics" },
   };

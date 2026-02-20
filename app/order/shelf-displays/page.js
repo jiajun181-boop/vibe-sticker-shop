@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Shelf Displays — Order Online | Vibe Sticker Shop",
+    title: "Custom Shelf Displays — Order Online | La Lunar Printing",
     description:
       "Order custom printed shelf talkers, wobblers, and shelf strips.",
     openGraph: {

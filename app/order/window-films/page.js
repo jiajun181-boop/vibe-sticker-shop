@@ -4,7 +4,7 @@ import WindowFilmOrderClient from "./WindowFilmOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Window Films & Clings — Order Online | Vibe Sticker Shop",
+    title: "Custom Window Films & Clings — Order Online | La Lunar Printing",
     description: "Order custom window films, static clings, adhesive films, one-way vision, and privacy films.",
     openGraph: { title: "Custom Window Films — Order Online", url: "/order/window-films" },
   };

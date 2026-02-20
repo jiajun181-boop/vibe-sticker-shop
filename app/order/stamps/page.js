@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Self-Inking Stamps — Order Online | Vibe Sticker Shop",
+    title: "Custom Self-Inking Stamps — Order Online | La Lunar Printing",
     description:
       "Order custom self-inking stamps online. Rectangular and round models with built-in ink pad and custom artwork.",
     openGraph: {

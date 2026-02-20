@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Retail Tags — Order Online | Vibe Sticker Shop",
+    title: "Custom Retail Tags — Order Online | La Lunar Printing",
     description:
       "Order custom printed retail hang tags for pricing, branding, and product labelling.",
     openGraph: {
