@@ -61,7 +61,7 @@ function ListIcon({ className }) {
   );
 }
 
-function ProductCardGrid({ product, href, selectedSpec, t }) {
+function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel }) {
   const image = product.images?.[0];
   const imageSrc = getProductImage(product, product.category);
   const sizeCount = product.optionsConfig?.sizes?.length || 0;
@@ -130,7 +130,7 @@ function ProductCardGrid({ product, href, selectedSpec, t }) {
   );
 }
 
-function ProductCardList({ product, href, selectedSpec, t }) {
+function ProductCardList({ product, href, selectedSpec, t, viewOrderLabel }) {
   const image = product.images?.[0];
   const imageSrc = getProductImage(product, product.category);
   const sizeCount = product.optionsConfig?.sizes?.length || 0;
@@ -298,6 +298,7 @@ export default function SubProductLandingClient({
                 href={`/shop/${product.category}/${product.slug}`}
                 selectedSpec={selectedSpec}
                 t={t}
+                viewOrderLabel={viewOrderLabel}
               />
             ))}
           </div>
@@ -310,6 +311,7 @@ export default function SubProductLandingClient({
                 href={`/shop/${product.category}/${product.slug}`}
                 selectedSpec={selectedSpec}
                 t={t}
+                viewOrderLabel={viewOrderLabel}
               />
             ))}
           </div>
