@@ -62,11 +62,6 @@ function SizeGrid({ sizeOptions, selectedSizeLabel, onSelect, label, t }) {
                   : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-900)] hover:border-[var(--color-gray-400)]"
               }`}
             >
-              {o.recommended && (
-                <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 label-xs font-bold uppercase tracking-wider ${
-                  selected ? "bg-white text-[var(--color-ink-black)]" : "bg-[var(--color-ink-black)] text-white"
-                }`}>{"\u2605"}</span>
-              )}
               <span className="block text-sm font-semibold">{o.displayLabel || o.label}</span>
             </button>
           );
@@ -1372,7 +1367,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
   return (
     <Wrapper className={embedded ? "text-[var(--color-gray-800)]" : "bg-[radial-gradient(circle_at_top,_var(--color-gray-50),_var(--color-gray-100)_45%,_var(--color-gray-50))] pb-20 pt-10 text-[var(--color-gray-800)]"}>
-      <div className={embedded ? "mx-auto max-w-6xl space-y-6 lg:space-y-10 px-4 sm:px-6" : "mx-auto max-w-[1600px] space-y-6 lg:space-y-8 px-4 sm:px-6 2xl:px-4"}>
+      <div className={embedded ? "mx-auto max-w-6xl space-y-6 lg:space-y-10 px-4 sm:px-6" : "mx-auto max-w-[1440px] space-y-6 lg:space-y-8 px-4 sm:px-6"}>
         {!embedded && (
           <Breadcrumbs items={[
             { label: t("product.shop"), href: "/shop" },
@@ -1425,7 +1420,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         )}
 
         <section className="grid gap-6 lg:gap-8 xl:gap-10 lg:grid-cols-12">
-          <div className="space-y-4 lg:col-span-8">
+          <div className="space-y-4 lg:col-span-7">
             <ImageGallery images={imageList} productName={product.name} />
 
             {templateGallery && <TemplateGallery templates={templateGallery} />}
@@ -1479,7 +1474,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             ) : null}
           </div>
 
-          <div className="space-y-6 lg:col-span-4 lg:self-start">
+          <div className="space-y-6 lg:col-span-5 lg:self-start">
             {/* Desktop-only header - hidden on mobile where it appears above the grid */}
             {!embedded && (
               <header className="hidden lg:block">
@@ -2142,7 +2137,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.size")}</p>
                         <div className="mt-2 grid grid-cols-2 gap-2">
                           {variantConfig.bases.map((base) => {
-                            const isRec = variantConfig.recommendedBases.has(base);
                             const selected = variantBase === base;
                             return (
                               <button
@@ -2155,11 +2149,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                     : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-900)] hover:border-[var(--color-gray-400)]"
                                 }`}
                               >
-                                {isRec && (
-                                  <span className={`absolute -top-2 right-2 rounded-full px-1.5 py-0.5 label-xs font-bold uppercase tracking-wider ${
-                                    selected ? "bg-white text-[var(--color-ink-black)]" : "bg-[var(--color-ink-black)] text-white"
-                                  }`}>{"\u2605"}</span>
-                                )}
                                 <span className="block text-sm font-semibold">{base}</span>
                               </button>
                             );

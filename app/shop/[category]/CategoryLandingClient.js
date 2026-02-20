@@ -13,6 +13,8 @@ const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
     cents / 100
   );
+const safeText = (value, fallback) =>
+  typeof value === "string" && value.trim() ? value : fallback;
 
 const CATEGORY_USE_CASES = {
   "marketing-business-print": [
@@ -41,6 +43,7 @@ function ProductCard({ product, t, compact }) {
   const href = `/shop/${product.category}/${product.slug}`;
   const image = product.images?.[0];
   const imageSrc = getProductImage(product, product.category);
+  const viewOrderLabel = safeText(t("mp.landing.viewOrder"), "View & Order");
 
   return (
     <article className="group overflow-hidden rounded-md border border-[var(--color-gray-200)] bg-white transition-colors duration-200 hover:border-[var(--color-gray-300)]">
@@ -111,7 +114,7 @@ function ProductCard({ product, t, compact }) {
               href={href}
               className="inline-block rounded-sm bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black"
             >
-              {t("mp.landing.viewOrder")}
+              {viewOrderLabel}
             </Link>
           </div>
         </div>
@@ -121,7 +124,7 @@ function ProductCard({ product, t, compact }) {
             href={href}
             className="mt-1.5 inline-block rounded-sm bg-[var(--color-gray-900)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black"
           >
-            {t("mp.landing.viewOrder")}
+            {viewOrderLabel}
           </Link>
         </div>
       )}

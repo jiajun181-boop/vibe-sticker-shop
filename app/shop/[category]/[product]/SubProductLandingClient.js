@@ -14,6 +14,8 @@ const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
     cents / 100
   );
+const safeText = (value, fallback) =>
+  typeof value === "string" && value.trim() ? value : fallback;
 
 // Cross-sell recommendations: if viewing sub-group X, suggest Y
 const CROSS_SELL_MAP = {
@@ -120,7 +122,7 @@ function ProductCardGrid({ product, href, selectedSpec, t }) {
             href={href}
             className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black"
           >
-            {t("mp.landing.viewOrder")}
+            {viewOrderLabel}
           </Link>
         </div>
       </div>
@@ -181,7 +183,7 @@ function ProductCardList({ product, href, selectedSpec, t }) {
             <span className="text-sm font-bold text-[var(--color-gray-900)]">{t("product.from", { price: formatCad(price) })}</span>
           )}
           <span className="ml-auto rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
-            {t("mp.landing.viewOrder")}
+            {viewOrderLabel}
           </span>
         </div>
       </div>
@@ -227,6 +229,8 @@ export default function SubProductLandingClient({
   siblingSubGroups = [],
 }) {
   const { t } = useTranslation();
+  const viewOrderLabel = safeText(t("mp.landing.viewOrder"), "View & Order");
+  const browseLabel = safeText(t("mp.landing.browse"), "Browse");
   const i18nBase = `sp.${parentSlug}`;
   const searchParams = useSearchParams();
   const selectedSpec = searchParams?.get("spec") || "";
@@ -340,7 +344,7 @@ export default function SubProductLandingClient({
                       {sg.title}
                     </h3>
                     <p className="text-[11px] text-[var(--color-gray-400)]">
-                      {t("mp.landing.browse")}
+                      {browseLabel}
                     </p>
                   </div>
                   <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-gray-600)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

@@ -32,6 +32,8 @@ const MATERIAL_OPTIONS = [
   { key: "rigid", label: "Rigid" },
   { key: "hardware", label: "Hardware" },
 ];
+const safeText = (value, fallback) =>
+  typeof value === "string" && value.trim() ? value : fallback;
 
 const CATEGORY_MATERIAL_MAP = {
   "marketing-business-print": "paper",
@@ -92,7 +94,7 @@ function SmallCard({ catSlug, meta, count, previews, t }) {
         </div>
       )}
       <span className="mt-auto pt-3 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] group-hover:text-[var(--color-gray-900)] transition-colors">
-        {t("mp.landing.browse")}
+        {safeText(t("mp.landing.browse"), "Browse")}
         <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
@@ -120,7 +122,7 @@ function ParentCard({ catSlug, meta, count, t }) {
           href={`/shop/${catSlug}`}
           className="flex-none rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)] transition-colors"
         >
-          {t("mp.landing.browse")}
+          {safeText(t("mp.landing.browse"), "Browse")}
         </Link>
       </div>
       {subGroups.length > 0 && (
@@ -906,13 +908,13 @@ export default function ShopClient({
                           href={href}
                           className="flex-1 rounded-xl bg-[var(--color-ink-black)] px-3 py-2 text-center label-sm text-white transition-colors hover:bg-black"
                         >
-                          {t("shop.viewDetails")}
+                          {safeText(t("shop.viewDetails"), "View Details")}
                         </Link>
                         <button
                           onClick={() => quickAdd(product)}
                           className="rounded-xl border border-[var(--color-gray-300)] px-3 py-2 label-sm text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
                         >
-                          {t("shop.quickAdd")}
+                          {safeText(t("shop.quickAdd"), "Quick Add")}
                         </button>
                       </div>
                     </div>

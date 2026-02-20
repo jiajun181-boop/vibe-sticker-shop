@@ -313,16 +313,22 @@ export default function Navbar({ catalogConfig }) {
                     <div className="space-y-1">
                       {safeDepartments.map((dept) => {
                         const selected = dept.key === activeDept?.key;
+                        const deptPrimaryCategory = dept.categories?.[0];
+                        const deptPrimaryHref = deptPrimaryCategory ? `/shop/${deptPrimaryCategory}` : "/shop";
                         return (
-                          <button
+                          <Link
                             key={dept.key}
-                            type="button"
+                            href={deptPrimaryHref}
                             onMouseEnter={() => setActiveShopDept(dept.key)}
                             onFocus={() => setActiveShopDept(dept.key)}
-                            className={`w-full rounded-sm px-3 py-2 text-left text-sm transition-colors ${selected ? "bg-white font-semibold text-[var(--color-gray-800)] ring-1 ring-[var(--color-gray-200)]" : "text-[var(--color-gray-600)] hover:bg-white hover:text-[var(--color-gray-800)]"}`}
+                            onClick={() => {
+                              setActiveShopDept(dept.key);
+                              setShopMenuOpen(false);
+                            }}
+                            className={`block w-full rounded-sm px-3 py-2 text-left text-sm transition-colors ${selected ? "bg-white font-semibold text-[var(--color-gray-800)] ring-1 ring-[var(--color-gray-200)]" : "text-[var(--color-gray-600)] hover:bg-white hover:text-[var(--color-gray-800)]"}`}
                           >
                             {departmentMeta?.[dept.key]?.title || dept.key}
-                          </button>
+                          </Link>
                         );
                       })}
                     </div>
