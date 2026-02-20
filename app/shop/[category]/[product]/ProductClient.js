@@ -39,6 +39,8 @@ const StampEditor = dynamic(() => import("@/components/product/StampEditor"), {
 });
 
 const MAX_SIZE_BOXES = 10;
+const stripMarker = (value) =>
+  typeof value === "string" ? value.replace(/\s*[★*]+\s*$/, "").trim() : value;
 
 function SizeGrid({ sizeOptions, selectedSizeLabel, onSelect, label, t }) {
   const [showAll, setShowAll] = useState(false);
@@ -62,7 +64,7 @@ function SizeGrid({ sizeOptions, selectedSizeLabel, onSelect, label, t }) {
                   : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-900)] hover:border-[var(--color-gray-400)]"
               }`}
             >
-              <span className="block text-sm font-semibold">{o.displayLabel || o.label}</span>
+              <span className="block text-sm font-semibold">{stripMarker(o.displayLabel || o.label)}</span>
             </button>
           );
         })}
@@ -2149,7 +2151,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                     : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-900)] hover:border-[var(--color-gray-400)]"
                                 }`}
                               >
-                                <span className="block text-sm font-semibold">{base}</span>
+                                <span className="block text-sm font-semibold">{stripMarker(base)}</span>
                               </button>
                             );
                           })}

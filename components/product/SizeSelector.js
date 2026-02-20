@@ -9,6 +9,10 @@ function normalize(s) {
     .trim();
 }
 
+function stripMarker(value) {
+  return typeof value === "string" ? value.replace(/\s*[★*]+\s*$/, "").trim() : value;
+}
+
 export default function SizeSelector({
   label,
   options,
@@ -59,10 +63,7 @@ export default function SizeSelector({
               }`}
             >
               <div className="font-semibold leading-snug">
-                {o.displayLabel || o.label}
-                {o.recommended && (
-                  <span className={`ml-1.5 inline-block rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${selected ? "bg-white/20 text-white" : "bg-amber-100 text-amber-700"}`}>Popular</span>
-                )}
+                {stripMarker(o.displayLabel || o.label)}
               </div>
               {(o.widthIn && o.heightIn) && (
                 <div className={`mt-0.5 text-xs ${selected ? "text-gray-200" : "text-[var(--color-gray-500)]"}`}>
