@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import BusinessCardsOrderClient from "./BusinessCardsOrderClient";
 
 export function generateMetadata() {
@@ -15,7 +16,9 @@ export function generateMetadata() {
   };
 }
 
-export default function BusinessCardsOrderPage() {
+export default async function BusinessCardsOrderPage() {
+  const productImages = await getOrderPageImages(["business-cards","business-cards-standard"]);
+
   return (
     <Suspense
       fallback={
@@ -24,7 +27,7 @@ export default function BusinessCardsOrderPage() {
         </div>
       }
     >
-      <BusinessCardsOrderClient />
+      <BusinessCardsOrderClient productImages={productImages} />
     </Suspense>
   );
 }

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import StickerOrderClient from "./StickerOrderClient";
 
 export function generateMetadata() {
@@ -15,16 +16,18 @@ export function generateMetadata() {
   };
 }
 
-export default function StickerOrderPage() {
+export default async function StickerOrderPage() {
+  const productImages = await getOrderPageImages(["stickers","die-cut-singles","die-cut-stickers"]);
+
   return (
     <Suspense
       fallback={
         <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-gray-300)] border-t-[var(--color-gray-900)]" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
         </div>
       }
     >
-      <StickerOrderClient />
+      <StickerOrderClient productImages={productImages} />
     </Suspense>
   );
 }

@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import VinylBannerSections from "@/components/banners/VinylBannerSections";
 
 const DEBOUNCE_MS = 300;
 
@@ -14,7 +15,7 @@ const formatCad = (cents) =>
 
 // ─── Vinyl Banner Configuration ───
 
-const SIZES = [
+const PRESET_SIZES = [
   { id: "2x4", label: "2' \u00d7 4'", tag: "2\u00d74", w: 24, h: 48 },
   { id: "3x6", label: "3' \u00d7 6'", tag: "3\u00d76", w: 36, h: 72 },
   { id: "4x8", label: "4' \u00d7 8'", tag: "4\u00d78", w: 48, h: 96 },
@@ -34,9 +35,30 @@ const FINISHINGS = [
   { id: "hemmed-only", surcharge: 0 },
 ];
 
+const GROMMET_SPACINGS = [
+  { id: "every-24", label: 'Every 24"' },
+  { id: "every-12", label: 'Every 12"' },
+  { id: "corners-only", label: "Corners Only" },
+];
+
+const POLE_POCKET_POSITIONS = [
+  { id: "top-bottom", label: "Top & Bottom" },
+  { id: "left-right", label: "Left & Right" },
+];
+
+const POLE_POCKET_SIZES = [
+  { id: "2in", label: '2" (Standard)' },
+  { id: "3in", label: '3"' },
+];
+
 const SIDES = [
   { id: "single", surcharge: 0 },
   { id: "double", surcharge: 0 },
+];
+
+const TURNAROUNDS = [
+  { id: "standard", multiplier: 1 },
+  { id: "rush", multiplier: 1.3 },
 ];
 
 const QUANTITIES = [1, 2, 5, 10, 25];
@@ -79,10 +101,26 @@ export default function VinylBannerOrderClient() {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
+  // Size mode: "preset" or "custom"
+  const [sizeMode, setSizeMode] = useState("preset");
   const [sizeIdx, setSizeIdx] = useState(1); // 3×6 default
+
+  // Custom size ft+in
+  const [customWFt, setCustomWFt] = useState("3");
+  const [customWIn, setCustomWIn] = useState("0");
+  const [customHFt, setCustomHFt] = useState("6");
+  const [customHIn, setCustomHIn] = useState("0");
+
   const [materialId, setMaterialId] = useState("13oz-vinyl");
   const [finishingId, setFinishingId] = useState("hemmed-grommets");
+
+  // Finishing sub-options
+  const [grommetSpacing, setGrommetSpacing] = useState("every-24");
+  const [polePocketPos, setPolePocketPos] = useState("top-bottom");
+  const [polePocketSize, setPolePocketSize] = useState("2in");
+
   const [sidesId, setSidesId] = useState("single");
+  const [turnaroundId, setTurnaroundId] = useState("standard");
   const [quantity, setQuantity] = useState(1);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -95,7 +133,22 @@ export default function VinylBannerOrderClient() {
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
 
-  const size = SIZES[sizeIdx];
+  // Compute effective size in inches
+  const size = useMemo(() => {
+    if (sizeMode === "custom") {
+      const wInches = Math.max(12, Math.min(60, (parseInt(customWFt, 10) || 0) * 12 + (parseInt(customWIn, 10) || 0)));
+      const hInches = Math.max(12, Math.min(600, (parseInt(customHFt, 10) || 0) * 12 + (parseInt(customHIn, 10) || 0)));
+      const wFt = Math.floor(wInches / 12);
+      const wRem = wInches % 12;
+      const hFt = Math.floor(hInches / 12);
+      const hRem = hInches % 12;
+      const label = wRem || hRem
+        ? `${wFt}'${wRem}" \u00d7 ${hFt}'${hRem}"`
+        : `${wFt}' \u00d7 ${hFt}'`;
+      return { id: "custom", label, tag: "Custom", w: wInches, h: hInches };
+    }
+    return PRESET_SIZES[sizeIdx];
+  }, [sizeMode, sizeIdx, customWFt, customWIn, customHFt, customHIn]);
 
   const activeQty = useMemo(() => {
     if (customQty !== "") {
@@ -104,6 +157,8 @@ export default function VinylBannerOrderClient() {
     }
     return quantity;
   }, [quantity, customQty]);
+
+  const turnaround = TURNAROUNDS.find((t) => t.id === turnaroundId) || TURNAROUNDS[0];
 
   // ─── Quote ───
 
@@ -154,7 +209,8 @@ export default function VinylBannerOrderClient() {
   const materialSurcharge = (MATERIALS.find((m) => m.id === materialId)?.surcharge ?? 0) * activeQty;
   const finishingSurcharge = (FINISHINGS.find((f) => f.id === finishingId)?.surcharge ?? 0) * activeQty;
   const adjustedSubtotal = subtotalCents + materialSurcharge + finishingSurcharge;
-  const totalCents = adjustedSubtotal;
+  const totalBeforeRush = adjustedSubtotal;
+  const totalCents = Math.round(totalBeforeRush * turnaround.multiplier);
 
   const canAddToCart = quoteData && !quoteLoading && activeQty > 0;
 
@@ -165,15 +221,16 @@ export default function VinylBannerOrderClient() {
 
     const nameParts = [
       t("vb.title"),
-      size.tag,
+      size.tag || size.label,
       t(`vb.sides.${sidesId}`),
     ];
+    if (turnaroundId === "rush") nameParts.push("RUSH");
 
     return {
       id: "vinyl-banners",
       name: nameParts.join(" \u2014 "),
       slug: "vinyl-banners",
-      price: Math.round(adjustedSubtotal / activeQty),
+      price: Math.round(totalCents / activeQty),
       quantity: activeQty,
       options: {
         sizeId: size.id,
@@ -182,7 +239,10 @@ export default function VinylBannerOrderClient() {
         height: size.h,
         material: materialId,
         finishing: finishingId,
+        ...(finishingId === "hemmed-grommets" && { grommetSpacing }),
+        ...(finishingId === "pole-pockets" && { polePocketPos, polePocketSize }),
         sides: sidesId,
+        turnaround: turnaroundId,
         fileName: uploadedFile?.name || null,
       },
       forceNewLine: true,
@@ -236,7 +296,7 @@ export default function VinylBannerOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("vb.breadcrumb"), href: "/shop/signs-banners/vinyl-banners" },
+          { label: t("vb.breadcrumb"), href: "/shop/banners-displays" },
           { label: t("vb.order") },
         ]}
       />
@@ -251,13 +311,64 @@ export default function VinylBannerOrderClient() {
 
           {/* Size */}
           <Section label={t("vb.size")}>
-            <div className="flex flex-wrap gap-2">
-              {SIZES.map((s, i) => (
-                <Chip key={s.id} active={sizeIdx === i} onClick={() => setSizeIdx(i)}>
-                  {s.label}
-                </Chip>
-              ))}
+            <div className="mb-3 flex gap-2">
+              <Chip active={sizeMode === "preset"} onClick={() => setSizeMode("preset")}>
+                {t("banner.sizeMode.preset")}
+              </Chip>
+              <Chip active={sizeMode === "custom"} onClick={() => setSizeMode("custom")}>
+                {t("banner.sizeMode.custom")}
+              </Chip>
             </div>
+
+            {sizeMode === "preset" ? (
+              <div className="flex flex-wrap gap-2">
+                {PRESET_SIZES.map((s, i) => (
+                  <Chip key={s.id} active={sizeIdx === i} onClick={() => setSizeIdx(i)}>
+                    {s.label}
+                  </Chip>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500 w-14">{t("banner.width")}:</span>
+                  <input
+                    type="number" min="1" max="5"
+                    value={customWFt}
+                    onChange={(e) => setCustomWFt(e.target.value)}
+                    className="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                  />
+                  <span className="text-xs text-gray-500">ft</span>
+                  <input
+                    type="number" min="0" max="11"
+                    value={customWIn}
+                    onChange={(e) => setCustomWIn(e.target.value)}
+                    className="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                  />
+                  <span className="text-xs text-gray-500">in</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500 w-14">{t("banner.height")}:</span>
+                  <input
+                    type="number" min="1" max="50"
+                    value={customHFt}
+                    onChange={(e) => setCustomHFt(e.target.value)}
+                    className="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                  />
+                  <span className="text-xs text-gray-500">ft</span>
+                  <input
+                    type="number" min="0" max="11"
+                    value={customHIn}
+                    onChange={(e) => setCustomHIn(e.target.value)}
+                    className="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-center focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                  />
+                  <span className="text-xs text-gray-500">in</span>
+                </div>
+                <p className="text-[11px] text-gray-400">
+                  {t("banner.customSizeHint")}
+                </p>
+              </div>
+            )}
           </Section>
 
           {/* Material */}
@@ -301,6 +412,45 @@ export default function VinylBannerOrderClient() {
                 </Chip>
               ))}
             </div>
+
+            {/* Finishing sub-options */}
+            {finishingId === "hemmed-grommets" && (
+              <div className="mt-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
+                <p className="mb-2 text-[11px] font-medium text-gray-500">{t("banner.grommetSpacing.label")}</p>
+                <div className="flex flex-wrap gap-2">
+                  {GROMMET_SPACINGS.map((gs) => (
+                    <Chip key={gs.id} active={grommetSpacing === gs.id} onClick={() => setGrommetSpacing(gs.id)}>
+                      {gs.label}
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {finishingId === "pole-pockets" && (
+              <div className="mt-3 space-y-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
+                <div>
+                  <p className="mb-2 text-[11px] font-medium text-gray-500">{t("banner.polePocket.position")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {POLE_POCKET_POSITIONS.map((pp) => (
+                      <Chip key={pp.id} active={polePocketPos === pp.id} onClick={() => setPolePocketPos(pp.id)}>
+                        {pp.label}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-2 text-[11px] font-medium text-gray-500">{t("banner.polePocket.size")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {POLE_POCKET_SIZES.map((ps) => (
+                      <Chip key={ps.id} active={polePocketSize === ps.id} onClick={() => setPolePocketSize(ps.id)}>
+                        {ps.label}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </Section>
 
           {/* Sides */}
@@ -310,6 +460,34 @@ export default function VinylBannerOrderClient() {
                 <Chip key={s.id} active={sidesId === s.id} onClick={() => setSidesId(s.id)}>
                   {t(`vb.sides.${s.id}`)}
                 </Chip>
+              ))}
+            </div>
+          </Section>
+
+          {/* Turnaround */}
+          <Section label={t("banner.turnaround.label")}>
+            <div className="grid grid-cols-2 gap-3">
+              {TURNAROUNDS.map((ta) => (
+                <button
+                  key={ta.id}
+                  type="button"
+                  onClick={() => setTurnaroundId(ta.id)}
+                  className={`rounded-xl border-2 p-4 text-left transition-all ${
+                    turnaroundId === ta.id
+                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  <span className="text-sm font-semibold">{t(`banner.turnaround.${ta.id}`)}</span>
+                  <p className={`mt-0.5 text-[11px] ${turnaroundId === ta.id ? "text-gray-300" : "text-gray-400"}`}>
+                    {t(`banner.turnaround.${ta.id}Desc`)}
+                  </p>
+                  {ta.multiplier > 1 && (
+                    <span className={`mt-1 inline-block text-[11px] font-medium ${turnaroundId === ta.id ? "text-amber-300" : "text-amber-600"}`}>
+                      +30% surcharge
+                    </span>
+                  )}
+                </button>
               ))}
             </div>
           </Section>
@@ -385,7 +563,17 @@ export default function VinylBannerOrderClient() {
               <Row label={t("vb.size")} value={size.label} />
               <Row label={t("vb.material.label")} value={t(`vb.material.${materialId}`)} />
               <Row label={t("vb.finishing.label")} value={t(`vb.finishing.${finishingId}`)} />
+              {finishingId === "hemmed-grommets" && (
+                <Row label={t("banner.grommetSpacing.label")} value={GROMMET_SPACINGS.find((g) => g.id === grommetSpacing)?.label} />
+              )}
+              {finishingId === "pole-pockets" && (
+                <>
+                  <Row label={t("banner.polePocket.position")} value={POLE_POCKET_POSITIONS.find((p) => p.id === polePocketPos)?.label} />
+                  <Row label={t("banner.polePocket.size")} value={POLE_POCKET_SIZES.find((p) => p.id === polePocketSize)?.label} />
+                </>
+              )}
               <Row label={t("vb.sides.label")} value={t(`vb.sides.${sidesId}`)} />
+              <Row label={t("banner.turnaround.label")} value={t(`banner.turnaround.${turnaroundId}`)} />
               <Row label={t("vb.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
             </dl>
 
@@ -408,14 +596,16 @@ export default function VinylBannerOrderClient() {
                 {finishingSurcharge > 0 && (
                   <Row label={t(`vb.finishing.${finishingId}`)} value={`+ ${formatCad(finishingSurcharge)}`} />
                 )}
-                <Row label={t("vb.subtotal")} value={formatCad(adjustedSubtotal)} />
+                {turnaroundId === "rush" && (
+                  <Row label={t("banner.turnaround.rush")} value={`+ ${formatCad(totalCents - totalBeforeRush)}`} />
+                )}
                 <div className="flex justify-between border-t border-gray-100 pt-2">
                   <dt className="font-semibold text-gray-900">{t("vb.total")}</dt>
                   <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
                 </div>
                 <div className="pt-1">
                   <p className="text-[11px] text-gray-400">
-                    {formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("vb.each")}
+                    {formatCad(Math.round(totalCents / activeQty))}/{t("vb.each")}
                   </p>
                 </div>
               </dl>
@@ -459,6 +649,9 @@ export default function VinylBannerOrderClient() {
         </aside>
       </div>
 
+      {/* ── Product content sections ── */}
+      <VinylBannerSections />
+
       {/* ── MOBILE: Bottom bar ── */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-3">
@@ -469,7 +662,8 @@ export default function VinylBannerOrderClient() {
               <>
                 <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
                 <p className="truncate text-[11px] text-gray-500">
-                  {activeQty.toLocaleString()} × {size.tag} {t(`vb.material.${materialId}`)}
+                  {activeQty.toLocaleString()} × {size.tag || size.label} {t(`vb.material.${materialId}`)}
+                  {turnaroundId === "rush" && " \u00b7 RUSH"}
                 </p>
               </>
             ) : (

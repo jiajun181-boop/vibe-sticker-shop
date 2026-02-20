@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import BackdropOrderClient from "./BackdropOrderClient";
 
 export function generateMetadata() {
@@ -9,6 +10,18 @@ export function generateMetadata() {
   };
 }
 
-export default function BackdropOrderPage() {
-  return (<Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" /></div>}><BackdropOrderClient /></Suspense>);
+export default async function BackdropOrderPage() {
+  const productImages = await getOrderPageImages(["backdrops","backdrop"]);
+
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+        </div>
+      }
+    >
+      <BackdropOrderClient productImages={productImages} />
+    </Suspense>
+  );
 }

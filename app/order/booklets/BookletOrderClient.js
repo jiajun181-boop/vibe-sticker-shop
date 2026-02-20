@@ -25,7 +25,7 @@ const BINDINGS = [
     icon: "staple",
     pageRule: "multiple-of-4",
     minPages: 8,
-    maxPages: 64,
+    maxPages: 32,
   },
   {
     id: "perfect-bound",
@@ -41,19 +41,19 @@ const BINDINGS = [
     icon: "coil",
     pageRule: "any",
     minPages: 12,
-    maxPages: 200,
+    maxPages: 100,
   },
 ];
 
 const SIZES = [
-  { id: "half-letter", label: '5.5" × 8.5"', w: 5.5, h: 8.5 },
-  { id: "letter", label: '8.5" × 11"', w: 8.5, h: 11 },
-  { id: "6x9", label: '6" × 9"', w: 6, h: 9 },
-  { id: "letter-landscape", label: '8.5" × 5.5" (横)', w: 8.5, h: 5.5 },
+  { id: "half-letter", label: '5.5" × 8.5" finished (flat 8.5" × 11")', w: 5.5, h: 8.5 },
+  { id: "letter", label: '8.5" × 11" finished (flat 11" × 17")', w: 8.5, h: 11 },
+  { id: "6x9", label: '6" × 9" finished (flat 9" × 12")', w: 6, h: 9 },
+  { id: "letter-landscape", label: '8.5" × 5.5" finished (flat 8.5" × 11")', w: 8.5, h: 5.5 },
 ];
 
-const PAGE_COUNTS_SADDLE = [8, 12, 16, 20, 24, 28, 32, 36, 40, 48, 64];
-const PAGE_COUNTS_GENERAL = [12, 16, 20, 24, 28, 32, 36, 40, 48, 64, 80, 100, 120, 160, 200];
+const PAGE_COUNTS_SADDLE = [8, 12, 16, 20, 24, 28, 32];
+const PAGE_COUNTS_GENERAL = [12, 16, 20, 24, 28, 32, 36, 40, 48, 64, 80, 100, 120, 160, 200, 250, 300, 400];
 
 const INTERIOR_PAPERS = [
   { id: "100lb-gloss-text", label: "100lb Gloss Text" },
@@ -64,9 +64,7 @@ const INTERIOR_PAPERS = [
 
 const COVER_PAPERS = [
   { id: "self-cover", label: null },
-  { id: "100lb-gloss-cover", label: "100lb Gloss Cover" },
   { id: "14pt-c2s", label: "14pt C2S" },
-  { id: "16pt-c2s", label: "16pt C2S" },
 ];
 
 const COVER_COATINGS = [
@@ -119,7 +117,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
   const [sizeIdx, setSizeIdx] = useState(1); // letter
   const [pageCount, setPageCount] = useState(16);
   const [interiorPaper, setInteriorPaper] = useState("100lb-gloss-text");
-  const [coverPaper, setCoverPaper] = useState("100lb-gloss-cover");
+  const [coverPaper, setCoverPaper] = useState("14pt-c2s");
   const [coverCoating, setCoverCoating] = useState("none");
   const [quantity, setQuantity] = useState(100);
   const [customQty, setCustomQty] = useState("");
@@ -172,7 +170,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
   // Surcharges
   const extraPages = Math.max(0, pageCount - 16);
   const pageSurcharge = extraPages * 2 * activeQty;
-  const coverUpgrade = coverPaper === "14pt-c2s" ? 15 : coverPaper === "16pt-c2s" ? 25 : 0;
+  const coverUpgrade = coverPaper === "14pt-c2s" ? 15 : 0;
   const coverSurchargeTotal = coverUpgrade * activeQty;
   const coatingPrice = coverCoating === "gloss-lam" ? 8 : coverCoating === "matte-lam" ? 10 : coverCoating === "soft-touch" ? 18 : 0;
   const coatingSurchargeTotal = isSelfCover ? 0 : coatingPrice * activeQty;
@@ -368,7 +366,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                 {COVER_PAPERS.map((p) => {
                   const displayLabel = p.label || t(`booklet.cover.${p.id}`);
-                  const surcharge = p.id === "14pt-c2s" ? "+$0.15" : p.id === "16pt-c2s" ? "+$0.25" : null;
+                  const surcharge = p.id === "14pt-c2s" ? "+$0.15" : null;
                   const isActive = coverPaper === p.id;
                   return (
                     <button
@@ -452,7 +450,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
-                    <span className="text-base font-black">{q >= 1000 ? `${q / 1000}K` : q}</span>
+                    <span className="text-base font-black">{q.toLocaleString()}</span>
                   </button>
                 ))}
               </div>

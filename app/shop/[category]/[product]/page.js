@@ -9,10 +9,14 @@ import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import { getConfiguratorForSlug } from "@/lib/configurator-router";
 import { getVariantConfig, getVariantParent, getVariantChildSlugs } from "@/lib/variantProductConfig";
 import { getSceneConfig } from "@/lib/sceneConfig";
+import { getStickerRichPageSlug } from "@/lib/sticker-page-content";
+import { getSignRichPageSlug } from "@/lib/sign-page-content";
 import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
 import VariantProductPage from "./VariantProductPage";
 import SceneLandingPage from "./SceneLandingPage";
+import StickerProductPageClient from "@/components/sticker-product/StickerProductPageClient";
+import SignProductPageClient from "@/components/sign-product/SignProductPageClient";
 import StickerOrderClient from "@/app/order/stickers/StickerOrderClient";
 import BookletOrderClient from "@/app/order/booklets/BookletOrderClient";
 import NcrOrderClient from "@/app/order/ncr/NcrOrderClient";
@@ -100,6 +104,36 @@ export async function generateMetadata({ params }) {
       alternates: { canonical: url },
       openGraph: { title: variantCfg.metaTitle, description: variantCfg.metaDescription, url, type: "website" },
       twitter: { card: "summary_large_image", title: variantCfg.metaTitle, description: variantCfg.metaDescription },
+    };
+  }
+
+  // Sticker rich page metadata
+  const stickerRich = getStickerRichPageSlug(decodedSlug);
+  if (stickerRich) {
+    const { content } = stickerRich;
+    const url = `${SITE_URL}/shop/${category}/${slug}`;
+    return {
+      title: content.seo.title,
+      description: content.seo.description,
+      keywords: content.seo.keywords,
+      alternates: { canonical: url },
+      openGraph: { title: content.seo.title, description: content.seo.description, url, type: "website" },
+      twitter: { card: "summary_large_image", title: content.seo.title, description: content.seo.description },
+    };
+  }
+
+  // Sign rich page metadata
+  const signRich = getSignRichPageSlug(decodedSlug);
+  if (signRich) {
+    const { content } = signRich;
+    const url = `${SITE_URL}/shop/${category}/${slug}`;
+    return {
+      title: content.seo.title,
+      description: content.seo.description,
+      keywords: content.seo.keywords,
+      alternates: { canonical: url },
+      openGraph: { title: content.seo.title, description: content.seo.description, url, type: "website" },
+      twitter: { card: "summary_large_image", title: content.seo.title, description: content.seo.description },
     };
   }
 
@@ -231,6 +265,51 @@ export default async function ProductPage({ params }) {
     }
   }
 
+  // ── Sign rich product page: SEO-optimized page with embedded configurator ──
+  // Must come BEFORE sub-product landing because sign slugs (e.g. "real-estate-signs")
+  // also exist in SUB_PRODUCT_CONFIG, and the rich page should take priority.
+  const signRichPage = getSignRichPageSlug(decodedSlug);
+  if (signRichPage) {
+    const { signTypeId, content } = signRichPage;
+    const signProduct = await prisma.product.findFirst({
+      where: { slug: decodedSlug, isActive: true },
+      include: { images: { orderBy: { sortOrder: "asc" } } },
+    });
+    const signAssets = signProduct ? await getProductAssets(signProduct.id) : [];
+    const signImages = signAssets.length > 0
+      ? signAssets
+      : toClientSafe(signProduct?.images || []);
+
+    const signRelated = await prisma.product.findMany({
+      where: {
+        isActive: true,
+        category: decodedCategory,
+        ...(signProduct ? { id: { not: signProduct.id } } : {}),
+      },
+      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+      take: 4,
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    });
+
+    return (
+      <Suspense
+        fallback={
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+          </div>
+        }
+      >
+        <SignProductPageClient
+          content={content}
+          signTypeId={signTypeId}
+          product={signProduct ? toClientSafe(signProduct) : { slug: decodedSlug, category: decodedCategory }}
+          images={signImages}
+          relatedProducts={toClientSafe(signRelated)}
+        />
+      </Suspense>
+    );
+  }
+
   // ── Sub-product landing: parent slug → show child products as card grid ──
   const subCfg = getSubProducts(decodedSlug);
   if (subCfg) {
@@ -296,6 +375,49 @@ export default async function ProductPage({ params }) {
         products={toClientSafe(dedupedProducts)}
         siblingSubGroups={siblingSubGroups}
       />
+    );
+  }
+
+  // ── Sticker rich product page: SEO-optimized page with embedded configurator ──
+  const stickerRichPage = getStickerRichPageSlug(decodedSlug);
+  if (stickerRichPage) {
+    const { cuttingTypeId, content } = stickerRichPage;
+    const stickerProduct = await prisma.product.findFirst({
+      where: { slug: decodedSlug, isActive: true },
+      include: { images: { orderBy: { sortOrder: "asc" } } },
+    });
+    const stickerAssets = stickerProduct ? await getProductAssets(stickerProduct.id) : [];
+    const stickerImages = stickerAssets.length > 0
+      ? stickerAssets
+      : toClientSafe(stickerProduct?.images || []);
+
+    const stickerRelated = await prisma.product.findMany({
+      where: {
+        isActive: true,
+        category: decodedCategory,
+        ...(stickerProduct ? { id: { not: stickerProduct.id } } : {}),
+      },
+      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+      take: 4,
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    });
+
+    return (
+      <Suspense
+        fallback={
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+          </div>
+        }
+      >
+        <StickerProductPageClient
+          content={content}
+          cuttingTypeId={cuttingTypeId}
+          product={stickerProduct ? toClientSafe(stickerProduct) : { slug: decodedSlug, category: decodedCategory }}
+          images={stickerImages}
+          relatedProducts={toClientSafe(stickerRelated)}
+        />
+      </Suspense>
     );
   }
 

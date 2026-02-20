@@ -14,6 +14,7 @@ import {
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
+  LetterheadTemplateBuilder,
   useConfiguratorQuote,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -36,6 +37,10 @@ export default function MarketingPrintOrderClient({
   const printType = useMemo(() => getMarketingPrintType(typeId), [typeId]);
 
   const [sizeIdx, setSizeIdx] = useState(0);
+  const [isCustomSize, setIsCustomSize] = useState(false);
+  const [customW, setCustomW] = useState("");
+  const [customH, setCustomH] = useState("");
+  const [extraSizes, setExtraSizes] = useState([]); // [{w, h}]
   const [paperId, setPaperId] = useState(() => {
     const def = printType.papers.find((p) => p.default);
     return def ? def.id : printType.papers[0].id;
@@ -45,8 +50,10 @@ export default function MarketingPrintOrderClient({
     printType.finishings[0] === "none" ? "none" : printType.finishings[0],
   );
   const [quantity, setQuantity] = useState(printType.quantities[0] ?? 100);
-  const [customQty, setCustomQty] = useState("");
+  const [customQty, setCustomQty] = useState(printType.quantityMode === "input" ? "1" : "");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkMode, setArtworkMode] = useState("upload"); // "upload" | "template"
+  const [templateData, setTemplateData] = useState(null);   // { logo, fields }
 
   // Extras state — keyed by extra key, stores selected option id
   const [extrasState, setExtrasState] = useState(() => {
@@ -62,12 +69,16 @@ export default function MarketingPrintOrderClient({
     setTypeId(newTypeId);
     const newType = getMarketingPrintType(newTypeId);
     setSizeIdx(0);
+    setIsCustomSize(false);
+    setCustomW("");
+    setCustomH("");
+    setExtraSizes([]);
     const defPaper = newType.papers.find((p) => p.default);
     setPaperId(defPaper ? defPaper.id : newType.papers[0].id);
     setSides(newType.sides.includes("double") ? "double" : "single");
     setFinishing(newType.finishings[0] === "none" ? "none" : newType.finishings[0]);
     setQuantity(newType.quantities[0] ?? 100);
-    setCustomQty("");
+    setCustomQty(newType.quantityMode === "input" ? "1" : "");
     // Reset extras
     const init = {};
     for (const ex of newType.extras || []) {
@@ -76,10 +87,11 @@ export default function MarketingPrintOrderClient({
     setExtrasState(init);
   }, []);
 
-  const selectedSize = printType.sizes[sizeIdx];
-  const widthIn = selectedSize?.w ?? 3.5;
-  const heightIn = selectedSize?.h ?? 2;
+  const selectedSize = isCustomSize ? null : printType.sizes[sizeIdx];
+  const widthIn = isCustomSize ? (parseFloat(customW) || 1) : (selectedSize?.w ?? 3.5);
+  const heightIn = isCustomSize ? (parseFloat(customH) || 1) : (selectedSize?.h ?? 2);
   const effectiveQty = customQty ? Math.max(1, parseInt(customQty) || 0) : quantity;
+  const sizeLabel = isCustomSize ? `${customW}" × ${customH}"` : selectedSize?.label;
 
   // --- Surcharges ---
   const selectedPaper = printType.papers.find((p) => p.id === paperId);
@@ -98,6 +110,8 @@ export default function MarketingPrintOrderClient({
   const totalSurchargePerUnit = paperSurchargePerUnit + extrasSurchargePerUnit;
   const totalSurchargeCents = totalSurchargePerUnit * effectiveQty;
 
+  const isContactOnly = !!printType.contactOnly;
+
   // --- Quote ---
   const quote = useConfiguratorQuote({
     slug: typeId,
@@ -106,11 +120,11 @@ export default function MarketingPrintOrderClient({
     heightIn,
     material: paperId,
     extra: {
-      sizeLabel: selectedSize?.label,
+      sizeLabel,
       finishings: finishing !== "none" ? [finishing] : [],
       sides,
     },
-    enabled: effectiveQty > 0,
+    enabled: effectiveQty > 0 && !isContactOnly,
   });
 
   // Apply surcharges to quote pricing
@@ -130,7 +144,7 @@ export default function MarketingPrintOrderClient({
     return {
       id: typeId,
       slug: typeId,
-      name: `${printType.label} — ${selectedSize?.label || "Custom"}`,
+      name: `${printType.label} — ${sizeLabel || "Custom"}`,
       price: quote.unitCents || 0,
       quantity: effectiveQty,
       image: null,
@@ -138,13 +152,15 @@ export default function MarketingPrintOrderClient({
         width: widthIn,
         height: heightIn,
         material: paperId,
-        sizeLabel: selectedSize?.label,
+        sizeLabel,
         sides,
         finishing,
+        ...(extraSizes.length > 0 ? { extraSizes: extraSizes.filter(s => s.w && s.h) } : {}),
         ...extrasForCart,
+        ...(artworkMode === "template" && templateData ? { templateData } : {}),
       },
     };
-  }, [effectiveQty, typeId, printType, selectedSize, quote.unitCents, widthIn, heightIn, paperId, sides, finishing, extrasState]);
+  }, [effectiveQty, typeId, printType, sizeLabel, quote.unitCents, widthIn, heightIn, paperId, sides, finishing, extrasState, extraSizes, artworkMode, templateData]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -163,7 +179,10 @@ export default function MarketingPrintOrderClient({
   const summaryLines = useMemo(() => {
     const lines = [];
     if (!hideTypeSelector) lines.push({ label: "Product", value: printType.label });
-    lines.push({ label: "Size", value: selectedSize?.label });
+    lines.push({ label: "Size", value: sizeLabel || "Custom" });
+    if (extraSizes.filter(s => s.w && s.h).length > 0) {
+      lines.push({ label: "Extra Sizes", value: `+${extraSizes.filter(s => s.w && s.h).length} sizes` });
+    }
     if (hasPaperStep) {
       const paperLabel = selectedPaper?.label || paperId;
       lines.push({
@@ -190,7 +209,7 @@ export default function MarketingPrintOrderClient({
     }
     lines.push({ label: "Quantity", value: effectiveQty.toLocaleString() });
     return lines;
-  }, [hideTypeSelector, printType, selectedSize, selectedPaper, paperId, paperSurchargePerUnit, hasPaperStep, hasSidesStep, sides, hasFinishingStep, finishing, extrasState, effectiveQty]);
+  }, [hideTypeSelector, printType, sizeLabel, selectedPaper, paperId, paperSurchargePerUnit, hasPaperStep, hasSidesStep, sides, hasFinishingStep, finishing, extrasState, effectiveQty, extraSizes]);
 
   // Extra pricing rows for PricingSidebar
   const extraRows = useMemo(() => {
@@ -227,12 +246,15 @@ export default function MarketingPrintOrderClient({
           t("marketingPrint.badgeProof", "Free digital proof"),
         ]}
       />
-      <ConfigProductGallery images={productImages} />
-
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* LEFT COLUMN */}
           <div className="space-y-6 lg:col-span-2">
+
+            {/* Product Gallery — inside grid so sidebar starts beside it */}
+            {productImages?.length > 0 && (
+              <ConfigProductGallery images={productImages} inline />
+            )}
 
             {/* Step: Print Type (hidden when direct-entry) */}
             {!hideTypeSelector && (
@@ -263,9 +285,9 @@ export default function MarketingPrintOrderClient({
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => setSizeIdx(idx)}
+                    onClick={() => { setSizeIdx(idx); setIsCustomSize(false); }}
                     className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                      sizeIdx === idx
+                      sizeIdx === idx && !isCustomSize
                         ? "border-gray-900 bg-gray-900 text-white shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
@@ -273,7 +295,117 @@ export default function MarketingPrintOrderClient({
                     {s.label}
                   </button>
                 ))}
+                {printType.customSize && (
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomSize(true)}
+                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                      isCustomSize
+                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    Custom Size
+                  </button>
+                )}
               </div>
+
+              {/* Custom size inputs */}
+              {isCustomSize && printType.customSize && (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-medium text-gray-500">W:</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={printType.customSize.maxW}
+                      step="0.5"
+                      placeholder={`max ${printType.customSize.maxW}"`}
+                      value={customW}
+                      onChange={(e) => setCustomW(e.target.value)}
+                      className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                    />
+                    <span className="text-xs text-gray-400">in</span>
+                  </div>
+                  <span className="text-gray-400">×</span>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-medium text-gray-500">H:</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={printType.customSize.maxH}
+                      step="0.5"
+                      placeholder={`max ${printType.customSize.maxH}"`}
+                      value={customH}
+                      onChange={(e) => setCustomH(e.target.value)}
+                      className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                    />
+                    <span className="text-xs text-gray-400">in</span>
+                  </div>
+                  <span className="text-xs text-gray-400">(max {printType.customSize.maxW}&quot; × {printType.customSize.maxH}&quot;)</span>
+                </div>
+              )}
+
+              {/* More Sizes */}
+              {printType.moreSizes > 0 && (
+                <div className="mt-4">
+                  {extraSizes.length > 0 && (
+                    <div className="mb-2 space-y-2">
+                      {extraSizes.map((es, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <span className="text-xs font-medium text-gray-500 w-6">#{i + 2}</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={printType.customSize?.maxW || 999}
+                            step="0.5"
+                            placeholder="W"
+                            value={es.w}
+                            onChange={(e) => {
+                              const next = [...extraSizes];
+                              next[i] = { ...next[i], w: e.target.value };
+                              setExtraSizes(next);
+                            }}
+                            className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                          />
+                          <span className="text-gray-400">×</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={printType.customSize?.maxH || 999}
+                            step="0.5"
+                            placeholder="H"
+                            value={es.h}
+                            onChange={(e) => {
+                              const next = [...extraSizes];
+                              next[i] = { ...next[i], h: e.target.value };
+                              setExtraSizes(next);
+                            }}
+                            className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                          />
+                          <span className="text-xs text-gray-400">in</span>
+                          <button
+                            type="button"
+                            onClick={() => setExtraSizes(extraSizes.filter((_, j) => j !== i))}
+                            className="text-xs text-red-500 hover:text-red-700 font-medium"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {extraSizes.length < printType.moreSizes && (
+                    <button
+                      type="button"
+                      onClick={() => setExtraSizes([...extraSizes, { w: "", h: "" }])}
+                      className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                    >
+                      + Add More Sizes {extraSizes.length > 0 && `(${extraSizes.length}/${printType.moreSizes})`}
+                    </button>
+                  )}
+                </div>
+              )}
             </ConfigStep>
 
             {/* Step: Paper / Stock (hidden if single option) */}
@@ -386,66 +518,143 @@ export default function MarketingPrintOrderClient({
 
             {/* Step: Quantity */}
             <ConfigStep number={++step} title={t("marketingPrint.quantity", "Quantity")}>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                {printType.quantities.map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    onClick={() => { setQuantity(q); setCustomQty(""); }}
-                    className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
-                      quantity === q && !customQty
-                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    <span className="text-base font-black">{q >= 1000 ? `${q / 1000}K` : q}</span>
-                  </button>
-                ))}
-              </div>
-              <div className="mt-3 flex items-center gap-3">
-                <label className="text-xs font-medium text-gray-500">{t("marketingPrint.customQty", "Custom")}:</label>
+              {printType.quantityMode !== "input" && (
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                  {printType.quantities.map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => { setQuantity(q); setCustomQty(""); }}
+                      className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
+                        quantity === q && !customQty
+                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                      }`}
+                    >
+                      <span className="text-base font-black">{q.toLocaleString()}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className={`flex items-center gap-3 ${printType.quantityMode !== "input" ? "mt-3" : ""}`}>
+                {printType.quantityMode !== "input" && (
+                  <label className="text-xs font-medium text-gray-500">{t("marketingPrint.customQty", "Custom")}:</label>
+                )}
                 <input
                   type="number"
                   min={1}
-                  placeholder="e.g. 200"
+                  placeholder={printType.quantityMode === "input" ? "Enter quantity" : "e.g. 200"}
                   value={customQty}
                   onChange={(e) => setCustomQty(e.target.value)}
-                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                  className="w-40 rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                 />
               </div>
             </ConfigStep>
 
-            {/* Step: Upload Artwork */}
-            <ConfigStep number={++step} title={t("marketingPrint.artwork", "Upload Artwork")} optional>
-              <ArtworkUpload
-                uploadedFile={uploadedFile}
-                onUploaded={setUploadedFile}
-                onRemove={() => setUploadedFile(null)}
-                t={t}
-              />
+            {/* Step: Artwork */}
+            <ConfigStep number={++step} title={t("marketingPrint.artwork", "Artwork")} optional>
+              {printType.templateBuilder ? (
+                <>
+                  {/* Toggle: Upload vs Template */}
+                  <div className="mb-4 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setArtworkMode("upload")}
+                      className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                        artworkMode === "upload"
+                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                      }`}
+                    >
+                      {t("marketingPrint.uploadDesign", "Upload Your Design")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setArtworkMode("template")}
+                      className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                        artworkMode === "template"
+                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                      }`}
+                    >
+                      {t("marketingPrint.useTemplate", "Use Our Template")}
+                    </button>
+                  </div>
+                  {artworkMode === "upload" ? (
+                    <ArtworkUpload
+                      uploadedFile={uploadedFile}
+                      onUploaded={setUploadedFile}
+                      onRemove={() => setUploadedFile(null)}
+                      t={t}
+                    />
+                  ) : (
+                    <LetterheadTemplateBuilder
+                      onTemplateData={setTemplateData}
+                      t={t}
+                    />
+                  )}
+                </>
+              ) : (
+                <ArtworkUpload
+                  uploadedFile={uploadedFile}
+                  onUploaded={setUploadedFile}
+                  onRemove={() => setUploadedFile(null)}
+                  t={t}
+                />
+              )}
             </ConfigStep>
           </div>
 
           {/* RIGHT COLUMN */}
-          <PricingSidebar
-            summaryLines={summaryLines}
-            quoteLoading={quote.quoteLoading}
-            quoteError={quote.quoteError}
-            unitCents={quote.unitCents}
-            subtotalCents={quote.subtotalCents}
-            taxCents={quote.taxCents}
-            totalCents={quote.totalCents}
-            canAddToCart={canAddToCart}
-            onAddToCart={handleAddToCart}
-            onBuyNow={handleBuyNow}
-            buyNowLoading={buyNowLoading}
-            extraRows={extraRows}
-            badges={[
-              t("marketingPrint.badgeFullColor", "Full colour"),
-              t("marketingPrint.badgeShipping", "Fast shipping"),
-            ]}
-            t={t}
-          />
+          {isContactOnly ? (
+            <div className="sticky top-6 space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-bold text-gray-900">Order Summary</h3>
+              <div className="space-y-2 text-sm">
+                {summaryLines.map((line, i) => (
+                  <div key={i} className="flex justify-between">
+                    <span className="text-gray-500">{line.label}</span>
+                    <span className="font-medium text-gray-900">{line.value}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-center">
+                <p className="text-sm font-bold text-amber-800 mb-1">Contact Us for Pricing</p>
+                <p className="text-xs text-amber-700">This product requires a custom quote. Please contact our team.</p>
+              </div>
+              <a
+                href="/contact"
+                className="block w-full rounded-xl bg-gray-900 py-3 text-center text-sm font-bold text-white hover:bg-gray-800 transition"
+              >
+                Contact Us
+              </a>
+              <a
+                href="tel:+16476990549"
+                className="block w-full rounded-xl border-2 border-gray-200 py-3 text-center text-sm font-bold text-gray-700 hover:border-gray-400 transition"
+              >
+                Call (647) 699-0549
+              </a>
+            </div>
+          ) : (
+            <PricingSidebar
+              summaryLines={summaryLines}
+              quoteLoading={quote.quoteLoading}
+              quoteError={quote.quoteError}
+              unitCents={quote.unitCents}
+              subtotalCents={quote.subtotalCents}
+              taxCents={quote.taxCents}
+              totalCents={quote.totalCents}
+              canAddToCart={canAddToCart}
+              onAddToCart={handleAddToCart}
+              onBuyNow={handleBuyNow}
+              buyNowLoading={buyNowLoading}
+              extraRows={extraRows}
+              badges={[
+                t("marketingPrint.badgeFullColor", "Full colour"),
+                t("marketingPrint.badgeShipping", "Fast shipping"),
+              ]}
+              t={t}
+            />
+          )}
         </div>
       </div>
 

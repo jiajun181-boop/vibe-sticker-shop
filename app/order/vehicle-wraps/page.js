@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import VehicleWrapOrderClient from "./VehicleWrapOrderClient";
 
 export function generateMetadata() {
@@ -9,6 +10,18 @@ export function generateMetadata() {
   };
 }
 
-export default function VehicleWrapOrderPage() {
-  return (<Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" /></div>}><VehicleWrapOrderClient /></Suspense>);
+export default async function VehicleWrapOrderPage() {
+  const productImages = await getOrderPageImages(["vehicle-wraps","vehicle-wrap"]);
+
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+        </div>
+      }
+    >
+      <VehicleWrapOrderClient productImages={productImages} />
+    </Suspense>
+  );
 }

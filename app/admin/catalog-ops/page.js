@@ -16,10 +16,10 @@ const CATEGORY_OPTIONS = [
   { value: "all", label: "All Categories" },
   { value: "marketing-business-print", label: "Marketing & Business Print" },
   { value: "stickers-labels-decals", label: "Stickers & Labels" },
-  { value: "signs-rigid-boards", label: "Signs & Rigid Boards" },
+  { value: "signs-rigid-boards", label: "Signs & Display Boards" },
   { value: "banners-displays", label: "Banners & Displays" },
   { value: "windows-walls-floors", label: "Windows, Walls & Floors Decals" },
-  { value: "vehicle-graphics-fleet", label: "Vehicle & Fleet Graphics" },
+  { value: "vehicle-graphics-fleet", label: "Vehicle Graphics & Fleet Branding" },
 ];
 
 export default function CatalogOpsPage() {

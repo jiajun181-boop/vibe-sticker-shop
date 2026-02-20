@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import RetractableStandOrderClient from "./RetractableStandOrderClient";
 
 export function generateMetadata() {
@@ -9,6 +10,18 @@ export function generateMetadata() {
   };
 }
 
-export default function RetractableStandOrderPage() {
-  return (<Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" /></div>}><RetractableStandOrderClient /></Suspense>);
+export default async function RetractableStandOrderPage() {
+  const productImages = await getOrderPageImages(["retractable-stands","retractable-banner-stand"]);
+
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+        </div>
+      }
+    >
+      <RetractableStandOrderClient productImages={productImages} />
+    </Suspense>
+  );
 }

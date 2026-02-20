@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
 
 export function generateMetadata() {
@@ -15,7 +16,9 @@ export function generateMetadata() {
   };
 }
 
-export default function WaiverOrderPage() {
+export default async function WaiverOrderPage() {
+  const productImages = await getOrderPageImages(["waivers-releases","waivers-standard"]);
+
   return (
     <Suspense
       fallback={
@@ -24,7 +27,7 @@ export default function WaiverOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="waivers-releases" hideTypeSelector />
+      <MarketingPrintOrderClient defaultType="waivers-releases" hideTypeSelector productImages={productImages} />
     </Suspense>
   );
 }

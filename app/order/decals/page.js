@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import DecalOrderClient from "./DecalOrderClient";
 
 export function generateMetadata() {
@@ -15,7 +16,9 @@ export function generateMetadata() {
   };
 }
 
-export default function DecalOrderPage() {
+export default async function DecalOrderPage() {
+  const productImages = await getOrderPageImages(["decals","vehicle-decals"]);
+
   return (
     <Suspense
       fallback={
@@ -24,7 +27,7 @@ export default function DecalOrderPage() {
         </div>
       }
     >
-      <DecalOrderClient />
+      <DecalOrderClient productImages={productImages} />
     </Suspense>
   );
 }

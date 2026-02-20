@@ -205,12 +205,13 @@ export default function Footer({ locale = "en" }) {
     {
       title: t("footer.products"),
       links: [
-        { label: t("footer.stickersLabels"), href: "/shop/stickers-labels-decals" },
-        { label: t("footer.bannersDisplays"), href: "/shop/banners-displays" },
-        { label: t("footer.signsBoards"), href: "/shop/signs-rigid-boards" },
-        { label: t("footer.vehicleBranding"), href: "/shop/vehicle-graphics-fleet" },
         { label: t("footer.marketingPrints"), href: "/shop/marketing-business-print" },
-        { label: t("footer.safetyDecals"), href: "/shop/stickers-labels-decals" },
+        { label: t("footer.stickersLabels"), href: "/shop/stickers-labels-decals" },
+        { label: t("footer.signsBoards"), href: "/shop/signs-rigid-boards" },
+        { label: t("footer.bannersDisplays"), href: "/shop/banners-displays" },
+        { label: t("footer.canvasPrints"), href: "/shop/canvas-prints" },
+        { label: t("footer.windowsWallsFloors"), href: "/shop/windows-walls-floors" },
+        { label: t("footer.vehicleBranding"), href: "/shop/vehicle-graphics-fleet" },
       ],
     },
     {

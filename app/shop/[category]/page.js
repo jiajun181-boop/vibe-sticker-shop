@@ -47,35 +47,17 @@ const MARKETING_SEGMENTS = [
   {
     key: "marketing-materials",
     title: "Marketing Materials",
-    slugs: ["flyers", "brochures", "door-hangers", "greeting-invitation-cards", "tickets-coupons", "menus", "posters", "postcards", "inserts-packaging", "rack-cards", "booklets", "bookmarks", "calendars"],
+    slugs: ["flyers", "brochures", "door-hangers", "greeting-invitation-cards", "tickets-coupons", "menus", "posters", "postcards", "rack-cards", "booklets", "bookmarks", "calendars"],
   },
   {
     key: "business-essentials",
     title: "Business Essentials",
-    slugs: ["business-cards", "stamps", "letterhead", "envelopes", "notepads", "ncr-forms", "order-forms", "waivers-releases", "certificates", "presentation-folders"],
+    slugs: ["business-cards", "stamps", "letterhead", "notepads", "ncr-forms", "document-printing", "certificates"],
   },
   {
     key: "retail-pos",
     title: "Retail & Point of Sale",
     slugs: ["shelf-displays", "table-tents"],
-  },
-];
-
-const BANNERS_SEGMENTS = [
-  {
-    key: "banners",
-    title: "Banners",
-    slugs: ["vinyl-banners", "mesh-banners", "pole-banners", "fabric-banners"],
-  },
-  {
-    key: "stands-displays",
-    title: "Stands & Displays",
-    slugs: ["retractable-stands", "x-banner-stands", "tabletop-displays", "backdrops-popups"],
-  },
-  {
-    key: "outdoor-signage",
-    title: "Outdoor & Signage",
-    slugs: ["flags-hardware", "tents-outdoor"],
   },
 ];
 
@@ -122,19 +104,37 @@ const STICKERS_SEGMENTS = [
 
 const SIGNS_SEGMENTS = [
   {
-    key: "outdoor-signs",
-    title: "Outdoor Signs",
-    slugs: ["yard-lawn-signs", "real-estate-signs"],
+    key: "coroplast-signs",
+    title: "Coroplast Signs",
+    slugs: ["real-estate-signs", "yard-lawn-signs", "construction-signs", "custom-coroplast"],
   },
   {
-    key: "indoor-portable",
-    title: "Indoor & Portable Signs",
-    slugs: ["a-frames-signs", "display-tabletop"],
+    key: "foam-board-displays",
+    title: "Foam Board Displays",
+    slugs: ["event-photo-boards", "event-signs", "presentation-boards", "custom-foam-board"],
   },
   {
-    key: "event-specialty",
-    title: "Event & Specialty",
-    slugs: ["event-photo-boards", "business-property", "by-material"],
+    key: "accessories",
+    title: "Accessories",
+    slugs: ["a-frames-signs", "sign-stakes", "real-estate-frames"],
+  },
+];
+
+const BANNERS_DISPLAYS_SEGMENTS = [
+  {
+    key: "banners",
+    title: "Banners",
+    slugs: ["vinyl-banners", "mesh-banners", "pole-banners"],
+  },
+  {
+    key: "stands-displays",
+    title: "Stands & Displays",
+    slugs: ["retractable-stands", "x-banner-stands", "tabletop-displays", "backdrops-popups"],
+  },
+  {
+    key: "outdoor-events",
+    title: "Outdoor & Events",
+    slugs: ["flags-hardware", "tents-outdoor", "fabric-banners"],
   },
 ];
 
@@ -248,8 +248,13 @@ export async function generateMetadata({ params }) {
   const meta = config.categoryMeta[decoded];
   if (!meta) return {};
 
-  const title = `${meta.title} - Vibe Sticker Shop`;
-  const description = `Custom ${meta.title.toLowerCase()} printing — professional quality, fast turnaround in Toronto & the GTA.`;
+  const title = `${meta.title} | La Lunar Printing`;
+
+  const CATEGORY_DESCRIPTIONS = {
+    "banners-displays": "Custom printed vinyl banners, mesh banners, roll-up stands, and display solutions in Toronto. Same day available.",
+  };
+  const description = CATEGORY_DESCRIPTIONS[decoded]
+    || `Custom ${meta.title.toLowerCase()} printing — professional quality, fast turnaround in Toronto & the GTA.`;
   const url = `${SITE_URL}/shop/${category}`;
 
   return {
@@ -436,9 +441,9 @@ export default async function CategoryPage({ params }) {
     const orderedSubGroupData = prioritizeSubGroups(decoded, subGroupData);
     const SEGMENT_MAP = {
       "marketing-business-print": MARKETING_SEGMENTS,
-      "banners-displays": BANNERS_SEGMENTS,
       "stickers-labels-decals": STICKERS_SEGMENTS,
       "signs-rigid-boards": SIGNS_SEGMENTS,
+      "banners-displays": BANNERS_DISPLAYS_SEGMENTS,
       "windows-walls-floors": WINDOWS_WALLS_FLOORS_SEGMENTS,
       "vehicle-graphics-fleet": VEHICLE_GRAPHICS_FLEET_SEGMENTS,
     };

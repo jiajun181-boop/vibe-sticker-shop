@@ -3,18 +3,17 @@
 import { useState } from "react";
 import Image from "next/image";
 
-export default function ConfigProductGallery({ images }) {
+export default function ConfigProductGallery({ images, inline }) {
   const [activeIdx, setActiveIdx] = useState(0);
 
   if (!images || images.length === 0) return null;
 
   const main = images[activeIdx] || images[0];
 
-  return (
-    <div className="mx-auto max-w-[1600px] px-4 pt-6 sm:px-6 lg:px-8">
-      <div className="overflow-hidden rounded-sm bg-gray-50">
+  const inner = (
+    <div className="overflow-hidden rounded-2xl bg-gray-50">
         {/* Main image */}
-        <div className="relative aspect-[16/9] w-full sm:aspect-[21/9]">
+        <div className="relative aspect-[4/3] w-full sm:aspect-[16/9]">
           <Image
             src={main.url}
             alt={main.alt || main.altOverride || "Product image"}
@@ -50,7 +49,14 @@ export default function ConfigProductGallery({ images }) {
             ))}
           </div>
         )}
-      </div>
+    </div>
+  );
+
+  if (inline) return inner;
+
+  return (
+    <div className="mx-auto max-w-[1600px] px-4 pt-6 sm:px-6 lg:px-8">
+      {inner}
     </div>
   );
 }

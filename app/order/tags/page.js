@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
 
 export function generateMetadata() {
@@ -15,7 +16,9 @@ export function generateMetadata() {
   };
 }
 
-export default function TagOrderPage() {
+export default async function TagOrderPage() {
+  const productImages = await getOrderPageImages(["tags","tags-hang","tags-product"]);
+
   return (
     <Suspense
       fallback={
@@ -24,7 +27,7 @@ export default function TagOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="tags" hideTypeSelector />
+      <MarketingPrintOrderClient defaultType="tags" hideTypeSelector productImages={productImages} />
     </Suspense>
   );
 }

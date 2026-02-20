@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { showErrorToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   ConfigStep,
@@ -20,20 +19,18 @@ const formatCad = (cents) =>
 // ─── NCR Configuration ───
 
 const FORM_TYPES = [
-  { id: "duplicate", parts: 2, slug: "ncr-forms-duplicate" },
-  { id: "triplicate", parts: 3, slug: "ncr-forms-triplicate" },
-  { id: "invoices", parts: 2, slug: "ncr-invoices" },
-  { id: "invoice-books", parts: 2, slug: "ncr-invoice-books" },
+  { id: "2-copy", parts: 2, slug: "ncr-forms-duplicate", label: "2 Copy", colors: "White / Yellow" },
+  { id: "3-copy", parts: 3, slug: "ncr-forms-triplicate", label: "3 Copy", colors: "White / Yellow / Pink" },
+  { id: "4-copy", parts: 4, slug: "ncr-invoices", label: "4 Copy", colors: "White / Yellow / Pink / Gold" },
 ];
 
 const SIZES = [
   { id: "half-letter", label: '5.5" × 8.5"', w: 5.5, h: 8.5 },
   { id: "letter", label: '8.5" × 11"', w: 8.5, h: 11 },
   { id: "legal", label: '8.5" × 14"', w: 8.5, h: 14 },
-  { id: "a4", label: "A4", w: 8.27, h: 11.69 },
 ];
 
-const QUANTITIES = [100, 250, 500, 1000, 2500, 5000];
+const QUANTITIES = [100, 250, 500, 1000, 2500, 5000, 7500, 10000];
 
 // ─── Main Component ───
 
@@ -41,84 +38,76 @@ export default function NcrOrderClient({ defaultType, productImages }) {
   const { t } = useTranslation();
 
   // Form state
-  const [formTypeId, setFormTypeId] = useState(defaultType || "duplicate");
+  const [formTypeId, setFormTypeId] = useState(defaultType || "2-copy");
   const [sizeIdx, setSizeIdx] = useState(1); // default: letter
   const [quantity, setQuantity] = useState(500);
-  const [customQty, setCustomQty] = useState("");
+
+  // Print color
+  const [printColor, setPrintColor] = useState("black"); // "black" | "color"
+
+  // Binding
+  const [binding, setBinding] = useState("loose"); // "loose" | "pad-25" | "pad-50"
 
   // Numbering
   const [numbering, setNumbering] = useState(false);
   const [numberStart, setNumberStart] = useState("1");
-  const [showNumberModal, setShowNumberModal] = useState(false);
+  const [numberColor, setNumberColor] = useState("black"); // "black" | "red"
 
   // File upload
   const [uploadedFile, setUploadedFile] = useState(null);
 
   const formType = useMemo(() => FORM_TYPES.find((f) => f.id === formTypeId) || FORM_TYPES[0], [formTypeId]);
   const size = SIZES[sizeIdx];
+  const is4Copy = formType.parts === 4;
 
-  const activeQty = useMemo(() => {
-    if (customQty !== "") {
-      const n = parseInt(customQty, 10);
-      return n > 0 ? n : 0;
+  // When switching to 4-copy, force binding to pad-25 or loose
+  useEffect(() => {
+    if (is4Copy && binding === "pad-50") {
+      setBinding("pad-25");
     }
-    return quantity;
-  }, [quantity, customQty]);
+  }, [is4Copy, binding]);
+
+  // When print color is black, force numbering color to black
+  useEffect(() => {
+    if (printColor === "black") {
+      setNumberColor("black");
+    }
+  }, [printColor]);
 
   // Computed numbering range
   const numberStartInt = parseInt(numberStart, 10) || 1;
-  const numberEnd = numberStartInt + activeQty - 1;
+  const numberEnd = numberStartInt + quantity - 1;
+  const numberingOverflow = numberEnd > 999999;
 
   // ─── Quote ───
   const quote = useConfiguratorQuote({
     slug: formType.slug,
-    quantity: activeQty,
+    quantity,
     widthIn: size.w,
     heightIn: size.h,
-    enabled: activeQty > 0,
+    enabled: quantity > 0,
   });
 
-  // Numbering surcharge: $0.03/form
-  const numberingSurcharge = numbering ? activeQty * 3 : 0;
+  // Numbering surcharge: $0.03/form; padding surcharge: $0.02/form
+  const numberingSurcharge = numbering ? quantity * 3 : 0;
+  const paddingSurcharge = binding !== "loose" ? quantity * 2 : 0;
+  const colorSurcharge = printColor === "color" ? quantity * 5 : 0;
+  const totalSurcharges = numberingSurcharge + paddingSurcharge + colorSurcharge;
 
   useEffect(() => {
-    quote.addSurcharge(numberingSurcharge);
-  }, [numberingSurcharge]); // eslint-disable-line react-hooks/exhaustive-deps
+    quote.addSurcharge(totalSurcharges);
+  }, [totalSurcharges]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0;
-
-  // ─── Numbering modal handlers ───
-  function handleToggleNumbering(checked) {
-    if (checked) {
-      setShowNumberModal(true);
-    } else {
-      setNumbering(false);
-    }
-  }
-
-  function handleConfirmNumbering() {
-    const start = parseInt(numberStart, 10);
-    if (!start || start < 0) {
-      showErrorToast(t("ncr.numbering.invalidStart"));
-      return;
-    }
-    setNumbering(true);
-    setShowNumberModal(false);
-  }
-
-  function handleCancelNumbering() {
-    setShowNumberModal(false);
-    setNumbering(false);
-  }
+  const canAddToCart = quote.quoteData && !quote.quoteLoading && quantity > 0 && (!numbering || !numberingOverflow);
 
   // ─── Cart ───
   const buildCartItem = useCallback(() => {
-    if (!quote.quoteData || activeQty <= 0) return null;
+    if (!quote.quoteData || quantity <= 0) return null;
 
     const nameParts = [
-      t(`ncr.type.${formTypeId}`),
+      `${formType.label} NCR`,
       size.label,
-      `×${activeQty.toLocaleString()}`,
+      `×${quantity.toLocaleString()}`,
     ];
     if (numbering) {
       nameParts.push(`#${numberStartInt}–${numberEnd}`);
@@ -128,22 +117,25 @@ export default function NcrOrderClient({ defaultType, productImages }) {
       id: formType.slug,
       name: nameParts.join(" — "),
       slug: formType.slug,
-      price: Math.round(quote.subtotalCents / activeQty),
-      quantity: activeQty,
+      price: Math.round(quote.subtotalCents / quantity),
+      quantity,
       options: {
         formType: formTypeId,
         parts: formType.parts,
+        colors: formType.colors,
         sizeId: size.id,
         sizeLabel: size.label,
         width: size.w,
         height: size.h,
+        printColor,
+        binding,
         numbering,
-        ...(numbering ? { numberStart: numberStartInt, numberEnd } : {}),
+        ...(numbering ? { numberStart: numberStartInt, numberEnd, numberColor } : {}),
         fileName: uploadedFile?.name || null,
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.subtotalCents, activeQty, formTypeId, formType, size, numbering, numberStartInt, numberEnd, uploadedFile, t]);
+  }, [quote.quoteData, quote.subtotalCents, quantity, formTypeId, formType, size, printColor, binding, numbering, numberStartInt, numberEnd, numberColor, uploadedFile]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -152,11 +144,13 @@ export default function NcrOrderClient({ defaultType, productImages }) {
 
   // ─── Summary & Extra Rows ───
   const summaryLines = [
-    { label: t("ncr.formType"), value: t(`ncr.type.${formTypeId}`) },
+    { label: t("ncr.formType"), value: `${formType.label} (${formType.colors})` },
     { label: t("ncr.size"), value: size.label },
-    { label: t("ncr.quantity"), value: activeQty > 0 ? activeQty.toLocaleString() : "—" },
+    { label: "Print Color", value: printColor === "color" ? "Full Color" : "Black" },
+    { label: "Binding", value: binding === "loose" ? "Loose Sheets" : binding === "pad-25" ? "Padded (25/book)" : "Padded (50/book)" },
+    { label: t("ncr.quantity"), value: quantity > 0 ? quantity.toLocaleString() : "—" },
     ...(numbering
-      ? [{ label: t("ncr.numbering.label"), value: `#${numberStartInt.toLocaleString()} – ${numberEnd.toLocaleString()}` }]
+      ? [{ label: t("ncr.numbering.label"), value: `#${numberStartInt.toLocaleString()} – ${numberEnd.toLocaleString()}${numberColor === "red" ? " (Red)" : ""}` }]
       : []),
   ];
 
@@ -164,6 +158,14 @@ export default function NcrOrderClient({ defaultType, productImages }) {
   if (numberingSurcharge > 0) {
     extraRows.push({ label: t("ncr.numbering.surcharge"), value: `+ ${formatCad(numberingSurcharge)}` });
   }
+  if (paddingSurcharge > 0) {
+    extraRows.push({ label: "Padding", value: `+ ${formatCad(paddingSurcharge)}` });
+  }
+  if (colorSurcharge > 0) {
+    extraRows.push({ label: "Full Color", value: `+ ${formatCad(colorSurcharge)}` });
+  }
+
+  let step = 0;
 
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)]">
@@ -174,19 +176,23 @@ export default function NcrOrderClient({ defaultType, productImages }) {
           { label: t("ncr.order") },
         ]}
         title={t("ncr.title")}
-        subtitle={t("ncr.subtitle", "Duplicate, triplicate & invoice forms — carbonless NCR printing")}
+        subtitle={t("ncr.subtitle", "2, 3 & 4-copy carbonless NCR forms — custom printing")}
         badges={[t("ncr.badge.carbonless"), t("ncr.badge.shipping")]}
       />
-      <ConfigProductGallery images={productImages} />
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* LEFT: Options */}
           <div className="space-y-6 lg:col-span-2">
 
-            {/* Form Type */}
-            <ConfigStep number={1} title={t("ncr.formType")} subtitle={t("ncr.formTypeSubtitle", "Select your form type")}>
-              <div className="grid grid-cols-2 gap-3">
+            {/* Product Gallery */}
+            {productImages?.length > 0 && (
+              <ConfigProductGallery images={productImages} inline />
+            )}
+
+            {/* Form Type (Copy Count) */}
+            <ConfigStep number={++step} title={t("ncr.formType")} subtitle={t("ncr.formTypeSubtitle", "Select copy count")}>
+              <div className="grid grid-cols-3 gap-3">
                 {FORM_TYPES.map((ft) => (
                   <button
                     key={ft.id}
@@ -203,9 +209,9 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                       </span>
                     )}
-                    <span className="text-sm font-bold">{t(`ncr.type.${ft.id}`)}</span>
-                    <span className={`text-[11px] ${formTypeId === ft.id ? "text-gray-300" : "text-gray-400"}`}>
-                      {ft.parts} {t("ncr.parts")}
+                    <span className="text-sm font-bold">{ft.label}</span>
+                    <span className={`text-[11px] leading-tight ${formTypeId === ft.id ? "text-gray-300" : "text-gray-400"}`}>
+                      {ft.colors}
                     </span>
                   </button>
                 ))}
@@ -213,7 +219,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
             </ConfigStep>
 
             {/* Size */}
-            <ConfigStep number={2} title={t("ncr.size")}>
+            <ConfigStep number={++step} title={t("ncr.size")}>
               <div className="flex flex-wrap gap-2">
                 {SIZES.map((s, i) => (
                   <button
@@ -232,52 +238,90 @@ export default function NcrOrderClient({ defaultType, productImages }) {
               </div>
             </ConfigStep>
 
-            {/* Quantity */}
-            <ConfigStep number={3} title={t("ncr.quantity")}>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                {QUANTITIES.map((q) => (
+            {/* Print Color */}
+            <ConfigStep number={++step} title="Print Color">
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: "black", label: "Black" },
+                  { id: "color", label: "Full Color" },
+                ].map((c) => (
                   <button
-                    key={q}
+                    key={c.id}
                     type="button"
-                    onClick={() => { setQuantity(q); setCustomQty(""); }}
-                    className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
-                      customQty === "" && quantity === q
+                    onClick={() => setPrintColor(c.id)}
+                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                      printColor === c.id
                         ? "border-gray-900 bg-gray-900 text-white shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
-                    <span className="text-base font-black">{q >= 1000 ? `${q / 1000}K` : q}</span>
+                    {c.label}
                   </button>
                 ))}
               </div>
-              <div className="mt-3 flex items-center gap-3">
-                <label className="text-xs font-medium text-gray-500">{t("ncr.customQty")}:</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="999999"
-                  value={customQty}
-                  onChange={(e) => setCustomQty(e.target.value)}
-                  placeholder="e.g. 750"
-                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
-                />
+            </ConfigStep>
+
+            {/* Binding */}
+            <ConfigStep number={++step} title="Binding">
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: "loose", label: "Loose Sheets" },
+                  { id: "pad-25", label: "Padded (25/book)" },
+                  ...(!is4Copy ? [{ id: "pad-50", label: "Padded (50/book)" }] : []),
+                ].map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => setBinding(b.id)}
+                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                      binding === b.id
+                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    {b.label}
+                  </button>
+                ))}
+              </div>
+              {is4Copy && (
+                <p className="mt-2 text-[11px] text-gray-400">4-copy forms can only be padded in books of 25.</p>
+              )}
+            </ConfigStep>
+
+            {/* Quantity */}
+            <ConfigStep number={++step} title={t("ncr.quantity")}>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+                {QUANTITIES.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => setQuantity(q)}
+                    className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
+                      quantity === q
+                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    <span className="text-base font-black">{q.toLocaleString()}</span>
+                  </button>
+                ))}
               </div>
             </ConfigStep>
 
             {/* Numbering */}
-            <ConfigStep number={4} title={t("ncr.numbering.label")}>
+            <ConfigStep number={++step} title={t("ncr.numbering.label")}>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={numbering}
-                  onChange={(e) => handleToggleNumbering(e.target.checked)}
+                  onChange={(e) => setNumbering(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                 />
                 <span className="text-sm text-gray-700">{t("ncr.numbering.addNumbering")}</span>
               </label>
 
               {numbering && (
-                <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
                   <div className="flex items-center gap-4">
                     <div>
                       <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400 mb-1">
@@ -285,9 +329,13 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                       </label>
                       <input
                         type="number"
-                        min="0"
+                        min="1"
+                        max="999999"
                         value={numberStart}
-                        onChange={(e) => setNumberStart(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val.length <= 6) setNumberStart(val);
+                        }}
                         className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                       />
                     </div>
@@ -296,25 +344,61 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                       <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400 mb-1">
                         {t("ncr.numbering.endNumber")}
                       </label>
-                      <div className="flex h-[38px] items-center rounded-lg border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-900">
+                      <div className={`flex h-[38px] items-center rounded-lg border px-3 text-sm font-semibold ${
+                        numberingOverflow
+                          ? "border-red-300 bg-red-50 text-red-600"
+                          : "border-gray-200 bg-white text-gray-900"
+                      }`}>
                         {numberEnd.toLocaleString()}
                       </div>
                     </div>
                     <div className="pt-5">
                       <span className="rounded-xl bg-gray-900 px-3 py-1 text-[11px] font-semibold text-white">
-                        {activeQty.toLocaleString()} {t("ncr.numbering.forms")}
+                        {quantity.toLocaleString()} {t("ncr.numbering.forms")}
                       </span>
                     </div>
                   </div>
-                  <p className="mt-2 text-[11px] text-gray-400">
-                    {t("ncr.numbering.hint", { qty: activeQty.toLocaleString() })}
+                  {numberingOverflow && (
+                    <p className="text-xs text-red-500 font-medium">Number exceeds 6 digits (max 999,999). Lower start number or quantity.</p>
+                  )}
+
+                  {/* Numbering color — only when full color print */}
+                  {printColor === "color" && (
+                    <div>
+                      <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400 mb-1.5">
+                        Number Color
+                      </label>
+                      <div className="flex gap-2">
+                        {[
+                          { id: "black", label: "Black" },
+                          { id: "red", label: "Red" },
+                        ].map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => setNumberColor(c.id)}
+                            className={`rounded-xl border-2 px-4 py-2 text-sm font-bold transition-all duration-150 ${
+                              numberColor === c.id
+                                ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                            }`}
+                          >
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-[11px] text-gray-400">
+                    Max 6 digits. {printColor === "black" ? "Numbering printed in black." : `Numbering printed in ${numberColor}.`}
                   </p>
                 </div>
               )}
             </ConfigStep>
 
             {/* File Upload */}
-            <ConfigStep number={5} title={t("ncr.artwork")} optional>
+            <ConfigStep number={++step} title={t("ncr.artwork")} optional>
               <ArtworkUpload
                 uploadedFile={uploadedFile}
                 onUploaded={setUploadedFile}
@@ -350,7 +434,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
         totalCents={quote.totalCents}
         summaryText={
           quote.quoteData
-            ? `${activeQty.toLocaleString()} ${t("ncr.numbering.forms")}${numbering ? ` \u2022 #${numberStartInt}\u2013${numberEnd}` : ""}`
+            ? `${quantity.toLocaleString()} ${t("ncr.numbering.forms")}${numbering ? ` \u2022 #${numberStartInt}\u2013${numberEnd}` : ""}`
             : null
         }
         canAddToCart={canAddToCart}
@@ -359,70 +443,6 @@ export default function NcrOrderClient({ defaultType, productImages }) {
         buyNowLoading={buyNowLoading}
         t={t}
       />
-
-      {/* Numbering Modal */}
-      {showNumberModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-1">{t("ncr.numbering.modalTitle")}</h3>
-            <p className="text-sm text-gray-500 mb-5">
-              {t("ncr.numbering.modalDesc", { qty: activeQty.toLocaleString() })}
-            </p>
-
-            <div className="flex items-end gap-4">
-              <div className="flex-1">
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400 mb-1.5">
-                  {t("ncr.numbering.startNumber")}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={numberStart}
-                  onChange={(e) => setNumberStart(e.target.value)}
-                  autoFocus
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-semibold focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
-                />
-              </div>
-              <span className="pb-3 text-lg text-gray-400">&rarr;</span>
-              <div className="flex-1">
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400 mb-1.5">
-                  {t("ncr.numbering.endNumber")}
-                </label>
-                <div className="flex h-[42px] items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-bold text-gray-900">
-                  {numberEnd.toLocaleString()}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-3 rounded-lg bg-gray-50 px-3 py-2">
-              <p className="text-xs text-gray-500">
-                {t("ncr.numbering.rangeExplain", {
-                  start: numberStartInt.toLocaleString(),
-                  end: numberEnd.toLocaleString(),
-                  qty: activeQty.toLocaleString(),
-                })}
-              </p>
-            </div>
-
-            <div className="mt-6 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={handleCancelNumbering}
-                className="rounded-xl border border-gray-200 px-5 py-2 text-xs font-bold uppercase tracking-[0.14em] text-gray-600 hover:bg-gray-50"
-              >
-                {t("ncr.numbering.cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmNumbering}
-                className="rounded-xl bg-gray-900 px-5 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white hover:bg-gray-800"
-              >
-                {t("ncr.numbering.confirm")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

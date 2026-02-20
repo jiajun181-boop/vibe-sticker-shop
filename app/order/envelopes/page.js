@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
 
 export function generateMetadata() {
@@ -15,7 +16,9 @@ export function generateMetadata() {
   };
 }
 
-export default function EnvelopeOrderPage() {
+export default async function EnvelopeOrderPage() {
+  const productImages = await getOrderPageImages(["envelopes","envelopes-standard"]);
+
   return (
     <Suspense
       fallback={
@@ -24,7 +27,7 @@ export default function EnvelopeOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="envelopes" hideTypeSelector />
+      <MarketingPrintOrderClient defaultType="envelopes" hideTypeSelector productImages={productImages} />
     </Suspense>
   );
 }

@@ -154,6 +154,14 @@ function CardInner({ group, t, stickerConfig, ctaLabel }) {
           {stickerConfig && (
             <DiscountBadge quantities={stickerConfig.quantities} />
           )}
+          {group.badges?.map((badge) => (
+            <span
+              key={badge}
+              className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm"
+            >
+              {badge}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -162,6 +170,11 @@ function CardInner({ group, t, stickerConfig, ctaLabel }) {
         <h3 className="text-xs sm:text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-moon-gold)] transition-colors">
           {group.title}
         </h3>
+        {group.description && (
+          <p className="mt-0.5 text-[10px] sm:text-[11px] leading-snug text-[var(--color-gray-500)] line-clamp-2">
+            {group.description}
+          </p>
+        )}
 
         {/* Price + turnaround */}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">

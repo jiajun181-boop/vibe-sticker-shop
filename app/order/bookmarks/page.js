@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
 
 export function generateMetadata() {
@@ -15,7 +16,9 @@ export function generateMetadata() {
   };
 }
 
-export default function BookmarkOrderPage() {
+export default async function BookmarkOrderPage() {
+  const productImages = await getOrderPageImages(["bookmarks","bookmarks-standard"]);
+
   return (
     <Suspense
       fallback={
@@ -24,7 +27,7 @@ export default function BookmarkOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="bookmarks" hideTypeSelector />
+      <MarketingPrintOrderClient defaultType="bookmarks" hideTypeSelector productImages={productImages} />
     </Suspense>
   );
 }

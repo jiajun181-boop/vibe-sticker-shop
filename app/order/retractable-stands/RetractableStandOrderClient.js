@@ -6,25 +6,25 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import RollUpStandSections from "@/components/banners/RollUpStandSections";
 
 const DEBOUNCE_MS = 300;
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-// ─── Retractable Stand Configuration ───
+// ─── Stand Tier Configuration ───
 
-const SIZES = [
-  { id: "24x80", label: '24" × 80"', tag: "Economy", w: 24, h: 80 },
-  { id: "33x81", label: '33" × 81"', tag: "Standard", w: 33, h: 81 },
-  { id: "36x92", label: '36" × 92"', tag: "Wide", w: 36, h: 92 },
-  { id: "48x92", label: '48" × 92"', tag: "XL", w: 48, h: 92 },
+const STAND_TIERS = [
+  { id: "economy", label: 'Economy 33"\u00d780"', w: 33, h: 80, priceCents: 5900 },
+  { id: "standard", label: 'Standard 33"\u00d781"', w: 33, h: 81, priceCents: 8900 },
+  { id: "premium", label: 'Premium 36"\u00d792"', w: 36, h: 92, priceCents: 12900 },
+  { id: "deluxe", label: 'Deluxe 48"\u00d792"', w: 48, h: 92, priceCents: 16900 },
 ];
 
-const BASE_QUALITIES = [
-  { id: "economy", surcharge: 0 },
-  { id: "standard", surcharge: 1500 },
-  { id: "premium", surcharge: 3000 },
+const ORDER_TYPES = [
+  { id: "complete-kit", surcharge: 0 },
+  { id: "print-only", surcharge: 0 },
 ];
 
 const BANNER_MATERIALS = [
@@ -32,48 +32,20 @@ const BANNER_MATERIALS = [
   { id: "fabric", surcharge: 500 },
 ];
 
-const CARRYING_CASES = [
-  { id: "included", surcharge: 0 },
-  { id: "padded-case", surcharge: 500 },
-];
-
 const QUANTITIES = [1, 2, 5, 10];
 
 // ─── Icons ───
 
-function BaseIcon({ type, className = "h-7 w-7" }) {
+function TierIcon({ tier, className = "h-10 w-10" }) {
   const common = { className, strokeWidth: 1.5, fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" };
-  switch (type) {
-    case "economy":
-      return (
-        <svg {...common}>
-          <rect x="6" y="18" width="12" height="3" rx="0.5" />
-          <line x1="12" y1="18" x2="12" y2="4" />
-          <rect x="9" y="4" width="6" height="14" rx="0.5" opacity="0.3" />
-        </svg>
-      );
-    case "standard":
-      return (
-        <svg {...common}>
-          <rect x="5" y="18" width="14" height="3" rx="1" />
-          <line x1="12" y1="18" x2="12" y2="4" strokeWidth="2" />
-          <rect x="8" y="4" width="8" height="14" rx="1" opacity="0.3" />
-          <circle cx="12" cy="21" r="0.5" fill="currentColor" />
-        </svg>
-      );
-    case "premium":
-      return (
-        <svg {...common}>
-          <rect x="4" y="17" width="16" height="4" rx="1" strokeWidth="2" />
-          <line x1="12" y1="17" x2="12" y2="3" strokeWidth="2" />
-          <rect x="7" y="3" width="10" height="14" rx="1" opacity="0.3" />
-          <circle cx="6" cy="21" r="1" fill="currentColor" opacity="0.5" />
-          <circle cx="18" cy="21" r="1" fill="currentColor" opacity="0.5" />
-        </svg>
-      );
-    default:
-      return null;
-  }
+  const opacity = tier === "economy" ? "0.3" : tier === "standard" ? "0.4" : tier === "premium" ? "0.5" : "0.6";
+  return (
+    <svg {...common}>
+      <rect x="5" y="17" width="14" height="4" rx="1" />
+      <line x1="12" y1="17" x2="12" y2="3" strokeWidth={tier === "economy" ? 1 : 2} />
+      <rect x="8" y="3" width="8" height="14" rx="1" opacity={opacity} />
+    </svg>
+  );
 }
 
 // ─── Main Component ───
@@ -82,10 +54,9 @@ export default function RetractableStandOrderClient() {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
-  const [sizeIdx, setSizeIdx] = useState(1); // 33×81 Standard default
-  const [baseId, setBaseId] = useState("economy");
+  const [tierIdx, setTierIdx] = useState(1); // Standard default
+  const [orderType, setOrderType] = useState("complete-kit");
   const [bannerId, setBannerId] = useState("vinyl");
-  const [caseId, setCaseId] = useState("included");
   const [quantity, setQuantity] = useState(1);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -98,7 +69,7 @@ export default function RetractableStandOrderClient() {
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
 
-  const size = SIZES[sizeIdx];
+  const tier = STAND_TIERS[tierIdx];
 
   const activeQty = useMemo(() => {
     if (customQty !== "") {
@@ -127,8 +98,8 @@ export default function RetractableStandOrderClient() {
       body: JSON.stringify({
         slug: "retractable-stands",
         quantity: activeQty,
-        widthIn: size.w,
-        heightIn: size.h,
+        widthIn: tier.w,
+        heightIn: tier.h,
         sides: "single",
       }),
       signal: ac.signal,
@@ -143,7 +114,7 @@ export default function RetractableStandOrderClient() {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty]);
+  }, [tier.w, tier.h, activeQty]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -154,10 +125,10 @@ export default function RetractableStandOrderClient() {
   // ─── Pricing ───
 
   const subtotalCents = quoteData?.totalCents ?? 0;
-  const baseSurcharge = (BASE_QUALITIES.find((b) => b.id === baseId)?.surcharge ?? 0) * activeQty;
   const bannerSurcharge = (BANNER_MATERIALS.find((b) => b.id === bannerId)?.surcharge ?? 0) * activeQty;
-  const caseSurcharge = (CARRYING_CASES.find((c) => c.id === caseId)?.surcharge ?? 0) * activeQty;
-  const adjustedSubtotal = subtotalCents + baseSurcharge + bannerSurcharge + caseSurcharge;
+  // Print-only: deduct stand hardware cost (~40% discount estimate)
+  const printOnlyDiscount = orderType === "print-only" ? Math.round(subtotalCents * 0.35) : 0;
+  const adjustedSubtotal = subtotalCents + bannerSurcharge - printOnlyDiscount;
   const totalCents = adjustedSubtotal;
 
   const canAddToCart = quoteData && !quoteLoading && activeQty > 0;
@@ -167,25 +138,20 @@ export default function RetractableStandOrderClient() {
   function buildCartItem() {
     if (!quoteData || activeQty <= 0) return null;
 
-    const nameParts = [
-      t("rs.title"),
-      `${size.label} (${size.tag})`,
-    ];
-
+    const typeLabel = orderType === "print-only" ? "Print Only" : "Complete Kit";
     return {
       id: "retractable-stands",
-      name: nameParts.join(" — "),
+      name: `${t("rs.title")} \u2014 ${tier.label} (${typeLabel})`,
       slug: "retractable-stands",
-      price: Math.round(adjustedSubtotal / activeQty),
+      price: Math.round(totalCents / activeQty),
       quantity: activeQty,
       options: {
-        sizeId: size.id,
-        sizeLabel: size.label,
-        width: size.w,
-        height: size.h,
-        base: baseId,
+        tier: tier.id,
+        sizeLabel: tier.label,
+        width: tier.w,
+        height: tier.h,
+        orderType,
         bannerMaterial: bannerId,
-        carryingCase: caseId,
         sides: "single",
         fileName: uploadedFile?.name || null,
       },
@@ -240,7 +206,7 @@ export default function RetractableStandOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("rs.breadcrumb"), href: "/shop/banners-displays/retractable-stands" },
+          { label: t("rs.breadcrumb"), href: "/shop/banners-displays" },
           { label: t("rs.order") },
         ]}
       />
@@ -253,41 +219,59 @@ export default function RetractableStandOrderClient() {
         {/* ── LEFT: Options ── */}
         <div className="space-y-8 lg:col-span-3">
 
-          {/* Size */}
-          <Section label={t("rs.size")}>
-            <div className="flex flex-wrap gap-2">
-              {SIZES.map((s, i) => (
-                <Chip key={s.id} active={sizeIdx === i} onClick={() => setSizeIdx(i)}>
-                  {s.label} <span className="ml-1 text-[11px] opacity-70">({s.tag})</span>
-                </Chip>
-              ))}
-            </div>
-          </Section>
-
-          {/* Base Quality */}
-          <Section label={t("rs.base.label")}>
-            <div className="grid grid-cols-3 gap-3">
-              {BASE_QUALITIES.map((b) => (
+          {/* Order Type Toggle */}
+          <Section label={t("banner.orderType.label")}>
+            <div className="grid grid-cols-2 gap-3">
+              {ORDER_TYPES.map((ot) => (
                 <button
-                  key={b.id}
+                  key={ot.id}
                   type="button"
-                  onClick={() => setBaseId(b.id)}
-                  className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
-                    baseId === b.id
+                  onClick={() => setOrderType(ot.id)}
+                  className={`rounded-xl border-2 p-4 text-left transition-all ${
+                    orderType === ot.id
                       ? "border-gray-900 bg-gray-900 text-white shadow-md"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
-                  <BaseIcon type={b.id} className="h-7 w-7" />
-                  <span className="text-sm font-semibold">{t(`rs.base.${b.id}`)}</span>
-                  <span className={`text-[11px] leading-tight ${baseId === b.id ? "text-gray-300" : "text-gray-400"}`}>
-                    {t(`rs.baseDesc.${b.id}`)}
+                  <span className="text-sm font-semibold">{t(`banner.orderType.${ot.id}`)}</span>
+                  <p className={`mt-0.5 text-[11px] ${orderType === ot.id ? "text-gray-300" : "text-gray-400"}`}>
+                    {t(`banner.orderType.${ot.id}Desc`)}
+                  </p>
+                </button>
+              ))}
+            </div>
+            {orderType === "print-only" && (
+              <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                <svg className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <p className="text-[11px] text-amber-800">{t("banner.orderType.printOnlyWarning")}</p>
+              </div>
+            )}
+          </Section>
+
+          {/* Stand Tier Selection */}
+          <Section label={t("rs.size")}>
+            <div className="grid grid-cols-2 gap-3">
+              {STAND_TIERS.map((st, i) => (
+                <button
+                  key={st.id}
+                  type="button"
+                  onClick={() => setTierIdx(i)}
+                  className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
+                    tierIdx === i
+                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  <TierIcon tier={st.id} className="h-10 w-10" />
+                  <span className="text-sm font-semibold capitalize">{t(`banner.tier.${st.id}`)}</span>
+                  <span className={`text-[11px] ${tierIdx === i ? "text-gray-300" : "text-gray-400"}`}>
+                    {st.label.split(" ").slice(1).join(" ")}
                   </span>
-                  {b.surcharge > 0 && (
-                    <span className={`text-[11px] font-medium ${baseId === b.id ? "text-amber-300" : "text-amber-600"}`}>
-                      +{formatCad(b.surcharge)}/ea
-                    </span>
-                  )}
+                  <span className={`text-sm font-bold ${tierIdx === i ? "text-white" : "text-gray-900"}`}>
+                    {formatCad(st.priceCents)}
+                  </span>
                 </button>
               ))}
             </div>
@@ -301,20 +285,6 @@ export default function RetractableStandOrderClient() {
                   {t(`rs.banner.${b.id}`)}
                   {b.surcharge > 0 && (
                     <span className="ml-1 text-[11px] opacity-70">+{formatCad(b.surcharge)}/ea</span>
-                  )}
-                </Chip>
-              ))}
-            </div>
-          </Section>
-
-          {/* Carrying Case */}
-          <Section label={t("rs.case.label")}>
-            <div className="flex flex-wrap gap-2">
-              {CARRYING_CASES.map((c) => (
-                <Chip key={c.id} active={caseId === c.id} onClick={() => setCaseId(c.id)}>
-                  {t(`rs.case.${c.id}`)}
-                  {c.surcharge > 0 && (
-                    <span className="ml-1 text-[11px] opacity-70">+{formatCad(c.surcharge)}/ea</span>
                   )}
                 </Chip>
               ))}
@@ -337,9 +307,7 @@ export default function RetractableStandOrderClient() {
             <div className="mt-3 flex items-center gap-2">
               <label className="text-xs text-gray-500">{t("rs.customQty")}:</label>
               <input
-                type="number"
-                min="1"
-                max="999999"
+                type="number" min="1" max="999999"
                 value={customQty}
                 onChange={(e) => setCustomQty(e.target.value)}
                 placeholder="e.g. 3"
@@ -355,13 +323,7 @@ export default function RetractableStandOrderClient() {
               {uploadedFile ? (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-800">{uploadedFile.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => setUploadedFile(null)}
-                    className="text-xs text-red-500 hover:text-red-700"
-                  >
-                    {t("rs.remove")}
-                  </button>
+                  <button type="button" onClick={() => setUploadedFile(null)} className="text-xs text-red-500 hover:text-red-700">{t("rs.remove")}</button>
                 </div>
               ) : (
                 <UploadButton
@@ -369,12 +331,7 @@ export default function RetractableStandOrderClient() {
                   onClientUploadComplete={(res) => {
                     const first = Array.isArray(res) ? res[0] : null;
                     if (!first) return;
-                    setUploadedFile({
-                      url: first.ufsUrl || first.url,
-                      key: first.key,
-                      name: first.name,
-                      size: first.size,
-                    });
+                    setUploadedFile({ url: first.ufsUrl || first.url, key: first.key, name: first.name, size: first.size });
                   }}
                   onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
                 />
@@ -389,10 +346,9 @@ export default function RetractableStandOrderClient() {
             <h2 className="text-base font-bold text-gray-900">{t("rs.summary")}</h2>
 
             <dl className="space-y-2 text-sm">
-              <Row label={t("rs.size")} value={`${size.label} (${size.tag})`} />
-              <Row label={t("rs.base.label")} value={t(`rs.base.${baseId}`)} />
+              <Row label={t("banner.orderType.label")} value={t(`banner.orderType.${orderType}`)} />
+              <Row label={t("rs.size")} value={tier.label} />
               <Row label={t("rs.banner.label")} value={t(`rs.banner.${bannerId}`)} />
-              <Row label={t("rs.case.label")} value={t(`rs.case.${caseId}`)} />
               <Row label={t("rs.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
             </dl>
 
@@ -409,23 +365,19 @@ export default function RetractableStandOrderClient() {
             ) : quoteData ? (
               <dl className="space-y-2 text-sm">
                 <Row label={t("rs.basePrice")} value={formatCad(subtotalCents)} />
-                {baseSurcharge > 0 && (
-                  <Row label={t(`rs.base.${baseId}`)} value={`+ ${formatCad(baseSurcharge)}`} />
-                )}
                 {bannerSurcharge > 0 && (
                   <Row label={t(`rs.banner.${bannerId}`)} value={`+ ${formatCad(bannerSurcharge)}`} />
                 )}
-                {caseSurcharge > 0 && (
-                  <Row label={t(`rs.case.${caseId}`)} value={`+ ${formatCad(caseSurcharge)}`} />
+                {printOnlyDiscount > 0 && (
+                  <Row label={t("banner.orderType.print-only")} value={`- ${formatCad(printOnlyDiscount)}`} />
                 )}
-                <Row label={t("rs.subtotal")} value={formatCad(adjustedSubtotal)} />
                 <div className="flex justify-between border-t border-gray-100 pt-2">
                   <dt className="font-semibold text-gray-900">{t("rs.total")}</dt>
                   <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
                 </div>
                 <div className="pt-1">
                   <p className="text-[11px] text-gray-400">
-                    {formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("rs.each")}
+                    {formatCad(Math.round(totalCents / activeQty))}/{t("rs.each")}
                   </p>
                 </div>
               </dl>
@@ -434,28 +386,12 @@ export default function RetractableStandOrderClient() {
             )}
 
             <div className="space-y-3">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={!canAddToCart}
-                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
-                  canAddToCart
-                    ? "bg-gray-900 text-white hover:bg-gray-800"
-                    : "cursor-not-allowed bg-gray-200 text-gray-400"
-                }`}
-              >
+              <button type="button" onClick={handleAddToCart} disabled={!canAddToCart}
+                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-white hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
                 {t("rs.addToCart")}
               </button>
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
-                  canAddToCart && !buyNowLoading
-                    ? "border-gray-900 text-gray-900 hover:bg-gray-50"
-                    : "cursor-not-allowed border-gray-200 text-gray-400"
-                }`}
-              >
+              <button type="button" onClick={handleBuyNow} disabled={!canAddToCart || buyNowLoading}
+                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart && !buyNowLoading ? "border-gray-900 text-gray-900 hover:bg-gray-50" : "cursor-not-allowed border-gray-200 text-gray-400"}`}>
                 {buyNowLoading ? t("rs.processing") : t("rs.buyNow")}
               </button>
             </div>
@@ -469,6 +405,9 @@ export default function RetractableStandOrderClient() {
         </aside>
       </div>
 
+      {/* ── Product content sections ── */}
+      <RollUpStandSections />
+
       {/* ── MOBILE: Bottom bar ── */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-3">
@@ -479,23 +418,15 @@ export default function RetractableStandOrderClient() {
               <>
                 <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
                 <p className="truncate text-[11px] text-gray-500">
-                  {activeQty.toLocaleString()} × {size.label} ({size.tag})
+                  {activeQty.toLocaleString()} × {tier.label}
                 </p>
               </>
             ) : (
               <p className="text-sm text-gray-400">{t("rs.selectOptions")}</p>
             )}
           </div>
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={!canAddToCart}
-            className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
-              canAddToCart
-                ? "bg-gray-900 text-white hover:bg-gray-800"
-                : "cursor-not-allowed bg-gray-200 text-gray-400"
-            }`}
-          >
+          <button type="button" onClick={handleAddToCart} disabled={!canAddToCart}
+            className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${canAddToCart ? "bg-gray-900 text-white hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
             {t("rs.addToCart")}
           </button>
         </div>
@@ -522,15 +453,8 @@ function Section({ label, optional, children }) {
 
 function Chip({ active, onClick, children }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-        active
-          ? "border-gray-900 bg-gray-900 text-white"
-          : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"
-      }`}
-    >
+    <button type="button" onClick={onClick}
+      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${active ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"}`}>
       {children}
     </button>
   );
