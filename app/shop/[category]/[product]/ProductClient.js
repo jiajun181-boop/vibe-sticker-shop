@@ -1569,7 +1569,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         className="w-full rounded-xl border-2 border-[var(--color-gray-200)] bg-white px-3 py-2.5 text-center text-sm font-semibold text-[var(--color-gray-900)] transition-colors hover:border-[var(--color-gray-400)]"
                       >
                         {activeQuantityChoices.map((q) => (
-                          <option key={q} value={q}>{q}{q === smartDefaults.minQuantity ? " \u2605" : ""}</option>
+                          <option key={q} value={q}>{q}</option>
                         ))}
                       </select>
                     </div>
