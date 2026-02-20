@@ -298,9 +298,11 @@ export default function SubGroupLandingClient({
             {categoryIcon && <span className="mr-2">{categoryIcon}</span>}
             {categoryTitle}
           </h1>
-          <p className="mt-1 text-sm text-[var(--color-gray-500)]">
-            {totalCount} {t("mp.landing.products")}
-          </p>
+          {totalCount > 10 && (
+            <p className="mt-1 text-sm text-[var(--color-gray-500)]">
+              {totalCount} {t("mp.landing.products")}
+            </p>
+          )}
 
           {/* Trust badges for stickers category */}
           {isStickersCategory && <TrustBadgeBar />}

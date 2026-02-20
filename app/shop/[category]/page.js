@@ -90,16 +90,6 @@ const STICKERS_SEGMENTS = [
     title: "Vinyl & Specialty",
     slugs: ["vinyl-lettering"],
   },
-  {
-    key: "safety-compliance",
-    title: "Safety & Compliance",
-    slugs: ["fire-emergency", "hazard-warning", "ppe-equipment", "electrical-chemical"],
-  },
-  {
-    key: "industrial-labels",
-    title: "Industrial & Asset Labels",
-    slugs: ["asset-equipment-tags", "pipe-valve-labels", "warehouse-labels", "electrical-cable-labels"],
-  },
 ];
 
 const SIGNS_SEGMENTS = [
@@ -248,9 +238,13 @@ export async function generateMetadata({ params }) {
   const meta = config.categoryMeta[decoded];
   if (!meta) return {};
 
-  const title = `${meta.title} | La Lunar Printing`;
+  const CATEGORY_TITLES = {
+    "stickers-labels-decals": "Custom Stickers & Labels Toronto | La Lunar Printing",
+  };
+  const title = CATEGORY_TITLES[decoded] || `${meta.title} | La Lunar Printing`;
 
   const CATEGORY_DESCRIPTIONS = {
+    "stickers-labels-decals": "Custom die-cut stickers, kiss-cut stickers, sticker sheets, roll labels & vinyl lettering. Waterproof, UV-protected. Fast turnaround in Toronto.",
     "banners-displays": "Custom printed vinyl banners, mesh banners, roll-up stands, and display solutions in Toronto. Same day available.",
   };
   const description = CATEGORY_DESCRIPTIONS[decoded]
@@ -302,8 +296,6 @@ export default async function CategoryPage({ params }) {
 
   // Cross-category product sharing — shared products appear in both category pages
   const CROSS_FETCH = {
-    "stickers-labels-decals": ["vehicle-graphics-fleet"],
-    "vehicle-graphics-fleet": ["stickers-labels-decals"],
   };
   for (const xCat of CROSS_FETCH[decoded] || []) {
     if (!categoriesToFetch.includes(xCat)) categoriesToFetch.push(xCat);
