@@ -1369,7 +1369,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
   return (
     <Wrapper className={embedded ? "text-[var(--color-gray-800)]" : "bg-[radial-gradient(circle_at_top,_var(--color-gray-50),_var(--color-gray-100)_45%,_var(--color-gray-50))] pb-20 pt-10 text-[var(--color-gray-800)]"}>
-      <div className={embedded ? "mx-auto max-w-6xl space-y-6 lg:space-y-10 px-4 sm:px-6" : "mx-auto max-w-[1440px] space-y-6 lg:space-y-8 px-4 sm:px-6"}>
+      <div className={embedded ? "mx-auto max-w-6xl space-y-6 xl:space-y-10 px-4 sm:px-6" : "mx-auto max-w-[1440px] space-y-6 xl:space-y-8 px-4 sm:px-6"}>
         {!embedded && (
           <Breadcrumbs items={[
             { label: t("product.shop"), href: "/shop" },
@@ -1386,7 +1386,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
         {/* Mobile-only header - shows title before gallery on small screens */}
         {!embedded && (
-          <header className="lg:hidden">
+          <header className="xl:hidden">
             <div className="flex items-start gap-3">
               <h1 className="flex-1 text-3xl font-black tracking-tight text-gray-950">{product.name}</h1>
               <button
@@ -1421,8 +1421,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           </header>
         )}
 
-        <section className="grid gap-6 lg:gap-8 xl:gap-10 lg:grid-cols-12">
-          <div className="space-y-4 lg:col-span-7">
+        <section className="grid gap-6 xl:gap-8 2xl:gap-10 xl:grid-cols-12">
+          <div className="space-y-4 xl:col-span-7">
             <ImageGallery images={imageList} productName={product.name} />
 
             {templateGallery && <TemplateGallery templates={templateGallery} />}
@@ -1462,7 +1462,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 </div>
               </div>
             ) : specs.length > 0 ? (
-              <div className="hidden lg:block rounded-3xl border border-[var(--color-gray-200)] bg-white/95 p-4 shadow-sm sm:p-5">
+              <div className="hidden xl:block rounded-3xl border border-[var(--color-gray-200)] bg-white/95 p-4 shadow-sm sm:p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">{t("product.specifications")}</h3>
                 <div className="mt-3 divide-y divide-[var(--color-gray-100)]">
                   {specs.map(([k, v]) => (
@@ -1476,10 +1476,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             ) : null}
           </div>
 
-          <div className="space-y-6 lg:col-span-5 lg:self-start">
+          <div className="space-y-6 xl:col-span-5 xl:self-start">
             {/* Desktop-only header - hidden on mobile where it appears above the grid */}
             {!embedded && (
-              <header className="hidden lg:block">
+              <header className="hidden xl:block">
                 <div className="flex items-start gap-3">
                   <h1 className="flex-1 text-4xl font-black tracking-tight text-gray-950 xl:text-5xl">{product.name}</h1>
                   <button
@@ -1509,7 +1509,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               </header>
             )}
 
-            <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 lg:sticky lg:top-24 flex flex-col">
+            <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 xl:sticky xl:top-24 flex flex-col">
               {/* PRICE + QUANTITY (always visible, order-1) */}
               <div className="order-1">
                 {inventorySignal && (
