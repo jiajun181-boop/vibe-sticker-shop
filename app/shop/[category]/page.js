@@ -9,6 +9,7 @@ import { getCuttingTypeForSlug, getCuttingType } from "@/lib/sticker-order-confi
 import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
 import SignsCategoryClient from "./SignsCategoryClient";
+import StickersCategoryClient from "./StickersCategoryClient";
 
 export const revalidate = 120;
 
@@ -53,7 +54,7 @@ const MARKETING_SEGMENTS = [
   {
     key: "business-essentials",
     title: "Business Essentials",
-    slugs: ["business-cards", "stamps", "letterhead", "notepads", "ncr-forms", "document-printing", "certificates"],
+    slugs: ["business-cards", "stamps", "letterhead", "envelopes", "notepads", "ncr-forms", "document-printing", "certificates"],
   },
   {
     key: "retail-pos",
@@ -249,7 +250,7 @@ export async function generateMetadata({ params }) {
   if (!meta) return {};
 
   const CATEGORY_TITLES = {
-    "stickers-labels-decals": "Stickers & Labels | La Lunar Printing",
+    "stickers-labels-decals": "Custom Stickers & Labels Toronto | La Lunar Printing",
     "signs-rigid-boards": "Custom Signs & Display Boards Toronto | Coroplast & Foam Board | La Lunar Printing",
   };
   const title = CATEGORY_TITLES[decoded] || `${meta.title} | La Lunar Printing`;
@@ -338,6 +339,11 @@ export default async function CategoryPage({ params }) {
   for (const p of products) {
     p.fromPrice = p.displayFromPrice || p.minPrice || computeFromPrice(p);
     p.quickAddQty = getSmartDefaults(p).minQuantity;
+  }
+
+  // Stickers & Labels — custom category page with cut-type cards + material browser
+  if (decoded === "stickers-labels-decals") {
+    return <StickersCategoryClient />;
   }
 
   // Signs & Display Boards — flat sectioned layout (no sub-group landings)
