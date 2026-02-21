@@ -10,6 +10,7 @@ import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
 import SignsCategoryClient from "./SignsCategoryClient";
 import StickersCategoryClient from "./StickersCategoryClient";
+import WindowsWallsFloorsCategoryClient from "./WindowsWallsFloorsCategoryClient";
 
 export const revalidate = 120;
 
@@ -96,18 +97,18 @@ const STICKERS_SEGMENTS = [
 
 const SIGNS_PRODUCT_SECTIONS = [
   {
-    key: "coroplast",
-    title: "Coroplast Signs",
-    description: "Durable outdoor signage \u2014 weatherproof, UV resistant",
-    productSlugs: ["yard-sign", "real-estate-sign", "construction-site-signs", "coroplast-signs"],
+    key: "outdoor-coroplast",
+    title: "Outdoor Coroplast Signs",
+    description: "Durable outdoor signage \u2014 weatherproof, UV resistant, double-sided",
+    productSlugs: ["yard-sign", "real-estate-sign", "election-signs", "open-house-signs", "directional-signs"],
     noImageGradient: "from-sky-100 to-emerald-100",
     noImageIcon: "\uD83E\uDEA7",
   },
   {
-    key: "foam-board",
-    title: "Foam Board Displays",
-    description: "Lightweight indoor boards \u2014 events, presentations, photo props",
-    productSlugs: ["selfie-frame-board", "welcome-sign-board", "tri-fold-presentation-board", "foam-board"],
+    key: "indoor-boards",
+    title: "Indoor Boards",
+    description: "Rigid boards for retail, offices, events & presentations",
+    productSlugs: ["pvc-board-signs", "selfie-frame-board", "welcome-sign-board", "tri-fold-presentation-board"],
     noImageGradient: "from-orange-100 to-amber-100",
     noImageIcon: "\uD83D\uDDBC\uFE0F",
   },
@@ -139,22 +140,16 @@ const BANNERS_DISPLAYS_SEGMENTS = [
   },
 ];
 
-const WINDOWS_WALLS_FLOORS_SEGMENTS = [
-  {
-    key: "window-films",
-    title: "Window Films",
-    slugs: ["static-clings", "adhesive-films", "one-way-vision", "privacy-films"],
-  },
-  {
-    key: "lettering-graphics",
-    title: "Lettering & Window Graphics",
-    slugs: ["window-lettering", "window-graphics"],
-  },
-  {
-    key: "wall-floor",
-    title: "Wall & Floor Graphics",
-    slugs: ["wall-graphics", "floor-graphics"],
-  },
+const WWF_PRODUCT_SLUGS = [
+  "one-way-vision",
+  "frosted-window-film",
+  "static-cling",
+  "transparent-color-film",
+  "blockout-vinyl",
+  "opaque-window-graphics",
+  "glass-waistline",
+  "wall-graphics",
+  "floor-graphics",
 ];
 
 function safeDecode(value) {
@@ -252,6 +247,7 @@ export async function generateMetadata({ params }) {
   const CATEGORY_TITLES = {
     "stickers-labels-decals": "Custom Stickers & Labels Toronto | La Lunar Printing",
     "signs-rigid-boards": "Custom Signs & Display Boards Toronto | Coroplast & Foam Board | La Lunar Printing",
+    "windows-walls-floors": "Window Films, Wall & Floor Graphics Toronto | La Lunar Printing",
   };
   const title = CATEGORY_TITLES[decoded] || `${meta.title} | La Lunar Printing`;
 
@@ -259,6 +255,7 @@ export async function generateMetadata({ params }) {
     "stickers-labels-decals": "Custom die-cut stickers, kiss-cut stickers, sticker sheets, roll labels & vinyl lettering. Waterproof, UV-protected. Fast turnaround in Toronto.",
     "banners-displays": "Custom printed vinyl banners, mesh banners, roll-up stands, and display solutions in Toronto. Same day available.",
     "signs-rigid-boards": "Custom printed Coroplast signs and foam board displays in Toronto. Real estate signs, yard signs, event backdrops, photo boards. Same day available. Free GTA delivery.",
+    "windows-walls-floors": "Custom window films, frosted vinyl, one-way vision, wall graphics & floor decals in Toronto. Professional quality, same day available.",
   };
   const description = CATEGORY_DESCRIPTIONS[decoded]
     || `Custom ${meta.title.toLowerCase()} printing — professional quality, fast turnaround in Toronto & the GTA.`;
@@ -365,6 +362,23 @@ export default async function CategoryPage({ params }) {
         categoryTitle={meta?.title || "Signs & Display Boards"}
         sections={toClientSafe(sections)}
         totalCount={products.length}
+      />
+    );
+  }
+
+  // Windows, Walls & Floors — flat product grid with filter tabs
+  if (decoded === "windows-walls-floors") {
+    const wwfSlugSet = new Set(WWF_PRODUCT_SLUGS);
+    const wwfProducts = products.filter((p) => wwfSlugSet.has(p.slug));
+    // Sort by the display order defined in WWF_PRODUCT_SLUGS
+    wwfProducts.sort((a, b) => WWF_PRODUCT_SLUGS.indexOf(a.slug) - WWF_PRODUCT_SLUGS.indexOf(b.slug));
+
+    return (
+      <WindowsWallsFloorsCategoryClient
+        category={decoded}
+        categoryTitle={meta?.title || "Windows, Walls & Floors"}
+        products={toClientSafe(wwfProducts)}
+        totalCount={wwfProducts.length}
       />
     );
   }
@@ -476,7 +490,6 @@ export default async function CategoryPage({ params }) {
       "marketing-business-print": MARKETING_SEGMENTS,
       "stickers-labels-decals": STICKERS_SEGMENTS,
       "banners-displays": BANNERS_DISPLAYS_SEGMENTS,
-      "windows-walls-floors": WINDOWS_WALLS_FLOORS_SEGMENTS,
       "vehicle-graphics-fleet": VEHICLE_GRAPHICS_FLEET_SEGMENTS,
     };
     const segmentDef = SEGMENT_MAP[decoded] || null;

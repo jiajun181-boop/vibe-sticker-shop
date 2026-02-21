@@ -17,7 +17,9 @@ import VariantProductPage from "./VariantProductPage";
 import SceneLandingPage from "./SceneLandingPage";
 import StickerProductPageClient from "@/components/sticker-product/StickerProductPageClient";
 import SignProductPageClient from "@/components/sign-product/SignProductPageClient";
-import StickerOrderClient from "@/app/order/stickers/StickerOrderClient";
+import WwfProductPageClient from "@/components/wwf-product/WwfProductPageClient";
+import { getWwfPageContent } from "@/lib/wwf-page-content";
+import ComingSoonPage from "@/components/sign-product/ComingSoonPage";
 import BookletOrderClient from "@/app/order/booklets/BookletOrderClient";
 import NcrOrderClient from "@/app/order/ncr/NcrOrderClient";
 import BannerOrderClient from "@/app/order/banners/BannerOrderClient";
@@ -122,10 +124,45 @@ export async function generateMetadata({ params }) {
     };
   }
 
+  // Coming Soon signs metadata
+  const COMING_SOON_SIGNS = {
+    "selfie-frame-board": { name: "Event & Photo Boards", description: "Custom foam board selfie frames, photo backdrops, and event props. Coming soon to La Lunar Printing." },
+    "welcome-sign-board": { name: "Event Signs", description: "Custom welcome signs, seating charts, and event signage on foam board. Coming soon." },
+    "tri-fold-presentation-board": { name: "Presentation Boards", description: "Tri-fold presentation boards for science fairs, exhibitions, and conferences. Coming soon." },
+  };
+  const comingSoonMeta = COMING_SOON_SIGNS[decodedSlug];
+  if (comingSoonMeta && safeDecode(category) === "signs-rigid-boards") {
+    const title = `${comingSoonMeta.name} | Coming Soon | La Lunar Printing`;
+    const csDescription = comingSoonMeta.description;
+    const url = `${SITE_URL}/shop/${category}/${slug}`;
+    return {
+      title,
+      description: csDescription,
+      alternates: { canonical: url },
+      openGraph: { title, description: csDescription, url, type: "website" },
+      twitter: { card: "summary_large_image", title, description: csDescription },
+    };
+  }
+
   // Sign rich page metadata
   const signRich = getSignRichPageSlug(decodedSlug);
   if (signRich) {
     const { content } = signRich;
+    const url = `${SITE_URL}/shop/${category}/${slug}`;
+    return {
+      title: content.seo.title,
+      description: content.seo.description,
+      keywords: content.seo.keywords,
+      alternates: { canonical: url },
+      openGraph: { title: content.seo.title, description: content.seo.description, url, type: "website" },
+      twitter: { card: "summary_large_image", title: content.seo.title, description: content.seo.description },
+    };
+  }
+
+  // WWF rich page metadata
+  const wwfRich = getWwfPageContent(decodedSlug);
+  if (wwfRich) {
+    const { content } = wwfRich;
     const url = `${SITE_URL}/shop/${category}/${slug}`;
     return {
       title: content.seo.title,
@@ -265,6 +302,17 @@ export default async function ProductPage({ params }) {
     }
   }
 
+  // ── Coming Soon signs ──
+  const COMING_SOON_SIGNS_PAGE = {
+    "selfie-frame-board": { name: "Event & Photo Boards", description: "Custom foam board selfie frames, photo backdrops, and event props. Full configurator and online ordering coming soon." },
+    "welcome-sign-board": { name: "Event Signs", description: "Custom welcome signs, seating charts, and event signage on premium foam board. Full configurator and online ordering coming soon." },
+    "tri-fold-presentation-board": { name: "Presentation Boards", description: "Tri-fold presentation boards for science fairs, exhibitions, and conferences. Full configurator and online ordering coming soon." },
+  };
+  const comingSoon = COMING_SOON_SIGNS_PAGE[decodedSlug];
+  if (comingSoon && decodedCategory === "signs-rigid-boards") {
+    return <ComingSoonPage {...comingSoon} slug={decodedSlug} category={decodedCategory} />;
+  }
+
   // ── Sign rich product page: SEO-optimized page with embedded configurator ──
   // Must come BEFORE sub-product landing because sign slugs (e.g. "real-estate-signs")
   // also exist in SUB_PRODUCT_CONFIG, and the rich page should take priority.
@@ -308,6 +356,50 @@ export default async function ProductPage({ params }) {
         />
       </Suspense>
     );
+  }
+
+  // ── WWF rich product page: SEO-optimized page with embedded configurator ──
+  if (decodedCategory === "windows-walls-floors") {
+    const wwfContent = getWwfPageContent(decodedSlug);
+    if (wwfContent) {
+      const wwfProduct = await prisma.product.findFirst({
+        where: { slug: decodedSlug, isActive: true },
+        include: { images: { orderBy: { sortOrder: "asc" } } },
+      });
+      const wwfAssets = wwfProduct ? await getProductAssets(wwfProduct.id) : [];
+      const wwfImages = wwfAssets.length > 0
+        ? wwfAssets
+        : toClientSafe(wwfProduct?.images || []);
+
+      const wwfRelated = await prisma.product.findMany({
+        where: {
+          isActive: true,
+          category: decodedCategory,
+          ...(wwfProduct ? { id: { not: wwfProduct.id } } : {}),
+        },
+        include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+        take: 4,
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      });
+
+      return (
+        <Suspense
+          fallback={
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+            </div>
+          }
+        >
+          <WwfProductPageClient
+            content={wwfContent.content}
+            wwfProductId={wwfContent.wwfProductId}
+            product={wwfProduct ? toClientSafe(wwfProduct) : { slug: decodedSlug, category: decodedCategory }}
+            images={wwfImages}
+            relatedProducts={toClientSafe(wwfRelated)}
+          />
+        </Suspense>
+      );
+    }
   }
 
   // ── Sub-product landing: parent slug → show child products as card grid ──
@@ -424,6 +516,10 @@ export default async function ProductPage({ params }) {
   // ── Category configurator: check all configurator types via unified router ──
   const configurator = getConfiguratorForSlug(decodedSlug);
   if (configurator) {
+    // Sticker products redirect to the stickers category page
+    if (configurator.component === "stickers") {
+      redirect(`/shop/stickers-labels-decals`);
+    }
     // Fetch product images for configurator display
     const cfgProduct = await prisma.product.findFirst({
       where: { slug: decodedSlug, isActive: true },
@@ -435,7 +531,8 @@ export default async function ProductPage({ params }) {
       : toClientSafe(cfgProduct?.images || []);
 
     const CONFIGURATOR_COMPONENTS = {
-      stickers: <StickerOrderClient defaultType={configurator.defaultValue} lockedType={true} productImages={cfgImages} />,
+      // Stickers use dedicated pages (die-cut, kiss-cut, etc.) — redirect via configurator-router
+      stickers: null,
       booklets: <BookletOrderClient defaultBinding={configurator.defaultValue} productImages={cfgImages} />,
       ncr: <NcrOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
       banners: <BannerOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,

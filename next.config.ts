@@ -130,6 +130,22 @@ const nextConfig: NextConfig = {
       { source: "/shop/:cat/rp-hang-tags", destination: "/shop/marketing-prints/tags-hang-tags", permanent: true },
       { source: "/shop/:cat/rp-menus", destination: "/shop/marketing-prints/menus-flat", permanent: true },
       { source: "/shop/:cat/rp-tickets", destination: "/shop/marketing-prints/tickets", permanent: true },
+      // ── WWF v2: old sub-group URLs → new product pages ──
+      { source: "/shop/windows-walls-floors/static-clings", destination: "/shop/windows-walls-floors/static-cling", permanent: true },
+      { source: "/shop/windows-walls-floors/adhesive-films", destination: "/shop/windows-walls-floors/transparent-color-film", permanent: true },
+      { source: "/shop/windows-walls-floors/privacy-films", destination: "/shop/windows-walls-floors/frosted-window-film", permanent: true },
+      { source: "/shop/windows-walls-floors/window-lettering", destination: "/shop/windows-walls-floors/opaque-window-graphics", permanent: true },
+      { source: "/shop/windows-walls-floors/window-graphics", destination: "/shop/windows-walls-floors/opaque-window-graphics", permanent: true },
+      { source: "/shop/windows-walls-floors/dichroic-window-film", destination: "/shop/windows-walls-floors", permanent: true },
+      { source: "/shop/windows-walls-floors/gradient-window-film", destination: "/shop/windows-walls-floors/transparent-color-film", permanent: true },
+      { source: "/shop/windows-walls-floors/window-graphics-double-sided", destination: "/shop/windows-walls-floors/opaque-window-graphics", permanent: true },
+      { source: "/shop/windows-walls-floors/window-graphics-standard", destination: "/shop/windows-walls-floors/opaque-window-graphics", permanent: true },
+      { source: "/shop/windows-walls-floors/window-graphics-blockout", destination: "/shop/windows-walls-floors/blockout-vinyl", permanent: true },
+      { source: "/shop/windows-walls-floors/window-graphics-transparent-color", destination: "/shop/windows-walls-floors/transparent-color-film", permanent: true },
+      { source: "/shop/windows-walls-floors/frosted-window-graphics", destination: "/shop/windows-walls-floors/frosted-window-film", permanent: true },
+      { source: "/shop/windows-walls-floors/static-cling-frosted", destination: "/shop/windows-walls-floors/static-cling", permanent: true },
+      { source: "/shop/windows-walls-floors/static-cling-standard", destination: "/shop/windows-walls-floors/static-cling", permanent: true },
+
       ...categoryReorgRedirectsV1,
     ];
   },
