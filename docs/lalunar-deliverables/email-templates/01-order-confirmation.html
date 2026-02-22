@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <title>Order Confirmation</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f5f7fb;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Your La Lunar Printing order has been received.</div>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f5f7fb;margin:0;padding:0;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e7ebf3;border-radius:12px;overflow:hidden;font-family:Arial, Helvetica, sans-serif;">
+          <tr>
+            <td style="background:#1a365d;padding:22px 32px;color:#ffffff;">
+              <div style="font-size:22px;line-height:26px;font-weight:700;letter-spacing:0.2px;">La Lunar Printing</div>
+              <div style="font-size:12px;line-height:18px;opacity:0.9;">local printing, fast turnaround</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 32px 8px 32px;">
+              <h1 style="margin:0;font-size:24px;line-height:30px;color:#1f2937;font-weight:700;">Order Confirmed</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 8px 32px;font-size:14px;line-height:22px;color:#374151;">
+        <p style="margin:0 0 12px 0;">Hi {{customer_name}}, thank you for your order. We have received your request and our team will review your files and production details shortly.</p>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 16px 0;border:1px solid #e5e7eb;border-radius:10px;background:#ffffff;">
+          <tr><td style="padding:12px 14px;font-size:13px;line-height:20px;color:#374151;"><strong style="color:#111827;">Order #</strong> {{order_number}}<br /><strong style="color:#111827;">Estimated Finish Time</strong> {{estimated_finish_time}}<br /><strong style="color:#111827;">File Status</strong> {{file_status}} (Received / Pending Upload)<br /><strong style="color:#111827;">Pickup / Delivery</strong> {{fulfillment_method}} - {{pickup_or_shipping_info}}</td></tr>
+        </table>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:8px 0 16px 0;">
+    <tr>
+      <th align="left" style="font-size:12px;line-height:16px;color:#6b7280;padding:10px 8px;border-bottom:1px solid #e5e7eb;">Item</th>
+      <th align="left" style="font-size:12px;line-height:16px;color:#6b7280;padding:10px 8px;border-bottom:1px solid #e5e7eb;">Details</th>
+      <th align="right" style="font-size:12px;line-height:16px;color:#6b7280;padding:10px 8px;border-bottom:1px solid #e5e7eb;">Amount</th>
+    </tr>
+    <tr>
+      <td style="padding:10px 8px;border-bottom:1px solid #f1f5f9;font-size:13px;line-height:18px;color:#111827;">{{item_1_name}}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid #f1f5f9;font-size:12px;line-height:18px;color:#4b5563;">{{item_1_size}} - Qty {{item_1_qty}} x {{item_1_unit_price}}</td>
+      <td align="right" style="padding:10px 8px;border-bottom:1px solid #f1f5f9;font-size:13px;line-height:18px;color:#111827;">{{item_1_subtotal}}</td>
+    </tr><tr>
+      <td style="padding:10px 8px;border-bottom:1px solid #f1f5f9;font-size:13px;line-height:18px;color:#111827;">{{item_2_name}}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid #f1f5f9;font-size:12px;line-height:18px;color:#4b5563;">{{item_2_size}} - Qty {{item_2_qty}} x {{item_2_unit_price}}</td>
+      <td align="right" style="padding:10px 8px;border-bottom:1px solid #f1f5f9;font-size:13px;line-height:18px;color:#111827;">{{item_2_subtotal}}</td>
+    </tr>
+  </table>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 8px 0;">
+          <tr><td style="font-size:13px;line-height:20px;color:#4b5563;padding:2px 0;">Subtotal</td><td align="right" style="font-size:13px;line-height:20px;color:#111827;padding:2px 0;">{{subtotal}}</td></tr>
+          <tr><td style="font-size:13px;line-height:20px;color:#4b5563;padding:2px 0;">Shipping</td><td align="right" style="font-size:13px;line-height:20px;color:#111827;padding:2px 0;">{{shipping_amount}}</td></tr>
+          <tr><td style="font-size:13px;line-height:20px;color:#4b5563;padding:2px 0;">Tax</td><td align="right" style="font-size:13px;line-height:20px;color:#111827;padding:2px 0;">{{tax_amount}}</td></tr>
+          <tr><td style="font-size:16px;line-height:24px;color:#111827;padding:6px 0 0 0;font-weight:700;">Total</td><td align="right" style="font-size:16px;line-height:24px;color:#111827;padding:6px 0 0 0;font-weight:700;">{{total_amount}}</td></tr>
+        </table>
+        <p style="margin:12px 0 0 0;">Questions? Reply to this email and our team will help.</p></td>
+          </tr>
+          <tr><td style="padding:0 32px 24px 32px;"><a href="{{order_url}}" style="display:inline-block;background:#1a365d;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;line-height:14px;padding:12px 18px;border-radius:6px;">View Order</a></td></tr>
+          <tr>
+            <td style="padding:0 32px 24px 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #e7ebf3;border-radius:10px;background:#fbfcfe;">
+                <tr>
+                  <td style="padding:14px 16px;font-size:12px;line-height:18px;color:#4b5563;">
+                    <strong style="color:#1f2937;">La Lunar Printing</strong><br />
+                    <a href="https://lunarprint.ca" style="color:#1a365d;text-decoration:none;">lunarprint.ca</a><br />
+                    11 Progress Ave #21, Scarborough, ON<br />
+                    Phone: {{company_phone}}<br />
+                    Questions? Reply to this email.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 24px;background:#faf7f0;border-top:1px solid #efe5d0;font-size:11px;line-height:17px;color:#6b7280;text-align:center;">
+              (c) {{current_year}} La Lunar Printing - Scarborough, Ontario
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

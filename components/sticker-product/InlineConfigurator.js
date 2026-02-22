@@ -15,7 +15,7 @@ import {
 import {
   ArtworkUpload,
   CustomDimensions,
-  useConfiguratorQuote,
+  useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
 
@@ -31,6 +31,41 @@ const MATERIAL_HINTS = {
   holographic: "Rainbow sparkle",
   reflective: "High visibility",
   "glossy-paper": "Bright, indoor",
+};
+
+// Map frontend material IDs → API material alias + implicit lamination
+const MATERIAL_API_MAP = {
+  "white-vinyl": { alias: "white-vinyl", lam: null },
+  matte: { alias: "matte", lam: "matte" },
+  clear: { alias: "clear", lam: null },
+  holographic: { alias: "holographic", lam: null },
+  reflective: { alias: "reflective", lam: null },
+  "glossy-paper": { alias: "glossy-paper", lam: null },
+  "white-bopp": { alias: "white-bopp", lam: null },
+  "clear-bopp": { alias: "clear-bopp", lam: null },
+  "kraft-paper": { alias: "kraft-paper", lam: null },
+  silver: { alias: "silver", lam: null },
+  outdoor: { alias: "outdoor", lam: null },
+  indoor: { alias: "indoor", lam: null },
+  "floor-nonslip": { alias: "floor-nonslip", lam: null },
+  "transfer-vinyl": { alias: "transfer-vinyl", lam: null },
+  "white-cling": { alias: "white-cling", lam: null },
+  "clear-cling": { alias: "clear-cling", lam: null },
+  "magnetic-vinyl": { alias: "magnetic-vinyl", lam: null },
+  perforated: { alias: "perforated", lam: null },
+};
+
+// Map frontend cutting type IDs → API cutType option
+const CUT_TYPE_MAP = {
+  "die-cut": "die_cut",
+  "kiss-cut": "kiss_cut",
+  sheets: "sheet",
+  "roll-labels": "die_cut",
+  "vinyl-lettering": "die_cut",
+  decals: "die_cut",
+  transfer: "die_cut",
+  "static-cling": "die_cut",
+  magnets: "die_cut",
 };
 
 /**
@@ -118,13 +153,21 @@ export default function InlineConfigurator({ cuttingTypeId }) {
     setDimErrors(result.errors);
   }, [widthIn, heightIn, cutting]);
 
-  // --- Quote ---
-  const quote = useConfiguratorQuote({
+  // --- Pricing ---
+  const matApi = MATERIAL_API_MAP[materialId] || { alias: materialId, lam: null };
+  const lamination = matApi.lam || (finishingOptions.matte_laminate ? "matte" : "none");
+
+  const quote = useConfiguratorPrice({
     slug,
     quantity: activeQty,
     widthIn,
     heightIn,
-    material: materialId,
+    material: matApi.alias,
+    options: {
+      cutType: CUT_TYPE_MAP[cuttingTypeId] || "die_cut",
+      isSticker: true,
+      lamination,
+    },
     enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 

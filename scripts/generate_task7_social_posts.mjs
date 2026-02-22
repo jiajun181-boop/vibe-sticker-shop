@@ -1,0 +1,178 @@
+import fs from "node:fs";
+import path from "node:path";
+
+const outDir = path.join(process.cwd(), "docs", "lalunar-deliverables");
+fs.mkdirSync(outDir, { recursive: true });
+
+const posts = [
+  {
+    id: 1,
+    theme: "new-store-intro",
+    xiaohongshuZh: "大家好，我们是 La Lunar Printing，位于士嘉堡的本地印刷店。我们做贴纸、名片、横幅、标牌、车贴等，服务 GTA，部分标准产品支持当天/次日自取。欢迎私信咨询尺寸、材质和交期，我们会按实际用途给建议。",
+    instagramEn: "Hello from La Lunar Printing in Scarborough. We print stickers, business cards, banners, signs, vehicle decals, and more for businesses across the GTA, with same-day or next-day pickup available for some standard jobs. Send us your size, quantity, and deadline and we will recommend the fastest option.",
+    imageDescription: "Team or workspace intro photo with sample products displayed together on a worktable.",
+    hashtags: ["#LaLunarPrinting", "#Scarborough", "#TorontoPrinting", "#GTABusiness", "#LocalPrintShop"],
+  },
+  {
+    id: 2,
+    theme: "business-cards",
+    xiaohongshuZh: "名片依然是本地生意非常实用的获客工具，尤其是地产、装修、餐饮和上门服务行业。我们可做实用款和高级款，适合新开业和老客户补单。文件准备好时，本地快印更省时间。",
+    instagramEn: "Business cards still work, especially for realtors, trades, restaurants, and service businesses. We can produce practical or premium options for first orders and reorders, and local production helps when timelines are tight. If your artwork is ready, we can move quickly.",
+    imageDescription: "Neatly stacked business cards in matte and gloss finishes with close-up detail shots.",
+    hashtags: ["#BusinessCards", "#PrintShop", "#TorontoSmallBusiness", "#Branding", "#ScarboroughPrinting"],
+  },
+  {
+    id: 3,
+    theme: "die-cut-stickers",
+    xiaohongshuZh: "异形贴纸很适合做品牌贴、包装贴和活动赠品。我们支持多种材质和表面效果，小批量测试也可以做，适合先试款再放量。GTA 本地制作，沟通和补单都更快。",
+    instagramEn: "Die-cut stickers are perfect for branding, packaging, and event giveaways. We offer multiple material and finish options, and small test runs are available if you want to try a design before placing a larger order. Local GTA production also makes reorders easier.",
+    imageDescription: "A flat lay of colorful die-cut logo stickers in white and clear vinyl finishes.",
+    hashtags: ["#DieCutStickers", "#CustomStickers", "#StickerPrinting", "#TorontoBrands", "#Packaging"],
+  },
+  {
+    id: 4,
+    theme: "kiss-cut-stickers",
+    xiaohongshuZh: "Kiss-cut 贴纸保留大底纸，更好撕也更适合做派发和礼品包。很多品牌会把它用在活动现场、礼包或店内赠品里。想做易撕又好看的款式，可以先从 kiss-cut 开始。",
+    instagramEn: "Kiss-cut stickers keep the backing intact, which makes them easier to peel and great for handouts, gift packs, and event giveaways. They are a popular option when you want a cleaner presentation for branded sticker drops. If you need an easy-to-use promo sticker, this is a good starting point.",
+    imageDescription: "Kiss-cut stickers on larger backing cards, arranged like a giveaway set.",
+    hashtags: ["#KissCutStickers", "#PromoStickers", "#EventMarketing", "#TorontoPrinting", "#BrandMerch"],
+  },
+  {
+    id: 5,
+    theme: "roll-labels",
+    xiaohongshuZh: "卷筒标签适合食品、饮品、手作品牌和零售包装，贴标效率很高。我们会根据用途建议纸质或更耐用的材质，方便你做稳定补货。对本地品牌来说，交期稳定很关键。",
+    instagramEn: "Roll labels are great for food, beverage, handmade, and retail packaging because they improve labeling speed and consistency. We can recommend paper or more durable materials based on how the labels will be used. Reliable local turnaround is especially useful for repeat orders.",
+    imageDescription: "Roll labels applied to jars, bottles, and boxes in a small product photography setup.",
+    hashtags: ["#RollLabels", "#LabelPrinting", "#ProductPackaging", "#TorontoMakers", "#SmallBusinessBranding"],
+  },
+  {
+    id: 6,
+    theme: "flyers",
+    xiaohongshuZh: "Flyer 依然是开业、促销、社区活动很高效的宣传方式。预算有限也能做出专业感，关键是版面清晰、信息直接。需要赶活动时间时，本地快印会轻松很多。",
+    instagramEn: "Flyers are still one of the fastest ways to promote a grand opening, sale, or community event. Clear messaging and good layout matter more than complicated design. Local printing is a big advantage when you need extra copies before an event.",
+    imageDescription: "Stacks of promotional flyers for different businesses (retail, restaurant, event).",
+    hashtags: ["#Flyers", "#MarketingPrint", "#LocalMarketing", "#TorontoEvents", "#PrintDesign"],
+  },
+  {
+    id: 7,
+    theme: "postcards",
+    xiaohongshuZh: "Postcard 很适合做门店宣传、直邮、感谢卡和活动邀请。尺寸小、信息集中、也方便搭配包装使用。做本地推广时，常常比你想象中更有效。",
+    instagramEn: "Postcards work well for direct mail, store promos, thank-you cards, and event invites. They are compact, easy to distribute, and useful for both marketing and packaging inserts. For local campaigns, they are often more effective than people expect.",
+    imageDescription: "A set of postcards in different designs, including direct mail and thank-you card styles.",
+    hashtags: ["#Postcards", "#DirectMail", "#PrintMarketing", "#TorontoBusiness", "#SmallBusinessTips"],
+  },
+  {
+    id: 8,
+    theme: "yard-signs",
+    xiaohongshuZh: "Yard sign 不只用于竞选，地产 open house、施工提示、活动导视都很常见。我们可做常见尺寸和多数量方案，适合短期活动和批量投放。赶时间的话建议尽早发文件确认交期。",
+    instagramEn: "Yard signs are useful for much more than campaigns: real estate open houses, contractor notices, event wayfinding, and local promotions all rely on them. We can help with common sizes and quantity options for both small and larger runs. If you are on a deadline, send your artwork early so we can confirm turnaround.",
+    imageDescription: "Outdoor yard signs installed with stakes, showing directional and real estate examples.",
+    hashtags: ["#YardSigns", "#CoroplastSigns", "#RealEstateMarketing", "#EventSignage", "#ScarboroughPrint"],
+  },
+  {
+    id: 9,
+    theme: "retractable-banners",
+    xiaohongshuZh: "易拉宝是展会、招聘会、快闪活动的高频选择：好收纳、好运输、搭建快。需要临时补货时，本地制作的优势会非常明显。也可以搭配背景架和桌布做成整套展示。",
+    instagramEn: "Retractable banners are a go-to for trade shows, hiring fairs, and pop-up events because they are portable and quick to set up. Local production helps when you need a rush replacement before an event. They also pair well with backdrops and table covers for a complete booth setup.",
+    imageDescription: "Retractable banner displayed at an event booth beside a table and branded backdrop.",
+    hashtags: ["#RetractableBanner", "#RollUpBanner", "#TradeShowDisplay", "#EventBooth", "#GTAPrinting"],
+  },
+  {
+    id: 10,
+    theme: "x-banners",
+    xiaohongshuZh: "预算更紧时，X-banner 是很实用的展示方案。轻便、易运输、适合临时活动和短期宣传。我们可以根据使用场景建议画面尺寸和材质。",
+    instagramEn: "X-banners are a practical display option when you need a lighter and more budget-friendly setup. They are easy to transport and work well for temporary promos and events. We can recommend the right print size and material for your usage.",
+    imageDescription: "X-banner stand used in a small event or retail promotion corner.",
+    hashtags: ["#XBanner", "#DisplayPrinting", "#BudgetDisplay", "#EventMarketing", "#TorontoPrintShop"],
+  },
+  {
+    id: 11,
+    theme: "vehicle-lettering",
+    xiaohongshuZh: "车身字和车门 logo 对服务类商家真的很实用，车开到哪里品牌就曝光到哪里。相比整车包膜，预算更友好，也更方便后续更新电话或网址。适合装修、水电、清洁、维修等本地服务团队。",
+    instagramEn: "Vehicle lettering and door logos are a smart move for service businesses because your vehicle becomes a moving ad every day. It is usually more budget-friendly than a full wrap and easier to update when contact details change. Great for contractors, cleaning teams, and mobile service businesses.",
+    imageDescription: "Service van with clean vinyl lettering, logo decal, and phone number on the doors.",
+    hashtags: ["#VehicleLettering", "#VanDecals", "#FleetBranding", "#ContractorMarketing", "#ScarboroughBusiness"],
+  },
+  {
+    id: 12,
+    theme: "fleet-unit-numbers",
+    xiaohongshuZh: "车队编号、单位号、合规信息贴看起来小，但对管理效率非常重要。统一尺寸和位置后，后续新增车辆补单会快很多。我们可以帮你建立一套可复制的车队标识方案。",
+    instagramEn: "Fleet unit numbers and compliance decals may be small, but they make a big difference for operations and consistency. Standardizing size and placement saves time when new vehicles are added. We can help build a repeatable labeling setup for your fleet.",
+    imageDescription: "Close-up of fleet unit number decals and compliance markings on multiple vehicles.",
+    hashtags: ["#FleetGraphics", "#VehicleDecals", "#FleetManagement", "#CommercialVehicles", "#TorontoContractors"],
+  },
+  {
+    id: 13,
+    theme: "window-graphics",
+    xiaohongshuZh: "门店玻璃是很值得利用的展示位：透视贴、磨砂膜、橱窗贴都能提升品牌感。不同场景对材质要求不同，我们会根据采光、隐私和更换频率来建议。适合零售店、餐饮店、诊所和办公室。",
+    instagramEn: "Storefront glass is valuable branding space. One-way vision film, frosted privacy film, and window decals all solve different needs, from promotions to privacy to a cleaner storefront look. We can recommend the right material based on lighting, privacy goals, and update frequency.",
+    imageDescription: "Storefront glass with branded decals and frosted privacy film sections.",
+    hashtags: ["#WindowGraphics", "#StorefrontBranding", "#FrostedFilm", "#RetailDesign", "#TorontoPrinting"],
+  },
+  {
+    id: 14,
+    theme: "wall-floor-graphics",
+    xiaohongshuZh: "墙贴和地贴很适合做导视、活动路线、店内分区和品牌视觉延伸。不同地面/墙面材质需要匹配不同胶材，选对材料会省很多返工。做活动前建议先确认安装表面。",
+    instagramEn: "Wall and floor graphics are great for wayfinding, event routes, store zoning, and branded interiors. Material choice matters because different wall and floor surfaces need different adhesive performance. Confirming the installation surface before printing helps avoid rework.",
+    imageDescription: "Retail or event interior with directional floor decals and branded wall graphics.",
+    hashtags: ["#WallGraphics", "#FloorDecals", "#Wayfinding", "#RetailBranding", "#EventGraphics"],
+  },
+  {
+    id: 15,
+    theme: "canvas-prints",
+    xiaohongshuZh: "Canvas Print 适合家居、办公室、礼品和品牌空间装饰。照片分辨率够的话，成品质感会非常好。想做单幅、拼图墙或带框款，都可以先发图让我们帮你判断合适尺寸。",
+    instagramEn: "Canvas prints are a great option for home decor, office walls, gifts, and branded spaces. Image quality matters, so feel free to send your photo and we can suggest a suitable size before printing. We can help with single-panel, framed, and multi-panel layouts.",
+    imageDescription: "Canvas wall display with single framed canvas and multi-panel set in a styled room.",
+    hashtags: ["#CanvasPrints", "#CustomWallArt", "#OfficeDecor", "#TorontoHomeDecor", "#PhotoPrinting"],
+  },
+  {
+    id: 16,
+    theme: "customer-case-realtor",
+    xiaohongshuZh: "案例分享（虚构示例）：一位地产经纪需要周末 open house 套装，我们帮他完成 yard sign、open house sign、名片和 flyer。统一视觉后现场更专业，物料准备也更省心。活动类项目做整套物料通常效率更高。",
+    instagramEn: "Client story (example): a realtor needed an open house package for the weekend, including yard signs, open house signs, business cards, and flyers. Producing everything together created a cleaner brand look and made the timeline easier to manage. Bundled event print sets usually save time.",
+    imageDescription: "Staged open house setup with signs, flyers, and business cards arranged together.",
+    hashtags: ["#RealtorMarketing", "#OpenHouseSigns", "#YardSigns", "#BusinessCards", "#TorontoRealtor"],
+  },
+  {
+    id: 17,
+    theme: "customer-case-restaurant",
+    xiaohongshuZh: "案例分享（虚构示例）：新开餐饮店要赶开业，我们先做菜单、门贴营业时间、宣传单和桌卡基础版，让门店先顺利上线。后续再根据实际运营情况升级设计和数量。小店开业阶段，速度和可执行性往往最重要。",
+    instagramEn: "Client story (example): a new restaurant needed menus, door hour decals, promo flyers, and table tents before opening. We prioritized a practical first batch so they could launch on time, then planned upgrades after opening. Early-stage businesses often benefit more from speed and execution than over-perfecting the first run.",
+    imageDescription: "Restaurant countertop scene with menus, table tents, and door decal design samples.",
+    hashtags: ["#RestaurantPrinting", "#MenuPrinting", "#GrandOpening", "#StorefrontDecals", "#TorontoFoodBusiness"],
+  },
+  {
+    id: 18,
+    theme: "rush-pickup",
+    xiaohongshuZh: "很多客户都会问：明天活动前能拿到吗？这就是本地印刷的价值之一，文件审核、沟通和取货都更快。部分标准产品可当天/次日自取（视文件与排产而定），建议尽早发文件确认。",
+    instagramEn: "A common question we get: can this be ready before tomorrow’s event? That is where local production helps most because file review, communication, and pickup all move faster. Some standard products can be available for same-day or next-day pickup depending on file readiness and schedule.",
+    imageDescription: "Rush-order pickup scene with labeled packages and a ready-for-pickup counter.",
+    hashtags: ["#RushPrinting", "#SameDayPickup", "#NextDayPickup", "#Scarborough", "#GTAPrinting"],
+  },
+  {
+    id: 19,
+    theme: "promo-template",
+    xiaohongshuZh: "促销模板（可替换）：【本周快印档期】名片 / 贴纸 / 横幅等部分产品支持加急安排。私信发送“产品 + 尺寸 + 数量 + 截止时间”，我们会尽快回复可行方案与交期。*具体以文件状态和排产为准。",
+    instagramEn: "Promo template (editable): Rush production slots are available this week for selected business cards, stickers, and banners. Message us your product, size, quantity, and deadline and we will reply with the fastest available option. Final timing depends on file readiness and production schedule.",
+    imageDescription: "Branded promotional graphic announcing weekly rush print slots with sample products.",
+    hashtags: ["#PrintingPromo", "#RushOrder", "#LocalPrintShop", "#TorontoDeals", "#EventDeadline"],
+  },
+  {
+    id: 20,
+    theme: "consultation-cta",
+    xiaohongshuZh: "不知道选什么材质、尺寸或数量？先告诉我们用途就行：室内还是室外、短期还是长期、预算范围、什么时候要。我们会按实际场景给建议，减少试错成本，欢迎来士嘉堡自取或安排 GTA 配送。",
+    instagramEn: "Not sure what material, size, or quantity to choose? Start with the use case: indoor or outdoor, short-term or long-term, budget range, and deadline. We will recommend a practical option based on real usage so you can avoid trial-and-error costs.",
+    imageDescription: "Consultation scene with print material swatches, color cards, and sample products on a counter.",
+    hashtags: ["#PrintConsultation", "#CustomPrinting", "#ScarboroughPrintShop", "#TorontoBusiness", "#LaLunarPrinting"],
+  },
+];
+
+const output = {
+  brand: "La Lunar Printing",
+  channels: ["Xiaohongshu", "Instagram"],
+  posts,
+};
+
+fs.writeFileSync(path.join(outDir, "task7-social-media-posts.json"), JSON.stringify(output, null, 2), "utf8");
+console.log(JSON.stringify({ posts: output.posts.length, firstTheme: output.posts[0].theme }, null, 2));
+

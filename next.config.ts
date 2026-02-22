@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { categoryReorgRedirectsV1 } from "./lib/redirects/category-reorg-v1";
+import { codexUrlMappingRedirects } from "./lib/redirects/codex-url-mapping";
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -147,6 +148,7 @@ const nextConfig: NextConfig = {
       { source: "/shop/windows-walls-floors/static-cling-standard", destination: "/shop/windows-walls-floors/static-cling", permanent: true },
 
       ...categoryReorgRedirectsV1,
+      ...codexUrlMappingRedirects,
     ];
   },
 };

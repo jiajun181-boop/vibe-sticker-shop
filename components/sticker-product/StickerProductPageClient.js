@@ -3,7 +3,7 @@
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageGallery from "@/components/product/ImageGallery";
 import RelatedProducts from "@/components/product/RelatedProducts";
-import { MobileBottomBar, useConfiguratorQuote, useConfiguratorCart } from "@/components/configurator";
+import { MobileBottomBar } from "@/components/configurator";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { STICKER_COMPARISON_TABLE } from "@/lib/sticker-page-content";
 import InlineConfigurator from "./InlineConfigurator";

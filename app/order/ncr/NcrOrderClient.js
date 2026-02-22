@@ -9,7 +9,7 @@ import {
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
-  useConfiguratorQuote,
+  useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
 
@@ -80,7 +80,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
   const numberingOverflow = numberEnd > 999999;
 
   // ─── Quote ───
-  const quote = useConfiguratorQuote({
+  const quote = useConfiguratorPrice({
     slug: formType.slug,
     quantity,
     widthIn: size.w,

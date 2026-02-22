@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <title>File Issue - Action Required</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f5f7fb;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">There is an issue with your uploaded file and we need a revision.</div>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f5f7fb;margin:0;padding:0;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e7ebf3;border-radius:12px;overflow:hidden;font-family:Arial, Helvetica, sans-serif;">
+          <tr>
+            <td style="background:#d4a053;padding:22px 32px;color:#ffffff;">
+              <div style="font-size:22px;line-height:26px;font-weight:700;letter-spacing:0.2px;">La Lunar Printing</div>
+              <div style="font-size:12px;line-height:18px;opacity:0.9;">local printing, fast turnaround</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 32px 8px 32px;">
+              <h1 style="margin:0;font-size:24px;line-height:30px;color:#1f2937;font-weight:700;">File Review Update - Action Needed</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 8px 32px;font-size:14px;line-height:22px;color:#374151;">
+        <p style="margin:0 0 12px 0;">Hi {{customer_name}}, Jay reviewed your file for Order {{order_number}} and found an issue that needs correction before we can print.</p>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 14px 0;border:1px solid #f5d7a1;border-radius:10px;background:#fffaf0;">
+          <tr><td style="padding:12px 14px;font-size:13px;line-height:20px;color:#1f2937;"><strong>File:</strong> {{file_name}}<br /><strong>Issue Type:</strong> {{issue_type}}<br /><strong>Notes:</strong> {{issue_notes}}<br /><strong>Recommended Fix:</strong> {{recommended_fix}}</td></tr>
+        </table>
+        <p style="margin:0 0 12px 0;">Reply to this email if you want us to confirm the revised file before production. We will restart your turnaround timing once the corrected file is approved.</p>
+        <p style="margin:0;">Questions? Reply to this email.</p></td>
+          </tr>
+          <tr><td style="padding:0 32px 24px 32px;"><a href="{{upload_file_url}}" style="display:inline-block;background:#d4a053;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;line-height:14px;padding:12px 18px;border-radius:6px;">Upload Revised File</a></td></tr>
+          <tr>
+            <td style="padding:0 32px 24px 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #e7ebf3;border-radius:10px;background:#fbfcfe;">
+                <tr>
+                  <td style="padding:14px 16px;font-size:12px;line-height:18px;color:#4b5563;">
+                    <strong style="color:#1f2937;">La Lunar Printing</strong><br />
+                    <a href="https://lunarprint.ca" style="color:#1a365d;text-decoration:none;">lunarprint.ca</a><br />
+                    11 Progress Ave #21, Scarborough, ON<br />
+                    Phone: {{company_phone}}<br />
+                    Questions? Reply to this email.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 24px;background:#faf7f0;border-top:1px solid #efe5d0;font-size:11px;line-height:17px;color:#6b7280;text-align:center;">
+              (c) {{current_year}} La Lunar Printing - Scarborough, Ontario
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

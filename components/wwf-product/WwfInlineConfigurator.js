@@ -10,7 +10,7 @@ import {
 import {
   ArtworkUpload,
   CustomDimensions,
-  useConfiguratorQuote,
+  useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
 
@@ -22,7 +22,7 @@ const formatCad = (cents) =>
 
 /**
  * Inline configurator for Windows, Walls & Floors product pages.
- * Uses COST_PLUS API pricing via useConfiguratorQuote.
+ * Uses Phase 3 pricing engine via useConfiguratorPrice.
  *
  * Props:
  *  - wwfProductId: product id from wwf-product-config (e.g. "frosted-window-film")
@@ -100,13 +100,13 @@ export default function WwfInlineConfigurator({ wwfProductId }) {
     taxCents,
     totalCents,
     addSurcharge,
-  } = useConfiguratorQuote({
+  } = useConfiguratorPrice({
     slug: product.slug,
     quantity: activeQty,
     widthIn,
     heightIn,
     material: materialId,
-    extra: { cutType, printMode: "cmyk" },
+    options: { cutType, printMode: "cmyk" },
     enabled: quoteEnabled,
   });
 

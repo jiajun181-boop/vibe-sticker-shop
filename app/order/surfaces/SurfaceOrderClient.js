@@ -15,7 +15,7 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
-  useConfiguratorQuote,
+  useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
 
@@ -105,13 +105,13 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
     () => ({ cutType, ...(selectedMat?.printMode ? { printMode: selectedMat.printMode } : {}) }),
     [cutType, selectedMat]
   );
-  const quote = useConfiguratorQuote({
+  const quote = useConfiguratorPrice({
     slug: surfaceType.defaultSlug,
     quantity: activeQty,
     widthIn,
     heightIn,
     material: materialId,
-    extra: quoteExtra,
+    options: quoteExtra,
     enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 

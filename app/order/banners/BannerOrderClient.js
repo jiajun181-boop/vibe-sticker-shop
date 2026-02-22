@@ -15,7 +15,7 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
-  useConfiguratorQuote,
+  useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
 
@@ -94,7 +94,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
   }, [finishings, activeQty]);
 
   // Quote
-  const quote = useConfiguratorQuote({
+  const quote = useConfiguratorPrice({
     slug: bannerType.defaultSlug,
     quantity: activeQty,
     widthIn,

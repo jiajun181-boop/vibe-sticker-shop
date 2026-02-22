@@ -1,0 +1,266 @@
+import fs from "node:fs";
+import path from "node:path";
+
+const outDir = path.join(process.cwd(), "docs", "lalunar-deliverables");
+fs.mkdirSync(outDir, { recursive: true });
+
+const task6Path = path.join(outDir, "task6-product-faqs.json");
+if (!fs.existsSync(task6Path)) {
+  throw new Error("Missing task6-product-faqs.json. Run Task 6 generator first.");
+}
+
+const task6 = JSON.parse(fs.readFileSync(task6Path, "utf8"));
+
+const categoryUrlMap = {
+  "stickers-labels-decals": "https://lunarprint.ca/stickers/",
+  "marketing-business-print": "https://lunarprint.ca/print/",
+  "signs-rigid-boards": "https://lunarprint.ca/signs/",
+  "banners-displays": "https://lunarprint.ca/banners/",
+  "canvas-prints": "https://lunarprint.ca/canvas/",
+  "vehicle-graphics-fleet": "https://lunarprint.ca/vehicle-graphics/",
+  "windows-walls-floors": "https://lunarprint.ca/surface-graphics/",
+};
+
+const task6b = {
+  generatedFor: "lunarprint.ca",
+  basedOn: "task6-product-faqs.json",
+  format: "FAQPage Schema.org (JSON-LD-ready objects)",
+  categories: task6.categories.map((c) => ({
+    category: c.category,
+    canonicalUrl: categoryUrlMap[c.category] || "https://lunarprint.ca/",
+    schema: {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: c.faqs.map((f) => ({
+        "@type": "Question",
+        name: f.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: f.answer,
+        },
+      })),
+    },
+  })),
+};
+
+fs.writeFileSync(path.join(outDir, "task6b-faq-schema-ready.json"), JSON.stringify(task6b, null, 2), "utf8");
+
+const task8 = {
+  brand: {
+    name: "La Lunar Printing",
+    address: "11 Progress Ave #21, Scarborough, ON M1B 3X4",
+    serviceAreas: ["Scarborough", "Toronto", "Markham", "Pickering", "Ajax", "GTA"],
+    hours: {
+      mondayToFriday: "9:00 AM - 6:00 PM",
+      saturday: "10:00 AM - 3:00 PM",
+      sunday: "Closed",
+    },
+    services: [
+      "Custom Stickers",
+      "Business Cards",
+      "Signs",
+      "Banners",
+      "Canvas Prints",
+      "Vehicle Graphics",
+    ],
+  },
+  businessDescription: {
+    en: "La Lunar Printing is a Scarborough-based print shop serving businesses across the GTA with fast, reliable local production. We print custom stickers, business cards, signs, banners, canvas prints, and vehicle graphics for small businesses, real estate agents, restaurants, and event teams. Need a rush job? We offer practical turnaround options and clear communication from file review to pickup or delivery. Visit us at 11 Progress Ave #21, Scarborough, ON for local service and same-day or next-day pickup on eligible orders.",
+    zh: "La Lunar Printing 是位于士嘉堡的本地印刷店，服务 Scarborough、Toronto、Markham、Pickering、Ajax 及整个 GTA。我们提供定制贴纸、名片、标牌、横幅、帆布画和车身贴等印刷服务，面向小企业、地产经纪、餐饮和活动客户。我们强调本地制作、交期透明、沟通直接，部分标准产品可当天或次日自取。欢迎到店：11 Progress Ave #21, Scarborough, ON M1B 3X4。",
+  },
+  services: [
+    {
+      name: "Custom Stickers & Labels",
+      description: "Die-cut stickers, kiss-cut stickers, sticker sheets, and roll labels for branding, packaging, and promotions with fast local turnaround.",
+    },
+    {
+      name: "Business Card Printing",
+      description: "Custom business cards in practical and premium stock options for local businesses, sales teams, and real estate professionals.",
+    },
+    {
+      name: "Flyers, Brochures & Postcards",
+      description: "Marketing print for promotions, direct mail, events, and in-store handouts with flexible quantities and local pickup options.",
+    },
+    {
+      name: "Yard Signs & Coroplast Signs",
+      description: "Coroplast yard signs for real estate, events, campaigns, and contractor notices in common sizes and quantity tiers.",
+    },
+    {
+      name: "Foam Board & Display Signs",
+      description: "Indoor presentation boards, event boards, and display signage for retail, meetings, and special events.",
+    },
+    {
+      name: "Vinyl & Mesh Banners",
+      description: "Custom banners for storefronts, promotions, fences, and events, including vinyl and mesh options with finishing choices.",
+    },
+    {
+      name: "Retractable Banners & Trade Show Displays",
+      description: "Roll-up banners, X-banners, backdrops, and display graphics for trade shows, pop-ups, and local events.",
+    },
+    {
+      name: "Feather Flags & Teardrop Flags",
+      description: "Portable outdoor event display flags with print and hardware options for storefront visibility and promotions.",
+    },
+    {
+      name: "Window, Wall & Floor Graphics",
+      description: "Window decals, frosted privacy film, one-way vision film, wall graphics, and floor decals for retail and office branding.",
+    },
+    {
+      name: "Vehicle Graphics & Fleet Decals",
+      description: "Vehicle lettering, logo decals, fleet unit numbers, and compliance graphics for service vehicles, trucks, and equipment.",
+    },
+    {
+      name: "Canvas Prints",
+      description: "Custom canvas prints for home, office, and commercial spaces, including framed and multi-panel display options.",
+    },
+    {
+      name: "Rush Printing & Local Pickup",
+      description: "Same-day or next-day pickup available on eligible products when files are ready and production capacity allows.",
+    },
+  ],
+  googlePosts: [
+    {
+      monthPlanWeek: 1,
+      title: "New Local Print Shop in Scarborough",
+      content: "La Lunar Printing is now serving Scarborough and the GTA with custom stickers, business cards, signs, banners, canvas prints, and vehicle graphics. Need a fast turnaround? Ask about same-day or next-day pickup options for eligible jobs.",
+      ctaButtonText: "Learn More",
+    },
+    {
+      monthPlanWeek: 1,
+      title: "Custom Sticker Printing for Local Brands",
+      content: "Launching a product or refreshing your packaging? We print die-cut stickers, kiss-cut stickers, sticker sheets, and roll labels with local production and quick reorders across the GTA.",
+      ctaButtonText: "Get Offer",
+    },
+    {
+      monthPlanWeek: 1,
+      title: "Business Cards with Fast GTA Turnaround",
+      content: "Need business cards before a meeting, open house, or event? We offer practical and premium options with fast local turnaround and pickup in Scarborough.",
+      ctaButtonText: "Call Now",
+    },
+    {
+      monthPlanWeek: 2,
+      title: "Yard Signs for Realtors, Events & Contractors",
+      content: "Coroplast yard signs are a reliable option for open houses, event wayfinding, and contractor site notices. Send your size, quantity, and deadline and we will confirm the fastest production schedule.",
+      ctaButtonText: "Request Quote",
+    },
+    {
+      monthPlanWeek: 2,
+      title: "Retractable Banners for Trade Shows",
+      content: "Preparing for a trade show or hiring event? We print retractable banners and display graphics with local production so last-minute updates are easier to manage.",
+      ctaButtonText: "Order Online",
+    },
+    {
+      monthPlanWeek: 2,
+      title: "Storefront Window Graphics & Frosted Film",
+      content: "Upgrade your storefront or office glass with window decals, one-way vision film, or frosted privacy film. We can recommend the right material based on visibility, privacy, and installation surface.",
+      ctaButtonText: "Learn More",
+    },
+    {
+      monthPlanWeek: 3,
+      title: "Rush Printing Slots This Week",
+      content: "Need prints before an event this week? Selected products may be available for rush production with same-day or next-day pickup if files are approved early. Message us with product, quantity, and deadline.",
+      ctaButtonText: "Message Us",
+    },
+    {
+      monthPlanWeek: 3,
+      title: "Vehicle Lettering for Service Businesses",
+      content: "Turn your van or truck into a moving ad with vehicle lettering and logo decals. We also provide fleet unit numbers and compliance-style decals for local business vehicles.",
+      ctaButtonText: "Request Quote",
+    },
+    {
+      monthPlanWeek: 3,
+      title: "Trade Show Display Bundle Support",
+      content: "Need a full event setup? We can help you coordinate retractable banners, backdrops, table covers, and flags so your booth looks consistent and professional.",
+      ctaButtonText: "Call Now",
+    },
+    {
+      monthPlanWeek: 4,
+      title: "Holiday Promo Prints & Event Graphics",
+      content: "Planning a seasonal promotion, local market, or holiday event? We can help with flyers, posters, banners, table displays, and stickers with local turnaround in the GTA.",
+      ctaButtonText: "Get Offer",
+    },
+    {
+      monthPlanWeek: 4,
+      title: "Grand Opening Print Package",
+      content: "Opening a new business location? Ask us about print packages that combine business cards, flyers, window decals, signs, and banners to simplify launch prep.",
+      ctaButtonText: "Learn More",
+    },
+    {
+      monthPlanWeek: 4,
+      title: "Local Pickup in Scarborough",
+      content: "Prefer pickup instead of shipping delays? Pick up your order at La Lunar Printing, 11 Progress Ave #21, Scarborough, ON M1B 3X4. We also serve Toronto, Markham, Pickering, Ajax, and the GTA.",
+      ctaButtonText: "Directions",
+    },
+  ],
+  qaSeed: [
+    {
+      question: "Do you offer same-day printing in Scarborough?",
+      answer: "Some standard products may be available for same-day printing or next-day pickup depending on quantity, file readiness, and production schedule. Send us your product, size, quantity, and deadline and we will confirm the fastest option.",
+    },
+    {
+      question: "Where is La Lunar Printing located?",
+      answer: "We are located at 11 Progress Ave #21, Scarborough, ON M1B 3X4. Pickup is available during business hours, and we also serve customers across the GTA.",
+    },
+    {
+      question: "What areas do you serve?",
+      answer: "We serve Scarborough, Toronto, Markham, Pickering, Ajax, and the Greater Toronto Area. If you are outside those areas, contact us and we can confirm delivery options.",
+    },
+    {
+      question: "What file format should I send for printing?",
+      answer: "A print-ready PDF is preferred for most jobs, and vector artwork (AI/EPS/PDF) is best for logos, signs, and lettering. We can also review high-resolution image files and let you know if any changes are needed before production.",
+    },
+    {
+      question: "Do you print custom stickers and labels?",
+      answer: "Yes, we print die-cut stickers, kiss-cut stickers, sticker sheets, and roll labels for branding, packaging, and promotions. We can recommend materials based on indoor or outdoor use.",
+    },
+    {
+      question: "Can I order only one banner or sign?",
+      answer: "Yes, many banners and signs can be ordered as a single unit. We also offer quantity pricing for larger campaigns, events, and multi-location orders.",
+    },
+    {
+      question: "Do you provide vehicle decals and fleet numbers?",
+      answer: "Yes, we offer vehicle lettering, logo decals, unit numbers, and fleet-related identification graphics. We can also help standardize sizing and layout for multiple vehicles.",
+    },
+    {
+      question: "What are your business hours?",
+      answer: "Our current business hours are Monday to Friday 9AM-6PM and Saturday 10AM-3PM. If you have a rush deadline, message us early so we can confirm production and pickup timing.",
+    },
+    {
+      question: "Do you help with material selection?",
+      answer: "Yes, we can recommend materials based on where the product will be used, how long it needs to last, and your budget. This is especially helpful for stickers, signs, banners, and window graphics.",
+    },
+    {
+      question: "Can I get a quote before ordering?",
+      answer: "Yes, quotes are available for custom sizes, quantities, and materials. Send your product details and artwork (if available), and we will provide pricing and turnaround options.",
+    },
+  ],
+  reviewReplyTemplates: {
+    fiveStar: "Thank you so much for your 5-star review and for choosing La Lunar Printing. We appreciate your support and are glad the order and turnaround met your expectations. We look forward to helping with your next print project in Scarborough or anywhere in the GTA.",
+    fourStar: "Thank you for your review and for trusting La Lunar Printing with your project. We are happy to hear the order went well, and we also appreciate any feedback that can help us improve your next experience. We hope to work with you again soon.",
+    threeStar: "Thank you for your feedback and for giving us the opportunity to work on your order. We are sorry the experience did not fully meet expectations, and we would like to learn more so we can improve. Please contact us directly with your order details so we can follow up.",
+    oneToTwoStar: "We are sorry to hear about your experience, and we take your feedback seriously. This is not the level of service we aim to provide, and we would appreciate the chance to review what happened and make it right if possible. Please contact us directly with your order details so our team can follow up promptly.",
+  },
+};
+
+fs.writeFileSync(path.join(outDir, "task8-gbp-content.json"), JSON.stringify(task8, null, 2), "utf8");
+
+const enLen = task8.businessDescription.en.length;
+const zhLen = task8.businessDescription.zh.length;
+if (enLen > 750 || zhLen > 750) {
+  throw new Error(`Business description too long (en=${enLen}, zh=${zhLen})`);
+}
+
+console.log(
+  JSON.stringify(
+    {
+      task6bCategories: task6b.categories.length,
+      task8Services: task8.services.length,
+      task8Posts: task8.googlePosts.length,
+      task8Qa: task8.qaSeed.length,
+      businessDescriptionLengths: { en: enLen, zh: zhLen },
+    },
+    null,
+    2
+  )
+);
+

@@ -15,7 +15,7 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   LetterheadTemplateBuilder,
-  useConfiguratorQuote,
+  useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
 
@@ -113,16 +113,15 @@ export default function MarketingPrintOrderClient({
   const isContactOnly = !!printType.contactOnly;
 
   // --- Quote ---
-  const quote = useConfiguratorQuote({
+  const quote = useConfiguratorPrice({
     slug: typeId,
     quantity: effectiveQty,
     widthIn,
     heightIn,
     material: paperId,
-    extra: {
-      sizeLabel,
-      finishings: finishing !== "none" ? [finishing] : [],
-      sides,
+    sizeLabel,
+    options: {
+      doubleSided: sides === "double",
     },
     enabled: effectiveQty > 0 && !isContactOnly,
   });

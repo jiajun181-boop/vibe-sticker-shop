@@ -1,18 +1,19 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
 const BASE = "/shop/stickers-labels-decals";
 
+const formatCad = (cents) =>
+  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+
 const MAIN_CARDS = [
   {
     slug: "die-cut",
     title: "Die-Cut Stickers",
     description: "Cut precisely to your design's shape. Weatherproof vinyl, any size.",
-    price: "From $0.52/ea",
     href: `${BASE}/die-cut`,
     gradient: "from-violet-100 to-fuchsia-100",
     icon: "scissors",
@@ -21,7 +22,6 @@ const MAIN_CARDS = [
     slug: "kiss-cut",
     title: "Kiss-Cut Stickers",
     description: "Easy-peel on backing sheet. Great for retail packaging & giveaways.",
-    price: "From $0.50/ea",
     href: `${BASE}/kiss-cut`,
     gradient: "from-sky-100 to-cyan-100",
     icon: "layers",
@@ -30,7 +30,6 @@ const MAIN_CARDS = [
     slug: "vinyl-lettering",
     title: "Vinyl Lettering",
     description: "Individual cut letters & logos. For windows, walls & vehicles.",
-    price: "From $25.00",
     href: `${BASE}/vinyl-lettering`,
     gradient: "from-amber-100 to-orange-100",
     icon: "type",
@@ -42,7 +41,6 @@ const SECONDARY_CARDS = [
     slug: "sticker-sheets",
     title: "Sticker Sheets",
     description: "Full page of stickers on paper or vinyl. Great for product labels.",
-    price: "From $0.95/sheet",
     href: `${BASE}/sticker-sheets`,
     cta: "Configure",
   },
@@ -50,7 +48,6 @@ const SECONDARY_CARDS = [
     slug: "roll-labels",
     title: "Roll Labels",
     description: "High volume on rolls. Min 500+. 5-7 day lead time.",
-    price: null,
     href: `${BASE}/roll-labels`,
     cta: "Get a Quote",
   },
@@ -105,7 +102,7 @@ function CardIcon({ type, className }) {
   return null;
 }
 
-export default function StickersCategoryClient() {
+export default function StickersCategoryClient({ stickerPrices = {} }) {
   const { t } = useTranslation();
 
   return (
@@ -160,7 +157,11 @@ export default function StickersCategoryClient() {
                     {card.description}
                   </p>
                   <div className="mt-auto pt-4 flex items-center justify-between">
-                    <span className="text-sm font-bold text-[var(--color-gray-900)]">{card.price}</span>
+                    {stickerPrices[card.slug] ? (
+                      <span className="text-sm font-bold text-[var(--color-gray-900)]">From {formatCad(stickerPrices[card.slug])}</span>
+                    ) : (
+                      <span />
+                    )}
                     <span className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
                       Configure
                       <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -194,10 +195,11 @@ export default function StickersCategoryClient() {
                   {card.description}
                 </p>
                 <div className="mt-auto pt-4 flex items-center justify-between">
-                  {card.price && (
-                    <span className="text-sm font-bold text-[var(--color-gray-900)]">{card.price}</span>
+                  {stickerPrices[card.slug] ? (
+                    <span className="text-sm font-bold text-[var(--color-gray-900)]">From {formatCad(stickerPrices[card.slug])}</span>
+                  ) : (
+                    <span />
                   )}
-                  {!card.price && <span />}
                   <span className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
                     {card.cta}
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

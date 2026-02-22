@@ -8,7 +8,7 @@ import {
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
-  useConfiguratorQuote,
+  useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
 
@@ -70,16 +70,14 @@ export default function BusinessCardsOrderClient() {
 
   const sideLabel = sideId === "single" ? "Single Sided" : "Double Sided";
 
-  const quote = useConfiguratorQuote({
+  const quote = useConfiguratorPrice({
     slug: cardType.slug,
     quantity: activeQty,
     widthIn: SIZE.w,
     heightIn: SIZE.h,
     material: cardTypeId,
-    extra: useMemo(
-      () => ({ sizeLabel: `${SIZE.label} - ${sideLabel}`, sides: sideId }),
-      [sideLabel, sideId]
-    ),
+    sizeLabel: `${SIZE.label} - ${sideLabel}`,
+    options: { doubleSided: sideId === "double" },
     enabled: activeQty > 0,
   });
 
@@ -105,12 +103,15 @@ export default function BusinessCardsOrderClient() {
       id: cardType.slug,
       name: nameParts.join(" — "),
       slug: cardType.slug,
-      price: quote.unitCents,
-      quantity: activeQty,
+      // Fixed-price product: use subtotalCents as line total to avoid
+      // per-unit rounding errors (e.g. $68/500 = 13.6¢ not integer).
+      price: quote.subtotalCents,
+      quantity: 1,
       options: {
         cardType: cardTypeId,
         sides: sideId,
         rounded,
+        printQuantity: activeQty,
         sizeLabel: SIZE.label,
         width: SIZE.w,
         height: SIZE.h,
@@ -118,7 +119,7 @@ export default function BusinessCardsOrderClient() {
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.unitCents, activeQty, cardTypeId, sideId, rounded, cardType.slug, uploadedFile, t]);
+  }, [quote.quoteData, quote.subtotalCents, activeQty, cardTypeId, sideId, rounded, cardType.slug, uploadedFile, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,

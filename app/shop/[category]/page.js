@@ -6,11 +6,23 @@ import { getTurnaround } from "@/lib/turnaroundConfig";
 import { computeFromPrice } from "@/lib/pricing/from-price";
 import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import { getCuttingTypeForSlug, getCuttingType } from "@/lib/sticker-order-config";
+import { CATEGORY_FAQ_SCHEMAS } from "@/lib/seo/category-faq-schemas";
 import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
 import SignsCategoryClient from "./SignsCategoryClient";
 import StickersCategoryClient from "./StickersCategoryClient";
 import WindowsWallsFloorsCategoryClient from "./WindowsWallsFloorsCategoryClient";
+
+function CategoryFaqSchema({ category }) {
+  const schema = CATEGORY_FAQ_SCHEMAS[category];
+  if (!schema) return null;
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
 
 export const revalidate = 120;
 
@@ -340,7 +352,26 @@ export default async function CategoryPage({ params }) {
 
   // Stickers & Labels — custom category page with cut-type cards + material browser
   if (decoded === "stickers-labels-decals") {
-    return <StickersCategoryClient />;
+    // Build price map for sticker sub-type cards using displayFromPrice
+    const STICKER_CARD_SLUGS = {
+      "die-cut": ["die-cut-stickers", "clear-singles", "holographic-stickers"],
+      "kiss-cut": ["removable-stickers"],
+      "vinyl-lettering": ["vinyl-lettering"],
+      "sticker-sheets": ["sticker-sheets"],
+      "roll-labels": ["roll-labels", "clear-labels", "kraft-paper-labels"],
+    };
+    const stickerPrices = {};
+    for (const [cardId, slugs] of Object.entries(STICKER_CARD_SLUGS)) {
+      const slugSet = new Set(slugs);
+      const prices = products.filter(p => slugSet.has(p.slug) && p.fromPrice > 0).map(p => p.fromPrice);
+      if (prices.length > 0) stickerPrices[cardId] = Math.min(...prices);
+    }
+    return (
+      <>
+        <CategoryFaqSchema category={decoded} />
+        <StickersCategoryClient stickerPrices={stickerPrices} />
+      </>
+    );
   }
 
   // Signs & Display Boards — flat sectioned layout (no sub-group landings)
@@ -357,12 +388,15 @@ export default async function CategoryPage({ params }) {
     }).filter((s) => s.products.length > 0);
 
     return (
-      <SignsCategoryClient
-        category={decoded}
-        categoryTitle={meta?.title || "Signs & Display Boards"}
-        sections={toClientSafe(sections)}
-        totalCount={products.length}
-      />
+      <>
+        <CategoryFaqSchema category={decoded} />
+        <SignsCategoryClient
+          category={decoded}
+          categoryTitle={meta?.title || "Signs & Display Boards"}
+          sections={toClientSafe(sections)}
+          totalCount={products.length}
+        />
+      </>
     );
   }
 
@@ -374,12 +408,15 @@ export default async function CategoryPage({ params }) {
     wwfProducts.sort((a, b) => WWF_PRODUCT_SLUGS.indexOf(a.slug) - WWF_PRODUCT_SLUGS.indexOf(b.slug));
 
     return (
-      <WindowsWallsFloorsCategoryClient
-        category={decoded}
-        categoryTitle={meta?.title || "Windows, Walls & Floors"}
-        products={toClientSafe(wwfProducts)}
-        totalCount={wwfProducts.length}
-      />
+      <>
+        <CategoryFaqSchema category={decoded} />
+        <WindowsWallsFloorsCategoryClient
+          category={decoded}
+          categoryTitle={meta?.title || "Windows, Walls & Floors"}
+          products={toClientSafe(wwfProducts)}
+          totalCount={wwfProducts.length}
+        />
+      </>
     );
   }
 
@@ -418,14 +455,17 @@ export default async function CategoryPage({ params }) {
       }));
 
       return (
-        <CategoryLandingClient
-          category={decoded}
-          categoryTitle={meta?.title || decoded}
-          categoryIcon={meta?.icon || ""}
-          products={toClientSafe(expandedProducts)}
-          filterGroups={filterGroups}
-          turnaroundGroups={turnaroundGroups}
-        />
+        <>
+          <CategoryFaqSchema category={decoded} />
+          <CategoryLandingClient
+            category={decoded}
+            categoryTitle={meta?.title || decoded}
+            categoryIcon={meta?.icon || ""}
+            products={toClientSafe(expandedProducts)}
+            filterGroups={filterGroups}
+            turnaroundGroups={turnaroundGroups}
+          />
+        </>
       );
     }
 
@@ -520,16 +560,19 @@ export default async function CategoryPage({ params }) {
     }
 
     return (
-      <SubGroupLandingClient
-        category={decoded}
-        categoryTitle={meta?.title || decoded}
-        categoryIcon={meta?.icon || ""}
-        subGroups={orderedSubGroupData}
-        groupedSubGroups={groupedSubGroups}
-        siblingCategories={siblingCategories}
-        totalCount={products.length}
-        stickerConfigData={stickerConfigData}
-      />
+      <>
+        <CategoryFaqSchema category={decoded} />
+        <SubGroupLandingClient
+          category={decoded}
+          categoryTitle={meta?.title || decoded}
+          categoryIcon={meta?.icon || ""}
+          subGroups={orderedSubGroupData}
+          groupedSubGroups={groupedSubGroups}
+          siblingCategories={siblingCategories}
+          totalCount={products.length}
+          stickerConfigData={stickerConfigData}
+        />
+      </>
     );
   }
 
@@ -564,13 +607,16 @@ export default async function CategoryPage({ params }) {
   }));
 
   return (
-    <CategoryLandingClient
-      category={decoded}
-      categoryTitle={meta?.title || decoded}
-      categoryIcon={meta?.icon || ""}
-      products={toClientSafe(products)}
-      filterGroups={filterGroups}
-      turnaroundGroups={turnaroundGroups}
-    />
+    <>
+      <CategoryFaqSchema category={decoded} />
+      <CategoryLandingClient
+        category={decoded}
+        categoryTitle={meta?.title || decoded}
+        categoryIcon={meta?.icon || ""}
+        products={toClientSafe(products)}
+        filterGroups={filterGroups}
+        turnaroundGroups={turnaroundGroups}
+      />
+    </>
   );
 }

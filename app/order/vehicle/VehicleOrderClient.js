@@ -15,7 +15,7 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
-  useConfiguratorQuote,
+  useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
 
@@ -98,7 +98,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
   const isQuoteOnly = vehicleType.quoteOnly;
 
   // Quote (skip for quote-only types)
-  const quote = useConfiguratorQuote({
+  const quote = useConfiguratorPrice({
     slug: vehicleType.defaultSlug,
     quantity: activeQty,
     widthIn: widthIn || undefined,

@@ -9,7 +9,7 @@ import {
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
-  useConfiguratorQuote,
+  useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
 
@@ -158,7 +158,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
   }, [isSelfCover]);
 
   // ─── Quote ───
-  const quote = useConfiguratorQuote({
+  const quote = useConfiguratorPrice({
     slug: binding.slug,
     quantity: activeQty,
     widthIn: size.w,

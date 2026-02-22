@@ -10,7 +10,7 @@ import {
 import {
   ArtworkUpload,
   CustomDimensions,
-  useConfiguratorQuote,
+  useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
 
@@ -107,12 +107,13 @@ export default function SignInlineConfigurator({ signTypeId }) {
   }, [accessories, activeQty]);
 
   // --- Quote ---
-  const quote = useConfiguratorQuote({
+  const quote = useConfiguratorPrice({
     slug: signType.defaultSlug,
     quantity: activeQty,
     widthIn,
     heightIn,
     material: materialId,
+    options: { doubleSided },
     enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 

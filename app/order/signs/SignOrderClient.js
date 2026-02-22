@@ -15,7 +15,7 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
-  useConfiguratorQuote,
+  useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
 
@@ -98,12 +98,13 @@ export default function SignOrderClient({ defaultType, productImages }) {
   const doubleSidedMultiplier = doubleSided ? 1.5 : 1.0;
 
   // Quote
-  const quote = useConfiguratorQuote({
+  const quote = useConfiguratorPrice({
     slug: signType.defaultSlug,
     quantity: activeQty,
     widthIn,
     heightIn,
     material: materialId,
+    options: { doubleSided },
     enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 
