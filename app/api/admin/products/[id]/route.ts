@@ -24,6 +24,34 @@ function normalizeTags(tags: unknown): string[] {
   return Array.from(new Set(values));
 }
 
+async function attachImageSourceMeta<T extends { id: string; images?: unknown[] }>(
+  product: T
+) {
+  const [assetLinkCount, galleryAssetLinkCount] = await Promise.all([
+    prisma.assetLink.count({
+      where: { entityType: "product", entityId: product.id },
+    }),
+    prisma.assetLink.count({
+      where: { entityType: "product", entityId: product.id, purpose: "gallery" },
+    }),
+  ]);
+
+  const legacyImageCount = Array.isArray(product.images) ? product.images.length : 0;
+  const resolvedSource =
+    assetLinkCount > 0 ? "asset" : legacyImageCount > 0 ? "legacy" : "none";
+
+  return {
+    ...product,
+    imageSourceMeta: {
+      assetLinkCount,
+      galleryAssetLinkCount,
+      legacyImageCount,
+      resolvedSource,
+      hasMixedStorage: assetLinkCount > 0 && legacyImageCount > 0,
+    },
+  };
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -45,7 +73,7 @@ export async function GET(
     return NextResponse.json({ error: "Product not found" }, { status: 404 });
   }
 
-  return NextResponse.json(product);
+  return NextResponse.json(await attachImageSourceMeta(product));
 }
 
 export async function PATCH(
@@ -169,7 +197,7 @@ export async function PATCH(
     },
   });
 
-  return NextResponse.json(product);
+  return NextResponse.json(await attachImageSourceMeta(product));
 }
 
 export async function DELETE(

@@ -16,6 +16,15 @@ const formatCad = (cents) =>
 const safeText = (value, fallback) =>
   typeof value === "string" && value.trim() ? value : fallback;
 
+const CATEGORY_GRADIENTS = {
+  "stickers-labels-decals": "from-violet-200 to-fuchsia-100",
+  "marketing-business-print": "from-amber-200 to-orange-100",
+  "signs-rigid-boards": "from-emerald-200 to-teal-100",
+  "banners-displays": "from-rose-200 to-pink-100",
+  "windows-walls-floors": "from-blue-200 to-cyan-100",
+  "vehicle-graphics-fleet": "from-slate-200 to-indigo-100",
+};
+
 const CATEGORY_USE_CASES = {
   "marketing-business-print": [
     { key: "grand-opening", label: "Grand Opening", hint: "flyers postcards door hanger", cta: "引流促销" },
@@ -59,25 +68,10 @@ function ProductCard({ product, t, compact }) {
               unoptimized={isSvgImage(imageSrc)}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-[var(--color-gray-50)]">
-              <div className="text-center px-3">
-                <svg
-                  className="mx-auto h-8 w-8 text-[var(--color-gray-300)]"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                  />
-                </svg>
-                <p className="mt-1 text-xs font-medium text-[var(--color-gray-400)]">
-                  {product.name}
-                </p>
-              </div>
+            <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${CATEGORY_GRADIENTS[product.category] || "from-gray-200 to-gray-100"}`}>
+              <p className="px-4 text-center text-sm font-semibold text-gray-700 drop-shadow-sm">
+                {product.name}
+              </p>
             </div>
           )}
         </div>

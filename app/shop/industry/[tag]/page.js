@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getProductImage } from "@/lib/product-image";
 import { getServerT } from "@/lib/i18n/server";
 import { computeFromPrice } from "@/lib/pricing/from-price";
 import {
@@ -174,7 +175,7 @@ export default async function IndustryPage({ params }) {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {products.map((product) => {
-              const img = product.images?.[0]?.url;
+              const img = getProductImage(product, product.category);
               return (
                 <Link
                   key={product.id}

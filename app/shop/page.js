@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 import { computeFromPrice } from "@/lib/pricing/from-price";
+import { getProductImage } from "@/lib/product-image";
 import ShopClient from "./ShopClient";
 import ShopLoading from "./loading";
 
@@ -66,8 +67,9 @@ export default async function ShopPage({ searchParams }) {
   const categoryPreviews = {};
   for (const p of products) {
     if (!categoryPreviews[p.category]) categoryPreviews[p.category] = [];
-    if (categoryPreviews[p.category].length < 3 && p.images?.[0]?.url) {
-      categoryPreviews[p.category].push(p.images[0].url);
+    const imageUrl = getProductImage(p, p.category);
+    if (categoryPreviews[p.category].length < 3 && imageUrl) {
+      categoryPreviews[p.category].push(imageUrl);
     }
   }
 
@@ -77,7 +79,7 @@ export default async function ShopPage({ searchParams }) {
     categoryCounts[parentSlug] = matching.length;
     categoryPreviews[parentSlug] = matching
       .slice(0, 3)
-      .map((p) => p.images?.[0]?.url)
+      .map((p) => getProductImage(p, p.category))
       .filter(Boolean);
   }
 

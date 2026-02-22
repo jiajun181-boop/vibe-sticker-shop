@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { getCatalogConfig } from "@/lib/catalogConfig";
+import { getProductImage } from "@/lib/product-image";
 import { getServerT } from "@/lib/i18n/server";
 import { OrganizationSchema, WebSiteSchema } from "@/components/JsonLd";
 import HowItWorks from "@/components/home/HowItWorks";
@@ -136,7 +137,7 @@ export default async function HomePage() {
               {grouped.map(([category, items]) => {
                 const meta = categoryMeta[category] || { title: category, icon: "\u{1F9E9}" };
                 const totalInCat = products.filter((p) => p.category === category).length;
-                const previewImg = items[0]?.images?.[0]?.url;
+                const previewImg = items[0] ? getProductImage(items[0], items[0].category) : null;
                 return (
                   <Link
                     key={category}

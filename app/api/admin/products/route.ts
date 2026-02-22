@@ -44,8 +44,55 @@ export async function GET(request: NextRequest) {
     prisma.product.count({ where }),
   ]);
 
+  const productIds = products.map((p) => p.id);
+  const assetLinks = productIds.length
+    ? await prisma.assetLink.findMany({
+        where: {
+          entityType: "product",
+          entityId: { in: productIds },
+        },
+        select: {
+          entityId: true,
+          purpose: true,
+        },
+      })
+    : [];
+
+  const assetMetaByProductId = new Map<
+    string,
+    { assetLinkCount: number; galleryAssetLinkCount: number }
+  >();
+  for (const link of assetLinks) {
+    const prev = assetMetaByProductId.get(link.entityId) || {
+      assetLinkCount: 0,
+      galleryAssetLinkCount: 0,
+    };
+    prev.assetLinkCount += 1;
+    if (link.purpose === "gallery") prev.galleryAssetLinkCount += 1;
+    assetMetaByProductId.set(link.entityId, prev);
+  }
+
+  const productsWithImageSource = products.map((p) => {
+    const assetMeta = assetMetaByProductId.get(p.id) || {
+      assetLinkCount: 0,
+      galleryAssetLinkCount: 0,
+    };
+    const legacyImageCount = p._count?.images || 0;
+    const resolvedSource =
+      assetMeta.assetLinkCount > 0 ? "asset" : legacyImageCount > 0 ? "legacy" : "none";
+    return {
+      ...p,
+      imageSourceMeta: {
+        ...assetMeta,
+        legacyImageCount,
+        resolvedSource,
+        hasMixedStorage: assetMeta.assetLinkCount > 0 && legacyImageCount > 0,
+      },
+    };
+  });
+
   return NextResponse.json({
-    products,
+    products: productsWithImageSource,
     pagination: {
       page,
       limit,

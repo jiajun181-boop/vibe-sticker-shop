@@ -103,12 +103,22 @@ export async function getProductAssets(
 export async function getProductPrimaryImage(
   productId: string
 ): Promise<AssetResult | null> {
-  // Try new Asset system first
-  const link = await prisma.assetLink.findFirst({
+  // Try new Asset system first (prefer explicit gallery purpose)
+  let link = await prisma.assetLink.findFirst({
     where: { entityType: "product", entityId: productId, purpose: "gallery" },
     include: { asset: true },
     orderBy: { sortOrder: "asc" },
   });
+
+  // Some legacy migrations may have asset links without a purpose set.
+  // Fall back to any linked product asset before using legacy ProductImage.
+  if (!link) {
+    link = await prisma.assetLink.findFirst({
+      where: { entityType: "product", entityId: productId },
+      include: { asset: true },
+      orderBy: { sortOrder: "asc" },
+    });
+  }
 
   if (link) {
     return {

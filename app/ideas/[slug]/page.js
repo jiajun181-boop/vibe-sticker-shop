@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getProductImage } from "@/lib/product-image";
 import { getServerT } from "@/lib/i18n/server";
 import {
   USE_CASES,
@@ -249,7 +250,7 @@ export default async function UseCasePage({ params }) {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {sortedProducts.map((product) => {
-              const img = product.images?.[0]?.url;
+              const img = getProductImage(product, product.category);
               return (
                 <Link
                   key={product.id}

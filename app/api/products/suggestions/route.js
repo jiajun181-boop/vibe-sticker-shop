@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getProductImage } from "@/lib/product-image";
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
@@ -31,7 +32,7 @@ export async function GET(req) {
     category: p.category,
     basePrice: p.basePrice,
     pricingUnit: p.pricingUnit,
-    image: p.images[0]?.url || null,
+    image: getProductImage(p, p.category) || null,
   }));
 
   return NextResponse.json(result);

@@ -1393,6 +1393,9 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 <tbody className="divide-y divide-[#e0e0e0]">
                   {products.map((product) => {
                     const imgUrl = product.images?.[0]?.url;
+                    const imageSource = product.imageSourceMeta?.hasMixedStorage
+                      ? "mixed"
+                      : (product.imageSourceMeta?.resolvedSource || "none");
                     return (
                       <tr key={product.id} className="hover:bg-[#fafafa]">
                         <td className="px-4 py-3">
@@ -1412,9 +1415,25 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                           <p className="font-medium text-black">
                             {product.name}
                           </p>
-                          <p className="font-mono text-xs text-[#999]">
-                            {product.slug}
-                          </p>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                            <p className="font-mono text-xs text-[#999]">
+                              {product.slug}
+                            </p>
+                            <span
+                              className={`rounded-[2px] px-1.5 py-0.5 text-[10px] font-medium ${
+                                imageSource === "asset"
+                                  ? "bg-green-50 text-green-700"
+                                  : imageSource === "legacy"
+                                    ? "bg-amber-50 text-amber-700"
+                                    : imageSource === "mixed"
+                                      ? "bg-blue-50 text-blue-700"
+                                      : "bg-[#f5f5f5] text-[#999]"
+                              }`}
+                              title={`Image source: ${imageSource}`}
+                            >
+                              IMG {imageSource}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <span className="inline-block rounded-[2px] bg-[#f5f5f5] px-2.5 py-0.5 text-xs font-medium text-[#666]">
@@ -1472,6 +1491,9 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
             <div className="divide-y divide-[#e0e0e0] lg:hidden">
               {products.map((product) => {
                 const imgUrl = product.images?.[0]?.url;
+                const imageSource = product.imageSourceMeta?.hasMixedStorage
+                  ? "mixed"
+                  : (product.imageSourceMeta?.resolvedSource || "none");
                 return (
                   <Link
                     key={product.id}
@@ -1493,6 +1515,24 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                       <p className="text-sm font-medium text-black truncate">
                         {product.name}
                       </p>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className="font-mono text-[11px] text-[#999] truncate">
+                          {product.slug}
+                        </span>
+                        <span
+                          className={`rounded-[2px] px-1.5 py-0.5 text-[10px] font-medium ${
+                            imageSource === "asset"
+                              ? "bg-green-50 text-green-700"
+                              : imageSource === "legacy"
+                                ? "bg-amber-50 text-amber-700"
+                                : imageSource === "mixed"
+                                  ? "bg-blue-50 text-blue-700"
+                                  : "bg-[#f5f5f5] text-[#999]"
+                          }`}
+                        >
+                          IMG {imageSource}
+                        </span>
+                      </div>
                       <div className="mt-0.5 flex items-center gap-2">
                         <span className="text-sm font-semibold text-black">
                           {formatCad(product.basePrice)}

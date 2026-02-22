@@ -221,26 +221,18 @@ export default function StickersCategoryClient({ stickerPrices = {} }) {
             Not sure which sticker type? Start by choosing your preferred material.
           </p>
 
-          <div className="mt-6 space-y-6">
-            {MATERIAL_GROUPS.map((group) => (
-              <div key={group.title}>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">
-                  {group.title}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {group.materials.map((mat) => (
-                    <Link
-                      key={mat.id}
-                      href={mat.href}
-                      className="group/mat inline-flex items-center gap-2 rounded-xl border border-[var(--color-gray-200)] bg-white px-4 py-2.5 text-sm font-medium text-[var(--color-gray-700)] transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-[var(--color-gray-400)] hover:text-[var(--color-gray-900)]"
-                    >
-                      <span className="h-3 w-3 rounded-full border border-[var(--color-gray-300)] bg-gradient-to-br from-[var(--color-gray-100)] to-[var(--color-gray-200)]" />
-                      {mat.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {MATERIAL_GROUPS.flatMap((group) =>
+              group.materials.map((mat) => (
+                <Link
+                  key={mat.id}
+                  href={mat.href}
+                  className="rounded-full border border-[var(--color-gray-200)] bg-white px-4 py-2 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+                >
+                  {mat.label}
+                </Link>
+              ))
+            )}
           </div>
         </section>
 

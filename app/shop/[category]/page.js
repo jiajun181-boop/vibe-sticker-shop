@@ -7,6 +7,7 @@ import { computeFromPrice } from "@/lib/pricing/from-price";
 import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import { getCuttingTypeForSlug, getCuttingType } from "@/lib/sticker-order-config";
 import { CATEGORY_FAQ_SCHEMAS } from "@/lib/seo/category-faq-schemas";
+import { getProductImage } from "@/lib/product-image";
 import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
 import SignsCategoryClient from "./SignsCategoryClient";
@@ -346,32 +347,43 @@ export default async function CategoryPage({ params }) {
   // Use pre-computed minPrice for listings (write-time calculation).
   // Falls back to computeFromPrice() only when minPrice is missing.
   for (const p of products) {
-    p.fromPrice = p.displayFromPrice || p.minPrice || computeFromPrice(p);
-    p.quickAddQty = getSmartDefaults(p).minQuantity;
+    try {
+      p.fromPrice = p.displayFromPrice || p.minPrice || computeFromPrice(p);
+      p.quickAddQty = getSmartDefaults(p).minQuantity;
+    } catch (err) {
+      console.error(`[category-page] Error computing price/defaults for product ${p.slug}:`, err);
+      p.fromPrice = p.basePrice || 0;
+      p.quickAddQty = 1;
+    }
   }
 
   // Stickers & Labels — custom category page with cut-type cards + material browser
   if (decoded === "stickers-labels-decals") {
-    // Build price map for sticker sub-type cards using displayFromPrice
-    const STICKER_CARD_SLUGS = {
-      "die-cut": ["die-cut-stickers", "clear-singles", "holographic-stickers"],
-      "kiss-cut": ["removable-stickers"],
-      "vinyl-lettering": ["vinyl-lettering"],
-      "sticker-sheets": ["sticker-sheets"],
-      "roll-labels": ["roll-labels", "clear-labels", "kraft-paper-labels"],
-    };
-    const stickerPrices = {};
-    for (const [cardId, slugs] of Object.entries(STICKER_CARD_SLUGS)) {
-      const slugSet = new Set(slugs);
-      const prices = products.filter(p => slugSet.has(p.slug) && p.fromPrice > 0).map(p => p.fromPrice);
-      if (prices.length > 0) stickerPrices[cardId] = Math.min(...prices);
+    try {
+      // Build price map for sticker sub-type cards using displayFromPrice
+      const STICKER_CARD_SLUGS = {
+        "die-cut": ["die-cut-stickers", "clear-singles", "holographic-stickers"],
+        "kiss-cut": ["removable-stickers"],
+        "vinyl-lettering": ["vinyl-lettering"],
+        "sticker-sheets": ["sticker-sheets"],
+        "roll-labels": ["roll-labels", "clear-labels", "kraft-paper-labels"],
+      };
+      const stickerPrices = {};
+      for (const [cardId, slugs] of Object.entries(STICKER_CARD_SLUGS)) {
+        const slugSet = new Set(slugs);
+        const prices = products.filter(p => slugSet.has(p.slug) && p.fromPrice > 0).map(p => p.fromPrice);
+        if (prices.length > 0) stickerPrices[cardId] = Math.min(...prices);
+      }
+      return (
+        <>
+          <CategoryFaqSchema category={decoded} />
+          <StickersCategoryClient stickerPrices={stickerPrices} />
+        </>
+      );
+    } catch (err) {
+      console.error("[stickers-page] Error rendering StickersCategoryClient:", err);
+      // Fall through to generic SubGroupLandingClient / CategoryLandingClient below
     }
-    return (
-      <>
-        <CategoryFaqSchema category={decoded} />
-        <StickersCategoryClient stickerPrices={stickerPrices} />
-      </>
-    );
   }
 
   // Signs & Display Boards — flat sectioned layout (no sub-group landings)
@@ -499,11 +511,11 @@ export default async function CategoryPage({ params }) {
       return {
         ...sg,
         count: matching.length,
-        previews: matching.slice(0, 3).map((p) => p.images?.[0]?.url).filter(Boolean),
+        previews: matching.slice(0, 3).map((p) => getProductImage(p, p.category)).filter(Boolean),
         topProducts: matching.slice(0, 3).map((p) => ({
           name: p.name,
           price: p.fromPrice || p.basePrice || 0,
-          imageUrl: p.images?.[0]?.url || null,
+          imageUrl: getProductImage(p, p.category) || null,
         })),
         minPrice,
         turnaround,

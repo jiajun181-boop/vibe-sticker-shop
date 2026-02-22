@@ -123,29 +123,21 @@ function CardInner({ group, t, stickerConfig, ctaLabel }) {
             <ShapeIcon type={stickerConfig.cuttingTypeId} className="h-16 w-16 drop-shadow-sm" />
           </div>
         ) : group.previews?.length > 0 ? (
-          <div className="grid h-full w-full grid-cols-3">
-            {group.previews.slice(0, 3).map((url, i) => (
-              <div key={i} className="relative overflow-hidden">
-                <Image
-                  src={url}
-                  alt=""
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  sizes="(max-width: 768px) 33vw, 15vw"
-                  unoptimized={url.endsWith(".svg")}
-                />
-              </div>
-            ))}
-            {group.previews.length < 3 &&
-              Array.from({ length: 3 - group.previews.length }).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-[var(--color-gray-50)]" />
-              ))}
+          <div className="relative h-full w-full overflow-hidden">
+            <Image
+              src={group.previews[0]}
+              alt=""
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              unoptimized={group.previews[0].endsWith(".svg")}
+            />
           </div>
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--color-gray-50)] to-[var(--color-gray-100)]">
-            <svg className="h-10 w-10 text-[var(--color-gray-200)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-            </svg>
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-200 to-gray-100">
+            <p className="px-4 text-center text-sm font-semibold text-gray-700 drop-shadow-sm">
+              {group.title}
+            </p>
           </div>
         )}
 

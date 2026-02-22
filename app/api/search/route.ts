@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getProductImage } from "@/lib/product-image";
 
 /**
  * GET /api/search?q=sticker&limit=8
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
       slug: p.slug,
       category: p.category,
       price: p.basePrice,
-      image: p.images[0]?.url || null,
+      image: getProductImage(p, p.category) || null,
       imageAlt: p.images[0]?.alt || p.name,
     }));
 

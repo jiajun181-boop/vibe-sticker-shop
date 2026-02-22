@@ -11,6 +11,7 @@ import { getVariantConfig, getVariantParent, getVariantChildSlugs } from "@/lib/
 import { getSceneConfig } from "@/lib/sceneConfig";
 import { getStickerRichPageSlug } from "@/lib/sticker-page-content";
 import { getSignRichPageSlug } from "@/lib/sign-page-content";
+import { getProductImage } from "@/lib/product-image";
 import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
 import VariantProductPage from "./VariantProductPage";
@@ -212,7 +213,7 @@ export async function generateMetadata({ params }) {
   const keywords = hasKeywords
     ? p.keywords
     : [p.name, categoryLabel, "custom printing", "Toronto printing", "Canada print shop"];
-  const image = p.images[0]?.url || `${SITE_URL}/og-image.png`;
+  const image = getProductImage(p, p.category) || `${SITE_URL}/og-image.png`;
   const canonical = `${SITE_URL}/shop/${category}/${slug}`;
   return {
     title,

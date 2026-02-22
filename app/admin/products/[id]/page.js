@@ -793,6 +793,13 @@ export default function ProductDetailPage() {
   if (!product) return null;
 
   const primaryImage = product.images?.[0];
+  const imageSourceMeta = product.imageSourceMeta || null;
+  const imageSourceLabel =
+    imageSourceMeta?.resolvedSource === "asset"
+      ? "Asset Library (frontend priority)"
+      : imageSourceMeta?.resolvedSource === "legacy"
+        ? "Legacy ProductImage fallback"
+        : "No images";
   const checklist = {
     hasImage: Boolean(product.images?.length),
     hasPrice: Boolean(product.pricingPresetId) || Number(product.basePrice) > 0,
@@ -1353,6 +1360,37 @@ export default function ProductDetailPage() {
               Images ({product.images?.length || 0})
             </h2>
             <p className="mb-3 mt-1 text-[10px] text-[#999]">Drag to reorder. First image = cover. Drop files or Ctrl+V to upload.</p>
+            {imageSourceMeta && (
+              <div className="mb-3 rounded-[3px] border border-[#e8e8e8] bg-[#fafafa] px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#666]">
+                    Image Source
+                  </span>
+                  <span
+                    className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                      imageSourceMeta.resolvedSource === "asset"
+                        ? "bg-green-50 text-green-700"
+                        : imageSourceMeta.resolvedSource === "legacy"
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {imageSourceLabel}
+                  </span>
+                </div>
+                <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] text-[#777]">
+                  <div>Asset links: {imageSourceMeta.assetLinkCount || 0}</div>
+                  <div>Gallery links: {imageSourceMeta.galleryAssetLinkCount || 0}</div>
+                  <div>Legacy images: {imageSourceMeta.legacyImageCount || 0}</div>
+                  <div>Frontend uses: {imageSourceMeta.resolvedSource}</div>
+                </div>
+                {(imageSourceMeta.resolvedSource === "legacy" || imageSourceMeta.hasMixedStorage) && (
+                  <p className="mt-2 text-[10px] text-[#8a6a00]">
+                    Frontend may show legacy images. If Media Library deletes do not affect the page, check/remove images in this product's legacy Images list.
+                  </p>
+                )}
+              </div>
+            )}
 
             {product.images && product.images.length > 0 ? (
               <div className="mb-4 grid grid-cols-2 gap-2">
@@ -1573,6 +1611,12 @@ export default function ProductDetailPage() {
                 <dt className="text-[#999]">Subseries</dt>
                 <dd className="text-black">{form.subseries ? titleizeSlug(form.subseries) : "Missing"}</dd>
               </div>
+              {imageSourceMeta && (
+                <div className="flex justify-between">
+                  <dt className="text-[#999]">Image Source</dt>
+                  <dd className="text-black text-right max-w-[170px]">{imageSourceMeta.resolvedSource}</dd>
+                </div>
+              )}
               {product.pricingPresetId && (
                 <div className="flex justify-between">
                   <dt className="text-[#999]">Pricing Preset</dt>
