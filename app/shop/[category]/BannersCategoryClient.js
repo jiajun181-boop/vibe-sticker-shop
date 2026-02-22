@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
-const BASE = "/shop/windows-walls-floors";
+const BASE = "/shop/banners-displays";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -12,36 +12,49 @@ const formatCad = (cents) =>
 /* ── Section definitions ── */
 const SECTIONS = [
   {
-    key: "window",
-    title: "Window Graphics & Films",
-    subtitle: "Privacy films, one-way vision, frosted vinyl, and decorative window graphics.",
+    key: "banners",
+    title: "Custom Banners",
+    subtitle: "Indoor & outdoor banners printed on heavy-duty vinyl and mesh.",
     size: "large",
     items: [
-      { key: "one-way-vision", name: "One-Way Vision Film", href: `${BASE}/one-way-vision`, gradient: "from-sky-400 to-blue-400" },
-      { key: "frosted-window-film", name: "Frosted Window Film", href: `${BASE}/frosted-window-film`, gradient: "from-slate-300 to-blue-200" },
-      { key: "static-cling", name: "Static Cling Film", href: `${BASE}/static-cling`, gradient: "from-cyan-400 to-teal-400" },
-      { key: "transparent-color-film", name: "Transparent Color Film", href: `${BASE}/transparent-color-film`, gradient: "from-violet-400 to-fuchsia-400" },
-      { key: "blockout-vinyl", name: "Blockout Vinyl", href: `${BASE}/blockout-vinyl`, gradient: "from-gray-500 to-slate-600" },
-      { key: "opaque-window-graphics", name: "Opaque Window Graphics", href: `${BASE}/opaque-window-graphics`, gradient: "from-indigo-400 to-blue-400" },
-      { key: "glass-waistline", name: "Glass Waistline Strips", href: `${BASE}/glass-waistline`, gradient: "from-amber-300 to-orange-300" },
+      { key: "vinyl-banners", name: "Vinyl Banners", href: `${BASE}/vinyl-banners`, gradient: "from-rose-400 to-pink-400" },
+      { key: "mesh-banners", name: "Mesh Banners", href: `${BASE}/mesh-banners`, gradient: "from-sky-400 to-cyan-400" },
+      { key: "pole-banners", name: "Pole Banners", href: `${BASE}/pole-banners`, gradient: "from-amber-400 to-orange-400" },
+      { key: "double-sided-banners", name: "Two-Sided Banners", href: `${BASE}/double-sided-banners`, gradient: "from-violet-400 to-fuchsia-400" },
     ],
   },
   {
-    key: "wall",
-    title: "Wall Graphics & Murals",
-    subtitle: "Custom wall decals, murals, and adhesive graphics for any surface.",
-    size: "large",
+    key: "stands",
+    title: "Banner Stands & Displays",
+    subtitle: "Portable retractable and X-banner stands for events and retail.",
+    size: "medium",
     items: [
-      { key: "wall-graphics", name: "Wall Graphics", href: `${BASE}/wall-graphics`, gradient: "from-emerald-400 to-teal-400" },
+      { key: "roll-up-banners", name: "Roll-Up Banners", href: `${BASE}/roll-up-banners`, gradient: "from-emerald-400 to-teal-400" },
+      { key: "x-banner-frame-print", name: "X-Banner Stand", href: `${BASE}/x-banner-frame-print`, gradient: "from-indigo-400 to-blue-400" },
+      { key: "tabletop-x-banner", name: "Tabletop X-Banner", href: `${BASE}/tabletop-x-banner`, gradient: "from-pink-400 to-rose-400" },
+      { key: "deluxe-tabletop-retractable-a3", name: "Tabletop Retractable", href: `${BASE}/deluxe-tabletop-retractable-a3`, gradient: "from-amber-400 to-yellow-400" },
     ],
   },
   {
-    key: "floor",
-    title: "Floor Graphics & Decals",
-    subtitle: "Anti-slip floor decals for retail, events, and wayfinding.",
-    size: "large",
+    key: "tradeshow",
+    title: "Trade Show & Backdrops",
+    subtitle: "Large-format backdrops and displays for trade shows and events.",
+    size: "medium",
     items: [
-      { key: "floor-graphics", name: "Floor Graphics", href: `${BASE}/floor-graphics`, gradient: "from-orange-400 to-red-400" },
+      { key: "telescopic-backdrop", name: "Telescopic Backdrop", href: `${BASE}/telescopic-backdrop`, gradient: "from-slate-400 to-gray-400" },
+      { key: "popup-display-curved-8ft", name: "Pop-Up Display 8ft", href: `${BASE}/popup-display-curved-8ft`, gradient: "from-blue-400 to-indigo-400" },
+      { key: "table-cloth", name: "Custom Table Cloth", href: `${BASE}/table-cloth`, gradient: "from-teal-400 to-cyan-400" },
+    ],
+  },
+  {
+    key: "outdoor",
+    title: "Outdoor Flags & Tents",
+    subtitle: "Feather flags, teardrop flags, and canopy tents for outdoor events.",
+    size: "medium",
+    items: [
+      { key: "feather-flags", name: "Feather Flags", href: `${BASE}/feather-flags`, gradient: "from-orange-400 to-red-400" },
+      { key: "teardrop-flags", name: "Teardrop Flags", href: `${BASE}/teardrop-flags`, gradient: "from-cyan-400 to-sky-400" },
+      { key: "outdoor-canopy-tent-10x10", name: "Canopy Tent 10×10", href: `${BASE}/outdoor-canopy-tent-10x10`, gradient: "from-emerald-400 to-green-400" },
     ],
   },
 ];
@@ -82,32 +95,32 @@ function ProductCard({ item, price, size }) {
   );
 }
 
-export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {} }) {
+export default function BannersCategoryClient({ bannerPrices = {} }) {
   const { t } = useTranslation();
 
   return (
-    <main className="bg-gradient-to-b from-blue-50 to-white pb-20 pt-10 text-[var(--color-gray-900)]">
+    <main className="bg-gradient-to-b from-rose-50 to-white pb-20 pt-10 text-[var(--color-gray-900)]">
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: "Windows, Walls & Floors" },
+            { label: "Banners & Displays" },
           ]}
         />
 
         {/* Hero */}
         <header className="mt-6">
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            Windows, Walls & Floors
+            Banners & Displays
           </h1>
           <p className="mt-2 max-w-2xl text-sm sm:text-base text-[var(--color-gray-500)]">
-            Custom window films, wall graphics, and floor decals. Professional installation-ready vinyl with full-colour printing.
+            Custom printed banners, retractable stands, backdrops, flags & tents. Perfect for events, trade shows, and storefronts.
           </p>
         </header>
 
         {/* Sections */}
         {SECTIONS.map((section) => {
-          const visibleItems = section.items.filter((item) => item.key in wwfPrices);
+          const visibleItems = section.items.filter((item) => item.key in bannerPrices);
           if (visibleItems.length === 0) return null;
 
           return (
@@ -115,15 +128,15 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {} }) {
               <h2 className="text-xl font-semibold tracking-tight">{section.title}</h2>
               <p className="mt-1 text-sm text-[var(--color-gray-500)]">{section.subtitle}</p>
               <div className={`mt-4 grid gap-4 ${
-                visibleItems.length <= 2
-                  ? "grid-cols-1 sm:grid-cols-2"
-                  : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                section.size === "large"
+                  ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+                  : "grid-cols-2 sm:grid-cols-3"
               }`}>
                 {visibleItems.map((item) => (
                   <ProductCard
                     key={item.key}
                     item={item}
-                    price={wwfPrices[item.key] || 0}
+                    price={bannerPrices[item.key] || 0}
                     size={section.size}
                   />
                 ))}
@@ -149,33 +162,27 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {} }) {
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
-              Professional Installation
+              Heavy-Duty Materials
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              All films ship ready for professional or DIY installation. On-site installation available in the GTA.
+              13oz scrim vinyl, mesh wind-through, and premium polyester fabrics. Built for Canadian weather.
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
-              Indoor & Outdoor Rated
+              Finishing Options
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              UV-protective laminates extend lifespan to 3&ndash;5 years in direct sunlight. Rated for both indoor and outdoor use.
+              Grommets, pole pockets, hemmed edges, and wind slits included. Hardware ships with every stand.
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
-              Custom Sizes
+              Same Day Production
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Any size, any shape. Priced per square foot. Upload your dimensions and get an instant quote.
+              Rush production available on vinyl banners and roll-up stands. Order before 12pm for same day GTA pickup.
             </p>
-            <Link
-              href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-[var(--color-brand-dark)]"
-            >
-              Get a Quote
-            </Link>
           </div>
         </div>
       </div>

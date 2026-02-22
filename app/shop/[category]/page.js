@@ -13,6 +13,9 @@ import SubGroupLandingClient from "./SubGroupLandingClient";
 import SignsCategoryClient from "./SignsCategoryClient";
 import StickersCategoryClient from "./StickersCategoryClient";
 import WindowsWallsFloorsCategoryClient from "./WindowsWallsFloorsCategoryClient";
+import MarketingCategoryClient from "./MarketingCategoryClient";
+import BannersCategoryClient from "./BannersCategoryClient";
+import VehicleCategoryClient from "./VehicleCategoryClient";
 
 function CategoryFaqSchema({ category }) {
   const schema = CATEGORY_FAQ_SCHEMAS[category];
@@ -362,11 +365,12 @@ export default async function CategoryPage({ params }) {
     try {
       // Build price map for sticker sub-type cards using displayFromPrice
       const STICKER_CARD_SLUGS = {
-        "die-cut": ["die-cut-stickers", "clear-singles", "holographic-stickers"],
-        "kiss-cut": ["removable-stickers"],
-        "vinyl-lettering": ["vinyl-lettering"],
-        "sticker-sheets": ["sticker-sheets"],
+        "die-cut": ["die-cut-stickers", "clear-singles"],
+        "kiss-cut": ["removable-stickers", "kiss-cut-stickers"],
+        "sticker-sheets": ["sticker-sheets", "kiss-cut-sticker-sheets", "stickers-multi-on-sheet"],
         "roll-labels": ["roll-labels", "clear-labels", "kraft-paper-labels"],
+        "holographic": ["holographic-stickers"],
+        "vinyl-lettering": ["vinyl-lettering"],
       };
       const stickerPrices = {};
       for (const [cardId, slugs] of Object.entries(STICKER_CARD_SLUGS)) {
@@ -384,6 +388,90 @@ export default async function CategoryPage({ params }) {
       console.error("[stickers-page] Error rendering StickersCategoryClient:", err);
       // Fall through to generic SubGroupLandingClient / CategoryLandingClient below
     }
+  }
+
+  // Marketing & Business Print — sectioned category page
+  if (decoded === "marketing-business-print") {
+    const MARKETING_PRICE_MAP = {
+      "business-cards": ["business-cards-classic", "business-cards-gloss", "business-cards-matte", "business-cards-soft-touch", "business-cards-gold-foil", "business-cards-linen", "business-cards-pearl", "business-cards-thick"],
+      "flyers": ["flyers"],
+      "brochures": ["brochures-bi-fold", "brochures-tri-fold", "brochures-z-fold"],
+      "postcards": ["postcards"],
+      "posters": ["posters", "posters-glossy", "posters-matte", "posters-adhesive", "posters-backlit"],
+      "booklets": ["booklets", "booklets-saddle-stitch", "booklets-perfect-bound", "booklets-wire-o"],
+      "letterhead": ["letterhead"],
+      "notepads": ["notepads", "notepads-custom"],
+      "stamps": ["stamps-s510", "stamps-s520", "stamps-s827", "stamps-s542", "stamps-r512", "stamps-r524", "stamps-r532", "stamps-r552"],
+      "calendars": ["calendars-wall", "calendars-wall-desk"],
+      "certificates": ["certificates"],
+      "envelopes": ["envelopes"],
+      "menus": ["menus-laminated", "menus-takeout", "table-mat"],
+      "table-tents": ["table-tents-4x6", "table-tent-cards", "table-display-cards"],
+      "shelf-displays": ["shelf-talkers", "shelf-danglers", "shelf-wobblers"],
+      "rack-cards": ["rack-cards"],
+      "door-hangers": ["door-hangers-standard", "door-hangers-perforated", "door-hangers-large"],
+      "tags": ["hang-tags", "retail-tags"],
+      "ncr-forms": ["ncr-forms-duplicate", "ncr-forms-triplicate", "ncr-invoices"],
+      "tickets-coupons": ["tickets", "coupons", "loyalty-cards"],
+      "greeting-invitation-cards": ["greeting-cards", "invitation-cards", "invitations-flat"],
+      "bookmarks": ["bookmarks", "bookmarks-custom"],
+      "loyalty-cards": ["loyalty-cards"],
+      "document-printing": ["document-printing"],
+    };
+
+    const marketingPrices = {};
+    for (const [key, slugs] of Object.entries(MARKETING_PRICE_MAP)) {
+      const slugSet = new Set(slugs);
+      const matching = products.filter((p) => slugSet.has(p.slug));
+      if (matching.length > 0) {
+        const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
+        marketingPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
+      }
+    }
+
+    return (
+      <>
+        <CategoryFaqSchema category={decoded} />
+        <MarketingCategoryClient marketingPrices={marketingPrices} />
+      </>
+    );
+  }
+
+  // Banners & Displays — sectioned category page
+  if (decoded === "banners-displays") {
+    const BANNER_PRICE_MAP = {
+      "vinyl-banners": ["vinyl-banners"],
+      "mesh-banners": ["mesh-banners"],
+      "pole-banners": ["pole-banners"],
+      "double-sided-banners": ["double-sided-banners"],
+      "roll-up-banners": ["roll-up-banners"],
+      "x-banner-frame-print": ["x-banner-frame-print"],
+      "tabletop-x-banner": ["tabletop-x-banner"],
+      "deluxe-tabletop-retractable-a3": ["deluxe-tabletop-retractable-a3"],
+      "telescopic-backdrop": ["telescopic-backdrop"],
+      "popup-display-curved-8ft": ["popup-display-curved-8ft"],
+      "table-cloth": ["table-cloth"],
+      "feather-flags": ["feather-flags"],
+      "teardrop-flags": ["teardrop-flags"],
+      "outdoor-canopy-tent-10x10": ["outdoor-canopy-tent-10x10"],
+    };
+
+    const bannerPrices = {};
+    for (const [key, slugs] of Object.entries(BANNER_PRICE_MAP)) {
+      const slugSet = new Set(slugs);
+      const matching = products.filter((p) => slugSet.has(p.slug));
+      if (matching.length > 0) {
+        const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
+        bannerPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
+      }
+    }
+
+    return (
+      <>
+        <CategoryFaqSchema category={decoded} />
+        <BannersCategoryClient bannerPrices={bannerPrices} />
+      </>
+    );
   }
 
   // Signs & Display Boards — flat sectioned layout (no sub-group landings)
@@ -412,22 +500,108 @@ export default async function CategoryPage({ params }) {
     );
   }
 
-  // Windows, Walls & Floors — flat product grid with filter tabs
+  // Windows, Walls & Floors — sectioned category page
   if (decoded === "windows-walls-floors") {
-    const wwfSlugSet = new Set(WWF_PRODUCT_SLUGS);
-    const wwfProducts = products.filter((p) => wwfSlugSet.has(p.slug));
-    // Sort by the display order defined in WWF_PRODUCT_SLUGS
-    wwfProducts.sort((a, b) => WWF_PRODUCT_SLUGS.indexOf(a.slug) - WWF_PRODUCT_SLUGS.indexOf(b.slug));
+    const WWF_PRICE_MAP = {
+      "one-way-vision": ["one-way-vision"],
+      "frosted-window-film": ["frosted-window-film"],
+      "static-cling": ["static-cling"],
+      "transparent-color-film": ["transparent-color-film"],
+      "blockout-vinyl": ["blockout-vinyl"],
+      "opaque-window-graphics": ["opaque-window-graphics"],
+      "glass-waistline": ["glass-waistline"],
+      "wall-graphics": ["wall-graphics"],
+      "floor-graphics": ["floor-graphics"],
+    };
+
+    const wwfPrices = {};
+    for (const [key, slugs] of Object.entries(WWF_PRICE_MAP)) {
+      const slugSet = new Set(slugs);
+      const matching = products.filter((p) => slugSet.has(p.slug));
+      if (matching.length > 0) {
+        const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
+        wwfPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
+      }
+    }
 
     return (
       <>
         <CategoryFaqSchema category={decoded} />
-        <WindowsWallsFloorsCategoryClient
-          category={decoded}
-          categoryTitle={meta?.title || "Windows, Walls & Floors"}
-          products={toClientSafe(wwfProducts)}
-          totalCount={wwfProducts.length}
-        />
+        <WindowsWallsFloorsCategoryClient wwfPrices={wwfPrices} />
+      </>
+    );
+  }
+
+  // Vehicle Graphics & Fleet — sectioned category page
+  if (decoded === "vehicle-graphics-fleet") {
+    const VEHICLE_PRICE_MAP = {
+      // Compliance & ID
+      "truck-door-compliance-kit": ["truck-door-compliance-kit"],
+      "cvor-number-decals": ["cvor-number-decals"],
+      "usdot-number-decals": ["usdot-number-decals"],
+      "mc-number-decals": ["mc-number-decals"],
+      "nsc-number-decals": ["nsc-number-decals"],
+      "tssa-truck-number-lettering-cut-vinyl": ["tssa-truck-number-lettering-cut-vinyl"],
+      "gvw-tare-weight-lettering": ["gvw-tare-weight-lettering"],
+      "fleet-unit-number-stickers": ["fleet-unit-number-stickers"],
+      "trailer-id-number-decals": ["trailer-id-number-decals"],
+      "equipment-id-decals-cut-vinyl": ["equipment-id-decals-cut-vinyl"],
+      "tire-pressure-load-labels": ["tire-pressure-load-labels"],
+      "fuel-type-labels-diesel-gas": ["fuel-type-labels-diesel-gas"],
+      "vehicle-inspection-maintenance-stickers": ["vehicle-inspection-maintenance-stickers"],
+      // Wraps & Large Graphics
+      "full-vehicle-wrap-design-print": ["full-vehicle-wrap-design-print"],
+      "partial-wrap-spot-graphics": ["partial-wrap-spot-graphics"],
+      "car-graphics": ["car-graphics"],
+      "car-hood-decal": ["car-hood-decal"],
+      "vehicle-roof-wrap": ["vehicle-roof-wrap"],
+      "trailer-full-wrap": ["trailer-full-wrap"],
+      "trailer-box-truck-large-graphics": ["trailer-box-truck-large-graphics"],
+      "fleet-graphic-package": ["fleet-graphic-package"],
+      "vehicle-wrap-print-only-quote": ["vehicle-wrap-print-only-quote"],
+      // Vinyl Lettering & Decals
+      "custom-cut-vinyl-lettering-any-text": ["custom-cut-vinyl-lettering-any-text"],
+      "custom-truck-door-lettering-kit": ["custom-truck-door-lettering-kit"],
+      "printed-truck-door-decals-full-color": ["printed-truck-door-decals-full-color"],
+      "truck-side-panel-printed-decal": ["truck-side-panel-printed-decal"],
+      "tailgate-rear-door-printed-decal": ["tailgate-rear-door-printed-decal"],
+      "custom-printed-vehicle-logo-decals": ["custom-printed-vehicle-logo-decals"],
+      "boat-lettering-registration": ["boat-lettering-registration"],
+      "long-term-outdoor-vehicle-decals": ["long-term-outdoor-vehicle-decals"],
+      "removable-promo-vehicle-decals": ["removable-promo-vehicle-decals"],
+      "social-qr-vehicle-decals": ["social-qr-vehicle-decals"],
+      "bumper-sticker-custom": ["bumper-sticker-custom"],
+      "stay-back-warning-decals": ["stay-back-warning-decals"],
+      // Magnetic Signs
+      "magnetic-car-signs": ["magnetic-car-signs"],
+      "magnetic-truck-door-signs": ["magnetic-truck-door-signs"],
+      "magnetic-rooftop-sign": ["magnetic-rooftop-sign"],
+      "car-door-magnets-pair": ["car-door-magnets-pair"],
+      "magnets-flexible": ["magnets-flexible"],
+      // Fleet Safety & Operations
+      "reflective-conspicuity-tape-kit": ["reflective-conspicuity-tape-kit"],
+      "reflective-safety-stripes-kit": ["reflective-safety-stripes-kit"],
+      "high-visibility-rear-chevron-kit": ["high-visibility-rear-chevron-kit"],
+      "dangerous-goods-placards": ["dangerous-goods-placards"],
+      "fleet-vehicle-inspection-book": ["fleet-vehicle-inspection-book"],
+      "hours-of-service-log-holder": ["hours-of-service-log-holder"],
+      "ifta-cab-card-holder": ["ifta-cab-card-holder"],
+    };
+
+    const vehiclePrices = {};
+    for (const [key, slugs] of Object.entries(VEHICLE_PRICE_MAP)) {
+      const slugSet = new Set(slugs);
+      const matching = products.filter((p) => slugSet.has(p.slug));
+      if (matching.length > 0) {
+        const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
+        vehiclePrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
+      }
+    }
+
+    return (
+      <>
+        <CategoryFaqSchema category={decoded} />
+        <VehicleCategoryClient vehiclePrices={vehiclePrices} />
       </>
     );
   }
