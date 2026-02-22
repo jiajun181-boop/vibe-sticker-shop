@@ -50,7 +50,7 @@ export default function FeaturedBanner({ products }) {
 
   return (
     <section
-      className="relative overflow-hidden rounded-md border border-[var(--color-gray-200)] bg-white"
+      className="relative overflow-hidden rounded-2xl shadow-[var(--shadow-card)] bg-white"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -122,24 +122,24 @@ function FeaturedCard({ product, compact }) {
   return (
     <Link
       href={`/shop/${product.category}/${product.slug}`}
-      className="group block rounded-md border border-[var(--color-gray-200)] bg-white p-4 md:p-5 transition-colors duration-200 hover:border-[var(--color-gray-300)]"
+      className="group block rounded-xl shadow-[var(--shadow-card)] bg-white p-4 md:p-5 transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
     >
       {/* Badge */}
       {badge && (
-        <div className="mb-3 inline-block rounded-sm border border-[var(--color-gray-300)] bg-[var(--color-gray-50)] px-2.5 py-1 label-xs text-[var(--color-gray-700)]">
+        <div className="mb-3 inline-block rounded-full bg-[var(--color-brand-50)] text-[var(--color-brand-dark)] px-2.5 py-1 label-xs">
           {t(badge.labelKey)}
         </div>
       )}
 
       {/* Image */}
-      <div className={`${compact ? "aspect-[3/4]" : "aspect-[4/5]"} mb-3 overflow-hidden rounded-sm bg-[var(--color-gray-50)] md:mb-4 flex items-center justify-center`}>
+      <div className={`${compact ? "aspect-[3/4]" : "aspect-[4/5]"} mb-3 overflow-hidden rounded-xl bg-[var(--color-gray-50)] md:mb-4 flex items-center justify-center`}>
         {img ? (
           <Image
             src={img}
             alt={product.name}
             width={400}
             height={500}
-            className="h-full w-full rounded-sm object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full rounded-xl object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <span className="text-3xl opacity-20">&#128444;</span>
@@ -166,7 +166,7 @@ function FeaturedCard({ product, compact }) {
             {cad(product.basePrice)}
           </p>
         </div>
-        <span className="whitespace-nowrap rounded-sm border border-[var(--color-gray-300)] bg-[var(--color-gray-50)] px-3 py-1.5 label-xs tracking-wide text-[var(--color-gray-700)] opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+        <span className="whitespace-nowrap rounded-full bg-[var(--color-brand)] px-3 py-1.5 label-xs tracking-wide text-white opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
           {t("featured.customize")} &rarr;
         </span>
       </div>

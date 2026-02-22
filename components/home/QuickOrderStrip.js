@@ -14,7 +14,7 @@ function ProductCard({ p, t, onQuickAdd }) {
   const img = p.images?.[0]?.url;
 
   return (
-    <div className="w-52 shrink-0 overflow-hidden rounded-md border border-[var(--color-gray-200)] bg-white hover-lift-subtle">
+    <div className="w-52 shrink-0 overflow-hidden rounded-xl shadow-[var(--shadow-card)] bg-white hover-lift-subtle">
       <Link href={`/shop/${p.category}/${p.slug}`} className="block">
         <div className="aspect-square overflow-hidden bg-[var(--color-gray-50)]">
           {img ? (
@@ -187,7 +187,7 @@ export default function QuickOrderStrip({ products }) {
 
   return (
     <div
-      className="popular-marquee-wrap rounded-md border border-[var(--color-gray-200)] bg-white p-4 md:p-6"
+      className="popular-marquee-wrap rounded-xl shadow-[var(--shadow-card)] bg-white p-4 md:p-6"
     >
       <div className="mb-4 flex items-center justify-between gap-3">
         <h3 className="text-center label-sm tracking-[0.16em] text-[var(--color-gray-500)]">
@@ -197,7 +197,7 @@ export default function QuickOrderStrip({ products }) {
           <button
             type="button"
             onClick={() => nudgeAll(-220)}
-            className="hidden h-8 w-8 items-center justify-center rounded-sm border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-600)] hover:bg-[var(--color-gray-100)] md:inline-flex"
+            className="hidden h-8 w-8 items-center justify-center rounded-lg border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-600)] hover:bg-[var(--color-gray-100)] md:inline-flex"
             aria-label="Scroll left"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
@@ -205,7 +205,7 @@ export default function QuickOrderStrip({ products }) {
           <button
             type="button"
             onClick={() => nudgeAll(220)}
-            className="hidden h-8 w-8 items-center justify-center rounded-sm border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-600)] hover:bg-[var(--color-gray-100)] md:inline-flex"
+            className="hidden h-8 w-8 items-center justify-center rounded-lg border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-600)] hover:bg-[var(--color-gray-100)] md:inline-flex"
             aria-label="Scroll right"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>

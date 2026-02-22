@@ -97,9 +97,9 @@ export default function TrustSignals() {
         {STATS.map((stat) => (
           <div
             key={stat.labelKey}
-            className="rounded-md border border-[var(--color-gray-200)] bg-white p-5 text-center md:p-6 hover-lift-subtle"
+            className="rounded-xl shadow-[var(--shadow-card)] bg-white p-5 text-center md:p-6 hover-lift-subtle"
           >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-sm border border-[var(--color-gray-300)] bg-[var(--color-gray-50)] text-[var(--color-gray-700)]">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-brand-50)] text-[var(--color-brand)]">
               {STAT_ICONS[stat.icon]}
             </div>
             <div className="text-3xl md:text-4xl font-black tracking-tight text-[var(--color-gray-900)]">
@@ -111,7 +111,7 @@ export default function TrustSignals() {
       </div>
 
       {/* Reviews */}
-      <div className="overflow-hidden rounded-md border border-[var(--color-gray-200)] bg-white p-6 md:p-8">
+      <div className="overflow-hidden rounded-xl shadow-[var(--shadow-card)] bg-white p-6 md:p-8">
         <div className="flex items-center gap-2 mb-6">
           <StarRating value={5} size={16} />
           <span className="label-xs text-[var(--color-gray-400)] tracking-[0.14em]">
@@ -133,7 +133,7 @@ export default function TrustSignals() {
                 &ldquo;{review.text}&rdquo;
               </blockquote>
               <div className="mt-3 flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-sm border border-[var(--color-gray-300)] bg-[var(--color-gray-50)] label-xs text-[var(--color-gray-700)]">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-brand-50)] label-xs text-[var(--color-brand-dark)]">
                   {review.name[0]}
                 </div>
                 <span className="body-sm font-bold">{review.name}</span>
@@ -149,7 +149,7 @@ export default function TrustSignals() {
               key={i}
               onClick={() => setReviewIdx(i)}
               className={`h-1.5 rounded-full transition-all ${
-                i === reviewIdx ? "bg-[var(--color-ink-black)] w-4" : "bg-[var(--color-gray-200)] w-1.5"
+                i === reviewIdx ? "bg-[var(--color-brand)] w-4" : "bg-[var(--color-gray-200)] w-1.5"
               }`}
             />
           ))}

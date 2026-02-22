@@ -1,5 +1,5 @@
 import "./globals.css";
-import { Poppins, EB_Garamond } from "next/font/google";
+import { Poppins, Inter } from "next/font/google";
 import CartDrawer from "@/components/cart/CartDrawer";
 import { Toaster } from "@/components/Toast";
 import { getServerLocale } from "@/lib/i18n/server";
@@ -15,10 +15,10 @@ const poppins = Poppins({
   display: "swap",
 });
 
-const ebGaramond = EB_Garamond({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-serif",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-heading",
   display: "swap",
 });
 
@@ -76,7 +76,7 @@ export default async function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <HreflangTags />
       </head>
-      <body className={`${poppins.variable} ${ebGaramond.variable} antialiased`}>
+      <body className={`${poppins.variable} ${inter.variable} antialiased`}>
         <SkipLink />
         <AppChrome catalogConfig={catalogConfig} locale={locale}>
           {children}

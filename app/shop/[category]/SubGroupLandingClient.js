@@ -42,10 +42,10 @@ function SubGroupCard({ group, t, stickerConfig, isExpanded, onExpand }) {
         <button
           type="button"
           onClick={handleClick}
-          className={`group flex w-full flex-col overflow-hidden rounded-2xl border bg-white text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
+          className={`group flex w-full flex-col overflow-hidden rounded-2xl bg-white text-left transition-all duration-200 hover:-translate-y-0.5 ${
             isExpanded
-              ? "border-[var(--color-gray-900)] ring-2 ring-[var(--color-gray-900)]/10 shadow-lg"
-              : "border-[var(--color-gray-200)] hover:border-[var(--color-gray-400)]"
+              ? "ring-2 ring-[var(--color-brand)]/20 shadow-lg"
+              : "shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)]"
           }`}
         >
           <CardInner
@@ -58,7 +58,7 @@ function SubGroupCard({ group, t, stickerConfig, isExpanded, onExpand }) {
       ) : (
         <Link
           href={group.href}
-          className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-[var(--color-gray-400)]"
+          className="group flex flex-col overflow-hidden rounded-2xl shadow-[var(--shadow-card)] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)]"
         >
           <CardInner
             group={group}
@@ -71,7 +71,7 @@ function SubGroupCard({ group, t, stickerConfig, isExpanded, onExpand }) {
 
       {/* Hover preview popover (desktop only, non-configurator cards) */}
       {!hasConfigurator && hovered && group.topProducts?.length > 0 && (
-        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-full z-20 mt-1 w-56 rounded-xl border border-[var(--color-gray-200)] bg-white p-3 shadow-xl pointer-events-none animate-in fade-in-0 zoom-in-95 duration-150">
+        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-full z-20 mt-1 w-56 rounded-xl bg-white p-3 shadow-xl pointer-events-none animate-in fade-in-0 zoom-in-95 duration-150">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)] mb-2">
             {t("shop.hoverViewProducts")}
           </p>
@@ -167,7 +167,7 @@ function CardInner({ group, t, stickerConfig, ctaLabel }) {
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-2.5 sm:p-4">
-        <h3 className="text-xs sm:text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-moon-gold)] transition-colors">
+        <h3 className="text-xs sm:text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)] transition-colors">
           {group.title}
         </h3>
         {group.description && (
@@ -335,8 +335,8 @@ export default function SubGroupLandingClient({
                   }}
                   className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
                     activeSlug === group.slug
-                      ? "bg-[var(--color-gray-900)] text-white"
-                      : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)] hover:text-[var(--color-gray-900)]"
+                      ? "bg-[var(--color-brand)] text-white"
+                      : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-brand)] hover:text-[var(--color-gray-900)]"
                   }`}
                 >
                   {group.title}
@@ -449,7 +449,7 @@ export default function SubGroupLandingClient({
 
         {/* Info Footer */}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.qualityTitle")}
             </h3>
@@ -464,18 +464,18 @@ export default function SubGroupLandingClient({
               ))}
             </ul>
           </div>
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.turnaroundTitle")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">{t("mp.landing.turnaroundText")}</p>
           </div>
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               {t("mp.landing.customTitle")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">{t("mp.landing.customText")}</p>
-            <Link href="/quote" className="mt-3 inline-block rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-black">
+            <Link href="/quote" className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-[var(--color-brand-dark)]">
               {t("home.cta.quote")}
             </Link>
           </div>
@@ -528,7 +528,7 @@ function QuickQuoteFAB({ t }) {
   return (
     <Link
       href="/quote"
-      className="fixed right-4 z-50 flex items-center gap-2 rounded-xl bg-[var(--color-gray-900)] px-4 py-2.5 text-white shadow-lg transition-all hover:bg-black animate-in fade-in-0 slide-in-from-bottom-4 duration-300 md:hidden"
+      className="fixed right-4 z-50 flex items-center gap-2 rounded-full bg-[var(--color-brand)] px-4 py-2.5 text-white shadow-lg transition-all hover:bg-[var(--color-brand-dark)] animate-in fade-in-0 slide-in-from-bottom-4 duration-300 md:hidden"
       style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom) + 8px)" }}
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

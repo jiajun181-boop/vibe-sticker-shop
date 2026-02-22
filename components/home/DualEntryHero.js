@@ -11,10 +11,10 @@ export default function DualEntryHero({ totalCount }) {
   return (
     <div
       ref={ref}
-      className="pt-28 pb-24 md:pt-40 md:pb-32 px-4 sm:px-6 relative bg-white"
+      className="pt-28 pb-28 md:pt-40 md:pb-36 px-4 sm:px-6 relative bg-gradient-to-br from-[var(--color-brand-50)] to-white"
     >
       <div className="max-w-3xl mx-auto text-center">
-        <p className="animate-on-scroll label-xs text-[var(--color-gray-400)] mb-8 tracking-[0.18em]">
+        <p className="animate-on-scroll inline-block bg-[var(--color-brand-100)] text-[var(--color-brand-dark)] rounded-full px-4 py-1.5 text-sm font-medium mb-8">
           {t("home.badge")}
         </p>
 
@@ -28,19 +28,19 @@ export default function DualEntryHero({ totalCount }) {
         <div className="animate-on-scroll delay-3 mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
             href="/shop"
-            className="btn-primary-pill btn-md tracking-[0.14em]"
+            className="btn-primary-pill btn-md"
           >
             {t("home.cta.shop")}
           </Link>
           <Link
             href="/quote"
-            className="inline-flex items-center gap-2 border-b-2 border-[var(--color-ink-black)] px-1 pb-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-ink-black)] transition-colors hover:border-[var(--color-moon-gold)] hover:text-[var(--color-moon-gold)]"
+            className="btn-secondary-pill btn-md"
           >
             {t("home.cta.quote")}
           </Link>
         </div>
 
-        <p className="animate-on-scroll delay-4 label-xs text-[var(--color-gray-400)] mt-8 tracking-[0.15em]">
+        <p className="animate-on-scroll delay-4 text-sm text-[var(--color-gray-400)] mt-8">
           {t("home.productsAvailable", { count: totalCount })}
         </p>
       </div>

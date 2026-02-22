@@ -479,7 +479,7 @@ export default function Navbar({ catalogConfig }) {
           {/* Get a Quote CTA */}
           <Link
             href="/quote"
-            className="btn-primary-pill hidden md:inline-flex px-4 py-1.5 text-xs"
+            className="btn-primary-pill hidden md:inline-flex px-4 py-2 text-xs"
           >
             {t("nav.getQuote")}
           </Link>
@@ -526,7 +526,7 @@ export default function Navbar({ catalogConfig }) {
             <span>{t("nav.cart")}</span>
             <span
               key={cartCount}
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-moon-blue)] label-xs font-semibold text-white cart-badge-bounce"
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-brand)] label-xs font-semibold text-white cart-badge-bounce"
             >
               {cartCount}
             </span>

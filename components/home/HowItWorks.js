@@ -29,10 +29,10 @@ export default function HowItWorks() {
   const { t } = useTranslation();
 
   return (
-    <section className="bg-white rounded-3xl border border-[var(--color-gray-100)] p-8 md:p-12">
+    <section className="bg-white rounded-2xl shadow-[var(--shadow-card)] p-8 md:p-12">
       <div className="text-center mb-10">
         <div className="flex items-center justify-center gap-2 mb-3">
-          <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-ink-black)]" />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)]" />
           <span className="label-xs text-[var(--color-gray-400)]">
             {t("howItWorks.badge")}
           </span>
@@ -47,13 +47,13 @@ export default function HowItWorks() {
           <div key={i} className="text-center relative">
             {/* Connector line (desktop only) */}
             {i < STEP_KEYS.length - 1 && (
-              <div className="hidden md:block absolute top-8 left-[60%] right-[-40%] h-px bg-gradient-to-r from-[var(--color-moon-gold)] to-transparent" />
+              <div className="hidden md:block absolute top-8 left-[60%] right-[-40%] h-px bg-gradient-to-r from-[var(--color-brand)] to-transparent" />
             )}
 
             {/* Number badge */}
-            <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--color-gray-50)] border border-[var(--color-gray-100)] text-[var(--color-gray-800)] mb-4 mx-auto">
+            <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-xl bg-[var(--color-brand-50)] text-[var(--color-brand)] mb-4 mx-auto">
               {STEP_ICONS[i]}
-              <span className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-[var(--color-moon-gold)] to-[var(--color-moon-gold-dark)] text-white rounded-full label-xs flex items-center justify-center tracking-normal font-black">
+              <span className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-dark)] text-white rounded-full label-xs flex items-center justify-center tracking-normal font-black">
                 {i + 1}
               </span>
             </div>

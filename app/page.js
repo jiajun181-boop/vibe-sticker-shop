@@ -117,7 +117,7 @@ export default async function HomePage() {
         <DualEntryHero totalCount={totalCount} />
 
         {/* 2. Popular Products */}
-        <section className="py-20 bg-white">
+        <section className="py-16 md:py-24 bg-white">
           <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <QuickOrderStrip products={serializedQuickProducts} />
           </div>
@@ -127,12 +127,12 @@ export default async function HomePage() {
         <ReorderStrip />
 
         {/* 5. Shop by Category */}
-        <section className="py-20 bg-white animate-on-scroll">
+        <section className="py-16 md:py-24 bg-[var(--color-brand-50)] animate-on-scroll">
           <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <h2 className="heading-2 text-center mb-10">
               {t("home.shopByCategory")}
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
               {grouped.map(([category, items]) => {
                 const meta = categoryMeta[category] || { title: category, icon: "\u{1F9E9}" };
                 const totalInCat = products.filter((p) => p.category === category).length;
@@ -141,9 +141,9 @@ export default async function HomePage() {
                   <Link
                     key={category}
                     href={`/shop/${category}`}
-                    className="group overflow-hidden rounded-md border border-[var(--color-gray-200)] bg-white hover-lift-subtle"
+                    className="group overflow-hidden rounded-xl shadow-[var(--shadow-card)] bg-white hover-lift-subtle"
                   >
-                    <div className="aspect-[4/3] bg-[var(--color-gray-50)] overflow-hidden flex items-center justify-center">
+                    <div className="aspect-[4/3] bg-[var(--color-gray-50)] overflow-hidden rounded-t-xl flex items-center justify-center">
                       {previewImg ? (
                         <Image
                           src={previewImg}
@@ -156,12 +156,12 @@ export default async function HomePage() {
                         <span className="text-4xl">{meta.icon}</span>
                       )}
                     </div>
-                    <div className="p-4">
+                    <div className="p-5">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{meta.icon}</span>
                         <h3 className="font-bold body-sm leading-tight">{meta.title}</h3>
                       </div>
-                      <p className="label-xs text-[var(--color-gray-400)] mt-1 font-normal tracking-wide">
+                      <p className="text-xs text-[var(--color-gray-400)] mt-1">
                         {t("home.categoryCount", { count: totalInCat })}
                       </p>
                     </div>
@@ -172,7 +172,7 @@ export default async function HomePage() {
             <div className="text-center pt-10">
               <Link
                 href="/shop"
-                className="btn-primary-pill btn-md inline-block font-black tracking-[0.14em]"
+                className="btn-primary-pill btn-md inline-block"
               >
                 {t("home.browseAll", { count: totalCount })}
               </Link>
@@ -181,7 +181,7 @@ export default async function HomePage() {
         </section>
 
         {/* 5. Trust Signals + How It Works */}
-        <section className="py-20 bg-white animate-on-scroll">
+        <section className="py-16 md:py-24 bg-white animate-on-scroll">
           <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4 space-y-16">
             <TrustSignals />
             <HowItWorks />
@@ -189,7 +189,7 @@ export default async function HomePage() {
         </section>
 
         {/* 9. Quote Calculator */}
-        <section className="py-20 bg-[var(--color-gray-50)] animate-on-scroll">
+        <section className="py-16 md:py-24 bg-[var(--color-gray-50)] animate-on-scroll">
           <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <QuoteCalculator products={quoteProducts} />
           </div>
@@ -197,7 +197,7 @@ export default async function HomePage() {
 
         {/* 10. Featured Display Products */}
         {displayProducts.length > 0 && (
-          <section className="py-20 bg-white animate-on-scroll">
+          <section className="py-16 md:py-24 bg-white animate-on-scroll">
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
               <FeaturedBanner products={displayProducts} />
             </div>

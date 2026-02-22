@@ -85,13 +85,13 @@ export default function QuoteCalculator({ products: serverProducts }) {
   if (!product) return null;
 
   return (
-    <section id="quote" className="bg-white rounded-3xl border border-[var(--color-gray-100)] shadow-lg overflow-hidden">
+    <section id="quote" className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="grid md:grid-cols-2">
         {/* Left — Form */}
         <div className="p-8 md:p-10 space-y-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-moon-gold)]" />
+              <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)]" />
               <span className="label-xs text-[var(--color-gray-400)]">
                 {t("quote.badge")}
               </span>
@@ -107,7 +107,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
             <select
               value={selectedSlug}
               onChange={(e) => handleProductChange(e.target.value)}
-              className="w-full border border-[var(--color-gray-200)] rounded-sm px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black bg-[var(--color-gray-50)] hover:bg-white transition-colors"
+              className="w-full border border-[var(--color-gray-200)] rounded-lg px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] bg-[var(--color-gray-50)] hover:bg-white transition-colors"
             >
               {items.map((p) => (
                 <option key={p.slug} value={p.slug}>
@@ -126,10 +126,10 @@ export default function QuoteCalculator({ products: serverProducts }) {
                   <button
                     key={s.label}
                     onClick={() => setSizeIdx(i)}
-                    className={`px-4 py-2.5 rounded-sm text-xs font-bold border transition-all ${
+                    className={`px-4 py-2.5 rounded-full text-xs font-bold border transition-all ${
                       sizeIdx === i
-                        ? "bg-[var(--color-ink-black)] text-white border-[var(--color-ink-black)]"
-                        : "bg-[var(--color-gray-50)] text-[var(--color-gray-600)] border-[var(--color-gray-200)] hover:border-[var(--color-gray-400)]"
+                        ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                        : "bg-[var(--color-gray-50)] text-[var(--color-gray-600)] border-[var(--color-gray-200)] hover:border-[var(--color-brand)]"
                     }`}
                   >
                     {s.label}
@@ -145,7 +145,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setQty(Math.max(1, qty - 1))}
-                className="w-10 h-10 rounded-sm border border-[var(--color-gray-200)] font-bold text-lg hover:bg-[var(--color-gray-50)] transition-colors flex items-center justify-center"
+                className="w-10 h-10 rounded-lg border border-[var(--color-gray-200)] font-bold text-lg hover:bg-[var(--color-gray-50)] transition-colors flex items-center justify-center"
               >
                 -
               </button>
@@ -154,11 +154,11 @@ export default function QuoteCalculator({ products: serverProducts }) {
                 min={1}
                 value={qty}
                 onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-20 text-center border border-[var(--color-gray-200)] rounded-sm py-2.5 text-sm font-black focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-20 text-center border border-[var(--color-gray-200)] rounded-lg py-2.5 text-sm font-black focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)]"
               />
               <button
                 onClick={() => setQty(qty + 1)}
-                className="w-10 h-10 rounded-sm border border-[var(--color-gray-200)] font-bold text-lg hover:bg-[var(--color-gray-50)] transition-colors flex items-center justify-center"
+                className="w-10 h-10 rounded-lg border border-[var(--color-gray-200)] font-bold text-lg hover:bg-[var(--color-gray-50)] transition-colors flex items-center justify-center"
               >
                 +
               </button>
@@ -167,8 +167,8 @@ export default function QuoteCalculator({ products: serverProducts }) {
                   <button
                     key={n}
                     onClick={() => setQty(n)}
-                    className={`px-3 py-1.5 rounded-sm label-xs font-bold transition-all ${
-                      qty === n ? "bg-[var(--color-ink-black)] text-white" : "bg-[var(--color-gray-100)] text-[var(--color-gray-500)] hover:bg-[var(--color-gray-200)]"
+                    className={`px-3 py-1.5 rounded-full label-xs font-bold transition-all ${
+                      qty === n ? "bg-[var(--color-brand)] text-white" : "bg-[var(--color-gray-100)] text-[var(--color-gray-500)] hover:bg-[var(--color-gray-200)]"
                     }`}
                   >
                     {n}
@@ -180,7 +180,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
 
           {/* Rush production */}
           <label className="flex items-center gap-3 cursor-pointer group">
-            <div className={`w-10 h-6 rounded-full relative transition-colors ${rush ? "bg-[var(--color-moon-gold)]" : "bg-[var(--color-gray-200)]"}`}>
+            <div className={`w-10 h-6 rounded-full relative transition-colors ${rush ? "bg-[var(--color-brand)]" : "bg-[var(--color-gray-200)]"}`}>
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${rush ? "left-[18px]" : "left-0.5"}`} />
             </div>
             <div>
@@ -191,7 +191,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
         </div>
 
         {/* Right — Price display */}
-        <div className="bg-gradient-to-br from-[var(--color-gray-50)] to-[var(--color-gray-100)] p-8 md:p-10 flex flex-col justify-between border-t md:border-t-0 md:border-l border-[var(--color-gray-100)]">
+        <div className="bg-gradient-to-br from-[var(--color-brand-50)] to-[var(--color-brand-100)] p-8 md:p-10 flex flex-col justify-between border-t md:border-t-0 md:border-l border-[var(--color-brand-100)]">
           <div className="space-y-6">
             <div>
               <span className="text-xs font-bold text-[var(--color-gray-400)] uppercase tracking-[0.14em]">{t("quote.estimatedPrice")}</span>
@@ -202,7 +202,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
                 <span className="text-[var(--color-gray-400)] text-sm">{t("quote.cad")}</span>
               </div>
               {rush && (
-                <div className="inline-flex items-center gap-1.5 mt-2 bg-amber-50 text-amber-700 label-xs font-bold px-3 py-1 rounded-sm">
+                <div className="inline-flex items-center gap-1.5 mt-2 bg-amber-50 text-amber-700 label-xs font-bold px-3 py-1 rounded-full">
                   <span>&#9889;</span> {t("quote.rushIncluded")}
                 </div>
               )}
@@ -217,19 +217,19 @@ export default function QuoteCalculator({ products: serverProducts }) {
 
             {/* Summary chips */}
             <div className="flex flex-wrap gap-2">
-              <span className="bg-white px-3 py-1.5 rounded-sm label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
+              <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
                 {product.name}
               </span>
               {product.unit === "per_sqft" && (
-                <span className="bg-white px-3 py-1.5 rounded-sm label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
+                <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
                   {size.label}
                 </span>
               )}
-              <span className="bg-white px-3 py-1.5 rounded-sm label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
+              <span className="bg-white px-3 py-1.5 rounded-full label-xs font-bold text-[var(--color-gray-500)] border border-[var(--color-gray-200)]">
                 {t("quote.qty")}: {qty}
               </span>
               {rush && (
-                <span className="bg-amber-50 px-3 py-1.5 rounded-sm label-xs font-bold text-amber-700 border border-amber-200">
+                <span className="bg-amber-50 px-3 py-1.5 rounded-full label-xs font-bold text-amber-700 border border-amber-200">
                   {t("quote.rush24h")}
                 </span>
               )}
@@ -244,7 +244,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
           <div className="mt-8 space-y-3">
             <Link
               href={product.href}
-              className="btn-dark-pill btn-lg block w-full text-center tracking-[0.14em]"
+              className="btn-primary-pill btn-lg block w-full text-center"
             >
               {t("quote.cta")}
             </Link>

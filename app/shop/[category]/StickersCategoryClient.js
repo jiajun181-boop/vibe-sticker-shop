@@ -162,7 +162,7 @@ export default function StickersCategoryClient({ stickerPrices = {} }) {
                     ) : (
                       <span />
                     )}
-                    <span className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
                       Configure
                       <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -200,7 +200,7 @@ export default function StickersCategoryClient({ stickerPrices = {} }) {
                   ) : (
                     <span />
                   )}
-                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
                     {card.cta}
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -259,7 +259,7 @@ export default function StickersCategoryClient({ stickerPrices = {} }) {
 
         {/* Info Footer */}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               Waterproof & UV Protected
             </h3>
@@ -269,7 +269,7 @@ export default function StickersCategoryClient({ stickerPrices = {} }) {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               Fast Turnaround
             </h3>
@@ -279,7 +279,7 @@ export default function StickersCategoryClient({ stickerPrices = {} }) {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
+          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
               Any Shape, Any Size
             </h3>
@@ -289,7 +289,7 @@ export default function StickersCategoryClient({ stickerPrices = {} }) {
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-black"
+              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-[var(--color-brand-dark)]"
             >
               Get a Quote
             </Link>
