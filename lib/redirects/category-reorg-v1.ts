@@ -86,17 +86,17 @@ export const categoryReorgRedirectsV1 = [
   },
   {
     "source": "/shop/marketing-prints/greeting-cards",
-    "destination": "/shop/marketing-business-print/greeting-cards",
+    "destination": "/shop/marketing-business-print/greeting-invitation-cards",
     "permanent": true
   },
   {
     "source": "/shop/marketing-prints/invitation-cards",
-    "destination": "/shop/marketing-business-print/invitation-cards",
+    "destination": "/shop/marketing-business-print/greeting-invitation-cards",
     "permanent": true
   },
   {
     "source": "/shop/marketing-prints/loyalty-cards",
-    "destination": "/shop/marketing-business-print/loyalty-cards",
+    "destination": "/shop/marketing-business-print/tickets-coupons",
     "permanent": true
   },
   {
@@ -161,12 +161,12 @@ export const categoryReorgRedirectsV1 = [
   },
   {
     "source": "/shop/window-glass-films/static-clings",
-    "destination": "/shop/windows-walls-floors/static-clings",
+    "destination": "/shop/windows-walls-floors/static-cling",
     "permanent": true
   },
   {
     "source": "/shop/window-glass-films/adhesive-films",
-    "destination": "/shop/windows-walls-floors/adhesive-films",
+    "destination": "/shop/windows-walls-floors/transparent-color-film",
     "permanent": true
   },
   {
@@ -176,12 +176,12 @@ export const categoryReorgRedirectsV1 = [
   },
   {
     "source": "/shop/window-glass-films/privacy-films",
-    "destination": "/shop/windows-walls-floors/privacy-films",
+    "destination": "/shop/windows-walls-floors/frosted-window-film",
     "permanent": true
   },
   {
     "source": "/shop/window-glass-films/window-lettering",
-    "destination": "/shop/windows-walls-floors/window-lettering",
+    "destination": "/shop/windows-walls-floors/opaque-window-graphics",
     "permanent": true
   },
   {
@@ -241,7 +241,7 @@ export const categoryReorgRedirectsV1 = [
   },
   {
     "source": "/shop/large-format-graphics/vehicle-graphics",
-    "destination": "/shop/vehicle-graphics-fleet/vehicle-graphics",
+    "destination": "/shop/vehicle-graphics-fleet/vehicle-wraps",
     "permanent": true
   },
   {
@@ -331,37 +331,37 @@ export const categoryReorgRedirectsV1 = [
   },
   {
     "source": "/shop/safety-warning-decals/fire-emergency",
-    "destination": "/shop/stickers-labels-decals/fire-emergency",
+    "destination": "/shop/stickers-labels-decals",
     "permanent": true
   },
   {
     "source": "/shop/safety-warning-decals/hazard-warning",
-    "destination": "/shop/stickers-labels-decals/hazard-warning",
+    "destination": "/shop/stickers-labels-decals",
     "permanent": true
   },
   {
     "source": "/shop/safety-warning-decals/ppe-equipment",
-    "destination": "/shop/stickers-labels-decals/ppe-equipment",
+    "destination": "/shop/stickers-labels-decals",
     "permanent": true
   },
   {
     "source": "/shop/safety-warning-decals/electrical-chemical",
-    "destination": "/shop/stickers-labels-decals/electrical-chemical",
+    "destination": "/shop/stickers-labels-decals",
     "permanent": true
   },
   {
     "source": "/shop/facility-asset-labels/asset-equipment-tags",
-    "destination": "/shop/stickers-labels-decals/asset-equipment-tags",
+    "destination": "/shop/stickers-labels-decals",
     "permanent": true
   },
   {
     "source": "/shop/facility-asset-labels/pipe-valve-labels",
-    "destination": "/shop/stickers-labels-decals/pipe-valve-labels",
+    "destination": "/shop/stickers-labels-decals",
     "permanent": true
   },
   {
     "source": "/shop/facility-asset-labels/warehouse-labels",
-    "destination": "/shop/stickers-labels-decals/warehouse-labels",
+    "destination": "/shop/stickers-labels-decals",
     "permanent": true
   },
   {
