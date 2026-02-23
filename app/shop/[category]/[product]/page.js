@@ -408,11 +408,8 @@ export default async function ProductPage({ params }) {
   }
 
   // ── Sub-product landing: parent slug → show child products as card grid ──
-  // Skip sub-product landing when a configurator exists for this slug —
-  // the configurator provides a better UX (direct order form) than an
-  // intermediate card grid.  e.g. business-cards, ncr-forms, table-tents.
   const subCfg = getSubProducts(decodedSlug);
-  if (subCfg && !getConfiguratorForSlug(decodedSlug)) {
+  if (subCfg) {
     const subProducts = await prisma.product.findMany({
       where: {
         slug: { in: subCfg.dbSlugs },
