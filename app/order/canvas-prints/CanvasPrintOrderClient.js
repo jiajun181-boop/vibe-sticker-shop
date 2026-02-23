@@ -131,7 +131,7 @@ export default function CanvasPrintOrderClient() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slug: "canvas-prints",
+        slug: "canvas-standard",
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,

@@ -146,7 +146,7 @@ export default function WindowFilmOrderClient() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slug: "window-films",
+        slug: "frosted-window-film",
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,

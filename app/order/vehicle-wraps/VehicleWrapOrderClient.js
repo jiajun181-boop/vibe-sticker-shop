@@ -141,13 +141,7 @@ export default function VehicleWrapOrderClient() {
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
 
-  const [quoteData, setQuoteData] = useState(null);
-  const [quoteLoading, setQuoteLoading] = useState(false);
-  const [quoteError, setQuoteError] = useState(null);
   const [buyNowLoading, setBuyNowLoading] = useState(false);
-
-  const debounceRef = useRef(null);
-  const abortRef = useRef(null);
 
   const activeQty = useMemo(() => {
     if (customQty !== "") {
@@ -157,63 +151,16 @@ export default function VehicleWrapOrderClient() {
     return quantity;
   }, [quantity, customQty]);
 
-  // ─── Quote ───
+  // ─── Vehicle wraps are quote-only (no instant pricing) ───
 
-  const fetchQuote = useCallback(() => {
-    if (abortRef.current) abortRef.current.abort();
-    if (activeQty <= 0) {
-      setQuoteData(null);
-      return;
-    }
-    const ac = new AbortController();
-    abortRef.current = ac;
-    setQuoteLoading(true);
-    setQuoteError(null);
+  const isQuoteOnly = true;
 
-    fetch("/api/quote", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        slug: "vehicle-wraps",
-        quantity: activeQty,
-        widthIn: 0,
-        heightIn: 0,
-        sides: "single",
-      }),
-      signal: ac.signal,
-    })
-      .then((r) => r.json().then((d) => ({ ok: r.ok, data: d })))
-      .then(({ ok, data }) => {
-        if (!ok) throw new Error(data.error || "Quote failed");
-        setQuoteData(data);
-      })
-      .catch((err) => {
-        if (err.name === "AbortError") return;
-        setQuoteError(err.message);
-      })
-      .finally(() => setQuoteLoading(false));
-  }, [activeQty]);
-
-  useEffect(() => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(fetchQuote, DEBOUNCE_MS);
-    return () => clearTimeout(debounceRef.current);
-  }, [fetchQuote]);
-
-  // ─── Pricing ───
-
-  const subtotalCents = quoteData?.totalCents ?? 0;
-  const vehicleSurcharge = (VEHICLES.find((v) => v.id === vehicleId)?.surcharge ?? 0) * activeQty;
-  const materialSurcharge = (MATERIALS.find((m) => m.id === materialId)?.surcharge ?? 0) * activeQty;
-  const adjustedSubtotal = subtotalCents + vehicleSurcharge + materialSurcharge;
-  const totalCents = adjustedSubtotal;
-
-  const canAddToCart = quoteData && !quoteLoading && activeQty > 0;
+  const canAddToCart = false;
 
   // ─── Cart ───
 
   function buildCartItem() {
-    if (!quoteData || activeQty <= 0) return null;
+    if (activeQty <= 0) return null;
 
     const nameParts = [
       t(`vw.type.${typeId}`),
@@ -463,65 +410,18 @@ export default function VehicleWrapOrderClient() {
 
             <hr className="border-gray-100" />
 
-            {quoteLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-4 animate-pulse rounded bg-gray-100" />
-                ))}
-              </div>
-            ) : quoteError ? (
-              <p className="text-xs text-red-500">{quoteError}</p>
-            ) : quoteData ? (
-              <dl className="space-y-2 text-sm">
-                <Row label={t("vw.basePrice")} value={formatCad(subtotalCents)} />
-                {vehicleSurcharge > 0 && (
-                  <Row label={t(`vw.vehicle.${vehicleId}`)} value={`+ ${formatCad(vehicleSurcharge)}`} />
-                )}
-                {materialSurcharge < 0 && (
-                  <Row label={t(`vw.material.${materialId}`)} value={`\u2212 ${formatCad(Math.abs(materialSurcharge))}`} />
-                )}
-                <Row label={t("vw.subtotal")} value={formatCad(adjustedSubtotal)} />
-                <div className="flex justify-between border-t border-gray-100 pt-2">
-                  <dt className="font-semibold text-gray-900">{t("vw.total")}</dt>
-                  <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
-                </div>
-                {activeQty > 1 && (
-                  <div className="pt-1">
-                    <p className="text-[11px] text-gray-400">
-                      {formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("vw.each")}
-                    </p>
-                  </div>
-                )}
-              </dl>
-            ) : (
-              <p className="text-xs text-gray-400">{t("vw.selectOptions")}</p>
-            )}
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+              <p className="text-sm font-semibold text-amber-800">Custom Quote Required</p>
+              <p className="mt-1 text-xs text-amber-700">Vehicle wraps are priced per project. Contact us for a free estimate.</p>
+            </div>
 
             <div className="space-y-3">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={!canAddToCart}
-                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
-                  canAddToCart
-                    ? "bg-gray-900 text-white hover:bg-gray-800"
-                    : "cursor-not-allowed bg-gray-200 text-gray-400"
-                }`}
+              <a
+                href="/quote"
+                className="block w-full rounded-full bg-gray-900 px-4 py-3 text-center text-sm font-semibold text-white transition-all hover:bg-gray-800"
               >
-                {t("vw.addToCart")}
-              </button>
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
-                  canAddToCart && !buyNowLoading
-                    ? "border-gray-900 text-gray-900 hover:bg-gray-50"
-                    : "cursor-not-allowed border-gray-200 text-gray-400"
-                }`}
-              >
-                {buyNowLoading ? t("vw.processing") : t("vw.buyNow")}
-              </button>
+                Request a Quote
+              </a>
             </div>
 
             <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
@@ -537,31 +437,17 @@ export default function VehicleWrapOrderClient() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
-            {quoteLoading ? (
-              <div className="h-5 w-20 animate-pulse rounded bg-gray-200" />
-            ) : quoteData ? (
-              <>
-                <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
-                <p className="truncate text-[11px] text-gray-500">
-                  {activeQty.toLocaleString()} × {t(`vw.type.${typeId}`)} {t(`vw.vehicle.${vehicleId}`)}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-gray-400">{t("vw.selectOptions")}</p>
-            )}
+            <p className="text-sm font-semibold text-gray-900">Custom Quote Required</p>
+            <p className="truncate text-[11px] text-gray-500">
+              {t(`vw.type.${typeId}`)} — {t(`vw.vehicle.${vehicleId}`)}
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={!canAddToCart}
-            className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
-              canAddToCart
-                ? "bg-gray-900 text-white hover:bg-gray-800"
-                : "cursor-not-allowed bg-gray-200 text-gray-400"
-            }`}
+          <a
+            href="/quote"
+            className="shrink-0 rounded-full bg-gray-900 px-5 py-2.5 text-xs font-semibold text-white transition-all hover:bg-gray-800"
           >
-            {t("vw.addToCart")}
-          </button>
+            Request a Quote
+          </a>
         </div>
       </div>
 
