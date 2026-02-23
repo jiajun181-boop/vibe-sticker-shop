@@ -21,6 +21,12 @@ import {
 
 const INCH_TO_CM = 2.54;
 
+const PURCHASE_TYPES = [
+  { id: "full-kit", label: "Full Kit (Hardware + Print)", multiplier: 1.0 },
+  { id: "print-only", label: "Print Only (Replacement Graphic)", multiplier: 0.6 },
+  { id: "hardware-only", label: "Hardware Only (No Print)", multiplier: 0.4 },
+];
+
 export default function BannerOrderClient({ defaultType, productImages }) {
   const { t } = useTranslation();
 
@@ -28,6 +34,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
   const [typeId, setTypeId] = useState(defaultType || "vinyl-banner");
   const bannerType = useMemo(() => getBannerType(typeId), [typeId]);
 
+  const [purchaseType, setPurchaseType] = useState("full-kit");
   const [sizeIdx, setSizeIdx] = useState(0);
   const [customW, setCustomW] = useState("");
   const [customH, setCustomH] = useState("");
@@ -38,6 +45,8 @@ export default function BannerOrderClient({ defaultType, productImages }) {
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
   const [dimErrors, setDimErrors] = useState([]);
+
+  const isHardwareType = !!bannerType.includesHardware;
 
   const isCustomSize = sizeIdx === -1;
   const widthIn = useMemo(() => {
@@ -64,6 +73,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
 
   // Reset when type changes
   useEffect(() => {
+    setPurchaseType("full-kit");
     setSizeIdx(0);
     setCustomW("");
     setCustomH("");
@@ -103,10 +113,17 @@ export default function BannerOrderClient({ defaultType, productImages }) {
     enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 
-  // Add finishing surcharges
+  // Purchase type discount (print-only = -40%, hardware-only = -60%)
+  const purchaseDiscount = useMemo(() => {
+    if (!isHardwareType || purchaseType === "full-kit") return 0;
+    const mult = PURCHASE_TYPES.find((p) => p.id === purchaseType)?.multiplier ?? 1;
+    return Math.round(quote.rawSubtotalCents * (mult - 1));
+  }, [isHardwareType, purchaseType, quote.rawSubtotalCents]);
+
+  // Add finishing surcharges + purchase type discount
   useEffect(() => {
-    quote.addSurcharge(finishingSurcharge);
-  }, [finishingSurcharge]); // eslint-disable-line react-hooks/exhaustive-deps
+    quote.addSurcharge(finishingSurcharge + purchaseDiscount);
+  }, [finishingSurcharge, purchaseDiscount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
 
@@ -124,6 +141,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
       quantity: activeQty,
       options: {
         bannerType: typeId,
+        ...(isHardwareType && { purchaseType: PURCHASE_TYPES.find((p) => p.id === purchaseType)?.label || purchaseType }),
         width: widthIn,
         height: heightIn,
         sizeLabel,
@@ -150,6 +168,14 @@ export default function BannerOrderClient({ defaultType, productImages }) {
   // Summary lines
   const summaryLines = [
     { label: t("banner.type.label"), value: t(`banner.type.${typeId}`) },
+  ];
+  if (isHardwareType) {
+    summaryLines.push({
+      label: "Purchase Type",
+      value: PURCHASE_TYPES.find((p) => p.id === purchaseType)?.label || purchaseType,
+    });
+  }
+  summaryLines.push(
     {
       label: t("banner.size"),
       value: isCustomSize
@@ -158,7 +184,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
     },
     { label: t("banner.material"), value: bannerType.materials.find((m) => m.id === materialId)?.label || materialId },
     { label: t("banner.quantity"), value: activeQty > 0 ? activeQty.toLocaleString() : "—" },
-  ];
+  );
   if (finishings.length > 0) {
     summaryLines.push({
       label: t("banner.finishing"),
@@ -167,6 +193,10 @@ export default function BannerOrderClient({ defaultType, productImages }) {
   }
 
   const extraRows = [];
+  if (purchaseDiscount !== 0) {
+    const pctOff = purchaseType === "print-only" ? "-40%" : "-60%";
+    extraRows.push({ label: PURCHASE_TYPES.find((p) => p.id === purchaseType)?.label || purchaseType, value: pctOff });
+  }
   if (finishingSurcharge > 0) {
     extraRows.push({ label: t("banner.finishingSurcharge"), value: `+ $${(finishingSurcharge / 100).toFixed(2)}` });
   }
@@ -192,9 +222,10 @@ export default function BannerOrderClient({ defaultType, productImages }) {
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* LEFT COLUMN */}
           <div className="space-y-6 lg:col-span-2">
+            {(() => { let stepNum = 0; return (<>
 
-            {/* Step 1: Banner Type */}
-            <ConfigStep number={1} title={t("banner.type.label")} subtitle={t("banner.type.subtitle")}>
+            {/* Step: Banner Type */}
+            <ConfigStep number={++stepNum} title={t("banner.type.label")} subtitle={t("banner.type.subtitle")}>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {BANNER_TYPES.map((bt) => (
                   <button
@@ -223,8 +254,43 @@ export default function BannerOrderClient({ defaultType, productImages }) {
               </div>
             </ConfigStep>
 
-            {/* Step 2: Size */}
-            <ConfigStep number={2} title={t("banner.size")} subtitle={t("banner.sizeSubtitle")}>
+            {/* Step: Purchase Type (hardware products only) */}
+            {isHardwareType && (
+              <ConfigStep number={++stepNum} title="Purchase Type" subtitle="Choose what you need — full kit, replacement print, or hardware only.">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {PURCHASE_TYPES.map((pt) => {
+                    const isActive = purchaseType === pt.id;
+                    return (
+                      <button
+                        key={pt.id}
+                        type="button"
+                        onClick={() => setPurchaseType(pt.id)}
+                        className={`relative flex flex-col gap-1 rounded-xl border-2 p-3 text-left transition-all duration-150 ${
+                          isActive
+                            ? "border-[var(--color-brand)] bg-[var(--color-brand-50,#f0fdfa)] shadow-md ring-1 ring-[var(--color-brand)]/20"
+                            : "border-gray-200 bg-white hover:border-gray-400"
+                        }`}
+                      >
+                        {isActive && (
+                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-brand)]">
+                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          </span>
+                        )}
+                        <span className={`text-sm font-bold ${isActive ? "text-[var(--color-brand-dark,#0e7490)]" : "text-gray-800"}`}>{pt.label}</span>
+                        {pt.multiplier < 1 && (
+                          <span className="text-[11px] font-semibold text-emerald-600">
+                            {Math.round((1 - pt.multiplier) * 100)}% less than full kit
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </ConfigStep>
+            )}
+
+            {/* Step: Size */}
+            <ConfigStep number={++stepNum} title={t("banner.size")} subtitle={t("banner.sizeSubtitle")}>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                 {bannerType.sizes.map((s, i) => (
                   <button
@@ -273,9 +339,9 @@ export default function BannerOrderClient({ defaultType, productImages }) {
               )}
             </ConfigStep>
 
-            {/* Step 3: Material */}
+            {/* Step: Material */}
             {bannerType.materials.length > 1 && (
-              <ConfigStep number={3} title={t("banner.material")} subtitle={t("banner.materialSubtitle")}>
+              <ConfigStep number={++stepNum} title={t("banner.material")} subtitle={t("banner.materialSubtitle")}>
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                   {bannerType.materials.map((mat) => {
                     const isActive = materialId === mat.id;
@@ -309,9 +375,9 @@ export default function BannerOrderClient({ defaultType, productImages }) {
               </ConfigStep>
             )}
 
-            {/* Step 4: Finishing (multi-select) */}
+            {/* Step: Finishing (multi-select) */}
             {bannerType.finishings.length > 0 && (
-              <ConfigStep number={bannerType.materials.length > 1 ? 4 : 3} title={t("banner.finishing")} subtitle={t("banner.finishingSubtitle")}>
+              <ConfigStep number={++stepNum} title={t("banner.finishing")} subtitle={t("banner.finishingSubtitle")}>
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                   {bannerType.finishings.map((fId) => {
                     const opt = FINISHING_OPTIONS[fId];
@@ -345,10 +411,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
 
             {/* Step: Quantity */}
             <ConfigStep
-              number={
-                (bannerType.materials.length > 1 ? 3 : 2) +
-                (bannerType.finishings.length > 0 ? 1 : 0) + 1
-              }
+              number={++stepNum}
               title={t("banner.quantity")}
               subtitle={t("banner.quantitySubtitle")}
             >
@@ -387,10 +450,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
 
             {/* Step: Upload Artwork */}
             <ConfigStep
-              number={
-                (bannerType.materials.length > 1 ? 3 : 2) +
-                (bannerType.finishings.length > 0 ? 1 : 0) + 2
-              }
+              number={++stepNum}
               title={t("banner.artwork")}
               subtitle={t("banner.artworkSubtitle")}
               optional
@@ -402,6 +462,8 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                 t={t}
               />
             </ConfigStep>
+
+            </>); })()}
           </div>
 
           {/* RIGHT COLUMN */}

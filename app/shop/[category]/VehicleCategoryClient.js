@@ -7,187 +7,434 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 const BASE = "/shop/vehicle-graphics-fleet";
 
 const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
+    cents / 100
+  );
 
-/* ── Section definitions ── */
+function minPrice(vehiclePrices, keys = []) {
+  const prices = keys.map((k) => vehiclePrices[k]).filter((v) => Number(v) > 0);
+  return prices.length ? Math.min(...prices) : 0;
+}
+
 const SECTIONS = [
   {
-    key: "compliance",
-    title: "Compliance & ID Numbers",
-    subtitle: "Regulatory decals and identification numbers for commercial vehicles.",
-    size: "medium",
+    key: "wraps-large",
+    jumpLabel: "Wraps & Large Graphics",
+    title: "Commercial Wraps & Large Graphics",
+    subtitle:
+      "High-ticket branding projects for vans, trucks, trailers, and fleet vehicles.",
+    ui: "premium",
     items: [
-      { key: "truck-door-compliance-kit", name: "Truck Door Compliance Kit", href: `${BASE}/truck-door-compliance-kit`, gradient: "from-slate-500 to-gray-600" },
-      { key: "cvor-number-decals", name: "CVOR Number Decals", href: `${BASE}/cvor-number-decals`, gradient: "from-slate-400 to-gray-400" },
-      { key: "usdot-number-decals", name: "US DOT Number Decals", href: `${BASE}/usdot-number-decals`, gradient: "from-blue-400 to-indigo-400" },
-      { key: "mc-number-decals", name: "MC Number Decals", href: `${BASE}/mc-number-decals`, gradient: "from-indigo-400 to-violet-400" },
-      { key: "nsc-number-decals", name: "NSC Number Decals", href: `${BASE}/nsc-number-decals`, gradient: "from-violet-400 to-purple-400" },
-      { key: "tssa-truck-number-lettering-cut-vinyl", name: "TSSA Truck Numbers", href: `${BASE}/tssa-truck-number-lettering-cut-vinyl`, gradient: "from-gray-400 to-slate-400" },
-      { key: "gvw-tare-weight-lettering", name: "GVW / Tare Weight", href: `${BASE}/gvw-tare-weight-lettering`, gradient: "from-zinc-400 to-gray-400" },
-      { key: "fleet-unit-number-stickers", name: "Fleet Unit Numbers", href: `${BASE}/fleet-unit-number-stickers`, gradient: "from-sky-400 to-blue-400" },
-      { key: "trailer-id-number-decals", name: "Trailer ID Numbers", href: `${BASE}/trailer-id-number-decals`, gradient: "from-cyan-400 to-teal-400" },
-      { key: "equipment-id-decals-cut-vinyl", name: "Equipment ID Decals", href: `${BASE}/equipment-id-decals-cut-vinyl`, gradient: "from-emerald-400 to-green-400" },
-      { key: "tire-pressure-load-labels", name: "Tire Pressure Labels", href: `${BASE}/tire-pressure-load-labels`, gradient: "from-amber-400 to-yellow-400" },
-      { key: "fuel-type-labels-diesel-gas", name: "Fuel Type Labels", href: `${BASE}/fuel-type-labels-diesel-gas`, gradient: "from-orange-400 to-amber-400" },
-      { key: "vehicle-inspection-maintenance-stickers", name: "Inspection Stickers", href: `${BASE}/vehicle-inspection-maintenance-stickers`, gradient: "from-red-400 to-rose-400" },
+      {
+        key: "full-vehicle-wrap-design-print",
+        name: "Full Vehicle Wrap (Design & Print)",
+        href: `${BASE}/full-vehicle-wrap-design-print`,
+        priceKeys: ["full-vehicle-wrap-design-print"],
+        note: "Design, print, and branding rollout for full-coverage vehicles",
+        badges: ["Quote-Only", "Install Available"],
+        gradient: "from-violet-700 via-fuchsia-600 to-pink-500",
+      },
+      {
+        key: "partial-wrap-spot-graphics",
+        name: "Partial Wrap & Spot Graphics",
+        href: `${BASE}/partial-wrap-spot-graphics`,
+        priceKeys: ["partial-wrap-spot-graphics"],
+        note: "Budget-friendly branding with strong visual impact",
+        gradient: "from-indigo-700 via-blue-600 to-cyan-500",
+      },
+      {
+        key: "trailer-box-truck-large-graphics",
+        name: "Trailer / Box Truck Large Graphics",
+        href: `${BASE}/trailer-box-truck-large-graphics`,
+        priceKeys: ["trailer-box-truck-large-graphics", "trailer-full-wrap"],
+        note: "Large-format side graphics for trailers and box trucks",
+        gradient: "from-slate-700 via-slate-600 to-blue-500",
+      },
+      {
+        key: "vehicle-roof-wrap",
+        name: "Vehicle Roof Wrap",
+        href: `${BASE}/vehicle-roof-wrap`,
+        priceKeys: ["vehicle-roof-wrap"],
+        note: "Top-view branding for parking lots, condos, and service fleets",
+        gradient: "from-emerald-700 via-teal-600 to-cyan-500",
+      },
     ],
   },
   {
-    key: "wraps",
-    title: "Vehicle Wraps & Large Graphics",
-    subtitle: "Full and partial wraps, hood decals, roof wraps, and trailer graphics.",
-    size: "large",
-    cta: "Request a Quote",
+    key: "door-decals-magnets",
+    jumpLabel: "Door Decals & Magnets",
+    title: "Door Decals & Magnets",
+    subtitle:
+      "Fast-turn branding essentials for contractors, local service vans, and field crews.",
+    ui: "cards",
     items: [
-      { key: "full-vehicle-wrap-design-print", name: "Full Vehicle Wrap", href: `${BASE}/full-vehicle-wrap-design-print`, gradient: "from-violet-500 to-fuchsia-500" },
-      { key: "partial-wrap-spot-graphics", name: "Partial Wrap Graphics", href: `${BASE}/partial-wrap-spot-graphics`, gradient: "from-indigo-400 to-blue-400" },
-      { key: "car-graphics", name: "Car Graphics", href: `${BASE}/car-graphics`, gradient: "from-sky-400 to-cyan-400" },
-      { key: "car-hood-decal", name: "Car Hood Decal", href: `${BASE}/car-hood-decal`, gradient: "from-rose-400 to-pink-400" },
-      { key: "vehicle-roof-wrap", name: "Vehicle Roof Wrap", href: `${BASE}/vehicle-roof-wrap`, gradient: "from-emerald-400 to-teal-400" },
-      { key: "trailer-full-wrap", name: "53ft Trailer Full Wrap", href: `${BASE}/trailer-full-wrap`, gradient: "from-slate-500 to-indigo-500" },
-      { key: "trailer-box-truck-large-graphics", name: "Trailer Large Graphics", href: `${BASE}/trailer-box-truck-large-graphics`, gradient: "from-amber-400 to-orange-400" },
-      { key: "fleet-graphic-package", name: "Fleet Graphic Package", href: `${BASE}/fleet-graphic-package`, gradient: "from-teal-400 to-cyan-400" },
-      { key: "vehicle-wrap-print-only-quote", name: "Wrap Print Only", href: `${BASE}/vehicle-wrap-print-only-quote`, gradient: "from-gray-400 to-slate-400" },
+      {
+        key: "custom-truck-door-lettering-kit",
+        name: "Custom Truck Door Lettering Kit",
+        href: `${BASE}/custom-truck-door-lettering-kit`,
+        priceKeys: ["custom-truck-door-lettering-kit"],
+        gradient: "from-blue-500 to-indigo-500",
+      },
+      {
+        key: "magnetic-truck-door-signs",
+        name: "Magnetic Truck Door Signs",
+        href: `${BASE}/magnetic-truck-door-signs`,
+        priceKeys: ["magnetic-truck-door-signs"],
+        gradient: "from-slate-500 to-slate-700",
+      },
+      {
+        key: "car-door-magnets-pair",
+        name: "Magnetic Car Signs (Pair)",
+        href: `${BASE}/car-door-magnets-pair`,
+        priceKeys: ["car-door-magnets-pair", "magnetic-car-signs"],
+        gradient: "from-violet-500 to-fuchsia-500",
+      },
+      {
+        key: "printed-truck-door-decals-full-color",
+        name: "Printed Truck Door Decals (Full Color)",
+        href: `${BASE}/printed-truck-door-decals-full-color`,
+        priceKeys: ["printed-truck-door-decals-full-color"],
+        gradient: "from-cyan-500 to-sky-500",
+      },
     ],
   },
   {
-    key: "lettering",
-    title: "Vinyl Lettering & Decals",
-    subtitle: "Custom cut vinyl lettering, logo decals, and promotional graphics for any vehicle.",
-    size: "medium",
+    key: "dot-fleet-compliance",
+    jumpLabel: "DOT & Fleet Compliance",
+    title: "Fleet Compliance & DOT Numbers",
+    subtitle:
+      "Essential compliance markings for logistics, transport, and commercial fleet operations.",
+    ui: "list",
     items: [
-      { key: "custom-cut-vinyl-lettering-any-text", name: "Custom Vinyl Lettering", href: `${BASE}/custom-cut-vinyl-lettering-any-text`, gradient: "from-emerald-400 to-teal-400" },
-      { key: "custom-truck-door-lettering-kit", name: "Truck Door Lettering Kit", href: `${BASE}/custom-truck-door-lettering-kit`, gradient: "from-blue-400 to-indigo-400" },
-      { key: "printed-truck-door-decals-full-color", name: "Printed Truck Door Decals", href: `${BASE}/printed-truck-door-decals-full-color`, gradient: "from-violet-400 to-purple-400" },
-      { key: "truck-side-panel-printed-decal", name: "Truck Side Panel Decal", href: `${BASE}/truck-side-panel-printed-decal`, gradient: "from-pink-400 to-rose-400" },
-      { key: "tailgate-rear-door-printed-decal", name: "Tailgate Decal", href: `${BASE}/tailgate-rear-door-printed-decal`, gradient: "from-amber-400 to-orange-400" },
-      { key: "custom-printed-vehicle-logo-decals", name: "Custom Van Logo Decals", href: `${BASE}/custom-printed-vehicle-logo-decals`, gradient: "from-cyan-400 to-sky-400" },
-      { key: "boat-lettering-registration", name: "Boat Registration Lettering", href: `${BASE}/boat-lettering-registration`, gradient: "from-sky-400 to-blue-400" },
-      { key: "long-term-outdoor-vehicle-decals", name: "Long-Term Outdoor Decals", href: `${BASE}/long-term-outdoor-vehicle-decals`, gradient: "from-teal-400 to-emerald-400" },
-      { key: "removable-promo-vehicle-decals", name: "Removable Promo Decals", href: `${BASE}/removable-promo-vehicle-decals`, gradient: "from-fuchsia-400 to-pink-400" },
-      { key: "social-qr-vehicle-decals", name: "Social Media QR Decals", href: `${BASE}/social-qr-vehicle-decals`, gradient: "from-indigo-400 to-violet-400" },
-      { key: "bumper-sticker-custom", name: "Custom Bumper Sticker", href: `${BASE}/bumper-sticker-custom`, gradient: "from-red-400 to-rose-400" },
-      { key: "stay-back-warning-decals", name: "Stay Back Warning", href: `${BASE}/stay-back-warning-decals`, gradient: "from-yellow-400 to-amber-400" },
+      {
+        key: "usdot-number-decals",
+        name: "USDOT Number Decals",
+        href: `${BASE}/usdot-number-decals`,
+        priceKeys: ["usdot-number-decals"],
+        badges: ["Same-Day"],
+      },
+      {
+        key: "cvor-number-decals",
+        name: "CVOR Number Decals",
+        href: `${BASE}/cvor-number-decals`,
+        priceKeys: ["cvor-number-decals"],
+        badges: ["Same-Day"],
+      },
+      {
+        key: "mc-nsc-number-decals",
+        name: "MC / NSC Number Decals",
+        href: `${BASE}/mc-number-decals`,
+        priceKeys: ["mc-number-decals", "nsc-number-decals"],
+        badges: ["Same-Day"],
+      },
+      {
+        key: "tssa-truck-number-lettering-cut-vinyl",
+        name: "TSSA Truck Number Lettering",
+        href: `${BASE}/tssa-truck-number-lettering-cut-vinyl`,
+        priceKeys: ["tssa-truck-number-lettering-cut-vinyl"],
+      },
+      {
+        key: "gvw-tare-weight-lettering",
+        name: "GVW / Tare Weight Lettering",
+        href: `${BASE}/gvw-tare-weight-lettering`,
+        priceKeys: ["gvw-tare-weight-lettering"],
+      },
+      {
+        key: "fleet-unit-number-stickers",
+        name: "Fleet Unit Number Stickers",
+        href: `${BASE}/fleet-unit-number-stickers`,
+        priceKeys: ["fleet-unit-number-stickers"],
+      },
     ],
   },
   {
-    key: "magnetic",
-    title: "Magnetic Signs",
-    subtitle: "Removable magnetic signs for cars, trucks, and rooftops. No permanent adhesive.",
-    size: "medium",
+    key: "safety-spec-labels",
+    jumpLabel: "Safety & Spec Labels",
+    title: "Safety, Inspection & Spec Labels",
+    subtitle:
+      "Functional labels and safety markings for trucks, trailers, and heavy equipment fleets.",
+    ui: "cards",
     items: [
-      { key: "magnetic-car-signs", name: "Magnetic Car Signs", href: `${BASE}/magnetic-car-signs`, gradient: "from-sky-400 to-blue-400" },
-      { key: "magnetic-truck-door-signs", name: "Magnetic Truck Door Signs", href: `${BASE}/magnetic-truck-door-signs`, gradient: "from-indigo-400 to-blue-400" },
-      { key: "magnetic-rooftop-sign", name: "Magnetic Rooftop Topper", href: `${BASE}/magnetic-rooftop-sign`, gradient: "from-violet-400 to-fuchsia-400" },
-      { key: "car-door-magnets-pair", name: "Car Door Magnets (Pair)", href: `${BASE}/car-door-magnets-pair`, gradient: "from-emerald-400 to-teal-400" },
-      { key: "magnets-flexible", name: "Flexible Magnets", href: `${BASE}/magnets-flexible`, gradient: "from-amber-400 to-orange-400" },
-    ],
-  },
-  {
-    key: "safety",
-    title: "Fleet Safety & Operations",
-    subtitle: "Reflective safety markings, conspicuity tape, and fleet management supplies.",
-    size: "medium",
-    items: [
-      { key: "reflective-conspicuity-tape-kit", name: "Conspicuity Tape Kit", href: `${BASE}/reflective-conspicuity-tape-kit`, gradient: "from-yellow-400 to-orange-400" },
-      { key: "reflective-safety-stripes-kit", name: "Reflective Safety Stripes", href: `${BASE}/reflective-safety-stripes-kit`, gradient: "from-orange-400 to-red-400" },
-      { key: "high-visibility-rear-chevron-kit", name: "Rear Chevron Kit", href: `${BASE}/high-visibility-rear-chevron-kit`, gradient: "from-red-400 to-rose-400" },
-      { key: "dangerous-goods-placards", name: "Dangerous Goods Placards", href: `${BASE}/dangerous-goods-placards`, gradient: "from-rose-500 to-red-500" },
-      { key: "fleet-vehicle-inspection-book", name: "Vehicle Inspection Book", href: `${BASE}/fleet-vehicle-inspection-book`, gradient: "from-slate-400 to-gray-400" },
-      { key: "hours-of-service-log-holder", name: "Hours of Service Log Holder", href: `${BASE}/hours-of-service-log-holder`, gradient: "from-gray-400 to-zinc-400" },
-      { key: "ifta-cab-card-holder", name: "IFTA Cab Card Holder", href: `${BASE}/ifta-cab-card-holder`, gradient: "from-zinc-400 to-slate-400" },
+      {
+        key: "vehicle-inspection-maintenance-stickers",
+        name: "Vehicle Inspection Maintenance Stickers",
+        href: `${BASE}/vehicle-inspection-maintenance-stickers`,
+        priceKeys: ["vehicle-inspection-maintenance-stickers"],
+        gradient: "from-rose-500 to-red-500",
+      },
+      {
+        key: "fuel-type-labels-diesel-gas",
+        name: "Fuel Type Labels (Diesel / Gas)",
+        href: `${BASE}/fuel-type-labels-diesel-gas`,
+        priceKeys: ["fuel-type-labels-diesel-gas"],
+        gradient: "from-amber-500 to-orange-500",
+      },
+      {
+        key: "dangerous-goods-placards",
+        name: "Dangerous Goods Placards",
+        href: `${BASE}/dangerous-goods-placards`,
+        priceKeys: ["dangerous-goods-placards"],
+        gradient: "from-red-600 to-rose-600",
+      },
+      {
+        key: "tire-pressure-load-labels",
+        name: "Tire Pressure / Load Labels",
+        href: `${BASE}/tire-pressure-load-labels`,
+        priceKeys: ["tire-pressure-load-labels"],
+        gradient: "from-zinc-600 to-slate-600",
+      },
+      {
+        key: "reflective-conspicuity-chevron-kits",
+        name: "Reflective Conspicuity Tape Kit / Chevron Kits",
+        href: `${BASE}/reflective-conspicuity-tape-kit`,
+        priceKeys: [
+          "reflective-conspicuity-tape-kit",
+          "high-visibility-rear-chevron-kit",
+          "reflective-safety-stripes-kit",
+        ],
+        gradient: "from-yellow-500 to-red-500",
+      },
     ],
   },
 ];
 
-function ProductCard({ item, price, size, cta = "View" }) {
-  const isLarge = size === "large";
+function PriceLabel({ price }) {
+  if (price > 0) {
+    return (
+      <span className="text-xs font-bold text-[var(--color-gray-900)]">
+        From {formatCad(price)}
+      </span>
+    );
+  }
+  return <span className="text-[11px] text-[var(--color-gray-400)]">Get a quote</span>;
+}
+
+function Badge({ label, tone = "neutral" }) {
+  const cls =
+    tone === "success"
+      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+      : tone === "dark"
+        ? "bg-black/15 text-white border-white/25"
+        : "bg-slate-50 text-slate-700 border-slate-200";
+
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] ${cls}`}>
+      {label}
+    </span>
+  );
+}
+
+function ProductCard({ item, price, premium = false, cta = "View" }) {
   return (
     <Link
       href={item.href}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
     >
-      <div className={`flex items-center justify-center bg-gradient-to-br ${item.gradient} ${isLarge ? "h-[200px]" : "h-[120px]"}`}>
-        <p className="px-4 text-center text-sm font-bold text-white drop-shadow-md leading-tight">
-          {item.name}
-        </p>
-      </div>
-      <div className="flex flex-1 flex-col p-3">
-        <h3 className={`font-semibold text-[var(--color-gray-900)] leading-tight ${isLarge ? "text-sm" : "text-xs"}`}>
-          {item.name}
-        </h3>
-        <div className="mt-auto pt-2 flex items-center justify-between">
-          {price > 0 ? (
-            <span className="text-xs font-bold text-[var(--color-gray-900)]">
-              From {formatCad(price)}
-            </span>
-          ) : (
-            <span className="text-[10px] text-[var(--color-gray-400)]">Get a quote</span>
-          )}
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[9px] font-semibold text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
-            {cta}
-            <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-          </span>
+      <div className={`relative bg-gradient-to-br ${item.gradient || "from-slate-400 to-slate-600"} ${premium ? "h-44" : "h-24"}`}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_55%)]" />
+        <div className="relative flex h-full flex-col justify-between p-4 text-white">
+          <div className="flex flex-wrap gap-1.5">
+            {premium && <Badge label="Premium" tone="dark" />}
+            {item.badges?.map((b) => (
+              <Badge key={b} label={b} tone={b === "Same-Day" ? "success" : premium ? "dark" : "neutral"} />
+            ))}
+          </div>
+          <p className={`pr-2 font-semibold leading-tight text-white drop-shadow ${premium ? "text-base" : "text-sm"}`}>
+            {item.name}
+          </p>
+          {premium && item.note ? <p className="text-xs text-white/80">{item.note}</p> : <span />}
         </div>
+      </div>
+      <div className="flex flex-1 items-center justify-between gap-2 p-4">
+        <PriceLabel price={price} />
+        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
+          {cta}
+          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </span>
       </div>
     </Link>
   );
 }
 
-export default function VehicleCategoryClient({ vehiclePrices = {} }) {
-  const { t } = useTranslation();
+function ComplianceListItem({ item, price }) {
+  return (
+    <Link
+      href={item.href}
+      className="group flex items-center justify-between gap-3 rounded-xl border border-[var(--color-gray-200)] bg-white px-4 py-3 transition-colors hover:border-[var(--color-brand)] hover:bg-[var(--color-gray-50)]"
+    >
+      <div className="min-w-0">
+        <p className="text-sm font-semibold leading-tight text-[var(--color-gray-900)]">{item.name}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] text-[var(--color-gray-500)]">Commercial fleet compliance decal</span>
+          {item.badges?.map((b) => (
+            <Badge key={b} label={b} tone="success" />
+          ))}
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-3">
+        <PriceLabel price={price} />
+        <svg className="h-4 w-4 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+      </div>
+    </Link>
+  );
+}
+
+function visibleSectionsForPrices(vehiclePrices) {
+  return SECTIONS.filter((section) =>
+    section.items.some((item) => (item.priceKeys || [item.key]).some((k) => k in vehiclePrices))
+  );
+}
+
+function renderSectionBody(section, vehiclePrices) {
+  const visibleItems = section.items
+    .map((item) => ({
+      ...item,
+      price: minPrice(vehiclePrices, item.priceKeys || [item.key]),
+    }))
+    .filter((item) => (item.priceKeys || [item.key]).some((k) => k in vehiclePrices));
+
+  if (visibleItems.length === 0) return null;
+
+  if (section.ui === "premium") {
+    return (
+      <div className="mt-5 grid gap-4 md:grid-cols-2">
+        {visibleItems.map((item) => (
+          <ProductCard key={item.key} item={item} price={item.price} premium cta="Quote / View" />
+        ))}
+      </div>
+    );
+  }
+
+  if (section.ui === "list") {
+    return (
+      <div className="mt-5 grid gap-3 lg:grid-cols-2">
+        {visibleItems.map((item) => (
+          <ComplianceListItem key={item.key} item={item} price={item.price} />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <main className="bg-gradient-to-b from-slate-50 to-white pb-20 pt-10 text-[var(--color-gray-900)]">
+    <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {visibleItems.map((item) => (
+        <ProductCard key={item.key} item={item} price={item.price} cta="View" />
+      ))}
+    </div>
+  );
+}
+
+export default function VehicleCategoryClient({ vehiclePrices = {} }) {
+  const { t } = useTranslation();
+  const visibleSections = visibleSectionsForPrices(vehiclePrices);
+
+  return (
+    <main className="bg-gradient-to-b from-slate-50 via-white to-white pb-20 pt-10 text-[var(--color-gray-900)]">
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: "Vehicle Graphics & Fleet" },
+            { label: "Vehicle Graphics & Fleet Branding" },
           ]}
         />
 
-        {/* Hero */}
-        <header className="mt-6">
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            Vehicle Graphics & Fleet
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm sm:text-base text-[var(--color-gray-500)]">
-            Commercial vehicle branding, fleet compliance decals, magnetic signs, and safety markings. From single trucks to full fleets.
-          </p>
+        <header className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                B2B Vehicle Branding & Compliance
+              </p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+                Vehicle Graphics & Fleet Branding
+              </h1>
+              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[var(--color-gray-600)] sm:text-base">
+                Built for contractors, owner-operators, and fleet teams. Find wraps, door branding, DOT/CVOR decals,
+                and safety labels in a cleaner buyer-first layout.
+              </p>
+            </div>
+            <div className="grid gap-2 text-xs sm:grid-cols-2">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">Same-day local pickup options</div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">Fleet quote + install support</div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">DOT / CVOR compliance grouping</div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">Mobile-friendly quick jump sections</div>
+            </div>
+          </div>
         </header>
 
-        {/* Sections */}
-        {SECTIONS.map((section) => {
-          const visibleItems = section.items.filter((item) => item.key in vehiclePrices);
-          if (visibleItems.length === 0) return null;
+        {visibleSections.length > 0 && (
+          <div className="sticky top-[calc(var(--promo-offset,0px)+var(--nav-offset,72px)+8px)] z-10 -mx-4 mt-5 border-y border-slate-200/70 bg-white/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 2xl:-mx-4 2xl:px-4">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                Quick Jump
+              </span>
+              {visibleSections.map((section) => (
+                <a
+                  key={section.key}
+                  href={`#${section.key}`}
+                  className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-[var(--color-brand)] hover:text-[var(--color-gray-900)]"
+                >
+                  {section.jumpLabel || section.title}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
-          return (
-            <section key={section.key} className="mt-12">
-              <h2 className="text-xl font-semibold tracking-tight">{section.title}</h2>
-              <p className="mt-1 text-sm text-[var(--color-gray-500)]">{section.subtitle}</p>
-              <div className={`mt-4 grid gap-3 ${
-                section.size === "large"
-                  ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
-                  : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-              }`}>
-                {visibleItems.map((item) => (
-                  <ProductCard
-                    key={item.key}
-                    item={item}
-                    price={vehiclePrices[item.key] || 0}
-                    size={section.size}
-                    cta={section.cta || "View"}
-                  />
-                ))}
+        {visibleSections.map((section, index) => (
+          <section
+            key={section.key}
+            id={section.key}
+            className={`${index === 0 ? "mt-8" : "mt-12"} scroll-mt-40`}
+          >
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{section.title}</h2>
+                <p className="mt-1 text-sm text-[var(--color-gray-500)]">{section.subtitle}</p>
               </div>
-            </section>
-          );
-        })}
+              {section.ui === "premium" && (
+                <Link
+                  href="/quote"
+                  className="inline-flex items-center gap-2 self-start rounded-full border border-[var(--color-gray-300)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+                >
+                  Request Fleet Quote
+                </Link>
+              )}
+            </div>
+            {renderSectionBody(section, vehiclePrices)}
+          </section>
+        ))}
 
-        {/* Back to shop */}
+        <div className="mt-12 grid gap-4 lg:grid-cols-3">
+          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Fast Fleet Ordering</h3>
+            <p className="mt-2 text-sm text-[var(--color-gray-600)]">
+              Quick-jump sections help drivers and dispatch teams get directly to DOT/CVOR decals without scrolling through wrap and signage products.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Soft-Hidden Sub-Parts</h3>
+            <p className="mt-2 text-sm text-[var(--color-gray-600)]">
+              Redundant sub-part SKUs are not shown in the landing grid, but remain in your catalog and direct URLs for ops and quoting workflows.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Quote + Install Support</h3>
+            <p className="mt-2 text-sm text-[var(--color-gray-600)]">
+              Large wrap projects are clearly marked as quote-led, with installation support highlighted for commercial buyers.
+            </p>
+            <Link
+              href="/quote"
+              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
+            >
+              Get a Quote
+            </Link>
+          </div>
+        </div>
+
         <div className="mt-12 text-center">
           <Link
             href="/shop"
@@ -198,40 +445,6 @@ export default function VehicleCategoryClient({ vehiclePrices = {} }) {
             </svg>
             All Categories
           </Link>
-        </div>
-
-        {/* Value Props */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              DOT & MTO Compliant
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              All compliance decals meet federal DOT, CVOR, and Ontario MTO requirements. Reflective and non-reflective options available.
-            </p>
-          </div>
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Fleet Pricing
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Volume discounts for fleet orders. Consistent branding across your entire fleet with bulk production pricing.
-            </p>
-          </div>
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Professional Installation
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              On-site installation available in the GTA. We come to your yard or fleet depot. DIY kits also available with instructions.
-            </p>
-            <Link
-              href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
-            >
-              Get a Quote
-            </Link>
-          </div>
         </div>
       </div>
     </main>
