@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { categoryReorgRedirectsV1 } from "./lib/redirects/category-reorg-v1";
 import { codexUrlMappingRedirects } from "./lib/redirects/codex-url-mapping";
 import { seoShortUrlRedirects } from "./lib/redirects/seo-short-urls";
+import { synonymRedirects } from "./lib/redirects/synonym-redirects";
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -152,6 +153,7 @@ const nextConfig: NextConfig = {
       ...categoryReorgRedirectsV1,
       ...codexUrlMappingRedirects,
       ...seoShortUrlRedirects,
+      ...synonymRedirects,
     ];
   },
 };
