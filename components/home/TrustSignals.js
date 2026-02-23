@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import StarRating from "@/components/product/StarRating";
 
 const STATS = [
-  { value: 15000, suffix: "+", labelKey: "trust.ordersDelivered", icon: "check" },
-  { value: 24, suffix: "h", labelKey: "trust.sameDayPrinting", icon: "bolt" },
-  { value: 150, suffix: "", labelKey: "trust.freeShippingOver", icon: "truck", prefix: "$" },
-  { value: 100, suffix: "%", labelKey: "trust.satisfactionGuarantee", icon: "shield" },
+  { display: "15,000+", label: "Orders Delivered", icon: "check" },
+  { display: "ON M1P 4S7", label: "Our Location", icon: "pin" },
+  { display: "info@lunarprint.ca", label: "Contact Us", icon: "mail" },
 ];
 
 const REVIEWS = [
@@ -19,42 +18,6 @@ const REVIEWS = [
   { name: "Carlos M.", company: "QuickShip Couriers", text: "CVOR and DOT numbers done same day. Exactly what we needed for compliance on our new trucks.", rating: 5 },
   { name: "Lisa W.", company: "Bloom Event Co.", text: "The tabletop banners are perfect for our pop-up events. Compact, portable, and they look premium.", rating: 5 },
 ];
-
-function AnimatedCounter({ value, suffix = "", prefix = "", text, decimals = 0 }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const hasAnimated = useRef(false);
-
-  useEffect(() => {
-    if (text) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasAnimated.current) {
-          hasAnimated.current = true;
-          const duration = 1500;
-          const start = performance.now();
-          const step = (now) => {
-            const progress = Math.min((now - start) / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3);
-            setCount(eased * value);
-            if (progress < 1) requestAnimationFrame(step);
-          };
-          requestAnimationFrame(step);
-        }
-      },
-      { threshold: 0.3 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [value, text]);
-
-  if (text) {
-    return <span ref={ref}>{text}</span>;
-  }
-
-  const display = decimals > 0 ? count.toFixed(decimals) : Math.floor(count).toLocaleString();
-  return <span ref={ref} className="tabular-nums">{prefix}{display}{suffix}</span>;
-}
 
 const STAT_ICONS = {
   check: (
@@ -77,6 +40,17 @@ const STAT_ICONS = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
     </svg>
   ),
+  pin: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+    </svg>
+  ),
+  mail: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+    </svg>
+  ),
 };
 
 export default function TrustSignals() {
@@ -93,19 +67,19 @@ export default function TrustSignals() {
   return (
     <div className="space-y-8">
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         {STATS.map((stat) => (
           <div
-            key={stat.labelKey}
+            key={stat.label}
             className="rounded-xl shadow-[var(--shadow-card)] bg-white p-5 text-center md:p-6 hover-lift-subtle"
           >
             <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-brand-50)] text-[var(--color-brand)]">
               {STAT_ICONS[stat.icon]}
             </div>
-            <div className="text-3xl md:text-4xl font-black tracking-tight text-[var(--color-gray-900)]">
-              <AnimatedCounter value={stat.value} suffix={stat.suffix} prefix={stat.prefix} text={stat.textKey ? t(stat.textKey) : undefined} />
+            <div className="text-2xl md:text-3xl font-black tracking-tight text-[var(--color-gray-900)]">
+              {stat.display}
             </div>
-            <p className="label-xs text-[var(--color-gray-400)] mt-1.5 font-normal tracking-[0.14em]">{t(stat.labelKey)}</p>
+            <p className="label-xs text-[var(--color-gray-400)] mt-1.5 font-normal tracking-[0.14em]">{stat.label}</p>
           </div>
         ))}
       </div>
