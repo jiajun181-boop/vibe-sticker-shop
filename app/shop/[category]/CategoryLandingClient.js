@@ -106,7 +106,7 @@ function ProductCard({ product, t, compact }) {
             <QuickAddButton product={product} />
             <Link
               href={href}
-              className="inline-block rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-[var(--color-brand-dark)]"
+              className="inline-block rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-white transition-colors hover:bg-[var(--color-brand-dark)]"
             >
               {viewOrderLabel}
             </Link>
@@ -116,7 +116,7 @@ function ProductCard({ product, t, compact }) {
         <div className="px-2.5 pb-2.5">
           <Link
             href={href}
-            className="mt-1.5 inline-block rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-[var(--color-brand-dark)]"
+            className="mt-1.5 inline-block rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[10px] font-semibold text-white transition-colors hover:bg-[var(--color-brand-dark)]"
           >
             {viewOrderLabel}
           </Link>
@@ -325,7 +325,7 @@ export default function CategoryLandingClient({
             {(activeFilter || turnaroundFilter) && (
               <button
                 onClick={() => { setActiveFilter(null); setTurnaroundFilter(null); }}
-                className="mt-3 rounded-sm border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
+                className="mt-3 rounded-sm border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)]"
               >
                 {t("shop.clearFilters")}
               </button>
@@ -337,7 +337,7 @@ export default function CategoryLandingClient({
         <div className="mt-12 text-center">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 rounded-sm border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+            className="inline-flex items-center gap-2 rounded-sm border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -392,7 +392,7 @@ export default function CategoryLandingClient({
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-[var(--color-brand-dark)]"
+              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
             >
               {t("home.cta.quote")}
             </Link>

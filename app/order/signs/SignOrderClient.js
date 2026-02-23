@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
-  SIGN_TYPES,
   ACCESSORY_OPTIONS,
   getSignType,
 } from "@/lib/sign-order-config";
@@ -86,6 +85,9 @@ export default function SignOrderClient({ defaultType, productImages }) {
     if (heightIn > signType.maxH) errs.push(`Height cannot exceed ${signType.maxH}"`);
     setDimErrors(errs);
   }, [widthIn, heightIn, signType]);
+
+  // Oversized warning (>48" on any side)
+  const isOversized = widthIn > 48 || heightIn > 48;
 
   // Accessory surcharges
   const accessorySurcharge = useMemo(() => {
@@ -204,37 +206,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           <div className="space-y-6 lg:col-span-2">
 
-            {/* Step 1: Sign Type */}
-            <ConfigStep number={stepNum++} title={t("sign.type.label")} subtitle={t("sign.type.subtitle")}>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {SIGN_TYPES.map((st) => (
-                  <button
-                    key={st.id}
-                    type="button"
-                    onClick={() => setTypeId(st.id)}
-                    className={`group relative flex flex-col items-center gap-1.5 rounded-2xl border-2 p-4 text-center transition-all duration-200 ${
-                      typeId === st.id
-                        ? "border-gray-900 bg-gray-900 text-white shadow-lg shadow-gray-900/20 scale-[1.02]"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
-                    }`}
-                  >
-                    {typeId === st.id && (
-                      <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                      </span>
-                    )}
-                    <span className="text-sm font-bold">{t(`sign.type.${st.id}`)}</span>
-                    {st.includesHardware && (
-                      <span className={`text-[10px] font-bold ${typeId === st.id ? "text-emerald-300" : "text-emerald-600"}`}>
-                        Includes hardware
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </ConfigStep>
-
-            {/* Step 2: Material */}
+            {/* Step 1: Material */}
             <ConfigStep number={stepNum++} title={t("sign.material")} subtitle={t("sign.materialSubtitle")}>
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                 {signType.materials.map((mat) => {
@@ -309,6 +281,22 @@ export default function SignOrderClient({ defaultType, productImages }) {
                   maxLabel={`${signType.maxW}" × ${signType.maxH}"`}
                   dimErrors={dimErrors} t={t}
                 />
+              )}
+
+              {/* Oversized warning */}
+              {isOversized && dimErrors.length === 0 && (
+                <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+                  <svg className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold text-amber-800">Oversized Sign</p>
+                    <p className="mt-0.5 text-xs text-amber-700">
+                      Signs larger than 48" may require special handling, additional shipping charges, and longer production times.
+                      Contact us for bulk oversized orders.
+                    </p>
+                  </div>
+                </div>
               )}
             </ConfigStep>
 

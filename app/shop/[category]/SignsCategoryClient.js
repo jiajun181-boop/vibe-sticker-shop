@@ -55,7 +55,7 @@ function SignProductCard({ product, section, category }) {
           )}
           {/* Badge overlay */}
           {badge && (
-            <span className={`absolute top-2 left-2 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${badge.color}`}>
+            <span className={`absolute top-2 left-2 rounded-full px-2.5 py-1 text-[10px] font-bold ${badge.color}`}>
               {badge.label}
             </span>
           )}
@@ -85,7 +85,7 @@ function SignProductCard({ product, section, category }) {
             ) : null}
             <Link
               href={href}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-gray-900)] px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-gray-900)] px-3.5 py-2 text-[10px] font-semibold text-white transition-colors hover:bg-black"
             >
               {isSimpleAdd ? "Add to Cart" : "Configure"}
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -227,7 +227,7 @@ export default function SignsCategoryClient({
         <div className="mt-12 text-center">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -239,7 +239,7 @@ export default function SignsCategoryClient({
         {/* Info Footer — signs-specific */}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
               Made for Outdoors & Events
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
@@ -250,7 +250,7 @@ export default function SignsCategoryClient({
           </div>
 
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
               Same Day Production
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
@@ -261,7 +261,7 @@ export default function SignsCategoryClient({
           </div>
 
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
               Accessories Included
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">

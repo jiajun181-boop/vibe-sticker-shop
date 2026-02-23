@@ -93,7 +93,7 @@ function ProductCard({ item, price, size }) {
           ) : (
             <span className="text-xs text-[var(--color-gray-400)]">Get a quote</span>
           )}
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3.5 py-1.5 text-[10px] font-semibold text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
             Configure
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -159,7 +159,7 @@ export default function MarketingCategoryClient({ marketingPrices = {} }) {
         <div className="mt-12 text-center">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -171,7 +171,7 @@ export default function MarketingCategoryClient({ marketingPrices = {} }) {
         {/* Section 5 — Value Props */}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
               Local Toronto Production
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
@@ -179,7 +179,7 @@ export default function MarketingCategoryClient({ marketingPrices = {} }) {
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
               Premium Paper Stocks
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
@@ -187,7 +187,7 @@ export default function MarketingCategoryClient({ marketingPrices = {} }) {
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">
+            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
               B2B & Wholesale Support
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
@@ -195,7 +195,7 @@ export default function MarketingCategoryClient({ marketingPrices = {} }) {
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-[var(--color-brand-dark)]"
+              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
             >
               Contact Us
             </Link>

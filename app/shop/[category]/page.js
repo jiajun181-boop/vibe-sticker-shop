@@ -16,6 +16,7 @@ import WindowsWallsFloorsCategoryClient from "./WindowsWallsFloorsCategoryClient
 import MarketingCategoryClient from "./MarketingCategoryClient";
 import BannersCategoryClient from "./BannersCategoryClient";
 import VehicleCategoryClient from "./VehicleCategoryClient";
+import CanvasCategoryClient from "./CanvasCategoryClient";
 
 function CategoryFaqSchema({ category }) {
   const schema = CATEGORY_FAQ_SCHEMAS[category];
@@ -113,26 +114,34 @@ const STICKERS_SEGMENTS = [
 
 const SIGNS_PRODUCT_SECTIONS = [
   {
-    key: "outdoor-coroplast",
-    title: "Outdoor Coroplast Signs",
-    description: "Durable outdoor signage \u2014 weatherproof, UV resistant, double-sided",
-    productSlugs: ["yard-sign", "real-estate-sign", "election-signs", "open-house-signs", "directional-signs"],
+    key: "outdoor-realestate",
+    title: "Outdoor & Real Estate Signs",
+    description: "Coroplast yard signs, real estate signs, election signs, and accessories. Weatherproof for Canadian outdoors.",
+    productSlugs: ["yard-sign", "real-estate-sign", "election-signs", "open-house-signs", "a-frame-sign-stand", "h-stakes", "real-estate-frame"],
     noImageGradient: "from-sky-100 to-emerald-100",
     noImageIcon: "\uD83E\uDEA7",
   },
   {
-    key: "indoor-boards",
-    title: "Indoor Boards",
-    description: "Rigid boards for retail, offices, events & presentations",
-    productSlugs: ["pvc-board-signs", "selfie-frame-board", "welcome-sign-board", "tri-fold-presentation-board"],
+    key: "events-weddings",
+    title: "Events, Weddings & Fun",
+    description: "Photo boards, selfie frames, giant cheques, life-size cutouts, and welcome signs for events and celebrations.",
+    productSlugs: ["selfie-frame-board", "tri-fold-presentation-board", "graduation-checks", "giant-checks", "presentation-checks", "life-size-cutouts", "wedding-seating-charts", "seating-chart-boards", "welcome-sign-board", "welcome-sign-boards"],
     noImageGradient: "from-orange-100 to-amber-100",
     noImageIcon: "\uD83D\uDDBC\uFE0F",
   },
   {
-    key: "accessories",
-    title: "Accessories",
-    description: "Stands, stakes & frames for your signs",
-    productSlugs: ["a-frame-sign-stand", "h-stakes", "real-estate-frame"],
+    key: "business-property",
+    title: "Business & Property Signs",
+    description: "Professional signage for commercial properties and facilities.",
+    productSlugs: ["parking-signs", "parking-property-signs", "business-hours-signs", "construction-site-signs", "wayfinding-signs", "directional-signs", "ada-braille-signs"],
+    noImageGradient: "from-slate-100 to-blue-100",
+    noImageIcon: "\uD83C\uDFE2",
+  },
+  {
+    key: "boards-material",
+    title: "Custom Boards by Material",
+    description: "Choose your substrate. Priced by the square foot for custom sizes.",
+    productSlugs: ["coroplast-signs", "coroplast-board-prints", "foam-board-prints", "foamboard-sheet", "pvc-sintra-prints", "pvc-sintra-signs", "pvc-board-signs", "acm-dibond-signs", "aluminum-composite", "acrylic-signs"],
     noImageGradient: "from-gray-200 to-gray-300",
     noImageIcon: "\uD83D\uDD27",
   },
@@ -528,6 +537,36 @@ export default async function CategoryPage({ params }) {
       <>
         <CategoryFaqSchema category={decoded} />
         <WindowsWallsFloorsCategoryClient wwfPrices={wwfPrices} />
+      </>
+    );
+  }
+
+  // Canvas Prints — sectioned category page (single + multi-panel)
+  if (decoded === "canvas-prints") {
+    const CANVAS_PRICE_MAP = {
+      "canvas-standard": ["canvas-standard"],
+      "canvas-gallery-wrap": ["canvas-gallery-wrap"],
+      "canvas-framed": ["canvas-framed"],
+      "canvas-panoramic": ["canvas-panoramic"],
+      "canvas-split-2": ["canvas-split-2"],
+      "canvas-split-3": ["canvas-split-3"],
+      "canvas-split-5": ["canvas-split-5"],
+    };
+
+    const canvasPrices = {};
+    for (const [key, slugs] of Object.entries(CANVAS_PRICE_MAP)) {
+      const slugSet = new Set(slugs);
+      const matching = products.filter((p) => slugSet.has(p.slug));
+      if (matching.length > 0) {
+        const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
+        canvasPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
+      }
+    }
+
+    return (
+      <>
+        <CategoryFaqSchema category={decoded} />
+        <CanvasCategoryClient canvasPrices={canvasPrices} />
       </>
     );
   }

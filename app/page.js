@@ -29,8 +29,8 @@ const FEATURED_SLUGS = [
   "flyers",
   "vinyl-banners",
   "yard-sign",
-  "canvas-prints-standard",
-  "retractable-banner-standard",
+  "canvas-standard",
+  "roll-up-banners",
   "custom-cut-vinyl-lettering-any-text",
 ];
 
@@ -154,7 +154,7 @@ export default async function HomePage() {
                           From {formatCad(p.fromPrice)}
                         </p>
                       )}
-                      <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
+                      <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
                         View Details
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />

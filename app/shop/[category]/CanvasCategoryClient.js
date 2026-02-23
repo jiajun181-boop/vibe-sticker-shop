@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
-const BASE = "/shop/banners-displays";
+const BASE = "/shop/canvas-prints";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -12,67 +12,43 @@ const formatCad = (cents) =>
 /* ── Section definitions ── */
 const SECTIONS = [
   {
-    key: "banners",
-    title: "Custom Banners",
-    subtitle: "Indoor & outdoor banners printed on heavy-duty vinyl and mesh.",
+    key: "single",
+    title: "Single Panel Canvas",
+    subtitle: "Classic one-piece canvas prints in a variety of styles and frames.",
     size: "large",
     items: [
-      { key: "vinyl-banners", name: "Vinyl Banners", href: `${BASE}/vinyl-banners`, gradient: "from-rose-400 to-pink-400" },
-      { key: "mesh-banners", name: "Mesh Banners", href: `${BASE}/mesh-banners`, gradient: "from-sky-400 to-cyan-400" },
-      { key: "pole-banners", name: "Pole Banners", href: `${BASE}/pole-banners`, gradient: "from-amber-400 to-orange-400" },
-      { key: "double-sided-banners", name: "Two-Sided Banners", href: `${BASE}/double-sided-banners`, gradient: "from-violet-400 to-fuchsia-400" },
+      { key: "canvas-standard", name: "Standard Canvas Print", href: `${BASE}/canvas-standard`, gradient: "from-amber-400 to-orange-400" },
+      { key: "canvas-gallery-wrap", name: "Gallery Wrap Canvas", href: `${BASE}/canvas-gallery-wrap`, gradient: "from-violet-400 to-fuchsia-400" },
+      { key: "canvas-framed", name: "Framed Canvas Print", href: `${BASE}/canvas-framed`, gradient: "from-slate-400 to-gray-500" },
+      { key: "canvas-panoramic", name: "Panoramic Canvas", href: `${BASE}/canvas-panoramic`, gradient: "from-sky-400 to-blue-400" },
     ],
   },
   {
-    key: "stands",
-    title: "Banner Stands & Displays",
-    subtitle: "Portable retractable and X-banner stands for events and retail.",
-    size: "medium",
+    key: "multi",
+    title: "Multi-Panel Canvas Sets",
+    subtitle: "Split your image across multiple panels for a dramatic wall display.",
+    size: "large",
     items: [
-      { key: "roll-up-banners", name: "Roll-Up Banners", href: `${BASE}/roll-up-banners`, gradient: "from-emerald-400 to-teal-400" },
-      { key: "x-banner-frame-print", name: "X-Banner Stand", href: `${BASE}/x-banner-frame-print`, gradient: "from-indigo-400 to-blue-400" },
-      { key: "tabletop-x-banner", name: "Tabletop X-Banner", href: `${BASE}/tabletop-x-banner`, gradient: "from-pink-400 to-rose-400" },
-      { key: "deluxe-tabletop-retractable-a3", name: "Tabletop Retractable", href: `${BASE}/deluxe-tabletop-retractable-a3`, gradient: "from-amber-400 to-yellow-400" },
-    ],
-  },
-  {
-    key: "tradeshow",
-    title: "Trade Show & Backdrops",
-    subtitle: "Large-format backdrops and displays for trade shows and events.",
-    size: "medium",
-    items: [
-      { key: "telescopic-backdrop", name: "Telescopic Backdrop", href: `${BASE}/telescopic-backdrop`, gradient: "from-slate-400 to-gray-400" },
-      { key: "popup-display-curved-8ft", name: "Pop-Up Display 8ft", href: `${BASE}/popup-display-curved-8ft`, gradient: "from-blue-400 to-indigo-400" },
-      { key: "table-cloth", name: "Custom Table Cloth", href: `${BASE}/table-cloth`, gradient: "from-teal-400 to-cyan-400" },
-    ],
-  },
-  {
-    key: "outdoor",
-    title: "Outdoor Flags & Tents",
-    subtitle: "Feather flags, teardrop flags, and canopy tents for outdoor events.",
-    size: "medium",
-    items: [
-      { key: "feather-flags", name: "Feather Flags", href: `${BASE}/feather-flags`, gradient: "from-orange-400 to-red-400" },
-      { key: "teardrop-flags", name: "Teardrop Flags", href: `${BASE}/teardrop-flags`, gradient: "from-cyan-400 to-sky-400" },
-      { key: "outdoor-canopy-tent-10x10", name: "Canopy Tent 10×10", href: `${BASE}/outdoor-canopy-tent-10x10`, gradient: "from-emerald-400 to-green-400" },
+      { key: "canvas-split-2", name: "2-Panel Diptych", href: `${BASE}/canvas-split-2`, gradient: "from-emerald-400 to-teal-400" },
+      { key: "canvas-split-3", name: "3-Panel Triptych", href: `${BASE}/canvas-split-3`, gradient: "from-rose-400 to-pink-400" },
+      { key: "canvas-split-5", name: "5-Panel Set", href: `${BASE}/canvas-split-5`, gradient: "from-indigo-400 to-blue-400" },
     ],
   },
 ];
 
-function ProductCard({ item, price, size }) {
-  const isLarge = size === "large";
+function ProductCard({ item, price }) {
   return (
     <Link
       href={item.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
     >
-      <div className={`flex items-center justify-center bg-gradient-to-br ${item.gradient} ${isLarge ? "h-[200px]" : "h-[140px]"}`}>
+      <div className={`flex items-center justify-center bg-gradient-to-br ${item.gradient} h-[200px]`}>
         <p className="px-6 text-center text-lg font-bold text-white drop-shadow-md">
           {item.name}
         </p>
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-base" : "text-sm"}`}>
+        <h3 className="text-base font-semibold text-[var(--color-gray-900)]">
           {item.name}
         </h3>
         <div className="mt-auto pt-3 flex items-center justify-between">
@@ -95,49 +71,44 @@ function ProductCard({ item, price, size }) {
   );
 }
 
-export default function BannersCategoryClient({ bannerPrices = {} }) {
+export default function CanvasCategoryClient({ canvasPrices = {} }) {
   const { t } = useTranslation();
 
   return (
-    <main className="bg-gradient-to-b from-rose-50 to-white pb-20 pt-10 text-[var(--color-gray-900)]">
+    <main className="bg-gradient-to-b from-amber-50 to-white pb-20 pt-10 text-[var(--color-gray-900)]">
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: "Banners & Displays" },
+            { label: "Canvas Prints" },
           ]}
         />
 
         {/* Hero */}
         <header className="mt-6">
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            Banners & Displays
+            Canvas Prints
           </h1>
           <p className="mt-2 max-w-2xl text-sm sm:text-base text-[var(--color-gray-500)]">
-            Custom printed banners, retractable stands, backdrops, flags & tents. Perfect for events, trade shows, and storefronts.
+            Museum-quality canvas prints on premium cotton blend. Gallery wrap, framed, panoramic, and multi-panel sets.
           </p>
         </header>
 
         {/* Sections */}
         {SECTIONS.map((section) => {
-          const visibleItems = section.items.filter((item) => item.key in bannerPrices);
+          const visibleItems = section.items.filter((item) => item.key in canvasPrices);
           if (visibleItems.length === 0) return null;
 
           return (
             <section key={section.key} className="mt-12">
               <h2 className="text-xl font-semibold tracking-tight">{section.title}</h2>
               <p className="mt-1 text-sm text-[var(--color-gray-500)]">{section.subtitle}</p>
-              <div className={`mt-4 grid gap-4 ${
-                section.size === "large"
-                  ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-                  : "grid-cols-2 sm:grid-cols-3"
-              }`}>
+              <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 {visibleItems.map((item) => (
                   <ProductCard
                     key={item.key}
                     item={item}
-                    price={bannerPrices[item.key] || 0}
-                    size={section.size}
+                    price={canvasPrices[item.key] || 0}
                   />
                 ))}
               </div>
@@ -162,27 +133,33 @@ export default function BannersCategoryClient({ bannerPrices = {} }) {
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Heavy-Duty Materials
+              Premium Cotton Blend
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              13oz scrim vinyl, mesh wind-through, and premium polyester fabrics. Built for Canadian weather.
+              350gsm poly-cotton canvas with archival-quality UV inks. Vibrant colour that lasts 75+ years indoors.
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Finishing Options
+              Ready to Hang
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Grommets, pole pockets, hemmed edges, and wind slits included. Hardware ships with every stand.
+              Every canvas ships stretched on kiln-dried wood stretcher bars with pre-installed hanging hardware.
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Same Day Production
+              Custom Sizes
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Rush production available on vinyl banners and roll-up stands. Order before 12pm for same day GTA pickup.
+              Standard sizes from 8×10 to 40×60. Custom sizes available up to 54" wide by any length.
             </p>
+            <Link
+              href="/quote"
+              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
+            >
+              Get a Quote
+            </Link>
           </div>
         </div>
       </div>
