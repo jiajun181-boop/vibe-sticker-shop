@@ -1,5 +1,7 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
+
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
@@ -10,9 +12,10 @@ const formatCad = (cents) =>
  *  - quoteLoading       — show skeleton
  *  - hasQuote           — whether pricing is available
  *  - totalCents         — total including tax
+ *  - quantity           — order quantity (for dual pricing)
  *  - summaryText        — one-line subtitle (e.g. "$1.20/ea × 500")
  *  - canAddToCart        — enables buttons
- *  - onAddToCart         — handler
+ *  - onAddToCart         — handler (accepts optional extraOptions param)
  *  - onBuyNow           — handler (optional, omit for single-button mode)
  *  - buyNowLoading      — spinner state
  *  - placeholderText    — shown when no quote
@@ -24,6 +27,7 @@ export default function MobileBottomBar({
   quoteLoading,
   hasQuote,
   totalCents = 0,
+  quantity = 0,
   summaryText,
   canAddToCart,
   onAddToCart,
@@ -34,6 +38,53 @@ export default function MobileBottomBar({
   quoteOnly,
   onRequestQuote,
 }) {
+  // ─── Add to Cart Animation ───
+  const [atcState, setAtcState] = useState("idle");
+  const atcTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => clearTimeout(atcTimerRef.current);
+  }, []);
+
+  const handleAtcClick = useCallback(() => {
+    if (atcState !== "idle") return;
+    setAtcState("adding");
+    onAddToCart?.();
+
+    atcTimerRef.current = setTimeout(() => {
+      setAtcState("added");
+      atcTimerRef.current = setTimeout(() => {
+        setAtcState("idle");
+      }, 2000);
+    }, 1000);
+  }, [atcState, onAddToCart]);
+
+  const atcContent =
+    atcState === "adding" ? (
+      <svg className="mx-auto h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+    ) : atcState === "added" ? (
+      <span className="inline-flex items-center gap-1">
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+        Added!
+      </span>
+    ) : (
+      t?.("configurator.addToCart") || "Add to Cart"
+    );
+
+  const atcBgClass =
+    atcState === "added"
+      ? "bg-emerald-600 text-white"
+      : atcState === "adding"
+      ? "bg-gray-600 text-white cursor-wait"
+      : canAddToCart
+      ? "bg-gray-900 text-white shadow-lg hover:bg-gray-800"
+      : "cursor-not-allowed bg-gray-200 text-gray-400";
+
   return (
     <>
       <div
@@ -47,9 +98,14 @@ export default function MobileBottomBar({
             ) : hasQuote ? (
               <>
                 <p className="text-lg font-black text-gray-900">{formatCad(totalCents)}</p>
-                {summaryText && (
+                {/* Dual pricing or summary text */}
+                {quantity > 1 ? (
+                  <p className="truncate text-[11px] text-gray-500">
+                    ({formatCad(Math.round(totalCents / quantity))}/each)
+                  </p>
+                ) : summaryText ? (
                   <p className="truncate text-[11px] text-gray-500">{summaryText}</p>
-                )}
+                ) : null}
               </>
             ) : (
               <p className="text-sm text-gray-400">{placeholderText || t?.("configurator.selectOptions") || "Select options"}</p>
@@ -67,15 +123,11 @@ export default function MobileBottomBar({
             <>
               <button
                 type="button"
-                onClick={onAddToCart}
-                disabled={!canAddToCart}
-                className={`shrink-0 rounded-sm px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
-                  canAddToCart
-                    ? "bg-gray-900 text-white shadow-lg hover:bg-gray-800"
-                    : "cursor-not-allowed bg-gray-200 text-gray-400"
-                }`}
+                onClick={handleAtcClick}
+                disabled={!canAddToCart || atcState !== "idle"}
+                className={`shrink-0 rounded-sm px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${atcBgClass}`}
               >
-                {t?.("configurator.addToCart") || "Add to Cart"}
+                {atcContent}
               </button>
               {onBuyNow && (
                 <button
@@ -94,9 +146,26 @@ export default function MobileBottomBar({
             </>
           )}
         </div>
+        {/* Trust signals */}
+        <div className="mx-auto mt-2 flex max-w-lg items-center justify-center gap-3 text-[10px] text-gray-400">
+          <span className="inline-flex items-center gap-0.5">
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+            Secure
+          </span>
+          <span className="text-gray-300">|</span>
+          <span className="inline-flex items-center gap-0.5">
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+            Toronto
+          </span>
+          <span className="text-gray-300">|</span>
+          <span className="inline-flex items-center gap-0.5">
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            Free Proof
+          </span>
+        </div>
       </div>
       {/* Bottom spacing */}
-      <div className="lg:hidden" style={{ height: "calc(var(--mobile-nav-offset, 72px) + 80px)" }} />
+      <div className="lg:hidden" style={{ height: "calc(var(--mobile-nav-offset, 72px) + 96px)" }} />
     </>
   );
 }

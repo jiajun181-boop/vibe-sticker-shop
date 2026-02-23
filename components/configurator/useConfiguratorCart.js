@@ -21,6 +21,8 @@ function normalizeCheckoutMeta(meta) {
   return out;
 }
 
+const DESIGN_HELP_CENTS = 4500;
+
 /**
  * Hook providing addToCart and buyNow handlers for configurator components.
  *
@@ -28,25 +30,46 @@ function normalizeCheckoutMeta(meta) {
  * @param {Function} params.buildCartItem — () => cartItem | null
  * @param {string} [params.successMessage] — toast message on add
  *
+ * handleAddToCart / handleBuyNow accept an optional `extraOptions` param:
+ *   { rushProduction?: boolean }
+ * When rushProduction is true, the item price is multiplied by 1.3.
+ *
  * @returns {{ handleAddToCart, handleBuyNow, buyNowLoading }}
  */
 export default function useConfiguratorCart({ buildCartItem, successMessage = "Added to cart!" }) {
   const { addItem, openCart } = useCartStore();
   const [buyNowLoading, setBuyNowLoading] = useState(false);
 
-  const handleAddToCart = useCallback(() => {
+  const handleAddToCart = useCallback((extraOptions) => {
     const item = buildCartItem();
     if (!item) return;
+
+    // Merge rush production and other extra options
+    if (extraOptions && typeof extraOptions === "object") {
+      item.options = { ...item.options, ...extraOptions };
+      if (extraOptions.rushProduction) {
+        item.price = Math.round(item.price * 1.3);
+      }
+    }
+
     addItem(item);
     openCart();
     showSuccessToast(successMessage);
   }, [buildCartItem, addItem, openCart, successMessage]);
 
-  const handleBuyNow = useCallback(async () => {
+  const handleBuyNow = useCallback(async (extraOptions) => {
     const item = buildCartItem();
     if (!item || buyNowLoading) return;
     setBuyNowLoading(true);
     try {
+      // Merge rush production and other extra options
+      if (extraOptions && typeof extraOptions === "object") {
+        item.options = { ...item.options, ...extraOptions };
+        if (extraOptions.rushProduction) {
+          item.price = Math.round(item.price * 1.3);
+        }
+      }
+
       const checkoutItem = {
         productId: String(item.id),
         slug: String(item.slug),

@@ -10,3 +10,4 @@ export { default as useConfiguratorCart } from "./useConfiguratorCart";
 export { default as ConfigProductGallery } from "./ConfigProductGallery";
 export { default as ProofPreview } from "./ProofPreview";
 export { default as LetterheadTemplateBuilder } from "./LetterheadTemplateBuilder";
+export { default as VolumePricingMatrix } from "./VolumePricingMatrix";
