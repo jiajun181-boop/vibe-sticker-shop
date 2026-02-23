@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { UploadButton } from "@/utils/uploadthing";
 import { showErrorToast } from "@/components/Toast";
 
@@ -72,6 +73,12 @@ export default function ArtworkUpload({ uploadedFile, onUploaded, onRemove, onBe
               allowedContent: "hidden",
             }}
           />
+          <Link
+            href="/artwork-guidelines"
+            className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 underline-offset-2 hover:text-gray-800 hover:underline"
+          >
+            <span>📐</span> View print-ready file requirements
+          </Link>
         </div>
       )}
     </div>
