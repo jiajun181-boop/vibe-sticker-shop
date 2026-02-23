@@ -7,7 +7,7 @@ import { buildVerifyEmailHtml } from "@/lib/email/templates/verify-email";
 import { buildB2bPendingHtml } from "@/lib/email/templates/b2b-pending";
 import { authLimiter, getClientIp } from "@/lib/rate-limit";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 
 export async function POST(request) {
   try {

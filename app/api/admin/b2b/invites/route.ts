@@ -5,7 +5,7 @@ import { sendEmail } from "@/lib/email/resend";
 import { buildPartnerInviteHtml } from "@/lib/email/templates/partner-invite";
 import crypto from "crypto";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 
 /** GET — list all invites */
 export async function GET(request: NextRequest) {

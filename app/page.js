@@ -7,7 +7,7 @@ import HomeScrollWrapper from "@/components/home/HomeScrollWrapper";
 
 export const revalidate = 60;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 const BRAND = "La Lunar Printing Inc.";
 
 const formatCad = (cents) =>

@@ -28,7 +28,7 @@ import TawkToWidget from "@/components/TawkToWidget";
 import HreflangTags from "@/components/HreflangTags";
 import PushNotificationPrompt from "@/components/PushNotificationPrompt";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 
 export async function generateMetadata() {
   const locale = await getServerLocale();

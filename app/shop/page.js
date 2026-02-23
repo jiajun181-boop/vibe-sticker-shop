@@ -9,7 +9,7 @@ import ShopLoading from "./loading";
 
 export const revalidate = 120;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 const BRAND = "La Lunar Printing Inc.";
 
 export async function generateMetadata({ searchParams }) {

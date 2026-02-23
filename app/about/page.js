@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getServerT } from "@/lib/i18n/server";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 const BRAND = "La Lunar Printing Inc.";
 
 export async function generateMetadata() {

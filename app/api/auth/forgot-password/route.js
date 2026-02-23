@@ -5,7 +5,7 @@ import { sendEmail } from "@/lib/email/resend";
 import { buildPasswordResetHtml } from "@/lib/email/templates/password-reset";
 import { forgotPasswordLimiter, getClientIp } from "@/lib/rate-limit";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 
 export async function POST(request) {
   try {

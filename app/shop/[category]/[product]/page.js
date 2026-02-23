@@ -12,6 +12,7 @@ import { getSceneConfig } from "@/lib/sceneConfig";
 import { getStickerRichPageSlug } from "@/lib/sticker-page-content";
 import { getSignRichPageSlug } from "@/lib/sign-page-content";
 import { getProductImage } from "@/lib/product-image";
+import { SEO_NOINDEX_SLUGS } from "@/lib/seo-noindex-slugs";
 import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
 import VariantProductPage from "./VariantProductPage";
@@ -33,7 +34,7 @@ import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
 
 export const revalidate = 60;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 
 function safeDecode(value) {
   try {
@@ -139,6 +140,7 @@ export async function generateMetadata({ params }) {
     return {
       title,
       description: csDescription,
+      robots: { index: false, follow: false },
       alternates: { canonical: url },
       openGraph: { title, description: csDescription, url, type: "website" },
       twitter: { card: "summary_large_image", title, description: csDescription },
@@ -215,10 +217,12 @@ export async function generateMetadata({ params }) {
     : [p.name, categoryLabel, "custom printing", "Toronto printing", "Canada print shop"];
   const image = getProductImage(p, p.category) || `${SITE_URL}/og-image.png`;
   const canonical = `${SITE_URL}/shop/${category}/${slug}`;
+  const noIndex = SEO_NOINDEX_SLUGS.has(decodedSlug);
   return {
     title,
     description,
     keywords,
+    ...(noIndex && { robots: { index: false, follow: false } }),
     alternates: { canonical },
     openGraph: {
       title,

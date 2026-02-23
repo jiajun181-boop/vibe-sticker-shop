@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getServerT } from "@/lib/i18n/server";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lunarprint.ca";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 
 export async function generateMetadata() {
   return {

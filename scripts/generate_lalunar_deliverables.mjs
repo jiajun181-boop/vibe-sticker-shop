@@ -344,7 +344,7 @@ function emailShell({ title, preheader, heading, bodyHtml, accent = '#1a365d', c
                 <tr>
                   <td style="padding:14px 16px;font-size:12px;line-height:18px;color:#4b5563;">
                     <strong style="color:#1f2937;">La Lunar Printing</strong><br />
-                    <a href="https://lunarprint.ca" style="color:#1a365d;text-decoration:none;">lunarprint.ca</a><br />
+                    <a href="https://www.lunarprint.ca" style="color:#1a365d;text-decoration:none;">lunarprint.ca</a><br />
                     11 Progress Ave #21, Scarborough, ON<br />
                     Phone: {{company_phone}}<br />
                     Questions? Reply to this email.
