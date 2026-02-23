@@ -34,9 +34,16 @@ export default function SignProductPageClient({
   const { t } = useTranslation();
   const { intro, highlights, tabs, useCases, faq } = content;
 
-  // Map signTypeId to the configurator sign type id
-  // "real-estate-signs" -> "real-estate" (the sign-order-config type id)
-  const configuratorTypeId = signTypeId === "real-estate-signs" ? "real-estate" : signTypeId;
+  // Map signTypeId to the configurator sign type id (sign-order-config SIGN_TYPES.id)
+  const SIGN_TYPE_MAP = {
+    "real-estate-signs": "real-estate",
+    "yard-sign": "yard-sign",
+    "election-signs": "election-signs",
+    "open-house-signs": "open-house-signs",
+    "directional-signs": "directional-signs",
+    "pvc-board-signs": "pvc-board-signs",
+  };
+  const configuratorTypeId = SIGN_TYPE_MAP[signTypeId] || signTypeId;
 
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)]">

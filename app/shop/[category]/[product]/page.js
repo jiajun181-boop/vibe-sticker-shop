@@ -408,8 +408,11 @@ export default async function ProductPage({ params }) {
   }
 
   // ── Sub-product landing: parent slug → show child products as card grid ──
+  // Skip sub-product landing when a configurator exists for this slug —
+  // the configurator provides a better UX (direct order form) than an
+  // intermediate card grid.  e.g. business-cards, ncr-forms, table-tents.
   const subCfg = getSubProducts(decodedSlug);
-  if (subCfg) {
+  if (subCfg && !getConfiguratorForSlug(decodedSlug)) {
     const subProducts = await prisma.product.findMany({
       where: {
         slug: { in: subCfg.dbSlugs },
@@ -451,8 +454,14 @@ export default async function ProductPage({ params }) {
 
     // Use pre-computed minPrice for sub-product cards (write-time calculation).
     for (const p of dedupedProducts) {
-      p.fromPrice = p.displayFromPrice || p.minPrice || computeFromPrice(p);
-      p.quickAddQty = getSmartDefaults(p).minQuantity;
+      try {
+        p.fromPrice = p.displayFromPrice || p.minPrice || computeFromPrice(p);
+        p.quickAddQty = getSmartDefaults(p).minQuantity;
+      } catch (err) {
+        console.error(`[sub-product] Error computing price/defaults for ${p.slug}:`, err);
+        p.fromPrice = p.basePrice || 0;
+        p.quickAddQty = 1;
+      }
     }
 
     const config = await getCatalogConfig();
@@ -465,13 +474,15 @@ export default async function ProductPage({ params }) {
       .map((sg) => ({ slug: sg.slug, title: sg.title, href: sg.href }));
 
     return (
-      <SubProductLandingClient
-        parentSlug={decodedSlug}
-        category={decodedCategory}
-        categoryTitle={categoryMeta?.title || decodedCategory}
-        products={toClientSafe(dedupedProducts)}
-        siblingSubGroups={siblingSubGroups}
-      />
+      <Suspense>
+        <SubProductLandingClient
+          parentSlug={decodedSlug}
+          category={decodedCategory}
+          categoryTitle={categoryMeta?.title || decodedCategory}
+          products={toClientSafe(dedupedProducts)}
+          siblingSubGroups={siblingSubGroups}
+        />
+      </Suspense>
     );
   }
 

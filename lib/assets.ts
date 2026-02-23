@@ -29,6 +29,7 @@ export async function getEntityAssets(
       entityType,
       entityId,
       ...(purpose ? { purpose: purpose as never } : {}),
+      asset: { status: "published" },
     },
     include: {
       asset: true,
@@ -58,9 +59,13 @@ export async function getEntityAssets(
 export async function getProductAssets(
   productId: string
 ): Promise<AssetResult[]> {
-  // Try new Asset system first
+  // Try new Asset system first (only published assets)
   const links = await prisma.assetLink.findMany({
-    where: { entityType: "product", entityId: productId },
+    where: {
+      entityType: "product",
+      entityId: productId,
+      asset: { status: "published" },
+    },
     include: { asset: true },
     orderBy: { sortOrder: "asc" },
   });
@@ -103,9 +108,14 @@ export async function getProductAssets(
 export async function getProductPrimaryImage(
   productId: string
 ): Promise<AssetResult | null> {
-  // Try new Asset system first (prefer explicit gallery purpose)
+  // Try new Asset system first (prefer explicit gallery purpose, only published)
   let link = await prisma.assetLink.findFirst({
-    where: { entityType: "product", entityId: productId, purpose: "gallery" },
+    where: {
+      entityType: "product",
+      entityId: productId,
+      purpose: "gallery",
+      asset: { status: "published" },
+    },
     include: { asset: true },
     orderBy: { sortOrder: "asc" },
   });
@@ -114,7 +124,11 @@ export async function getProductPrimaryImage(
   // Fall back to any linked product asset before using legacy ProductImage.
   if (!link) {
     link = await prisma.assetLink.findFirst({
-      where: { entityType: "product", entityId: productId },
+      where: {
+        entityType: "product",
+        entityId: productId,
+        asset: { status: "published" },
+      },
       include: { asset: true },
       orderBy: { sortOrder: "asc" },
     });
