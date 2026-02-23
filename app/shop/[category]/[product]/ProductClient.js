@@ -1051,7 +1051,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
   // Only include specs that have real values (not N/A)
   const specs = [
-    product.type && [t("product.spec.productType"), product.type],
     product.minWidthIn && product.minHeightIn && [t("product.spec.minSize"), `${product.minWidthIn}" x ${product.minHeightIn}"`],
     product.maxWidthIn && product.maxHeightIn && [t("product.spec.maxSize"), `${product.maxWidthIn}" x ${product.maxHeightIn}"`],
     product.minDpi && [t("product.spec.minDpi"), String(product.minDpi)],
@@ -1388,7 +1387,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         {!embedded && (
           <header className="xl:hidden">
             <div className="flex items-start gap-3">
-              <h1 className="flex-1 text-3xl font-black tracking-tight text-gray-950">{product.name}</h1>
+              <div className="flex-1 text-3xl font-black tracking-tight text-gray-950">{product.name}</div>
               <button
                 type="button"
                 onClick={() => {
