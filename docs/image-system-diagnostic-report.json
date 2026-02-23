@@ -1,0 +1,720 @@
+{
+  "summary": {
+    "totalProducts": 207,
+    "activeProducts": 207,
+    "assetOnly": 1,
+    "legacyOnly": 0,
+    "mixed": 47,
+    "none": 159
+  },
+  "homepageFirst8": [
+    {
+      "id": "cmlhhggmg0003unl45or3wtix",
+      "slug": "business-cards-gloss",
+      "name": " Business Cards - Gloss",
+      "category": "marketing-business-print",
+      "isActive": true,
+      "assetLinkCount": 1,
+      "galleryAssetLinkCount": 1,
+      "legacyImageCount": 1,
+      "imageSource": "mixed",
+      "hasImage": true
+    },
+    {
+      "id": "cmljyj0hu001funbwkh6hafyy",
+      "slug": "ncr-forms-duplicate",
+      "name": "2-Copy NCR Form",
+      "category": "marketing-business-print",
+      "isActive": true,
+      "assetLinkCount": 1,
+      "galleryAssetLinkCount": 1,
+      "legacyImageCount": 1,
+      "imageSource": "mixed",
+      "hasImage": true
+    },
+    {
+      "id": "cmlrmosoy000aunnojdsxbmia",
+      "slug": "canvas-split-2",
+      "name": "2-Panel Canvas Set (Diptych)",
+      "category": "canvas-prints",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    },
+    {
+      "id": "cmljyj0ju001gunbwwieqsw9o",
+      "slug": "ncr-forms-triplicate",
+      "name": "3-Copy NCR Form",
+      "category": "marketing-business-print",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    },
+    {
+      "id": "cmlrmosqz000cunnozkg9wawg",
+      "slug": "canvas-split-3",
+      "name": "3-Panel Canvas Set (Triptych)",
+      "category": "canvas-prints",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    },
+    {
+      "id": "cmlfdnfc0006qunho9j3ut3oz",
+      "slug": "ncr-invoices",
+      "name": "4-Copy NCR Form",
+      "category": "marketing-business-print",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    },
+    {
+      "id": "cmlrmossy000eunnonmkypsbp",
+      "slug": "canvas-split-5",
+      "name": "5-Panel Canvas Set",
+      "category": "canvas-prints",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    },
+    {
+      "id": "cmljyiyzf000ounbwdzbffhxq",
+      "slug": "trailer-full-wrap",
+      "name": "53ft Trailer Full Wrap",
+      "category": "vehicle-graphics-fleet",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    }
+  ],
+  "section1Status": {
+    "stickers-labels-decals": [
+      {
+        "slug": "die-cut-stickers",
+        "name": "Die-Cut Stickers",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "removable-stickers",
+        "name": "Kiss-Cut Stickers",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      }
+    ],
+    "marketing-business-print": [
+      {
+        "slug": "business-cards",
+        "name": null,
+        "imageSource": "missing-product",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "flyers",
+        "name": "Flyers",
+        "imageSource": "mixed",
+        "hasImage": true,
+        "assetLinkCount": 7,
+        "legacyImageCount": 5
+      },
+      {
+        "slug": "brochures",
+        "name": null,
+        "imageSource": "missing-product",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "postcards",
+        "name": "Postcards",
+        "imageSource": "mixed",
+        "hasImage": true,
+        "assetLinkCount": 3,
+        "legacyImageCount": 3
+      },
+      {
+        "slug": "posters",
+        "name": "Posters",
+        "imageSource": "mixed",
+        "hasImage": true,
+        "assetLinkCount": 1,
+        "legacyImageCount": 1
+      },
+      {
+        "slug": "booklets",
+        "name": "Booklets",
+        "imageSource": "mixed",
+        "hasImage": true,
+        "assetLinkCount": 2,
+        "legacyImageCount": 1
+      }
+    ],
+    "signs-rigid-boards": [
+      {
+        "slug": "yard-sign",
+        "name": "Yard & Lawn Signs",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "real-estate-sign",
+        "name": "Real Estate Signs",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "election-signs",
+        "name": "Election & Campaign Signs",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "open-house-signs",
+        "name": "Open House Signs",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "a-frame-sign-stand",
+        "name": "A-Frame Signs",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "h-stakes",
+        "name": "H-Wire Stakes",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "real-estate-frame",
+        "name": "Real Estate Frames",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      }
+    ],
+    "banners-displays": [
+      {
+        "slug": "vinyl-banners",
+        "name": "Vinyl Banners",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "mesh-banners",
+        "name": "Mesh Banners",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "pole-banners",
+        "name": "Pole Banners",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "double-sided-banners",
+        "name": "Two-Sided Banners",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      }
+    ],
+    "canvas-prints": [
+      {
+        "slug": "canvas-standard",
+        "name": "Standard Canvas Print",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "canvas-gallery-wrap",
+        "name": "Gallery Wrap Canvas",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "canvas-framed",
+        "name": "Framed Canvas Print",
+        "imageSource": "asset",
+        "hasImage": true,
+        "assetLinkCount": 1,
+        "legacyImageCount": 0
+      }
+    ],
+    "windows-walls-floors": [
+      {
+        "slug": "one-way-vision",
+        "name": "One-Way Vision Film",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "frosted-window-film",
+        "name": "Frosted Window Film",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "static-cling",
+        "name": "Static Cling Film",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "transparent-color-film",
+        "name": "Transparent Color Film",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "blockout-vinyl",
+        "name": "Blockout Vinyl",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "opaque-window-graphics",
+        "name": "Opaque Window Graphics",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "glass-waistline",
+        "name": "Glass Waistline Strips",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      }
+    ],
+    "vehicle-graphics-fleet": [
+      {
+        "slug": "full-vehicle-wrap-design-print",
+        "name": "Full Vehicle Wrap - Design & Print",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "partial-wrap-spot-graphics",
+        "name": "Partial Wrap Graphics",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "trailer-box-truck-large-graphics",
+        "name": "Trailer Large Graphics",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      },
+      {
+        "slug": "vehicle-roof-wrap",
+        "name": "Vehicle Roof Wrap",
+        "imageSource": "none",
+        "hasImage": false,
+        "assetLinkCount": 0,
+        "legacyImageCount": 0
+      }
+    ]
+  },
+  "noImageCritical": [
+    {
+      "scope": "homepage-first8",
+      "id": "cmlrmosoy000aunnojdsxbmia",
+      "slug": "canvas-split-2",
+      "name": "2-Panel Canvas Set (Diptych)",
+      "category": "canvas-prints",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    },
+    {
+      "scope": "homepage-first8",
+      "id": "cmljyj0ju001gunbwwieqsw9o",
+      "slug": "ncr-forms-triplicate",
+      "name": "3-Copy NCR Form",
+      "category": "marketing-business-print",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    },
+    {
+      "scope": "homepage-first8",
+      "id": "cmlrmosqz000cunnozkg9wawg",
+      "slug": "canvas-split-3",
+      "name": "3-Panel Canvas Set (Triptych)",
+      "category": "canvas-prints",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    },
+    {
+      "scope": "homepage-first8",
+      "id": "cmlfdnfc0006qunho9j3ut3oz",
+      "slug": "ncr-invoices",
+      "name": "4-Copy NCR Form",
+      "category": "marketing-business-print",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    },
+    {
+      "scope": "homepage-first8",
+      "id": "cmlrmossy000eunnonmkypsbp",
+      "slug": "canvas-split-5",
+      "name": "5-Panel Canvas Set",
+      "category": "canvas-prints",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    },
+    {
+      "scope": "homepage-first8",
+      "id": "cmljyiyzf000ounbwdzbffhxq",
+      "slug": "trailer-full-wrap",
+      "name": "53ft Trailer Full Wrap",
+      "category": "vehicle-graphics-fleet",
+      "isActive": true,
+      "assetLinkCount": 0,
+      "galleryAssetLinkCount": 0,
+      "legacyImageCount": 0,
+      "imageSource": "none",
+      "hasImage": false
+    },
+    {
+      "scope": "stickers-labels-decals:section1",
+      "slug": "die-cut-stickers",
+      "name": "Die-Cut Stickers",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "stickers-labels-decals:section1",
+      "slug": "removable-stickers",
+      "name": "Kiss-Cut Stickers",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "marketing-business-print:section1",
+      "slug": "business-cards",
+      "name": null,
+      "imageSource": "missing-product",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "marketing-business-print:section1",
+      "slug": "brochures",
+      "name": null,
+      "imageSource": "missing-product",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "signs-rigid-boards:section1",
+      "slug": "yard-sign",
+      "name": "Yard & Lawn Signs",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "signs-rigid-boards:section1",
+      "slug": "real-estate-sign",
+      "name": "Real Estate Signs",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "signs-rigid-boards:section1",
+      "slug": "election-signs",
+      "name": "Election & Campaign Signs",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "signs-rigid-boards:section1",
+      "slug": "open-house-signs",
+      "name": "Open House Signs",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "signs-rigid-boards:section1",
+      "slug": "a-frame-sign-stand",
+      "name": "A-Frame Signs",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "signs-rigid-boards:section1",
+      "slug": "h-stakes",
+      "name": "H-Wire Stakes",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "signs-rigid-boards:section1",
+      "slug": "real-estate-frame",
+      "name": "Real Estate Frames",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "banners-displays:section1",
+      "slug": "vinyl-banners",
+      "name": "Vinyl Banners",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "banners-displays:section1",
+      "slug": "mesh-banners",
+      "name": "Mesh Banners",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "banners-displays:section1",
+      "slug": "pole-banners",
+      "name": "Pole Banners",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "banners-displays:section1",
+      "slug": "double-sided-banners",
+      "name": "Two-Sided Banners",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "canvas-prints:section1",
+      "slug": "canvas-standard",
+      "name": "Standard Canvas Print",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "canvas-prints:section1",
+      "slug": "canvas-gallery-wrap",
+      "name": "Gallery Wrap Canvas",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "windows-walls-floors:section1",
+      "slug": "one-way-vision",
+      "name": "One-Way Vision Film",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "windows-walls-floors:section1",
+      "slug": "frosted-window-film",
+      "name": "Frosted Window Film",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "windows-walls-floors:section1",
+      "slug": "static-cling",
+      "name": "Static Cling Film",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "windows-walls-floors:section1",
+      "slug": "transparent-color-film",
+      "name": "Transparent Color Film",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "windows-walls-floors:section1",
+      "slug": "blockout-vinyl",
+      "name": "Blockout Vinyl",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "windows-walls-floors:section1",
+      "slug": "opaque-window-graphics",
+      "name": "Opaque Window Graphics",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "windows-walls-floors:section1",
+      "slug": "glass-waistline",
+      "name": "Glass Waistline Strips",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "vehicle-graphics-fleet:section1",
+      "slug": "full-vehicle-wrap-design-print",
+      "name": "Full Vehicle Wrap - Design & Print",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "vehicle-graphics-fleet:section1",
+      "slug": "partial-wrap-spot-graphics",
+      "name": "Partial Wrap Graphics",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "vehicle-graphics-fleet:section1",
+      "slug": "trailer-box-truck-large-graphics",
+      "name": "Trailer Large Graphics",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    },
+    {
+      "scope": "vehicle-graphics-fleet:section1",
+      "slug": "vehicle-roof-wrap",
+      "name": "Vehicle Roof Wrap",
+      "imageSource": "none",
+      "hasImage": false,
+      "assetLinkCount": 0,
+      "legacyImageCount": 0
+    }
+  ]
+}

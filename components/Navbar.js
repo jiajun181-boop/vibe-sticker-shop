@@ -534,7 +534,7 @@ export default function Navbar({ catalogConfig }) {
         </div>
       </div>
 
-      {/* Mobile search bar â€” full width (nav links already in MobileBottomNav) */}
+      {/* Mobile search bar - full width (nav links already in MobileBottomNav) */}
       <div className="px-4 pb-2 md:hidden">
         <div ref={mobileSearchWrapperRef} className="relative">
           <form onSubmit={handleSearch}>
