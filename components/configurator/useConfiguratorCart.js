@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { showErrorToast, showSuccessToast } from "@/components/Toast";
+import { trackAddToCart } from "@/lib/analytics";
 
 /**
  * Normalise meta values for Stripe checkout (strings/numbers/booleans only).
@@ -55,6 +56,13 @@ export default function useConfiguratorCart({ buildCartItem, successMessage = "A
     addItem(item);
     openCart();
     showSuccessToast(successMessage);
+    trackAddToCart({
+      name: item.name,
+      value: item.price * item.quantity,
+      slug: item.slug,
+      quantity: item.quantity,
+      pricingModel: "configurator",
+    });
   }, [buildCartItem, addItem, openCart, successMessage]);
 
   const handleBuyNow = useCallback(async (extraOptions) => {

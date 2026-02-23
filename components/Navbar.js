@@ -465,16 +465,7 @@ export default function Navbar({ catalogConfig }) {
             )}
           </div>
 
-          {hydrated && (
-            <button
-              type="button"
-              onClick={() => setLocale(locale === "en" ? "zh" : "en")}
-              className="rounded-xl border border-[var(--color-gray-300)] px-2.5 py-1.5 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
-              aria-label="Switch language"
-            >
-              {locale === "en" ? "中文" : "EN"}
-            </button>
-          )}
+          {/* Language toggle hidden — keeping footer Chinese phone number */}
 
           {/* Get a Quote CTA */}
           <Link

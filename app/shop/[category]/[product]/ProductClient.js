@@ -10,7 +10,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { PaymentBadges } from "@/components/TrustBadges";
 import { MobileBottomBar, ArtworkUpload } from "@/components/configurator";
 import ImageGallery from "@/components/product/ImageGallery";
-import { trackAddToCart, trackOptionChange, trackQuoteLoaded, trackBuyNow, trackUploadStarted } from "@/lib/analytics";
+import { trackAddToCart, trackOptionChange, trackQuoteLoaded, trackBuyNow, trackUploadStarted, trackViewItem } from "@/lib/analytics";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { useRecentlyViewedStore } from "@/lib/recently-viewed";
 import dynamic from "next/dynamic";
@@ -411,7 +411,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     return [{ url: primaryImage, alt: product.name || "Product", mimeType: isSvgImage(primaryImage) ? "image/svg+xml" : undefined }];
   }, [product.images, product.name, primaryImage]);
 
-  // Track recently viewed
+  // Track recently viewed + ViewContent
   useEffect(() => {
     useRecentlyViewedStore.getState().addViewed({
       slug: product.slug,
@@ -419,6 +419,12 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       name: product.name,
       image: primaryImage,
       basePrice: product.basePrice,
+    });
+    trackViewItem({
+      name: product.name,
+      slug: product.slug,
+      category: product.category,
+      value: product.basePrice,
     });
   }, [product.slug, product.category, product.name, product.basePrice, primaryImage]);
 

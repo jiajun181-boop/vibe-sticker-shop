@@ -198,7 +198,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
           { label: t("vehicle.breadcrumb"), href: "/shop/vehicle-graphics-fleet" },
           { label: t("vehicle.order") },
         ]}
-        title={t("vehicle.title")}
+        title={t(`vehicle.type.${typeId}`)}
         subtitle={t("vehicle.subtitle")}
         badges={[t("vehicle.badgeDurable"), t("vehicle.badgeShipping"), t("vehicle.badgeProof")]}
       />

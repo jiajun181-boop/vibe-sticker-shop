@@ -196,7 +196,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
           { label: t("sign.breadcrumb"), href: "/shop/signs-rigid-boards" },
           { label: t("sign.order") },
         ]}
-        title={t("sign.title")}
+        title={t(`sign.type.${typeId}`)}
         subtitle={t("sign.subtitle")}
         badges={[t("sign.badgeWeatherproof"), t("sign.badgeShipping"), t("sign.badgeProof")]}
       />

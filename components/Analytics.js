@@ -1,9 +1,26 @@
 "use client";
 
 import Script from "next/script";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { trackPageView } from "@/lib/analytics";
 
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID || "";
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
+
+function RouteChangeTracker() {
+  const pathname = usePathname();
+  const prev = useRef(pathname);
+
+  useEffect(() => {
+    if (pathname !== prev.current) {
+      prev.current = pathname;
+      trackPageView(pathname);
+    }
+  }, [pathname]);
+
+  return null;
+}
 
 export default function Analytics() {
   return (
@@ -43,6 +60,8 @@ export default function Analytics() {
           `}
         </Script>
       )}
+
+      <RouteChangeTracker />
     </>
   );
 }

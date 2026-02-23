@@ -295,7 +295,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
           { label: t("canvas.breadcrumb"), href: "/shop/canvas-prints" },
           { label: t("canvas.configure") },
         ]}
-        title={t("canvas.title")}
+        title={t(`canvas.type.${typeId}`)}
         subtitle={t("canvas.subtitle")}
         badges={["Epson Pigment Ink", "Free Shipping $99+", "Digital Proof"]}
       />

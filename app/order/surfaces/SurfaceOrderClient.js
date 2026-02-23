@@ -209,7 +209,7 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
           { label: t("surface.breadcrumb"), href: "/shop/windows-walls-floors" },
           { label: t("surface.order") },
         ]}
-        title={t("surface.title")}
+        title={t(`surface.type.${typeId}`)}
         subtitle={t("surface.subtitle")}
         badges={[t("surface.badgeDurable"), t("surface.badgeShipping"), t("surface.badgeProof")]}
       />

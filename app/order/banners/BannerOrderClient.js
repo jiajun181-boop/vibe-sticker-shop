@@ -212,7 +212,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
           { label: t("banner.breadcrumb"), href: "/shop/banners-displays" },
           { label: t("banner.order") },
         ]}
-        title={t("banner.title")}
+        title={t(`banner.type.${typeId}`)}
         subtitle={t("banner.subtitle")}
         badges={[t("banner.badgeWeatherproof"), t("banner.badgeShipping"), t("banner.badgeProof")]}
       />

@@ -57,7 +57,9 @@ export default function QuoteCalculator({ products: serverProducts }) {
       }));
   }, [serverProducts]);
 
-  const [selectedSlug, setSelectedSlug] = useState(items[0]?.slug || "");
+  const [selectedSlug, setSelectedSlug] = useState(
+    items.find((p) => p.slug === "business-cards-classic")?.slug || items[0]?.slug || ""
+  );
   const [sizeIdx, setSizeIdx] = useState(0);
   const [qty, setQty] = useState(1);
   const [rush, setRush] = useState(false);

@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { trackAddToCart } from "@/lib/analytics";
 
 const DEBOUNCE_MS = 300;
 
@@ -51,12 +52,19 @@ const SIDES = [
 
 const QUANTITIES = [1, 2, 5, 10, 25];
 
+const PURCHASE_TYPES = [
+  { id: "full-kit", labelKey: "fl.purchaseType.fullKit", descKey: "fl.purchaseType.fullKitDesc" },
+  { id: "print-only", labelKey: "fl.purchaseType.printOnly", descKey: "fl.purchaseType.printOnlyDesc" },
+  { id: "hardware-only", labelKey: "fl.purchaseType.hardwareOnly", descKey: "fl.purchaseType.hardwareOnlyDesc" },
+];
+
 // ─── Main Component ───
 
 export default function FlagOrderClient() {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
+  const [purchaseType, setPurchaseType] = useState("full-kit");
   const [style, setStyle] = useState("feather");
   const [sizeId, setSizeId] = useState("m");
   const [pole, setPole] = useState("ground-stake");
@@ -137,7 +145,9 @@ export default function FlagOrderClient() {
 
   const subtotalCents = quoteData?.totalCents ?? 0;
   const poleSurcharge = (POLES.find((p) => p.id === pole)?.surcharge ?? 0) * activeQty;
-  const adjustedSubtotal = subtotalCents + poleSurcharge;
+  const printCents = purchaseType === "hardware-only" ? 0 : subtotalCents;
+  const hardwareCents = purchaseType === "print-only" ? 0 : poleSurcharge;
+  const adjustedSubtotal = printCents + hardwareCents;
   const totalCents = adjustedSubtotal;
 
   const canAddToCart = quoteData && !quoteLoading && activeQty > 0;
@@ -153,12 +163,13 @@ export default function FlagOrderClient() {
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
       options: {
+        purchaseType,
         style,
         sizeId: size.id,
         sizeLabel: size.label,
         width: size.w,
         height: size.h,
-        pole,
+        pole: purchaseType !== "print-only" ? pole : undefined,
         sides: sidesId,
         fileName: uploadedFile?.name || null,
       },
@@ -172,6 +183,13 @@ export default function FlagOrderClient() {
     addItem(item);
     openCart();
     showSuccessToast(t("fl.addedToCart"));
+    trackAddToCart({
+      name: item.name,
+      value: item.price * item.quantity,
+      slug: item.slug,
+      quantity: item.quantity,
+      pricingModel: "configurator",
+    });
   }
 
   async function handleBuyNow() {
@@ -225,6 +243,29 @@ export default function FlagOrderClient() {
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
         <div className="space-y-8 lg:col-span-3">
+
+          {/* Purchase Type */}
+          <Section label={t("fl.purchaseType.label")}>
+            <div className="grid grid-cols-3 gap-3">
+              {PURCHASE_TYPES.map((pt) => (
+                <button
+                  key={pt.id}
+                  type="button"
+                  onClick={() => setPurchaseType(pt.id)}
+                  className={`group flex flex-col items-center gap-1.5 rounded-xl border-2 p-4 text-center transition-all ${
+                    purchaseType === pt.id
+                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  <span className="text-sm font-semibold">{t(pt.labelKey)}</span>
+                  <span className={`text-[11px] leading-tight ${purchaseType === pt.id ? "text-gray-300" : "text-gray-400"}`}>
+                    {t(pt.descKey)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </Section>
 
           {/* Style */}
           <Section label={t("fl.style.label")}>
@@ -354,9 +395,10 @@ export default function FlagOrderClient() {
             <h2 className="text-base font-bold text-gray-900">{t("fl.summary")}</h2>
 
             <dl className="space-y-2 text-sm">
+              <Row label={t("fl.purchaseType.label")} value={t(`fl.purchaseType.${purchaseType === "full-kit" ? "fullKit" : purchaseType === "print-only" ? "printOnly" : "hardwareOnly"}`)} />
               <Row label={t("fl.style.label")} value={t(`fl.style.${style}`)} />
               <Row label={t("fl.size")} value={size?.label || "\u2014"} />
-              <Row label={t("fl.pole.label")} value={t(`fl.pole.${pole}`)} />
+              {purchaseType !== "print-only" && <Row label={t("fl.pole.label")} value={t(`fl.pole.${pole}`)} />}
               <Row label={t("fl.sides.label")} value={t(`fl.sides.${sidesId}`)} />
               <Row label={t("fl.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
             </dl>
