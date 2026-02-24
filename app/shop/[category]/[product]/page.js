@@ -532,9 +532,45 @@ export default async function ProductPage({ params }) {
   // ── Category configurator: check all configurator types via unified router ──
   const configurator = getConfiguratorForSlug(decodedSlug);
   if (configurator) {
-    // Sticker products redirect to the stickers category page
+    // Sticker products: render with StickerProductPageClient using fallback content
     if (configurator.component === "stickers") {
-      redirect(`/shop/stickers-labels-decals`);
+      const { STICKER_PAGE_CONTENT } = await import("@/lib/sticker-page-content");
+      const fallbackContent = STICKER_PAGE_CONTENT[configurator.defaultValue] || STICKER_PAGE_CONTENT["die-cut"];
+      const stickerProd = await prisma.product.findFirst({
+        where: { slug: decodedSlug, isActive: true },
+        include: { images: { orderBy: { sortOrder: "asc" } } },
+      });
+      const stickerFallbackAssets = stickerProd ? await getProductAssets(stickerProd.id) : [];
+      const stickerFallbackImages = stickerFallbackAssets.length > 0
+        ? stickerFallbackAssets
+        : toClientSafe(stickerProd?.images || []);
+      const stickerFallbackRelated = await prisma.product.findMany({
+        where: {
+          isActive: true,
+          category: decodedCategory,
+          ...(stickerProd ? { id: { not: stickerProd.id } } : {}),
+        },
+        include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+        take: 4,
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      });
+      return (
+        <Suspense
+          fallback={
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+            </div>
+          }
+        >
+          <StickerProductPageClient
+            content={fallbackContent}
+            cuttingTypeId={configurator.defaultValue}
+            product={stickerProd ? toClientSafe(stickerProd) : { slug: decodedSlug, category: decodedCategory }}
+            images={stickerFallbackImages}
+            relatedProducts={toClientSafe(stickerFallbackRelated)}
+          />
+        </Suspense>
+      );
     }
     // Fetch product images for configurator display
     const cfgProduct = await prisma.product.findFirst({
