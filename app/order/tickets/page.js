@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom tickets. Choose size, stubs, numbering, and quantity.",
       url: "/order/tickets",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/tickets" },
   };
 }
 

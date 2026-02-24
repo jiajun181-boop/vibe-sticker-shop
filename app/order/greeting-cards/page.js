@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom greeting cards. Choose size, paper, fold style, and envelope options.",
       url: "/order/greeting-cards",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/greeting-cards" },
   };
 }
 

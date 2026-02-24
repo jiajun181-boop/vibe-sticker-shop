@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom rack cards. Choose paper, coating, and quantity.",
       url: "/order/rack-cards",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/rack-cards" },
   };
 }
 

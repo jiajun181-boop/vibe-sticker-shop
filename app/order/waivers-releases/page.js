@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom waivers. Choose size, paper, binding, and quantity.",
       url: "/order/waivers-releases",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/waivers-releases" },
   };
 }
 

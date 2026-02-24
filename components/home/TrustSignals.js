@@ -5,9 +5,9 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import StarRating from "@/components/product/StarRating";
 
 const STATS = [
-  { display: "15,000+", label: "Orders Delivered", icon: "check" },
-  { display: "ON M1P 4S7", label: "Our Location", icon: "pin" },
-  { display: "info@lunarprint.ca", label: "Contact Us", icon: "mail" },
+  { display: "15,000+", labelKey: "trust.ordersDelivered", icon: "check" },
+  { display: "ON M1P 4S7", labelKey: "trust.ourLocation", icon: "pin" },
+  { display: "info@lunarprint.ca", labelKey: "trust.contactUs", icon: "mail" },
 ];
 
 const REVIEWS = [
@@ -70,7 +70,7 @@ export default function TrustSignals() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         {STATS.map((stat) => (
           <div
-            key={stat.label}
+            key={stat.labelKey}
             className="rounded-xl shadow-[var(--shadow-card)] bg-white p-5 text-center md:p-6 hover-lift-subtle"
           >
             <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-brand-50)] text-[var(--color-brand)]">
@@ -79,7 +79,7 @@ export default function TrustSignals() {
             <div className="text-2xl md:text-3xl font-black tracking-tight text-[var(--color-gray-900)]">
               {stat.display}
             </div>
-            <p className="label-xs text-[var(--color-gray-400)] mt-1.5 font-normal tracking-[0.14em]">{stat.label}</p>
+            <p className="label-xs text-[var(--color-gray-400)] mt-1.5 font-normal tracking-[0.14em]">{t(stat.labelKey)}</p>
           </div>
         ))}
       </div>

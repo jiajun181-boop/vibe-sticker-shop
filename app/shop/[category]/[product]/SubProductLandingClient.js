@@ -560,7 +560,7 @@ export default function SubProductLandingClient({
 
         {products.length === 0 && (
           <p className="mt-8 text-center text-sm text-[var(--color-gray-500)]">
-            No products available yet.
+            {t("mp.landing.noProducts")}
           </p>
         )}
 

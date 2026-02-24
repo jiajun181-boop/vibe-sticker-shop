@@ -8,7 +8,8 @@ import { showErrorToast } from "@/components/Toast";
 const ARTWORK_OPTIONS = [
   {
     id: "upload",
-    label: "Upload Print-Ready File Now",
+    labelKey: "configurator.uploadNow",
+    labelFallback: "Upload Print-Ready File Now",
     icon: (
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -17,8 +18,10 @@ const ARTWORK_OPTIONS = [
   },
   {
     id: "email-later",
-    label: "Email Artwork Later",
-    desc: "We'll send you instructions after checkout",
+    labelKey: "configurator.emailLater",
+    labelFallback: "Email Artwork Later",
+    descKey: "configurator.emailLaterDesc",
+    descFallback: "We'll send you instructions after checkout",
     icon: (
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
@@ -27,8 +30,10 @@ const ARTWORK_OPTIONS = [
   },
   {
     id: "design-help",
-    label: "Need Design Help?",
-    desc: "Our designers will create your artwork",
+    labelKey: "configurator.designHelp",
+    labelFallback: "Need Design Help?",
+    descKey: "configurator.designHelpDesc",
+    descFallback: "Our designers will create your artwork",
     badge: null,
     icon: (
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -108,7 +113,7 @@ export default function ArtworkUpload({
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-2">
               <span className={`text-sm font-semibold ${selectedOption === opt.id ? "text-gray-900" : "text-gray-700"}`}>
-                {opt.label}
+                {t?.(opt.labelKey) || opt.labelFallback}
               </span>
               {opt.badge && (
                 <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
@@ -116,8 +121,8 @@ export default function ArtworkUpload({
                 </span>
               )}
             </span>
-            {opt.desc && (
-              <span className="block text-xs text-gray-400">{opt.desc}</span>
+            {opt.descKey && (
+              <span className="block text-xs text-gray-400">{t?.(opt.descKey) || opt.descFallback}</span>
             )}
           </span>
         </button>
@@ -155,7 +160,7 @@ export default function ArtworkUpload({
                 <p className="text-sm font-medium text-gray-600">
                   {t?.("configurator.dragDrop") || "Drag & drop or click to upload"}
                 </p>
-                <p className="mt-1 text-xs text-gray-400">Accepts PDF, AI, EPS, PSD, JPG, PNG (300 DPI, CMYK preferred). Include 1/8&quot; bleed.</p>
+                <p className="mt-1 text-xs text-gray-400">{t?.("configurator.fileRequirements") || 'Accepts PDF, AI, EPS, PSD, JPG, PNG (300 DPI, CMYK preferred). Include 1/8" bleed.'}</p>
               </div>
               <UploadButton
                 endpoint="artworkUploader"
@@ -180,7 +185,7 @@ export default function ArtworkUpload({
                 href="/artwork-guidelines"
                 className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 underline-offset-2 hover:text-gray-800 hover:underline"
               >
-                View print-ready file requirements
+                {t?.("configurator.viewFileRequirements") || "View print-ready file requirements"}
               </Link>
             </div>
           )}
@@ -191,7 +196,7 @@ export default function ArtworkUpload({
       {selectedOption === "email-later" && (
         <div className="ml-8 rounded-xl bg-gray-50 px-4 py-3">
           <p className="text-sm text-gray-500">
-            Send your artwork to <span className="font-medium text-gray-700">info@lunarprint.ca</span> after placing your order. Include your order number in the subject line.
+            {t?.("configurator.emailLaterNote") || <>Send your artwork to <span className="font-medium text-gray-700">info@lunarprint.ca</span> after placing your order. Include your order number in the subject line.</>}
           </p>
         </div>
       )}
@@ -200,7 +205,7 @@ export default function ArtworkUpload({
       {selectedOption === "design-help" && (
         <div className="ml-8 rounded-xl bg-amber-50 px-4 py-3">
           <p className="text-sm text-gray-600">
-            A designer will contact you within 1 business day to discuss your project. Design fee of <span className="font-bold text-amber-700">$45.00</span> will be added to your order.
+            {t?.("configurator.designHelpNote") || <>A designer will contact you within 1 business day to discuss your project. Design fee of <span className="font-bold text-amber-700">$45.00</span> will be added to your order.</>}
           </p>
         </div>
       )}

@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom folders. Choose pockets, card slits, coating, and foil stamping.",
       url: "/order/presentation-folders",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/presentation-folders" },
   };
 }
 

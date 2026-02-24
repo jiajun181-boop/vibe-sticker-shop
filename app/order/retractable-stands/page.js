@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Retractable Banner Stands — Order Online | La Lunar Printing",
     description: "Order custom retractable roll-up banner stands for trade shows and events.",
     openGraph: { title: "Retractable Banner Stands — Order Online", url: "/order/retractable-stands" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/retractable-stands" },
   };
 }
 

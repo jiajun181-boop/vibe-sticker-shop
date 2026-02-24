@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Custom A-Frame Signs — Order Online | La Lunar Printing",
     description: "Order custom A-frame sandwich board signs for sidewalks and storefronts.",
     openGraph: { title: "Custom A-Frame Signs — Order Online", description: "Configure and order custom A-frame signs. Choose size, material, and print options.", url: "/order/a-frame-signs" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/a-frame-signs" },
   };
 }
 

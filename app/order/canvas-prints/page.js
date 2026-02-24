@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Custom Canvas Prints — Order Online | La Lunar Printing",
     description: "Order custom canvas prints for wall art, photography, and business displays.",
     openGraph: { title: "Custom Canvas Prints — Order Online", url: "/order/canvas-prints" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/canvas-prints" },
   };
 }
 

@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Custom Aluminum Signs — Order Online | La Lunar Printing",
     description: "Order custom aluminum signs for outdoor, parking, and property signage.",
     openGraph: { title: "Custom Aluminum Signs — Order Online", description: "Configure and order custom aluminum signs. Choose thickness, size, and print options.", url: "/order/aluminum-signs" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/aluminum-signs" },
   };
 }
 

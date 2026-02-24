@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Custom Vinyl Banners — Order Online | La Lunar Printing",
     description: "Order custom vinyl banners for events, business, and outdoor advertising.",
     openGraph: { title: "Custom Vinyl Banners — Order Online", url: "/order/vinyl-banners" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/vinyl-banners" },
   };
 }
 

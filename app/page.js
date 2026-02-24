@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getServerT } from "@/lib/i18n/server";
+import { getServerT, getServerLocale } from "@/lib/i18n/server";
 import { OrganizationSchema, WebSiteSchema } from "@/components/JsonLd";
 import DualEntryHero from "@/components/home/DualEntryHero";
 import HomeScrollWrapper from "@/components/home/HomeScrollWrapper";
@@ -16,13 +16,13 @@ const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 const CATEGORY_CARDS = [
-  { slug: "marketing-business-print", title: "Marketing & Business Print", desc: "Business cards, flyers, brochures & more", gradient: "from-amber-400 to-orange-400", href: "/shop/marketing-business-print", icon: "/api/product-image/business-cards-classic?category=marketing-business-print&name=Business+Cards" },
-  { slug: "stickers-labels-decals", title: "Stickers & Labels", desc: "Die-cut stickers, labels, decals & sheets", gradient: "from-violet-400 to-fuchsia-400", href: "/shop/stickers-labels-decals", icon: "/api/product-image/die-cut-stickers?category=stickers-labels-decals&name=Stickers" },
-  { slug: "signs-rigid-boards", title: "Signs & Display Boards", desc: "Yard signs, foam boards, aluminum signs", gradient: "from-emerald-400 to-teal-400", href: "/shop/signs-rigid-boards", icon: "/api/product-image/yard-sign?category=signs-rigid-boards&name=Signs" },
-  { slug: "banners-displays", title: "Banners & Displays", desc: "Vinyl banners, retractable stands, flags", gradient: "from-rose-400 to-pink-400", href: "/shop/banners-displays", icon: "/api/product-image/vinyl-banners?category=banners-displays&name=Banners" },
-  { slug: "canvas-prints", title: "Canvas Prints", desc: "Gallery wraps, framed canvas, multi-panel", gradient: "from-sky-400 to-blue-400", href: "/shop/canvas-prints", icon: "/api/product-image/canvas-standard?category=canvas-prints&name=Canvas" },
-  { slug: "windows-walls-floors", title: "Windows, Walls & Floors", desc: "Window films, wall graphics, floor decals", gradient: "from-cyan-400 to-blue-400", href: "/shop/windows-walls-floors", icon: "/api/product-image/one-way-vision?category=windows-walls-floors&name=Window+Films" },
-  { slug: "vehicle-graphics-fleet", title: "Vehicle Graphics & Fleet", desc: "Vehicle lettering, decals, fleet branding", gradient: "from-slate-400 to-indigo-400", href: "/shop/vehicle-graphics-fleet", icon: "/api/product-image/vehicle-wraps?category=vehicle-graphics-fleet&name=Vehicle+Wraps" },
+  { slug: "marketing-business-print", title: "Marketing & Business Print", titleZh: "营销 & 商务印刷", desc: "Business cards, flyers, brochures & more", descZh: "名片、传单、折页等", gradient: "from-amber-400 to-orange-400", href: "/shop/marketing-business-print", icon: "/api/product-image/business-cards-classic?category=marketing-business-print&name=Business+Cards" },
+  { slug: "stickers-labels-decals", title: "Stickers & Labels", titleZh: "贴纸 & 标签", desc: "Die-cut stickers, labels, decals & sheets", descZh: "异形贴纸、标签、贴花等", gradient: "from-violet-400 to-fuchsia-400", href: "/shop/stickers-labels-decals", icon: "/api/product-image/die-cut-stickers?category=stickers-labels-decals&name=Stickers" },
+  { slug: "signs-rigid-boards", title: "Signs & Display Boards", titleZh: "标牌 & 展示板", desc: "Yard signs, foam boards, aluminum signs", descZh: "庭院标牌、泡沫板、铝板标牌", gradient: "from-emerald-400 to-teal-400", href: "/shop/signs-rigid-boards", icon: "/api/product-image/yard-sign?category=signs-rigid-boards&name=Signs" },
+  { slug: "banners-displays", title: "Banners & Displays", titleZh: "横幅 & 展架", desc: "Vinyl banners, retractable stands, flags", descZh: "乙烯基横幅、易拉宝、旗帜", gradient: "from-rose-400 to-pink-400", href: "/shop/banners-displays", icon: "/api/product-image/vinyl-banners?category=banners-displays&name=Banners" },
+  { slug: "canvas-prints", title: "Canvas Prints", titleZh: "帆布画", desc: "Gallery wraps, framed canvas, multi-panel", descZh: "画廊包边、框架帆布、多联画", gradient: "from-sky-400 to-blue-400", href: "/shop/canvas-prints", icon: "/api/product-image/canvas-standard?category=canvas-prints&name=Canvas" },
+  { slug: "windows-walls-floors", title: "Windows, Walls & Floors", titleZh: "窗户、墙面 & 地面", desc: "Window films, wall graphics, floor decals", descZh: "窗膜、墙面图案、地面贴", gradient: "from-cyan-400 to-blue-400", href: "/shop/windows-walls-floors", icon: "/api/product-image/one-way-vision?category=windows-walls-floors&name=Window+Films" },
+  { slug: "vehicle-graphics-fleet", title: "Vehicle Graphics & Fleet", titleZh: "车身图案 & 车队", desc: "Vehicle lettering, decals, fleet branding", descZh: "车身字母、贴花、车队品牌", gradient: "from-slate-400 to-indigo-400", href: "/shop/vehicle-graphics-fleet", icon: "/api/product-image/vehicle-wraps?category=vehicle-graphics-fleet&name=Vehicle+Wraps" },
 ];
 
 const FEATURED_SLUGS = [
@@ -58,6 +58,8 @@ export async function generateMetadata() {
 
 export default async function HomePage() {
   const t = await getServerT();
+  const locale = await getServerLocale();
+  const isZh = locale === "zh";
 
   const [totalCount, featuredProducts] = await Promise.all([
     prisma.product.count({ where: { isActive: true } }),
@@ -98,7 +100,7 @@ export default async function HomePage() {
               {t("home.shopByCategory")}
             </h2>
             <p className="text-center text-sm text-[var(--color-gray-500)] mb-10">
-              Professional printing for every need
+              {t("home.proSubtitle")}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {CATEGORY_CARDS.map((cat) => (
@@ -108,10 +110,10 @@ export default async function HomePage() {
                   className={`group relative flex flex-col justify-end overflow-hidden rounded-2xl p-6 h-[160px] bg-gradient-to-br ${cat.gradient} shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md`}
                 >
                   <h3 className="relative text-xl font-bold text-[#fff] leading-tight">
-                    {cat.title}
+                    {isZh ? cat.titleZh : cat.title}
                   </h3>
                   <p className="relative mt-1 text-sm text-[#fff]/80 leading-snug">
-                    {cat.desc}
+                    {isZh ? cat.descZh : cat.desc}
                   </p>
                 </Link>
               ))}
@@ -132,10 +134,10 @@ export default async function HomePage() {
           <section className="py-16 md:py-20 bg-[var(--color-gray-50)] animate-on-scroll overflow-hidden">
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
               <h2 className="heading-2 text-center mb-3">
-                Popular Products
+                {t("home.popularProducts")}
               </h2>
               <p className="text-center text-sm text-[var(--color-gray-500)] mb-10">
-                Our best sellers across all categories
+                {t("home.bestSellers")}
               </p>
             </div>
             {/* Mobile: swipeable horizontal scroll */}
@@ -163,11 +165,11 @@ export default async function HomePage() {
                       </h3>
                       {p.fromPrice > 0 && (
                         <p className="mt-1 text-sm font-bold text-[var(--color-brand)]">
-                          From {formatCad(p.fromPrice)}
+                          {t("home.from")} {formatCad(p.fromPrice)}
                         </p>
                       )}
                       <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-[#fff]">
-                        View Details
+                        {t("home.viewDetails")}
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
@@ -202,11 +204,11 @@ export default async function HomePage() {
                       </h3>
                       {p.fromPrice > 0 && (
                         <p className="mt-1 text-sm font-bold text-[var(--color-brand)]">
-                          From {formatCad(p.fromPrice)}
+                          {t("home.from")} {formatCad(p.fromPrice)}
                         </p>
                       )}
                       <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
-                        View Details
+                        {t("home.viewDetails")}
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
@@ -226,28 +228,28 @@ export default async function HomePage() {
               <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 text-center">
                 <span className="text-3xl">&#x1F1E8;&#x1F1E6;</span>
                 <h3 className="mt-3 text-base font-bold text-[var(--color-gray-900)]">
-                  Made in Canada
+                  {t("home.madeInCanada")}
                 </h3>
                 <p className="mt-2 text-sm text-[var(--color-gray-500)]">
-                  Printed in our Scarborough facility. No outsourcing, no customs delays.
+                  {t("home.madeInCanadaDesc")}
                 </p>
               </div>
               <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 text-center">
                 <span className="text-3xl">&#x26A1;</span>
                 <h3 className="mt-3 text-base font-bold text-[var(--color-gray-900)]">
-                  Fast Turnaround
+                  {t("home.fastTurnaround")}
                 </h3>
                 <p className="mt-2 text-sm text-[var(--color-gray-500)]">
-                  Standard 3&ndash;5 days. Same-day rush available on select products.
+                  {t("home.fastTurnaroundDesc")}
                 </p>
               </div>
               <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 text-center">
                 <span className="text-3xl">&#x1F4B0;</span>
                 <h3 className="mt-3 text-base font-bold text-[var(--color-gray-900)]">
-                  Factory Direct Pricing
+                  {t("home.factoryDirect")}
                 </h3>
                 <p className="mt-2 text-sm text-[var(--color-gray-500)]">
-                  No middleman. Industrial equipment, wholesale materials, retail convenience.
+                  {t("home.factoryDirectDesc")}
                 </p>
               </div>
             </div>
@@ -258,23 +260,23 @@ export default async function HomePage() {
         <section className="bg-[var(--color-brand)] py-16 md:py-20">
           <div className="mx-auto max-w-2xl px-4 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-[#fff] tracking-tight">
-              Ready to get started?
+              {t("home.ctaTitle")}
             </h2>
             <p className="mt-3 text-sm text-[#fff]/80">
-              Get an instant quote or browse our full product catalog.
+              {t("home.ctaSubtitle")}
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/quote"
                 className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-[var(--color-brand)] transition-colors hover:bg-gray-100"
               >
-                Get a Quote
+                {t("home.ctaQuote")}
               </Link>
               <Link
                 href="/shop"
                 className="rounded-full border-2 border-white px-6 py-3 text-sm font-semibold text-[#fff] transition-colors hover:bg-white/10"
               >
-                Browse Products
+                {t("home.ctaBrowse")}
               </Link>
             </div>
           </div>

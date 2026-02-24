@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom table tents. Choose size, paper, coating, and quantity.",
       url: "/order/table-tents",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/table-tents" },
   };
 }
 

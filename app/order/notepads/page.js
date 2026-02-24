@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom notepads. Choose size, pages, printing, and binding options.",
       url: "/order/notepads",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/notepads" },
   };
 }
 

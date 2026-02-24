@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom letterhead. Choose paper stock, color mode, and quantity.",
       url: "/order/letterhead",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/letterhead" },
   };
 }
 

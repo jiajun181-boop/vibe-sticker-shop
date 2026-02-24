@@ -31,7 +31,7 @@ export default function WwfProductPageClient({
   images,
   relatedProducts,
 }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { intro, highlights, tabs, useCases, faq } = content;
 
   return (
@@ -41,7 +41,7 @@ export default function WwfProductPageClient({
         <Breadcrumbs
           items={[
             { label: t("nav.shop"), href: "/shop" },
-            { label: "Windows, Walls & Floors", href: `/shop/${WWF_CATEGORY}` },
+            { label: t("productPage.cat.windowsWallsFloors"), href: `/shop/${WWF_CATEGORY}` },
             { label: intro.headline },
           ]}
         />
@@ -103,7 +103,7 @@ export default function WwfProductPageClient({
           tableData={WWF_COMPARISON_TABLE}
           currentTypeId={wwfProductId}
           category={WWF_CATEGORY}
-          title="Compare Window, Wall & Floor Products"
+          title={t("productPage.compareWwf")}
         />
 
         {/* FAQ */}
@@ -124,6 +124,7 @@ export default function WwfProductPageClient({
 }
 
 function MobileBottomBarBridge() {
+  const { t } = useTranslation();
   return (
     <>
       <div
@@ -132,15 +133,15 @@ function MobileBottomBarBridge() {
       >
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-gray-900">Ready to order?</p>
-            <p className="text-[11px] text-gray-500">Configure above & add to cart</p>
+            <p className="text-sm font-bold text-gray-900">{t("productPage.readyToOrder")}</p>
+            <p className="text-[11px] text-gray-500">{t("productPage.configureAbove")}</p>
           </div>
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="shrink-0 rounded-lg bg-gray-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#fff] shadow-lg hover:bg-gray-800"
           >
-            Configure
+            {t("productPage.configure")}
           </button>
         </div>
       </div>

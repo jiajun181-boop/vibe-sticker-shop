@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom packaging inserts and seals. Choose type, size, paper, and quantity.",
       url: "/order/inserts-packaging",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/inserts-packaging" },
   };
 }
 

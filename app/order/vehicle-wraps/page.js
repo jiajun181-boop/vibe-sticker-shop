@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Custom Vehicle Wraps & Graphics — Order Online | La Lunar Printing",
     description: "Order custom vehicle wraps, door graphics, and fleet branding packages.",
     openGraph: { title: "Custom Vehicle Wraps — Order Online", url: "/order/vehicle-wraps" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/vehicle-wraps" },
   };
 }
 

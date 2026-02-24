@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Custom Magnetic Signs — Order Online | La Lunar Printing",
     description: "Order custom magnetic signs for vehicles, removable and repositionable.",
     openGraph: { title: "Custom Magnetic Signs — Order Online", url: "/order/magnetic-signs" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/magnetic-signs" },
   };
 }
 

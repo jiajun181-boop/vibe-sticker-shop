@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom calendars. Choose type, size, paper stock, and quantity.",
       url: "/order/calendars",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/calendars" },
   };
 }
 

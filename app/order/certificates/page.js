@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom certificates. Choose type, paper, foil, and quantity.",
       url: "/order/certificates",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/certificates" },
   };
 }
 

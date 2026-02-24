@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 /* ------------------------------------------------------------------ */
 /*  Inline star SVG                                                    */
@@ -26,7 +27,7 @@ function Star({ size = 16, className = "" }) {
 function StarDisplay({ value = 0, size = 16 }) {
   const pct = (Math.min(Math.max(value, 0), 5) / 5) * 100;
   return (
-    <div className="relative inline-flex" role="img" aria-label={`${value.toFixed(1)} out of 5 stars`}>
+    <div className="relative inline-flex" role="img" aria-label={`${value.toFixed(1)} / 5`}>
       <div className="flex gap-0.5 text-[var(--color-gray-300)]">
         {Array.from({ length: 5 }, (_, i) => (
           <Star key={i} size={size} />
@@ -82,7 +83,7 @@ function StarSelector({ value, onChange }) {
 /* ------------------------------------------------------------------ */
 /*  Relative time helper                                               */
 /* ------------------------------------------------------------------ */
-function timeAgo(dateStr) {
+function timeAgo(dateStr, isZh = false) {
   const now = new Date();
   const date = new Date(dateStr);
   const diffMs = now - date;
@@ -92,6 +93,15 @@ function timeAgo(dateStr) {
   const days = Math.floor(hours / 24);
   const months = Math.floor(days / 30);
   const years = Math.floor(days / 365);
+
+  if (isZh) {
+    if (years > 0) return `${years}年前`;
+    if (months > 0) return `${months}月前`;
+    if (days > 0) return `${days}天前`;
+    if (hours > 0) return `${hours}小时前`;
+    if (minutes > 0) return `${minutes}分钟前`;
+    return "刚刚";
+  }
 
   if (years > 0) return `${years} year${years > 1 ? "s" : ""} ago`;
   if (months > 0) return `${months} month${months > 1 ? "s" : ""} ago`;
@@ -105,6 +115,8 @@ function timeAgo(dateStr) {
 /*  Main ReviewsSection component                                      */
 /* ------------------------------------------------------------------ */
 export default function ReviewsSection({ productId, productName }) {
+  const { t, locale } = useTranslation();
+  const isZh = locale === "zh";
   const [reviews, setReviews] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -166,11 +178,11 @@ export default function ReviewsSection({ productId, productName }) {
     setFormError(null);
 
     if (formRating === 0) {
-      setFormError("Please select a star rating.");
+      setFormError(t("reviews.errorSelectRating"));
       return;
     }
     if (formBody.trim().length < 10) {
-      setFormError("Review must be at least 10 characters.");
+      setFormError(t("reviews.errorMinChars"));
       return;
     }
 
@@ -196,7 +208,7 @@ export default function ReviewsSection({ productId, productName }) {
 
       if (!res.ok) {
         const data = await res.json();
-        setFormError(data.error || "Failed to submit review. Please try again.");
+        setFormError(data.error || t("reviews.errorSubmitFailed"));
       } else {
         setSubmitted(true);
         setFormRating(0);
@@ -206,7 +218,7 @@ export default function ReviewsSection({ productId, productName }) {
         setFormEmail("");
       }
     } catch {
-      setFormError("Network error. Please try again.");
+      setFormError(t("reviews.errorNetwork"));
     } finally {
       setSubmitting(false);
     }
@@ -227,7 +239,7 @@ export default function ReviewsSection({ productId, productName }) {
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-[var(--color-gray-900)]">
-            Customer Reviews
+            {t("reviews.customerReviews")}
           </h2>
           {totalCount > 0 && (
             <div className="mt-1.5 flex items-center gap-2">
@@ -236,13 +248,13 @@ export default function ReviewsSection({ productId, productName }) {
                 {Number(avgRating).toFixed(1)}
               </span>
               <span className="text-sm text-[var(--color-gray-500)]">
-                ({totalCount} review{totalCount !== 1 ? "s" : ""})
+                ({t("reviews.reviewCount", { count: totalCount })})
               </span>
             </div>
           )}
           {totalCount === 0 && !loading && (
             <p className="mt-1 text-sm text-[var(--color-gray-500)]">
-              No reviews yet. Be the first to review this product!
+              {t("reviews.noReviewsYet")}
             </p>
           )}
         </div>
@@ -252,7 +264,7 @@ export default function ReviewsSection({ productId, productName }) {
             onClick={() => setShowForm(true)}
             className="self-start rounded-xl border border-[var(--color-gray-900)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-gray-900)] transition-colors hover:bg-[var(--color-gray-900)] hover:text-[#fff]"
           >
-            Write a Review
+            {t("reviews.writeReview")}
           </button>
         )}
       </div>
@@ -261,14 +273,14 @@ export default function ReviewsSection({ productId, productName }) {
       {showForm && !submitted && (
         <div className="mb-6 rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-5">
           <h3 className="text-base font-semibold text-[var(--color-gray-900)]">
-            Review {productName || "this product"}
+            {t("reviews.reviewProduct", { product: productName || t("reviews.thisProduct") })}
           </h3>
 
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             {/* Star Rating */}
             <div>
               <label className="mb-1.5 block text-xs font-medium text-[var(--color-gray-600)]">
-                Your Rating *
+                {t("reviews.yourRating")} *
               </label>
               <StarSelector value={formRating} onChange={setFormRating} />
             </div>
@@ -280,14 +292,14 @@ export default function ReviewsSection({ productId, productName }) {
                   htmlFor="review-name"
                   className="mb-1.5 block text-xs font-medium text-[var(--color-gray-600)]"
                 >
-                  Name
+                  {t("reviews.name")}
                 </label>
                 <input
                   id="review-name"
                   type="text"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Your name"
+                  placeholder={t("reviews.yourName")}
                   className="w-full rounded-xl border border-[var(--color-gray-200)] bg-white px-3.5 py-2.5 text-sm text-[var(--color-gray-900)] outline-none transition-colors placeholder:text-[var(--color-gray-400)] focus:border-[var(--color-gray-900)]"
                 />
               </div>
@@ -296,7 +308,7 @@ export default function ReviewsSection({ productId, productName }) {
                   htmlFor="review-email"
                   className="mb-1.5 block text-xs font-medium text-[var(--color-gray-600)]"
                 >
-                  Email
+                  {t("reviews.email")}
                 </label>
                 <input
                   id="review-email"
@@ -315,14 +327,14 @@ export default function ReviewsSection({ productId, productName }) {
                 htmlFor="review-title"
                 className="mb-1.5 block text-xs font-medium text-[var(--color-gray-600)]"
               >
-                Title (optional)
+                {t("reviews.titleOptional")}
               </label>
               <input
                 id="review-title"
                 type="text"
                 value={formTitle}
                 onChange={(e) => setFormTitle(e.target.value)}
-                placeholder="Sum up your experience"
+                placeholder={t("reviews.titlePlaceholder")}
                 className="w-full rounded-xl border border-[var(--color-gray-200)] bg-white px-3.5 py-2.5 text-sm text-[var(--color-gray-900)] outline-none transition-colors placeholder:text-[var(--color-gray-400)] focus:border-[var(--color-gray-900)]"
               />
             </div>
@@ -333,20 +345,20 @@ export default function ReviewsSection({ productId, productName }) {
                 htmlFor="review-body"
                 className="mb-1.5 block text-xs font-medium text-[var(--color-gray-600)]"
               >
-                Your Review *
+                {t("reviews.yourReview")} *
               </label>
               <textarea
                 id="review-body"
                 rows={4}
                 value={formBody}
                 onChange={(e) => setFormBody(e.target.value)}
-                placeholder="Tell others about your experience (min 10 characters)"
+                placeholder={t("reviews.reviewPlaceholder")}
                 required
                 minLength={10}
                 className="w-full rounded-xl border border-[var(--color-gray-200)] bg-white px-3.5 py-2.5 text-sm leading-relaxed text-[var(--color-gray-900)] outline-none transition-colors placeholder:text-[var(--color-gray-400)] focus:border-[var(--color-gray-900)]"
               />
               <p className="mt-1 text-xs text-[var(--color-gray-400)]">
-                {formBody.length}/10 characters minimum
+                {t("reviews.charsMinimum", { count: formBody.length })}
               </p>
             </div>
 
@@ -364,7 +376,7 @@ export default function ReviewsSection({ productId, productName }) {
                 disabled={submitting}
                 className="rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[#fff] transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                {submitting ? "Submitting..." : "Submit Review"}
+                {submitting ? t("reviews.submitting") : t("reviews.submitReview")}
               </button>
               <button
                 type="button"
@@ -374,7 +386,7 @@ export default function ReviewsSection({ productId, productName }) {
                 }}
                 className="rounded-xl border border-[var(--color-gray-300)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-gray-700)] transition-colors hover:bg-[var(--color-gray-50)]"
               >
-                Cancel
+                {t("reviews.cancel")}
               </button>
             </div>
           </form>
@@ -398,7 +410,7 @@ export default function ReviewsSection({ productId, productName }) {
             />
           </svg>
           <p className="mt-2 text-sm font-semibold text-green-800">
-            Thank you! Your review will appear after moderation.
+            {t("reviews.thankYou")}
           </p>
           <button
             type="button"
@@ -408,7 +420,7 @@ export default function ReviewsSection({ productId, productName }) {
             }}
             className="mt-3 text-xs font-medium text-green-700 underline hover:no-underline"
           >
-            Dismiss
+            {t("reviews.dismiss")}
           </button>
         </div>
       )}
@@ -416,7 +428,7 @@ export default function ReviewsSection({ productId, productName }) {
       {/* Reviews List */}
       {loading ? (
         <div className="flex h-32 items-center justify-center text-sm text-[var(--color-gray-400)]">
-          Loading reviews...
+          {t("reviews.loading")}
         </div>
       ) : (
         <div className="space-y-4">
@@ -430,7 +442,7 @@ export default function ReviewsSection({ productId, productName }) {
                 <div className="flex items-center gap-2">
                   <StarDisplay value={review.rating} size={14} />
                   <span className="text-xs text-[var(--color-gray-400)]">
-                    {timeAgo(review.createdAt)}
+                    {timeAgo(review.createdAt, isZh)}
                   </span>
                 </div>
               </div>
@@ -438,7 +450,7 @@ export default function ReviewsSection({ productId, productName }) {
               {/* Author */}
               <div className="mt-2 flex items-center gap-1.5">
                 <span className="text-sm font-semibold text-[var(--color-gray-900)]">
-                  {review.customerName || "Anonymous"}
+                  {review.customerName || t("reviews.anonymous")}
                 </span>
                 {review.isVerified && (
                   <span className="inline-flex items-center gap-0.5 rounded-xl bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
@@ -453,7 +465,7 @@ export default function ReviewsSection({ productId, productName }) {
                         clipRule="evenodd"
                       />
                     </svg>
-                    Verified Purchase
+                    {t("reviews.verifiedPurchase")}
                   </span>
                 )}
               </div>
@@ -484,7 +496,7 @@ export default function ReviewsSection({ productId, productName }) {
           disabled={loadingMore}
           className="mt-4 w-full rounded-xl border border-[var(--color-gray-300)] px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)] transition-colors hover:bg-[var(--color-gray-50)] disabled:opacity-50"
         >
-          {loadingMore ? "Loading..." : "Load More Reviews"}
+          {loadingMore ? t("reviews.loadingMore") : t("reviews.loadMore")}
         </button>
       )}
     </section>

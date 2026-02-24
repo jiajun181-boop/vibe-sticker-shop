@@ -1,7 +1,14 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 
-export default function HreflangTags({ path = "" }) {
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+export default function HreflangTags() {
+  const pathname = usePathname();
+  // Strip /zh prefix if present to get the canonical path
+  const cleanPath = pathname.replace(/^\/zh/, "") || "/";
+
   return (
     <>
       <link rel="alternate" hrefLang="en" href={`${SITE_URL}${cleanPath}`} />

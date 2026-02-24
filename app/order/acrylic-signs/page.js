@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Custom Acrylic Signs — Order Online | La Lunar Printing",
     description: "Order custom acrylic signs for professional business, office, and retail displays.",
     openGraph: { title: "Custom Acrylic Signs — Order Online", description: "Configure and order custom acrylic signs. Choose thickness, size, mounting, and print options.", url: "/order/acrylic-signs" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/acrylic-signs" },
   };
 }
 

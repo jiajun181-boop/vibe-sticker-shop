@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom coupons. Choose size, perforation, numbering, and quantity.",
       url: "/order/coupons",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/coupons" },
   };
 }
 

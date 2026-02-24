@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom business cards. 3.5×2 inch, multiple finishes, single or double sided.",
       url: "/order/business-cards",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/business-cards" },
   };
 }
 

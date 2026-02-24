@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Custom Backdrops & Pop-Ups — Order Online | La Lunar Printing",
     description: "Order custom backdrops and pop-up displays for events, photos, and trade shows.",
     openGraph: { title: "Custom Backdrops — Order Online", url: "/order/backdrops" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/backdrops" },
   };
 }
 

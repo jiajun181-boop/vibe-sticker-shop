@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom tags and labels. Choose type, shape, material, size, and quantity.",
       url: "/order/tags",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/tags" },
   };
 }
 

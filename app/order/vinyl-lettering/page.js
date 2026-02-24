@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Vinyl Lettering — Order Online | La Lunar Printing",
     description: "Order custom vinyl lettering for storefronts, vehicles, and walls.",
     openGraph: { title: "Vinyl Lettering — Order Online", description: "Configure and order custom vinyl lettering. Choose font style, size, color, and quantity.", url: "/order/vinyl-lettering" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/vinyl-lettering" },
   };
 }
 

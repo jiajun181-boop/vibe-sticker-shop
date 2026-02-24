@@ -27,24 +27,24 @@ const CATEGORY_GRADIENTS = {
 
 const CATEGORY_USE_CASES = {
   "marketing-business-print": [
-    { key: "grand-opening", label: "Grand Opening", hint: "flyers postcards door hanger", cta: "引流促销" },
-    { key: "daily-ops", label: "Daily Operations", hint: "ncr forms notepads stamps", cta: "日常办公" },
-    { key: "events", label: "Events & Booth", hint: "brochures rack cards table tents", cta: "活动展会" },
+    { key: "grand-opening", i18nLabel: "useCase.grandOpening", label: "Grand Opening", hint: "flyers postcards door hanger", i18nCta: "useCase.cta.grandOpening", cta: "引流促销" },
+    { key: "daily-ops", i18nLabel: "useCase.dailyOps", label: "Daily Operations", hint: "ncr forms notepads stamps", i18nCta: "useCase.cta.dailyOps", cta: "日常办公" },
+    { key: "events", i18nLabel: "useCase.eventsBooth", label: "Events & Booth", hint: "brochures rack cards table tents", i18nCta: "useCase.cta.eventsBooth", cta: "活动展会" },
   ],
   "windows-walls-floors": [
-    { key: "storefront", label: "Storefront Branding", hint: "window graphics frosted window", cta: "门店形象" },
-    { key: "privacy", label: "Office Privacy", hint: "frosted privacy one-way vision", cta: "隐私隔断" },
-    { key: "wayfinding", label: "Wayfinding", hint: "floor graphics wall graphics", cta: "导视动线" },
+    { key: "storefront", i18nLabel: "useCase.storefrontBranding", label: "Storefront Branding", hint: "window graphics frosted window", i18nCta: "useCase.cta.storefrontBranding", cta: "门店形象" },
+    { key: "privacy", i18nLabel: "useCase.officePrivacy", label: "Office Privacy", hint: "frosted privacy one-way vision", i18nCta: "useCase.cta.officePrivacy", cta: "隐私隔断" },
+    { key: "wayfinding", i18nLabel: "useCase.wayfinding", label: "Wayfinding", hint: "floor graphics wall graphics", i18nCta: "useCase.cta.wayfinding", cta: "导视动线" },
   ],
   "vehicle-graphics-fleet": [
-    { key: "fleet-branding", label: "Fleet Branding", hint: "vehicle wraps decals", cta: "车队广告" },
-    { key: "compliance", label: "Compliance", hint: "dot mc unit ids", cta: "合规标识" },
-    { key: "partial", label: "Budget Partial Wrap", hint: "door panel graphics magnets", cta: "预算友好" },
+    { key: "fleet-branding", i18nLabel: "useCase.fleetBranding", label: "Fleet Branding", hint: "vehicle wraps decals", i18nCta: "useCase.cta.fleetBranding", cta: "车队广告" },
+    { key: "compliance", i18nLabel: "useCase.compliance", label: "Compliance", hint: "dot mc unit ids", i18nCta: "useCase.cta.compliance", cta: "合规标识" },
+    { key: "partial", i18nLabel: "useCase.budgetPartialWrap", label: "Budget Partial Wrap", hint: "door panel graphics magnets", i18nCta: "useCase.cta.budgetPartialWrap", cta: "预算友好" },
   ],
   "stickers-labels-decals": [
-    { key: "brand-logo", label: "Brand & Logo", hint: "die-cut stickers packaging labels", cta: "Brand" },
-    { key: "events-giveaways", label: "Events & Giveaways", hint: "sticker sheets handouts", cta: "Events" },
-    { key: "outdoor-vehicle", label: "Outdoor & Vehicle", hint: "bumper stickers decals vinyl", cta: "Outdoor" },
+    { key: "brand-logo", i18nLabel: "useCase.brandLogo", label: "Brand & Logo", hint: "die-cut stickers packaging labels", i18nCta: "useCase.cta.brandLogo", cta: "Brand" },
+    { key: "events-giveaways", i18nLabel: "useCase.eventsGiveaways", label: "Events & Giveaways", hint: "sticker sheets handouts", i18nCta: "useCase.cta.eventsGiveaways", cta: "Events" },
+    { key: "outdoor-vehicle", i18nLabel: "useCase.outdoorVehicle", label: "Outdoor & Vehicle", hint: "bumper stickers decals vinyl", i18nCta: "useCase.cta.outdoorVehicle", cta: "Outdoor" },
   ],
 };
 
@@ -234,7 +234,7 @@ export default function CategoryLandingClient({
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("shop.searchCategory") || "Search products..."}
+              placeholder={safeText(t("shop.searchCategory"), "Search products...")}
               className="w-full rounded-sm border border-[var(--color-gray-200)] bg-white pl-9 pr-4 py-2 text-sm focus:border-[var(--color-gray-400)] focus:outline-none"
             />
           </div>
@@ -251,8 +251,8 @@ export default function CategoryLandingClient({
                   onClick={() => setSearchQuery(card.hint)}
                   className="rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3 text-left transition-colors hover:border-[var(--color-brand)] hover:bg-white"
                 >
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-500)]">{card.cta}</p>
-                  <p className="mt-1 text-sm font-semibold text-[var(--color-gray-900)]">{card.label}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-500)]">{safeText(t(card.i18nCta), card.cta)}</p>
+                  <p className="mt-1 text-sm font-semibold text-[var(--color-gray-900)]">{safeText(t(card.i18nLabel), card.label)}</p>
                 </button>
               ))}
             </div>

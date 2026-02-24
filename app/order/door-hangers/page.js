@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom door hangers. Choose size, paper, coating, and perforation options.",
       url: "/order/door-hangers",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/door-hangers" },
   };
 }
 

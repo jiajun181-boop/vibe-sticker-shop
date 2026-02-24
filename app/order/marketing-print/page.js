@@ -12,6 +12,7 @@ export function generateMetadata() {
         "Configure and order custom marketing prints. Business cards, flyers, postcards, brochures, menus, and more.",
       url: "/order/marketing-print",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/marketing-print" },
   };
 }
 

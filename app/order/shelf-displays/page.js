@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom shelf displays. Choose style, size, coating, and quantity.",
       url: "/order/shelf-displays",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/shelf-displays" },
   };
 }
 

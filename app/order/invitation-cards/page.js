@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom invitations. Choose size, paper, foil, and envelope options.",
       url: "/order/invitation-cards",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/invitation-cards" },
   };
 }
 

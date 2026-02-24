@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom flyers. Choose size, paper stock, sides, coating, and quantity.",
       url: "/order/flyers",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/flyers" },
   };
 }
 

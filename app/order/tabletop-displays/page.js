@@ -11,6 +11,7 @@ export function generateMetadata() {
       title: "Tabletop Displays — Order Online",
       url: "/order/tabletop-displays",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/tabletop-displays" },
   };
 }
 

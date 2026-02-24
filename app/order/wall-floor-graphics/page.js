@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Custom Wall & Floor Graphics — Order Online | La Lunar Printing",
     description: "Order custom wall graphics, wall murals, and floor graphics for branding and wayfinding.",
     openGraph: { title: "Custom Wall & Floor Graphics — Order Online", url: "/order/wall-floor-graphics" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/wall-floor-graphics" },
   };
 }
 

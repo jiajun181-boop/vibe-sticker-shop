@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom NCR carbonless forms. Duplicate & triplicate with sequential numbering.",
       url: "/order/ncr",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/ncr" },
   };
 }
 

@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Safety & Compliance Labels — Order Online | La Lunar Printing",
     description: "Order custom safety labels — fire, hazard, PPE, electrical, and chemical warning labels.",
     openGraph: { title: "Safety & Compliance Labels — Order Online", description: "Configure and order custom safety labels. Choose category, material, size, and quantity.", url: "/order/safety-labels" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/safety-labels" },
   };
 }
 

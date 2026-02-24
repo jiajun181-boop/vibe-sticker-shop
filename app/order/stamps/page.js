@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom stamps. Choose model, ink color, and upload your design.",
       url: "/order/stamps",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/stamps" },
   };
 }
 

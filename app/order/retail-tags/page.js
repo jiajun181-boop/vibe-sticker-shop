@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom retail tags. Choose size, paper, hole, and quantity.",
       url: "/order/retail-tags",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/retail-tags" },
   };
 }
 

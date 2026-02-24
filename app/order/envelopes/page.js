@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom envelopes. Choose size, paper, window style, printing, and quantity.",
       url: "/order/envelopes",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/envelopes" },
   };
 }
 

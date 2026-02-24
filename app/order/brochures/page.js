@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom brochures. Choose fold type, size, paper stock, coating, and quantity.",
       url: "/order/brochures",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/brochures" },
   };
 }
 

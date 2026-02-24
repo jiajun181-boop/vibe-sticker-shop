@@ -11,12 +11,12 @@ import { USE_CASES } from "@/lib/useCases";
 
 export default function Navbar({ catalogConfig }) {
   const { departments, departmentMeta, categoryMeta } = catalogConfig || {};
-  const isZh = locale === "zh";
-  const getTitle = (obj) => isZh ? (obj?.titleZh || obj?.title) : obj?.title;
-  const getSgTitle = (sg) => isZh ? (sg.titleZh || sg.title) : sg.title;
   const storeCount = useCartStore((state) => state.getCartCount());
   const openCart = useCartStore((state) => state.openCart);
   const { t, locale, setLocale, hydrated } = useTranslation();
+  const isZh = locale === "zh";
+  const getTitle = (obj) => isZh ? (obj?.titleZh || obj?.title) : obj?.title;
+  const getSgTitle = (sg) => isZh ? (sg.titleZh || sg.title) : sg.title;
   const authUser = useAuthStore((s) => s.user);
   const authLoading = useAuthStore((s) => s.loading);
 

@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom decals. Choose application, vinyl type, size, and quantity.",
       url: "/order/decals",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/decals" },
   };
 }
 

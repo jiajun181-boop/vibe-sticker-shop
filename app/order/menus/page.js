@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom menus. Choose style, size, paper stock, lamination, and quantity.",
       url: "/order/menus",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/menus" },
   };
 }
 

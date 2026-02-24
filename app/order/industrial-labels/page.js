@@ -7,6 +7,7 @@ export function generateMetadata() {
     title: "Industrial & Asset Labels — Order Online | La Lunar Printing",
     description: "Order custom industrial labels — asset tags, pipe markers, warehouse labels, and cable labels.",
     openGraph: { title: "Industrial & Asset Labels — Order Online", description: "Configure and order custom industrial labels. Choose type, material, size, and quantity.", url: "/order/industrial-labels" },
+    alternates: { canonical: "https://www.lunarprint.ca/order/industrial-labels" },
   };
 }
 

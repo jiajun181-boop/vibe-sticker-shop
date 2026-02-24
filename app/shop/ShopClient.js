@@ -26,11 +26,11 @@ const HOT_PICK_SLUGS = [
 ];
 
 const MATERIAL_OPTIONS = [
-  { key: "paper", label: "Paper" },
-  { key: "adhesive", label: "Adhesive" },
-  { key: "non-adhesive", label: "Non-Adhesive" },
-  { key: "rigid", label: "Rigid" },
-  { key: "hardware", label: "Hardware" },
+  { key: "paper", i18nKey: "shop.material.paper", label: "Paper" },
+  { key: "adhesive", i18nKey: "shop.material.adhesive", label: "Adhesive" },
+  { key: "non-adhesive", i18nKey: "shop.material.nonAdhesive", label: "Non-Adhesive" },
+  { key: "rigid", i18nKey: "shop.material.rigid", label: "Rigid" },
+  { key: "hardware", i18nKey: "shop.material.hardware", label: "Hardware" },
 ];
 const safeText = (value, fallback) =>
   typeof value === "string" && value.trim() ? value : fallback;
@@ -627,14 +627,14 @@ export default function ShopClient({
         <section className="mb-5 rounded-2xl border border-[var(--color-gray-200)] bg-white p-3 sm:mb-6 sm:p-4">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-gray-500)]">
-              Hot Picks
+              {safeText(t("shop.hotPicks"), "Hot Picks")}
             </p>
             <button
               type="button"
               onClick={switchToAllProducts}
               className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]"
             >
-              Browse All
+              {safeText(t("shop.browseAllBtn"), "Browse All")}
             </button>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -660,7 +660,7 @@ export default function ShopClient({
               }}
               className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "products" ? "bg-[var(--color-ink-black)] text-[#fff]" : "text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)]"}`}
             >
-              Products ({products.length})
+              {safeText(t("shop.tabProducts"), "Products")} ({products.length})
             </button>
             <button
               onClick={() => {
@@ -670,7 +670,7 @@ export default function ShopClient({
               }}
               className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "category" ? "bg-[var(--color-ink-black)] text-[#fff]" : "text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)]"}`}
             >
-              Catalog
+              {safeText(t("shop.tabCatalog"), "Catalog")}
             </button>
             <button
               onClick={() => {
@@ -699,7 +699,7 @@ export default function ShopClient({
                 !material ? "bg-[var(--color-ink-black)] text-[#fff]" : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
               }`}
             >
-              All
+              {safeText(t("shop.materialAll"), "All")}
             </button>
             {MATERIAL_OPTIONS.map((m) => (
               <button
@@ -716,7 +716,7 @@ export default function ShopClient({
                     : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                 }`}
               >
-                {m.label}
+                {safeText(t(m.i18nKey), m.label)}
               </button>
             ))}
           </div>
@@ -763,7 +763,7 @@ export default function ShopClient({
               </>
             ) : (
               <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-10 text-center text-sm text-[var(--color-gray-500)]">
-                No categories found for this material. Try another material filter.
+                {safeText(t("shop.noCategoriesForMaterial"), "No categories found for this material. Try another material filter.")}
               </div>
             )}
           </>

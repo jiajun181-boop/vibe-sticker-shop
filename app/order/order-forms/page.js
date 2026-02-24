@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom order forms. Choose size, paper, numbering, and quantity.",
       url: "/order/order-forms",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/order-forms" },
   };
 }
 

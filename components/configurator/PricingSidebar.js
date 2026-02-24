@@ -138,7 +138,7 @@ export default function PricingSidebar({
           <div className="space-y-2.5">
             <div className="flex items-baseline justify-between">
               <span className="text-xs text-gray-500">{t?.("configurator.unitPrice") || "Unit price"}</span>
-              <span className="text-sm font-bold text-gray-800">{formatCad(displayUnit)} / ea</span>
+              <span className="text-sm font-bold text-gray-800">{formatCad(displayUnit)} {t?.("configurator.perEa") || "/ ea"}</span>
             </div>
             {extraRows.map((r) => (
               <div key={r.label} className="flex items-baseline justify-between">
@@ -152,25 +152,25 @@ export default function PricingSidebar({
             </div>
             {rushProduction && (
               <div className="flex items-baseline justify-between">
-                <span className="text-xs text-amber-600">Rush surcharge</span>
+                <span className="text-xs text-amber-600">{t?.("configurator.rushSurcharge") || "Rush surcharge"}</span>
                 <span className="text-sm font-medium text-amber-600">
                   + {formatCad(Math.round(subtotalCents * 0.3))}
                 </span>
               </div>
             )}
             <div className="flex items-baseline justify-between">
-              <span className="text-xs text-gray-500">HST (13%)</span>
+              <span className="text-xs text-gray-500">{t?.("configurator.hst") || "HST (13%)"}</span>
               <span className="text-sm text-gray-500">{formatCad(displayTax)}</span>
             </div>
             <hr className="border-gray-100" />
             <div className="flex items-baseline justify-between">
-              <span className="text-base font-black text-gray-900">Total</span>
+              <span className="text-base font-black text-gray-900">{t?.("configurator.total") || "Total"}</span>
               <span className="text-2xl font-black text-gray-900">{formatCad(displayTotal)}</span>
             </div>
             {/* Dual pricing: unit price below total */}
             {quantity > 1 && (
               <p className="text-right text-xs text-gray-400">
-                ({formatCad(Math.round(displayTotal / quantity))}/each)
+                {formatCad(Math.round(displayTotal / quantity))}/{t?.("configurator.each") || "each"}
               </p>
             )}
           </div>
@@ -217,7 +217,7 @@ export default function PricingSidebar({
               className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
             />
             <div className="flex-1">
-              <span className="text-sm font-semibold text-gray-800">24-Hour Rush Production</span>
+              <span className="text-sm font-semibold text-gray-800">{t?.("configurator.rushProduction") || "24-Hour Rush Production"}</span>
             </div>
           </label>
         )}
@@ -250,7 +250,7 @@ export default function PricingSidebar({
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>
-                    Added!
+                    {t?.("configurator.added") || "Added!"}
                   </span>
                 ) : (
                   atcLabel
@@ -276,17 +276,17 @@ export default function PricingSidebar({
         <div className="flex items-center justify-center gap-4 text-[11px] text-gray-400">
           <span className="inline-flex items-center gap-1">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
-            Secure Checkout
+            {t?.("configurator.secureCheckout") || "Secure Checkout"}
           </span>
           <span className="text-gray-300">|</span>
           <span className="inline-flex items-center gap-1">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
-            Made in Toronto
+            {t?.("configurator.madeInToronto") || "Made in Toronto"}
           </span>
           <span className="text-gray-300">|</span>
           <span className="inline-flex items-center gap-1">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            Free Proof
+            {t?.("configurator.freeProof") || "Free Proof"}
           </span>
         </div>
       </div>

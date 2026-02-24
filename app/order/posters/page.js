@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom posters. Choose paper finish, size, lamination, and quantity.",
       url: "/order/posters",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/posters" },
   };
 }
 

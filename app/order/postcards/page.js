@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom postcards. Choose size, paper, coating, corners, and quantity.",
       url: "/order/postcards",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/postcards" },
   };
 }
 

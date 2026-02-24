@@ -28,14 +28,20 @@ export default async function sitemap() {
     { url: `${SITE_URL}/partner`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
   ];
 
-  // Configurator order pages
+  // Configurator order pages — only include routes that actually exist in app/order/*/page.js
   const orderPages = [
-    "stickers", "booklets", "ncr", "vinyl-banners", "mesh-banners", "yard-signs",
-    "foam-board-signs", "acrylic-signs", "canvas-prints", "vehicle-wraps", "vehicle-decals",
-    "magnetic-signs", "window-films", "wall-floor-graphics", "retractable-stands",
-    "x-banner-stands", "business-cards", "flyers", "postcards", "posters", "brochures",
+    "booklets", "ncr", "vinyl-banners", "mesh-banners", "fabric-banners",
+    "yard-signs", "foam-board-signs", "acrylic-signs", "aluminum-signs", "pvc-signs", "a-frame-signs",
+    "canvas-prints", "vehicle-wraps", "vehicle-decals", "magnetic-signs",
+    "window-films", "wall-floor-graphics",
+    "retractable-stands", "x-banner-stands", "backdrops", "flags", "tabletop-displays",
+    "business-cards", "flyers", "postcards", "posters", "brochures",
     "bookmarks", "door-hangers", "menus", "rack-cards", "letterhead", "envelopes",
-    "stamps", "tags", "calendars", "marketing-print",
+    "stamps", "tags", "calendars", "marketing-print", "notepads",
+    "greeting-cards", "invitation-cards", "certificates", "tickets", "coupons",
+    "loyalty-cards", "shelf-displays", "table-tents",
+    "vinyl-lettering", "decals", "safety-labels", "industrial-labels",
+    "presentation-folders", "retail-tags",
   ].map((slug) => ({
     url: `${SITE_URL}/order/${slug}`,
     lastModified: now,
@@ -102,12 +108,7 @@ export default async function sitemap() {
     ...productPages,
   ];
 
-  // Add /zh/ variants for all pages
-  const zhPages = allPages.map((page) => ({
-    ...page,
-    url: page.url.replace(SITE_URL, `${SITE_URL}/zh`),
-    priority: Math.max(0.1, (page.priority || 0.5) - 0.1),
-  }));
-
-  return [...allPages, ...zhPages];
+  // zh variants temporarily excluded — Chinese content is still being built out.
+  // Re-enable once all pages are fully translated.
+  return allPages;
 }

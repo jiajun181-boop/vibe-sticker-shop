@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom loyalty cards. Choose paper, coating, punch style, and quantity.",
       url: "/order/loyalty-cards",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/loyalty-cards" },
   };
 }
 

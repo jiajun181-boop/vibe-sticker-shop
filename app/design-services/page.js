@@ -1,42 +1,58 @@
 import Link from "next/link";
-import { getServerT } from "@/lib/i18n/server";
+import { getServerT, getServerLocale } from "@/lib/i18n/server";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 
 export async function generateMetadata() {
+  const locale = await getServerLocale();
+  const isZh = locale === "zh";
+  const title = isZh
+    ? "设计服务 | La Lunar Printing Inc."
+    : "Design Services | La Lunar Printing Inc.";
+  const description = isZh
+    ? "专业平面设计服务。名片设计低至$75，传单、折页、标签等。提供标准和高级设计套餐。"
+    : "Professional graphic design services for print. Business cards from $75, flyers, brochures, labels, and more. Standard and premium design packages available.";
+
   return {
-    title: "Design Services | La Lunar Printing Inc.",
-    description: "Professional graphic design services for print. Business cards from $75, flyers, brochures, labels, and more. Standard and premium design packages available.",
+    title,
+    description,
     alternates: { canonical: `${SITE_URL}/design-services` },
   };
 }
 
 const PRICING = [
-  { item: "Business Cards", single: "$75+", double: "$85+" },
-  { item: "Flyers", single: "$75+", double: "$100+" },
-  { item: "Folded Brochures", single: "$75+", double: "$150+" },
-  { item: "Posters", single: "$75+", double: "$150+" },
-  { item: "Envelopes", single: "$75+", double: "\u2014" },
-  { item: "Postcards", single: "$75+", double: "$150+" },
-  { item: "Menus", single: "$75\u2013$150+", double: "$150+" },
-  { item: "Labels / Stickers", single: "$50+", double: "\u2014" },
-  { item: "File Edits / Text Changes", single: "$20\u2013$25+", double: "\u2014" },
-  { item: "Hourly Design", single: "$75/hr", double: "$75/hr" },
-  { item: "Website Design", single: "$800+", double: "$800+" },
+  { en: "Business Cards", zh: "名片", single: "$75+", double: "$85+" },
+  { en: "Flyers", zh: "传单", single: "$75+", double: "$100+" },
+  { en: "Folded Brochures", zh: "折页", single: "$75+", double: "$150+" },
+  { en: "Posters", zh: "海报", single: "$75+", double: "$150+" },
+  { en: "Envelopes", zh: "信封", single: "$75+", double: "\u2014" },
+  { en: "Postcards", zh: "明信片", single: "$75+", double: "$150+" },
+  { en: "Menus", zh: "菜单", single: "$75\u2013$150+", double: "$150+" },
+  { en: "Labels / Stickers", zh: "标签 / 贴纸", single: "$50+", double: "\u2014" },
+  { en: "File Edits / Text Changes", zh: "文件修改 / 文字更改", single: "$20\u2013$25+", double: "\u2014" },
+  { en: "Hourly Design", zh: "按小时设计", single: "$75/hr", double: "$75/hr" },
+  { en: "Website Design", zh: "网站设计", single: "$800+", double: "$800+" },
 ];
 
 export default async function DesignServicesPage() {
-  const t = await getServerT();
+  const locale = await getServerLocale();
+  const isZh = locale === "zh";
+
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)] px-6 py-14 text-[var(--color-gray-900)]">
       <div className="mx-auto max-w-4xl space-y-10">
         {/* Header */}
         <header className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
-          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gray-500)]">Services</p>
-          <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight">Design Services</h1>
+          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gray-500)]">
+            {isZh ? "服务" : "Services"}
+          </p>
+          <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight">
+            {isZh ? "设计服务" : "Design Services"}
+          </h1>
           <p className="mt-4 text-sm text-[var(--color-gray-600)] leading-relaxed max-w-2xl">
-            Need help with your design? Our professional graphic designers can create print-ready artwork
-            for any product. From simple text edits to full custom designs, we&apos;ve got you covered.
+            {isZh
+              ? "需要设计帮助？我们的专业平面设计师可以为任何产品创建印刷就绪的设计稿。从简单的文字修改到完整的定制设计，我们都能为您搞定。"
+              : "Need help with your design? Our professional graphic designers can create print-ready artwork for any product. From simple text edits to full custom designs, we\u2019ve got you covered."}
           </p>
         </header>
 
@@ -45,29 +61,36 @@ export default async function DesignServicesPage() {
           {/* Standard */}
           <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8">
             <div className="inline-block rounded-xl bg-[var(--color-gray-100)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--color-gray-500)] mb-4">
-              Standard
+              {isZh ? "标准" : "Standard"}
             </div>
-            <h2 className="text-xl font-semibold">Standard Design</h2>
+            <h2 className="text-xl font-semibold">
+              {isZh ? "标准设计" : "Standard Design"}
+            </h2>
             <p className="mt-3 text-sm text-[var(--color-gray-600)] leading-relaxed">
-              Budget-friendly option for basic layout adjustments. Select &quot;Design Service&quot; at checkout
-              and provide notes on your preferred colours, text, and content.
+              {isZh
+                ? "经济实惠的基础版面调整方案。结账时选择「设计服务」，并提供您偏好的颜色、文字和内容说明。"
+                : "Budget-friendly option for basic layout adjustments. Select \"Design Service\" at checkout and provide notes on your preferred colours, text, and content."}
             </p>
             <ul className="mt-5 space-y-2 text-sm text-[var(--color-gray-700)]">
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-emerald-500">&#10003;</span>
-                Up to 3 revisions
+                {isZh ? "最多 3 次修改" : "Up to 3 revisions"}
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-emerald-500">&#10003;</span>
-                Print-ready file delivery
+                {isZh ? "交付印刷就绪文件" : "Print-ready file delivery"}
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-[var(--color-gray-300)]">&#10005;</span>
-                <span className="text-[var(--color-gray-400)]">Original source files not included</span>
+                <span className="text-[var(--color-gray-400)]">
+                  {isZh ? "不包含原始源文件" : "Original source files not included"}
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-[var(--color-gray-300)]">&#10005;</span>
-                <span className="text-[var(--color-gray-400)]">Print usage only (no reuse rights)</span>
+                <span className="text-[var(--color-gray-400)]">
+                  {isZh ? "仅限印刷使用（无二次使用权）" : "Print usage only (no reuse rights)"}
+                </span>
               </li>
             </ul>
           </section>
@@ -75,29 +98,32 @@ export default async function DesignServicesPage() {
           {/* Premium */}
           <section className="rounded-3xl border-2 border-[var(--color-gray-900)] bg-white p-8 relative">
             <div className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#fff] mb-4">
-              Premium
+              {isZh ? "高级" : "Premium"}
             </div>
-            <h2 className="text-xl font-semibold">Premium Custom Design</h2>
+            <h2 className="text-xl font-semibold">
+              {isZh ? "高级定制设计" : "Premium Custom Design"}
+            </h2>
             <p className="mt-3 text-sm text-[var(--color-gray-600)] leading-relaxed">
-              Full custom design service. Contact us directly with your brand requirements including
-              vision, style preferences, and target audience.
+              {isZh
+                ? "全方位定制设计服务。直接联系我们，告诉我们您的品牌需求，包括设计愿景、风格偏好和目标受众。"
+                : "Full custom design service. Contact us directly with your brand requirements including vision, style preferences, and target audience."}
             </p>
             <ul className="mt-5 space-y-2 text-sm text-[var(--color-gray-700)]">
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-emerald-500">&#10003;</span>
-                Extended revisions
+                {isZh ? "更多修改次数" : "Extended revisions"}
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-emerald-500">&#10003;</span>
-                Print-ready file delivery
+                {isZh ? "交付印刷就绪文件" : "Print-ready file delivery"}
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-emerald-500">&#10003;</span>
-                Original source files (AI/PSD/InDesign)
+                {isZh ? "原始源文件（AI/PSD/InDesign）" : "Original source files (AI/PSD/InDesign)"}
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 text-emerald-500">&#10003;</span>
-                Full reusable ownership
+                {isZh ? "完整的可复用所有权" : "Full reusable ownership"}
               </li>
             </ul>
           </section>
@@ -105,20 +131,24 @@ export default async function DesignServicesPage() {
 
         {/* Pricing table */}
         <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
-          <h2 className="text-2xl font-semibold tracking-tight mb-6">Premium Design Pricing</h2>
+          <h2 className="text-2xl font-semibold tracking-tight mb-6">
+            {isZh ? "高级设计定价" : "Premium Design Pricing"}
+          </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-gray-200)] text-left text-xs font-bold uppercase tracking-wider text-[var(--color-gray-400)]">
-                  <th className="pb-3 pr-4">Item</th>
-                  <th className="pb-3 pr-4">Single Side</th>
-                  <th className="pb-3">Double Side</th>
+                  <th className="pb-3 pr-4">{isZh ? "项目" : "Item"}</th>
+                  <th className="pb-3 pr-4">{isZh ? "单面" : "Single Side"}</th>
+                  <th className="pb-3">{isZh ? "双面" : "Double Side"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-gray-100)]">
                 {PRICING.map((row) => (
-                  <tr key={row.item}>
-                    <td className="py-3 pr-4 font-medium text-[var(--color-gray-900)]">{row.item}</td>
+                  <tr key={row.en}>
+                    <td className="py-3 pr-4 font-medium text-[var(--color-gray-900)]">
+                      {isZh ? row.zh : row.en}
+                    </td>
                     <td className="py-3 pr-4 text-[var(--color-gray-600)]">{row.single}</td>
                     <td className="py-3 text-[var(--color-gray-600)]">{row.double}</td>
                   </tr>
@@ -127,22 +157,28 @@ export default async function DesignServicesPage() {
             </table>
           </div>
           <p className="mt-6 text-xs text-[var(--color-gray-400)]">
-            Prices are starting rates and may vary based on complexity. Contact us for a detailed quote.
+            {isZh
+              ? "以上为起步价，实际价格可能因设计复杂度而异。请联系我们获取详细报价。"
+              : "Prices are starting rates and may vary based on complexity. Contact us for a detailed quote."}
           </p>
         </section>
 
         {/* CTA */}
         <section className="rounded-3xl border border-[var(--color-gray-200)] bg-[var(--color-gray-900)] p-8 text-[#fff]">
-          <h2 className="text-2xl font-semibold">Ready to get started?</h2>
+          <h2 className="text-2xl font-semibold">
+            {isZh ? "准备好开始了吗？" : "Ready to get started?"}
+          </h2>
           <p className="mt-3 text-sm text-[var(--color-gray-300)]">
-            Email us your design brief or call to discuss your project. We typically respond within 24 hours.
+            {isZh
+              ? "发送您的设计需求邮件或致电讨论您的项目。我们通常在 24 小时内回复。"
+              : "Email us your design brief or call to discuss your project. We typically respond within 24 hours."}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href="/contact"
               className="inline-block rounded-xl bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
             >
-              Contact Us
+              {isZh ? "联系我们" : "Contact Us"}
             </Link>
             <a
               href="mailto:info@lunarprint.ca"

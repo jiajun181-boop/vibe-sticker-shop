@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom bookmarks. Choose size, paper, coating, and finishing options.",
       url: "/order/bookmarks",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/bookmarks" },
   };
 }
 

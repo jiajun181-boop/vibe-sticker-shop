@@ -13,6 +13,7 @@ export function generateMetadata() {
         "Configure and order custom booklets. Choose binding, page count, paper stock, and cover finish.",
       url: "/order/booklets",
     },
+    alternates: { canonical: "https://www.lunarprint.ca/order/booklets" },
   };
 }
 
