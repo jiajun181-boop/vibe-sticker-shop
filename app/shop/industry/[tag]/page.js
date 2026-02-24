@@ -27,11 +27,11 @@ export async function generateMetadata({ params }) {
   const extended = t(`industry.${tag}.extendedDescription`);
 
   return {
-    title: `${meta.title} Printing Solutions | La Lunar Printing`,
+    title: `${meta.title} Printing Solutions`,
     description: extended || meta.description,
     alternates: { canonical: `${SITE_URL}/shop/industry/${tag}` },
     openGraph: {
-      title: `${meta.title} \u2014 Custom Print Solutions | La Lunar Printing`,
+      title: `${meta.title} \u2014 Custom Print Solutions`,
       description: extended || meta.description,
       url: `${SITE_URL}/shop/industry/${tag}`,
       siteName: "La Lunar Printing",

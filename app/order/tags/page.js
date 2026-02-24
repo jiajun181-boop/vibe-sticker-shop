@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Tags & Labels — Order Online | La Lunar Printing",
+    title: "Custom Tags & Labels — Order Online",
     description:
       "Order custom hang tags, product labels, and packaging tags. Multiple shapes, materials, and finishing options.",
     openGraph: {

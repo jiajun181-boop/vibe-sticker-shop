@@ -4,7 +4,7 @@ import NcrOrderClient from "./NcrOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "NCR Forms — Order Online | La Lunar Printing",
+    title: "NCR Forms — Order Online",
     description:
       "Order custom NCR carbonless forms online. Duplicate, triplicate, invoices, and receipt books with optional sequential numbering.",
     openGraph: {

@@ -3,7 +3,7 @@ import MarketingPrintOrderClient from "./MarketingPrintOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Marketing & Business Printing — Build Your Order | La Lunar Printing",
+    title: "Custom Marketing & Business Printing — Build Your Order",
     description:
       "Order custom business cards, flyers, postcards, brochures, menus, posters, and more. Choose paper stock, finishing, and quantity — get instant pricing.",
     openGraph: {

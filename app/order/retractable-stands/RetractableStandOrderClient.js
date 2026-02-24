@@ -28,8 +28,7 @@ const ORDER_TYPES = [
 ];
 
 const BANNER_MATERIALS = [
-  { id: "vinyl", surcharge: 0 },
-  { id: "fabric", surcharge: 500 },
+  { id: "pet-grey-back", surcharge: 0 },
 ];
 
 const QUANTITIES = [1, 2, 5, 10];
@@ -56,7 +55,7 @@ export default function RetractableStandOrderClient() {
 
   const [tierIdx, setTierIdx] = useState(1); // Standard default
   const [orderType, setOrderType] = useState("complete-kit");
-  const [bannerId, setBannerId] = useState("vinyl");
+  const [bannerId, setBannerId] = useState("pet-grey-back");
   const [quantity, setQuantity] = useState(1);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -96,7 +95,7 @@ export default function RetractableStandOrderClient() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slug: "retractable-stands",
+        slug: "roll-up-banners",
         quantity: activeQty,
         widthIn: tier.w,
         heightIn: tier.h,
@@ -140,9 +139,9 @@ export default function RetractableStandOrderClient() {
 
     const typeLabel = orderType === "print-only" ? "Print Only" : "Complete Kit";
     return {
-      id: "retractable-stands",
+      id: "roll-up-banners",
       name: `${t("rs.title")} \u2014 ${tier.label} (${typeLabel})`,
-      slug: "retractable-stands",
+      slug: "roll-up-banners",
       price: Math.round(totalCents / activeQty),
       quantity: activeQty,
       options: {

@@ -4,7 +4,7 @@ import BackdropOrderClient from "./BackdropOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Backdrops & Pop-Ups — Order Online | La Lunar Printing",
+    title: "Custom Backdrops & Pop-Ups — Order Online",
     description: "Order custom backdrops and pop-up displays for events, photos, and trade shows.",
     openGraph: { title: "Custom Backdrops — Order Online", url: "/order/backdrops" },
     alternates: { canonical: "https://www.lunarprint.ca/order/backdrops" },

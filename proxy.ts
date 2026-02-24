@@ -60,6 +60,8 @@ export default async function proxy(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 365,
       sameSite: "lax",
     });
+    // Chinese pages are not indexed — noindex header for SEO
+    response.headers.set("X-Robots-Tag", "noindex, follow");
     return response;
   }
 

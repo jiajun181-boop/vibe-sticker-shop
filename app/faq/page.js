@@ -27,7 +27,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca"
 
 export async function generateMetadata() {
   return {
-    title: "FAQ | La Lunar Printing Inc.",
+    title: "FAQ",
     description: "Frequently asked questions about ordering, file requirements, shipping, and returns at La Lunar Printing.",
     alternates: { canonical: `${SITE_URL}/faq` },
   };

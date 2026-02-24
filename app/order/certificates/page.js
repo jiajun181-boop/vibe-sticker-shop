@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Certificates — Order Online | La Lunar Printing",
+    title: "Custom Certificates — Order Online",
     description:
       "Order custom certificates, diplomas, and gift certificates. Premium paper stocks with optional foil accents.",
     openGraph: {

@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Terms of Service | La Lunar Printing",
+  title: "Terms of Service",
   description: "Terms and conditions governing the use of La Lunar Printing's website and custom printing services.",
 };
 

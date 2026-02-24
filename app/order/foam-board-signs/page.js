@@ -4,7 +4,7 @@ import FoamBoardOrderClient from "./FoamBoardOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Foam Board Signs — Order Online | La Lunar Printing",
+    title: "Custom Foam Board Signs — Order Online",
     description: "Order custom foam board signs for displays, presentations, and indoor signage.",
     openGraph: { title: "Custom Foam Board Signs — Order Online", description: "Configure and order custom foam board signs. Choose thickness, size, and print options.", url: "/order/foam-board-signs" },
     alternates: { canonical: "https://www.lunarprint.ca/order/foam-board-signs" },

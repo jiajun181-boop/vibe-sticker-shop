@@ -4,7 +4,7 @@ import BookletOrderClient from "./BookletOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Booklets — Order Online | La Lunar Printing",
+    title: "Custom Booklets — Order Online",
     description:
       "Order custom booklets online. Saddle stitch, perfect bound, and wire-o binding with premium paper options and cover lamination.",
     openGraph: {

@@ -4,7 +4,7 @@ import XBannerStandOrderClient from "./XBannerStandOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "X-Banner Stands — Order Online | La Lunar Printing",
+    title: "X-Banner Stands — Order Online",
     description: "Order custom X-banner stands — lightweight and portable display solution.",
     openGraph: { title: "X-Banner Stands — Order Online", url: "/order/x-banner-stands" },
     alternates: { canonical: "https://www.lunarprint.ca/order/x-banner-stands" },

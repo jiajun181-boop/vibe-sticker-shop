@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Posters — Order Online | La Lunar Printing",
+    title: "Custom Posters — Order Online",
     description:
       "Order custom posters online. Glossy, matte, adhesive, and backlit options in multiple sizes with optional lamination.",
     openGraph: {

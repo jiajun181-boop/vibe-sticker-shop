@@ -4,7 +4,7 @@ import FlagOrderClient from "./FlagOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Flags & Feather Banners — Order Online | La Lunar Printing",
+    title: "Custom Flags & Feather Banners — Order Online",
     description: "Order custom feather flags, teardrop flags, and rectangular flags.",
     openGraph: { title: "Custom Flags — Order Online", url: "/order/flags" },
     alternates: { canonical: "https://www.lunarprint.ca/order/flags" },

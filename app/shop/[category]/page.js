@@ -270,12 +270,12 @@ export async function generateMetadata({ params }) {
   if (!meta) return {};
 
   const CATEGORY_TITLES = {
-    "stickers-labels-decals": "Custom Stickers & Labels Toronto | La Lunar Printing",
-    "signs-rigid-boards": "Custom Signs & Display Boards Toronto | Coroplast & Foam Board | La Lunar Printing",
-    "windows-walls-floors": "Window Films, Wall & Floor Graphics Toronto | La Lunar Printing",
-    "canvas-prints": "Canvas Prints Toronto | Gallery Wrap, Framed & Split Panel | La Lunar Printing",
+    "stickers-labels-decals": "Custom Stickers & Labels Toronto",
+    "signs-rigid-boards": "Custom Signs & Display Boards Toronto | Coroplast & Foam Board",
+    "windows-walls-floors": "Window Films, Wall & Floor Graphics Toronto",
+    "canvas-prints": "Canvas Prints Toronto | Gallery Wrap, Framed & Split Panel",
   };
-  const title = CATEGORY_TITLES[decoded] || `${meta.title} | La Lunar Printing`;
+  const title = CATEGORY_TITLES[decoded] || meta.title;
 
   const CATEGORY_DESCRIPTIONS = {
     "stickers-labels-decals": "Custom die-cut stickers, kiss-cut stickers, sticker sheets, roll labels & vinyl lettering. Waterproof, UV-protected. Fast turnaround in Toronto.",

@@ -10,8 +10,8 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca"
 export async function generateMetadata() {
   const locale = await getServerLocale();
   const title = locale === "zh"
-    ? "透明定价 | La Lunar Printing Inc."
-    : "Transparent Pricing | La Lunar Printing Inc.";
+    ? "透明定价"
+    : "Transparent Pricing";
   const description = locale === "zh"
     ? "查看所有印刷产品的批量定价。从名片到车辆贴花，享受透明的阶梯价格。"
     : "View volume pricing for all print products. From business cards to vehicle decals, enjoy transparent tiered pricing.";

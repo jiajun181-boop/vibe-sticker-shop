@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Privacy Policy | La Lunar Printing",
+  title: "Privacy Policy",
   description: "How La Lunar Printing Inc. collects, uses, and protects your personal information under Canadian privacy law (PIPEDA).",
 };
 

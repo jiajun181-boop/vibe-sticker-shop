@@ -6,7 +6,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca"
 
 export async function generateMetadata() {
   return {
-    title: "Request a Quote | La Lunar Printing Inc.",
+    title: "Request a Quote",
     description: "Get a custom quote for your printing project. Vehicle graphics, fleet compliance, signage, stickers, and more.",
     alternates: { canonical: `${SITE_URL}/quote` },
   };

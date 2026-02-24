@@ -4,7 +4,7 @@ import VehicleWrapOrderClient from "./VehicleWrapOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Vehicle Wraps & Graphics — Order Online | La Lunar Printing",
+    title: "Custom Vehicle Wraps & Graphics — Order Online",
     description: "Order custom vehicle wraps, door graphics, and fleet branding packages.",
     openGraph: { title: "Custom Vehicle Wraps — Order Online", url: "/order/vehicle-wraps" },
     alternates: { canonical: "https://www.lunarprint.ca/order/vehicle-wraps" },

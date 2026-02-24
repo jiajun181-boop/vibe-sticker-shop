@@ -4,7 +4,7 @@ import DecalOrderClient from "./DecalOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Decals — Order Online | La Lunar Printing",
+    title: "Custom Decals — Order Online",
     description:
       "Order custom adhesive decals for windows, walls, and floors. Indoor and outdoor options with clear, white, and perforated vinyl.",
     openGraph: {

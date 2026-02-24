@@ -7,8 +7,8 @@ export async function generateMetadata() {
   const locale = await getServerLocale();
   const isZh = locale === "zh";
   const title = isZh
-    ? "设计服务 | La Lunar Printing Inc."
-    : "Design Services | La Lunar Printing Inc.";
+    ? "设计服务"
+    : "Design Services";
   const description = isZh
     ? "专业平面设计服务。名片设计低至$75，传单、折页、标签等。提供标准和高级设计套餐。"
     : "Professional graphic design services for print. Business cards from $75, flyers, brochures, labels, and more. Standard and premium design packages available.";

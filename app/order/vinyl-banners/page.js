@@ -4,7 +4,7 @@ import VinylBannerOrderClient from "./VinylBannerOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Vinyl Banners — Order Online | La Lunar Printing",
+    title: "Custom Vinyl Banners — Order Online",
     description: "Order custom vinyl banners for events, business, and outdoor advertising.",
     openGraph: { title: "Custom Vinyl Banners — Order Online", url: "/order/vinyl-banners" },
     alternates: { canonical: "https://www.lunarprint.ca/order/vinyl-banners" },

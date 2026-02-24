@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Return & Refund Policy | La Lunar Printing",
+  title: "Return & Refund Policy",
   description: "La Lunar Printing's policy on returns, refunds, reprints, and quality guarantees for custom printing orders.",
 };
 

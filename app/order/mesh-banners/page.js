@@ -4,7 +4,7 @@ import MeshBannerOrderClient from "./MeshBannerOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Mesh Banners — Order Online | La Lunar Printing",
+    title: "Custom Mesh Banners — Order Online",
     description: "Order custom mesh banners — wind-resistant for fences and outdoor use.",
     openGraph: { title: "Custom Mesh Banners — Order Online", url: "/order/mesh-banners" },
     alternates: { canonical: "https://www.lunarprint.ca/order/mesh-banners" },

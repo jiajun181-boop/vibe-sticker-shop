@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Postcards — Order Online | La Lunar Printing",
+    title: "Custom Postcards — Order Online",
     description:
       "Order custom postcards online. Standard, medium, large, and EDDM sizes on premium card stock with coating and rounded corner options.",
     openGraph: {

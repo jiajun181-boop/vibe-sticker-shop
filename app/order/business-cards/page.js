@@ -4,7 +4,7 @@ import BusinessCardsOrderClient from "./BusinessCardsOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Business Cards — Order Online | La Lunar Printing",
+    title: "Custom Business Cards — Order Online",
     description:
       "Order custom business cards online. Choose from 10 premium finishes including gloss, matte, soft-touch, gold foil, linen, and more.",
     openGraph: {

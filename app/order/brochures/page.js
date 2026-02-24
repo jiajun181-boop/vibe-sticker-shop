@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Brochures — Order Online | La Lunar Printing",
+    title: "Custom Brochures — Order Online",
     description:
       "Order custom brochures online. Bi-fold, tri-fold, and z-fold options on premium paper stocks with optional coating.",
     openGraph: {

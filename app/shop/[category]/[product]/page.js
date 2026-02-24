@@ -134,7 +134,7 @@ export async function generateMetadata({ params }) {
   };
   const comingSoonMeta = COMING_SOON_SIGNS[decodedSlug];
   if (comingSoonMeta && safeDecode(category) === "signs-rigid-boards") {
-    const title = `${comingSoonMeta.name} | Coming Soon | La Lunar Printing`;
+    const title = `${comingSoonMeta.name} | Coming Soon`;
     const csDescription = comingSoonMeta.description;
     const url = `${SITE_URL}/shop/${category}/${slug}`;
     return {
@@ -183,7 +183,7 @@ export async function generateMetadata({ params }) {
     const subLabel = decodedSlug
       .replace(/-/g, " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
-    const title = `${subLabel} | La Lunar Printing Inc.`;
+    const title = `${subLabel}`;
     const description = `Custom ${subLabel.toLowerCase()} printing — ${subCfg.dbSlugs.length} options available. Professional quality, fast turnaround in Toronto & the GTA.`;
     const url = `${SITE_URL}/shop/${category}/${slug}`;
     return {
@@ -207,7 +207,7 @@ export async function generateMetadata({ params }) {
 
   const title = hasMetaTitle
     ? p.metaTitle.trim()
-    : `${p.name} Printing | ${categoryLabel} | La Lunar Printing Inc.`;
+    : `${p.name} Printing | ${categoryLabel}`;
   const description = hasMetaDescription
     ? p.metaDescription.trim()
     : p.description ||
@@ -258,11 +258,15 @@ export default async function ProductPage({ params }) {
       const safeProduct = toClientSafe(product);
       if (assetImages.length > 0) safeProduct.images = assetImages;
       return (
-        <SceneLandingPage
-          sceneConfig={sceneCfg}
-          product={safeProduct}
-          category={decodedCategory}
-        />
+        <>
+          <ProductSchema product={safeProduct} />
+          <BreadcrumbSchema category={decodedCategory} productName={safeProduct.name} />
+          <SceneLandingPage
+            sceneConfig={sceneCfg}
+            product={safeProduct}
+            category={decodedCategory}
+          />
+        </>
       );
     }
   }
@@ -284,14 +288,19 @@ export default async function ProductPage({ params }) {
       productMap[p.slug] = safe;
     }
 
+    const firstProduct = Object.values(productMap)[0];
     return (
-      <Suspense>
-        <VariantProductPage
-          variantConfig={variantCfg}
-          productMap={productMap}
-          category={decodedCategory}
-        />
-      </Suspense>
+      <>
+        {firstProduct && <ProductSchema product={firstProduct} />}
+        <BreadcrumbSchema category={decodedCategory} productName={variantCfg.metaTitle || decodedSlug} />
+        <Suspense>
+          <VariantProductPage
+            variantConfig={variantCfg}
+            productMap={productMap}
+            category={decodedCategory}
+          />
+        </Suspense>
+      </>
     );
   }
 
@@ -333,22 +342,27 @@ export default async function ProductPage({ params }) {
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     });
 
+    const safeSignProduct = signProduct ? toClientSafe(signProduct) : { slug: decodedSlug, category: decodedCategory, name: content.intro?.headline || decodedSlug };
     return (
-      <Suspense
-        fallback={
-          <div className="flex min-h-[60vh] items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
-          </div>
-        }
-      >
-        <SignProductPageClient
-          content={content}
-          signTypeId={signTypeId}
-          product={signProduct ? toClientSafe(signProduct) : { slug: decodedSlug, category: decodedCategory }}
-          images={signImages}
-          relatedProducts={toClientSafe(signRelated)}
-        />
-      </Suspense>
+      <>
+        {signProduct && <ProductSchema product={toClientSafe(signProduct)} />}
+        <BreadcrumbSchema category={decodedCategory} productName={content.intro?.headline || decodedSlug} />
+        <Suspense
+          fallback={
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+            </div>
+          }
+        >
+          <SignProductPageClient
+            content={content}
+            signTypeId={signTypeId}
+            product={safeSignProduct}
+            images={signImages}
+            relatedProducts={toClientSafe(signRelated)}
+          />
+        </Suspense>
+      </>
     );
   }
 
@@ -377,21 +391,25 @@ export default async function ProductPage({ params }) {
       });
 
       return (
-        <Suspense
-          fallback={
-            <div className="flex min-h-[60vh] items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
-            </div>
-          }
-        >
-          <WwfProductPageClient
-            content={wwfContent.content}
-            wwfProductId={wwfContent.wwfProductId}
-            product={wwfProduct ? toClientSafe(wwfProduct) : { slug: decodedSlug, category: decodedCategory }}
-            images={wwfImages}
-            relatedProducts={toClientSafe(wwfRelated)}
-          />
-        </Suspense>
+        <>
+          {wwfProduct && <ProductSchema product={toClientSafe(wwfProduct)} />}
+          <BreadcrumbSchema category={decodedCategory} productName={wwfContent.content.intro?.headline || decodedSlug} />
+          <Suspense
+            fallback={
+              <div className="flex min-h-[60vh] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+              </div>
+            }
+          >
+            <WwfProductPageClient
+              content={wwfContent.content}
+              wwfProductId={wwfContent.wwfProductId}
+              product={wwfProduct ? toClientSafe(wwfProduct) : { slug: decodedSlug, category: decodedCategory }}
+              images={wwfImages}
+              relatedProducts={toClientSafe(wwfRelated)}
+            />
+          </Suspense>
+        </>
       );
     }
   }
@@ -511,21 +529,25 @@ export default async function ProductPage({ params }) {
     });
 
     return (
-      <Suspense
-        fallback={
-          <div className="flex min-h-[60vh] items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
-          </div>
-        }
-      >
-        <StickerProductPageClient
-          content={content}
-          cuttingTypeId={cuttingTypeId}
-          product={stickerProduct ? toClientSafe(stickerProduct) : { slug: decodedSlug, category: decodedCategory }}
-          images={stickerImages}
-          relatedProducts={toClientSafe(stickerRelated)}
+      <>
+        {stickerProduct && <ProductSchema product={toClientSafe(stickerProduct)} />}
+        <BreadcrumbSchema category={decodedCategory} productName={content.intro?.headline || decodedSlug} />
+        <Suspense
+          fallback={
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+            </div>
+          }
+        >
+          <StickerProductPageClient
+            content={content}
+            cuttingTypeId={cuttingTypeId}
+            product={stickerProduct ? toClientSafe(stickerProduct) : { slug: decodedSlug, category: decodedCategory }}
+            images={stickerImages}
+            relatedProducts={toClientSafe(stickerRelated)}
         />
       </Suspense>
+      </>
     );
   }
 

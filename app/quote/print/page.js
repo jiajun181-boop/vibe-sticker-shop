@@ -1,7 +1,7 @@
 import QuotePrintClient from "./QuotePrintClient";
 
 export const metadata = {
-  title: "Quote Document | La Lunar Printing Inc.",
+  title: "Quote Document",
   robots: { index: false, follow: false },
 };
 

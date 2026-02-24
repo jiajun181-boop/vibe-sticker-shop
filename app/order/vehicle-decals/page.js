@@ -4,7 +4,7 @@ import VehicleDecalOrderClient from "./VehicleDecalOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Vehicle Decals & Lettering — Order Online | La Lunar Printing",
+    title: "Custom Vehicle Decals & Lettering — Order Online",
     description: "Order custom vehicle decals, lettering, DOT numbers, and compliance labels.",
     openGraph: { title: "Custom Vehicle Decals — Order Online", url: "/order/vehicle-decals" },
     alternates: { canonical: "https://www.lunarprint.ca/order/vehicle-decals" },

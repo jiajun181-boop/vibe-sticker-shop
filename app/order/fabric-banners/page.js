@@ -4,7 +4,7 @@ import FabricBannerOrderClient from "./FabricBannerOrderClient";
 
 export function generateMetadata() {
   return {
-    title: "Custom Fabric Banners — Order Online | La Lunar Printing",
+    title: "Custom Fabric Banners — Order Online",
     description: "Order custom fabric banners for trade shows, events, and indoor displays.",
     openGraph: { title: "Custom Fabric Banners — Order Online", url: "/order/fabric-banners" },
     alternates: { canonical: "https://www.lunarprint.ca/order/fabric-banners" },

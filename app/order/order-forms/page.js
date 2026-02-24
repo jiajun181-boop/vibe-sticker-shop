@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Order Forms — Order Online | La Lunar Printing",
+    title: "Custom Order Forms — Order Online",
     description:
       "Order custom printed order forms with optional numbering and padding.",
     openGraph: {

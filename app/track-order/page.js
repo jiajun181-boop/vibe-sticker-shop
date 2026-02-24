@@ -5,7 +5,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca"
 
 export async function generateMetadata() {
   return {
-    title: "Track Your Order | La Lunar Printing Inc.",
+    title: "Track Your Order",
     description: "Check the status of your order. Enter your order reference number and email to get real-time updates.",
     alternates: { canonical: `${SITE_URL}/track-order` },
   };

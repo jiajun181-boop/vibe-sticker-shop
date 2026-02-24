@@ -28,11 +28,11 @@ export async function generateMetadata({ params }) {
   const description = t(`ideas.${slug}.heroDescription`);
 
   return {
-    title: `${title} \u2014 Custom Printing | La Lunar Printing`,
+    title: `${title} \u2014 Custom Printing`,
     description,
     alternates: { canonical: `${SITE_URL}/ideas/${slug}` },
     openGraph: {
-      title: `${title} | La Lunar Printing`,
+      title,
       description,
       url: `${SITE_URL}/ideas/${slug}`,
       siteName: "La Lunar Printing",

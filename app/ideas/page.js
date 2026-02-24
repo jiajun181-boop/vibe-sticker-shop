@@ -8,12 +8,12 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca"
 
 export async function generateMetadata() {
   return {
-    title: "Ideas & Inspiration \u2014 Custom Print Projects | La Lunar Printing",
+    title: "Ideas & Inspiration \u2014 Custom Print Projects",
     description:
       "Explore print ideas for gifting, weddings, corporate events, campus life, and more. Find the perfect products for your industry \u2014 essential to your brand.",
     alternates: { canonical: `${SITE_URL}/ideas` },
     openGraph: {
-      title: "Ideas & Inspiration | La Lunar Printing",
+      title: "Ideas & Inspiration",
       description:
         "Custom print solutions for every occasion and industry. Business essential \u2014 from concept to delivery.",
       url: `${SITE_URL}/ideas`,

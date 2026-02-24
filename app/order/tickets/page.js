@@ -4,7 +4,7 @@ import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrin
 
 export function generateMetadata() {
   return {
-    title: "Custom Tickets — Order Online | La Lunar Printing",
+    title: "Custom Tickets — Order Online",
     description:
       "Order custom event tickets and raffle tickets with tear-off stubs and sequential numbering.",
     openGraph: {

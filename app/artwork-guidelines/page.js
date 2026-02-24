@@ -5,7 +5,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca"
 
 export async function generateMetadata() {
   return {
-    title: "Print-Ready File Guidelines | La Lunar Printing",
+    title: "Print-Ready File Guidelines",
     description: "File preparation specs for print: accepted formats, DPI requirements, bleed, colour mode, and design tips. Get it right the first time.",
     alternates: { canonical: `${SITE_URL}/artwork-guidelines` },
   };

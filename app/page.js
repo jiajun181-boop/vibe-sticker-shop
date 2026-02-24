@@ -37,7 +37,7 @@ const FEATURED_SLUGS = [
 ];
 
 export async function generateMetadata() {
-  const title = "Custom Stickers, Labels & Signs | La Lunar Printing";
+  const title = "Custom Stickers, Labels & Signs";
   const description = "Toronto's trusted custom printing shop. Stickers, labels, banners, vehicle wraps, business cards & more. Fast turnaround, free shipping on orders $150+.";
 
   return {
@@ -45,7 +45,7 @@ export async function generateMetadata() {
     description,
     alternates: { canonical: SITE_URL },
     openGraph: {
-      title: "Custom Stickers, Labels & Signs | La Lunar Printing",
+      title: "Custom Stickers, Labels & Signs",
       description: "Toronto's trusted custom printing shop. Stickers, labels, banners, vehicle wraps, business cards & more.",
       url: SITE_URL,
       siteName: BRAND,

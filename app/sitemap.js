@@ -42,6 +42,7 @@ export default async function sitemap() {
     "loyalty-cards", "shelf-displays", "table-tents",
     "vinyl-lettering", "decals", "safety-labels", "industrial-labels",
     "presentation-folders", "retail-tags",
+    "inserts-packaging", "order-forms", "waivers-releases",
   ].map((slug) => ({
     url: `${SITE_URL}/order/${slug}`,
     lastModified: now,
