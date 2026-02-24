@@ -60,7 +60,7 @@ export default function AdminSupportPage() {
             onClick={() => setStatus(s)}
             className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
               status === s
-                ? "bg-gray-900 text-white"
+                ? "bg-gray-900 text-[#fff]"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >

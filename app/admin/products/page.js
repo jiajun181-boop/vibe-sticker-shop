@@ -873,7 +873,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
             + Add Product
           </button>
@@ -884,7 +884,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
             + Add Product
           </button>
@@ -934,7 +934,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
               }}
               className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                 categoryFilter === c.value
-                  ? "bg-black text-white"
+                  ? "bg-black text-[#fff]"
                   : "bg-white text-[#666] hover:bg-[#fafafa]"
               }`}
             >
@@ -965,7 +965,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
           />
           <button
             type="submit"
-            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
             Search
           </button>
@@ -1057,7 +1057,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 type="button"
                 onClick={handleBulkMove}
                 disabled={moving || selectedProductIds.length === 0}
-                className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#222] disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {moving ? "Moving..." : "Move Selected"}
               </button>

@@ -348,14 +348,14 @@ export default function TextOverlayModal({ image, onSave, onClose }) {
                 <button
                   type="button"
                   onClick={() => setBold(!bold)}
-                  className={`flex-1 rounded-[3px] border px-2 py-1.5 text-xs font-bold ${bold ? "border-black bg-black text-white" : "border-[#d0d0d0] text-[#666] hover:bg-[#fafafa]"}`}
+                  className={`flex-1 rounded-[3px] border px-2 py-1.5 text-xs font-bold ${bold ? "border-black bg-black text-[#fff]" : "border-[#d0d0d0] text-[#666] hover:bg-[#fafafa]"}`}
                 >
                   B
                 </button>
                 <button
                   type="button"
                   onClick={() => setItalic(!italic)}
-                  className={`flex-1 rounded-[3px] border px-2 py-1.5 text-xs italic ${italic ? "border-black bg-black text-white" : "border-[#d0d0d0] text-[#666] hover:bg-[#fafafa]"}`}
+                  className={`flex-1 rounded-[3px] border px-2 py-1.5 text-xs italic ${italic ? "border-black bg-black text-[#fff]" : "border-[#d0d0d0] text-[#666] hover:bg-[#fafafa]"}`}
                 >
                   I
                 </button>
@@ -370,7 +370,7 @@ export default function TextOverlayModal({ image, onSave, onClose }) {
                       key={a}
                       type="button"
                       onClick={() => setTextAlign(a)}
-                      className={`flex-1 rounded-[3px] border px-2 py-1.5 text-xs capitalize ${textAlign === a ? "border-black bg-black text-white" : "border-[#d0d0d0] text-[#666] hover:bg-[#fafafa]"}`}
+                      className={`flex-1 rounded-[3px] border px-2 py-1.5 text-xs capitalize ${textAlign === a ? "border-black bg-black text-[#fff]" : "border-[#d0d0d0] text-[#666] hover:bg-[#fafafa]"}`}
                     >
                       {a}
                     </button>
@@ -420,7 +420,7 @@ export default function TextOverlayModal({ image, onSave, onClose }) {
               type="button"
               disabled={saving || !imgLoaded}
               onClick={() => handleSave(true)}
-              className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+              className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
             >
               {saving ? "Saving..." : "Replace Original"}
             </button>

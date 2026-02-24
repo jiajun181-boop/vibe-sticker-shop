@@ -153,7 +153,7 @@ function PromoTab({ promo, setPromo, onSave, saving }) {
           {/* Preview */}
           <div>
             <label className="mb-1 block text-xs font-medium text-[#666]">Preview</label>
-            <div className="rounded-[3px] px-4 py-2 text-sm text-white" style={{ backgroundColor: promo.bgColor }}>
+            <div className="rounded-[3px] px-4 py-2 text-sm text-[#fff]" style={{ backgroundColor: promo.bgColor }}>
               {promo.textEn || "Promo text will appear here"}
             </div>
           </div>
@@ -320,7 +320,7 @@ function Toggle({ checked, onChange }) {
 function SaveButton({ saving }) {
   return (
     <div className="flex justify-end">
-      <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#222] disabled:opacity-50">
+      <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-6 py-2.5 text-sm font-semibold text-[#fff] transition-colors hover:bg-[#222] disabled:opacity-50">
         {saving ? "Saving..." : "Save Changes"}
       </button>
     </div>

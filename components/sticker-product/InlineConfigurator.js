@@ -110,7 +110,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
   });
   const [uploadedFile, setUploadedFile] = useState(null);
   const [dimErrors, setDimErrors] = useState([]);
-  const [finishingOptions, setFinishingOptions] = useState({ matte_laminate: false });
+  const [laminationId, setLaminationId] = useState("none");
 
   // Derived dimensions
   const isCustomSize = sizeIdx === -1;
@@ -155,7 +155,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
 
   // --- Pricing ---
   const matApi = MATERIAL_API_MAP[materialId] || { alias: materialId, lam: null };
-  const lamination = matApi.lam || (finishingOptions.matte_laminate ? "matte" : "none");
+  const lamination = matApi.lam || (laminationId === "matte-lam" ? "matte" : laminationId === "gloss" ? "gloss" : "none");
 
   const quote = useConfiguratorPrice({
     slug,
@@ -192,11 +192,12 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         sizeLabel,
         material: materialId,
         materialName: t(`stickerOrder.mat.${materialId}`),
+        lamination: lamination !== "none" ? lamination : null,
         fileName: uploadedFile?.name || null,
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.unitCents, activeQty, cuttingTypeId, widthIn, heightIn, isCustomSize, sizeIdx, cutting, slug, materialId, uploadedFile, t]);
+  }, [quote.quoteData, quote.unitCents, activeQty, cuttingTypeId, widthIn, heightIn, isCustomSize, sizeIdx, cutting, slug, materialId, lamination, uploadedFile, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -247,7 +248,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               >
                 {isActive && (
                   <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-gray-900">
-                    <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <svg className="h-2.5 w-2.5 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                   </span>
                 )}
                 <span className="text-xs font-bold text-gray-800">
@@ -277,7 +278,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
                 onClick={() => selectSize(i)}
                 className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
                   isActive
-                    ? "border-gray-900 bg-gray-900 text-white"
+                    ? "border-gray-900 bg-gray-900 text-[#fff]"
                     : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                 }`}
               >
@@ -290,7 +291,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
             onClick={() => selectSize(-1)}
             className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
               isCustomSize
-                ? "border-gray-900 bg-gray-900 text-white"
+                ? "border-gray-900 bg-gray-900 text-[#fff]"
                 : "border-dashed border-gray-300 text-gray-500 hover:border-gray-500"
             }`}
           >
@@ -323,7 +324,6 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         <div className="flex flex-wrap gap-2">
           {cutting.quantities.map((q) => {
             const isActive = customQty === "" && quantity === q;
-            const discount = q >= 1000 ? 18 : q >= 500 ? 12 : q >= 250 ? 7 : q >= 100 ? 3 : 0;
             return (
               <button
                 key={q}
@@ -331,16 +331,11 @@ export default function InlineConfigurator({ cuttingTypeId }) {
                 onClick={() => selectQuantity(q)}
                 className={`relative rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
                   isActive
-                    ? "border-gray-900 bg-gray-900 text-white"
+                    ? "border-gray-900 bg-gray-900 text-[#fff]"
                     : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                 }`}
               >
                 {q >= 1000 ? `${q / 1000}K` : q}
-                {discount > 0 && (
-                  <span className={`ml-1 text-[9px] ${isActive ? "text-emerald-300" : "text-emerald-600"}`}>
-                    -{discount}%
-                  </span>
-                )}
               </button>
             );
           })}
@@ -364,21 +359,30 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         </div>
       </div>
 
-      {/* Finishing */}
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Finishing
-        </h3>
-        <label className="flex items-center gap-2 text-xs text-gray-700">
-          <input
-            type="checkbox"
-            checked={finishingOptions.matte_laminate}
-            onChange={(e) => setFinishingOptions((prev) => ({ ...prev, matte_laminate: e.target.checked }))}
-            className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-          />
-          Matte laminate overlay
-        </label>
-      </div>
+      {/* Lamination */}
+      {cutting.lamination && cutting.lamination.length > 1 && (
+        <div>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+            Lamination
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {cutting.lamination.map((lam) => (
+              <button
+                key={lam.id}
+                type="button"
+                onClick={() => setLaminationId(lam.id)}
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  laminationId === lam.id
+                    ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
+                    : "border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-500)]"
+                }`}
+              >
+                {lam.id === "none" ? "No Lamination" : lam.id === "gloss" ? "Gloss Lamination" : "Matte Lamination"}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Upload Artwork */}
       <div>
@@ -432,7 +436,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
           disabled={!canAddToCart}
           className={`w-full rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all ${
             canAddToCart
-              ? "bg-gray-900 text-white shadow-lg hover:bg-gray-800 active:scale-[0.98]"
+              ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800 active:scale-[0.98]"
               : "cursor-not-allowed bg-gray-200 text-gray-400"
           }`}
         >

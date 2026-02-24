@@ -135,13 +135,13 @@ function CanvasCard({ item, price, variant = "standard", imageUrl }) {
         isWide ? "sm:col-span-2" : ""
       }`}
     >
-      <div className={`relative overflow-hidden ${imageUrl ? "bg-gray-50" : `bg-gradient-to-br ${item.gradient}`} ${isLarge ? "h-52" : isWide ? "h-40 sm:h-44" : "h-40"}`}>
+      <div className={`relative overflow-hidden ${imageUrl ? "bg-[var(--color-gray-100)]" : `bg-gradient-to-br ${item.gradient}`} ${isLarge ? "h-52" : isWide ? "h-40 sm:h-44" : "h-40"}`}>
         {imageUrl ? (
           <>
             {isSvg ? (
-              <img src={imageUrl} alt={item.name} className="h-full w-full object-contain p-4" />
+              <img src={imageUrl} alt={item.name} className="h-full w-full object-cover" />
             ) : (
-              <Image src={imageUrl} alt={item.name} fill className="object-contain p-4" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" />
+              <Image src={imageUrl} alt={item.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" />
             )}
             <div className="absolute left-3 top-3 flex items-center gap-2">
               <span className="rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)]">
@@ -304,7 +304,7 @@ export default function CanvasCategoryClient({ canvasPrices = {}, canvasImages =
               <div className="mt-6 flex flex-wrap gap-2">
                 <Link
                   href={`${BASE}/canvas-gallery-wrap`}
-                  className="inline-flex items-center rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
+                  className="inline-flex items-center rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
                 >
                   Start with Gallery Wrap
                 </Link>
@@ -370,7 +370,7 @@ export default function CanvasCategoryClient({ canvasPrices = {}, canvasImages =
             </p>
             <Link
               href="/order/canvas-prints"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
+              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
             >
               Configure &amp; Quote
             </Link>

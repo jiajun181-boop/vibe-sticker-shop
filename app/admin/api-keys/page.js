@@ -59,7 +59,7 @@ export default function AdminApiKeysPage() {
         <button
           type="submit"
           disabled={creating}
-          className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
+          className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-[#fff] hover:bg-black disabled:opacity-50"
         >
           {creating ? "Creating..." : "Create Key"}
         </button>

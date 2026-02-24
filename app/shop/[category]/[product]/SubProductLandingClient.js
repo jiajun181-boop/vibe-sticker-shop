@@ -361,7 +361,7 @@ function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel }) {
           <QuickAddButton product={product} />
           <Link
             href={href}
-            className="inline-block rounded-xl bg-gray-900 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black"
+            className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-black"
           >
             {viewOrderLabel}
           </Link>
@@ -423,7 +423,7 @@ function ProductCardList({ product, href, selectedSpec, t, viewOrderLabel }) {
           {price > 0 && (
             <span className="text-sm font-bold text-[var(--color-gray-900)]">{t("product.from", { price: formatCad(price) })}</span>
           )}
-          <span className="ml-auto rounded-xl bg-gray-900 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
+          <span className="ml-auto rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors group-hover:bg-black">
             {viewOrderLabel}
           </span>
         </div>
@@ -449,7 +449,7 @@ function QuickQuoteFAB({ t }) {
   return (
     <Link
       href="/quote"
-      className="fixed right-4 z-50 flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-white shadow-lg transition-all hover:bg-black animate-in fade-in-0 slide-in-from-bottom-4 duration-300 md:hidden"
+      className="fixed right-4 z-50 flex items-center gap-2 rounded-xl bg-[var(--color-gray-900)] px-4 py-2.5 text-[#fff] shadow-lg transition-all hover:bg-black animate-in fade-in-0 slide-in-from-bottom-4 duration-300 md:hidden"
       style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom) + 8px)" }}
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -510,7 +510,7 @@ export default function SubProductLandingClient({
               <button
                 onClick={() => setViewMode("grid")}
                 className={`rounded-md p-1.5 transition-colors ${
-                  viewMode === "grid" ? "bg-gray-900 text-white" : "text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]"
+                  viewMode === "grid" ? "bg-[var(--color-gray-900)] text-[#fff]" : "text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]"
                 }`}
                 title={t("shop.viewGrid")}
               >
@@ -519,7 +519,7 @@ export default function SubProductLandingClient({
               <button
                 onClick={() => setViewMode("list")}
                 className={`rounded-md p-1.5 transition-colors ${
-                  viewMode === "list" ? "bg-gray-900 text-white" : "text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]"
+                  viewMode === "list" ? "bg-[var(--color-gray-900)] text-[#fff]" : "text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]"
                 }`}
                 title={t("shop.viewList")}
               >
@@ -686,7 +686,7 @@ export default function SubProductLandingClient({
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-xl bg-gray-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-black"
+              className="mt-3 inline-block rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#fff] hover:bg-black"
             >
               {t("home.cta.quote")}
             </Link>

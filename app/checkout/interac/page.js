@@ -65,7 +65,7 @@ export default function InteracCheckoutPage() {
         </p>
         <a
           href="/shop"
-          className="inline-block rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-gray-800"
+          className="inline-block rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-gray-800"
         >
           Continue Shopping
         </a>
@@ -128,7 +128,7 @@ export default function InteracCheckoutPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+              className="w-full rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-gray-800 disabled:opacity-50"
             >
               {loading ? "Placing Order..." : "Place Order with Interac e-Transfer"}
             </button>

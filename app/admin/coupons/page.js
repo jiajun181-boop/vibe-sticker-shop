@@ -187,7 +187,7 @@ function CouponsContent() {
         <button
           type="button"
           onClick={() => setShowForm(true)}
-          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
         >
           + Create Coupon
         </button>
@@ -223,7 +223,7 @@ function CouponsContent() {
               }}
               className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeFilter === tab.value
-                  ? "bg-black text-white"
+                  ? "bg-black text-[#fff]"
                   : "bg-white text-[#666] hover:bg-[#fafafa]"
               }`}
             >
@@ -243,7 +243,7 @@ function CouponsContent() {
           />
           <button
             type="submit"
-            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
             Search
           </button>
@@ -571,7 +571,7 @@ function CouponsContent() {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="flex-1 rounded-[3px] bg-black py-2.5 text-sm font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+                  className="flex-1 rounded-[3px] bg-black py-2.5 text-sm font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
                 >
                   {creating ? "Creating..." : "Create Coupon"}
                 </button>

@@ -81,7 +81,7 @@ function LockIcon({ unlocking }) {
       />
       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.06] backdrop-blur-sm border border-white/10">
         <svg
-          className="h-6 w-6 text-white/70"
+          className="h-6 w-6 text-[#fff]/70"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -218,7 +218,7 @@ function LoginContent() {
       type="button"
       tabIndex={-1}
       onClick={() => setShowPassword(!showPassword)}
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#fff]/30 hover:text-[#fff]/60 transition-colors"
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         {showPassword ? (
@@ -234,7 +234,7 @@ function LoginContent() {
   );
 
   const inputClass =
-    "w-full rounded-[3px] border border-white/10 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition-all focus:border-white/30 focus:bg-white/[0.08] backdrop-blur-sm";
+    "w-full rounded-[3px] border border-white/10 bg-white/[0.06] px-4 py-3 text-sm text-[#fff] placeholder-white/30 outline-none transition-all focus:border-white/30 focus:bg-white/[0.08] backdrop-blur-sm";
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0a]">
@@ -274,10 +274,10 @@ function LoginContent() {
           <div className="mb-8 flex flex-col items-center gap-4">
             <LockIcon unlocking={unlocking} />
             <div className="text-center">
-              <h1 className="text-xs font-bold uppercase tracking-[0.22em] text-white/80">
+              <h1 className="text-xs font-bold uppercase tracking-[0.22em] text-[#fff]/80">
                 {mode === "setup" ? "ADMIN SETUP" : "ADMIN"}
               </h1>
-              <p className="mt-1.5 text-[11px] text-white/30">
+              <p className="mt-1.5 text-[11px] text-[#fff]/30">
                 {mode === "setup"
                   ? "Create your first admin account"
                   : "Sign in to continue"}
@@ -332,7 +332,7 @@ function LoginContent() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-[3px] bg-white py-3 text-sm font-semibold text-black transition-all hover:bg-white/90 disabled:bg-white/20 disabled:text-white/40"
+                className="w-full rounded-[3px] bg-white py-3 text-sm font-semibold text-black transition-all hover:bg-white/90 disabled:bg-white/20 disabled:text-[#fff]/40"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -391,7 +391,7 @@ function LoginContent() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-[3px] bg-white py-3 text-sm font-semibold text-black transition-all hover:bg-white/90 disabled:bg-white/20 disabled:text-white/40"
+                className="w-full rounded-[3px] bg-white py-3 text-sm font-semibold text-black transition-all hover:bg-white/90 disabled:bg-white/20 disabled:text-[#fff]/40"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -409,7 +409,7 @@ function LoginContent() {
           )}
         </div>
 
-        <p className="mt-6 text-center text-[10px] text-white/20">
+        <p className="mt-6 text-center text-[10px] text-[#fff]/20">
           Protected area &middot; Unauthorized access is prohibited
         </p>
       </div>

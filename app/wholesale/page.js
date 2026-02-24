@@ -171,7 +171,7 @@ export default function WholesalePage() {
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)] text-[var(--color-gray-800)]">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-[var(--color-gray-900)] px-6 py-20 text-white sm:py-28">
+      <section className="relative overflow-hidden bg-[var(--color-gray-900)] px-6 py-20 text-[#fff] sm:py-28">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(196,147,64,0.3),transparent_60%)]" />
         </div>
@@ -182,7 +182,7 @@ export default function WholesalePage() {
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">
             {isZh ? "与我们合作，共同成长" : "Let\u2019s Grow Together"}
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#fff]/70 sm:text-base">
             {isZh
               ? "无论您是广告公司、车队运营商还是印刷分销商，我们提供有竞争力的批量定价、专属服务和可靠的交付能力。"
               : "Whether you\u2019re a sign shop, fleet operator, or print reseller, we offer competitive volume pricing, dedicated service, and reliable delivery across Canada."}
@@ -190,13 +190,13 @@ export default function WholesalePage() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <a
               href="#inquiry"
-              className="rounded-xl bg-[var(--color-moon-gold)] px-8 py-3 text-sm font-semibold text-white transition-colors hover:brightness-110"
+              className="rounded-xl bg-[var(--color-moon-gold)] px-8 py-3 text-sm font-semibold text-[#fff] transition-colors hover:brightness-110"
             >
               {isZh ? "提交合作咨询" : "Submit an Inquiry"}
             </a>
             <a
               href="tel:+16477834728"
-              className="rounded-xl border border-white/30 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              className="rounded-xl border border-white/30 px-8 py-3 text-sm font-semibold text-[#fff] transition-colors hover:bg-white/10"
             >
               {isZh ? "电话联系" : "Call Us"}
             </a>
@@ -324,7 +324,7 @@ export default function WholesalePage() {
               </p>
               <Link
                 href="/shop"
-                className="mt-6 inline-block rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold text-white hover:bg-black"
+                className="mt-6 inline-block rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold text-[#fff] hover:bg-black"
               >
                 {isZh ? "浏览产品" : "Browse Products"}
               </Link>
@@ -408,7 +408,7 @@ export default function WholesalePage() {
                       />
                       <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] ${
                         products.includes(p.key)
-                          ? "border-[var(--color-moon-gold)] bg-[var(--color-moon-gold)] text-white"
+                          ? "border-[var(--color-moon-gold)] bg-[var(--color-moon-gold)] text-[#fff]"
                           : "border-[var(--color-gray-300)] bg-white"
                       }`}>
                         {products.includes(p.key) && "✓"}
@@ -456,7 +456,7 @@ export default function WholesalePage() {
               <button
                 type="submit"
                 disabled={status === "sending"}
-                className="w-full rounded-xl bg-[var(--color-gray-900)] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-black disabled:opacity-50"
+                className="w-full rounded-xl bg-[var(--color-gray-900)] py-3.5 text-sm font-semibold text-[#fff] transition-colors hover:bg-black disabled:opacity-50"
               >
                 {status === "sending"
                   ? (isZh ? "提交中..." : "Sending...")

@@ -83,7 +83,7 @@ export default function InviteAcceptPage() {
             </div>
             <h1 className="text-lg font-semibold text-[#1a1816]">Invitation Invalid</h1>
             <p className="mt-2 text-sm text-[#716960]">{errorMsg}</p>
-            <a href="/contact" className="mt-6 inline-block rounded-xl bg-[#1a1816] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#3d372f]">
+            <a href="/contact" className="mt-6 inline-block rounded-xl bg-[#1a1816] px-6 py-2.5 text-sm font-semibold text-[#fff] hover:bg-[#3d372f]">
               Contact Us
             </a>
           </div>
@@ -97,10 +97,10 @@ export default function InviteAcceptPage() {
       <div className="w-full max-w-lg px-4">
         <div className="rounded-xl border border-[#e0dbd0] bg-white shadow-sm overflow-hidden">
           {/* Header */}
-          <div className="bg-[#1a1816] px-8 py-6 text-center text-white">
+          <div className="bg-[#1a1816] px-8 py-6 text-center text-[#fff]">
             <Image src="/logo.svg" alt="Logo" width={140} height={40} className="mx-auto mb-3 h-8 w-auto brightness-0 invert" />
             <h1 className="text-lg font-semibold tracking-wide">Partner Program</h1>
-            <p className="mt-1 text-xs text-white/60">You&apos;ve been invited to join as a partner</p>
+            <p className="mt-1 text-xs text-[#fff]/60">You&apos;ve been invited to join as a partner</p>
           </div>
 
           {/* Invite details */}
@@ -210,7 +210,7 @@ export default function InviteAcceptPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-full bg-[#1a1816] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#3d372f] disabled:bg-[#cbc4b6]"
+              className="w-full rounded-full bg-[#1a1816] py-3 text-sm font-semibold text-[#fff] transition-colors hover:bg-[#3d372f] disabled:bg-[#cbc4b6]"
             >
               {submitting ? "Creating your account..." : "Join Partner Program"}
             </button>

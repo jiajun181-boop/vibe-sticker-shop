@@ -101,7 +101,7 @@ export default function FavoritesPage() {
                   <div className="mt-3 flex gap-2">
                     <Link
                       href={href}
-                      className="flex-1 rounded-xl bg-[var(--color-ink-black)] px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black"
+                      className="flex-1 rounded-xl bg-[var(--color-ink-black)] px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-black"
                     >
                       {t("shop.viewDetails")}
                     </Link>

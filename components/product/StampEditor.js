@@ -307,7 +307,7 @@ export default function StampEditor({
           <button
             type="button"
             onClick={() => setShowRef((v) => !v)}
-            className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${showRef ? "bg-[var(--color-gray-900)] text-white border-[var(--color-gray-900)]" : "text-[var(--color-gray-500)] border-[var(--color-gray-300)] hover:border-[var(--color-gray-500)]"}`}
+            className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${showRef ? "bg-[var(--color-gray-900)] text-[#fff] border-[var(--color-gray-900)]" : "text-[var(--color-gray-500)] border-[var(--color-gray-300)] hover:border-[var(--color-gray-500)]"}`}
           >
             {t("stamp.sizeReference")}
           </button>
@@ -367,7 +367,7 @@ export default function StampEditor({
               key={cat}
               type="button"
               onClick={() => setTemplateCat(cat)}
-              className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${templateCat === cat ? "bg-[var(--color-gray-900)] text-white" : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-200)]"}`}
+              className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${templateCat === cat ? "bg-[var(--color-gray-900)] text-[#fff]" : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-200)]"}`}
             >
               {t(`stamp.templateCat.${cat}`)}
             </button>
@@ -400,7 +400,7 @@ export default function StampEditor({
             }}
             onUploadError={(e) => console.error("[stamp logo]", e)}
             appearance={{
-              button: "!bg-[var(--color-gray-900)] !text-white !text-xs !rounded-full !px-4 !py-2 !font-semibold hover:!bg-black",
+              button: "!bg-[var(--color-gray-900)] !text-[#fff] !text-xs !rounded-full !px-4 !py-2 !font-semibold hover:!bg-black",
               allowedContent: "!text-[10px] !text-[var(--color-gray-400)]",
             }}
           />

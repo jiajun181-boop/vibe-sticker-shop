@@ -55,7 +55,7 @@ export default function ProductTable({ products }) {
         <h1 className="text-4xl font-black italic tracking-tighter">PRODUCTS</h1>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-black text-white font-bold px-6 py-2.5 rounded-xl hover:bg-gray-800 transition-colors text-sm"
+          className="bg-black text-[#fff] font-bold px-6 py-2.5 rounded-xl hover:bg-gray-800 transition-colors text-sm"
         >
           + Add Product
         </button>

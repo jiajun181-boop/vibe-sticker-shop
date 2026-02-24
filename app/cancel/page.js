@@ -25,7 +25,7 @@ export default function CancelPage() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/shop"
-            className="inline-flex items-center justify-center rounded-xl bg-[var(--color-gray-900)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black"
+            className="inline-flex items-center justify-center rounded-xl bg-[var(--color-gray-900)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-black"
           >
             {t("cancel.continueShopping")}
           </Link>

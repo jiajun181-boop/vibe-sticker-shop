@@ -34,7 +34,7 @@ export default function EditorToolbar({ onAddText, onUndo, onRedo, onExport, can
       <button
         onClick={onExport}
         disabled={exporting}
-        className="rounded-lg bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+        className="rounded-lg bg-gray-900 px-4 py-1.5 text-xs font-semibold text-[#fff] hover:bg-gray-800 disabled:opacity-50"
       >
         {exporting ? "Exporting..." : "Export High-Res PNG"}
       </button>

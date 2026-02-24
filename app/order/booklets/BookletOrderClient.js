@@ -272,12 +272,12 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
                     onClick={() => setBindingId(b.id)}
                     className={`group relative flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition-all duration-200 ${
                       bindingId === b.id
-                        ? "border-gray-900 bg-gray-900 text-white shadow-lg shadow-gray-900/20 scale-[1.02]"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
                     }`}
                   >
                     {bindingId === b.id && (
-                      <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
+                      <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                       </span>
                     )}
@@ -301,7 +301,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
                     onClick={() => setSizeIdx(i)}
                     className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                       sizeIdx === i
-                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
@@ -321,7 +321,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
                     onClick={() => setPageCount(p)}
                     className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                       pageCount === p
-                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
@@ -353,7 +353,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
                       <span className="block text-sm font-bold text-gray-800">{p.label}</span>
                       {isActive && (
                         <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                         </span>
                       )}
                     </button>
@@ -386,7 +386,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
                       )}
                       {isActive && (
                         <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                         </span>
                       )}
                     </button>
@@ -425,7 +425,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
                       )}
                       {isActive && !disabled && (
                         <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                         </span>
                       )}
                     </button>
@@ -447,7 +447,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
                     onClick={() => { setQuantity(q); setCustomQty(""); }}
                     className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
                       customQty === "" && quantity === q
-                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >

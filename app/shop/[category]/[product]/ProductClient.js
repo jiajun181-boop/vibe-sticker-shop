@@ -61,7 +61,7 @@ function SizeGrid({ sizeOptions, selectedSizeLabel, onSelect, label, t }) {
               onClick={() => onSelect(o.label)}
               className={`relative rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
                 selected
-                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-[#fff]"
                   : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-900)] hover:border-[var(--color-gray-400)]"
               }`}
             >
@@ -1613,7 +1613,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             onClick={() => setCardType(ct.id)}
                             className={`rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
                               cardType === ct.id
-                                ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                                ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-[#fff]"
                                 : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-900)] hover:border-[var(--color-gray-400)]"
                             }`}
                           >
@@ -1635,7 +1635,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               onClick={() => setSides(s.id)}
                               className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
                                 sides === s.id
-                                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-[#fff]"
                                   : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                               }`}
                             >
@@ -1657,7 +1657,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               onClick={() => setThickLayer(l.id)}
                               className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
                                 thickLayer === l.id
-                                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-[#fff]"
                                   : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                               }`}
                             >
@@ -1828,14 +1828,14 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         <button
                           type="button"
                           onClick={() => setUnit("in")}
-                          className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "in" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
+                          className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "in" ? "bg-[var(--color-ink-black)] text-[#fff]" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
                         >
                           {t("product.inches")}
                         </button>
                         <button
                           type="button"
                           onClick={() => setUnit("cm")}
-                          className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "cm" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
+                          className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "cm" ? "bg-[var(--color-ink-black)] text-[#fff]" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
                         >
                           {t("product.cm")}
                         </button>
@@ -1957,7 +1957,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         }
                         setUseMultiSize((prev) => !prev);
                       }}
-                      className={`rounded-lg px-3 py-1 text-xs font-semibold ${useMultiSize ? "bg-[var(--color-ink-black)] text-white" : "border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)]"}`}
+                      className={`rounded-lg px-3 py-1 text-xs font-semibold ${useMultiSize ? "bg-[var(--color-ink-black)] text-[#fff]" : "border border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)]"}`}
                     >
                       {useMultiSize ? "On" : "Off"}
                     </button>
@@ -1969,14 +1969,14 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       <button
                         type="button"
                         onClick={() => setUnit("in")}
-                        className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "in" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
+                        className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "in" ? "bg-[var(--color-ink-black)] text-[#fff]" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
                       >
                         {t("product.inches")}
                       </button>
                       <button
                         type="button"
                         onClick={() => setUnit("cm")}
-                        className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "cm" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
+                        className={`rounded-lg px-3 py-1.5 font-semibold transition-colors ${unit === "cm" ? "bg-[var(--color-ink-black)] text-[#fff]" : "text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"}`}
                       >
                         {t("product.cm")}
                       </button>
@@ -2156,7 +2156,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                 onClick={() => setVariantBase(base)}
                                 className={`relative rounded-xl border-2 px-3 py-2.5 text-left transition-all ${
                                   selected
-                                    ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                                    ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-[#fff]"
                                     : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-900)] hover:border-[var(--color-gray-400)]"
                                 }`}
                               >
@@ -2177,7 +2177,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               onClick={() => setVariantValue(v)}
                               className={`flex-1 rounded-xl border-2 px-3 py-2 text-center text-sm font-semibold transition-all ${
                                 variantValue === v
-                                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-[#fff]"
                                   : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                               }`}
                             >
@@ -2217,7 +2217,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             }}
                             className={`w-full rounded-xl border-2 px-3 py-2.5 text-sm font-semibold transition-all ${
                               isCustomSize
-                                ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                                ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-[#fff]"
                                 : "border-dashed border-[var(--color-gray-300)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
                             }`}
                           >
@@ -2354,7 +2354,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         }}
                         className={`flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
                           wantsFinishing === val
-                            ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                            ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-[#fff]"
                             : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:bg-[var(--color-gray-50)]"
                         }`}
                       >

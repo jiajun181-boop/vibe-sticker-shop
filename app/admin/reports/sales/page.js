@@ -397,7 +397,7 @@ export default function SalesReportPage() {
           <button
             type="button"
             onClick={() => downloadCsv(data)}
-            className="inline-flex items-center gap-2 rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#222]"
+            className="inline-flex items-center gap-2 rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] transition-colors hover:bg-[#222]"
           >
             <svg
               className="h-4 w-4"
@@ -429,7 +429,7 @@ export default function SalesReportPage() {
                 onClick={() => handlePreset(p.key)}
                 className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                   activePreset === p.key
-                    ? "bg-black text-white"
+                    ? "bg-black text-[#fff]"
                     : "bg-[#f5f5f5] text-[#666] hover:bg-[#fafafa]"
                 }`}
               >

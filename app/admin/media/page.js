@@ -734,10 +734,10 @@ function MediaContent() {
       {pageDragOver && (
         <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 pointer-events-none">
           <div className="rounded-lg border-2 border-dashed border-white bg-black/60 px-12 py-8 text-center">
-            <svg className="mx-auto h-12 w-12 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="mx-auto h-12 w-12 text-[#fff]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
-            <p className="mt-3 text-sm font-semibold text-white">Drop images to upload</p>
+            <p className="mt-3 text-sm font-semibold text-[#fff]">Drop images to upload</p>
           </div>
         </div>
       )}
@@ -748,7 +748,7 @@ function MediaContent() {
         <button
           type="button"
           onClick={() => setShowUpload(true)}
-          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
         >
           + Upload Asset
         </button>
@@ -854,7 +854,7 @@ function MediaContent() {
             placeholder={tab === "assets" ? "Search by name, alt text..." : "Search by alt text or product..."}
             className="w-full sm:w-72 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
-          <button type="submit" className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]">
+          <button type="submit" className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]">
             Search
           </button>
         </form>
@@ -939,23 +939,23 @@ function MediaContent() {
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2.5">
                         <div className="flex justify-between items-start">
                           <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                            asset.status === "published" ? "bg-green-500/80 text-white" :
-                            asset.status === "archived" ? "bg-[#fafafa]0/80 text-white" :
-                            "bg-yellow-500/80 text-white"
+                            asset.status === "published" ? "bg-green-500/80 text-[#fff]" :
+                            asset.status === "archived" ? "bg-[#fafafa]0/80 text-[#fff]" :
+                            "bg-yellow-500/80 text-[#fff]"
                           }`}>
                             {asset.status}
                           </span>
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setDeleteTarget(asset); }}
-                            className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold hover:bg-red-600"
+                            className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-[#fff] text-xs font-bold hover:bg-red-600"
                           >
                             X
                           </button>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-xs text-white/90 truncate">{asset.originalName}</p>
-                          <p className="text-[10px] text-white/90">
+                          <p className="text-xs text-[#fff]/90 truncate">{asset.originalName}</p>
+                          <p className="text-[10px] text-[#fff]/90">
                             {asset.widthPx}x{asset.heightPx} · {formatBytes(asset.sizeBytes)} · {asset.linkCount || 0} links
                           </p>
                         </div>
@@ -987,14 +987,14 @@ function MediaContent() {
                         <button
                           type="button"
                           onClick={() => handleDeleteLegacy(image.id)}
-                          className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold hover:bg-red-600"
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-[#fff] text-xs font-bold hover:bg-red-600"
                         >
                           X
                         </button>
                       </div>
                       <div className="space-y-1">
-                        {image.alt && <p className="text-xs text-white/90 leading-tight line-clamp-2">{image.alt}</p>}
-                        {image.product && <p className="text-xs text-white/90 truncate">{image.product.name}</p>}
+                        {image.alt && <p className="text-xs text-[#fff]/90 leading-tight line-clamp-2">{image.alt}</p>}
+                        {image.product && <p className="text-xs text-[#fff]/90 truncate">{image.product.name}</p>}
                       </div>
                     </div>
                   </div>
@@ -1224,7 +1224,7 @@ function MediaContent() {
                 </p>
                 <div className="flex gap-2">
                   {uploadFiles.some((f) => f.status === "done") && uploadFiles.every((f) => f.status !== "ready") ? (
-                    <button type="button" onClick={() => { setShowUpload(false); setUploadFiles([]); setUploadProductQuery(""); setUploadProductResults([]); setUploadProductId(""); }} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]">
+                    <button type="button" onClick={() => { setShowUpload(false); setUploadFiles([]); setUploadProductQuery(""); setUploadProductResults([]); setUploadProductId(""); }} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]">
                       Done
                     </button>
                   ) : (
@@ -1232,7 +1232,7 @@ function MediaContent() {
                       <button type="button" onClick={() => { setShowUpload(false); setUploadFiles([]); }} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
                         Cancel
                       </button>
-                      <button type="submit" disabled={uploadFiles.filter((f) => f.status === "ready").length === 0 || uploading} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50">
+                      <button type="submit" disabled={uploadFiles.filter((f) => f.status === "ready").length === 0 || uploading} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50">
                         {uploading ? "Uploading..." : `Upload ${uploadFiles.filter((f) => f.status === "ready").length}`}
                       </button>
                     </>
@@ -1305,7 +1305,7 @@ function MediaContent() {
                           type="button"
                           onClick={handleSaveBgRemoved}
                           disabled={bgSaving}
-                          className="w-full rounded-[3px] bg-black px-3 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+                          className="w-full rounded-[3px] bg-black px-3 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
                         >
                           {bgSaving ? "Saving..." : "Save as New Asset"}
                         </button>
@@ -1397,7 +1397,7 @@ function MediaContent() {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <button type="button" onClick={saveDetail} disabled={savingDetail} className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50">
+                  <button type="button" onClick={saveDetail} disabled={savingDetail} className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50">
                     {savingDetail ? "Saving..." : "Save Changes"}
                   </button>
                   <button type="button" onClick={() => { setDeleteTarget(selectedAsset); setSelectedAsset(null); }} className="rounded-[3px] border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-100">
@@ -1425,7 +1425,7 @@ function MediaContent() {
               <button type="button" onClick={handleArchive} className="w-full rounded-[3px] border border-[#d0d0d0] py-2.5 text-xs font-medium text-black hover:bg-[#fafafa]">
                 Archive (can restore later)
               </button>
-              <button type="button" onClick={handlePermanentDelete} className="w-full rounded-[3px] bg-red-600 py-2.5 text-xs font-semibold text-white hover:bg-red-700">
+              <button type="button" onClick={handlePermanentDelete} className="w-full rounded-[3px] bg-red-600 py-2.5 text-xs font-semibold text-[#fff] hover:bg-red-700">
                 Permanent Delete
               </button>
               <button type="button" onClick={() => setDeleteTarget(null)} className="w-full rounded-[3px] border border-[#d0d0d0] py-2.5 text-xs font-medium text-[#999] hover:bg-[#fafafa]">

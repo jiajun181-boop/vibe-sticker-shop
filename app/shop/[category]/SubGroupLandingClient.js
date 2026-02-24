@@ -149,7 +149,7 @@ function CardInner({ group, t, stickerConfig, ctaLabel }) {
           {group.badges?.map((badge) => (
             <span
               key={badge}
-              className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm"
+              className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-[#fff] shadow-sm"
             >
               {badge}
             </span>
@@ -327,7 +327,7 @@ export default function SubGroupLandingClient({
                   }}
                   className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
                     activeSlug === group.slug
-                      ? "bg-[var(--color-brand)] text-white"
+                      ? "bg-[var(--color-brand)] text-[#fff]"
                       : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-brand)] hover:text-[var(--color-gray-900)]"
                   }`}
                 >
@@ -467,7 +467,7 @@ export default function SubGroupLandingClient({
               {t("mp.landing.customTitle")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">{t("mp.landing.customText")}</p>
-            <Link href="/quote" className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-[var(--color-brand-dark)]">
+            <Link href="/quote" className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#fff] hover:bg-[var(--color-brand-dark)]">
               {t("home.cta.quote")}
             </Link>
           </div>
@@ -520,7 +520,7 @@ function QuickQuoteFAB({ t }) {
   return (
     <Link
       href="/quote"
-      className="fixed right-4 z-50 flex items-center gap-2 rounded-full bg-[var(--color-brand)] px-4 py-2.5 text-white shadow-lg transition-all hover:bg-[var(--color-brand-dark)] animate-in fade-in-0 slide-in-from-bottom-4 duration-300 md:hidden"
+      className="fixed right-4 z-50 flex items-center gap-2 rounded-full bg-[var(--color-brand)] px-4 py-2.5 text-[#fff] shadow-lg transition-all hover:bg-[var(--color-brand-dark)] animate-in fade-in-0 slide-in-from-bottom-4 duration-300 md:hidden"
       style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom) + 8px)" }}
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

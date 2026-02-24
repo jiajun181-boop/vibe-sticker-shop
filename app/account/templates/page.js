@@ -71,7 +71,7 @@ export default function TemplatesPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleReorder(template.id)}
-                    className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-gray-800"
+                    className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-gray-800"
                   >
                     Reorder
                   </button>

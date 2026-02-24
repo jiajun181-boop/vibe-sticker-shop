@@ -251,7 +251,7 @@ function ProductionContent() {
           Production Queue
         </h1>
         {pagination && (
-          <span className="inline-flex items-center rounded-[2px] bg-black px-2.5 py-0.5 text-xs font-medium text-white">
+          <span className="inline-flex items-center rounded-[2px] bg-black px-2.5 py-0.5 text-xs font-medium text-[#fff]">
             {pagination.total}
           </span>
         )}
@@ -372,7 +372,7 @@ function ProductionContent() {
           />
           <button
             type="submit"
-            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
             Search
           </button>

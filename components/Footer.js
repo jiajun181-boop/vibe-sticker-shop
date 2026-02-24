@@ -44,7 +44,7 @@ function NewsletterForm({ t }) {
       <button
         type="submit"
         disabled={status === "sending"}
-        className="rounded-lg bg-[var(--color-moon-gold)] px-4 py-2 text-xs font-semibold text-white transition-colors hover:brightness-95 disabled:opacity-50"
+        className="rounded-lg bg-[var(--color-moon-gold)] px-4 py-2 text-xs font-semibold text-[#fff] transition-colors hover:brightness-95 disabled:opacity-50"
       >
         {t("footer.subscribe")}
       </button>
@@ -143,7 +143,7 @@ function XiaohongshuIcon() {
 /* ── Payment card icons ── */
 function VisaIcon() {
   return (
-    <svg className="h-5 w-8" viewBox="0 0 48 32" fill="none">
+    <svg className="h-6 w-10" viewBox="0 0 48 32" fill="none">
       <rect width="48" height="32" rx="4" fill="#1A1F71" />
       <path d="M20.3 20.5h-2.8l1.7-10.5h2.8L20.3 20.5z" fill="white" />
       <path d="M31.7 10.2c-.6-.2-1.4-.4-2.5-.4-2.8 0-4.7 1.5-4.7 3.6 0 1.6 1.4 2.4 2.5 3 1.1.5 1.5.9 1.5 1.3 0 .7-.9 1-1.7 1-1.2 0-1.8-.2-2.7-.6l-.4-.2-.4 2.5c.7.3 1.9.6 3.2.6 2.9 0 4.9-1.4 4.9-3.7 0-1.2-.7-2.2-2.4-3-.9-.5-1.5-.8-1.5-1.3 0-.4.5-.9 1.5-.9.9 0 1.5.2 2 .4l.2.1.5-2.4z" fill="white" />
@@ -155,7 +155,7 @@ function VisaIcon() {
 
 function MastercardIcon() {
   return (
-    <svg className="h-5 w-8" viewBox="0 0 48 32" fill="none">
+    <svg className="h-6 w-10" viewBox="0 0 48 32" fill="none">
       <rect width="48" height="32" rx="4" fill="#252525" />
       <circle cx="19" cy="16" r="8" fill="#EB001B" />
       <circle cx="29" cy="16" r="8" fill="#F79E1B" />
@@ -166,7 +166,7 @@ function MastercardIcon() {
 
 function AmexIcon() {
   return (
-    <svg className="h-5 w-8" viewBox="0 0 48 32" fill="none">
+    <svg className="h-6 w-10" viewBox="0 0 48 32" fill="none">
       <rect width="48" height="32" rx="4" fill="#2E77BC" />
       <text x="24" y="18" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold" fontFamily="Arial">AMEX</text>
     </svg>
@@ -175,7 +175,7 @@ function AmexIcon() {
 
 function ETransferIcon() {
   return (
-    <svg className="h-5 w-8" viewBox="0 0 48 32" fill="none">
+    <svg className="h-6 w-10" viewBox="0 0 48 32" fill="none">
       <rect width="48" height="32" rx="4" fill="#F5A623" />
       <text x="24" y="18" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold" fontFamily="Arial">e-Transfer</text>
     </svg>

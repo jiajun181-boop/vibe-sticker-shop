@@ -76,7 +76,7 @@ export default function RollUpStandSections() {
             <div className="space-y-4">
               {SETUP_STEPS.map((step, i) => (
                 <div key={i} className="flex items-start gap-4">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-900 text-sm font-bold text-white">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-900 text-sm font-bold text-[#fff]">
                     {i + 1}
                   </span>
                   <div>
@@ -92,7 +92,7 @@ export default function RollUpStandSections() {
             <div className="overflow-hidden rounded-xl border border-gray-200">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-900 text-white">
+                  <tr className="bg-gray-900 text-[#fff]">
                     <th className="px-4 py-3 text-left font-medium">Feature</th>
                     <th className="px-4 py-3 text-left font-medium">Economy</th>
                     <th className="px-4 py-3 text-left font-medium">Standard</th>

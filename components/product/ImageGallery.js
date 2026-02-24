@@ -124,7 +124,7 @@ export default function ImageGallery({ images, productName }) {
               type="button"
               onClick={() => go(-1)}
               aria-label="Previous image"
-              className="absolute left-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-black/45 text-white backdrop-blur transition-colors hover:bg-black/60"
+              className="absolute left-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-black/45 text-[#fff] backdrop-blur transition-colors hover:bg-black/60"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -134,7 +134,7 @@ export default function ImageGallery({ images, productName }) {
               type="button"
               onClick={() => go(1)}
               aria-label="Next image"
-              className="absolute right-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-black/45 text-white backdrop-blur transition-colors hover:bg-black/60"
+              className="absolute right-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-black/45 text-[#fff] backdrop-blur transition-colors hover:bg-black/60"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -144,7 +144,7 @@ export default function ImageGallery({ images, productName }) {
         )}
 
         {canNav && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-xl border border-white/30 bg-black/60 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-xl border border-white/30 bg-black/60 px-3 py-1 text-[11px] font-semibold text-[#fff] backdrop-blur">
             {clamp(activeIndex + 1, 1, list.length)} / {list.length}
           </div>
         )}

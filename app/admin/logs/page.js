@@ -178,7 +178,7 @@ function LogsContent() {
           <button
             type="button"
             onClick={handleFilter}
-            className="rounded-lg bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-black"
+            className="rounded-lg bg-gray-900 px-4 py-1.5 text-xs font-semibold text-[#fff] hover:bg-black"
           >
             Filter
           </button>

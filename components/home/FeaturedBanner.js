@@ -166,7 +166,7 @@ function FeaturedCard({ product, compact }) {
             {cad(product.basePrice)}
           </p>
         </div>
-        <span className="whitespace-nowrap rounded-full bg-[var(--color-brand)] px-3 py-1.5 label-xs tracking-wide text-white opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+        <span className="whitespace-nowrap rounded-full bg-[var(--color-brand)] px-3 py-1.5 label-xs tracking-wide text-[#fff] opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
           {t("featured.customize")} &rarr;
         </span>
       </div>

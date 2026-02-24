@@ -63,7 +63,7 @@ function InkSettingsCard({ ink, onSave }) {
           <span className="text-sm font-bold text-purple-900">${computed.toFixed(4)}/sqft</span>
         </div>
         <button onClick={handleSave} disabled={saving}
-          className="rounded-lg bg-purple-700 px-4 py-1.5 text-xs font-bold text-white hover:bg-purple-800 disabled:opacity-50">
+          className="rounded-lg bg-purple-700 px-4 py-1.5 text-xs font-bold text-[#fff] hover:bg-purple-800 disabled:opacity-50">
           {saving ? "Saving..." : "Save"}
         </button>
       </div>
@@ -251,7 +251,7 @@ function FormulaCard({ data, setData, loading }) {
           </div>
 
           <button onClick={() => save(data)} disabled={saving}
-            className="rounded-lg bg-orange-700 px-6 py-2 text-sm font-bold text-white hover:bg-orange-800 disabled:opacity-50">
+            className="rounded-lg bg-orange-700 px-6 py-2 text-sm font-bold text-[#fff] hover:bg-orange-800 disabled:opacity-50">
             {saving ? "Saving..." : "Save All Formula Settings"}
           </button>
         </div>
@@ -413,7 +413,7 @@ export default function MaterialsPage() {
           <p className="text-sm text-gray-500">Manage material inventory and cost per sqft for COST_PLUS pricing</p>
         </div>
         <button onClick={handleAdd}
-          className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-bold text-white hover:bg-gray-800">
+          className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-bold text-[#fff] hover:bg-gray-800">
           + Add Material
         </button>
       </div>
@@ -453,12 +453,12 @@ export default function MaterialsPage() {
       {/* Filter tabs */}
       <div className="flex gap-2">
         <button onClick={() => setFilterType("all")}
-          className={`rounded-lg px-3 py-1.5 text-xs font-bold ${filterType === "all" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+          className={`rounded-lg px-3 py-1.5 text-xs font-bold ${filterType === "all" ? "bg-gray-900 text-[#fff]" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
           All ({materials.length})
         </button>
         {types.map((t) => (
           <button key={t} onClick={() => setFilterType(t)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold ${filterType === t ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+            className={`rounded-lg px-3 py-1.5 text-xs font-bold ${filterType === t ? "bg-gray-900 text-[#fff]" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
             {t} ({materials.filter((m) => m.type === t).length})
           </button>
         ))}

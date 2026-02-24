@@ -178,7 +178,7 @@ function ReviewsContent() {
             }}
             className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
               activeFilter === tab.value
-                ? "bg-black text-white"
+                ? "bg-black text-[#fff]"
                 : "bg-white text-[#666] border border-[#e0e0e0] hover:border-black hover:text-black"
             }`}
           >
@@ -289,7 +289,7 @@ function ReviewsContent() {
                     type="button"
                     disabled={actionLoading === review.id}
                     onClick={() => handleAction(review.id, "approve")}
-                    className="rounded-[3px] bg-green-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+                    className="rounded-[3px] bg-green-600 px-3 py-1.5 text-xs font-semibold text-[#fff] transition-colors hover:bg-green-700 disabled:opacity-50"
                   >
                     {actionLoading === review.id ? "..." : "Approve"}
                   </button>

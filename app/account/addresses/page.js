@@ -158,7 +158,7 @@ export default function AddressesPage() {
         {!showForm && (
           <button
             onClick={handleAdd}
-            className="rounded-xl border border-[var(--color-gray-900)] bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-[var(--color-gray-800)]"
+            className="rounded-xl border border-[var(--color-gray-900)] bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-[var(--color-gray-800)]"
           >
             {t("account.addresses.add")}
           </button>
@@ -304,7 +304,7 @@ export default function AddressesPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-xl bg-[var(--color-gray-900)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-[var(--color-gray-800)] disabled:opacity-50"
+              className="rounded-xl bg-[var(--color-gray-900)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-[var(--color-gray-800)] disabled:opacity-50"
             >
               {saving ? t("account.profile.saving") : t("account.profile.save")}
             </button>
@@ -343,7 +343,7 @@ export default function AddressesPage() {
                     </span>
                   )}
                   {addr.isDefaultShipping && (
-                    <span className="rounded-xl bg-[var(--color-gray-900)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+                    <span className="rounded-xl bg-[var(--color-gray-900)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#fff]">
                       {t("account.addresses.default")}
                     </span>
                   )}

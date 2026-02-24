@@ -91,11 +91,11 @@ export default function PricingSidebar({
 
   const atcClasses =
     atcState === "added"
-      ? "w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider bg-emerald-600 text-white cursor-default"
+      ? "w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider bg-emerald-600 text-[#fff] cursor-default"
       : atcState === "adding"
-      ? "w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider bg-gray-600 text-white cursor-wait"
+      ? "w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider bg-gray-600 text-[#fff] cursor-wait"
       : canAddToCart
-      ? "w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all duration-200 bg-gray-900 text-white shadow-lg shadow-gray-900/20 hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
+      ? "w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all duration-200 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
       : "w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider cursor-not-allowed bg-gray-200 text-gray-400";
 
   return (
@@ -228,7 +228,7 @@ export default function PricingSidebar({
             <button
               type="button"
               onClick={onRequestQuote}
-              className="w-full rounded-sm bg-gray-900 px-4 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-gray-900/20 transition-all duration-200 hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
+              className="w-full rounded-sm bg-gray-900 px-4 py-3.5 text-sm font-bold uppercase tracking-wider text-[#fff] shadow-lg shadow-gray-900/20 transition-all duration-200 hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
             >
               {t?.("configurator.requestQuote") || "Request a Quote"}
             </button>
@@ -241,7 +241,7 @@ export default function PricingSidebar({
                 className={atcClasses}
               >
                 {atcState === "adding" ? (
-                  <svg className="mx-auto h-5 w-5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                  <svg className="mx-auto h-5 w-5 animate-spin text-[#fff]" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>

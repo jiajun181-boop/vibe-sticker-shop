@@ -200,12 +200,12 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                     onClick={() => setFormTypeId(ft.id)}
                     className={`group relative flex flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
                       formTypeId === ft.id
-                        ? "border-gray-900 bg-gray-900 text-white shadow-lg shadow-gray-900/20 scale-[1.02]"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
                     }`}
                   >
                     {formTypeId === ft.id && (
-                      <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
+                      <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                       </span>
                     )}
@@ -228,7 +228,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                     onClick={() => setSizeIdx(i)}
                     className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                       sizeIdx === i
-                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
@@ -251,7 +251,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                     onClick={() => setPrintColor(c.id)}
                     className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                       printColor === c.id
-                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
@@ -275,7 +275,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                     onClick={() => setBinding(b.id)}
                     className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                       binding === b.id
-                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
@@ -298,7 +298,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                     onClick={() => setQuantity(q)}
                     className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
                       quantity === q
-                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
@@ -353,7 +353,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                       </div>
                     </div>
                     <div className="pt-5">
-                      <span className="rounded-xl bg-gray-900 px-3 py-1 text-[11px] font-semibold text-white">
+                      <span className="rounded-xl bg-gray-900 px-3 py-1 text-[11px] font-semibold text-[#fff]">
                         {quantity.toLocaleString()} {t("ncr.numbering.forms")}
                       </span>
                     </div>
@@ -379,7 +379,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                             onClick={() => setNumberColor(c.id)}
                             className={`rounded-xl border-2 px-4 py-2 text-sm font-bold transition-all duration-150 ${
                               numberColor === c.id
-                                ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                                ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                                 : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                             }`}
                           >

@@ -84,7 +84,7 @@ export default function TemplateDetailPage() {
             rows={2}
           />
           <div className="flex gap-2">
-            <button onClick={handleSave} className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white">
+            <button onClick={handleSave} className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-[#fff]">
               Save
             </button>
             <button onClick={() => setEditing(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600">
@@ -99,7 +99,7 @@ export default function TemplateDetailPage() {
             {template.description && <p className="mt-1 text-gray-500">{template.description}</p>}
           </div>
           <div className="flex gap-2">
-            <button onClick={handleReorder} className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800">
+            <button onClick={handleReorder} className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-gray-800">
               Reorder
             </button>
             <button onClick={() => setEditing(true)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">

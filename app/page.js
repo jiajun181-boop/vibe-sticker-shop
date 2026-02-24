@@ -107,10 +107,10 @@ export default async function HomePage() {
                   href={cat.href}
                   className={`group relative flex flex-col justify-end overflow-hidden rounded-2xl p-6 h-[160px] bg-gradient-to-br ${cat.gradient} shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md`}
                 >
-                  <h3 className="relative text-xl font-bold text-white leading-tight">
+                  <h3 className="relative text-xl font-bold text-[#fff] leading-tight">
                     {cat.title}
                   </h3>
-                  <p className="relative mt-1 text-sm text-white/80 leading-snug">
+                  <p className="relative mt-1 text-sm text-[#fff]/80 leading-snug">
                     {cat.desc}
                   </p>
                 </Link>
@@ -138,7 +138,47 @@ export default async function HomePage() {
                 Our best sellers across all categories
               </p>
             </div>
-            <div className="relative">
+            {/* Mobile: swipeable horizontal scroll */}
+            <div className="md:hidden overflow-x-auto scroll-smooth snap-x snap-mandatory px-4 pb-4 -mx-4" style={{ WebkitOverflowScrolling: "touch" }}>
+              <div className="flex gap-4">
+                {featured.slice(0, 8).map((p) => (
+                  <Link
+                    key={p.slug}
+                    href={p.href}
+                    className="group w-[240px] shrink-0 snap-start overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 active:scale-[0.98]"
+                  >
+                    <div className="relative h-[160px] bg-[var(--color-gray-100)]">
+                      <Image
+                        src={p.image}
+                        alt={p.images?.[0]?.alt || p.name}
+                        fill
+                        className="object-cover"
+                        unoptimized={isSvgImage(p.image)}
+                        sizes="240px"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="text-sm font-semibold text-[var(--color-gray-900)] leading-tight line-clamp-2">
+                        {p.name}
+                      </h3>
+                      {p.fromPrice > 0 && (
+                        <p className="mt-1 text-sm font-bold text-[var(--color-brand)]">
+                          From {formatCad(p.fromPrice)}
+                        </p>
+                      )}
+                      <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-[#fff]">
+                        View Details
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+            {/* Desktop: auto-scrolling marquee */}
+            <div className="relative hidden md:block">
               <div className="flex gap-4 animate-marquee hover:[animation-play-state:paused]">
                 {[...featured.slice(0, 8), ...featured.slice(0, 8)].map((p, i) => (
                   <Link
@@ -146,12 +186,12 @@ export default async function HomePage() {
                     href={p.href}
                     className="group w-[260px] shrink-0 overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    <div className="relative h-[180px] bg-white">
+                    <div className="relative h-[180px] bg-[var(--color-gray-100)]">
                       <Image
                         src={p.image}
                         alt={p.images?.[0]?.alt || p.name}
                         fill
-                        className="object-contain p-4"
+                        className="object-cover"
                         unoptimized={isSvgImage(p.image)}
                         sizes="260px"
                       />
@@ -165,7 +205,7 @@ export default async function HomePage() {
                           From {formatCad(p.fromPrice)}
                         </p>
                       )}
-                      <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
+                      <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
                         View Details
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -217,10 +257,10 @@ export default async function HomePage() {
         {/* 5. CTA */}
         <section className="bg-[var(--color-brand)] py-16 md:py-20">
           <div className="mx-auto max-w-2xl px-4 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#fff] tracking-tight">
               Ready to get started?
             </h2>
-            <p className="mt-3 text-sm text-white/80">
+            <p className="mt-3 text-sm text-[#fff]/80">
               Get an instant quote or browse our full product catalog.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -232,7 +272,7 @@ export default async function HomePage() {
               </Link>
               <Link
                 href="/shop"
-                className="rounded-full border-2 border-white px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                className="rounded-full border-2 border-white px-6 py-3 text-sm font-semibold text-[#fff] transition-colors hover:bg-white/10"
               >
                 Browse Products
               </Link>

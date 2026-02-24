@@ -11,6 +11,9 @@ import { USE_CASES } from "@/lib/useCases";
 
 export default function Navbar({ catalogConfig }) {
   const { departments, departmentMeta, categoryMeta } = catalogConfig || {};
+  const isZh = locale === "zh";
+  const getTitle = (obj) => isZh ? (obj?.titleZh || obj?.title) : obj?.title;
+  const getSgTitle = (sg) => isZh ? (sg.titleZh || sg.title) : sg.title;
   const storeCount = useCartStore((state) => state.getCartCount());
   const openCart = useCartStore((state) => state.openCart);
   const { t, locale, setLocale, hydrated } = useTranslation();
@@ -340,7 +343,7 @@ export default function Navbar({ catalogConfig }) {
                             }}
                             className={`block w-full rounded-sm px-3 py-2 text-left text-sm transition-colors ${selected ? "bg-white font-semibold text-[var(--color-gray-800)] ring-1 ring-[var(--color-gray-200)]" : "text-[var(--color-gray-600)] hover:bg-white hover:text-[var(--color-gray-800)]"}`}
                           >
-                            {departmentMeta?.[dept.key]?.title || dept.key}
+                            {getTitle(departmentMeta?.[dept.key]) || dept.key}
                           </Link>
                         );
                       })}
@@ -366,10 +369,10 @@ export default function Navbar({ catalogConfig }) {
                             <div className="mb-2 flex items-center justify-between gap-3">
                               <Link href={`/shop/${catSlug}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-gray-800)] hover:text-black">
                                 <span>{cMeta?.icon || ""}</span>
-                                <span>{cMeta?.title || catSlug}</span>
+                                <span>{getTitle(cMeta) || catSlug}</span>
                               </Link>
                               <Link href={`/shop/${catSlug}`} className="text-[11px] font-semibold text-[var(--color-gray-500)] hover:text-[var(--color-gray-800)]">
-                                {t("nav.allIn", { category: cMeta?.title || catSlug })} &rarr;
+                                {t("nav.allIn", { category: getTitle(cMeta) || catSlug })} &rarr;
                               </Link>
                             </div>
                             <div className="grid grid-cols-3 gap-1.5">
@@ -383,7 +386,7 @@ export default function Navbar({ catalogConfig }) {
                                       : "text-[var(--color-gray-600)]"
                                   }`}
                                 >
-                                  {sg.title}
+                                  {getSgTitle(sg)}
                                 </Link>
                               ))}
                             </div>
@@ -543,7 +546,7 @@ export default function Navbar({ catalogConfig }) {
             <span>{t("nav.cart")}</span>
             <span
               key={cartCount}
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-brand)] label-xs font-semibold text-white cart-badge-bounce"
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-brand)] label-xs font-semibold text-[#fff] cart-badge-bounce"
             >
               {cartCount}
             </span>
@@ -599,7 +602,7 @@ export default function Navbar({ catalogConfig }) {
                 return (
                   <div key={dept.key} className="border-b border-[var(--color-gray-100)]">
                     <p className="py-3 text-sm font-bold text-[var(--color-gray-800)]">
-                      {deptM?.title || dept.key}
+                      {getTitle(deptM) || dept.key}
                     </p>
                     <div className="pb-2 space-y-0.5">
                       {cats.map((catSlug) => {
@@ -611,7 +614,7 @@ export default function Navbar({ catalogConfig }) {
                             onClick={() => setMobileMenuOpen(false)}
                             className="block pl-4 py-2 text-sm text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)] rounded-sm transition-colors"
                           >
-                            {cMeta?.title || catSlug}
+                            {getTitle(cMeta) || catSlug}
                           </Link>
                         );
                       })}
@@ -623,7 +626,7 @@ export default function Navbar({ catalogConfig }) {
                 <Link
                   href="/quote"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full rounded-full bg-[var(--color-brand)] px-4 py-2.5 text-center text-sm font-semibold text-white"
+                  className="block w-full rounded-full bg-[var(--color-brand)] px-4 py-2.5 text-center text-sm font-semibold text-[#fff]"
                 >
                   {t("nav.getQuote")}
                 </Link>

@@ -39,6 +39,7 @@ const CheckoutSchema = z.object({
   successUrl: z.string().url().optional(),
   cancelUrl: z.string().url().optional(),
   promoCode: z.string().max(50).nullable().optional(),
+  shippingMethod: z.enum(["delivery", "pickup"]).optional(),
 });
 
 type ProductWithPricingPreset = Prisma.ProductGetPayload<{
@@ -269,7 +270,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { items, successUrl, cancelUrl, promoCode } = result.data;
+    const { items, successUrl, cancelUrl, promoCode, shippingMethod } = result.data;
+    const isPickup = shippingMethod === "pickup";
     const baseOrigin = buildBaseOriginFromHeaders(
       req.headers,
       process.env.NEXT_PUBLIC_SITE_URL
@@ -398,7 +400,7 @@ export async function POST(req: Request) {
     const afterDiscount = Math.max(0, subtotal - discountAmount);
 
     const FREE_SHIPPING_THRESHOLD = 15000;
-    const isFreeShipping = afterDiscount >= FREE_SHIPPING_THRESHOLD;
+    const isFreeShipping = isPickup || afterDiscount >= FREE_SHIPPING_THRESHOLD;
     const shippingCost = isFreeShipping ? 0 : 1500;
 
     const taxableAmount = afterDiscount + shippingCost;
@@ -462,23 +464,35 @@ export async function POST(req: Request) {
       },
       phone_number_collection: { enabled: true },
 
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            type: "fixed_amount",
-            fixed_amount: {
-              amount: shippingCost,
-              currency: process.env.STRIPE_CURRENCY || "cad",
+      shipping_options: isPickup
+        ? [
+            {
+              shipping_rate_data: {
+                type: "fixed_amount",
+                fixed_amount: { amount: 0, currency: process.env.STRIPE_CURRENCY || "cad" },
+                display_name: "Store Pickup — FREE",
+                delivery_estimate: {
+                  minimum: { unit: "business_day", value: 2 },
+                  maximum: { unit: "business_day", value: 3 },
+                },
+                tax_behavior: "exclusive",
+              },
             },
-            display_name: isFreeShipping ? "Free Shipping" : "Standard Shipping",
-            delivery_estimate: {
-              minimum: { unit: "business_day", value: 3 },
-              maximum: { unit: "business_day", value: 5 },
+          ]
+        : [
+            {
+              shipping_rate_data: {
+                type: "fixed_amount",
+                fixed_amount: { amount: shippingCost, currency: process.env.STRIPE_CURRENCY || "cad" },
+                display_name: isFreeShipping ? "Free Shipping" : "Standard Shipping",
+                delivery_estimate: {
+                  minimum: { unit: "business_day", value: 3 },
+                  maximum: { unit: "business_day", value: 5 },
+                },
+                tax_behavior: "exclusive",
+              },
             },
-            tax_behavior: "exclusive",
-          },
-        },
-      ],
+          ],
 
       automatic_tax: { enabled: true },
 

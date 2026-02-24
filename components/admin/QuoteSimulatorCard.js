@@ -135,13 +135,13 @@ export default function QuoteSimulatorCard({ formulaConfig, materials }) {
             <div className="flex items-center gap-2 pb-1">
               <button
                 onClick={() => setIsB2B(false)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-bold ${!isB2B ? "bg-teal-700 text-white" : "bg-teal-100 text-teal-700 hover:bg-teal-200"}`}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold ${!isB2B ? "bg-teal-700 text-[#fff]" : "bg-teal-100 text-teal-700 hover:bg-teal-200"}`}
               >
                 Retail
               </button>
               <button
                 onClick={() => setIsB2B(true)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-bold ${isB2B ? "bg-teal-700 text-white" : "bg-teal-100 text-teal-700 hover:bg-teal-200"}`}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold ${isB2B ? "bg-teal-700 text-[#fff]" : "bg-teal-100 text-teal-700 hover:bg-teal-200"}`}
               >
                 B2B
               </button>
@@ -223,7 +223,7 @@ export default function QuoteSimulatorCard({ formulaConfig, materials }) {
                     <Row label="File / setup fee" formula="" amount={result.meta.fileFee} />
                   )}
                   {/* Final price */}
-                  <tr className="bg-teal-700 text-white font-bold">
+                  <tr className="bg-teal-700 text-[#fff] font-bold">
                     <td className="px-3 py-2" colSpan={2}>Final price (roundTo99)</td>
                     <td className="px-3 py-2 text-right font-mono text-base">${(result.totalCents / 100).toFixed(2)}</td>
                   </tr>

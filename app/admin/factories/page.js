@@ -182,7 +182,7 @@ export default function FactoriesPage() {
         <button
           type="button"
           onClick={openAddModal}
-          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
         >
           + Add Factory
         </button>
@@ -417,7 +417,7 @@ export default function FactoriesPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 rounded-lg bg-gray-900 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
+                  className="flex-1 rounded-lg bg-gray-900 py-2.5 text-sm font-semibold text-[#fff] hover:bg-black disabled:opacity-50"
                 >
                   {saving
                     ? "Saving..."

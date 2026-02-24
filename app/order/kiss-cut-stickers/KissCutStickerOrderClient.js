@@ -374,7 +374,7 @@ export default function KissCutStickerOrderClient() {
                 onClick={handleAddToCart}
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
-                  canAddToCart ? "bg-gray-900 text-white hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"
+                  canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"
                 }`}
               >
                 {t("kc.addToCart")}
@@ -422,7 +422,7 @@ export default function KissCutStickerOrderClient() {
             onClick={handleAddToCart}
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
-              canAddToCart ? "bg-gray-900 text-white hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"
+              canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"
             }`}
           >
             {t("kc.addToCart")}
@@ -464,7 +464,7 @@ function Chip({ active, onClick, children }) {
       type="button"
       onClick={onClick}
       className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-        active ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"
+        active ? "border-gray-900 bg-gray-900 text-[#fff]" : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"
       }`}
     >
       {children}

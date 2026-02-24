@@ -206,7 +206,7 @@ export default function LetterheadTemplateBuilder({ onTemplateData, t }) {
               }
               appearance={{
                 button:
-                  "ut-ready:bg-gray-900 ut-ready:hover:bg-gray-800 ut-uploading:bg-gray-600 rounded-full px-5 py-2 text-sm font-semibold text-white transition-colors",
+                  "ut-ready:bg-gray-900 ut-ready:hover:bg-gray-800 ut-uploading:bg-gray-600 rounded-full px-5 py-2 text-sm font-semibold text-[#fff] transition-colors",
                 allowedContent: "hidden",
               }}
               content={{

@@ -273,7 +273,7 @@ export default function AssignmentRulesPage() {
         <button
           type="button"
           onClick={openAddModal}
-          className="shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+          className="shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-black"
         >
           + Add Rule
         </button>
@@ -739,7 +739,7 @@ export default function AssignmentRulesPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 rounded-lg bg-gray-900 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
+                  className="flex-1 rounded-lg bg-gray-900 py-2.5 text-sm font-semibold text-[#fff] hover:bg-black disabled:opacity-50"
                 >
                   {saving
                     ? "Saving..."

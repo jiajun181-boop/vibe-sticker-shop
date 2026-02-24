@@ -122,7 +122,7 @@ export default function VinylBannerSections() {
             <ul className="space-y-3">
               {INSTALLATION_TIPS.map((tip, i) => (
                 <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
-                  <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
+                  <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-[#fff]">
                     {i + 1}
                   </span>
                   {tip}
@@ -178,7 +178,7 @@ export default function VinylBannerSections() {
         <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-900 text-white">
+              <tr className="bg-gray-900 text-[#fff]">
                 <th className="px-4 py-3 text-left font-medium">Feature</th>
                 <th className="px-4 py-3 text-left font-medium">Vinyl Banner</th>
                 <th className="px-4 py-3 text-left font-medium">Mesh Banner</th>

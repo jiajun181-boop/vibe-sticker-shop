@@ -466,7 +466,7 @@ export default function ProductionJobDetailPage() {
                 type="button"
                 onClick={handleSaveChanges}
                 disabled={saving}
-                className="rounded-lg bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:bg-gray-400"
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-xs font-semibold text-[#fff] hover:bg-blue-700 disabled:bg-gray-400"
               >
                 {saving ? "Saving..." : "Save Changes"}
               </button>
@@ -510,7 +510,7 @@ export default function ProductionJobDetailPage() {
                   type="button"
                   onClick={handleAddNote}
                   disabled={addingNote || !notePayload.trim()}
-                  className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black disabled:bg-gray-400"
+                  className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-black disabled:bg-gray-400"
                 >
                   {addingNote ? "Adding..." : "Add Note"}
                 </button>

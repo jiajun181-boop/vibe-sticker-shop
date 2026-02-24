@@ -127,7 +127,7 @@ export default async function AboutPage() {
             <div className="space-y-6">
               {milestones.map((m) => (
                 <div key={m.year} className="relative pl-12">
-                  <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-[var(--color-gray-900)] text-white label-xs font-bold flex items-center justify-center">
+                  <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-[var(--color-gray-900)] text-[#fff] label-xs font-bold flex items-center justify-center">
                     {"\u2713"}
                   </div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--color-gray-400)]">{m.year}</p>
@@ -193,7 +193,7 @@ export default async function AboutPage() {
         </section>
 
         {/* CTA */}
-        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-[var(--color-gray-900)] p-8 text-white relative overflow-hidden">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-[var(--color-gray-900)] p-8 text-[#fff] relative overflow-hidden">
           {/* Subtle brand watermark */}
           <div className="absolute top-4 right-4 opacity-[0.04]">
             <Image src="/logo-lunarprint.png" alt="" width={120} height={120} className="opacity-20" />
@@ -209,7 +209,7 @@ export default async function AboutPage() {
             </Link>
             <Link
               href="/contact"
-              className="inline-block rounded-xl border border-white/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:border-white/70 transition-colors"
+              className="inline-block rounded-xl border border-white/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] hover:border-white/70 transition-colors"
             >
               {t("about.ctaContact")}
             </Link>

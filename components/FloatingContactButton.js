@@ -50,8 +50,8 @@ export default function FloatingContactButton() {
         onClick={() => setOpen(!open)}
         className={`flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-200 ${
           open
-            ? "bg-gray-800 text-white rotate-45"
-            : "bg-[var(--color-brand)] text-white hover:bg-[var(--color-brand-dark)] hover:scale-105"
+            ? "bg-gray-800 text-[#fff] rotate-45"
+            : "bg-[var(--color-brand)] text-[#fff] hover:bg-[var(--color-brand-dark)] hover:scale-105"
         }`}
         aria-label="Contact us"
       >

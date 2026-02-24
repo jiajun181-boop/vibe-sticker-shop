@@ -216,7 +216,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 rounded-xl bg-black py-2.5 text-sm font-bold text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+              className="flex-1 rounded-xl bg-black py-2.5 text-sm font-bold text-[#fff] transition-colors hover:bg-gray-800 disabled:opacity-50"
             >
               {loading ? "Saving..." : isEdit ? "Update Product" : "Create Product"}
             </button>

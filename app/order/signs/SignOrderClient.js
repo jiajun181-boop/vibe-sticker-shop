@@ -279,7 +279,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
                     >
                       {isActive && (
                         <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                         </span>
                       )}
                       <span className="text-sm font-bold text-gray-800">{mat.label}</span>
@@ -299,7 +299,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
                     onClick={() => { setSizeIdx(i); setCustomW(""); setCustomH(""); }}
                     className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
                       sizeIdx === i
-                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
@@ -311,7 +311,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
                   onClick={() => setSizeIdx(-1)}
                   className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
                     isCustomSize
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                       : "border-dashed border-gray-300 bg-white text-gray-500 hover:border-gray-500"
                   }`}
                 >
@@ -360,7 +360,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
                       onClick={() => setDoubleSided(ds)}
                       className={`flex-1 rounded-xl border-2 px-4 py-3 text-center font-bold transition-all ${
                         doubleSided === ds
-                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
@@ -392,7 +392,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
                       >
                         {isActive && (
                           <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                            <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                           </span>
                         )}
                         {icon && <div className="mb-0.5">{icon}</div>}
@@ -422,7 +422,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
                       onClick={() => { setQuantity(q); setCustomQty(""); }}
                       className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
                         isActive
-                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >

@@ -108,16 +108,16 @@ export default async function UseCasePage({ params }) {
       />
 
       {/* Hero */}
-      <div className="bg-[var(--color-ink-black)] text-white pt-24 pb-16 px-6 relative overflow-hidden">
+      <div className="bg-[var(--color-ink-black)] text-[#fff] pt-24 pb-16 px-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.04] pointer-events-none flex items-center justify-center">
           <span className="text-[250px] select-none">{currentUseCase.icon}</span>
         </div>
         <div className="max-w-5xl mx-auto relative">
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 text-xs text-[var(--color-gray-500)] mb-6">
-            <Link href="/" className="hover:text-white transition-colors">{t("nav.home")}</Link>
+            <Link href="/" className="hover:text-[#fff] transition-colors">{t("nav.home")}</Link>
             <span>/</span>
-            <Link href="/ideas" className="hover:text-white transition-colors">{t("nav.ideas")}</Link>
+            <Link href="/ideas" className="hover:text-[#fff] transition-colors">{t("nav.ideas")}</Link>
             <span>/</span>
             <span className="text-[var(--color-gray-300)]">{t(`ideas.${slug}.title`)}</span>
           </nav>
@@ -152,7 +152,7 @@ export default async function UseCasePage({ params }) {
               href={`/ideas/${uc.slug}`}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
                 uc.slug === slug
-                  ? "bg-[var(--color-gray-900)] text-white"
+                  ? "bg-[var(--color-gray-900)] text-[#fff]"
                   : "bg-white border border-[var(--color-gray-200)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
               }`}
             >
@@ -177,7 +177,7 @@ export default async function UseCasePage({ params }) {
                 key={i}
                 className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
               >
-                <div className="w-8 h-8 rounded-full bg-[var(--color-gray-900)] text-white text-xs font-black flex items-center justify-center mb-3">
+                <div className="w-8 h-8 rounded-full bg-[var(--color-gray-900)] text-[#fff] text-xs font-black flex items-center justify-center mb-3">
                   {i + 1}
                 </div>
                 <h3 className="font-bold text-sm mb-2">{tip.title}</h3>
@@ -217,7 +217,7 @@ export default async function UseCasePage({ params }) {
                 </ul>
                 <Link
                   href={`/quote?sku=${encodeURIComponent(bundle.id)}`}
-                  className="block w-full rounded-xl bg-[var(--color-gray-900)] py-2 text-center text-xs font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-black"
+                  className="block w-full rounded-xl bg-[var(--color-gray-900)] py-2 text-center text-xs font-semibold uppercase tracking-[0.1em] text-[#fff] transition-colors hover:bg-black"
                 >
                   {t("solutions.getPackage")}
                 </Link>
@@ -312,7 +312,7 @@ export default async function UseCasePage({ params }) {
               <Link
                 key={r.tag}
                 href={`/shop/industry/${r.tag}`}
-                className="flex items-center gap-2 rounded-xl border border-[var(--color-gray-200)] bg-white px-4 py-2 text-xs font-medium text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)] hover:bg-[var(--color-gray-900)] hover:text-white transition-all"
+                className="flex items-center gap-2 rounded-xl border border-[var(--color-gray-200)] bg-white px-4 py-2 text-xs font-medium text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)] hover:bg-[var(--color-gray-900)] hover:text-[#fff] transition-all"
               >
                 <span>{r.icon}</span>
                 {r.title}
@@ -343,7 +343,7 @@ export default async function UseCasePage({ params }) {
 
       {/* CTA */}
       <div className="max-w-4xl mx-auto px-6">
-        <div className="rounded-3xl bg-[var(--color-gray-900)] text-white p-8 md:p-12 text-center">
+        <div className="rounded-3xl bg-[var(--color-gray-900)] text-[#fff] p-8 md:p-12 text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--color-gray-500)] mb-3">
             {t("common.printPartner")}
           </p>
@@ -362,7 +362,7 @@ export default async function UseCasePage({ params }) {
             </Link>
             <Link
               href="/shop"
-              className="border border-white/30 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-[0.14em] hover:border-white/70 transition-colors"
+              className="border border-white/30 text-[#fff] px-6 py-3 rounded-xl text-xs font-black uppercase tracking-[0.14em] hover:border-white/70 transition-colors"
             >
               {t("common.browseAll")}
             </Link>

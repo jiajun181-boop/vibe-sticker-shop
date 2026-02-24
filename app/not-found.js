@@ -12,7 +12,7 @@ export default async function NotFound() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/shop"
-            className="rounded-xl bg-[var(--color-gray-900)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black"
+            className="rounded-xl bg-[var(--color-gray-900)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-black"
           >
             {t("error.404.browseProducts")}
           </Link>

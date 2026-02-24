@@ -250,7 +250,7 @@ export default function ReviewsSection({ productId, productName }) {
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="self-start rounded-xl border border-[var(--color-gray-900)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-gray-900)] transition-colors hover:bg-[var(--color-gray-900)] hover:text-white"
+            className="self-start rounded-xl border border-[var(--color-gray-900)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-gray-900)] transition-colors hover:bg-[var(--color-gray-900)] hover:text-[#fff]"
           >
             Write a Review
           </button>
@@ -362,7 +362,7 @@ export default function ReviewsSection({ productId, productName }) {
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[#fff] transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {submitting ? "Submitting..." : "Submit Review"}
               </button>

@@ -155,7 +155,7 @@ export default function TicketDetailPage() {
           <button
             type="submit"
             disabled={sending || !reply.trim()}
-            className="rounded-lg bg-[var(--color-gray-900)] px-6 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50 transition-colors"
+            className="rounded-lg bg-[var(--color-gray-900)] px-6 py-2.5 text-sm font-semibold text-[#fff] hover:bg-black disabled:opacity-50 transition-colors"
           >
             {sending ? "Sending..." : "Send Reply"}
           </button>

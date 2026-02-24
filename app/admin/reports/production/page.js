@@ -339,7 +339,7 @@ export default function ProductionReportPage() {
               onClick={() => handlePreset(p.key)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                 activePreset === p.key
-                  ? "bg-gray-900 text-white"
+                  ? "bg-gray-900 text-[#fff]"
                   : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
               }`}
             >

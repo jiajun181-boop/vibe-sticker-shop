@@ -130,7 +130,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
                     onClick={() => setSizeIdx(i)}
                     className={`px-4 py-2.5 rounded-full text-xs font-bold border transition-all ${
                       sizeIdx === i
-                        ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)]"
+                        ? "bg-[var(--color-brand)] text-[#fff] border-[var(--color-brand)]"
                         : "bg-[var(--color-gray-50)] text-[var(--color-gray-600)] border-[var(--color-gray-200)] hover:border-[var(--color-brand)]"
                     }`}
                   >
@@ -170,7 +170,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
                     key={n}
                     onClick={() => setQty(n)}
                     className={`px-3 py-1.5 rounded-full label-xs font-bold transition-all ${
-                      qty === n ? "bg-[var(--color-brand)] text-white" : "bg-[var(--color-gray-100)] text-[var(--color-gray-500)] hover:bg-[var(--color-gray-200)]"
+                      qty === n ? "bg-[var(--color-brand)] text-[#fff]" : "bg-[var(--color-gray-100)] text-[var(--color-gray-500)] hover:bg-[var(--color-gray-200)]"
                     }`}
                   >
                     {n}

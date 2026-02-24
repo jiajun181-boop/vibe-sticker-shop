@@ -96,7 +96,7 @@ function LoginContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
+            className="w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
           >
             {loading ? t("auth.login.signingIn") : t("auth.login.submit")}
           </button>

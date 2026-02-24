@@ -91,7 +91,7 @@ export default function AdminUploadOverlay({ productId, productName }) {
         type="button"
         onClick={() => fileRef.current?.click()}
         disabled={uploading}
-        className="flex h-12 w-12 items-center justify-center rounded-full bg-black/80 text-white shadow-lg backdrop-blur transition-all hover:bg-black disabled:opacity-60 sm:h-auto sm:w-auto sm:gap-1.5 sm:rounded-lg sm:px-3 sm:py-2 sm:text-xs sm:font-semibold"
+        className="flex h-12 w-12 items-center justify-center rounded-full bg-black/80 text-[#fff] shadow-lg backdrop-blur transition-all hover:bg-black disabled:opacity-60 sm:h-auto sm:w-auto sm:gap-1.5 sm:rounded-lg sm:px-3 sm:py-2 sm:text-xs sm:font-semibold"
         title="Admin: Upload product image"
       >
         {uploading ? (

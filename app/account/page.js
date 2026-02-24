@@ -156,7 +156,7 @@ export default function AccountDashboard() {
             <p className="mt-1 text-xs text-[var(--color-gray-400)]">{t("account.orders.emptyHint")}</p>
             <Link
               href="/shop"
-              className="mt-4 inline-block rounded-xl bg-[var(--color-gray-900)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:bg-black"
+              className="mt-4 inline-block rounded-xl bg-[var(--color-gray-900)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] hover:bg-black"
             >
               {t("cart.continueShopping")}
             </Link>

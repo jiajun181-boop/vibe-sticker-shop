@@ -299,7 +299,7 @@ export default function ProductionBoardPage() {
 
         {/* View toggle */}
         <div className="flex items-center gap-1 sm:ml-auto">
-          <span className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-white">
+          <span className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-[#fff]">
             Board
           </span>
           <Link

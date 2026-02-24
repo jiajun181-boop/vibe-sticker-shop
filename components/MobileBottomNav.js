@@ -61,7 +61,8 @@ function ChevronIcon({ className }) {
 }
 
 function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMeta }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const isZh = locale === "zh";
   const [expanded, setExpanded] = useState({});
 
   // Lock body scroll when open
@@ -125,7 +126,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
                     <span className="flex items-center gap-2.5">
                       <span className="text-lg leading-none">{meta?.icon || "📦"}</span>
                       <span className="text-lg font-semibold text-[var(--color-gray-800)]">
-                        {meta?.title || departmentMeta?.[key]?.title || key}
+                        {isZh ? (meta?.titleZh || departmentMeta?.[key]?.titleZh || meta?.title || departmentMeta?.[key]?.title || key) : (meta?.title || departmentMeta?.[key]?.title || key)}
                       </span>
                     </span>
                     <ChevronIcon
@@ -145,7 +146,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
                           onClick={onClose}
                           className="block pl-8 py-2 text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)] transition-colors"
                         >
-                          {sg.title}
+                          {isZh ? (sg.titleZh || sg.title) : sg.title}
                         </Link>
                       ))}
                     </div>
@@ -297,7 +298,7 @@ export default function MobileBottomNav({ catalogConfig }) {
                   {tab.badge > 0 && (
                     <span
                       key={tab.badge}
-                      className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-moon-blue)] px-1 label-xs font-bold text-white cart-badge-bounce"
+                      className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-moon-blue)] px-1 label-xs font-bold text-[#fff] cart-badge-bounce"
                     >
                       {tab.badge > 99 ? "99+" : tab.badge}
                     </span>

@@ -53,7 +53,7 @@ export default function HowItWorks() {
             {/* Number badge */}
             <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-xl bg-[var(--color-brand-50)] text-[var(--color-brand)] mb-4 mx-auto">
               {STEP_ICONS[i]}
-              <span className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-dark)] text-white rounded-full label-xs flex items-center justify-center tracking-normal font-black">
+              <span className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-dark)] text-[#fff] rounded-full label-xs flex items-center justify-center tracking-normal font-black">
                 {i + 1}
               </span>
             </div>

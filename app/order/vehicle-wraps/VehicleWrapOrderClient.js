@@ -255,7 +255,7 @@ export default function VehicleWrapOrderClient() {
                   onClick={() => setTypeId(tp.id)}
                   className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
                     typeId === tp.id
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
@@ -279,7 +279,7 @@ export default function VehicleWrapOrderClient() {
                   onClick={() => setVehicleId(v.id)}
                   className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
                     vehicleId === v.id
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
@@ -305,7 +305,7 @@ export default function VehicleWrapOrderClient() {
                   onClick={() => setMaterialId(m.id)}
                   className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
                     materialId === m.id
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
@@ -424,7 +424,7 @@ export default function VehicleWrapOrderClient() {
             <div className="space-y-3">
               <a
                 href="/quote"
-                className="block w-full rounded-full bg-gray-900 px-4 py-3 text-center text-sm font-semibold text-white transition-all hover:bg-gray-800"
+                className="block w-full rounded-full bg-gray-900 px-4 py-3 text-center text-sm font-semibold text-[#fff] transition-all hover:bg-gray-800"
               >
                 Request a Quote
               </a>
@@ -450,7 +450,7 @@ export default function VehicleWrapOrderClient() {
           </div>
           <a
             href="/quote"
-            className="shrink-0 rounded-full bg-gray-900 px-5 py-2.5 text-xs font-semibold text-white transition-all hover:bg-gray-800"
+            className="shrink-0 rounded-full bg-gray-900 px-5 py-2.5 text-xs font-semibold text-[#fff] transition-all hover:bg-gray-800"
           >
             Request a Quote
           </a>
@@ -483,7 +483,7 @@ function Chip({ active, onClick, children }) {
       onClick={onClick}
       className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
         active
-          ? "border-gray-900 bg-gray-900 text-white"
+          ? "border-gray-900 bg-gray-900 text-[#fff]"
           : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"
       }`}
     >

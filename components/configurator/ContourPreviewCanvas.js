@@ -130,7 +130,7 @@ export default function ContourPreviewCanvas({
             onClick={() => setZoom(z)}
             className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
               zoom === z
-                ? "bg-gray-900 text-white"
+                ? "bg-gray-900 text-[#fff]"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >

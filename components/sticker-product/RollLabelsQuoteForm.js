@@ -127,7 +127,7 @@ export default function RollLabelsQuoteForm() {
               >
                 {isActive && (
                   <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-gray-900">
-                    <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <svg className="h-2.5 w-2.5 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>
                   </span>
@@ -152,7 +152,7 @@ export default function RollLabelsQuoteForm() {
               onClick={() => setShape(s.id)}
               className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
                 shape === s.id
-                  ? "border-gray-900 bg-gray-900 text-white"
+                  ? "border-gray-900 bg-gray-900 text-[#fff]"
                   : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
               }`}
             >
@@ -206,7 +206,7 @@ export default function RollLabelsQuoteForm() {
               onClick={() => { setQuantity(q); setCustomQty(""); }}
               className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
                 customQty === "" && quantity === q
-                  ? "border-gray-900 bg-gray-900 text-white"
+                  ? "border-gray-900 bg-gray-900 text-[#fff]"
                   : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
               }`}
             >
@@ -238,7 +238,7 @@ export default function RollLabelsQuoteForm() {
               onClick={() => setFinish(f)}
               className={`rounded-lg border-2 px-3 py-2 text-xs font-bold capitalize transition-all ${
                 finish === f
-                  ? "border-gray-900 bg-gray-900 text-white"
+                  ? "border-gray-900 bg-gray-900 text-[#fff]"
                   : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
               }`}
             >
@@ -305,7 +305,7 @@ export default function RollLabelsQuoteForm() {
         disabled={!isValid || submitting}
         className={`w-full rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all ${
           isValid && !submitting
-            ? "bg-gray-900 text-white shadow-lg hover:bg-gray-800 active:scale-[0.98]"
+            ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800 active:scale-[0.98]"
             : "cursor-not-allowed bg-gray-200 text-gray-400"
         }`}
       >

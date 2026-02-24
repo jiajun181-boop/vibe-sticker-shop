@@ -173,7 +173,7 @@ export default function MiniConfigurator({ cuttingTypeId, onClose }) {
                 onClick={() => setSizeIdx(i)}
                 className={`rounded-lg border-2 px-2 py-2 text-center transition-all ${
                   sizeIdx === i
-                    ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+                    ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
                     : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                 }`}
               >
@@ -205,7 +205,7 @@ export default function MiniConfigurator({ cuttingTypeId, onClose }) {
                   onClick={() => setMaterialId(mat.id)}
                   className={`rounded-lg border-2 px-2 py-2 text-left transition-all ${
                     isActive
-                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
                       : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                   }`}
                 >
@@ -237,7 +237,7 @@ export default function MiniConfigurator({ cuttingTypeId, onClose }) {
                   onClick={() => setQuantity(q)}
                   className={`flex flex-col items-center rounded-lg border-2 px-2 py-2 transition-all ${
                     isActive
-                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
                       : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                   }`}
                 >
@@ -292,7 +292,7 @@ export default function MiniConfigurator({ cuttingTypeId, onClose }) {
             type="button"
             disabled={!canAdd}
             onClick={handleAddToCart}
-            className="rounded-lg bg-[var(--color-gray-900)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="rounded-lg bg-[var(--color-gray-900)] px-4 py-2 text-xs font-bold text-[#fff] transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Add to Cart
           </button>

@@ -159,7 +159,7 @@ export default function HardwarePricingTable() {
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab("all")}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold ${activeTab === "all" ? "bg-indigo-700 text-white" : "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"}`}
+              className={`rounded-lg px-3 py-1.5 text-xs font-bold ${activeTab === "all" ? "bg-indigo-700 text-[#fff]" : "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"}`}
             >
               All ({items.length})
             </button>
@@ -167,7 +167,7 @@ export default function HardwarePricingTable() {
               <button
                 key={cat}
                 onClick={() => setActiveTab(cat)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-bold ${activeTab === cat ? "bg-indigo-700 text-white" : "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"}`}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold ${activeTab === cat ? "bg-indigo-700 text-[#fff]" : "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"}`}
               >
                 {cat} ({items.filter((i) => i.category === cat).length})
               </button>
@@ -282,7 +282,7 @@ export default function HardwarePricingTable() {
               <button
                 onClick={handleAdd}
                 disabled={!addingSlug.trim() || !addingName.trim()}
-                className="rounded-lg bg-indigo-700 px-4 py-1.5 text-xs font-bold text-white hover:bg-indigo-800 disabled:opacity-50"
+                className="rounded-lg bg-indigo-700 px-4 py-1.5 text-xs font-bold text-[#fff] hover:bg-indigo-800 disabled:opacity-50"
               >
                 + Add
               </button>

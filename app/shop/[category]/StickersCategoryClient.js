@@ -102,15 +102,15 @@ function ProductCard({ card, stickerPrices, size = "large", imageUrl }) {
       href={card.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
     >
-      <div className={`relative flex items-center justify-center ${imageUrl ? "bg-gray-50" : `bg-gradient-to-br ${card.gradient}`} ${isLarge ? "aspect-[3/2]" : "aspect-[5/2]"}`}>
+      <div className={`relative overflow-hidden ${imageUrl ? "bg-[var(--color-gray-100)]" : `bg-gradient-to-br ${card.gradient} flex items-center justify-center`} ${isLarge ? "aspect-[3/2]" : "aspect-[5/2]"}`}>
         {imageUrl ? (
           isSvg ? (
-            <img src={imageUrl} alt={card.title} className="h-full w-full object-contain p-4" />
+            <img src={imageUrl} alt={card.title} className="h-full w-full object-cover" />
           ) : (
-            <Image src={imageUrl} alt={card.title} fill className="object-contain p-4" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+            <Image src={imageUrl} alt={card.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
           )
         ) : (
-          <p className="px-6 text-center text-lg font-bold text-white drop-shadow-md">
+          <p className="px-6 text-center text-lg font-bold text-[#fff] drop-shadow-md">
             {card.title}
           </p>
         )}
@@ -128,7 +128,7 @@ function ProductCard({ card, stickerPrices, size = "large", imageUrl }) {
               ? `From ${formatCad(stickerPrices[card.priceKey])}`
               : card.fallbackPrice}
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
             {card.cta}
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -287,7 +287,7 @@ export default function StickersCategoryClient({ stickerPrices = {}, stickerImag
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
+              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
             >
               Get a Quote
             </Link>

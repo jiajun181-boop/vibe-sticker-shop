@@ -220,7 +220,7 @@ export default function DecalOrderClient() {
             <div className="grid grid-cols-3 gap-3">
               {APPLICATIONS.map((a) => (
                 <button key={a.id} type="button" onClick={() => setAppId(a.id)}
-                  className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${appId === a.id ? "border-gray-900 bg-gray-900 text-white shadow-md" : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"}`}>
+                  className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${appId === a.id ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md" : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"}`}>
                   <AppIcon type={a.icon} className="h-8 w-8" />
                   <span className="text-sm font-semibold">{t(`decal.app.${a.id}`)}</span>
                   <span className={`text-[11px] leading-tight ${appId === a.id ? "text-gray-300" : "text-gray-400"}`}>{t(`decal.appDesc.${a.id}`)}</span>
@@ -260,7 +260,7 @@ export default function DecalOrderClient() {
                 const disabled = isFloor && d.id === "indoor";
                 return (
                   <button key={d.id} type="button" onClick={() => !disabled && setDurability(d.id)} disabled={disabled}
-                    className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${disabled ? "cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300" : durability === d.id ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"}`}>
+                    className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${disabled ? "cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300" : durability === d.id ? "border-gray-900 bg-gray-900 text-[#fff]" : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"}`}>
                     {t(`decal.dur.${d.id}`)}
                     {d.surcharge > 0 && !disabled && <span className="ml-1 text-[11px] opacity-70">+{formatCad(d.surcharge)}/ea</span>}
                   </button>
@@ -335,7 +335,7 @@ export default function DecalOrderClient() {
               </dl>
             ) : <p className="text-xs text-gray-400">{t("decal.selectOptions")}</p>}
             <div className="space-y-3">
-              <button type="button" onClick={handleAddToCart} disabled={!canAddToCart} className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-white hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>{t("decal.addToCart")}</button>
+              <button type="button" onClick={handleAddToCart} disabled={!canAddToCart} className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>{t("decal.addToCart")}</button>
               <button type="button" onClick={handleBuyNow} disabled={!canAddToCart || buyNowLoading} className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart && !buyNowLoading ? "border-gray-900 text-gray-900 hover:bg-gray-50" : "cursor-not-allowed border-gray-200 text-gray-400"}`}>{buyNowLoading ? t("decal.processing") : t("decal.buyNow")}</button>
             </div>
             <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
@@ -352,7 +352,7 @@ export default function DecalOrderClient() {
               <><p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p><p className="truncate text-[11px] text-gray-500">{activeQty} × {t(`decal.app.${appId}`)} {size.label}</p></>
             ) : <p className="text-sm text-gray-400">{t("decal.selectOptions")}</p>}
           </div>
-          <button type="button" onClick={handleAddToCart} disabled={!canAddToCart} className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${canAddToCart ? "bg-gray-900 text-white hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>{t("decal.addToCart")}</button>
+          <button type="button" onClick={handleAddToCart} disabled={!canAddToCart} className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>{t("decal.addToCart")}</button>
         </div>
       </div>
       <div className="h-20 lg:hidden" />
@@ -364,7 +364,7 @@ function Section({ label, optional, children }) {
   return (<section><div className="mb-3 flex items-baseline gap-2"><h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{label}</h2>{optional && <span className="text-[10px] text-gray-400">(optional)</span>}</div>{children}</section>);
 }
 function Chip({ active, onClick, children }) {
-  return (<button type="button" onClick={onClick} className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${active ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"}`}>{children}</button>);
+  return (<button type="button" onClick={onClick} className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${active ? "border-gray-900 bg-gray-900 text-[#fff]" : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"}`}>{children}</button>);
 }
 function Row({ label, value }) {
   return (<div className="flex justify-between"><dt className="text-gray-500">{label}</dt><dd className="font-medium text-gray-800">{value}</dd></div>);

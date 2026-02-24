@@ -1230,7 +1230,7 @@ export default function ProductDetailPage() {
                     onClick={() => toggleFormat(fmt)}
                     className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                       (form.acceptedFormats || []).includes(fmt)
-                        ? "bg-black text-white"
+                        ? "bg-black text-[#fff]"
                         : "bg-[#f5f5f5] text-[#999] hover:bg-[#fafafa]"
                     }`}
                   >
@@ -1299,7 +1299,7 @@ export default function ProductDetailPage() {
 
           {/* Save button */}
           <div className="flex gap-3">
-            <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#222] disabled:opacity-50">
+            <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-6 py-2.5 text-sm font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50">
               {saving ? "Saving..." : "Save Changes"}
             </button>
             <button
@@ -1334,7 +1334,7 @@ export default function ProductDetailPage() {
                 type="button"
                 disabled={workflowLoading}
                 onClick={() => handleWorkflow("publish")}
-                className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+                className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
               >
                 Publish
               </button>
@@ -1433,7 +1433,7 @@ export default function ProductDetailPage() {
                     <div className="relative cursor-grab active:cursor-grabbing">
                       <img src={img.url} alt={img.alt || product.name} className="h-28 w-full object-cover" />
                       {idx === 0 && (
-                        <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">Cover</span>
+                        <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-[#fff]">Cover</span>
                       )}
                       {(bgRemovingId === img.id || compressingId === img.id) && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -1570,7 +1570,7 @@ export default function ProductDetailPage() {
                 type="button"
                 onClick={() => assetFileRef.current?.click()}
                 disabled={uploadingAsset}
-                className="w-full rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+                className="w-full rounded-[3px] bg-black py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
               >
                 {uploadingAsset ? "Uploading..." : "Upload Images"}
               </button>

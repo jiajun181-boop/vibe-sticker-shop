@@ -152,7 +152,7 @@ function MobileBottomBarBridge() {
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="shrink-0 rounded-lg bg-gray-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg hover:bg-gray-800"
+            className="shrink-0 rounded-lg bg-gray-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#fff] shadow-lg hover:bg-gray-800"
           >
             Configure
           </button>

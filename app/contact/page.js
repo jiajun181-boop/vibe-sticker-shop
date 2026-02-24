@@ -110,7 +110,7 @@ export default async function ContactPage() {
                 href="https://www.google.com/maps/dir/?api=1&destination=11+Progress+Ave+%2321,+Scarborough,+ON+M1P+4S7"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 flex items-center justify-center gap-2 rounded-2xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black"
+                className="mt-2 flex items-center justify-center gap-2 rounded-2xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-black"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />

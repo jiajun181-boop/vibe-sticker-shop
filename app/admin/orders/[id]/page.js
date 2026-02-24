@@ -445,7 +445,7 @@ export default function OrderDetailPage() {
                     type="button"
                     onClick={handleAddNote}
                     disabled={addingNote || !noteText.trim()}
-                    className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
+                    className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:bg-[#999]"
                   >
                     {addingNote ? "..." : "Add"}
                   </button>
@@ -552,7 +552,7 @@ export default function OrderDetailPage() {
                   type="button"
                   onClick={handleStatusUpdate}
                   disabled={saving}
-                  className="w-full rounded-[3px] bg-black py-2.5 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
+                  className="w-full rounded-[3px] bg-black py-2.5 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:bg-[#999]"
                 >
                   {saving ? "Saving..." : "Update Status"}
                 </button>
@@ -942,7 +942,7 @@ function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
         type="button"
         onClick={() => handleReview("approved")}
         disabled={acting}
-        className="rounded bg-green-600 px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+        className="rounded bg-green-600 px-2.5 py-1 text-[10px] font-semibold text-[#fff] hover:bg-green-700 disabled:opacity-50"
       >
         Approve
       </button>
@@ -950,7 +950,7 @@ function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
         type="button"
         onClick={() => handleReview("rejected")}
         disabled={acting}
-        className="rounded bg-red-600 px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+        className="rounded bg-red-600 px-2.5 py-1 text-[10px] font-semibold text-[#fff] hover:bg-red-700 disabled:opacity-50"
       >
         Reject
       </button>
@@ -1048,7 +1048,7 @@ function ProofSection({ orderId }) {
             type="button"
             onClick={handleUploadProof}
             disabled={submitting || !imageUrl.trim()}
-            className="w-full rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
+            className="w-full rounded-[3px] bg-black py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:bg-[#999]"
           >
             {submitting ? "Uploading..." : "Upload Proof"}
           </button>
@@ -1214,7 +1214,7 @@ function OrderActions({ order, onUpdate }) {
           <button
             type="button"
             onClick={() => setShipOpen(true)}
-            className="w-full rounded-lg bg-purple-600 py-2.5 text-xs font-semibold text-white hover:bg-purple-700"
+            className="w-full rounded-lg bg-purple-600 py-2.5 text-xs font-semibold text-[#fff] hover:bg-purple-700"
           >
             Mark as Shipped
           </button>
@@ -1251,7 +1251,7 @@ function OrderActions({ order, onUpdate }) {
                 type="button"
                 onClick={handleShip}
                 disabled={acting || !trackingNumber}
-                className="flex-1 rounded bg-purple-600 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 disabled:bg-gray-400"
+                className="flex-1 rounded bg-purple-600 py-1.5 text-xs font-semibold text-[#fff] hover:bg-purple-700 disabled:bg-gray-400"
               >
                 {acting ? "..." : "Confirm Ship"}
               </button>
@@ -1304,7 +1304,7 @@ function OrderActions({ order, onUpdate }) {
                 type="button"
                 onClick={handleRefund}
                 disabled={acting}
-                className="flex-1 rounded bg-red-600 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:bg-gray-400"
+                className="flex-1 rounded bg-red-600 py-1.5 text-xs font-semibold text-[#fff] hover:bg-red-700 disabled:bg-gray-400"
               >
                 {acting ? "..." : "Confirm Refund"}
               </button>

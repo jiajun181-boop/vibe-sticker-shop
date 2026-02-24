@@ -217,7 +217,7 @@ export default function ProofPreview({
                   });
                 }
               }}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-red-700"
             >
               {t?.("configurator.proofRetry") || "Retry"}
             </button>
@@ -323,7 +323,7 @@ export default function ProofPreview({
             <button
               type="button"
               onClick={handleConfirm}
-              className="flex-1 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 hover:shadow-emerald-700/30"
+              className="flex-1 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-[#fff] shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 hover:shadow-emerald-700/30"
             >
               <span className="flex items-center justify-center gap-2">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -338,7 +338,7 @@ export default function ProofPreview({
         /* ── Confirmed State ── */
         <div className="flex items-center gap-3 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500">
-            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <svg className="h-5 w-5 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
           </div>

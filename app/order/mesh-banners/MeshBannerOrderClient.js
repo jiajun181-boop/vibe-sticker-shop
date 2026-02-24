@@ -316,7 +316,7 @@ export default function MeshBannerOrderClient() {
                   onClick={() => setMaterialId(m.id)}
                   className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
                     materialId === m.id
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
@@ -359,7 +359,7 @@ export default function MeshBannerOrderClient() {
                   onClick={() => setTurnaroundId(ta.id)}
                   className={`rounded-xl border-2 p-4 text-left transition-all ${
                     turnaroundId === ta.id
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
@@ -472,7 +472,7 @@ export default function MeshBannerOrderClient() {
 
             <div className="space-y-3">
               <button type="button" onClick={handleAddToCart} disabled={!canAddToCart}
-                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-white hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
+                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
                 {t("mb.addToCart")}
               </button>
               <button type="button" onClick={handleBuyNow} disabled={!canAddToCart || buyNowLoading}
@@ -512,7 +512,7 @@ export default function MeshBannerOrderClient() {
             )}
           </div>
           <button type="button" onClick={handleAddToCart} disabled={!canAddToCart}
-            className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${canAddToCart ? "bg-gray-900 text-white hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
+            className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
             {t("mb.addToCart")}
           </button>
         </div>
@@ -540,7 +540,7 @@ function Section({ label, optional, children }) {
 function Chip({ active, onClick, children }) {
   return (
     <button type="button" onClick={onClick}
-      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${active ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"}`}>
+      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${active ? "border-gray-900 bg-gray-900 text-[#fff]" : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"}`}>
       {children}
     </button>
   );

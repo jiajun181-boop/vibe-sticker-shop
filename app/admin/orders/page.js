@@ -191,7 +191,7 @@ function OrdersContent() {
               }}
               className={`rounded-[3px] px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
                 statusFilter === s
-                  ? "bg-black text-white"
+                  ? "bg-black text-[#fff]"
                   : "bg-white text-[#666] border border-[#e0e0e0] hover:border-black hover:text-black"
               }`}
             >
@@ -211,7 +211,7 @@ function OrdersContent() {
           />
           <button
             type="submit"
-            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
             Search
           </button>

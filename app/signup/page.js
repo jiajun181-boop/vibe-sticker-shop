@@ -65,7 +65,7 @@ export default function SignupPage() {
             type="button"
             onClick={() => setAccountType("B2C")}
             className={`flex-1 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors ${
-              accountType === "B2C" ? "bg-[var(--color-gray-900)] text-white" : "text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]"
+              accountType === "B2C" ? "bg-[var(--color-gray-900)] text-[#fff]" : "text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]"
             }`}
           >
             {t("auth.signup.personal")}
@@ -74,7 +74,7 @@ export default function SignupPage() {
             type="button"
             onClick={() => setAccountType("B2B")}
             className={`flex-1 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors ${
-              accountType === "B2B" ? "bg-[var(--color-gray-900)] text-white" : "text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]"
+              accountType === "B2B" ? "bg-[var(--color-gray-900)] text-[#fff]" : "text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]"
             }`}
           >
             {t("auth.signup.business")}
@@ -180,7 +180,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
+            className="w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-[var(--color-gray-400)]"
           >
             {loading ? t("auth.signup.creating") : t("auth.signup.submit")}
           </button>

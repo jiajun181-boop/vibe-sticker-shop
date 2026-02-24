@@ -63,7 +63,7 @@ export default function RecoverCartPage() {
             <div className="mb-4 text-4xl">😔</div>
             <h1 className="mb-2 text-xl font-semibold">Cart Not Found</h1>
             <p className="mb-4 text-gray-600">This recovery link may have expired or already been used.</p>
-            <a href="/shop" className="inline-block rounded-lg bg-gray-900 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800">
+            <a href="/shop" className="inline-block rounded-lg bg-gray-900 px-6 py-3 text-sm font-semibold text-[#fff] hover:bg-gray-800">
               Browse Shop
             </a>
           </>

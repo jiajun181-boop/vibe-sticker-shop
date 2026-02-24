@@ -387,7 +387,7 @@ export default function CropModal({ image, onSave, onClose }) {
               onClick={() => setRatio(r.value)}
               className={`rounded-[3px] border px-2.5 py-1 text-xs font-medium ${
                 ratio === r.value
-                  ? "border-black bg-black text-white"
+                  ? "border-black bg-black text-[#fff]"
                   : "border-[#d0d0d0] text-[#666] hover:bg-[#fafafa]"
               }`}
             >
@@ -448,7 +448,7 @@ export default function CropModal({ image, onSave, onClose }) {
               type="button"
               disabled={saving || !imgLoaded}
               onClick={() => handleSave(true)}
-              className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+              className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
             >
               {saving ? "Saving..." : "Replace Original"}
             </button>

@@ -137,7 +137,7 @@ function SubGroupCard({ sg, t }) {
           )}
           <Link
             href={sg.href}
-            className="rounded-lg bg-[var(--color-primary-600)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--color-primary-700)]"
+            className="rounded-lg bg-[var(--color-primary-600)] px-3 py-1.5 text-xs font-medium text-[#fff] transition-colors hover:bg-[var(--color-primary-700)]"
           >
             {t("pricing.viewDetails")}
           </Link>
@@ -184,7 +184,7 @@ function DepartmentSection({ dept, t }) {
         <p className="text-sm text-[var(--color-gray-700)]">{t("pricing.contactBulk")}</p>
         <Link
           href="/quote"
-          className="rounded-lg bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[var(--color-gray-800)]"
+          className="rounded-lg bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold text-[#fff] transition-colors hover:bg-[var(--color-gray-800)]"
         >
           {t("pricing.getQuote")}
         </Link>
@@ -240,7 +240,7 @@ export default function PricingClient({ departments }) {
   return (
     <>
       {/* Hero */}
-      <div className="bg-gradient-to-br from-[var(--color-gray-900)] to-[var(--color-gray-800)] text-white px-6 py-14">
+      <div className="bg-gradient-to-br from-[var(--color-gray-900)] to-[var(--color-gray-800)] text-[#fff] px-6 py-14">
         <div className="mx-auto max-w-5xl text-center">
           <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-gray-400)] mb-3">
             {t("pricing.badge")}
@@ -269,7 +269,7 @@ export default function PricingClient({ departments }) {
                 onClick={() => scrollToDept(dept.key)}
                 className={`shrink-0 rounded-full px-4 py-2 text-xs font-medium transition-colors whitespace-nowrap ${
                   activeDept === dept.key
-                    ? "bg-[var(--color-primary-600)] text-white"
+                    ? "bg-[var(--color-primary-600)] text-[#fff]"
                     : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-200)]"
                 }`}
               >
@@ -288,7 +288,7 @@ export default function PricingClient({ departments }) {
         ))}
 
         {/* Bottom CTA */}
-        <div className="rounded-2xl bg-gradient-to-r from-[var(--color-primary-600)] to-[var(--color-primary-700)] p-8 text-center text-white">
+        <div className="rounded-2xl bg-gradient-to-r from-[var(--color-primary-600)] to-[var(--color-primary-700)] p-8 text-center text-[#fff]">
           <h2 className="text-xl font-bold">{t("pricing.ctaTitle")}</h2>
           <p className="mt-2 text-sm opacity-90">{t("pricing.ctaDescription")}</p>
           <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -300,7 +300,7 @@ export default function PricingClient({ departments }) {
             </Link>
             <Link
               href="/contact"
-              className="rounded-lg border border-white/30 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
+              className="rounded-lg border border-white/30 px-6 py-2.5 text-sm font-medium text-[#fff] transition-colors hover:bg-white/10"
             >
               {t("pricing.contactCta")}
             </Link>

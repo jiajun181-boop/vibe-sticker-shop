@@ -190,7 +190,7 @@ export default function QCPage() {
             Quality Control
           </h1>
           {pagination && (
-            <span className="inline-flex items-center rounded-[2px] bg-black px-2.5 py-0.5 text-xs font-medium text-white">
+            <span className="inline-flex items-center rounded-[2px] bg-black px-2.5 py-0.5 text-xs font-medium text-[#fff]">
               {pagination.total}
             </span>
           )}
@@ -198,7 +198,7 @@ export default function QCPage() {
         <button
           type="button"
           onClick={() => setShowForm(!showForm)}
-          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
         >
           {showForm ? "Cancel" : "Report Defect"}
         </button>
@@ -299,7 +299,7 @@ export default function QCPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-[3px] bg-black px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
+              className="rounded-[3px] bg-black px-5 py-2.5 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:bg-[#999]"
             >
               {submitting ? "Submitting..." : "Submit Report"}
             </button>
@@ -360,7 +360,7 @@ export default function QCPage() {
             }}
             className={`rounded-[3px] border px-3 py-1.5 text-xs font-medium transition-colors ${
               resolutionFilter === "pending" && !severityFilter
-                ? "border-gray-900 bg-black text-white"
+                ? "border-gray-900 bg-black text-[#fff]"
                 : "border-[#d0d0d0] text-black hover:bg-[#fafafa]"
             }`}
           >
@@ -375,7 +375,7 @@ export default function QCPage() {
             }}
             className={`rounded-[3px] border px-3 py-1.5 text-xs font-medium transition-colors ${
               severityFilter === "critical" && !resolutionFilter
-                ? "border-red-600 bg-red-600 text-white"
+                ? "border-red-600 bg-red-600 text-[#fff]"
                 : "border-[#d0d0d0] text-black hover:bg-[#fafafa]"
             }`}
           >
@@ -660,7 +660,7 @@ export default function QCPage() {
                           type="button"
                           onClick={() => handleResolve(report.id)}
                           disabled={resolveSubmitting}
-                          className="rounded-[3px] bg-black px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
+                          className="rounded-[3px] bg-black px-4 py-1.5 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:bg-[#999]"
                         >
                           {resolveSubmitting ? "Saving..." : "Submit"}
                         </button>
@@ -715,7 +715,7 @@ export default function QCPage() {
                           type="button"
                           onClick={() => handleResolve(report.id)}
                           disabled={resolveSubmitting}
-                          className="rounded-[3px] bg-black px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]"
+                          className="rounded-[3px] bg-black px-4 py-1.5 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:bg-[#999]"
                         >
                           {resolveSubmitting ? "Saving..." : "Submit"}
                         </button>
@@ -772,7 +772,7 @@ export default function QCPage() {
                   onClick={() => setPage(pageNum)}
                   className={`rounded-[3px] border px-3 py-1.5 text-xs font-medium transition-colors ${
                     page === pageNum
-                      ? "border-gray-900 bg-black text-white"
+                      ? "border-gray-900 bg-black text-[#fff]"
                       : "border-[#d0d0d0] text-black hover:bg-[#fafafa]"
                   }`}
                 >

@@ -192,7 +192,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
             )}
             <Link
               href="/shop"
-              className="block w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black"
+              className="block w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-black"
             >
               {t("success.backToCart")}
             </Link>
@@ -258,7 +258,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
               { step: "3", text: t("success.step3") },
             ].map((s) => (
               <div key={s.step} className="flex items-start gap-3">
-                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-[#fff]">
                   {s.step}
                 </span>
                 <p className="text-sm text-emerald-800">{s.text}</p>
@@ -284,7 +284,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
 
         <Link
           href="/shop"
-          className="block w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-black"
+          className="block w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-black"
         >
           {t("success.continueShopping")}
         </Link>

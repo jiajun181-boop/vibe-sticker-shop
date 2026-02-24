@@ -94,7 +94,7 @@ export default function ComingSoonPage({ name, description, slug, category }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="shrink-0 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-gray-800 disabled:opacity-50"
+                    className="shrink-0 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-bold text-[#fff] hover:bg-gray-800 disabled:opacity-50"
                   >
                     {loading ? "..." : "Notify Me"}
                   </button>

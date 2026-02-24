@@ -81,12 +81,12 @@ function PartnerDashboard() {
         )}
 
         {/* Header card */}
-        <div className={`rounded-xl bg-gradient-to-br ${tierGradient} p-6 text-white shadow-lg sm:p-8`}>
+        <div className={`rounded-xl bg-gradient-to-br ${tierGradient} p-6 text-[#fff] shadow-lg sm:p-8`}>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-white/60">Partner Dashboard</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-[#fff]/60">Partner Dashboard</p>
               <h1 className="mt-1 text-xl font-bold sm:text-2xl">{user.companyName || user.name}</h1>
-              <p className="mt-1 text-sm text-white/70">{user.email}</p>
+              <p className="mt-1 text-sm text-[#fff]/70">{user.email}</p>
             </div>
             <div className="text-right">
               <div className="rounded-xl bg-white/20 px-4 py-1.5 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
@@ -101,15 +101,15 @@ function PartnerDashboard() {
           {/* Stats */}
           <div className="mt-6 grid grid-cols-3 gap-4">
             <div className="rounded-lg bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-white/60">Total Orders</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-[#fff]/60">Total Orders</p>
               <p className="mt-1 text-xl font-bold">{stats.orderCount}</p>
             </div>
             <div className="rounded-lg bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-white/60">Total Spent</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-[#fff]/60">Total Spent</p>
               <p className="mt-1 text-xl font-bold">${(stats.totalSpent / 100).toLocaleString("en-CA", { minimumFractionDigits: 2 })}</p>
             </div>
             <div className="rounded-lg bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-white/60">Referrals</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-[#fff]/60">Referrals</p>
               <p className="mt-1 text-xl font-bold">{stats.referralCount}</p>
             </div>
           </div>

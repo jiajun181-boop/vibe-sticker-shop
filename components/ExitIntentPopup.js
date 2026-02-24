@@ -107,7 +107,7 @@ export default function ExitIntentPopup() {
           <>
             <div className="mb-6 text-center">
               <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-moon-gold)]">
-                <span className="text-2xl font-black text-white">10%</span>
+                <span className="text-2xl font-black text-[#fff]">10%</span>
               </div>
               <h3 className="text-2xl font-bold text-[var(--color-gray-900)]">{t("exit.headline")}</h3>
               <p className="mt-2 text-sm text-[var(--color-gray-600)]">{t("exit.subtext")}</p>

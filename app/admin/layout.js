@@ -399,7 +399,7 @@ export default function AdminLayout({ children }) {
               <button
                 type="button"
                 onClick={() => setLocale(locale === "en" ? "zh" : "en")}
-                className="rounded-[3px] border border-[#000] px-2.5 py-1 text-xs font-semibold text-black transition-colors hover:bg-black hover:text-white"
+                className="rounded-[3px] border border-[#000] px-2.5 py-1 text-xs font-semibold text-black transition-colors hover:bg-black hover:text-[#fff]"
               >
                 {locale === "en" ? "中文" : "EN"}
               </button>
@@ -467,7 +467,7 @@ export default function AdminLayout({ children }) {
                 type="button"
                 onClick={handleChangePassword}
                 disabled={pwSaving}
-                className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+                className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
               >
                 {pwSaving ? "Saving..." : "Update Password"}
               </button>

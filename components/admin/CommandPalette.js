@@ -123,7 +123,7 @@ export default function CommandPalette() {
                   type="button"
                   onClick={() => handleSelect(r)}
                   onMouseEnter={() => setActive(i)}
-                  className={`flex w-full items-center gap-3 rounded-[3px] px-3 py-2.5 text-left text-sm transition-colors ${active === i ? "bg-black text-white" : "text-black hover:bg-[#fafafa]"}`}
+                  className={`flex w-full items-center gap-3 rounded-[3px] px-3 py-2.5 text-left text-sm transition-colors ${active === i ? "bg-black text-[#fff]" : "text-black hover:bg-[#fafafa]"}`}
                 >
                   <svg className={`h-3.5 w-3.5 shrink-0 ${active === i ? "text-[#999]" : "text-[#ccc]"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -144,7 +144,7 @@ export default function CommandPalette() {
                     type="button"
                     onClick={() => handleSelect(r)}
                     onMouseEnter={() => setActive(idx)}
-                    className={`flex w-full items-center gap-3 rounded-[3px] px-3 py-2.5 text-left text-sm transition-colors ${active === idx ? "bg-black text-white" : "text-black hover:bg-[#fafafa]"}`}
+                    className={`flex w-full items-center gap-3 rounded-[3px] px-3 py-2.5 text-left text-sm transition-colors ${active === idx ? "bg-black text-[#fff]" : "text-black hover:bg-[#fafafa]"}`}
                   >
                     <span className={`shrink-0 rounded-[2px] px-1.5 py-0.5 text-[10px] font-semibold ${
                       r.type === "order"

@@ -31,7 +31,7 @@ export default function ComparisonTable({ tableData, currentTypeId, category, ti
                   key={col.id}
                   className={`px-4 py-3 text-center text-xs font-bold uppercase tracking-wider ${
                     col.id === currentTypeId
-                      ? "bg-gray-900 text-white"
+                      ? "bg-gray-900 text-[#fff]"
                       : "bg-gray-50 text-gray-500"
                   }`}
                 >

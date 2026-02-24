@@ -39,7 +39,7 @@ export default async function IdeasPage() {
       />
 
       {/* Hero */}
-      <div className="bg-[var(--color-ink-black)] text-white pt-24 pb-16 px-6 relative overflow-hidden">
+      <div className="bg-[var(--color-ink-black)] text-[#fff] pt-24 pb-16 px-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center">
           <span className="text-[300px] font-black tracking-tighter select-none">IDEAS</span>
         </div>
@@ -138,7 +138,7 @@ export default async function IdeasPage() {
 
       {/* CTA */}
       <div className="max-w-4xl mx-auto px-6">
-        <div className="rounded-3xl bg-[var(--color-gray-900)] text-white p-8 md:p-12 text-center relative overflow-hidden">
+        <div className="rounded-3xl bg-[var(--color-gray-900)] text-[#fff] p-8 md:p-12 text-center relative overflow-hidden">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--color-gray-500)] mb-3">
             {t("ideas.ctaBadge")}
           </p>
@@ -157,7 +157,7 @@ export default async function IdeasPage() {
             </Link>
             <Link
               href="/shop"
-              className="border border-white/30 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-[0.14em] hover:border-white/70 transition-colors"
+              className="border border-white/30 text-[#fff] px-6 py-3 rounded-xl text-xs font-black uppercase tracking-[0.14em] hover:border-white/70 transition-colors"
             >
               {t("common.browseAll")}
             </Link>

@@ -66,7 +66,7 @@ export default function CustomDimensions({
               onClick={() => onChangeUnit(u)}
               className={`px-3.5 py-2.5 text-xs font-bold uppercase transition ${
                 unit === u
-                  ? "bg-gray-900 text-white"
+                  ? "bg-gray-900 text-[#fff]"
                   : "bg-white text-gray-500 hover:bg-gray-50"
               }`}
             >

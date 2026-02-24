@@ -58,7 +58,7 @@ export default function SizeSelector({
               onClick={() => onChange(o.label)}
               className={`rounded-xl border px-3 py-2 text-left text-sm transition-colors ${
                 selected
-                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white"
+                  ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-[#fff]"
                   : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)]"
               }`}
             >

@@ -201,7 +201,7 @@ export default function OrderDetailPage() {
                 setReordering(false);
               }
             }}
-            className="flex-1 rounded-xl bg-[var(--color-gray-900)] py-3 text-sm font-semibold text-white hover:bg-black disabled:opacity-50 transition-colors"
+            className="flex-1 rounded-xl bg-[var(--color-gray-900)] py-3 text-sm font-semibold text-[#fff] hover:bg-black disabled:opacity-50 transition-colors"
           >
             {reordering ? "Adding to cart..." : "Reorder This Order"}
           </button>
@@ -323,7 +323,7 @@ export default function OrderDetailPage() {
             {proofs.map((proof) => (
               <div key={proof.id} className="p-4 space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-md bg-[var(--color-gray-900)] px-2 py-0.5 text-[10px] font-bold text-white">
+                  <span className="rounded-md bg-[var(--color-gray-900)] px-2 py-0.5 text-[10px] font-bold text-[#fff]">
                     v{proof.version}
                   </span>
                   <span
@@ -376,7 +376,7 @@ export default function OrderDetailPage() {
                         type="button"
                         disabled={proofActioning === proof.id}
                         onClick={() => handleProofAction(proof.id, "approved")}
-                        className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                        className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-[#fff] hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                       >
                         {proofActioning === proof.id ? "Submitting..." : "Approve"}
                       </button>

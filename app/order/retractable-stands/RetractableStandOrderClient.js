@@ -229,7 +229,7 @@ export default function RetractableStandOrderClient() {
                   onClick={() => setOrderType(ot.id)}
                   className={`rounded-xl border-2 p-4 text-left transition-all ${
                     orderType === ot.id
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
@@ -260,7 +260,7 @@ export default function RetractableStandOrderClient() {
                   onClick={() => setTierIdx(i)}
                   className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
                     tierIdx === i
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
@@ -269,7 +269,7 @@ export default function RetractableStandOrderClient() {
                   <span className={`text-[11px] ${tierIdx === i ? "text-gray-300" : "text-gray-400"}`}>
                     {st.label.split(" ").slice(1).join(" ")}
                   </span>
-                  <span className={`text-sm font-bold ${tierIdx === i ? "text-white" : "text-gray-900"}`}>
+                  <span className={`text-sm font-bold ${tierIdx === i ? "text-[#fff]" : "text-gray-900"}`}>
                     {formatCad(st.priceCents)}
                   </span>
                 </button>
@@ -387,7 +387,7 @@ export default function RetractableStandOrderClient() {
 
             <div className="space-y-3">
               <button type="button" onClick={handleAddToCart} disabled={!canAddToCart}
-                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-white hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
+                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
                 {t("rs.addToCart")}
               </button>
               <button type="button" onClick={handleBuyNow} disabled={!canAddToCart || buyNowLoading}
@@ -426,7 +426,7 @@ export default function RetractableStandOrderClient() {
             )}
           </div>
           <button type="button" onClick={handleAddToCart} disabled={!canAddToCart}
-            className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${canAddToCart ? "bg-gray-900 text-white hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
+            className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
             {t("rs.addToCart")}
           </button>
         </div>
@@ -454,7 +454,7 @@ function Section({ label, optional, children }) {
 function Chip({ active, onClick, children }) {
   return (
     <button type="button" onClick={onClick}
-      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${active ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"}`}>
+      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${active ? "border-gray-900 bg-gray-900 text-[#fff]" : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"}`}>
       {children}
     </button>
   );

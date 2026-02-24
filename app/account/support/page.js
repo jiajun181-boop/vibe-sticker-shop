@@ -59,7 +59,7 @@ export default function SupportPage() {
         <button
           type="button"
           onClick={() => setShowNew(!showNew)}
-          className="rounded-lg bg-[var(--color-gray-900)] px-4 py-2 text-sm font-semibold text-white hover:bg-black transition-colors"
+          className="rounded-lg bg-[var(--color-gray-900)] px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-black transition-colors"
         >
           {showNew ? "Cancel" : "New Ticket"}
         </button>
@@ -93,7 +93,7 @@ export default function SupportPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-[var(--color-gray-900)] px-6 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50 transition-colors"
+            className="rounded-lg bg-[var(--color-gray-900)] px-6 py-2.5 text-sm font-semibold text-[#fff] hover:bg-black disabled:opacity-50 transition-colors"
           >
             {submitting ? "Submitting..." : "Submit Ticket"}
           </button>

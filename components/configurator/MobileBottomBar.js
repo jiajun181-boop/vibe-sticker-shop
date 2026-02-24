@@ -61,7 +61,7 @@ export default function MobileBottomBar({
 
   const atcContent =
     atcState === "adding" ? (
-      <svg className="mx-auto h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+      <svg className="mx-auto h-4 w-4 animate-spin text-[#fff]" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
       </svg>
@@ -78,11 +78,11 @@ export default function MobileBottomBar({
 
   const atcBgClass =
     atcState === "added"
-      ? "bg-emerald-600 text-white"
+      ? "bg-emerald-600 text-[#fff]"
       : atcState === "adding"
-      ? "bg-gray-600 text-white cursor-wait"
+      ? "bg-gray-600 text-[#fff] cursor-wait"
       : canAddToCart
-      ? "bg-gray-900 text-white shadow-lg hover:bg-gray-800"
+      ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800"
       : "cursor-not-allowed bg-gray-200 text-gray-400";
 
   return (
@@ -115,7 +115,7 @@ export default function MobileBottomBar({
             <button
               type="button"
               onClick={onRequestQuote}
-              className="shrink-0 rounded-sm bg-gray-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg hover:bg-gray-800"
+              className="shrink-0 rounded-sm bg-gray-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#fff] shadow-lg hover:bg-gray-800"
             >
               {t?.("configurator.requestQuote") || "Get Quote"}
             </button>

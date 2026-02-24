@@ -31,8 +31,8 @@ export default function ConfirmModal({
 
   const btnColor =
     variant === "danger"
-      ? "bg-red-600 hover:bg-red-700 text-white"
-      : "bg-black hover:bg-[#222] text-white";
+      ? "bg-red-600 hover:bg-red-700 text-[#fff]"
+      : "bg-black hover:bg-[#222] text-[#fff]";
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">

@@ -93,13 +93,13 @@ export default async function IndustryPage({ params }) {
       />
 
       {/* Header */}
-      <div className="bg-[var(--color-ink-black)] text-white pt-24 pb-14 px-4 sm:px-6">
+      <div className="bg-[var(--color-ink-black)] text-[#fff] pt-24 pb-14 px-4 sm:px-6">
         <div className="mx-auto max-w-[1600px] 2xl:px-4">
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 text-xs text-[var(--color-gray-500)] mb-6">
-            <Link href="/" className="hover:text-white transition-colors">{t("nav.home")}</Link>
+            <Link href="/" className="hover:text-[#fff] transition-colors">{t("nav.home")}</Link>
             <span>/</span>
-            <Link href="/shop" className="hover:text-white transition-colors">{t("nav.shop")}</Link>
+            <Link href="/shop" className="hover:text-[#fff] transition-colors">{t("nav.shop")}</Link>
             <span>/</span>
             <span>{t("shop.industry")}</span>
             <span>/</span>
@@ -147,7 +147,7 @@ export default async function IndustryPage({ params }) {
                 href={`/shop/industry/${t}`}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
                   t === tag
-                    ? "bg-gray-900 text-white"
+                    ? "bg-gray-900 text-[#fff]"
                     : "bg-white border border-[var(--color-gray-200)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
                 }`}
               >
@@ -235,7 +235,7 @@ export default async function IndustryPage({ params }) {
               <Link
                 key={r.tag}
                 href={`/shop/industry/${r.tag}`}
-                className="flex items-center gap-2 rounded-xl border border-[var(--color-gray-200)] bg-white px-4 py-2 text-xs font-medium text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)] hover:bg-gray-900 hover:text-white transition-all"
+                className="flex items-center gap-2 rounded-xl border border-[var(--color-gray-200)] bg-white px-4 py-2 text-xs font-medium text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)] hover:bg-gray-900 hover:text-[#fff] transition-all"
               >
                 <span>{r.icon}</span>
                 {r.title}
@@ -247,7 +247,7 @@ export default async function IndustryPage({ params }) {
 
       {/* CTA */}
       <div className="max-w-4xl mx-auto px-6 mt-10">
-        <div className="rounded-3xl bg-gray-900 text-white p-8 md:p-12 text-center">
+        <div className="rounded-3xl bg-gray-900 text-[#fff] p-8 md:p-12 text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--color-gray-500)] mb-3">
             {t("common.essentialBrand")}
           </p>
@@ -266,7 +266,7 @@ export default async function IndustryPage({ params }) {
             </Link>
             <Link
               href="/ideas"
-              className="border border-white/30 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-[0.14em] hover:border-white/70 transition-colors"
+              className="border border-white/30 text-[#fff] px-6 py-3 rounded-xl text-xs font-black uppercase tracking-[0.14em] hover:border-white/70 transition-colors"
             >
               {t("industry.exploreIdeas")}
             </Link>

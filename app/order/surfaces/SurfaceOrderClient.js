@@ -287,12 +287,12 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
                         onClick={() => setTypeId(st.id)}
                         className={`group relative flex flex-col items-center gap-1.5 rounded-2xl border-2 p-3.5 text-center transition-all duration-200 ${
                           typeId === st.id
-                            ? "border-gray-900 bg-gray-900 text-white shadow-lg shadow-gray-900/20 scale-[1.02]"
+                            ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
                             : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
                         }`}
                       >
                         {typeId === st.id && (
-                          <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
+                          <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                           </span>
                         )}
@@ -319,7 +319,7 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
                       nextRowId.current = 2;
                     }
                   }}
-                  className={`rounded-lg px-3 py-1 text-xs font-semibold transition-colors ${sizeMode === "multi" ? "bg-gray-900 text-white" : "border border-gray-300 bg-white text-gray-700"}`}
+                  className={`rounded-lg px-3 py-1 text-xs font-semibold transition-colors ${sizeMode === "multi" ? "bg-gray-900 text-[#fff]" : "border border-gray-300 bg-white text-gray-700"}`}
                 >
                   {sizeMode === "multi" ? "On" : "Off"}
                 </button>
@@ -335,7 +335,7 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
                         onClick={() => { setSizeIdx(i); setCustomW(""); setCustomH(""); }}
                         className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
                           sizeIdx === i
-                            ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                            ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                             : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                         }`}
                       >
@@ -347,7 +347,7 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
                       onClick={() => setSizeIdx(-1)}
                       className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
                         isCustomSize
-                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-dashed border-gray-300 bg-white text-gray-500 hover:border-gray-500"
                       }`}
                     >
@@ -463,7 +463,7 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
                     >
                       {isActive && (
                         <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                         </span>
                       )}
                       <span className="text-sm font-bold text-gray-800">{mat.label}</span>
@@ -495,7 +495,7 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
                       >
                         {isActive && (
                           <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                            <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                           </span>
                         )}
                         <span className="text-sm font-bold text-gray-800">{opt.label}</span>
@@ -528,7 +528,7 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
                       >
                         {isActive && (
                           <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                            <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                           </span>
                         )}
                         <span className="text-sm font-bold text-gray-800">{label}</span>
@@ -571,7 +571,7 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
                       >
                         {isActive && (
                           <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                            <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                           </span>
                         )}
                         <span className="text-sm font-bold text-gray-800">{opt?.label || fId}</span>
@@ -598,7 +598,7 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
                       onClick={() => { setQuantity(q); setCustomQty(""); }}
                       className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
                         isActive
-                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >

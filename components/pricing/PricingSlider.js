@@ -112,7 +112,7 @@ export default function PricingSlider({
             className={`px-4 py-2 text-xs font-semibold uppercase tracking-wide rounded-lg transition-all duration-200
               ${
                 quantity === value
-                  ? "bg-[var(--color-ink-black)] text-white"
+                  ? "bg-[var(--color-ink-black)] text-[#fff]"
                   : "border border-[var(--color-gray-300)] text-[var(--color-gray-700)] hover:border-[var(--color-ink-black)] hover:text-[var(--color-ink-black)]"
               }
             `}

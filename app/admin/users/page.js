@@ -37,7 +37,7 @@ export default function AdminUsersPage() {
         <button
           type="button"
           onClick={() => { setShowCreate(true); setEditId(null); }}
-          className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-[#222]"
+          className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-[#222]"
         >
           + New User
         </button>
@@ -230,7 +230,7 @@ function CreateUserModal({ onClose, onCreated }) {
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex justify-end gap-3 pt-2">
           <button type="button" onClick={onClose} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-sm font-medium text-black hover:bg-[#fafafa]">Cancel</button>
-          <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-[#222] disabled:opacity-50">{saving ? "Creating..." : "Create User"}</button>
+          <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50">{saving ? "Creating..." : "Create User"}</button>
         </div>
       </form>
     </Modal>
@@ -288,7 +288,7 @@ function EditUserModal({ user, onClose, onUpdated }) {
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex justify-end gap-3 pt-2">
           <button type="button" onClick={onClose} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-sm font-medium text-black hover:bg-[#fafafa]">Cancel</button>
-          <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-[#222] disabled:opacity-50">{saving ? "Saving..." : "Save Changes"}</button>
+          <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50">{saving ? "Saving..." : "Save Changes"}</button>
         </div>
       </form>
     </Modal>

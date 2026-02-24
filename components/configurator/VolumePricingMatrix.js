@@ -107,7 +107,7 @@ export default function VolumePricingMatrix({
             >
               {/* Best Value badge */}
               {isBestValue && (
-                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-teal-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-teal-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#fff]">
                   Best Value
                 </span>
               )}

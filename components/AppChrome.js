@@ -32,7 +32,7 @@ export default function AppChrome({ children, catalogConfig, locale }) {
       {showFloatingQuote && (
         <Link
           href="/quote"
-          className="fixed bottom-20 right-4 z-40 hidden items-center rounded-xl bg-[var(--color-ink-black)] px-4 py-2 text-xs font-semibold text-white shadow-lg transition-colors hover:bg-black md:inline-flex whitespace-nowrap"
+          className="fixed bottom-20 right-4 z-40 hidden items-center rounded-xl bg-[var(--color-ink-black)] px-4 py-2 text-xs font-semibold text-[#fff] shadow-lg transition-colors hover:bg-black md:inline-flex whitespace-nowrap"
         >
           Online Quote
         </Link>

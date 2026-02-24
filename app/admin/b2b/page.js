@@ -127,7 +127,7 @@ export default function AdminB2BPage() {
         <button
           type="button"
           onClick={() => { setShowInviteForm(true); setTab("invites"); }}
-          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
         >
           + Invite Partner
         </button>
@@ -150,7 +150,7 @@ export default function AdminB2BPage() {
             type="button"
             onClick={() => setTab(t.key)}
             className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-colors ${
-              tab === t.key ? "bg-black text-white" : "text-[#999] hover:text-black"
+              tab === t.key ? "bg-black text-[#fff]" : "text-[#999] hover:text-black"
             }`}
           >
             {t.label}
@@ -168,7 +168,7 @@ export default function AdminB2BPage() {
                 type="button"
                 onClick={() => setFilter(f.key)}
                 className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  filter === f.key ? "bg-black text-white" : "text-[#999] hover:text-black"
+                  filter === f.key ? "bg-black text-[#fff]" : "text-[#999] hover:text-black"
                 }`}
               >
                 {f.label}
@@ -233,7 +233,7 @@ export default function AdminB2BPage() {
                         <td className="px-4 py-3">
                           {!user.b2bApproved && (
                             <div className="flex gap-2">
-                              <button type="button" onClick={() => handleAction(user.id, "approve")} disabled={actionLoading === user.id} className="rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">Approve</button>
+                              <button type="button" onClick={() => handleAction(user.id, "approve")} disabled={actionLoading === user.id} className="rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-[#fff] hover:bg-emerald-700 disabled:opacity-50">Approve</button>
                               <button type="button" onClick={() => handleAction(user.id, "reject")} disabled={actionLoading === user.id} className="rounded-md bg-red-100 px-2.5 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50">Reject</button>
                             </div>
                           )}
@@ -268,7 +268,7 @@ export default function AdminB2BPage() {
                     </div>
                     {!user.b2bApproved && (
                       <div className="mt-3 flex gap-2">
-                        <button type="button" onClick={() => handleAction(user.id, "approve")} disabled={actionLoading === user.id} className="rounded-md bg-emerald-600 px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">Approve</button>
+                        <button type="button" onClick={() => handleAction(user.id, "approve")} disabled={actionLoading === user.id} className="rounded-md bg-emerald-600 px-2.5 py-1.5 text-[11px] font-semibold text-[#fff] hover:bg-emerald-700 disabled:opacity-50">Approve</button>
                         <button type="button" onClick={() => handleAction(user.id, "reject")} disabled={actionLoading === user.id} className="rounded-md bg-red-100 px-2.5 py-1.5 text-[11px] font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50">Reject</button>
                       </div>
                     )}
@@ -345,7 +345,7 @@ export default function AdminB2BPage() {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <button type="submit" disabled={inviteSending} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:bg-[#999]">
+                  <button type="submit" disabled={inviteSending} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:bg-[#999]">
                     {inviteSending ? "Sending..." : "Send Invite"}
                   </button>
                   <button type="button" onClick={() => setShowInviteForm(false)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-semibold text-[#666] hover:border-black">

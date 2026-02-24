@@ -249,7 +249,7 @@ export default function MarketingCalendarPage() {
             >
               <div className="flex items-center gap-3 border-b border-gray-200 px-5 py-3">
                 <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold ${
-                  isCurrent ? "bg-blue-500 text-white" : isPastMonth ? "bg-gray-300 text-gray-600" : "bg-gray-200 text-gray-700"
+                  isCurrent ? "bg-blue-500 text-[#fff]" : isPastMonth ? "bg-gray-300 text-gray-600" : "bg-gray-200 text-gray-700"
                 }`}>
                   {m}
                 </span>
@@ -257,7 +257,7 @@ export default function MarketingCalendarPage() {
                   {MONTHS[m - 1]}
                 </h3>
                 {isCurrent && (
-                  <span className="rounded-full bg-blue-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                  <span className="rounded-full bg-blue-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#fff]">
                     Current
                   </span>
                 )}
@@ -392,7 +392,7 @@ export default function MarketingCalendarPage() {
               href={`#month-${m}`}
               className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${
                 m === currentMonth
-                  ? "bg-blue-500 text-white"
+                  ? "bg-blue-500 text-[#fff]"
                   : m < currentMonth
                     ? "text-gray-300 hover:bg-gray-100 hover:text-gray-500"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"

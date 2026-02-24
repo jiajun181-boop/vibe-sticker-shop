@@ -106,7 +106,7 @@ function ProductCard({ product, t, compact }) {
             <QuickAddButton product={product} />
             <Link
               href={href}
-              className="inline-block rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-white transition-colors hover:bg-[var(--color-brand-dark)]"
+              className="inline-block rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-[#fff] transition-colors hover:bg-[var(--color-brand-dark)]"
             >
               {viewOrderLabel}
             </Link>
@@ -116,7 +116,7 @@ function ProductCard({ product, t, compact }) {
         <div className="px-2.5 pb-2.5">
           <Link
             href={href}
-            className="mt-1.5 inline-block rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[10px] font-semibold text-white transition-colors hover:bg-[var(--color-brand-dark)]"
+            className="mt-1.5 inline-block rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[10px] font-semibold text-[#fff] transition-colors hover:bg-[var(--color-brand-dark)]"
           >
             {viewOrderLabel}
           </Link>
@@ -266,7 +266,7 @@ export default function CategoryLandingClient({
               onClick={() => setActiveFilter(null)}
               className={`flex-none rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                 activeFilter === null
-                  ? "bg-[var(--color-brand)] text-white"
+                  ? "bg-[var(--color-brand)] text-[#fff]"
                   : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-brand)]"
               }`}
             >
@@ -280,7 +280,7 @@ export default function CategoryLandingClient({
                 }
                 className={`flex-none rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                   activeFilter === group.slug
-                    ? "bg-[var(--color-brand)] text-white"
+                    ? "bg-[var(--color-brand)] text-[#fff]"
                     : "border border-[var(--color-gray-200)] bg-white text-[var(--color-gray-600)] hover:border-[var(--color-brand)]"
                 }`}
               >
@@ -392,7 +392,7 @@ export default function CategoryLandingClient({
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
+              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
             >
               {t("home.cta.quote")}
             </Link>

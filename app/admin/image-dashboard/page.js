@@ -310,7 +310,7 @@ export default function ImageDashboardPage() {
                             type="button"
                             onClick={() => fileRefs.current[product.id]?.click()}
                             disabled={uploading[product.id]}
-                            className="h-11 sm:h-auto w-full sm:w-auto rounded-[3px] bg-teal-600 px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-teal-700 disabled:opacity-50"
+                            className="h-11 sm:h-auto w-full sm:w-auto rounded-[3px] bg-teal-600 px-2.5 py-1.5 text-xs font-semibold text-[#fff] transition-colors hover:bg-teal-700 disabled:opacity-50"
                           >
                             {uploading[product.id] ? "Uploading..." : "Upload"}
                           </button>

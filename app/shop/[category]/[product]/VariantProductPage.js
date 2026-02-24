@@ -94,7 +94,7 @@ export default function VariantProductPage({ variantConfig, productMap, category
                   onClick={() => handleStyleChange(v.slug)}
                   className={`group relative rounded-xl border-2 px-4 py-2.5 text-left transition-all ${
                     isActive
-                      ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-white shadow-lg"
+                      ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)] text-[#fff] shadow-lg"
                       : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)] hover:shadow-md"
                   }`}
                   title={v.description}

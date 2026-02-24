@@ -74,7 +74,7 @@ export default async function DesignServicesPage() {
 
           {/* Premium */}
           <section className="rounded-3xl border-2 border-[var(--color-gray-900)] bg-white p-8 relative">
-            <div className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white mb-4">
+            <div className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#fff] mb-4">
               Premium
             </div>
             <h2 className="text-xl font-semibold">Premium Custom Design</h2>
@@ -132,7 +132,7 @@ export default async function DesignServicesPage() {
         </section>
 
         {/* CTA */}
-        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-[var(--color-gray-900)] p-8 text-white">
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-[var(--color-gray-900)] p-8 text-[#fff]">
           <h2 className="text-2xl font-semibold">Ready to get started?</h2>
           <p className="mt-3 text-sm text-[var(--color-gray-300)]">
             Email us your design brief or call to discuss your project. We typically respond within 24 hours.
@@ -146,7 +146,7 @@ export default async function DesignServicesPage() {
             </Link>
             <a
               href="mailto:info@lunarprint.ca"
-              className="inline-block rounded-xl border border-white/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:border-white/70 transition-colors"
+              className="inline-block rounded-xl border border-white/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] hover:border-white/70 transition-colors"
             >
               info@lunarprint.ca
             </a>

@@ -225,7 +225,7 @@ function Badge({ label, tone = "neutral" }) {
     tone === "success"
       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
       : tone === "dark"
-        ? "bg-black/15 text-white border-white/25"
+        ? "bg-black/15 text-[#fff] border-white/25"
         : "bg-slate-50 text-slate-700 border-slate-200";
 
   return (
@@ -242,13 +242,13 @@ function ProductCard({ item, price, premium = false, cta = "View", imageUrl }) {
       href={item.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
     >
-      <div className={`relative ${premium ? "h-44" : "h-24"} ${imageUrl ? "bg-gray-50" : `bg-gradient-to-br ${item.gradient || "from-slate-400 to-slate-600"}`}`}>
+      <div className={`relative overflow-hidden ${premium ? "h-44" : "h-24"} ${imageUrl ? "bg-[var(--color-gray-100)]" : `bg-gradient-to-br ${item.gradient || "from-slate-400 to-slate-600"}`}`}>
         {imageUrl ? (
           <>
             {isSvg ? (
-              <img src={imageUrl} alt={item.name} className="h-full w-full object-contain p-3" />
+              <img src={imageUrl} alt={item.name} className="h-full w-full object-cover" />
             ) : (
-              <Image src={imageUrl} alt={item.name} fill className="object-contain p-3" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+              <Image src={imageUrl} alt={item.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
             )}
             <div className="absolute left-3 top-2 flex flex-wrap gap-1.5">
               {premium && <Badge label="Premium" tone="neutral" />}
@@ -260,17 +260,17 @@ function ProductCard({ item, price, premium = false, cta = "View", imageUrl }) {
         ) : (
           <>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_55%)]" />
-            <div className="relative flex h-full flex-col justify-between p-4 text-white">
+            <div className="relative flex h-full flex-col justify-between p-4 text-[#fff]">
               <div className="flex flex-wrap gap-1.5">
                 {premium && <Badge label="Premium" tone="dark" />}
                 {item.badges?.map((b) => (
                   <Badge key={b} label={b} tone={b === "Same-Day" ? "success" : premium ? "dark" : "neutral"} />
                 ))}
               </div>
-              <p className={`pr-2 font-semibold leading-tight text-white drop-shadow ${premium ? "text-base" : "text-sm"}`}>
+              <p className={`pr-2 font-semibold leading-tight text-[#fff] drop-shadow ${premium ? "text-base" : "text-sm"}`}>
                 {item.name}
               </p>
-              {premium && item.note ? <p className="text-xs text-white/80">{item.note}</p> : <span />}
+              {premium && item.note ? <p className="text-xs text-[#fff]/80">{item.note}</p> : <span />}
             </div>
           </>
         )}
@@ -284,7 +284,7 @@ function ProductCard({ item, price, premium = false, cta = "View", imageUrl }) {
         )}
         <div className="flex items-center justify-between gap-2">
           <PriceLabel price={price} />
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
             {cta}
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -466,7 +466,7 @@ export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImage
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
+              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
             >
               Get a Quote
             </Link>

@@ -159,7 +159,7 @@ export default function FunnelPage() {
                     <div className="w-full max-w-[20px] rounded-t bg-emerald-400 -mt-px" style={{ height: paidH, position: "relative", top: -(createdH) }} />
                   </div>
                   {/* Tooltip */}
-                  <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10">
+                  <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-[#fff] text-[10px] rounded px-2 py-1 whitespace-nowrap z-10">
                     {new Date(d.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}:
                     {" "}{d.created} created, {d.paid} paid
                   </div>

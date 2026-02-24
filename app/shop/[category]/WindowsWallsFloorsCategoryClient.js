@@ -72,16 +72,16 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className={`relative flex items-center justify-center bg-gray-50 ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
+      <div className={`relative overflow-hidden bg-[var(--color-gray-100)] ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
         {showUrl ? (
           isSvg ? (
-            <img src={showUrl} alt={item.name} className="h-full w-full object-contain p-4 transition-opacity duration-300" />
+            <img src={showUrl} alt={item.name} className="h-full w-full object-cover transition-opacity duration-300" />
           ) : (
-            <Image src={showUrl} alt={item.name} fill className="object-contain p-4 transition-opacity duration-300" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+            <Image src={showUrl} alt={item.name} fill className="object-cover transition-opacity duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
           )
         ) : (
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
-            <p className="px-6 text-center text-lg font-bold text-white drop-shadow-md">
+            <p className="px-6 text-center text-lg font-bold text-[#fff] drop-shadow-md">
               {item.name}
             </p>
           </div>
@@ -99,7 +99,7 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl }) {
           ) : (
             <span className="text-xs text-[var(--color-gray-400)]">Get a quote</span>
           )}
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3.5 py-1.5 text-[10px] font-semibold text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3.5 py-1.5 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
             Configure
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -203,7 +203,7 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfIm
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
+              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
             >
               Get a Quote
             </Link>

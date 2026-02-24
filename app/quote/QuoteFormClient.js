@@ -78,7 +78,7 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
           </div>
           <a
             href="/shop"
-            className="mt-6 inline-block rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black"
+            className="mt-6 inline-block rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-black"
           >
             {t("cart.continueShopping")}
           </a>
@@ -97,7 +97,7 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
               <div
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors ${
                   s <= step
-                    ? "bg-[var(--color-gray-900)] text-white"
+                    ? "bg-[var(--color-gray-900)] text-[#fff]"
                     : "bg-[var(--color-gray-100)] text-[var(--color-gray-400)]"
                 }`}
               >
@@ -149,7 +149,7 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
               type="button"
               onClick={() => setStep((s) => s + 1)}
               disabled={!canNext()}
-              className="rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t("quote.next")}
             </button>
@@ -158,7 +158,7 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
               type="button"
               onClick={handleSubmit}
               disabled={submitting || !form.name || !form.email}
-              className="rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting ? t("quote.step4.submitting") : t("quote.step4.submit")}
             </button>
@@ -266,7 +266,7 @@ function Step2({ form, update, t }) {
                 onClick={() => update("quantity", String(q))}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
                   form.quantity === String(q)
-                    ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+                    ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
                     : "border-[var(--color-gray-200)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
                 }`}
               >
@@ -313,7 +313,7 @@ function Step2({ form, update, t }) {
                 onClick={() => update("colorMode", opt.value)}
                 className={`rounded-lg border px-4 py-2 text-xs font-semibold transition-colors ${
                   form.colorMode === opt.value
-                    ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+                    ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
                     : "border-[var(--color-gray-200)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-400)]"
                 }`}
               >

@@ -10,7 +10,7 @@ export default function AdminError({ error, reset }) {
         <button
           type="button"
           onClick={() => reset()}
-          className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black"
+          className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-[#fff] hover:bg-black"
         >
           Try Again
         </button>

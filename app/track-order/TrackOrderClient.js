@@ -120,7 +120,7 @@ export default function TrackOrderClient() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-[var(--color-gray-900)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:bg-black transition-colors disabled:opacity-50"
+          className="w-full rounded-xl bg-[var(--color-gray-900)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] hover:bg-black transition-colors disabled:opacity-50"
         >
           {loading ? t("track.searching") : t("track.submit")}
         </button>

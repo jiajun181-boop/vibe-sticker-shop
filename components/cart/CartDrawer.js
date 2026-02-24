@@ -315,7 +315,7 @@ export default function CartDrawer() {
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-semibold tracking-[0.16em] text-[var(--color-gray-800)]">{t("cart.title")}</h2>
             {cart.length > 0 && (
-              <span className="rounded-sm bg-[var(--color-moon-blue-deep)] px-2 py-0.5 text-[10px] font-semibold text-white">{cart.length}</span>
+              <span className="rounded-sm bg-[var(--color-moon-blue-deep)] px-2 py-0.5 text-[10px] font-semibold text-[#fff]">{cart.length}</span>
             )}
           </div>
           <button
@@ -475,7 +475,7 @@ export default function CartDrawer() {
                   onClick={() => setShippingMethod("delivery")}
                   className={`rounded-sm border px-3 py-2 text-left text-xs transition-colors ${
                     shippingMethod === "delivery"
-                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
                       : "border-[var(--color-gray-300)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-500)]"
                   }`}
                 >
@@ -486,7 +486,7 @@ export default function CartDrawer() {
                   onClick={() => setShippingMethod("pickup")}
                   className={`rounded-sm border px-3 py-2 text-left text-xs transition-colors ${
                     shippingMethod === "pickup"
-                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
                       : "border-[var(--color-gray-300)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-500)]"
                   }`}
                 >
@@ -588,7 +588,7 @@ export default function CartDrawer() {
                   onClick={() => setCheckoutMode("stripe")}
                   className={`rounded-sm border-2 px-3 py-2 text-left transition-colors ${
                     checkoutMode === "stripe"
-                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
                       : "border-[var(--color-gray-300)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-500)]"
                   }`}
                 >
@@ -602,7 +602,7 @@ export default function CartDrawer() {
                   onClick={() => setCheckoutMode("invoice")}
                   className={`rounded-sm border-2 px-3 py-2 text-left transition-colors ${
                     checkoutMode === "invoice"
-                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-white"
+                      ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
                       : "border-[var(--color-gray-300)] text-[var(--color-gray-600)] hover:border-[var(--color-gray-500)]"
                   }`}
                 >

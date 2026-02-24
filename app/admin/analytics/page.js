@@ -94,7 +94,7 @@ function AnalyticsContent() {
               onClick={() => setPeriod(p.key)}
               className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                 activePeriod === p.key
-                  ? "bg-black text-white"
+                  ? "bg-black text-[#fff]"
                   : "bg-white text-[#666] hover:bg-[#fafafa]"
               }`}
             >

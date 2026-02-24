@@ -267,7 +267,7 @@ export default function MarketingPrintOrderClient({
                       onClick={() => handleTypeChange(pt.id)}
                       className={`rounded-xl border-2 px-3 py-2.5 text-sm font-bold transition-all duration-150 ${
                         typeId === pt.id
-                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
@@ -288,7 +288,7 @@ export default function MarketingPrintOrderClient({
                     onClick={() => { setSizeIdx(idx); setIsCustomSize(false); }}
                     className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                       sizeIdx === idx && !isCustomSize
-                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
@@ -301,7 +301,7 @@ export default function MarketingPrintOrderClient({
                     onClick={() => setIsCustomSize(true)}
                     className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                       isCustomSize
-                        ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
@@ -427,7 +427,7 @@ export default function MarketingPrintOrderClient({
                       >
                         {isActive && (
                           <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                            <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                           </span>
                         )}
                         <span className="text-sm font-bold text-gray-800">{p.label}</span>
@@ -452,7 +452,7 @@ export default function MarketingPrintOrderClient({
                       onClick={() => setSides(s)}
                       className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                         sides === s
-                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
@@ -476,7 +476,7 @@ export default function MarketingPrintOrderClient({
                       onClick={() => setFinishing(f)}
                       className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                         finishing === f
-                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
@@ -500,7 +500,7 @@ export default function MarketingPrintOrderClient({
                       }
                       className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                         extrasState[ex.key] === opt.id
-                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
@@ -527,7 +527,7 @@ export default function MarketingPrintOrderClient({
                       onClick={() => { setQuantity(q); setCustomQty(""); }}
                       className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
                         quantity === q && !customQty
-                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
@@ -562,7 +562,7 @@ export default function MarketingPrintOrderClient({
                       onClick={() => setArtworkMode("upload")}
                       className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                         artworkMode === "upload"
-                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
@@ -573,7 +573,7 @@ export default function MarketingPrintOrderClient({
                       onClick={() => setArtworkMode("template")}
                       className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
                         artworkMode === "template"
-                          ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
@@ -623,7 +623,7 @@ export default function MarketingPrintOrderClient({
               </div>
               <a
                 href="/contact"
-                className="block w-full rounded-xl bg-gray-900 py-3 text-center text-sm font-bold text-white hover:bg-gray-800 transition"
+                className="block w-full rounded-xl bg-gray-900 py-3 text-center text-sm font-bold text-[#fff] hover:bg-gray-800 transition"
               >
                 Contact Us
               </a>

@@ -254,7 +254,7 @@ export default function FlagOrderClient() {
                   onClick={() => setPurchaseType(pt.id)}
                   className={`group flex flex-col items-center gap-1.5 rounded-xl border-2 p-4 text-center transition-all ${
                     purchaseType === pt.id
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
@@ -277,7 +277,7 @@ export default function FlagOrderClient() {
                   onClick={() => setStyle(s.id)}
                   className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
                     style === s.id
-                      ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
@@ -441,7 +441,7 @@ export default function FlagOrderClient() {
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart
-                    ? "bg-gray-900 text-white hover:bg-gray-800"
+                    ? "bg-gray-900 text-[#fff] hover:bg-gray-800"
                     : "cursor-not-allowed bg-gray-200 text-gray-400"
                 }`}
               >
@@ -493,7 +493,7 @@ export default function FlagOrderClient() {
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart
-                ? "bg-gray-900 text-white hover:bg-gray-800"
+                ? "bg-gray-900 text-[#fff] hover:bg-gray-800"
                 : "cursor-not-allowed bg-gray-200 text-gray-400"
             }`}
           >
@@ -528,7 +528,7 @@ function Chip({ active, onClick, children }) {
       onClick={onClick}
       className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
         active
-          ? "border-gray-900 bg-gray-900 text-white"
+          ? "border-gray-900 bg-gray-900 text-[#fff]"
           : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"
       }`}
     >

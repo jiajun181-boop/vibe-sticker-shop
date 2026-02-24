@@ -3,7 +3,7 @@ export default function ConfigStep({ number, title, subtitle, optional, children
   return (
     <section className="rounded border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="mb-4 flex items-start gap-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-900 text-sm font-black text-white">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-900 text-sm font-black text-[#fff]">
           {number}
         </span>
         <div className="flex-1">

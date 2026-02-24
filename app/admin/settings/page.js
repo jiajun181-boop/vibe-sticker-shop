@@ -282,7 +282,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-black disabled:opacity-50"
+            className="rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-semibold text-[#fff] transition-colors hover:bg-black disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save All Settings"}
           </button>
