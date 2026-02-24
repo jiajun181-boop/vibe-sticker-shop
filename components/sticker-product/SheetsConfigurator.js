@@ -411,7 +411,7 @@ export default function SheetsConfigurator() {
         </svg>
         <span>Secure checkout</span>
         <span className="text-gray-300">|</span>
-        <span>Free shipping $75+</span>
+        <span>Free shipping $99+</span>
         <span className="text-gray-300">|</span>
         <span>Free proof</span>
       </div>

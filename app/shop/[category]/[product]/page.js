@@ -578,25 +578,30 @@ export default async function ProductPage({ params }) {
         take: 4,
         orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
       });
+      const safeStickerProd = stickerProd ? toClientSafe(stickerProd) : { slug: decodedSlug, category: decodedCategory };
       return (
-        <Suspense
-          fallback={
-            <div className="flex min-h-[60vh] items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
-            </div>
-          }
-        >
-          <StickerProductPageClient
-            content={fallbackContent}
-            cuttingTypeId={configurator.defaultValue}
-            product={stickerProd ? toClientSafe(stickerProd) : { slug: decodedSlug, category: decodedCategory }}
-            images={stickerFallbackImages}
-            relatedProducts={toClientSafe(stickerFallbackRelated)}
-          />
-        </Suspense>
+        <>
+          {stickerProd && <ProductSchema product={toClientSafe(stickerProd)} />}
+          <BreadcrumbSchema category={decodedCategory} productName={safeStickerProd.name || decodedSlug} />
+          <Suspense
+            fallback={
+              <div className="flex min-h-[60vh] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+              </div>
+            }
+          >
+            <StickerProductPageClient
+              content={fallbackContent}
+              cuttingTypeId={configurator.defaultValue}
+              product={safeStickerProd}
+              images={stickerFallbackImages}
+              relatedProducts={toClientSafe(stickerFallbackRelated)}
+            />
+          </Suspense>
+        </>
       );
     }
-    // Fetch product images for configurator display
+    // Fetch product for configurator display + JSON-LD
     const cfgProduct = await prisma.product.findFirst({
       where: { slug: decodedSlug, isActive: true },
       include: { images: { orderBy: { sortOrder: "asc" } } },
@@ -619,15 +624,19 @@ export default async function ProductPage({ params }) {
       "marketing-print": <MarketingPrintOrderClient defaultType={configurator.defaultValue} hideTypeSelector={true} productImages={cfgImages} />,
     };
     return (
-      <Suspense
-        fallback={
-          <div className="flex min-h-[60vh] items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
-          </div>
-        }
-      >
-        {CONFIGURATOR_COMPONENTS[configurator.component]}
-      </Suspense>
+      <>
+        {cfgProduct && <ProductSchema product={toClientSafe(cfgProduct)} />}
+        <BreadcrumbSchema category={decodedCategory} productName={cfgProduct?.name || decodedSlug} />
+        <Suspense
+          fallback={
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+            </div>
+          }
+        >
+          {CONFIGURATOR_COMPONENTS[configurator.component]}
+        </Suspense>
+      </>
     );
   }
 

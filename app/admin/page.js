@@ -36,7 +36,7 @@ const SITE_FEATURES = [
   {
     icon: "\uD83D\uDE9A",
     title: "Smart Shipping",
-    desc: "Free shipping over $150 CAD. Three options: pickup ($0), local delivery ($15), Canada-wide ($20). Automatic threshold detection and promo bar progress.",
+    desc: "Free shipping over $99 CAD. Three options: pickup ($0), local delivery ($15), Canada-wide ($20). Automatic threshold detection and promo bar progress.",
   },
   {
     icon: "\uD83C\uDF10",

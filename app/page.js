@@ -38,7 +38,7 @@ const FEATURED_SLUGS = [
 
 export async function generateMetadata() {
   const title = "Custom Stickers, Labels & Signs";
-  const description = "Toronto's trusted custom printing shop. Stickers, labels, banners, vehicle wraps, business cards & more. Fast turnaround, free shipping on orders $150+.";
+  const description = "Toronto's trusted custom printing shop. Stickers, labels, banners, vehicle wraps, business cards & more. Fast turnaround, free shipping on orders $99+.";
 
   return {
     title,

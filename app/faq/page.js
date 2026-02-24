@@ -13,7 +13,7 @@ const FAQ_ITEMS_EN = [
   { question: "Do I need to include bleed?", answer: "Yes, please include 3 mm bleed on all sides. Keep all important text and logos at least 5 mm inside the trim line." },
   { question: "How long does production take?", answer: "Most standard jobs are completed in 1\u20132 business days. Orders finalized after 6:00 PM EST are processed the following business day." },
   { question: "How long does shipping take?", answer: "We ship via UPS across Canada and the US, typically delivering within 3 business days after production is complete." },
-  { question: "Is free shipping available?", answer: "Yes! Orders over $150 CAD qualify for free Canada-wide shipping." },
+  { question: "Is free shipping available?", answer: "Yes! Orders over $99 CAD qualify for free Canada-wide shipping." },
   { question: "What is your return policy?", answer: "All sales are final as products are custom-made. If there is a manufacturing defect, contact us within 2 days with photos and we will reprint or refund at no cost." },
   { question: "What if there's a printing error?", answer: "Contact us within 2 days at info@lunarprint.ca or WeChat: lunarprinting with 2\u20133 photos and your order number. We will reprint free of charge for confirmed production errors." },
   { question: "What payment methods do you accept?", answer: "We accept Visa, MasterCard, American Express, Debit, and E-Transfer (include your order number in the memo). All payments are processed securely." },

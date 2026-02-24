@@ -33,7 +33,7 @@ const FILE_GUIDELINES = [
 ];
 
 const SHIPPING_INFO = [
-  "Standard shipping: 5\u20137 business days (free on orders over $150)",
+  "Standard shipping: 5\u20137 business days (free on orders over $99)",
   "Express shipping: 2\u20133 business days",
   "Local pickup available in Toronto (same day for rush orders)",
   "Banners are rolled for shipping to prevent creases",
@@ -64,7 +64,7 @@ const FAQ = [
   { q: "Do you offer same-day banner printing?", a: "Yes, rush orders with same/next day turnaround are available for an additional 30% surcharge. Select Rush in the turnaround step." },
   { q: "What file format should I send?", a: "We accept PDF, AI, EPS, JPG, and PNG. For best results, provide a 300 DPI CMYK PDF with 0.5\u2033 bleed." },
   { q: "Can I order a custom size not listed?", a: "Absolutely! Use the custom size input (feet + inches) to enter any dimensions. Min 1\u00d71 ft, max 5\u00d750 ft." },
-  { q: "How are banners shipped?", a: "Banners are rolled (never folded) and shipped in sturdy tubes. Free shipping on orders over $150." },
+  { q: "How are banners shipped?", a: "Banners are rolled (never folded) and shipped in sturdy tubes. Free shipping on orders over $99." },
 ];
 
 export default function VinylBannerSections() {
