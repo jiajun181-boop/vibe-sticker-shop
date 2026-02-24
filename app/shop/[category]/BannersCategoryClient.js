@@ -69,7 +69,7 @@ function ProductCard({ item, price, size, imageUrl }) {
       href={item.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
     >
-      <div className={`relative flex items-center justify-center bg-gray-50 ${isLarge ? "h-[200px]" : "h-[140px]"}`}>
+      <div className={`relative flex items-center justify-center bg-gray-50 ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
         {imageUrl ? (
           isSvg ? (
             <img src={imageUrl} alt={item.name} className="h-full w-full object-contain p-4" />
