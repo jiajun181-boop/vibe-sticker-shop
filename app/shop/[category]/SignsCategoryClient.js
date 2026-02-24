@@ -85,7 +85,7 @@ function SignProductCard({ product, section, category }) {
             ) : null}
             <Link
               href={href}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-gray-900)] px-3.5 py-2 text-[10px] font-semibold text-white transition-colors hover:bg-black"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gray-900 px-3.5 py-2 text-[10px] font-semibold text-white transition-colors hover:bg-black"
             >
               {isSimpleAdd ? "Add to Cart" : "Configure"}
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -171,7 +171,7 @@ export default function SignsCategoryClient({
                 onClick={() => scrollToSection(section.key)}
                 className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                   activeSection === section.key
-                    ? "bg-[var(--color-gray-900)] text-white"
+                    ? "bg-gray-900 text-white"
                     : "bg-white border border-[var(--color-gray-200)] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-100)] hover:text-[var(--color-gray-800)]"
                 }`}
               >
