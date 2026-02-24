@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -70,20 +71,24 @@ const SECTIONS = [
   },
 ];
 
-function ProductCard({ item, price, size, imageUrl }) {
+function ProductCard({ item, price, size, imageUrl, hoverImageUrl }) {
   const isLarge = size === "large";
+  const [hovered, setHovered] = useState(false);
+  const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
   return (
     <Link
       href={item.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div className={`relative overflow-hidden ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
-        {imageUrl ? (
+        {showUrl ? (
           <Image
-            src={imageUrl}
+            src={showUrl}
             alt={item.name}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-all duration-300 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
           />
         ) : (
@@ -118,7 +123,7 @@ function ProductCard({ item, price, size, imageUrl }) {
   );
 }
 
-export default function MarketingCategoryClient({ marketingPrices = {}, marketingImages = {} }) {
+export default function MarketingCategoryClient({ marketingPrices = {}, marketingImages = {}, marketingImages2 = {} }) {
   const { t } = useTranslation();
 
   return (
@@ -162,6 +167,7 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
                     price={marketingPrices[item.key] || 0}
                     size={section.size}
                     imageUrl={marketingImages[item.key]}
+                    hoverImageUrl={marketingImages2[item.key]}
                   />
                 ))}
               </div>

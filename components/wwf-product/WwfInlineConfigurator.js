@@ -237,7 +237,7 @@ export default function WwfInlineConfigurator({ wwfProductId }) {
           <div className="flex gap-2">
             {product.cutTypes.map((ct) => {
               const isActive = cutType === ct;
-              const label = ct === "rectangular" ? "Rectangular" : "Contour (Die-Cut)";
+              const label = ct === "rectangular" ? "Rectangular" : "Custom Shape";
               return (
                 <button
                   key={ct}

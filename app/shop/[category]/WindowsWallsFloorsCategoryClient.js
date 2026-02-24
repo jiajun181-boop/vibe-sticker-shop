@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -59,20 +60,24 @@ const SECTIONS = [
   },
 ];
 
-function ProductCard({ item, price, size, imageUrl }) {
+function ProductCard({ item, price, size, imageUrl, hoverImageUrl }) {
   const isLarge = size === "large";
-  const isSvg = imageUrl && isSvgImage(imageUrl);
+  const [hovered, setHovered] = useState(false);
+  const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
+  const isSvg = showUrl && isSvgImage(showUrl);
   return (
     <Link
       href={item.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div className={`relative flex items-center justify-center bg-gray-50 ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
-        {imageUrl ? (
+        {showUrl ? (
           isSvg ? (
-            <img src={imageUrl} alt={item.name} className="h-full w-full object-contain p-4" />
+            <img src={showUrl} alt={item.name} className="h-full w-full object-contain p-4 transition-opacity duration-300" />
           ) : (
-            <Image src={imageUrl} alt={item.name} fill className="object-contain p-4" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+            <Image src={showUrl} alt={item.name} fill className="object-contain p-4 transition-opacity duration-300" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
           )
         ) : (
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
@@ -106,7 +111,7 @@ function ProductCard({ item, price, size, imageUrl }) {
   );
 }
 
-export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfImages = {} }) {
+export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfImages = {}, wwfImages2 = {} }) {
   const { t } = useTranslation();
 
   return (
@@ -150,6 +155,7 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfIm
                     price={wwfPrices[item.key] || 0}
                     size={section.size}
                     imageUrl={wwfImages[item.key]}
+                    hoverImageUrl={wwfImages2[item.key]}
                   />
                 ))}
               </div>

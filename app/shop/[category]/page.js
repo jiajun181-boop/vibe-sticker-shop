@@ -352,7 +352,7 @@ export default async function CategoryPage({ params }) {
       isActive: true,
     },
     include: {
-      images: { take: 1, orderBy: { sortOrder: "asc" } },
+      images: { take: 2, orderBy: { sortOrder: "asc" } },
       pricingPreset: true,
     },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -438,6 +438,7 @@ export default async function CategoryPage({ params }) {
 
     const marketingPrices = {};
     const marketingImages = {};
+    const marketingImages2 = {};
     for (const [key, slugs] of Object.entries(MARKETING_PRICE_MAP)) {
       const slugSet = new Set(slugs);
       const matching = products.filter((p) => slugSet.has(p.slug));
@@ -448,6 +449,7 @@ export default async function CategoryPage({ params }) {
         const withImage = matching.find((p) => p.images?.[0]?.url);
         if (withImage) {
           marketingImages[key] = withImage.images[0].url;
+          if (withImage.images[1]?.url) marketingImages2[key] = withImage.images[1].url;
         }
       }
     }
@@ -455,7 +457,7 @@ export default async function CategoryPage({ params }) {
     return (
       <>
         <CategoryFaqSchema category={decoded} />
-        <MarketingCategoryClient marketingPrices={marketingPrices} marketingImages={marketingImages} />
+        <MarketingCategoryClient marketingPrices={marketingPrices} marketingImages={marketingImages} marketingImages2={marketingImages2} />
       </>
     );
   }
@@ -481,6 +483,7 @@ export default async function CategoryPage({ params }) {
 
     const bannerPrices = {};
     const bannerImages = {};
+    const bannerImages2 = {};
     for (const [key, slugs] of Object.entries(BANNER_PRICE_MAP)) {
       const slugSet = new Set(slugs);
       const matching = products.filter((p) => slugSet.has(p.slug));
@@ -489,13 +492,14 @@ export default async function CategoryPage({ params }) {
         bannerPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
         const img = getProductImage(matching[0]);
         if (img) bannerImages[key] = img;
+        if (matching[0].images?.[1]?.url) bannerImages2[key] = matching[0].images[1].url;
       }
     }
 
     return (
       <>
         <CategoryFaqSchema category={decoded} />
-        <BannersCategoryClient bannerPrices={bannerPrices} bannerImages={bannerImages} />
+        <BannersCategoryClient bannerPrices={bannerPrices} bannerImages={bannerImages} bannerImages2={bannerImages2} />
       </>
     );
   }
@@ -543,6 +547,7 @@ export default async function CategoryPage({ params }) {
 
     const wwfPrices = {};
     const wwfImages = {};
+    const wwfImages2 = {};
     for (const [key, slugs] of Object.entries(WWF_PRICE_MAP)) {
       const slugSet = new Set(slugs);
       const matching = products.filter((p) => slugSet.has(p.slug));
@@ -551,13 +556,14 @@ export default async function CategoryPage({ params }) {
         wwfPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
         const img = getProductImage(matching[0]);
         if (img) wwfImages[key] = img;
+        if (matching[0].images?.[1]?.url) wwfImages2[key] = matching[0].images[1].url;
       }
     }
 
     return (
       <>
         <CategoryFaqSchema category={decoded} />
-        <WindowsWallsFloorsCategoryClient wwfPrices={wwfPrices} wwfImages={wwfImages} />
+        <WindowsWallsFloorsCategoryClient wwfPrices={wwfPrices} wwfImages={wwfImages} wwfImages2={wwfImages2} />
       </>
     );
   }
@@ -576,6 +582,7 @@ export default async function CategoryPage({ params }) {
 
     const canvasPrices = {};
     const canvasImages = {};
+    const canvasImages2 = {};
     for (const [key, slugs] of Object.entries(CANVAS_PRICE_MAP)) {
       const slugSet = new Set(slugs);
       const matching = products.filter((p) => slugSet.has(p.slug));
@@ -584,13 +591,14 @@ export default async function CategoryPage({ params }) {
         canvasPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
         const img = getProductImage(matching[0]);
         if (img) canvasImages[key] = img;
+        if (matching[0].images?.[1]?.url) canvasImages2[key] = matching[0].images[1].url;
       }
     }
 
     return (
       <>
         <CategoryFaqSchema category={decoded} />
-        <CanvasCategoryClient canvasPrices={canvasPrices} canvasImages={canvasImages} />
+        <CanvasCategoryClient canvasPrices={canvasPrices} canvasImages={canvasImages} canvasImages2={canvasImages2} />
       </>
     );
   }
@@ -653,6 +661,7 @@ export default async function CategoryPage({ params }) {
 
     const vehiclePrices = {};
     const vehicleImages = {};
+    const vehicleImages2 = {};
     for (const [key, slugs] of Object.entries(VEHICLE_PRICE_MAP)) {
       const slugSet = new Set(slugs);
       const matching = products.filter((p) => slugSet.has(p.slug));
@@ -661,13 +670,14 @@ export default async function CategoryPage({ params }) {
         vehiclePrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
         const img = getProductImage(matching[0]);
         if (img) vehicleImages[key] = img;
+        if (matching[0].images?.[1]?.url) vehicleImages2[key] = matching[0].images[1].url;
       }
     }
 
     return (
       <>
         <CategoryFaqSchema category={decoded} />
-        <VehicleCategoryClient vehiclePrices={vehiclePrices} vehicleImages={vehicleImages} />
+        <VehicleCategoryClient vehiclePrices={vehiclePrices} vehicleImages={vehicleImages} vehicleImages2={vehicleImages2} />
       </>
     );
   }
