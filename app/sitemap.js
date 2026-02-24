@@ -29,17 +29,17 @@ export default async function sitemap() {
   ];
 
   // Configurator order pages — only include routes that actually exist in app/order/*/page.js
+  // Exclude order slugs that have 308 redirects in codex-url-mapping / synonym-redirects
+  // (their /shop/ destinations are already in the sitemap via product pages)
   const orderPages = [
-    "booklets", "ncr", "vinyl-banners", "mesh-banners", "fabric-banners",
-    "yard-signs", "foam-board-signs", "acrylic-signs", "aluminum-signs", "pvc-signs", "a-frame-signs",
+    "ncr", "fabric-banners",
+    "foam-board-signs", "acrylic-signs", "aluminum-signs", "pvc-signs", "a-frame-signs",
     "canvas-prints", "vehicle-wraps", "vehicle-decals", "magnetic-signs",
     "window-films", "wall-floor-graphics",
-    "retractable-stands", "x-banner-stands", "backdrops", "flags", "tabletop-displays",
-    "business-cards", "flyers", "postcards", "posters", "brochures",
-    "bookmarks", "door-hangers", "menus", "rack-cards", "letterhead", "envelopes",
-    "stamps", "tags", "calendars", "marketing-print", "notepads",
-    "greeting-cards", "invitation-cards", "certificates", "tickets", "coupons",
-    "loyalty-cards", "shelf-displays", "table-tents",
+    "retractable-stands", "x-banner-stands", "backdrops", "flags",
+    "brochures", "door-hangers", "menus",
+    "stamps", "tags", "calendars", "marketing-print",
+    "shelf-displays",
     "vinyl-lettering", "decals", "safety-labels", "industrial-labels",
     "presentation-folders", "retail-tags",
     "inserts-packaging", "order-forms", "waivers-releases",

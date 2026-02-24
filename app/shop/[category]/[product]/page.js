@@ -414,6 +414,55 @@ export default async function ProductPage({ params }) {
     }
   }
 
+  // ── Sticker rich product page: SEO-optimized page with embedded configurator ──
+  // Must come BEFORE sub-product landing because sticker slugs (e.g. "die-cut-stickers")
+  // also exist in SUB_PRODUCT_CONFIG, and the rich page should take priority.
+  const stickerRichPage = getStickerRichPageSlug(decodedSlug);
+  if (stickerRichPage) {
+    const { cuttingTypeId, content } = stickerRichPage;
+    const stickerProduct = await prisma.product.findFirst({
+      where: { slug: decodedSlug, isActive: true },
+      include: { images: { orderBy: { sortOrder: "asc" } } },
+    });
+    const stickerAssets = stickerProduct ? await getProductAssets(stickerProduct.id) : [];
+    const stickerImages = stickerAssets.length > 0
+      ? stickerAssets
+      : toClientSafe(stickerProduct?.images || []);
+
+    const stickerRelated = await prisma.product.findMany({
+      where: {
+        isActive: true,
+        category: decodedCategory,
+        ...(stickerProduct ? { id: { not: stickerProduct.id } } : {}),
+      },
+      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+      take: 4,
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    });
+
+    return (
+      <>
+        {stickerProduct && <ProductSchema product={toClientSafe(stickerProduct)} />}
+        <BreadcrumbSchema category={decodedCategory} productName={content.intro?.headline || decodedSlug} />
+        <Suspense
+          fallback={
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+            </div>
+          }
+        >
+          <StickerProductPageClient
+            content={content}
+            cuttingTypeId={cuttingTypeId}
+            product={stickerProduct ? toClientSafe(stickerProduct) : { slug: decodedSlug, category: decodedCategory }}
+            images={stickerImages}
+            relatedProducts={toClientSafe(stickerRelated)}
+        />
+      </Suspense>
+      </>
+    );
+  }
+
   // ── Sub-product landing: parent slug → show child products as card grid ──
   // Some sub-groups should redirect to the category page instead of showing a landing
   const SUB_GROUP_REDIRECT_TO_CATEGORY = ["flags-hardware", "tents-outdoor"];
@@ -501,53 +550,6 @@ export default async function ProductPage({ params }) {
           siblingSubGroups={siblingSubGroups}
         />
       </Suspense>
-    );
-  }
-
-  // ── Sticker rich product page: SEO-optimized page with embedded configurator ──
-  const stickerRichPage = getStickerRichPageSlug(decodedSlug);
-  if (stickerRichPage) {
-    const { cuttingTypeId, content } = stickerRichPage;
-    const stickerProduct = await prisma.product.findFirst({
-      where: { slug: decodedSlug, isActive: true },
-      include: { images: { orderBy: { sortOrder: "asc" } } },
-    });
-    const stickerAssets = stickerProduct ? await getProductAssets(stickerProduct.id) : [];
-    const stickerImages = stickerAssets.length > 0
-      ? stickerAssets
-      : toClientSafe(stickerProduct?.images || []);
-
-    const stickerRelated = await prisma.product.findMany({
-      where: {
-        isActive: true,
-        category: decodedCategory,
-        ...(stickerProduct ? { id: { not: stickerProduct.id } } : {}),
-      },
-      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
-      take: 4,
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
-    });
-
-    return (
-      <>
-        {stickerProduct && <ProductSchema product={toClientSafe(stickerProduct)} />}
-        <BreadcrumbSchema category={decodedCategory} productName={content.intro?.headline || decodedSlug} />
-        <Suspense
-          fallback={
-            <div className="flex min-h-[60vh] items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
-            </div>
-          }
-        >
-          <StickerProductPageClient
-            content={content}
-            cuttingTypeId={cuttingTypeId}
-            product={stickerProduct ? toClientSafe(stickerProduct) : { slug: decodedSlug, category: decodedCategory }}
-            images={stickerImages}
-            relatedProducts={toClientSafe(stickerRelated)}
-        />
-      </Suspense>
-      </>
     );
   }
 
