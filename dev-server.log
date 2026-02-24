@@ -1,0 +1,9 @@
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3456
+- Network:       http://192.168.0.192:3456
+- Environments: .env
+
+✓ Starting...
+⨯ Unable to acquire lock at C:\Users\Lilian\vibe-sticker-shop\.next\dev\lock, is another instance of next dev running?
+  Suggestion: If you intended to restart next dev, terminate the other process, and then try again.
+[?25h

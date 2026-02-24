@@ -31,6 +31,7 @@ export default function ImageDashboardPage() {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState({});
   const [uploading, setUploading] = useState({}); // productId -> true
+  const [justUploaded, setJustUploaded] = useState({}); // productId -> true (brief green flash)
   const fileRefs = useRef({}); // productId -> input ref
 
   const fetchData = useCallback(async () => {
@@ -94,6 +95,7 @@ export default function ImageDashboardPage() {
     setUploading((prev) => ({ ...prev, [product.id]: true }));
 
     try {
+      let lastUrl = null;
       for (const rawFile of files) {
         const file = await resizeImageFile(rawFile);
         const formData = new FormData();
@@ -106,6 +108,7 @@ export default function ImageDashboardPage() {
         if (!uploadRes.ok) throw new Error(uploadData.error || "Upload failed");
 
         const asset = uploadData.asset;
+        lastUrl = asset.originalUrl;
 
         await fetch(`/api/admin/assets/${asset.id}/links`, {
           method: "POST",
@@ -120,11 +123,11 @@ export default function ImageDashboardPage() {
         });
       }
 
-      // Update local state
+      // Update local state with actual thumbnail
       setProducts((prev) =>
         prev.map((p) =>
           p.id === product.id
-            ? { ...p, imageCount: p.imageCount + files.length, thumbnailUrl: p.thumbnailUrl || "uploaded" }
+            ? { ...p, imageCount: p.imageCount + files.length, thumbnailUrl: lastUrl || p.thumbnailUrl }
             : p
         )
       );
@@ -133,6 +136,10 @@ export default function ImageDashboardPage() {
         withImages: prev.withImages + (product.imageCount === 0 ? 1 : 0),
         missingImages: prev.missingImages - (product.imageCount === 0 ? 1 : 0),
       }));
+
+      // Brief green highlight
+      setJustUploaded((prev) => ({ ...prev, [product.id]: true }));
+      setTimeout(() => setJustUploaded((prev) => { const n = { ...prev }; delete n[product.id]; return n; }), 3000);
     } catch (err) {
       alert("Upload failed: " + (err.message || "Unknown error"));
     } finally {
@@ -161,9 +168,9 @@ export default function ImageDashboardPage() {
     return (
       <div className="space-y-4">
         <h1 className="text-lg font-bold text-[#111]">Image Dashboard</h1>
-        <div className="flex gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 flex-1 animate-pulse rounded-[2px] border border-[#e0e0e0] bg-white" />
+            <div key={i} className="h-20 animate-pulse rounded-[2px] border border-[#e0e0e0] bg-white" />
           ))}
         </div>
         <div className="h-10 animate-pulse rounded-[3px] border border-[#e0e0e0] bg-white" />
@@ -179,7 +186,7 @@ export default function ImageDashboardPage() {
       <h1 className="text-lg font-bold text-[#111]">Image Dashboard</h1>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-[2px] border border-[#e0e0e0] bg-white px-4 py-3">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">Total Products</p>
           <p className="mt-1 text-2xl font-bold text-[#111]">{stats.total}</p>
@@ -240,13 +247,17 @@ export default function ImageDashboardPage() {
 
               {isOpen && (
                 <div className="border-t border-[#f0f0f0]">
-                  {items.map((product) => (
+                  {items.map((product) => {
+                    const uploaded = justUploaded[product.id];
+                    return (
                     <div
                       key={product.id}
-                      className={`flex items-center gap-3 px-4 py-2.5 text-sm ${
-                        product.imageCount === 0
-                          ? "border-l-2 border-l-red-400 bg-red-50"
-                          : "border-l-2 border-l-transparent hover:bg-[#fafafa]"
+                      className={`flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 px-4 py-2.5 text-sm transition-colors duration-700 ${
+                        uploaded
+                          ? "border-l-2 border-l-emerald-500 bg-emerald-50"
+                          : product.imageCount === 0
+                            ? "border-l-2 border-l-red-400 bg-red-50"
+                            : "border-l-2 border-l-transparent hover:bg-[#fafafa]"
                       }`}
                     >
                       {/* Thumbnail */}
@@ -283,45 +294,50 @@ export default function ImageDashboardPage() {
                         {product.imageCount} {product.imageCount === 1 ? "image" : "images"}
                       </span>
 
-                      {/* View on Site */}
-                      <a
-                        href={getProductUrl(product)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="shrink-0 rounded-[3px] border border-[#e0e0e0] px-2.5 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-[#000] hover:text-black"
-                      >
-                        View
-                      </a>
+                      {/* Action buttons — full-width row on mobile, inline on desktop */}
+                      <div className="flex w-full sm:w-auto items-center gap-2">
+                        {/* Upload */}
+                        <div className="flex-1 sm:flex-initial">
+                          <input
+                            ref={(el) => { fileRefs.current[product.id] = el; }}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => handleUpload(e, product)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => fileRefs.current[product.id]?.click()}
+                            disabled={uploading[product.id]}
+                            className="h-11 sm:h-auto w-full sm:w-auto rounded-[3px] bg-teal-600 px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-teal-700 disabled:opacity-50"
+                          >
+                            {uploading[product.id] ? "Uploading..." : "Upload"}
+                          </button>
+                        </div>
 
-                      {/* Upload */}
-                      <div className="shrink-0">
-                        <input
-                          ref={(el) => { fileRefs.current[product.id] = el; }}
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          className="hidden"
-                          onChange={(e) => handleUpload(e, product)}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => fileRefs.current[product.id]?.click()}
-                          disabled={uploading[product.id]}
-                          className="rounded-[3px] bg-black px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#333] disabled:opacity-50"
+                        {/* View on Site */}
+                        <a
+                          href={getProductUrl(product)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex h-11 sm:h-auto flex-1 sm:flex-initial items-center justify-center rounded-[3px] border border-[#e0e0e0] px-2.5 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-[#000] hover:text-black"
                         >
-                          {uploading[product.id] ? "Uploading..." : "Upload"}
-                        </button>
-                      </div>
+                          View
+                        </a>
 
-                      {/* Edit link */}
-                      <Link
-                        href={`/admin/products/${product.id}`}
-                        className="shrink-0 text-xs font-medium text-[#4f46e5] hover:underline"
-                      >
-                        Edit
-                      </Link>
+                        {/* Edit link */}
+                        <Link
+                          href={`/admin/products/${product.id}`}
+                          className="flex h-11 sm:h-auto flex-1 sm:flex-initial items-center justify-center rounded-[3px] border border-[#e0e0e0] px-2.5 py-1.5 text-xs font-medium text-[#4f46e5] transition-colors hover:border-[#4f46e5]"
+                        >
+                          Edit
+                        </Link>
+                      </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

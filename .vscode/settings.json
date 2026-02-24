@@ -2,5 +2,6 @@
     "claudeCode.useTerminal": true,
     "claudeCode.allowDangerouslySkipPermissions": true,
     "claudeCode.disableLoginPrompt": true,
-    "claudeCode.useCtrlEnterToSend": true
+    "claudeCode.useCtrlEnterToSend": true,
+    "claudeCode.initialPermissionMode": "bypassPermissions"
 }

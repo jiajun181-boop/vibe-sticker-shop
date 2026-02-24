@@ -1,0 +1,22 @@
+Turbopack build encountered 1 warnings:
+./lib/push/web-push.ts:24:21
+Module not found: Can't resolve 'web-push'
+[0m [90m 22 |[39m     [90m// Use dynamic require to avoid build errors when web-push isn't installed[39m
+ [90m 23 |[39m     [90m// eslint-disable-next-line @typescript-eslint/no-var-requires[39m
+[31m[1m>[22m[39m[90m 24 |[39m     [36mconst[39m webpush [33m=[39m require([32m"web-push"[39m)[33m;[39m
+ [90m    |[39m                     [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 25 |[39m     webpush[33m.[39msetVapidDetails(
+ [90m 26 |[39m       process[33m.[39menv[33m.[39m[33mVAPID_SUBJECT[39m [33m||[39m [32m"mailto:info@lalunarprinting.com"[39m[33m,[39m
+ [90m 27 |[39m       [33mVAPID_PUBLIC_KEY[39m[33m,[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./lib/push/web-push.ts
+    ./lib/notifications/order-notifications.ts
+    ./app/api/admin/orders/[id]/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+

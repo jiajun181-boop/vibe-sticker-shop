@@ -1,0 +1,29 @@
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3456
+- Network:       http://192.168.0.192:3456
+- Environments: .env
+
+✓ Starting...
+✓ Ready in 1306ms
+ GET /shop/marketing-business-print 200 in 3.5s (compile: 2.5s, proxy.ts: 106ms, render: 909ms)
+ GET /shop/marketing-business-print 200 in 358ms (compile: 14ms, proxy.ts: 4ms, render: 341ms)
+ GET /shop/marketing-business-print 200 in 377ms (compile: 10ms, proxy.ts: 4ms, render: 363ms)
+ GET /shop/marketing-business-print 200 in 403ms (compile: 12ms, proxy.ts: 4ms, render: 388ms)
+ GET /shop/marketing-business-print 200 in 587ms (compile: 251ms, proxy.ts: 3ms, render: 333ms)
+ GET /shop/marketing-business-print 200 in 364ms (compile: 12ms, proxy.ts: 4ms, render: 348ms)
+ GET /shop/marketing-business-print 200 in 396ms (compile: 9ms, proxy.ts: 3ms, render: 383ms)
+ GET /shop/marketing-business-print/business-cards 200 in 2.4s (compile: 1530ms, proxy.ts: 10ms, render: 845ms)
+ GET /shop/marketing-business-print/flyers 200 in 2.4s (compile: 1531ms, proxy.ts: 10ms, render: 850ms)
+ GET /shop/marketing-business-print/table-tents 200 in 2.4s (compile: 1528ms, proxy.ts: 11ms, render: 854ms)
+ GET /shop/marketing-business-print/brochures 200 in 2.4s (compile: 1527ms, proxy.ts: 11ms, render: 858ms)
+ GET /shop/marketing-business-print/ncr-forms 200 in 2.4s (compile: 1529ms, proxy.ts: 11ms, render: 862ms)
+ GET /shop/marketing-business-print 200 in 540ms (compile: 11ms, proxy.ts: 3ms, render: 526ms)
+ GET /shop/marketing-business-print 200 in 348ms (compile: 9ms, proxy.ts: 3ms, render: 336ms)
+✓ Compiled in 263ms
+✓ Compiled in 220ms
+✓ Compiled in 219ms
+✓ Compiled in 236ms
+✓ Compiled in 216ms
+✓ Compiled in 217ms
+✓ Compiled in 220ms
+✓ Compiled in 217ms
