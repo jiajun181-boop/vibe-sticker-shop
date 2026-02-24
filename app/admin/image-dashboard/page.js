@@ -302,7 +302,6 @@ export default function ImageDashboardPage() {
                             ref={(el) => { fileRefs.current[product.id] = el; }}
                             type="file"
                             accept="image/*"
-                            capture="environment"
                             multiple
                             className="hidden"
                             onChange={(e) => handleUpload(e, product)}

@@ -270,7 +270,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                 {vehicleType.materials.map((mat) => {
                   const isActive = materialId === mat.id;
-                  const surcharge = mat.multiplier > 1 ? `+${Math.round((mat.multiplier - 1) * 100)}%` : null;
+                  void mat.multiplier; // multiplier used in pricing only
                   return (
                     <button
                       key={mat.id}
@@ -288,11 +288,6 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
                         </span>
                       )}
                       <span className="text-sm font-bold text-gray-800">{mat.label}</span>
-                      {surcharge && (
-                        <span className="inline-flex w-fit rounded-xl bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                          {surcharge}
-                        </span>
-                      )}
                     </button>
                   );
                 })}

@@ -152,7 +152,7 @@ export default function PricingSidebar({
             </div>
             {rushProduction && (
               <div className="flex items-baseline justify-between">
-                <span className="text-xs text-amber-600">Rush surcharge (+30%)</span>
+                <span className="text-xs text-amber-600">Rush surcharge</span>
                 <span className="text-sm font-medium text-amber-600">
                   + {formatCad(Math.round(subtotalCents * 0.3))}
                 </span>
@@ -218,7 +218,6 @@ export default function PricingSidebar({
             />
             <div className="flex-1">
               <span className="text-sm font-semibold text-gray-800">24-Hour Rush Production</span>
-              <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">+30%</span>
             </div>
           </label>
         )}

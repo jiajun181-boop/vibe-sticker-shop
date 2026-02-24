@@ -2287,7 +2287,6 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                           <span className={`h-3.5 w-3.5 shrink-0 rounded-full border-2 ${selected ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)]" : "border-[var(--color-gray-300)]"}`} />
                           <span className="flex-1">
                             {m.name}
-                            {m.multiplier !== 1.0 && <span className="ml-1 text-xs text-[var(--color-gray-500)]">(+{Math.round((m.multiplier - 1) * 100)}%)</span>}
                           </span>
                           {isPopular && (
                             <span className="inline-block rounded-xl bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
@@ -2418,7 +2417,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       disabled={!canAddToCart}
                       className={`btn-primary-pill w-full px-4 py-3.5 text-sm ${
                         !canAddToCart
-                          ? "bg-[var(--color-gray-300)] cursor-not-allowed"
+                          ? "!bg-[var(--color-gray-300)] !text-[var(--color-gray-500)] cursor-not-allowed"
                           : added
                             ? "bg-emerald-600"
                             : ""

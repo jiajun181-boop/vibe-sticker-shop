@@ -75,6 +75,7 @@ const SECTIONS = [
         name: "Custom Truck Door Lettering Kit",
         href: `${BASE}/custom-truck-door-lettering-kit`,
         priceKeys: ["custom-truck-door-lettering-kit"],
+        note: "Cut vinyl text for both doors — company name, phone, licence",
         gradient: "from-blue-500 to-indigo-500",
       },
       {
@@ -82,6 +83,7 @@ const SECTIONS = [
         name: "Magnetic Truck Door Signs",
         href: `${BASE}/magnetic-truck-door-signs`,
         priceKeys: ["magnetic-truck-door-signs"],
+        note: "Removable magnetic panels for trucks — swap between vehicles",
         gradient: "from-slate-500 to-slate-700",
       },
       {
@@ -89,6 +91,7 @@ const SECTIONS = [
         name: "Magnetic Car Signs (Pair)",
         href: `${BASE}/car-door-magnets-pair`,
         priceKeys: ["car-door-magnets-pair", "magnetic-car-signs"],
+        note: "Full-color printed magnet pair for cars and small vans",
         gradient: "from-violet-500 to-fuchsia-500",
       },
       {
@@ -96,6 +99,7 @@ const SECTIONS = [
         name: "Printed Truck Door Decals (Full Color)",
         href: `${BASE}/printed-truck-door-decals-full-color`,
         priceKeys: ["printed-truck-door-decals-full-color"],
+        note: "Full-color printed vinyl decals for truck doors",
         gradient: "from-cyan-500 to-sky-500",
       },
     ],
@@ -162,6 +166,7 @@ const SECTIONS = [
         name: "Vehicle Inspection Maintenance Stickers",
         href: `${BASE}/vehicle-inspection-maintenance-stickers`,
         priceKeys: ["vehicle-inspection-maintenance-stickers"],
+        note: "Pre-printed inspection and maintenance tracking stickers",
         gradient: "from-rose-500 to-red-500",
       },
       {
@@ -169,6 +174,7 @@ const SECTIONS = [
         name: "Fuel Type Labels (Diesel / Gas)",
         href: `${BASE}/fuel-type-labels-diesel-gas`,
         priceKeys: ["fuel-type-labels-diesel-gas"],
+        note: "Weather-resistant fuel cap labels for mixed fleets",
         gradient: "from-amber-500 to-orange-500",
       },
       {
@@ -176,6 +182,7 @@ const SECTIONS = [
         name: "Dangerous Goods Placards",
         href: `${BASE}/dangerous-goods-placards`,
         priceKeys: ["dangerous-goods-placards"],
+        note: "DOT/TDG compliant placards for hazmat transport",
         gradient: "from-red-600 to-rose-600",
       },
       {
@@ -183,6 +190,7 @@ const SECTIONS = [
         name: "Tire Pressure / Load Labels",
         href: `${BASE}/tire-pressure-load-labels`,
         priceKeys: ["tire-pressure-load-labels"],
+        note: "Durable vinyl labels for tire and axle load specs",
         gradient: "from-zinc-600 to-slate-600",
       },
       {
@@ -194,6 +202,7 @@ const SECTIONS = [
           "high-visibility-rear-chevron-kit",
           "reflective-safety-stripes-kit",
         ],
+        note: "Reflective tape and chevron kits for trailer visibility",
         gradient: "from-yellow-500 to-red-500",
       },
     ],
@@ -266,14 +275,22 @@ function ProductCard({ item, price, premium = false, cta = "View", imageUrl }) {
           </>
         )}
       </div>
-      <div className="flex flex-1 items-center justify-between gap-2 p-4">
-        <PriceLabel price={price} />
-        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
-          {cta}
-          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        </span>
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        {imageUrl && (
+          <div>
+            <p className={`font-semibold leading-tight text-[var(--color-gray-900)] ${premium ? "text-base" : "text-sm"}`}>{item.name}</p>
+            {item.note && <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">{item.note}</p>}
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-2">
+          <PriceLabel price={price} />
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-white transition-colors group-hover:bg-[var(--color-brand-dark)]">
+            {cta}
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </span>
+        </div>
       </div>
     </Link>
   );

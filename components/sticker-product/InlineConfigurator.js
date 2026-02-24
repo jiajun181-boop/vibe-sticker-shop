@@ -233,7 +233,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         <div className="grid grid-cols-2 gap-2">
           {cutting.materials.map((mat) => {
             const isActive = materialId === mat.id;
-            const surcharge = mat.multiplier > 1 ? `+${Math.round((mat.multiplier - 1) * 100)}%` : null;
+            void mat.multiplier; // multiplier used in pricing only
             return (
               <button
                 key={mat.id}
@@ -256,11 +256,6 @@ export default function InlineConfigurator({ cuttingTypeId }) {
                 <span className="text-[10px] text-gray-400">
                   {MATERIAL_HINTS[mat.id] || ""}
                 </span>
-                {surcharge && (
-                  <span className="mt-0.5 inline-flex w-fit rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
-                    {surcharge}
-                  </span>
-                )}
               </button>
             );
           })}

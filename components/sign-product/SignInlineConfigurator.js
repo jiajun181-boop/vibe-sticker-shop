@@ -198,7 +198,7 @@ export default function SignInlineConfigurator({ signTypeId }) {
         <div className="grid grid-cols-2 gap-2">
           {signType.materials.map((mat) => {
             const isActive = materialId === mat.id;
-            const surcharge = mat.multiplier > 1 ? `+${Math.round((mat.multiplier - 1) * 100)}%` : null;
+            void mat.multiplier; // multiplier used in pricing only
             return (
               <button
                 key={mat.id}
@@ -219,11 +219,6 @@ export default function SignInlineConfigurator({ signTypeId }) {
                 <span className="text-[10px] text-gray-400">
                   {MATERIAL_HINTS[mat.id] || ""}
                 </span>
-                {surcharge && (
-                  <span className="mt-0.5 inline-flex w-fit rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
-                    {surcharge}
-                  </span>
-                )}
               </button>
             );
           })}
@@ -311,7 +306,6 @@ export default function SignInlineConfigurator({ signTypeId }) {
               }`}
             >
               Double-Sided
-              <span className={`ml-1 text-[9px] ${doubleSided ? "text-amber-300" : "text-amber-600"}`}>+50%</span>
             </button>
           </div>
         </div>

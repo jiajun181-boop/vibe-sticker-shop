@@ -22,8 +22,8 @@ const formatCad = (dollars) =>
 const LAMINATION_OPTIONS = [
   { id: "gloss", label: "Gloss", surcharge: null },
   { id: "matte", label: "Matte", surcharge: null },
-  { id: "soft_touch", label: "Soft Touch", surcharge: "+12%" },
-  { id: "foil", label: "Foil Stamping", surcharge: "+50%" },
+  { id: "soft_touch", label: "Soft Touch", surcharge: null },
+  { id: "foil", label: "Foil Stamping", surcharge: null },
 ];
 
 const SHEET_SIZES = [

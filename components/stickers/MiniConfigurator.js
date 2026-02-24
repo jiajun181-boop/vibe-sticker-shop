@@ -197,7 +197,7 @@ export default function MiniConfigurator({ cuttingTypeId, onClose }) {
           <div className="grid grid-cols-2 gap-1.5">
             {cutting.materials.map((mat) => {
               const isActive = materialId === mat.id;
-              const surcharge = mat.multiplier > 1 ? Math.round((mat.multiplier - 1) * 100) : 0;
+              void mat.multiplier; // multiplier used in pricing only
               return (
                 <button
                   key={mat.id}
@@ -214,11 +214,6 @@ export default function MiniConfigurator({ cuttingTypeId, onClose }) {
                   </span>
                   <span className={`text-[10px] ${isActive ? "text-gray-300" : "text-[var(--color-gray-400)]"}`}>
                     {MATERIAL_HINTS[mat.id] || ""}
-                    {surcharge > 0 && (
-                      <span className={`ml-1 font-bold ${isActive ? "text-amber-300" : "text-amber-600"}`}>
-                        +{surcharge}%
-                      </span>
-                    )}
                   </span>
                 </button>
               );

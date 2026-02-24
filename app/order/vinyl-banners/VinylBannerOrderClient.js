@@ -482,11 +482,6 @@ export default function VinylBannerOrderClient() {
                   <p className={`mt-0.5 text-[11px] ${turnaroundId === ta.id ? "text-gray-300" : "text-gray-400"}`}>
                     {t(`banner.turnaround.${ta.id}Desc`)}
                   </p>
-                  {ta.multiplier > 1 && (
-                    <span className={`mt-1 inline-block text-[11px] font-medium ${turnaroundId === ta.id ? "text-amber-300" : "text-amber-600"}`}>
-                      +30% surcharge
-                    </span>
-                  )}
                 </button>
               ))}
             </div>
