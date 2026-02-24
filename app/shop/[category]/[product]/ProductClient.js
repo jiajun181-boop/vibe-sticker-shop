@@ -14,6 +14,7 @@ import { trackAddToCart, trackOptionChange, trackQuoteLoaded, trackBuyNow, track
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { useRecentlyViewedStore } from "@/lib/recently-viewed";
 import dynamic from "next/dynamic";
+import AdminUploadOverlay from "@/components/admin/AdminUploadOverlay";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import TemplateGallery from "@/components/product/TemplateGallery";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
@@ -1428,7 +1429,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
         <section className="grid gap-6 xl:gap-8 2xl:gap-10 xl:grid-cols-12">
           <div className="space-y-4 xl:col-span-7">
-            <ImageGallery images={imageList} productName={product.name} />
+            <div className="relative">
+              <ImageGallery images={imageList} productName={product.name} />
+              <AdminUploadOverlay productId={product.id} productName={product.name} />
+            </div>
 
             {templateGallery && <TemplateGallery templates={templateGallery} />}
 
