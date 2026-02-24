@@ -1,9 +1,11 @@
+import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getServerT } from "@/lib/i18n/server";
 import { OrganizationSchema, WebSiteSchema } from "@/components/JsonLd";
 import DualEntryHero from "@/components/home/DualEntryHero";
 import HomeScrollWrapper from "@/components/home/HomeScrollWrapper";
+import { getProductImage, isSvgImage } from "@/lib/product-image";
 
 export const revalidate = 60;
 
@@ -14,13 +16,13 @@ const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 const CATEGORY_CARDS = [
-  { slug: "marketing-business-print", title: "Marketing & Business Print", desc: "Business cards, flyers, brochures & more", gradient: "from-amber-400 to-orange-400", href: "/shop/marketing-business-print" },
-  { slug: "stickers-labels-decals", title: "Stickers & Labels", desc: "Die-cut stickers, labels, decals & sheets", gradient: "from-violet-400 to-fuchsia-400", href: "/shop/stickers-labels-decals" },
-  { slug: "signs-rigid-boards", title: "Signs & Display Boards", desc: "Yard signs, foam boards, aluminum signs", gradient: "from-emerald-400 to-teal-400", href: "/shop/signs-rigid-boards" },
-  { slug: "banners-displays", title: "Banners & Displays", desc: "Vinyl banners, retractable stands, flags", gradient: "from-rose-400 to-pink-400", href: "/shop/banners-displays" },
-  { slug: "canvas-prints", title: "Canvas Prints", desc: "Gallery wraps, framed canvas, multi-panel", gradient: "from-sky-400 to-blue-400", href: "/shop/canvas-prints" },
-  { slug: "windows-walls-floors", title: "Windows, Walls & Floors", desc: "Window films, wall graphics, floor decals", gradient: "from-cyan-400 to-blue-400", href: "/shop/windows-walls-floors" },
-  { slug: "vehicle-graphics-fleet", title: "Vehicle Graphics & Fleet", desc: "Vehicle lettering, decals, fleet branding", gradient: "from-slate-400 to-indigo-400", href: "/shop/vehicle-graphics-fleet" },
+  { slug: "marketing-business-print", title: "Marketing & Business Print", desc: "Business cards, flyers, brochures & more", gradient: "from-amber-400 to-orange-400", href: "/shop/marketing-business-print", icon: "/api/product-image/business-cards-classic?category=marketing-business-print&name=Business+Cards" },
+  { slug: "stickers-labels-decals", title: "Stickers & Labels", desc: "Die-cut stickers, labels, decals & sheets", gradient: "from-violet-400 to-fuchsia-400", href: "/shop/stickers-labels-decals", icon: "/api/product-image/die-cut-stickers?category=stickers-labels-decals&name=Stickers" },
+  { slug: "signs-rigid-boards", title: "Signs & Display Boards", desc: "Yard signs, foam boards, aluminum signs", gradient: "from-emerald-400 to-teal-400", href: "/shop/signs-rigid-boards", icon: "/api/product-image/yard-sign?category=signs-rigid-boards&name=Signs" },
+  { slug: "banners-displays", title: "Banners & Displays", desc: "Vinyl banners, retractable stands, flags", gradient: "from-rose-400 to-pink-400", href: "/shop/banners-displays", icon: "/api/product-image/vinyl-banners?category=banners-displays&name=Banners" },
+  { slug: "canvas-prints", title: "Canvas Prints", desc: "Gallery wraps, framed canvas, multi-panel", gradient: "from-sky-400 to-blue-400", href: "/shop/canvas-prints", icon: "/api/product-image/canvas-standard?category=canvas-prints&name=Canvas" },
+  { slug: "windows-walls-floors", title: "Windows, Walls & Floors", desc: "Window films, wall graphics, floor decals", gradient: "from-cyan-400 to-blue-400", href: "/shop/windows-walls-floors", icon: "/api/product-image/one-way-vision?category=windows-walls-floors&name=Window+Films" },
+  { slug: "vehicle-graphics-fleet", title: "Vehicle Graphics & Fleet", desc: "Vehicle lettering, decals, fleet branding", gradient: "from-slate-400 to-indigo-400", href: "/shop/vehicle-graphics-fleet", icon: "/api/product-image/vehicle-wraps?category=vehicle-graphics-fleet&name=Vehicle+Wraps" },
 ];
 
 const FEATURED_SLUGS = [
@@ -68,6 +70,7 @@ export default async function HomePage() {
         displayFromPrice: true,
         minPrice: true,
         basePrice: true,
+        images: { select: { url: true, alt: true }, orderBy: { sortOrder: "asc" }, take: 1 },
       },
     }),
   ]);
@@ -76,6 +79,7 @@ export default async function HomePage() {
     ...p,
     fromPrice: p.displayFromPrice || p.minPrice || p.basePrice || 0,
     href: `/shop/${p.category}/${p.slug}`,
+    image: getProductImage(p, p.category),
   }));
 
   return (
@@ -101,12 +105,20 @@ export default async function HomePage() {
                 <Link
                   key={cat.slug}
                   href={cat.href}
-                  className={`group flex flex-col justify-end rounded-2xl p-6 h-[160px] bg-gradient-to-br ${cat.gradient} shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md`}
+                  className={`group relative flex flex-col justify-end overflow-hidden rounded-2xl p-6 h-[160px] bg-gradient-to-br ${cat.gradient} shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md`}
                 >
-                  <h3 className="text-xl font-bold text-white leading-tight">
+                  <Image
+                    src={cat.icon}
+                    alt=""
+                    width={120}
+                    height={120}
+                    className="pointer-events-none absolute -right-2 -top-2 opacity-20 group-hover:opacity-30 transition-opacity"
+                    unoptimized
+                  />
+                  <h3 className="relative text-xl font-bold text-white leading-tight">
                     {cat.title}
                   </h3>
-                  <p className="mt-1 text-sm text-white/80 leading-snug">
+                  <p className="relative mt-1 text-sm text-white/80 leading-snug">
                     {cat.desc}
                   </p>
                 </Link>
@@ -140,10 +152,15 @@ export default async function HomePage() {
                     href={p.href}
                     className="group overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    <div className="h-[140px] flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                      <p className="px-4 text-center text-sm font-semibold text-gray-600">
-                        {p.name}
-                      </p>
+                    <div className="relative h-[160px] bg-gradient-to-br from-gray-50 to-gray-100">
+                      <Image
+                        src={p.image}
+                        alt={p.images?.[0]?.alt || p.name}
+                        fill
+                        className="object-contain p-3"
+                        unoptimized={isSvgImage(p.image)}
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                      />
                     </div>
                     <div className="p-4">
                       <h3 className="text-sm font-semibold text-[var(--color-gray-900)] leading-tight line-clamp-2">
