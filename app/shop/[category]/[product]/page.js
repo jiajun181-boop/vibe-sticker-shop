@@ -307,17 +307,6 @@ export default async function ProductPage({ params }) {
     }
   }
 
-  // ── Coming Soon signs ──
-  const COMING_SOON_SIGNS_PAGE = {
-    "selfie-frame-board": { name: "Event & Photo Boards", description: "Custom foam board selfie frames, photo backdrops, and event props. Full configurator and online ordering coming soon." },
-    "welcome-sign-board": { name: "Event Signs", description: "Custom welcome signs, seating charts, and event signage on premium foam board. Full configurator and online ordering coming soon." },
-    "tri-fold-presentation-board": { name: "Presentation Boards", description: "Tri-fold presentation boards for science fairs, exhibitions, and conferences. Full configurator and online ordering coming soon." },
-  };
-  const comingSoon = COMING_SOON_SIGNS_PAGE[decodedSlug];
-  if (comingSoon && decodedCategory === "signs-rigid-boards") {
-    return <ComingSoonPage {...comingSoon} slug={decodedSlug} category={decodedCategory} />;
-  }
-
   // ── Sign rich product page: SEO-optimized page with embedded configurator ──
   // Must come BEFORE sub-product landing because sign slugs (e.g. "real-estate-signs")
   // also exist in SUB_PRODUCT_CONFIG, and the rich page should take priority.
@@ -408,6 +397,12 @@ export default async function ProductPage({ params }) {
   }
 
   // ── Sub-product landing: parent slug → show child products as card grid ──
+  // Some sub-groups should redirect to the category page instead of showing a landing
+  const SUB_GROUP_REDIRECT_TO_CATEGORY = ["flags-hardware", "tents-outdoor"];
+  if (SUB_GROUP_REDIRECT_TO_CATEGORY.includes(decodedSlug)) {
+    redirect(`/shop/${decodedCategory}`);
+  }
+
   const subCfg = getSubProducts(decodedSlug);
   if (subCfg) {
     const subProducts = await prisma.product.findMany({
@@ -448,6 +443,14 @@ export default async function ProductPage({ params }) {
       // Exclude the parent landing slug itself from spec cards.
       // Example: /shop/.../flyers should list only concrete flyer specs.
       .filter((p) => p.slug !== decodedSlug);
+
+    // Single-product sub-group: skip landing page, go directly to the product
+    if (dedupedProducts.length === 1) {
+      redirect(`/shop/${dedupedProducts[0].category}/${dedupedProducts[0].slug}`);
+    }
+    if (dedupedProducts.length === 0) {
+      redirect(`/shop/${decodedCategory}`);
+    }
 
     // Use pre-computed minPrice for sub-product cards (write-time calculation).
     for (const p of dedupedProducts) {

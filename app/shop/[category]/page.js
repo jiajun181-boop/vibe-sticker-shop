@@ -273,6 +273,7 @@ export async function generateMetadata({ params }) {
     "stickers-labels-decals": "Custom Stickers & Labels Toronto | La Lunar Printing",
     "signs-rigid-boards": "Custom Signs & Display Boards Toronto | Coroplast & Foam Board | La Lunar Printing",
     "windows-walls-floors": "Window Films, Wall & Floor Graphics Toronto | La Lunar Printing",
+    "canvas-prints": "Canvas Prints Toronto | Gallery Wrap, Framed & Split Panel | La Lunar Printing",
   };
   const title = CATEGORY_TITLES[decoded] || `${meta.title} | La Lunar Printing`;
 
@@ -281,6 +282,7 @@ export async function generateMetadata({ params }) {
     "banners-displays": "Custom printed vinyl banners, mesh banners, roll-up stands, and display solutions in Toronto. Same day available.",
     "signs-rigid-boards": "Custom printed Coroplast signs and foam board displays in Toronto. Real estate signs, yard signs, event backdrops, photo boards. Same day available. Free GTA delivery.",
     "windows-walls-floors": "Custom window films, frosted vinyl, one-way vision, wall graphics & floor decals in Toronto. Professional quality, same day available.",
+    "canvas-prints": "Museum-quality canvas prints in Toronto. Gallery wrap, framed, panoramic & split panel sets. Epson professional printer, original ink with custom ICC profile. Print on demand & drop-ship fulfillment for sellers.",
   };
   const description = CATEGORY_DESCRIPTIONS[decoded]
     || `Custom ${meta.title.toLowerCase()} printing — professional quality, fast turnaround in Toronto & the GTA.`;
@@ -382,15 +384,21 @@ export default async function CategoryPage({ params }) {
         "vinyl-lettering": ["vinyl-lettering"],
       };
       const stickerPrices = {};
+      const stickerImages = {};
       for (const [cardId, slugs] of Object.entries(STICKER_CARD_SLUGS)) {
         const slugSet = new Set(slugs);
-        const prices = products.filter(p => slugSet.has(p.slug) && p.fromPrice > 0).map(p => p.fromPrice);
+        const matching = products.filter(p => slugSet.has(p.slug));
+        const prices = matching.filter(p => p.fromPrice > 0).map(p => p.fromPrice);
         if (prices.length > 0) stickerPrices[cardId] = Math.min(...prices);
+        if (matching.length > 0) {
+          const img = getProductImage(matching[0]);
+          if (img) stickerImages[cardId] = img;
+        }
       }
       return (
         <>
           <CategoryFaqSchema category={decoded} />
-          <StickersCategoryClient stickerPrices={stickerPrices} />
+          <StickersCategoryClient stickerPrices={stickerPrices} stickerImages={stickerImages} />
         </>
       );
     } catch (err) {
@@ -429,19 +437,25 @@ export default async function CategoryPage({ params }) {
     };
 
     const marketingPrices = {};
+    const marketingImages = {};
     for (const [key, slugs] of Object.entries(MARKETING_PRICE_MAP)) {
       const slugSet = new Set(slugs);
       const matching = products.filter((p) => slugSet.has(p.slug));
       if (matching.length > 0) {
         const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
         marketingPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
+        // Pick best image from matching products
+        const withImage = matching.find((p) => p.images?.[0]?.url);
+        if (withImage) {
+          marketingImages[key] = withImage.images[0].url;
+        }
       }
     }
 
     return (
       <>
         <CategoryFaqSchema category={decoded} />
-        <MarketingCategoryClient marketingPrices={marketingPrices} />
+        <MarketingCategoryClient marketingPrices={marketingPrices} marketingImages={marketingImages} />
       </>
     );
   }
@@ -466,19 +480,22 @@ export default async function CategoryPage({ params }) {
     };
 
     const bannerPrices = {};
+    const bannerImages = {};
     for (const [key, slugs] of Object.entries(BANNER_PRICE_MAP)) {
       const slugSet = new Set(slugs);
       const matching = products.filter((p) => slugSet.has(p.slug));
       if (matching.length > 0) {
         const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
         bannerPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
+        const img = getProductImage(matching[0]);
+        if (img) bannerImages[key] = img;
       }
     }
 
     return (
       <>
         <CategoryFaqSchema category={decoded} />
-        <BannersCategoryClient bannerPrices={bannerPrices} />
+        <BannersCategoryClient bannerPrices={bannerPrices} bannerImages={bannerImages} />
       </>
     );
   }
@@ -521,22 +538,26 @@ export default async function CategoryPage({ params }) {
       "glass-waistline": ["glass-waistline"],
       "wall-graphics": ["wall-graphics"],
       "floor-graphics": ["floor-graphics"],
+      "decals": ["decals"],
     };
 
     const wwfPrices = {};
+    const wwfImages = {};
     for (const [key, slugs] of Object.entries(WWF_PRICE_MAP)) {
       const slugSet = new Set(slugs);
       const matching = products.filter((p) => slugSet.has(p.slug));
       if (matching.length > 0) {
         const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
         wwfPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
+        const img = getProductImage(matching[0]);
+        if (img) wwfImages[key] = img;
       }
     }
 
     return (
       <>
         <CategoryFaqSchema category={decoded} />
-        <WindowsWallsFloorsCategoryClient wwfPrices={wwfPrices} />
+        <WindowsWallsFloorsCategoryClient wwfPrices={wwfPrices} wwfImages={wwfImages} />
       </>
     );
   }
@@ -554,19 +575,22 @@ export default async function CategoryPage({ params }) {
     };
 
     const canvasPrices = {};
+    const canvasImages = {};
     for (const [key, slugs] of Object.entries(CANVAS_PRICE_MAP)) {
       const slugSet = new Set(slugs);
       const matching = products.filter((p) => slugSet.has(p.slug));
       if (matching.length > 0) {
         const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
         canvasPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
+        const img = getProductImage(matching[0]);
+        if (img) canvasImages[key] = img;
       }
     }
 
     return (
       <>
         <CategoryFaqSchema category={decoded} />
-        <CanvasCategoryClient canvasPrices={canvasPrices} />
+        <CanvasCategoryClient canvasPrices={canvasPrices} canvasImages={canvasImages} />
       </>
     );
   }
@@ -628,19 +652,22 @@ export default async function CategoryPage({ params }) {
     };
 
     const vehiclePrices = {};
+    const vehicleImages = {};
     for (const [key, slugs] of Object.entries(VEHICLE_PRICE_MAP)) {
       const slugSet = new Set(slugs);
       const matching = products.filter((p) => slugSet.has(p.slug));
       if (matching.length > 0) {
         const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
         vehiclePrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
+        const img = getProductImage(matching[0]);
+        if (img) vehicleImages[key] = img;
       }
     }
 
     return (
       <>
         <CategoryFaqSchema category={decoded} />
-        <VehicleCategoryClient vehiclePrices={vehiclePrices} />
+        <VehicleCategoryClient vehiclePrices={vehiclePrices} vehicleImages={vehicleImages} />
       </>
     );
   }

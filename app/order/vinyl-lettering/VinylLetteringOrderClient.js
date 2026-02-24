@@ -57,6 +57,7 @@ export default function VinylLetteringOrderClient() {
   const [application, setApplication] = useState("outdoor");
   const [quantity, setQuantity] = useState(5);
   const [customQty, setCustomQty] = useState("");
+  const [letteringText, setLetteringText] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
 
   const [quoteData, setQuoteData] = useState(null);
@@ -142,15 +143,17 @@ export default function VinylLetteringOrderClient() {
 
   function buildCartItem() {
     if (!quoteData || activeQty <= 0) return null;
+    const textSnippet = letteringText.trim().slice(0, 40);
     return {
       id: "vinyl-lettering",
-      name: `${t("vl.title")} — ${letterHeight.label} ${t(`vl.color.${color}`)}`,
+      name: `${t("vl.title")} — ${letterHeight.label} ${t(`vl.color.${color}`)}${textSnippet ? ` "${textSnippet}"` : ""}`,
       slug: "vinyl-lettering",
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
       options: {
         letterHeight: heightId,
         letterHeightLabel: letterHeight.label,
+        letteringText: letteringText.trim() || null,
         color,
         material,
         application,
@@ -219,6 +222,44 @@ export default function VinylLetteringOrderClient() {
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
         <div className="space-y-8 lg:col-span-3">
+
+          {/* Your Text */}
+          <Section label={t("vl.textInput")}>
+            <textarea
+              value={letteringText}
+              onChange={(e) => setLetteringText(e.target.value)}
+              placeholder={t("vl.enterText")}
+              rows={3}
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+            />
+            <p className="mt-1.5 text-xs text-gray-500">{t("vl.textInputHint")}</p>
+          </Section>
+
+          {/* Live Preview */}
+          {letteringText.trim() && (
+            <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-5">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">{t("vl.preview") || "Preview"}</p>
+              <div
+                className="flex min-h-[80px] items-center justify-center overflow-hidden rounded-xl bg-white p-4 shadow-inner"
+                style={{ backgroundColor: color === "white" ? "#374151" : "#ffffff" }}
+              >
+                <p
+                  className="text-center font-bold leading-tight whitespace-pre-line break-words"
+                  style={{
+                    color: COLORS.find((c) => c.id === color)?.hex || "#1a1a1a",
+                    fontSize: `${Math.min(letterHeight.value * 6, 72)}px`,
+                    letterSpacing: "0.02em",
+                    maxWidth: "100%",
+                  }}
+                >
+                  {letteringText.trim()}
+                </p>
+              </div>
+              <p className="mt-2 text-[11px] text-gray-400 text-center">
+                {letterHeight.label} {t(`vl.color.${color}`)} · {t(`vl.material.${material}`)}
+              </p>
+            </div>
+          )}
 
           {/* Letter Height */}
           <Section label={t("vl.letterHeight")}>
@@ -352,6 +393,9 @@ export default function VinylLetteringOrderClient() {
 
             <dl className="space-y-2 text-sm">
               <Row label={t("vl.letterHeight")} value={letterHeight.label} />
+              {letteringText.trim() && (
+                <Row label={t("vl.textInput")} value={`"${letteringText.trim().slice(0, 20)}${letteringText.trim().length > 20 ? "…" : ""}"`} />
+              )}
               <Row
                 label={t("vl.color.label")}
                 value={
@@ -439,6 +483,88 @@ export default function VinylLetteringOrderClient() {
             </div>
           </div>
         </aside>
+      </div>
+
+      {/* ── Product Content ── */}
+      <div className="mt-16 space-y-12">
+        {/* Description */}
+        <section>
+          <h2 className="text-xl font-bold text-gray-900">About Vinyl Lettering</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
+            Custom vinyl lettering is precision-cut from premium outdoor-grade vinyl film, producing
+            crisp, paint-like text for storefronts, vehicles, boats, and interior decor. Each character
+            is individually cut and weeded — no background, no border — just clean letters that bond
+            directly to glass, metal, plastic, or painted surfaces. Our lettering is rated for 5–8 years
+            outdoors and is removable without residue.
+          </p>
+        </section>
+
+        {/* Specs */}
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">Specifications</h2>
+          <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-gray-100">
+                {[
+                  ["Material", "Premium calendered or cast vinyl (Oracal / Avery)"],
+                  ["Adhesive", "Permanent pressure-sensitive, repositionable for 10 min"],
+                  ["Durability", "5–8 years outdoor, 10+ years indoor"],
+                  ["Sizes", '1″ to 12″ letter height; custom sizes available'],
+                  ["Colors", "Black, White, Red, Blue, Gold, Silver + 50 more on request"],
+                  ["Finish", "Gloss, Matte, or Reflective"],
+                  ["Turnaround", "2–3 business days standard"],
+                ].map(([label, value]) => (
+                  <tr key={label}>
+                    <td className="whitespace-nowrap bg-gray-50 px-4 py-2.5 font-medium text-gray-700">{label}</td>
+                    <td className="px-4 py-2.5 text-gray-600">{value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Use Cases */}
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">Popular Uses</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { title: "Storefronts", desc: "Window hours, business names, address numbers — professional look at a fraction of sign cost." },
+              { title: "Vehicles", desc: "Company name, phone, and website on trucks, vans, and trailers — DOT & CVOR compliant." },
+              { title: "Boats & Watercraft", desc: "Registration numbers, vessel names, and hailing ports in marine-grade vinyl." },
+              { title: "Interior Decor", desc: "Wall quotes, office branding, room labels — easy to apply and remove without damage." },
+            ].map((uc) => (
+              <div key={uc.title} className="rounded-xl border border-gray-200 bg-white p-4">
+                <h3 className="text-sm font-semibold text-gray-900">{uc.title}</h3>
+                <p className="mt-1 text-xs text-gray-500 leading-relaxed">{uc.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">FAQ</h2>
+          <div className="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-200">
+            {[
+              { q: "How do I apply vinyl lettering?", a: "Clean the surface with rubbing alcohol, peel the backing, position using the transfer tape, squeegee from center out, then peel the transfer tape at a sharp angle. Full instructions are included with every order." },
+              { q: "Can vinyl lettering go on a textured wall?", a: "Vinyl adheres best to smooth, non-porous surfaces. For lightly textured walls we recommend our cast vinyl upgrade. Heavily textured surfaces like stucco or brick are not recommended." },
+              { q: "How long does vinyl lettering last outdoors?", a: "Standard calendered vinyl lasts 5–7 years. Our cast vinyl option lasts 8–10 years. Reflective vinyl lasts 5+ years. All ratings assume vertical application." },
+              { q: "Can I remove the lettering later?", a: "Yes. Heat the letters with a hair dryer and peel slowly. Any residue can be removed with Goo Gone or rubbing alcohol. There is no paint damage on factory finishes." },
+              { q: "Do you offer custom fonts and logos?", a: "Absolutely. Upload your own vector artwork or describe the font style you want. We have 500+ fonts available and can match any brand guideline." },
+            ].map((faq, i) => (
+              <details key={i} className="group">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50">
+                  {faq.q}
+                  <svg className="h-4 w-4 shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </summary>
+                <p className="px-4 pb-3 text-sm leading-relaxed text-gray-600">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
       </div>
 
       {/* ── MOBILE: Bottom bar ── */}

@@ -20,6 +20,61 @@ import {
 
 const INCH_TO_CM = 2.54;
 
+/* Small inline icons for accessory options */
+const ACCESSORY_ICONS = {
+  "h-stake": (
+    <svg className="h-8 w-8 text-gray-500" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={1.5}>
+      {/* H-stake: two vertical prongs connected by horizontal bar */}
+      <line x1="14" y1="6" x2="14" y2="36" strokeLinecap="round"/>
+      <line x1="26" y1="6" x2="26" y2="36" strokeLinecap="round"/>
+      <line x1="14" y1="16" x2="26" y2="16" strokeLinecap="round"/>
+      {/* sign panel */}
+      <rect x="10" y="4" width="20" height="12" rx="1" strokeDasharray="2 2" className="text-gray-400" stroke="currentColor" fill="none"/>
+    </svg>
+  ),
+  "wire-stake": (
+    <svg className="h-8 w-8 text-gray-500" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={1.5}>
+      {/* Wire stake: single thin rod bent at bottom */}
+      <line x1="20" y1="8" x2="20" y2="30" strokeLinecap="round"/>
+      <path d="M20 30 L16 38" strokeLinecap="round"/>
+      <path d="M20 30 L24 38" strokeLinecap="round"/>
+      {/* sign panel */}
+      <rect x="10" y="4" width="20" height="10" rx="1" strokeDasharray="2 2" className="text-gray-400" stroke="currentColor" fill="none"/>
+    </svg>
+  ),
+  "easel-back": (
+    <svg className="h-8 w-8 text-gray-500" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={1.5}>
+      {/* Easel: board with stand behind */}
+      <rect x="10" y="6" width="20" height="24" rx="1" fill="none"/>
+      <line x1="20" y1="30" x2="28" y2="38" strokeLinecap="round"/>
+    </svg>
+  ),
+  "standoffs": (
+    <svg className="h-8 w-8 text-gray-500" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={1.5}>
+      {/* Wall-mounted with standoffs */}
+      <rect x="8" y="8" width="24" height="18" rx="1" fill="none"/>
+      <circle cx="12" cy="12" r="2.5"/>
+      <circle cx="28" cy="12" r="2.5"/>
+      <circle cx="12" cy="22" r="2.5"/>
+      <circle cx="28" cy="22" r="2.5"/>
+    </svg>
+  ),
+  "a-frame-stand": (
+    <svg className="h-8 w-8 text-gray-500" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={1.5}>
+      {/* A-frame shape */}
+      <path d="M10 36 L20 6 L30 36" strokeLinecap="round" strokeLinejoin="round"/>
+      <line x1="14" y1="24" x2="26" y2="24" strokeLinecap="round"/>
+    </svg>
+  ),
+  "real-estate-frame": (
+    <svg className="h-8 w-8 text-gray-500" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={1.5}>
+      {/* Post with sign on top */}
+      <rect x="12" y="4" width="16" height="14" rx="1" fill="none"/>
+      <line x1="20" y1="18" x2="20" y2="38" strokeLinecap="round"/>
+    </svg>
+  ),
+};
+
 export default function SignOrderClient({ defaultType, productImages }) {
   const { t } = useTranslation();
 
@@ -177,7 +232,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
 
   const extraRows = [];
   if (doubleSided) {
-    extraRows.push({ label: "Double-sided", value: "+50%" });
+    extraRows.push({ label: t("sign.doubleSided"), value: t("sign.doubleSidedIncluded") });
   }
   if (accessorySurcharge > 0) {
     extraRows.push({ label: t("sign.accessorySurcharge"), value: `+ $${(accessorySurcharge / 100).toFixed(2)}` });
@@ -211,7 +266,6 @@ export default function SignOrderClient({ defaultType, productImages }) {
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                 {signType.materials.map((mat) => {
                   const isActive = materialId === mat.id;
-                  const surcharge = mat.multiplier > 1 ? `+${Math.round((mat.multiplier - 1) * 100)}%` : null;
                   return (
                     <button
                       key={mat.id}
@@ -229,11 +283,6 @@ export default function SignOrderClient({ defaultType, productImages }) {
                         </span>
                       )}
                       <span className="text-sm font-bold text-gray-800">{mat.label}</span>
-                      {surcharge && (
-                        <span className="inline-flex w-fit rounded-xl bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                          {surcharge}
-                        </span>
-                      )}
                     </button>
                   );
                 })}
@@ -315,7 +364,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
-                      {ds ? "Double-Sided (+50%)" : "Single-Sided"}
+                      {ds ? t("sign.doubleSided") : t("sign.singleSided")}
                     </button>
                   ))}
                 </div>
@@ -329,12 +378,13 @@ export default function SignOrderClient({ defaultType, productImages }) {
                   {signType.accessories.map((aId) => {
                     const opt = ACCESSORY_OPTIONS[aId];
                     const isActive = accessories.includes(aId);
+                    const icon = ACCESSORY_ICONS[aId];
                     return (
                       <button
                         key={aId}
                         type="button"
                         onClick={() => toggleAccessory(aId)}
-                        className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
+                        className={`relative flex flex-col items-center gap-1.5 rounded-xl border-2 p-3.5 text-center transition-all duration-150 ${
                           isActive
                             ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
                             : "border-gray-200 bg-white hover:border-gray-400"
@@ -345,12 +395,13 @@ export default function SignOrderClient({ defaultType, productImages }) {
                             <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                           </span>
                         )}
+                        {icon && <div className="mb-0.5">{icon}</div>}
                         <span className="text-sm font-bold text-gray-800">{opt?.label || aId}</span>
                         {opt?.surcharge > 0 && (
-                          <span className="text-[11px] text-amber-600">+${(opt.surcharge / 100).toFixed(2)}/ea</span>
+                          <span className="text-[11px] text-gray-500">${(opt.surcharge / 100).toFixed(2)}/{t("sign.perUnit")}</span>
                         )}
                         {opt?.surcharge === 0 && (
-                          <span className="text-[11px] text-emerald-600">Included</span>
+                          <span className="text-[11px] text-emerald-600">{t("sign.included")}</span>
                         )}
                       </button>
                     );
@@ -385,9 +436,13 @@ export default function SignOrderClient({ defaultType, productImages }) {
                 <input
                   type="number"
                   min="1"
-                  max="999999"
+                  max="1000"
                   value={customQty}
-                  onChange={(e) => setCustomQty(e.target.value)}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (v > 1000) { setCustomQty("1000"); return; }
+                    setCustomQty(e.target.value);
+                  }}
                   placeholder="e.g. 15"
                   className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                 />

@@ -1518,7 +1518,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               </header>
             )}
 
-            <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white/95 p-4 shadow-sm ring-1 ring-white sm:p-6 xl:sticky xl:top-24 flex flex-col">
+            <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-4 shadow-sm sm:p-6 xl:sticky xl:top-24 flex flex-col">
               {/* PRICE + QUANTITY (always visible, order-1) */}
               <div className="order-1">
                 {inventorySignal && (

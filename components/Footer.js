@@ -132,12 +132,23 @@ function WeChatIcon() {
   );
 }
 
+function XiaohongshuIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.615 14.154h-2.77l-.384-2.308H9.846L9.23 16.154H6.462L9.692 6.462h4.616l3.307 9.692zm-4.23-4.616l-.77-3.077h-.076L10.77 11.538h1.615z" />
+    </svg>
+  );
+}
+
 /* ── Payment card icons ── */
 function VisaIcon() {
   return (
     <svg className="h-5 w-8" viewBox="0 0 48 32" fill="none">
       <rect width="48" height="32" rx="4" fill="#1A1F71" />
-      <path d="M19.5 21h-3l1.9-11.5h3L19.5 21zm8-11.5l-2.8 7.9-.3-1.6-1-5.3s-.1-1-1.4-1H18l-.1.3s1.5.3 3.2 1.4l2.7 10.3h3.1l4.7-12h-3.1zm12.3 11.5h2.7l-2.4-11.5h-2.4c-.9 0-1.3.5-1.3.5L32 21h3.1l.6-1.7h3.8l.3 1.7zm-3.3-4l1.6-4.3.9 4.3h-2.5zM28 13.3l.4-2.4s-1.3-.5-2.6-.5c-1.5 0-4.9.6-4.9 3.7 0 2.9 4 2.9 4 4.4s-3.6 1.2-4.8.3l-.4 2.5s1.3.6 3.3.6 5-1 5-3.8-4-3.2-4-4.4c0-1.3 2.7-1.1 4-.4z" fill="white" />
+      <path d="M20.3 20.5h-2.8l1.7-10.5h2.8L20.3 20.5z" fill="white" />
+      <path d="M31.7 10.2c-.6-.2-1.4-.4-2.5-.4-2.8 0-4.7 1.5-4.7 3.6 0 1.6 1.4 2.4 2.5 3 1.1.5 1.5.9 1.5 1.3 0 .7-.9 1-1.7 1-1.2 0-1.8-.2-2.7-.6l-.4-.2-.4 2.5c.7.3 1.9.6 3.2.6 2.9 0 4.9-1.4 4.9-3.7 0-1.2-.7-2.2-2.4-3-.9-.5-1.5-.8-1.5-1.3 0-.4.5-.9 1.5-.9.9 0 1.5.2 2 .4l.2.1.5-2.4z" fill="white" />
+      <path d="M36.1 10h-2.2c-.7 0-1.2.2-1.5.9L28.2 20.5h2.9l.6-1.6h3.6l.3 1.6h2.6L36.1 10zm-3.3 7l1.5-4 .8 4h-2.3z" fill="white" />
+      <path d="M17.8 10l-2.6 7.2-.3-1.4-.9-4.7c-.2-.6-.7-.9-1.3-.9h-4.3l-.1.2c1 .3 2.1.7 2.8 1.1l2.4 9h3l4.4-10.5h-3.1z" fill="white" />
     </svg>
   );
 }
@@ -173,28 +184,23 @@ function ETransferIcon() {
 
 const socialLinks = [
   {
-    label: "Instagram",
-    href: "https://www.instagram.com/lunarprinting",
-    icon: InstagramIcon,
-    hoverClass: "hover:border-pink-400 hover:bg-pink-50 hover:text-pink-500",
+    label: "Xiaohongshu",
+    href: null,
+    icon: XiaohongshuIcon,
+    title: "小红书: lunarprinting",
+    hoverClass: "hover:border-red-400 hover:bg-red-50 hover:text-red-500",
   },
   {
-    label: "Facebook",
-    href: "https://www.facebook.com/lunarprinting",
-    icon: FacebookIcon,
-    hoverClass: "hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600",
+    label: "WeChat",
+    href: null,
+    icon: WeChatIcon,
+    title: "WeChat: lunarprinting",
   },
   {
     label: "Google Maps",
     href: "https://maps.google.com/?q=11+Progress+Ave+%2321+Scarborough+ON+M1P+4S7",
     icon: MapPinIcon,
     hoverClass: "hover:border-red-400 hover:bg-red-50 hover:text-red-500",
-  },
-  {
-    label: "WeChat",
-    href: null, // not a link
-    icon: WeChatIcon,
-    title: "WeChat: lunarprinting",
   },
 ];
 
@@ -306,6 +312,42 @@ export default function Footer({ locale = "en" }) {
                   </span>
                 )
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* Join Us / Partner */}
+        <div className="mt-6 border-t border-[var(--color-gray-200)] pt-6">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("footer.joinUs")}</p>
+              <p className="mt-1.5 text-xs leading-relaxed text-[var(--color-gray-500)]">
+                {t("footer.joinUsDesc")}
+              </p>
+              <a
+                href="mailto:careers@lunarprint.ca"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+                {t("footer.sendResume")}
+              </a>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("footer.becomeSalesPartner")}</p>
+              <p className="mt-1.5 text-xs leading-relaxed text-[var(--color-gray-500)]">
+                {t("footer.salesPartnerDesc")}
+              </p>
+              <Link
+                href="/partner"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-gray-300)] px-4 py-2 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                </svg>
+                {t("footer.learnMore")}
+              </Link>
             </div>
           </div>
         </div>

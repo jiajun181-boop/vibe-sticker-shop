@@ -11,6 +11,7 @@ import {
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
+import BusinessCardPreview from "@/components/business-card/BusinessCardPreview";
 
 // ─── Business Card Configuration ───
 
@@ -273,6 +274,14 @@ export default function BusinessCardsOrderClient() {
 
           {/* RIGHT COLUMN — Sticky Price Summary */}
           <PricingSidebar
+            previewSlot={
+              <BusinessCardPreview
+                cardType={cardTypeId}
+                sides={sideId}
+                rounded={rounded}
+                imageUrl={uploadedFile?.url || null}
+              />
+            }
             summaryLines={summaryLines}
             quoteLoading={quote.quoteLoading}
             quoteError={quote.quoteError}

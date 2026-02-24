@@ -35,6 +35,7 @@ export default function SplitPanelPreview({
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    if (!widthIn || !heightIn || !isFinite(widthIn) || !isFinite(heightIn)) return;
     const ctx = canvas.getContext("2d");
 
     // Calculate sizes in inches

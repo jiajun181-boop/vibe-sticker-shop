@@ -7,6 +7,7 @@ import {
   getMarketingPrintType,
   FINISHING_LABELS,
 } from "@/lib/marketing-print-order-config";
+import BrochureFoldPreview from "@/components/brochure/BrochureFoldPreview";
 import {
   ConfigStep,
   ConfigHero,
@@ -635,6 +636,7 @@ export default function MarketingPrintOrderClient({
             </div>
           ) : (
             <PricingSidebar
+              previewSlot={typeId.startsWith("brochures-") ? <BrochureFoldPreview typeId={typeId} /> : undefined}
               summaryLines={summaryLines}
               quoteLoading={quote.quoteLoading}
               quoteError={quote.quoteError}

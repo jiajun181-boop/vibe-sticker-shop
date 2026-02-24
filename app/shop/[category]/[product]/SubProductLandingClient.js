@@ -19,31 +19,258 @@ const safeText = (value, fallback) =>
 
 // Cross-sell recommendations: if viewing sub-group X, suggest Y
 const CROSS_SELL_MAP = {
-  "retractable-stands": ["tabletop-displays", "backdrops-popups"],
-  "x-banner-stands": ["retractable-stands", "tabletop-displays"],
-  "tabletop-displays": ["retractable-stands", "backdrops-popups"],
-  "backdrops-popups": ["retractable-stands", "flags-hardware"],
-  "vinyl-banners": ["mesh-banners", "retractable-stands"],
-  "mesh-banners": ["vinyl-banners", "flags-hardware"],
-  "pole-banners": ["flags-hardware", "vinyl-banners"],
-  "flags-hardware": ["pole-banners", "tents-outdoor"],
-  "a-frames-signs": ["lawn-yard-signs", "vinyl-banners"],
-  "lawn-yard-signs": ["a-frames-signs", "flags-hardware"],
-  "tents-outdoor": ["flags-hardware", "vinyl-banners"],
-  "fabric-banners": ["retractable-stands", "backdrops-popups"],
-  "canvas-prints": ["fabric-banners", "backdrops-popups"],
-  "business-cards": ["letterhead", "envelopes"],
-  "flyers": ["postcards", "rack-cards"],
-  "postcards": ["flyers", "door-hangers"],
-  "brochures": ["booklets", "presentation-folders"],
-  "booklets": ["brochures", "posters"],
+  // Banners & Displays
+  "retractable-stands": ["vinyl-banners", "tabletop-displays"],
+  "x-banner-stands": ["retractable-stands", "vinyl-banners"],
+  "tabletop-displays": ["retractable-stands", "x-banner-stands"],
+  "backdrops-popups": ["retractable-stands", "fabric-banners"],
+  "vinyl-banners": ["retractable-stands", "mesh-banners"],
+  "mesh-banners": ["vinyl-banners", "pole-banners"],
+  "pole-banners": ["vinyl-banners", "flags-hardware"],
+  "flags-hardware": ["vinyl-banners", "tents-outdoor"],
+  "a-frames-signs": ["vinyl-banners", "lawn-yard-signs"],
+  "lawn-yard-signs": ["a-frames-signs", "vinyl-banners"],
+  "tents-outdoor": ["vinyl-banners", "flags-hardware"],
+  "fabric-banners": ["backdrops-popups", "retractable-stands"],
+  "canvas-prints": ["retractable-stands", "fabric-banners"],
+  // Marketing & Business Print
+  "business-cards": ["flyers", "postcards"],
+  "flyers": ["business-cards", "postcards"],
+  "postcards": ["flyers", "business-cards"],
+  "brochures": ["flyers", "booklets"],
+  "booklets": ["flyers", "brochures"],
+  "posters": ["flyers", "vinyl-banners"],
+  "letterhead": ["business-cards", "envelopes"],
+  "envelopes": ["letterhead", "business-cards"],
+  "menus": ["table-tents", "rack-cards"],
+  "table-tents": ["menus", "shelf-displays"],
+  "rack-cards": ["flyers", "door-hangers"],
+  "door-hangers": ["flyers", "rack-cards"],
+  "greeting-invitation-cards": ["postcards", "envelopes"],
+  "bookmarks": ["business-cards", "postcards"],
+  "notepads": ["letterhead", "business-cards"],
+  "ncr-forms": ["notepads", "letterhead"],
+  "tickets-coupons": ["business-cards", "loyalty-cards"],
+  "loyalty-cards": ["business-cards", "rack-cards"],
+  "stamps": ["notepads", "letterhead"],
+  "calendars": ["notepads", "posters"],
+  "certificates": ["letterhead", "envelopes"],
+  "tags": ["business-cards", "loyalty-cards"],
+  "shelf-displays": ["table-tents", "rack-cards"],
+  "document-printing": ["ncr-forms", "notepads"],
+  // Stickers
   "die-cut-stickers": ["sticker-pages", "sticker-rolls"],
   "sticker-pages": ["die-cut-stickers", "sticker-rolls"],
-  "sticker-rolls": ["die-cut-stickers", "vinyl-lettering"],
-  "vehicle-wraps": ["door-panel-graphics", "vehicle-decals"],
+  "sticker-rolls": ["die-cut-stickers", "sticker-pages"],
+  "vinyl-lettering": ["vehicle-decals", "die-cut-stickers"],
+  // Vehicles
+  "vehicle-wraps": ["vehicle-decals", "door-panel-graphics"],
   "door-panel-graphics": ["vehicle-wraps", "magnetic-signs"],
-  "vehicle-decals": ["vehicle-wraps", "magnetic-signs"],
+  "vehicle-decals": ["vehicle-wraps", "vinyl-lettering"],
+  "magnetic-signs": ["vehicle-decals", "door-panel-graphics"],
 };
+
+// Sub-product page content — description + FAQ per group
+const SUB_PRODUCT_CONTENT = {
+  // Marketing & Business Print
+  "business-cards": {
+    desc: "Premium business cards printed on thick card stock with a range of finishes. Choose from classic matte, glossy UV, soft-touch laminate, gold foil, linen, and more. All cards are full-color, double-sided, and cut to standard 3.5\u2033 \u00d7 2\u2033 or custom sizes.",
+    features: ["14pt–32pt card stock", "Matte, Gloss, Soft-Touch, Linen", "Gold/Silver foil stamping", "Rounded corners available", "Same-day rush option"],
+    faq: [
+      { q: "What paper stock is used?", a: "Standard cards use 14pt C2S card stock. Premium options include 16pt, 18pt, and 32pt ultra-thick with optional painted edges." },
+      { q: "Can I get a sample?", a: "Yes \u2014 we offer a free sample pack with all paper stocks and finishes. Request one from the product page or contact us." },
+    ],
+  },
+  "flyers": {
+    desc: "Full-color flyers on premium paper, available in a range of sizes from half-page to tabloid. Ideal for events, promotions, real estate, and mass distribution.",
+    features: ["100lb Gloss or Matte text", "Single or double-sided", "Standard & custom sizes", "Folding options available", "Bulk discounts from 250+"],
+    faq: [
+      { q: "What sizes are available?", a: "Standard sizes include 8.5\u2033\u00d711\u2033 (letter), 5.5\u2033\u00d78.5\u2033 (half page), and 11\u2033\u00d717\u2033 (tabloid). Custom sizes are also available." },
+      { q: "Can flyers be folded?", a: "Yes \u2014 half-fold, tri-fold, and Z-fold options are available at no extra charge for orders of 500+." },
+    ],
+  },
+  "postcards": {
+    desc: "Thick, full-bleed postcards for direct mail, promotions, and event invitations. Printed on 14pt card stock with UV gloss or matte finish.",
+    features: ["14pt card stock standard", "UV coating one or both sides", "USPS/Canada Post compliant", "4\u2033\u00d76\u2033 to 6\u2033\u00d711\u2033 sizes", "Mailing services available"],
+    faq: [
+      { q: "Are postcards mail-ready?", a: "Yes \u2014 all postcards meet Canada Post and USPS specifications. We can add address areas and indicia for direct mail." },
+    ],
+  },
+  "brochures": {
+    desc: "Professional brochures with bi-fold, tri-fold, and Z-fold options. Printed on premium gloss or matte paper with sharp, vibrant color reproduction.",
+    features: ["100lb Gloss or Matte text", "Bi-fold, Tri-fold, Z-fold", "Full-bleed printing", "Scoring for clean folds", "Die-cut options available"],
+    faq: [
+      { q: "What\u2019s the difference between bi-fold and tri-fold?", a: "Bi-fold creates 4 panels (folded in half). Tri-fold creates 6 panels and is the most popular for marketing materials." },
+    ],
+  },
+  "booklets": {
+    desc: "Perfect for catalogs, programs, manuals, and lookbooks. Choose saddle-stitch (stapled), perfect-bound (glued spine), or wire-o binding for a professional finish.",
+    features: ["Saddle-stitch, Perfect-bound, Wire-O", "8 to 400+ pages", "Full-color throughout", "Gloss or matte cover", "Custom sizes available"],
+    faq: [
+      { q: "What binding is best for my project?", a: "Saddle-stitch (stapled) is best for 8\u201364 pages. Perfect-bound gives a book-like spine for 24\u2013400+ pages. Wire-O lays flat and is ideal for planners and manuals." },
+      { q: "What\u2019s the minimum page count?", a: "Saddle-stitch requires a minimum of 8 pages (2 sheets). Perfect-bound requires at least 24 pages for a visible spine." },
+    ],
+  },
+  "posters": {
+    desc: "Vibrant, large-format posters on glossy, matte, or adhesive stock. Perfect for retail displays, event promotion, movie posters, and wall art.",
+    features: ["Glossy, Matte, Adhesive, Backlit", "Sizes from 11\u2033\u00d717\u2033 to 48\u2033\u00d796\u2033", "Indoor and outdoor options", "Epson original ink, custom ICC profile", "Same-day available for small orders"],
+    faq: [
+      { q: "What\u2019s the difference between glossy and matte posters?", a: "Glossy posters have a shiny, vibrant finish ideal for photos and retail. Matte posters reduce glare and are preferred for text-heavy designs and galleries." },
+    ],
+  },
+  "menus": {
+    desc: "Durable restaurant menus with lamination for spill resistance. Available as flat menus, tri-fold, or takeout formats with premium paper options.",
+    features: ["Laminated for durability", "Flat, folded, or takeout size", "Full-color, double-sided", "Water & grease resistant", "Rush turnaround available"],
+    faq: [
+      { q: "How durable are laminated menus?", a: "Our laminated menus are sealed in 10mil pouches and resist water, grease, and tearing. They typically last 6\u201312 months of daily restaurant use." },
+    ],
+  },
+  "door-hangers": {
+    desc: "Die-cut door hangers for real estate, hotel, and marketing campaigns. Printed on thick card stock with an optional tear-off perforated section.",
+    features: ["14pt card stock", "Standard die-cut hook", "Perforated tear-off option", "Full-color, double-sided", "3.5\u2033\u00d78.5\u2033 standard"],
+    faq: [
+      { q: "What\u2019s the perforated option?", a: "The perforated door hanger has a tear-off coupon or business card at the bottom, perfect for leaving behind a redeemable offer." },
+    ],
+  },
+  "greeting-invitation-cards": {
+    desc: "Custom greeting cards and invitations for weddings, holidays, corporate events, and special occasions. Printed on premium card stock with envelope options.",
+    features: ["Premium card stock", "Flat or folded styles", "Matching envelopes included", "Foil stamping available", "Custom sizes and shapes"],
+    faq: [
+      { q: "Do invitations come with envelopes?", a: "Yes \u2014 standard white envelopes are included. Upgrade to colored, textured, or lined envelopes for an additional fee." },
+    ],
+  },
+  // Banners & Displays
+  "vinyl-banners": {
+    desc: "Heavy-duty vinyl banners for indoor and outdoor use. Printed on 13oz or 18oz scrim vinyl with UV-resistant inks for long-lasting color.",
+    features: ["13oz & 18oz vinyl options", "Hemmed edges & grommets", "UV & weather resistant", "Single or double-sided", "Custom sizes up to 50ft"],
+    faq: [
+      { q: "How long do vinyl banners last outdoors?", a: "Standard 13oz vinyl banners last 2\u20133 years outdoors. Our 18oz heavy-duty option lasts 3\u20135 years. Both use UV-resistant inks." },
+    ],
+  },
+  "retractable-stands": {
+    desc: "Portable retractable banner stands that set up in seconds. Professional display solution for trade shows, lobbies, and events.",
+    features: ["Sets up in 30 seconds", "Aluminum construction", "Includes carry bag", "Replaceable graphics", "33\u2033 and 47\u2033 widths"],
+    faq: [
+      { q: "Can I replace the banner graphic later?", a: "Yes \u2014 all our retractable stands accept replacement graphics. Just order a new print and swap it in." },
+    ],
+  },
+  "flags-hardware": {
+    desc: "Eye-catching feather flags, teardrop flags, and flutter flags with heavy-duty hardware kits. Perfect for storefronts, car lots, and events.",
+    features: ["Feather, teardrop, & flutter styles", "Single or double-sided print", "Ground stake & cross base options", "Water bag for indoor use", "8ft to 17ft tall"],
+    faq: [
+      { q: "What base should I use?", a: "Ground stakes for soft ground (grass, dirt). Cross base with water bag for indoor or hard surfaces. Both are included in hardware kits." },
+    ],
+  },
+  "backdrops-popups": {
+    desc: "Large-format backdrops and popup displays for events, trade shows, photo walls, and press conferences. Step-and-repeat and tension fabric options.",
+    features: ["8ft \u00d7 8ft to 10ft \u00d7 20ft", "Wrinkle-free fabric", "Step-and-repeat layouts", "Easy setup frames", "Reusable hardware"],
+    faq: [],
+  },
+  "x-banner-stands": {
+    desc: "Budget-friendly X-banner stands for indoor displays. Lightweight, portable, and easy to assemble \u2014 great for offices and events.",
+    features: ["Lightweight tripod frame", "No tools needed", "24\u2033 \u00d7 63\u2033 standard", "Includes carry bag", "Indoor use recommended"],
+    faq: [],
+  },
+  "tabletop-displays": {
+    desc: "Compact countertop and tabletop displays for reception areas, trade shows, and retail counters. Professional presentation in a small footprint.",
+    features: ["Retractable & easel styles", "8\u2033 \u00d7 12\u2033 to 24\u2033 \u00d7 36\u2033", "Portable & lightweight", "Includes carrying case", "Easy graphic swap"],
+    faq: [],
+  },
+  "tents-outdoor": {
+    desc: "Custom printed canopy tents for outdoor events, farmers markets, and promotions. Full-color printing on durable polyester with steel or aluminum frames.",
+    features: ["10\u2032 \u00d7 10\u2032 standard", "Full-color dye-sub print", "Steel & aluminum frames", "Side walls available", "Includes carry bag"],
+    faq: [],
+  },
+  // Stickers
+  "die-cut-stickers": {
+    desc: "Custom die-cut stickers cut to any shape. Printed on premium vinyl with laminate protection for indoor and outdoor use.",
+    features: ["Cut to any shape", "Vinyl or paper stock", "Waterproof laminate", "Indoor/outdoor durable", "Singles or bulk packs"],
+    faq: [
+      { q: "How long do die-cut stickers last?", a: "Our vinyl stickers with laminate last 3\u20135 years outdoors and 7+ years indoors. Paper stickers are best for indoor use only." },
+    ],
+  },
+  "sticker-pages": {
+    desc: "Multiple stickers printed on sheets \u2014 perfect for sticker packs, product labels, and packaging inserts. Kiss-cut for easy peel.",
+    features: ["Multiple designs per sheet", "Kiss-cut for easy peel", "Vinyl or paper stock", "Custom sheet layouts", "Bulk pricing available"],
+    faq: [],
+  },
+  "sticker-rolls": {
+    desc: "Custom labels on rolls for product packaging, branding, and retail. Compatible with standard label dispensers and applicators.",
+    features: ["Roll sizes from 250 to 10,000+", "BOPP, vinyl, kraft, clear", "Compatible with dispensers", "Waterproof & oil-resistant options", "Sequential numbering available"],
+    faq: [],
+  },
+  // Vehicles
+  "vehicle-wraps": {
+    desc: "Full and partial vehicle wraps for cars, trucks, vans, and trailers. Premium cast vinyl with air-release technology for bubble-free installation.",
+    features: ["3M\u2122 & Avery\u2122 cast vinyl", "Full, partial, & spot graphics", "Air-release for easy install", "5\u20137 year outdoor life", "Professional installation available"],
+    faq: [
+      { q: "How long does a vehicle wrap last?", a: "High-quality cast vinyl wraps last 5\u20137 years with proper care. We recommend hand washing and avoiding automatic car washes with brushes." },
+    ],
+  },
+  "vehicle-decals": {
+    desc: "Custom vinyl decals for company branding, DOT numbers, and decorative graphics. Easy to apply and remove without damaging paint.",
+    features: ["Precision die-cut", "Removable without residue", "DOT & CVOR compliant", "Reflective options", "5+ year outdoor life"],
+    faq: [],
+  },
+  "door-panel-graphics": {
+    desc: "Branded door panel graphics and lettering for company vehicles. Includes design, print, and optional professional installation.",
+    features: ["Custom fit to any vehicle", "Full-color digital print", "Contour-cut vinyl", "Easy DIY application", "Installation service available"],
+    faq: [],
+  },
+  "magnetic-signs": {
+    desc: "Removable magnetic vehicle signs \u2014 great for contractors, delivery drivers, and anyone who uses a personal vehicle for business.",
+    features: ["30mil magnetic material", "Removable & reusable", "Full-color printing", "UV laminate protection", "Standard & custom sizes"],
+    faq: [],
+  },
+};
+
+function SubProductContent({ parentSlug }) {
+  const content = SUB_PRODUCT_CONTENT[parentSlug];
+  if (!content) return null;
+
+  return (
+    <section className="mt-12 space-y-8">
+      {/* Description */}
+      <div>
+        <p className="max-w-3xl text-sm leading-relaxed text-[var(--color-gray-600)]">{content.desc}</p>
+      </div>
+
+      {/* Features */}
+      {content.features?.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {content.features.map((f) => (
+            <span key={f} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-gray-200)] bg-white px-3 py-1.5 text-xs text-[var(--color-gray-600)]">
+              <svg className="h-3 w-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              {f}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* FAQ */}
+      {content.faq?.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)]">FAQ</h3>
+          <div className="mt-3 divide-y divide-[var(--color-gray-200)] rounded-xl border border-[var(--color-gray-200)] bg-white">
+            {content.faq.map((item, i) => (
+              <details key={i} className="group">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)]">
+                  {item.q}
+                  <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </summary>
+                <p className="px-4 pb-3 text-sm leading-relaxed text-[var(--color-gray-600)]">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
 
 function GridIcon({ className }) {
   return (
@@ -63,7 +290,9 @@ function ListIcon({ className }) {
 
 function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel }) {
   const image = product.images?.[0];
+  const image2 = product.images?.[1];
   const imageSrc = getProductImage(product, product.category);
+  const imageSrc2 = image2?.url || null;
   const sizeCount = product.optionsConfig?.sizes?.length || 0;
   const tk = getTurnaround(product);
   const price = product.fromPrice || product.basePrice;
@@ -77,14 +306,26 @@ function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel }) {
       <Link href={href} className="block">
       <div className="relative aspect-[4/3] bg-[var(--color-gray-100)]">
         {imageSrc ? (
-          <Image
-            src={imageSrc}
-            alt={image?.alt || product.name}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
-            unoptimized={isSvgImage(imageSrc)}
-          />
+          <>
+            <Image
+              src={imageSrc}
+              alt={image?.alt || product.name}
+              fill
+              className={`object-cover transition-all duration-300 ${imageSrc2 ? "group-hover:opacity-0" : "group-hover:scale-105"}`}
+              sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              unoptimized={isSvgImage(imageSrc)}
+            />
+            {imageSrc2 && (
+              <Image
+                src={imageSrc2}
+                alt={image2?.alt || product.name}
+                fill
+                className="object-cover opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:scale-105"
+                sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                unoptimized={isSvgImage(imageSrc2)}
+              />
+            )}
+          </>
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--color-gray-100)] to-[var(--color-gray-200)]">
             <div className="text-center px-3">
@@ -120,7 +361,7 @@ function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel }) {
           <QuickAddButton product={product} />
           <Link
             href={href}
-            className="inline-block rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black"
+            className="inline-block rounded-xl bg-gray-900 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black"
           >
             {viewOrderLabel}
           </Link>
@@ -182,7 +423,7 @@ function ProductCardList({ product, href, selectedSpec, t, viewOrderLabel }) {
           {price > 0 && (
             <span className="text-sm font-bold text-[var(--color-gray-900)]">{t("product.from", { price: formatCad(price) })}</span>
           )}
-          <span className="ml-auto rounded-xl bg-[var(--color-gray-900)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
+          <span className="ml-auto rounded-xl bg-gray-900 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors group-hover:bg-black">
             {viewOrderLabel}
           </span>
         </div>
@@ -208,7 +449,7 @@ function QuickQuoteFAB({ t }) {
   return (
     <Link
       href="/quote"
-      className="fixed right-4 z-50 flex items-center gap-2 rounded-xl bg-[var(--color-gray-900)] px-4 py-2.5 text-white shadow-lg transition-all hover:bg-black animate-in fade-in-0 slide-in-from-bottom-4 duration-300 md:hidden"
+      className="fixed right-4 z-50 flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-white shadow-lg transition-all hover:bg-black animate-in fade-in-0 slide-in-from-bottom-4 duration-300 md:hidden"
       style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom) + 8px)" }}
     >
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -269,7 +510,7 @@ export default function SubProductLandingClient({
               <button
                 onClick={() => setViewMode("grid")}
                 className={`rounded-md p-1.5 transition-colors ${
-                  viewMode === "grid" ? "bg-[var(--color-gray-900)] text-white" : "text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]"
+                  viewMode === "grid" ? "bg-gray-900 text-white" : "text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]"
                 }`}
                 title={t("shop.viewGrid")}
               >
@@ -278,7 +519,7 @@ export default function SubProductLandingClient({
               <button
                 onClick={() => setViewMode("list")}
                 className={`rounded-md p-1.5 transition-colors ${
-                  viewMode === "list" ? "bg-[var(--color-gray-900)] text-white" : "text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]"
+                  viewMode === "list" ? "bg-gray-900 text-white" : "text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]"
                 }`}
                 title={t("shop.viewList")}
               >
@@ -322,6 +563,9 @@ export default function SubProductLandingClient({
             No products available yet.
           </p>
         )}
+
+        {/* Product Content — description, features, FAQ */}
+        <SubProductContent parentSlug={parentSlug} />
 
         {/* Complete Your Setup — cross-sell */}
         {crossSellGroups.length > 0 && (
@@ -442,7 +686,7 @@ export default function SubProductLandingClient({
             </p>
             <Link
               href="/quote"
-              className="mt-3 inline-block rounded-xl bg-[var(--color-gray-900)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-black"
+              className="mt-3 inline-block rounded-xl bg-gray-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white hover:bg-black"
             >
               {t("home.cta.quote")}
             </Link>

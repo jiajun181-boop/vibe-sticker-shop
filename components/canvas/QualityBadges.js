@@ -2,8 +2,8 @@
 
 const badges = [
   {
-    title: "Epson SC9100",
-    description: "Professional wide-format printer",
+    title: "Epson Professional",
+    description: "Wide-format printer",
     icon: (
       <svg
         className="h-6 w-6"
@@ -21,8 +21,8 @@ const badges = [
     ),
   },
   {
-    title: "Pigment Ink",
-    description: "100+ year fade resistance",
+    title: "Original Ink",
+    description: "Custom ICC profile, 100+ year fade resistance",
     icon: (
       <svg
         className="h-6 w-6"
@@ -60,7 +60,7 @@ const badges = [
   },
   {
     title: "Vivid Colors",
-    description: "10-color UltraChrome ink system",
+    description: "Wide-gamut color reproduction",
     icon: (
       <svg
         className="h-6 w-6"

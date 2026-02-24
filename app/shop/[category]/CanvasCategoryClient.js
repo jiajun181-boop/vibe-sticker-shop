@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { isSvgImage } from "@/lib/product-image";
 
 const BASE = "/shop/canvas-prints";
 
@@ -121,9 +123,10 @@ function PriceTag({ price, quoteOnly = false }) {
   return <span className="text-xs text-[var(--color-gray-400)]">Get a quote</span>;
 }
 
-function CanvasCard({ item, price, variant = "standard" }) {
+function CanvasCard({ item, price, variant = "standard", imageUrl }) {
   const isLarge = variant === "large";
   const isWide = variant === "wide";
+  const isSvg = imageUrl && isSvgImage(imageUrl);
 
   return (
     <Link
@@ -132,47 +135,68 @@ function CanvasCard({ item, price, variant = "standard" }) {
         isWide ? "sm:col-span-2" : ""
       }`}
     >
-      <div className={`relative overflow-hidden bg-gradient-to-br ${item.gradient} ${isLarge ? "h-52" : isWide ? "h-40 sm:h-44" : "h-40"}`}>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.55),transparent_55%)]" />
-        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(135deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:14px_14px]" />
-        <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="rounded-full border border-white/70 bg-white/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)]">
-              {item.accent}
-            </span>
-            {item.quoteOnly && (
-              <span className="rounded-full border border-black/10 bg-black/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-700)]">
-                Quote-Only
-              </span>
+      <div className={`relative overflow-hidden ${imageUrl ? "bg-gray-50" : `bg-gradient-to-br ${item.gradient}`} ${isLarge ? "h-52" : isWide ? "h-40 sm:h-44" : "h-40"}`}>
+        {imageUrl ? (
+          <>
+            {isSvg ? (
+              <img src={imageUrl} alt={item.name} className="h-full w-full object-contain p-4" />
+            ) : (
+              <Image src={imageUrl} alt={item.name} fill className="object-contain p-4" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" />
             )}
-          </div>
-
-          <div className="mx-auto flex w-full max-w-[240px] items-center justify-center">
-            <div className="rounded-lg border border-white/70 bg-white/80 p-2 shadow-sm">
-              <div
-                className={`bg-white shadow-inner ${
-                  item.key.includes("split-5")
-                    ? "grid grid-cols-5 gap-1 p-1"
-                    : item.key.includes("split-3")
-                      ? "grid grid-cols-3 gap-1 p-1"
-                      : item.key.includes("split-2")
-                        ? "grid grid-cols-2 gap-1 p-1"
-                        : item.key.includes("panoramic")
-                          ? "h-16 w-32"
-                          : "h-20 w-24"
-                }`}
-              >
-                {item.key.includes("split-") ? (
-                  Array.from({ length: item.key.includes("split-5") ? 5 : item.key.includes("split-3") ? 3 : 2 }).map((_, i) => (
-                    <div key={i} className="h-14 rounded-sm bg-gradient-to-b from-white to-zinc-100 border border-zinc-100" />
-                  ))
-                ) : (
-                  <div className="h-full w-full rounded-sm border border-zinc-100 bg-gradient-to-b from-white to-zinc-100" />
+            <div className="absolute left-3 top-3 flex items-center gap-2">
+              <span className="rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)]">
+                {item.accent}
+              </span>
+              {item.quoteOnly && (
+                <span className="rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-700)]">
+                  Quote-Only
+                </span>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.55),transparent_55%)]" />
+            <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(135deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:14px_14px]" />
+            <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="rounded-full border border-white/70 bg-white/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)]">
+                  {item.accent}
+                </span>
+                {item.quoteOnly && (
+                  <span className="rounded-full border border-black/10 bg-black/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-700)]">
+                    Quote-Only
+                  </span>
                 )}
               </div>
+              <div className="mx-auto flex w-full max-w-[240px] items-center justify-center">
+                <div className="rounded-lg border border-white/70 bg-white/80 p-2 shadow-sm">
+                  <div
+                    className={`bg-white shadow-inner ${
+                      item.key.includes("split-5")
+                        ? "grid grid-cols-5 gap-1 p-1"
+                        : item.key.includes("split-3")
+                          ? "grid grid-cols-3 gap-1 p-1"
+                          : item.key.includes("split-2")
+                            ? "grid grid-cols-2 gap-1 p-1"
+                            : item.key.includes("panoramic")
+                              ? "h-16 w-32"
+                              : "h-20 w-24"
+                    }`}
+                  >
+                    {item.key.includes("split-") ? (
+                      Array.from({ length: item.key.includes("split-5") ? 5 : item.key.includes("split-3") ? 3 : 2 }).map((_, i) => (
+                        <div key={i} className="h-14 rounded-sm bg-gradient-to-b from-white to-zinc-100 border border-zinc-100" />
+                      ))
+                    ) : (
+                      <div className="h-full w-full rounded-sm border border-zinc-100 bg-gradient-to-b from-white to-zinc-100" />
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       <div className="flex flex-1 items-center justify-between gap-3 p-4">
@@ -193,7 +217,7 @@ function CanvasCard({ item, price, variant = "standard" }) {
   );
 }
 
-function SectionGrid({ section, canvasPrices }) {
+function SectionGrid({ section, canvasPrices, canvasImages = {} }) {
   const visibleItems = section.items.filter((item) => shouldShow(canvasPrices, item));
   if (!visibleItems.length) return null;
 
@@ -206,6 +230,7 @@ function SectionGrid({ section, canvasPrices }) {
             item={item}
             price={getPrice(canvasPrices, item)}
             variant={idx === 1 ? "large" : "standard"}
+            imageUrl={canvasImages[item.key]}
           />
         ))}
       </div>
@@ -216,7 +241,7 @@ function SectionGrid({ section, canvasPrices }) {
     return (
       <div className="mt-5 grid gap-4 md:grid-cols-3">
         {visibleItems.map((item) => (
-          <CanvasCard key={item.key} item={item} price={getPrice(canvasPrices, item)} variant="large" />
+          <CanvasCard key={item.key} item={item} price={getPrice(canvasPrices, item)} variant="large" imageUrl={canvasImages[item.key]} />
         ))}
       </div>
     );
@@ -230,13 +255,14 @@ function SectionGrid({ section, canvasPrices }) {
           item={item}
           price={getPrice(canvasPrices, item)}
           variant={idx === 0 ? "wide" : "standard"}
+          imageUrl={canvasImages[item.key]}
         />
       ))}
     </div>
   );
 }
 
-export default function CanvasCategoryClient({ canvasPrices = {} }) {
+export default function CanvasCategoryClient({ canvasPrices = {}, canvasImages = {} }) {
   const { t } = useTranslation();
 
   return (
@@ -253,14 +279,28 @@ export default function CanvasCategoryClient({ canvasPrices = {} }) {
           <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="p-6 sm:p-8 lg:p-10">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-500)]">
-                Wall Art Studio — Toronto
+                Print on Demand &middot; Toronto
               </p>
               <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-                Museum-Quality Canvas Prints in Toronto
+                Museum-Quality Canvas Prints
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--color-gray-600)] sm:text-base">
-                Transform your memories into stunning wall art. Hand-stretched and ready to hang.
+                We produce premium canvas wall art with an Epson professional printer and original ink tuned with custom ICC profiles. Trusted by online sellers for print-on-demand fulfillment and drop shipping — every piece hand-stretched, inspected, and ready to hang.
               </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-[11px] font-semibold text-gray-700">
+                  <svg className="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Drop-Ship Fulfillment
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-[11px] font-semibold text-gray-700">
+                  <svg className="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Epson Pro &middot; Original Ink
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-[11px] font-semibold text-gray-700">
+                  <svg className="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Hand-Stretched on Wood
+                </span>
+              </div>
               <div className="mt-6 flex flex-wrap gap-2">
                 <Link
                   href={`${BASE}/canvas-gallery-wrap`}
@@ -269,7 +309,7 @@ export default function CanvasCategoryClient({ canvasPrices = {} }) {
                   Start with Gallery Wrap
                 </Link>
                 <Link
-                  href="/quote"
+                  href="/order/canvas-prints"
                   className="inline-flex items-center rounded-full border border-[var(--color-gray-300)] bg-white px-4 py-2 text-xs font-semibold text-[var(--color-gray-700)] hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
                 >
                   Custom Size Quote
@@ -306,33 +346,33 @@ export default function CanvasCategoryClient({ canvasPrices = {} }) {
                 <p className="mt-1 text-sm text-[var(--color-gray-500)]">{section.subtitle}</p>
               </div>
             </div>
-            <SectionGrid section={section} canvasPrices={canvasPrices} />
+            <SectionGrid section={section} canvasPrices={canvasPrices} canvasImages={canvasImages} />
           </section>
         ))}
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Hand-Stretched Finish</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Print on Demand Fulfillment</h3>
             <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              Each canvas is carefully stretched on kiln-dried wooden bars and inspected before pickup or delivery.
+              We help online sellers with drop-ship fulfillment — print, stretch, pack, and ship direct to your customers under your brand.
             </p>
           </div>
           <div className="rounded-2xl border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Home & Office Ready</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Premium Quality, Every Piece</h3>
             <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              Great for family walls, office receptions, retail interiors, and gift-quality photo art.
+              Epson professional printer with original ink and custom ICC profiles. Acid-free cotton canvas on kiln-dried pine stretcher bars.
             </p>
           </div>
           <div className="rounded-2xl border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Oversize Custom Projects</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Custom Sizes Available</h3>
             <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              Need a panoramic or non-standard size? We can quote custom dimensions for feature walls and commercial spaces.
+              Need a panoramic or non-standard size? Enter any dimension in the configurator or contact us for oversize projects.
             </p>
             <Link
-              href="/quote"
+              href="/order/canvas-prints"
               className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-brand-dark)]"
             >
-              Get a Quote
+              Configure &amp; Quote
             </Link>
           </div>
         </div>

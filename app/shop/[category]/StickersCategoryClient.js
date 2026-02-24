@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { isSvgImage } from "@/lib/product-image";
 
 const BASE = "/shop/stickers-labels-decals";
 
@@ -92,17 +94,26 @@ const MATERIAL_PILLS = [
 ];
 
 /* ── Shared card component ── */
-function ProductCard({ card, stickerPrices, size = "large" }) {
+function ProductCard({ card, stickerPrices, size = "large", imageUrl }) {
   const isLarge = size === "large";
+  const isSvg = imageUrl && isSvgImage(imageUrl);
   return (
     <Link
       href={card.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
     >
-      <div className={`relative flex items-center justify-center bg-gradient-to-br ${card.gradient} ${isLarge ? "aspect-[3/2]" : "aspect-[5/2]"}`}>
-        <p className="px-6 text-center text-lg font-bold text-white drop-shadow-md">
-          {card.title}
-        </p>
+      <div className={`relative flex items-center justify-center ${imageUrl ? "bg-gray-50" : `bg-gradient-to-br ${card.gradient}`} ${isLarge ? "aspect-[3/2]" : "aspect-[5/2]"}`}>
+        {imageUrl ? (
+          isSvg ? (
+            <img src={imageUrl} alt={card.title} className="h-full w-full object-contain p-4" />
+          ) : (
+            <Image src={imageUrl} alt={card.title} fill className="object-contain p-4" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+          )
+        ) : (
+          <p className="px-6 text-center text-lg font-bold text-white drop-shadow-md">
+            {card.title}
+          </p>
+        )}
       </div>
       <div className="flex flex-1 flex-col p-5">
         <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-lg" : "text-base"}`}>
@@ -129,7 +140,7 @@ function ProductCard({ card, stickerPrices, size = "large" }) {
   );
 }
 
-export default function StickersCategoryClient({ stickerPrices = {} }) {
+export default function StickersCategoryClient({ stickerPrices = {}, stickerImages = {} }) {
   const { t } = useTranslation();
 
   return (
@@ -166,7 +177,7 @@ export default function StickersCategoryClient({ stickerPrices = {} }) {
           </p>
           <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
             {INDIVIDUAL_CARDS.map((card) => (
-              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} />
+              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} imageUrl={stickerImages[card.priceKey]} />
             ))}
           </div>
         </section>
@@ -179,7 +190,7 @@ export default function StickersCategoryClient({ stickerPrices = {} }) {
           </p>
           <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
             {PACKAGING_CARDS.map((card) => (
-              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} />
+              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} imageUrl={stickerImages[card.priceKey]} />
             ))}
           </div>
         </section>
@@ -192,7 +203,7 @@ export default function StickersCategoryClient({ stickerPrices = {} }) {
           </p>
           <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
             {SPECIALTY_CARDS.map((card) => (
-              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} size="medium" />
+              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} size="medium" imageUrl={stickerImages[card.priceKey]} />
             ))}
           </div>
         </section>

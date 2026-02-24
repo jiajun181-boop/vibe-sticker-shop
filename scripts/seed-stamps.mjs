@@ -163,7 +163,7 @@ async function main() {
         name: s.name,
         description: s.description,
         basePrice: s.basePrice,
-        category: "marketing-prints",
+        category: "marketing-business-print",
         pricingUnit: "per_piece",
 
         isActive: true,
@@ -175,7 +175,7 @@ async function main() {
         name: s.name,
         description: s.description,
         basePrice: s.basePrice,
-        category: "marketing-prints",
+        category: "marketing-business-print",
         pricingUnit: "per_piece",
 
         isActive: true,

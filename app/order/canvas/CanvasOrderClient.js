@@ -5,6 +5,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { CANVAS_TYPES, getCanvasType } from "@/lib/canvas-order-config";
 import CanvasPreview from "@/components/canvas/CanvasPreview";
 import SplitPanelPreview from "@/components/canvas/SplitPanelPreview";
+import WallContextPreview from "@/components/canvas/WallContextPreview";
 import QualityBadges from "@/components/canvas/QualityBadges";
 import ImageCropper from "@/components/canvas/ImageCropper";
 import {
@@ -61,6 +62,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [cropData, setCropData] = useState(null);
   const [dimErrors, setDimErrors] = useState([]);
+  const [viewMode, setViewMode] = useState("closeup");
 
   const isCustomSize = sizeIdx === -1;
 
@@ -258,24 +260,24 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
   const formatCad = (cents) =>
     new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-  // Preview slot
+  // Preview slot with close-up / room toggle
   const previewSlot = useMemo(() => {
-    if (canvasType.panels > 1) {
-      return (
-        <SplitPanelPreview
-          imageUrl={uploadedFile?.url || null}
-          widthIn={widthIn}
-          heightIn={heightIn}
-          panelCount={canvasType.panels}
-          gapInches={canvasType.gapInches || 2}
-          barDepth={canvasType.barDepth}
-          edgeTreatment={edgeTreatment || "image-wrap"}
-        />
-      );
-    }
-    return (
+    const imgUrl = uploadedFile?.url || null;
+    const isSplit = canvasType.panels > 1;
+
+    const closeupView = isSplit ? (
+      <SplitPanelPreview
+        imageUrl={imgUrl}
+        widthIn={widthIn}
+        heightIn={heightIn}
+        panelCount={canvasType.panels}
+        gapInches={canvasType.gapInches || 2}
+        barDepth={canvasType.barDepth}
+        edgeTreatment={edgeTreatment || "image-wrap"}
+      />
+    ) : (
       <CanvasPreview
-        imageUrl={uploadedFile?.url || null}
+        imageUrl={imgUrl}
         widthIn={widthIn}
         heightIn={heightIn}
         barDepth={canvasType.barDepth}
@@ -283,7 +285,57 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
         frameColor={canvasType.frameOptions ? frameColor : null}
       />
     );
-  }, [canvasType, uploadedFile, widthIn, heightIn, edgeTreatment, frameColor]);
+
+    const roomView = (
+      <WallContextPreview
+        imageUrl={imgUrl}
+        widthIn={widthIn}
+        heightIn={heightIn}
+        barDepth={canvasType.barDepth}
+        edgeTreatment={edgeTreatment || (isSplit ? "image-wrap" : "mirror")}
+        frameColor={canvasType.frameOptions ? frameColor : null}
+        panelCount={canvasType.panels}
+        gapInches={canvasType.gapInches || 2}
+      />
+    );
+
+    return (
+      <div className="flex flex-col gap-3">
+        {/* View toggle */}
+        <div className="flex items-center justify-center gap-1 rounded-lg bg-gray-100 p-1">
+          <button
+            type="button"
+            onClick={() => setViewMode("closeup")}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+              viewMode === "closeup"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+            </svg>
+            {t("canvas.viewCloseup")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("room")}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+              viewMode === "room"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+            </svg>
+            {t("canvas.viewRoom")}
+          </button>
+        </div>
+        {viewMode === "closeup" ? closeupView : roomView}
+      </div>
+    );
+  }, [canvasType, uploadedFile, widthIn, heightIn, edgeTreatment, frameColor, viewMode, t]);
 
   let stepNum = 1;
 
@@ -297,7 +349,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
         ]}
         title={t(`canvas.type.${typeId}`)}
         subtitle={t("canvas.subtitle")}
-        badges={["Epson Pigment Ink", "Free Shipping $99+", "Digital Proof"]}
+        badges={[t("canvas.badgeInk"), t("canvas.badgeShipping"), t("canvas.badgeProof")]}
       />
       <ConfigProductGallery images={productImages} />
 
@@ -468,10 +520,6 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                 {canvasType.materials.map((mat) => {
                   const isActive = materialId === mat.id;
-                  const surcharge =
-                    mat.multiplier > 1
-                      ? `+${Math.round((mat.multiplier - 1) * 100)}%`
-                      : null;
                   return (
                     <button
                       key={mat.id}
@@ -503,11 +551,6 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
                       <span className="text-sm font-bold text-gray-800">{mat.label}</span>
                       {mat.desc && (
                         <span className="text-[11px] text-gray-500">{mat.desc}</span>
-                      )}
-                      {surcharge && (
-                        <span className="inline-flex w-fit rounded-xl bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                          {surcharge}
-                        </span>
                       )}
                     </button>
                   );
@@ -652,7 +695,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
                 <input
                   type="number"
                   min="1"
-                  max="999999"
+                  max="100"
                   value={customQty}
                   onChange={(e) => setCustomQty(e.target.value)}
                   placeholder="e.g. 15"
@@ -685,7 +728,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
             onBuyNow={handleBuyNow}
             buyNowLoading={buyNowLoading}
             extraRows={extraRows}
-            badges={["Epson Pigment Ink", "Free Shipping $99+"]}
+            badges={[t("canvas.badgeInk"), t("canvas.badgeShipping")]}
             t={t}
           />
         </div>

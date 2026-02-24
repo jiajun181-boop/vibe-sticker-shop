@@ -18,6 +18,7 @@ import {
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
+import VehiclePreview from "@/components/vehicle/VehiclePreview";
 
 const INCH_TO_CM = 2.54;
 
@@ -414,6 +415,13 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
           </div>
 
           <PricingSidebar
+            previewSlot={
+              <VehiclePreview
+                vehicleBody={vehicleBodyId || vehicleType.vehicleTypes[0] || "car"}
+                graphicType={typeId}
+                text={textInput}
+              />
+            }
             summaryLines={summaryLines}
             quoteLoading={quote.quoteLoading}
             quoteError={quote.quoteError}

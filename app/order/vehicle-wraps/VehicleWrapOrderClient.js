@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import VehiclePreview from "@/components/vehicle/VehiclePreview";
 
 const DEBOUNCE_MS = 300;
 
@@ -399,6 +400,11 @@ export default function VehicleWrapOrderClient() {
         <aside className="hidden lg:col-span-2 lg:block">
           <div className="sticky top-24 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-base font-bold text-gray-900">{t("vw.summary")}</h2>
+
+            <VehiclePreview
+              vehicleBody={{ sedan: "car", suv: "suv", truck: "pickup", van: "van" }[vehicleId] || "car"}
+              graphicType={typeId === "door-panels" ? "door-graphics" : typeId}
+            />
 
             <dl className="space-y-2 text-sm">
               <Row label={t("vw.type.label")} value={t(`vw.type.${typeId}`)} />

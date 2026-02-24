@@ -35,12 +35,13 @@ export default function WwfInlineConfigurator({ wwfProductId }) {
   const isWindowProduct = product.application === "window";
   const hasMultipleCutTypes = product.cutTypes.length > 1;
   const hasFinishings = product.finishings.length > 0;
+  const isCustomSizeOnly = product.customSizeOnly === true;
 
   // --- State ---
   const [materialId, setMaterialId] = useState(
     isMultiMaterial ? product.materials[0].id : product.fixedMaterial
   );
-  const [sizeIdx, setSizeIdx] = useState(0);
+  const [sizeIdx, setSizeIdx] = useState(isCustomSizeOnly ? -1 : 0);
   const [customW, setCustomW] = useState("");
   const [customH, setCustomH] = useState("");
   const [unit, setUnit] = useState("in");
@@ -177,38 +178,40 @@ export default function WwfInlineConfigurator({ wwfProductId }) {
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
           Size
         </h3>
-        <div className="flex flex-wrap gap-2">
-          {product.sizes.map((s, i) => {
-            const isActive = sizeIdx === i;
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => selectSize(i)}
-                className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                  isActive
-                    ? "border-gray-900 bg-gray-900 text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {s.label}
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => selectSize(-1)}
-            className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-              isCustomSize
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-dashed border-gray-300 text-gray-500 hover:border-gray-500"
-            }`}
-          >
-            Custom
-          </button>
-        </div>
-        {isCustomSize && (
-          <div className="mt-2">
+        {!isCustomSizeOnly && (
+          <div className="flex flex-wrap gap-2">
+            {product.sizes.map((s, i) => {
+              const isActive = sizeIdx === i;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => selectSize(i)}
+                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                    isActive
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => selectSize(-1)}
+              className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                isCustomSize
+                  ? "border-gray-900 bg-gray-900 text-white"
+                  : "border-dashed border-gray-300 text-gray-500 hover:border-gray-500"
+              }`}
+            >
+              Custom
+            </button>
+          </div>
+        )}
+        {(isCustomSize || isCustomSizeOnly) && (
+          <div className={isCustomSizeOnly ? "" : "mt-2"}>
             <CustomDimensions
               customW={customW}
               customH={customH}

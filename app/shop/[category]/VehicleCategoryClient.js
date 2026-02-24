@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { isSvgImage } from "@/lib/product-image";
 
 const BASE = "/shop/vehicle-graphics-fleet";
 
@@ -224,26 +226,45 @@ function Badge({ label, tone = "neutral" }) {
   );
 }
 
-function ProductCard({ item, price, premium = false, cta = "View" }) {
+function ProductCard({ item, price, premium = false, cta = "View", imageUrl }) {
+  const isSvg = imageUrl && isSvgImage(imageUrl);
   return (
     <Link
       href={item.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
     >
-      <div className={`relative bg-gradient-to-br ${item.gradient || "from-slate-400 to-slate-600"} ${premium ? "h-44" : "h-24"}`}>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_55%)]" />
-        <div className="relative flex h-full flex-col justify-between p-4 text-white">
-          <div className="flex flex-wrap gap-1.5">
-            {premium && <Badge label="Premium" tone="dark" />}
-            {item.badges?.map((b) => (
-              <Badge key={b} label={b} tone={b === "Same-Day" ? "success" : premium ? "dark" : "neutral"} />
-            ))}
-          </div>
-          <p className={`pr-2 font-semibold leading-tight text-white drop-shadow ${premium ? "text-base" : "text-sm"}`}>
-            {item.name}
-          </p>
-          {premium && item.note ? <p className="text-xs text-white/80">{item.note}</p> : <span />}
-        </div>
+      <div className={`relative ${premium ? "h-44" : "h-24"} ${imageUrl ? "bg-gray-50" : `bg-gradient-to-br ${item.gradient || "from-slate-400 to-slate-600"}`}`}>
+        {imageUrl ? (
+          <>
+            {isSvg ? (
+              <img src={imageUrl} alt={item.name} className="h-full w-full object-contain p-3" />
+            ) : (
+              <Image src={imageUrl} alt={item.name} fill className="object-contain p-3" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+            )}
+            <div className="absolute left-3 top-2 flex flex-wrap gap-1.5">
+              {premium && <Badge label="Premium" tone="neutral" />}
+              {item.badges?.map((b) => (
+                <Badge key={b} label={b} tone={b === "Same-Day" ? "success" : "neutral"} />
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_55%)]" />
+            <div className="relative flex h-full flex-col justify-between p-4 text-white">
+              <div className="flex flex-wrap gap-1.5">
+                {premium && <Badge label="Premium" tone="dark" />}
+                {item.badges?.map((b) => (
+                  <Badge key={b} label={b} tone={b === "Same-Day" ? "success" : premium ? "dark" : "neutral"} />
+                ))}
+              </div>
+              <p className={`pr-2 font-semibold leading-tight text-white drop-shadow ${premium ? "text-base" : "text-sm"}`}>
+                {item.name}
+              </p>
+              {premium && item.note ? <p className="text-xs text-white/80">{item.note}</p> : <span />}
+            </div>
+          </>
+        )}
       </div>
       <div className="flex flex-1 items-center justify-between gap-2 p-4">
         <PriceLabel price={price} />
@@ -289,7 +310,7 @@ function visibleSectionsForPrices(vehiclePrices) {
   );
 }
 
-function renderSectionBody(section, vehiclePrices) {
+function renderSectionBody(section, vehiclePrices, vehicleImages = {}) {
   const visibleItems = section.items
     .map((item) => ({
       ...item,
@@ -303,7 +324,7 @@ function renderSectionBody(section, vehiclePrices) {
     return (
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         {visibleItems.map((item) => (
-          <ProductCard key={item.key} item={item} price={item.price} premium cta="Quote / View" />
+          <ProductCard key={item.key} item={item} price={item.price} premium cta="Quote / View" imageUrl={vehicleImages[item.key]} />
         ))}
       </div>
     );
@@ -322,13 +343,13 @@ function renderSectionBody(section, vehiclePrices) {
   return (
     <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {visibleItems.map((item) => (
-        <ProductCard key={item.key} item={item} price={item.price} cta="View" />
+        <ProductCard key={item.key} item={item} price={item.price} cta="View" imageUrl={vehicleImages[item.key]} />
       ))}
     </div>
   );
 }
 
-export default function VehicleCategoryClient({ vehiclePrices = {} }) {
+export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImages = {} }) {
   const { t } = useTranslation();
   const visibleSections = visibleSectionsForPrices(vehiclePrices);
 
@@ -404,7 +425,7 @@ export default function VehicleCategoryClient({ vehiclePrices = {} }) {
                 </Link>
               )}
             </div>
-            {renderSectionBody(section, vehiclePrices)}
+            {renderSectionBody(section, vehiclePrices, vehicleImages)}
           </section>
         ))}
 

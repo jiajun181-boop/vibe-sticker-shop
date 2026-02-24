@@ -37,6 +37,7 @@ export default function Navbar({ catalogConfig }) {
   const shopOpenTimerRef = useRef(null);
   const shopCloseTimerRef = useRef(null);
   const [shopMenuOpen, setShopMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const safeDepartments = useMemo(() => departments || [], [departments]);
   const [activeShopDept, setActiveShopDept] = useState(safeDepartments[0]?.key || "");
 
@@ -243,8 +244,20 @@ export default function Navbar({ catalogConfig }) {
       ref={navRef}
       className="sticky top-[var(--promo-offset,0px)] z-[50] w-full border-b border-[var(--color-gray-200)] bg-white"
     >
-      <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2.5">
+      <div className="relative mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        {/* Mobile hamburger */}
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(true)}
+          className="md:hidden p-1.5 -ml-1.5 text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)] transition-colors"
+          aria-label="Menu"
+        >
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+
+        <Link href="/" className="flex items-center gap-2.5 md:flex-none absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
           <Image src="/logo-lunarprint.png" alt="La Lunar Printing" width={32} height={32} className="h-8 w-8" priority />
           <div className="hidden sm:block">
             <span className="block text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gray-800)] leading-tight">La Lunar</span>
@@ -343,12 +356,6 @@ export default function Navbar({ catalogConfig }) {
                           {t("nav.shopAll")}
                         </Link>
                       </div>
-                      <Link
-                        href="/shop"
-                        className="inline-flex items-center gap-1 rounded-sm border border-[var(--color-gray-300)] px-3 py-1 label-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-800)] hover:text-[var(--color-gray-800)]"
-                      >
-                        {t("nav.exploreAll")}
-                      </Link>
                     </div>
 
                     <div className="space-y-3">
@@ -496,6 +503,15 @@ export default function Navbar({ catalogConfig }) {
             )
           )}
 
+          {/* Mobile language toggle */}
+          <button
+            type="button"
+            onClick={() => setLocale(locale === "zh" ? "en" : "zh")}
+            className="md:hidden px-2 py-1 text-[10px] font-bold text-[var(--color-gray-500)] hover:text-[var(--color-gray-800)] transition-colors"
+          >
+            {locale === "zh" ? "EN" : "中"}
+          </button>
+
           {/* Mobile account icon */}
           {!authLoading && (
             <Link
@@ -508,6 +524,16 @@ export default function Navbar({ catalogConfig }) {
               </svg>
             </Link>
           )}
+
+          {/* Language toggle */}
+          <button
+            type="button"
+            onClick={() => setLocale(locale === "zh" ? "en" : "zh")}
+            className="hidden md:inline-flex items-center gap-1 rounded-xl border border-[var(--color-gray-300)] px-2.5 py-1.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-moon-blue)] hover:text-[var(--color-moon-blue)]"
+            title={locale === "zh" ? "Switch to English" : "切换中文"}
+          >
+            {locale === "zh" ? "EN" : "中文"}
+          </button>
 
           <button
             type="button"
@@ -543,6 +569,76 @@ export default function Navbar({ catalogConfig }) {
           {renderSearchDropdown(mobileDropdownRef)}
         </div>
       </div>
+
+      {/* Mobile slide-out menu */}
+      {mobileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[60] bg-black/40 md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 z-[61] w-80 border-r border-[var(--color-gray-200)] bg-white shadow-lg md:hidden overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[var(--color-gray-100)] px-5 py-4">
+              <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--color-gray-800)]">
+                {t("nav.categories")}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-sm p-1.5 text-[var(--color-gray-400)] transition-colors hover:bg-[var(--color-gray-100)] hover:text-[var(--color-gray-700)]"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav className="px-4 pb-28">
+              {safeDepartments.map((dept) => {
+                const deptM = departmentMeta?.[dept.key];
+                const cats = dept.categories || [];
+                return (
+                  <div key={dept.key} className="border-b border-[var(--color-gray-100)]">
+                    <p className="py-3 text-sm font-bold text-[var(--color-gray-800)]">
+                      {deptM?.title || dept.key}
+                    </p>
+                    <div className="pb-2 space-y-0.5">
+                      {cats.map((catSlug) => {
+                        const cMeta = categoryMeta?.[catSlug];
+                        return (
+                          <Link
+                            key={catSlug}
+                            href={`/shop/${catSlug}`}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="block pl-4 py-2 text-sm text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)] rounded-sm transition-colors"
+                          >
+                            {cMeta?.title || catSlug}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="mt-4 space-y-2">
+                <Link
+                  href="/quote"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full rounded-full bg-[var(--color-brand)] px-4 py-2.5 text-center text-sm font-semibold text-white"
+                >
+                  {t("nav.getQuote")}
+                </Link>
+                <Link
+                  href="/shop"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full rounded-full border border-[var(--color-gray-300)] px-4 py-2.5 text-center text-sm font-semibold text-[var(--color-gray-700)]"
+                >
+                  {t("nav.shopAll")}
+                </Link>
+              </div>
+            </nav>
+          </div>
+        </>
+      )}
     </header>
   );
 }

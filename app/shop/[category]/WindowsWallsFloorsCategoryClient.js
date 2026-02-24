@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { isSvgImage } from "@/lib/product-image";
 
 const BASE = "/shop/windows-walls-floors";
 
@@ -44,19 +46,41 @@ const SECTIONS = [
       { key: "floor-graphics", name: "Floor Graphics", href: `${BASE}/floor-graphics`, gradient: "from-orange-400 to-red-400" },
     ],
   },
+  {
+    key: "decals-banners",
+    title: "Decals, Banners & Backdrops",
+    subtitle: "Vinyl decals, banners, and display backdrops for walls and events.",
+    size: "large",
+    items: [
+      { key: "decals", name: "Custom Decals", href: `${BASE}/decals`, gradient: "from-rose-400 to-pink-400" },
+      { key: "vinyl-banners", name: "Vinyl Banners", href: "/shop/banners-displays/vinyl-banners", gradient: "from-sky-400 to-blue-400" },
+      { key: "telescopic-backdrop", name: "Display Backdrop", href: "/shop/banners-displays/telescopic-backdrop", gradient: "from-violet-400 to-purple-400" },
+    ],
+  },
 ];
 
-function ProductCard({ item, price, size }) {
+function ProductCard({ item, price, size, imageUrl }) {
   const isLarge = size === "large";
+  const isSvg = imageUrl && isSvgImage(imageUrl);
   return (
     <Link
       href={item.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
     >
-      <div className={`flex items-center justify-center bg-gradient-to-br ${item.gradient} ${isLarge ? "h-[200px]" : "h-[140px]"}`}>
-        <p className="px-6 text-center text-lg font-bold text-white drop-shadow-md">
-          {item.name}
-        </p>
+      <div className={`relative flex items-center justify-center bg-gray-50 ${isLarge ? "h-[200px]" : "h-[140px]"}`}>
+        {imageUrl ? (
+          isSvg ? (
+            <img src={imageUrl} alt={item.name} className="h-full w-full object-contain p-4" />
+          ) : (
+            <Image src={imageUrl} alt={item.name} fill className="object-contain p-4" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+          )
+        ) : (
+          <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
+            <p className="px-6 text-center text-lg font-bold text-white drop-shadow-md">
+              {item.name}
+            </p>
+          </div>
+        )}
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-base" : "text-sm"}`}>
@@ -82,7 +106,7 @@ function ProductCard({ item, price, size }) {
   );
 }
 
-export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {} }) {
+export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfImages = {} }) {
   const { t } = useTranslation();
 
   return (
@@ -125,6 +149,7 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {} }) {
                     item={item}
                     price={wwfPrices[item.key] || 0}
                     size={section.size}
+                    imageUrl={wwfImages[item.key]}
                   />
                 ))}
               </div>

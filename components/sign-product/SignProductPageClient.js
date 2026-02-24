@@ -38,10 +38,10 @@ export default function SignProductPageClient({
   const SIGN_TYPE_MAP = {
     "real-estate-signs": "real-estate",
     "yard-sign": "yard-sign",
-    "election-signs": "election-signs",
-    "open-house-signs": "open-house-signs",
-    "directional-signs": "directional-signs",
-    "pvc-board-signs": "pvc-board-signs",
+    "election-signs": "yard-sign",
+    "open-house-signs": "real-estate",
+    "directional-signs": "aluminum-sign",
+    "pvc-board-signs": "pvc-sign",
   };
   const configuratorTypeId = SIGN_TYPE_MAP[signTypeId] || signTypeId;
 

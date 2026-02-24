@@ -107,14 +107,6 @@ export default async function HomePage() {
                   href={cat.href}
                   className={`group relative flex flex-col justify-end overflow-hidden rounded-2xl p-6 h-[160px] bg-gradient-to-br ${cat.gradient} shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md`}
                 >
-                  <Image
-                    src={cat.icon}
-                    alt=""
-                    width={120}
-                    height={120}
-                    className="pointer-events-none absolute -right-2 -top-2 opacity-20 group-hover:opacity-30 transition-opacity"
-                    unoptimized
-                  />
                   <h3 className="relative text-xl font-bold text-white leading-tight">
                     {cat.title}
                   </h3>
@@ -135,9 +127,9 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* 3. Popular Products — max 8 */}
+        {/* 3. Popular Products — auto-scrolling marquee */}
         {featured.length > 0 && (
-          <section className="py-16 md:py-20 bg-[var(--color-gray-50)] animate-on-scroll">
+          <section className="py-16 md:py-20 bg-[var(--color-gray-50)] animate-on-scroll overflow-hidden">
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
               <h2 className="heading-2 text-center mb-3">
                 Popular Products
@@ -145,21 +137,23 @@ export default async function HomePage() {
               <p className="text-center text-sm text-[var(--color-gray-500)] mb-10">
                 Our best sellers across all categories
               </p>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {featured.slice(0, 8).map((p) => (
+            </div>
+            <div className="relative">
+              <div className="flex gap-4 animate-marquee hover:[animation-play-state:paused]">
+                {[...featured.slice(0, 8), ...featured.slice(0, 8)].map((p, i) => (
                   <Link
-                    key={p.slug}
+                    key={`${p.slug}-${i}`}
                     href={p.href}
-                    className="group overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                    className="group w-[260px] shrink-0 overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    <div className="relative h-[160px] bg-gradient-to-br from-gray-50 to-gray-100">
+                    <div className="relative h-[180px] bg-white">
                       <Image
                         src={p.image}
                         alt={p.images?.[0]?.alt || p.name}
                         fill
-                        className="object-contain p-3"
+                        className="object-contain p-4"
                         unoptimized={isSvgImage(p.image)}
-                        sizes="(max-width: 768px) 50vw, 25vw"
+                        sizes="260px"
                       />
                     </div>
                     <div className="p-4">

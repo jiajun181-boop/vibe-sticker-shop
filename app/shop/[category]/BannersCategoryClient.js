@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { isSvgImage } from "@/lib/product-image";
 
 const BASE = "/shop/banners-displays";
 
@@ -59,17 +61,28 @@ const SECTIONS = [
   },
 ];
 
-function ProductCard({ item, price, size }) {
+function ProductCard({ item, price, size, imageUrl }) {
   const isLarge = size === "large";
+  const isSvg = imageUrl && isSvgImage(imageUrl);
   return (
     <Link
       href={item.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
     >
-      <div className={`flex items-center justify-center bg-gradient-to-br ${item.gradient} ${isLarge ? "h-[200px]" : "h-[140px]"}`}>
-        <p className="px-6 text-center text-lg font-bold text-white drop-shadow-md">
-          {item.name}
-        </p>
+      <div className={`relative flex items-center justify-center bg-gray-50 ${isLarge ? "h-[200px]" : "h-[140px]"}`}>
+        {imageUrl ? (
+          isSvg ? (
+            <img src={imageUrl} alt={item.name} className="h-full w-full object-contain p-4" />
+          ) : (
+            <Image src={imageUrl} alt={item.name} fill className="object-contain p-4" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+          )
+        ) : (
+          <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
+            <p className="px-6 text-center text-lg font-bold text-white drop-shadow-md">
+              {item.name}
+            </p>
+          </div>
+        )}
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-base" : "text-sm"}`}>
@@ -95,7 +108,7 @@ function ProductCard({ item, price, size }) {
   );
 }
 
-export default function BannersCategoryClient({ bannerPrices = {} }) {
+export default function BannersCategoryClient({ bannerPrices = {}, bannerImages = {} }) {
   const { t } = useTranslation();
 
   return (
@@ -138,6 +151,7 @@ export default function BannersCategoryClient({ bannerPrices = {} }) {
                     item={item}
                     price={bannerPrices[item.key] || 0}
                     size={section.size}
+                    imageUrl={bannerImages[item.key]}
                   />
                 ))}
               </div>

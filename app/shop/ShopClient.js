@@ -105,9 +105,16 @@ function SmallCard({ catSlug, meta, count, previews, t }) {
 
 /* ── Wide parent card with sub-group pills ────────────────────── */
 function ParentCard({ catSlug, meta, count, t }) {
+  const router = useRouter();
   const subGroups = meta?.subGroups || [];
   return (
-    <div className="col-span-2 md:col-span-3 lg:col-span-4 rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 transition-all duration-200 hover:shadow-lg hover:border-[var(--color-gray-300)]">
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={() => router.push(`/shop/${catSlug}`)}
+      onKeyDown={(e) => { if (e.key === "Enter") router.push(`/shop/${catSlug}`); }}
+      className="col-span-2 md:col-span-3 lg:col-span-4 cursor-pointer rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 transition-all duration-200 hover:shadow-lg hover:border-[var(--color-gray-300)]"
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <span className="text-2xl">{meta?.icon || ""}</span>
@@ -118,12 +125,11 @@ function ParentCard({ catSlug, meta, count, t }) {
             )}
           </div>
         </div>
-        <Link
-          href={`/shop/${catSlug}`}
-          className="flex-none rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)] transition-colors"
+        <span
+          className="flex-none rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors"
         >
           {safeText(t("mp.landing.browse"), "Browse")}
-        </Link>
+        </span>
       </div>
       {subGroups.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -131,6 +137,7 @@ function ParentCard({ catSlug, meta, count, t }) {
             <Link
               key={sg.slug}
               href={sg.href}
+              onClick={(e) => e.stopPropagation()}
               className="rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-1.5 text-xs font-medium text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-white hover:text-[var(--color-gray-900)]"
             >
               {t(`catalog.sub.${sg.slug}`) !== `catalog.sub.${sg.slug}` ? t(`catalog.sub.${sg.slug}`) : sg.title}
@@ -590,7 +597,7 @@ export default function ShopClient({
                   }}
                   className="rounded-xl bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)]"
                 >
-                  打印物料
+                  {t("shop.byMaterial")}
                 </button>
                 <Link
                   href="/quote"
@@ -673,14 +680,14 @@ export default function ShopClient({
               }}
               className={`rounded-full px-4 py-2 transition-colors ${catalogTab === "material" ? "bg-[var(--color-ink-black)] text-white" : "text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)]"}`}
             >
-              打印物料
+              {t("shop.byMaterial")}
             </button>
           </div>
         </div>
 
         {isMaterialCatalog && (
           <div id="material-filter" className="mb-5 flex flex-wrap items-center gap-2 sm:mb-6">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-gray-500)]">打印物料</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-gray-500)]">{t("shop.byMaterial")}</span>
             <button
               type="button"
               onClick={() => {

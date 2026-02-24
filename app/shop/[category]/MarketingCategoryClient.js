@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -69,17 +70,29 @@ const SECTIONS = [
   },
 ];
 
-function ProductCard({ item, price, size }) {
+function ProductCard({ item, price, size, imageUrl }) {
   const isLarge = size === "large";
   return (
     <Link
       href={item.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
     >
-      <div className={`flex items-center justify-center bg-gradient-to-br ${item.gradient} ${isLarge ? "h-[200px]" : "h-[140px]"}`}>
-        <p className="px-6 text-center text-lg font-bold text-white drop-shadow-md">
-          {item.name}
-        </p>
+      <div className={`relative overflow-hidden ${isLarge ? "h-[200px]" : "h-[140px]"}`}>
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={item.name}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
+          />
+        ) : (
+          <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
+            <p className="px-6 text-center text-lg font-bold text-white drop-shadow-md">
+              {item.name}
+            </p>
+          </div>
+        )}
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-base" : "text-sm"}`}>
@@ -105,7 +118,7 @@ function ProductCard({ item, price, size }) {
   );
 }
 
-export default function MarketingCategoryClient({ marketingPrices = {} }) {
+export default function MarketingCategoryClient({ marketingPrices = {}, marketingImages = {} }) {
   const { t } = useTranslation();
 
   return (
@@ -148,6 +161,7 @@ export default function MarketingCategoryClient({ marketingPrices = {} }) {
                     item={item}
                     price={marketingPrices[item.key] || 0}
                     size={section.size}
+                    imageUrl={marketingImages[item.key]}
                   />
                 ))}
               </div>

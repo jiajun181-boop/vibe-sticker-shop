@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PromoBar from "@/components/home/PromoBar";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import FloatingContactButton from "@/components/FloatingContactButton";
 
 export default function AppChrome({ children, catalogConfig, locale }) {
   const pathname = usePathname() || "";
@@ -36,6 +37,7 @@ export default function AppChrome({ children, catalogConfig, locale }) {
           Online Quote
         </Link>
       )}
+      <FloatingContactButton />
       <MobileBottomNav catalogConfig={catalogConfig} />
       <Footer locale={locale} />
     </>

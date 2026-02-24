@@ -12,6 +12,7 @@ import {
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
+import BookletPreview from "@/components/booklet/BookletPreview";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -481,6 +482,13 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
 
           {/* RIGHT: Summary */}
           <PricingSidebar
+            previewSlot={
+              <BookletPreview
+                binding={bindingId}
+                pageCount={pageCount}
+                coverPaper={coverPaper}
+              />
+            }
             summaryLines={summaryLines}
             quoteLoading={quote.quoteLoading}
             quoteError={quote.quoteError}
