@@ -140,14 +140,17 @@ function MobileBottomBarBridge() {
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-gray-900">{t("productPage.readyToOrder")}</p>
-            <p className="text-[11px] text-gray-500">{t("productPage.configureAbove")}</p>
+            <p className="text-[11px] text-gray-500">{t("productPage.chooseOptionsAbove")}</p>
           </div>
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="shrink-0 rounded-lg bg-gray-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#fff] shadow-lg hover:bg-gray-800"
+            className="shrink-0 flex items-center gap-1.5 rounded-lg bg-gray-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#fff] shadow-lg hover:bg-gray-800"
           >
-            {t("productPage.configure")}
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+            </svg>
+            {t("productPage.configureAndPrice")}
           </button>
         </div>
       </div>

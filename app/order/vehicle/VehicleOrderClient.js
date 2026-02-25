@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   VEHICLE_TYPES,
@@ -24,6 +25,7 @@ const INCH_TO_CM = 2.54;
 
 export default function VehicleOrderClient({ defaultType, productImages }) {
   const { t } = useTranslation();
+  const router = useRouter();
 
   // --- State ---
   const [typeId, setTypeId] = useState(defaultType || "door-graphics");
@@ -149,16 +151,22 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
     successMessage: t("vehicle.addedToCart"),
   });
 
-  // Request quote handler for wrap/fleet types
+  // Request quote handler for wrap/fleet types — redirects to /quote with prefill
   function handleRequestQuote() {
-    const subject = `Quote: ${t(`vehicle.type.${typeId}`)}`;
-    const body = [
-      `Type: ${t(`vehicle.type.${typeId}`)}`,
+    const typeName = t(`vehicle.type.${typeId}`);
+    const descParts = [
+      `Inquiry for ${typeName}`,
       vehicleBodyId ? `Vehicle: ${VEHICLE_TYPE_OPTIONS.find((v) => v.id === vehicleBodyId)?.label || vehicleBodyId}` : null,
       `Quantity: ${activeQty}`,
       textInput.trim() ? `Text: ${textInput.trim()}` : null,
     ].filter(Boolean).join("\n");
-    window.location.href = `mailto:info@lunarprint.ca?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    const params = new URLSearchParams({
+      sku: "vehicle-graphics-fleet",
+      name: typeName,
+      context: descParts,
+    });
+    router.push(`/quote?${params.toString()}`);
   }
 
   const summaryLines = [

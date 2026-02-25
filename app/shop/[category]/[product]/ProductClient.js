@@ -8,7 +8,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { validateDimensions } from "@/lib/materialLimits";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { PaymentBadges } from "@/components/TrustBadges";
-import { MobileBottomBar, ArtworkUpload } from "@/components/configurator";
+import { MobileBottomBar, ArtworkUpload, MaterialSwatchGrid } from "@/components/configurator";
 import ImageGallery from "@/components/product/ImageGallery";
 import { trackAddToCart, trackOptionChange, trackQuoteLoaded, trackBuyNow, trackUploadStarted, trackViewItem } from "@/lib/analytics";
 import RecentlyViewed from "@/components/RecentlyViewed";
@@ -24,6 +24,7 @@ import RelatedLinks from "@/components/product/RelatedLinks";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import ProductSpecsSection from "@/components/product/ProductSpecsSection";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
+import { isOversizedProduct } from "@/lib/pickup-hints";
 import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import {
   HST_RATE, PRESET_QUANTITIES, INCH_TO_CM,
@@ -2270,32 +2271,16 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
               {!hideMaterials && materials.length > 0 && (
                 <div className="mt-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.material")}</p>
-                  <div className="mt-2 space-y-1.5">
-                    {materials.map((m) => {
-                      const selected = material === m.id;
-                      const isPopular = m.multiplier === 1.0;
-                      return (
-                        <button
-                          key={m.id}
-                          onClick={() => setMaterial(m.id)}
-                          className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors text-left ${
-                            selected
-                              ? "border-[var(--color-ink-black)] bg-[var(--color-gray-50)] font-semibold"
-                              : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
-                          }`}
-                        >
-                          <span className={`h-3.5 w-3.5 shrink-0 rounded-full border-2 ${selected ? "border-[var(--color-ink-black)] bg-[var(--color-ink-black)]" : "border-[var(--color-gray-300)]"}`} />
-                          <span className="flex-1">
-                            {m.name}
-                          </span>
-                          {isPopular && (
-                            <span className="inline-block rounded-xl bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
-                              {t("product.popular")}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
+                  <div className="mt-2">
+                    <MaterialSwatchGrid
+                      materials={materials.map((m) => ({
+                        id: m.id,
+                        label: m.name,
+                      }))}
+                      selectedId={material}
+                      onSelect={setMaterial}
+                      columns={materials.length <= 3 ? 3 : 4}
+                    />
                   </div>
                 </div>
               )}
@@ -2445,6 +2430,15 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     >
                       {buyNowLoading ? "Processing..." : "Buy Now"}
                     </button>
+                    {isOversizedProduct(product.slug, product.category) && (
+                      <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                        <svg className="h-4 w-4 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                        </svg>
+                        <span className="text-xs text-amber-800">{t("pickup.recommendedOversized")}</span>
+                      </div>
+                    )}
                     <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
                       <button
                         type="button"

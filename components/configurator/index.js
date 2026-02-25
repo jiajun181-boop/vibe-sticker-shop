@@ -11,3 +11,4 @@ export { default as ConfigProductGallery } from "./ConfigProductGallery";
 export { default as ProofPreview } from "./ProofPreview";
 export { default as LetterheadTemplateBuilder } from "./LetterheadTemplateBuilder";
 export { default as VolumePricingMatrix } from "./VolumePricingMatrix";
+export { default as MaterialSwatchGrid, MaterialSwatch, MATERIAL_META } from "./MaterialSwatchGrid";

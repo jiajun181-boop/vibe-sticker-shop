@@ -10,6 +10,7 @@ import { trackBeginCheckout } from "@/lib/analytics";
 import useFocusTrap from "@/lib/useFocusTrap";
 import CartUpsell from "@/components/cart/CartUpsell";
 import { getProductImage } from "@/lib/product-image";
+import { isOversizedProduct } from "@/lib/pickup-hints";
 
 const FREE_SHIPPING_THRESHOLD = 9900;
 const SHIPPING_COST = 1500;
@@ -500,9 +501,20 @@ export default function CartDrawer() {
                   <p className="mt-1">{t("cart.pickupNote")}</p>
                 </div>
               ) : (
-                <div className="rounded-sm border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3 text-xs text-[var(--color-gray-600)]">
-                  {t("cart.estimatedDelivery")} <span className="font-semibold text-[var(--color-gray-900)]">{getDeliveryWindow()}</span>
-                </div>
+                <>
+                  <div className="rounded-sm border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3 text-xs text-[var(--color-gray-600)]">
+                    {t("cart.estimatedDelivery")} <span className="font-semibold text-[var(--color-gray-900)]">{getDeliveryWindow()}</span>
+                  </div>
+                  {cart.some((item) => isOversizedProduct(item.slug, item.category)) && (
+                    <div className="flex items-center gap-2 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      <svg className="h-4 w-4 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                      </svg>
+                      {t("cart.pickupRecommended")}
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Collapsible promo code */}

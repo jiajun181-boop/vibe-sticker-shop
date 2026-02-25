@@ -17,6 +17,7 @@ import {
   CustomDimensions,
   useConfiguratorPrice,
   useConfiguratorCart,
+  MaterialSwatchGrid,
 } from "@/components/configurator";
 
 const INCH_TO_CM = 2.54;
@@ -231,36 +232,16 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
           Material
         </h3>
-        <div className="grid grid-cols-2 gap-2">
-          {cutting.materials.map((mat) => {
-            const isActive = materialId === mat.id;
-            void mat.multiplier; // multiplier used in pricing only
-            return (
-              <button
-                key={mat.id}
-                type="button"
-                onClick={() => selectMaterial(mat.id)}
-                className={`relative flex flex-col gap-0.5 rounded-lg border-2 p-2.5 text-left transition-all ${
-                  isActive
-                    ? "border-gray-900 bg-gray-50 shadow-sm"
-                    : "border-gray-200 bg-white hover:border-gray-400"
-                }`}
-              >
-                {isActive && (
-                  <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-gray-900">
-                    <svg className="h-2.5 w-2.5 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                  </span>
-                )}
-                <span className="text-xs font-bold text-gray-800">
-                  {t(`stickerOrder.mat.${mat.id}`)}
-                </span>
-                <span className="text-[10px] text-gray-400">
-                  {MATERIAL_HINTS[mat.id] || ""}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <MaterialSwatchGrid
+          materials={cutting.materials.map((mat) => ({
+            id: mat.id,
+            label: t(`stickerOrder.mat.${mat.id}`),
+            subtitle: MATERIAL_HINTS[mat.id] || undefined,
+          }))}
+          selectedId={materialId}
+          onSelect={selectMaterial}
+          columns={cutting.materials.length <= 3 ? 3 : 4}
+        />
       </div>
 
       {/* Size */}
@@ -422,6 +403,15 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               <span className="text-sm font-black text-gray-900">Total</span>
               <span className="text-xl font-black text-gray-900">{formatCad(quote.totalCents)}</span>
             </div>
+            {(() => {
+              const hints = [];
+              if (materialId !== cutting.materials[0].id) hints.push(t("configurator.priceIncludesMaterial"));
+              if (laminationId !== "none") hints.push(t("configurator.priceIncludesFinishing"));
+              if (hints.length === 0 && activeQty > 0) return null;
+              return hints.length > 0 ? (
+                <p className="mt-1 text-xs text-gray-400">{hints.join(". ")}.</p>
+              ) : null;
+            })()}
           </div>
         ) : (
           <p className="text-center text-xs text-gray-400">Select options for pricing</p>

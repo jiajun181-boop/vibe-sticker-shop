@@ -14,7 +14,10 @@ export async function generateMetadata() {
 
 export default async function QuotePage({ searchParams }) {
   const [t, config] = await Promise.all([getServerT(), getCatalogConfig()]);
-  const sku = (await searchParams)?.sku || "";
+  const sp = await searchParams;
+  const sku = sp?.sku || "";
+  const prefillName = sp?.name || "";
+  const prefillContext = sp?.context || "";
 
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)] px-4 py-14 sm:px-6">
@@ -27,7 +30,12 @@ export default async function QuotePage({ searchParams }) {
           <p className="mt-3 text-sm text-[var(--color-gray-500)]">{t("quote.pageSubtitle")}</p>
         </header>
 
-        <QuoteFormClient preselectedProduct={sku} categoryMeta={config.categoryMeta} />
+        <QuoteFormClient
+          preselectedProduct={sku}
+          categoryMeta={config.categoryMeta}
+          prefillName={prefillName}
+          prefillContext={prefillContext}
+        />
       </div>
     </main>
   );

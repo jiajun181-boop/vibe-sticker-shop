@@ -8,7 +8,7 @@ const STEPS = 4;
 
 const QUANTITY_PRESETS = [50, 100, 250, 500, 1000];
 
-export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} }) {
+export default function QuoteFormClient({ preselectedProduct, categoryMeta = {}, prefillName = "", prefillContext = "" }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -17,7 +17,7 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
 
   const [form, setForm] = useState({
     productType: preselectedProduct || "",
-    description: "",
+    description: prefillContext || "",
     width: "",
     height: "",
     quantity: "",
@@ -119,7 +119,7 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
 
       <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 sm:p-8">
         {/* Step 1: Product selection */}
-        {step === 1 && <Step1 form={form} update={update} t={t} categoryMeta={categoryMeta} />}
+        {step === 1 && <Step1 form={form} update={update} t={t} categoryMeta={categoryMeta} prefilled={!!prefillContext} />}
 
         {/* Step 2: Specifications */}
         {step === 2 && <Step2 form={form} update={update} t={t} />}
@@ -170,12 +170,18 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {} 
 }
 
 /* ── Step 1: What do you need? ── */
-function Step1({ form, update, t, categoryMeta }) {
+function Step1({ form, update, t, categoryMeta, prefilled }) {
   const categories = Object.entries(categoryMeta);
   return (
     <div>
       <h2 className="text-xl font-bold text-[var(--color-gray-900)]">{t("quote.step1.title")}</h2>
       <p className="mt-1 text-sm text-[var(--color-gray-500)]">{t("quote.step1.subtitle")}</p>
+
+      {prefilled && (
+        <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs text-blue-700">
+          {t("quote.prefillNote")}
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {categories.map(([slug, meta]) => (
