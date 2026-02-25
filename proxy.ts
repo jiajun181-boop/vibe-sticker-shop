@@ -38,6 +38,13 @@ function detectLocale(request: NextRequest): string {
 
 const PUBLIC_ADMIN_API_ROUTES = ["/api/admin/login", "/api/admin/setup"];
 
+function setSecurityHeaders(response: NextResponse) {
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+}
+
 export default async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
@@ -62,6 +69,7 @@ export default async function proxy(request: NextRequest) {
     });
     // Chinese pages are not indexed — noindex header for SEO
     response.headers.set("X-Robots-Tag", "noindex, follow");
+    setSecurityHeaders(response);
     return response;
   }
 
@@ -98,6 +106,7 @@ export default async function proxy(request: NextRequest) {
     }
   }
 
+  setSecurityHeaders(response);
   return response;
 }
 
