@@ -7,7 +7,7 @@ const DEFAULTS = {
   "store.email": "",
   "store.phone": "",
   "store.address": "",
-  "shipping.freeThreshold": 15000,
+  "shipping.freeThreshold": 9900,
   "shipping.localRate": 1500,
   "shipping.nationwideRate": 2000,
   "tax.hstRate": 13,

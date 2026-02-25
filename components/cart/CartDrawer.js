@@ -11,7 +11,7 @@ import useFocusTrap from "@/lib/useFocusTrap";
 import CartUpsell from "@/components/cart/CartUpsell";
 import { getProductImage } from "@/lib/product-image";
 
-const FREE_SHIPPING_THRESHOLD = 15000;
+const FREE_SHIPPING_THRESHOLD = 9900;
 const SHIPPING_COST = 1500;
 const HST_RATE = 0.13;
 const CHECKOUT_COOLDOWN_MS = 8000;

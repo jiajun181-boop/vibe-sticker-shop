@@ -399,7 +399,7 @@ export async function POST(req: Request) {
     const discountAmount = couponDiscount + partnerDiscount;
     const afterDiscount = Math.max(0, subtotal - discountAmount);
 
-    const FREE_SHIPPING_THRESHOLD = 15000;
+    const FREE_SHIPPING_THRESHOLD = 9900;
     const isFreeShipping = isPickup || afterDiscount >= FREE_SHIPPING_THRESHOLD;
     const shippingCost = isFreeShipping ? 0 : 1500;
 
