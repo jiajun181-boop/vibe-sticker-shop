@@ -32,8 +32,8 @@ export default async function ArtworkGuidelinesPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-[var(--color-gray-100)] bg-[var(--color-gray-50)] p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-gray-400)] mb-2">File Formats</p>
-              <p className="text-sm text-[var(--color-gray-700)] font-medium">PDF, AI, PSD, JPG, PNG, TIF</p>
-              <p className="text-xs text-[var(--color-gray-500)] mt-1">AI/PSD recommended (CS6 or earlier)</p>
+              <p className="text-sm text-[var(--color-gray-700)] font-medium">PDF, AI, EPS, PSD, JPG, PNG, TIF</p>
+              <p className="text-xs text-[var(--color-gray-500)] mt-1">AI/EPS/PSD recommended (CS6 or earlier)</p>
             </div>
             <div className="rounded-2xl border border-[var(--color-gray-100)] bg-[var(--color-gray-50)] p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-gray-400)] mb-2">Resolution</p>
@@ -131,7 +131,7 @@ export default async function ArtworkGuidelinesPage() {
           <h2 className="text-xl font-semibold tracking-tight mb-4">Template Downloads</h2>
           <p className="text-sm text-[var(--color-gray-600)] leading-relaxed">
             Templates for popular products are coming soon. In the meantime, contact us at{" "}
-            <a href="mailto:artwork@lunarprint.ca" className="font-medium text-[var(--color-gray-900)] underline underline-offset-2 hover:text-[var(--color-gray-700)]">artwork@lunarprint.ca</a>{" "}
+            <a href="mailto:info@lunarprint.ca" className="font-medium text-[var(--color-gray-900)] underline underline-offset-2 hover:text-[var(--color-gray-700)]">info@lunarprint.ca</a>{" "}
             and we&apos;ll send you a custom template for your order.
           </p>
         </section>
@@ -156,14 +156,14 @@ export default async function ArtworkGuidelinesPage() {
           <h2 className="text-2xl font-semibold">Need help with your files?</h2>
           <p className="mt-3 text-sm text-[var(--color-gray-300)]">
             Not sure if your artwork is print-ready? Send it to{" "}
-            <a href="mailto:artwork@lunarprint.ca" className="font-medium underline hover:text-[#fff]">artwork@lunarprint.ca</a>{" "}
+            <a href="mailto:info@lunarprint.ca" className="font-medium underline hover:text-[#fff]">info@lunarprint.ca</a>{" "}
             and our preflight team will check it for free. You can also call us at{" "}
             <a href="tel:+16478869288" className="font-medium underline hover:text-[#fff]">647-886-9288</a>.
             We offer professional <Link href="/design-services" className="underline hover:text-[#fff]">design services</Link> starting at $50.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <a
-              href="mailto:artwork@lunarprint.ca"
+              href="mailto:info@lunarprint.ca"
               className="inline-block rounded-xl bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
             >
               Email Artwork
@@ -188,8 +188,8 @@ export default async function ArtworkGuidelinesPage() {
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-[var(--color-gray-100)] bg-[var(--color-gray-50)] p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-gray-400)] mb-2">文件格式</p>
-              <p className="text-sm text-[var(--color-gray-700)] font-medium">PDF, AI, PSD, JPG, PNG, TIF</p>
-              <p className="text-xs text-[var(--color-gray-500)] mt-1">推荐使用 AI/PSD（CS6 或更早版本）</p>
+              <p className="text-sm text-[var(--color-gray-700)] font-medium">PDF, AI, EPS, PSD, JPG, PNG, TIF</p>
+              <p className="text-xs text-[var(--color-gray-500)] mt-1">推荐使用 AI/EPS/PSD（CS6 或更早版本）</p>
             </div>
             <div className="rounded-2xl border border-[var(--color-gray-100)] bg-[var(--color-gray-50)] p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-gray-400)] mb-2">分辨率</p>
@@ -244,7 +244,7 @@ export default async function ArtworkGuidelinesPage() {
           <div className="mt-8 rounded-2xl bg-[var(--color-gray-50)] p-5">
             <p className="text-sm text-[var(--color-gray-600)]">
               需要帮助？请将文件发送至{" "}
-              <a href="mailto:artwork@lunarprint.ca" className="font-medium text-[var(--color-gray-900)] underline">artwork@lunarprint.ca</a>
+              <a href="mailto:info@lunarprint.ca" className="font-medium text-[var(--color-gray-900)] underline">info@lunarprint.ca</a>
               ，我们的制前团队会免费检查。也可致电{" "}
               <a href="tel:+16478869288" className="font-medium text-[var(--color-gray-900)] underline">647-886-9288</a>。
             </p>
