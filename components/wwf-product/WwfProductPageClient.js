@@ -85,7 +85,9 @@ export default function WwfProductPageClient({
               </div>
 
               {/* Inline configurator */}
-              <WwfInlineConfigurator wwfProductId={wwfProductId} />
+              <div id="configurator">
+                <WwfInlineConfigurator wwfProductId={wwfProductId} />
+              </div>
 
               {/* Pickup hint for oversized products */}
               {product?.slug && isOversizedProduct(product.slug) && (
@@ -135,8 +137,16 @@ export default function WwfProductPageClient({
   );
 }
 
+/**
+ * Mobile sticky CTA bar — scrolls to the configurator section with strong CTA.
+ */
 function MobileBottomBarBridge() {
   const { t } = useTranslation();
+  const scrollToConfigurator = () => {
+    const el = document.getElementById("configurator");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    else window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   return (
     <>
       <div
@@ -146,17 +156,17 @@ function MobileBottomBarBridge() {
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-gray-900">{t("productPage.readyToOrder")}</p>
-            <p className="text-[11px] text-gray-500">{t("productPage.chooseOptionsAbove")}</p>
+            <p className="text-[11px] text-gray-500">{t("productPage.customizeAndOrder")}</p>
           </div>
           <button
             type="button"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="shrink-0 flex items-center gap-1.5 rounded-lg bg-gray-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#fff] shadow-lg hover:bg-gray-800"
+            onClick={scrollToConfigurator}
+            className="shrink-0 flex items-center gap-1.5 rounded-lg bg-[var(--color-brand)] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#fff] shadow-lg hover:bg-[var(--color-brand-dark)]"
           >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l2.828 2.818L15 13.182" />
             </svg>
-            {t("productPage.configureAndPrice")}
+            {t("productPage.getYourPrice")}
           </button>
         </div>
       </div>
