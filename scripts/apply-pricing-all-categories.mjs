@@ -59,12 +59,13 @@ const CATEGORY_PRESETS = [
     },
   },
 
-  // ── Safety & Facility Labels ──
+  // ── Safety & Facility Labels (2× Sinalite wholesale markup) ──
   {
     key: "cat_safety_facility",
     name: "Safety & Facility Labels",
     model: "QTY_TIERED",
     config: {
+      // Retail tiers = ~2× Sinalite wholesale cost
       tiers: [
         { minQty: 1, unitPrice: 22.00 },
         { minQty: 5, unitPrice: 18.00 },
@@ -72,6 +73,15 @@ const CATEGORY_PRESETS = [
         { minQty: 25, unitPrice: 12.00 },
         { minQty: 50, unitPrice: 9.50 },
         { minQty: 100, unitPrice: 7.50 },
+      ],
+      // B2B / wholesale tiers = ~1.2× Sinalite cost (40% below retail)
+      b2bTiers: [
+        { minQty: 1, unitPrice: 13.20 },
+        { minQty: 5, unitPrice: 10.80 },
+        { minQty: 10, unitPrice: 9.00 },
+        { minQty: 25, unitPrice: 7.20 },
+        { minQty: 50, unitPrice: 5.70 },
+        { minQty: 100, unitPrice: 4.50 },
       ],
       minimumPrice: 22,
       fileFee: 0,
@@ -82,18 +92,27 @@ const CATEGORY_PRESETS = [
     },
   },
 
-  // ── Fleet Compliance & ID ──
+  // ── Fleet Compliance & ID (2× Sinalite wholesale markup) ──
   {
     key: "cat_fleet_compliance",
     name: "Fleet Compliance & ID",
     model: "QTY_TIERED",
     config: {
+      // Retail tiers = ~2× Sinalite wholesale cost
       tiers: [
         { minQty: 1, unitPrice: 35.00 },
         { minQty: 3, unitPrice: 30.00 },
         { minQty: 5, unitPrice: 26.00 },
         { minQty: 10, unitPrice: 22.00 },
         { minQty: 25, unitPrice: 18.00 },
+      ],
+      // B2B / wholesale tiers = ~1.2× Sinalite cost (40% below retail)
+      b2bTiers: [
+        { minQty: 1, unitPrice: 21.00 },
+        { minQty: 3, unitPrice: 18.00 },
+        { minQty: 5, unitPrice: 15.60 },
+        { minQty: 10, unitPrice: 13.20 },
+        { minQty: 25, unitPrice: 10.80 },
       ],
       minimumPrice: 35,
       fileFee: 0,
@@ -282,12 +301,13 @@ const CATEGORY_PRESETS = [
     },
   },
 
-  // ── Safety Warning Decals ──
+  // ── Safety Warning Decals (2× Sinalite wholesale markup) ──
   {
     key: "cat_safety_decals",
     name: "Safety Warning Decals",
     model: "QTY_TIERED",
     config: {
+      // Retail tiers = ~2× Sinalite wholesale cost
       tiers: [
         { minQty: 1, unitPrice: 25.00 },
         { minQty: 5, unitPrice: 20.00 },
@@ -295,6 +315,15 @@ const CATEGORY_PRESETS = [
         { minQty: 25, unitPrice: 12.00 },
         { minQty: 50, unitPrice: 9.00 },
         { minQty: 100, unitPrice: 7.00 },
+      ],
+      // B2B / wholesale tiers = ~1.2× Sinalite cost (40% below retail)
+      b2bTiers: [
+        { minQty: 1, unitPrice: 15.00 },
+        { minQty: 5, unitPrice: 12.00 },
+        { minQty: 10, unitPrice: 9.60 },
+        { minQty: 25, unitPrice: 7.20 },
+        { minQty: 50, unitPrice: 5.40 },
+        { minQty: 100, unitPrice: 4.20 },
       ],
       minimumPrice: 25,
       fileFee: 0,
