@@ -146,7 +146,7 @@ a {
   color: inherit;
   transition: color var(--duration-fast) var(--ease-out-cubic);
 }
-a:hover {
+a:hover:not([class*="text-"]) {
   color: var(--color-ink-black);
 }
 

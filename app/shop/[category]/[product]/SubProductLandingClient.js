@@ -63,6 +63,8 @@ const CROSS_SELL_MAP = {
   "sticker-pages": ["die-cut-stickers", "sticker-rolls"],
   "sticker-rolls": ["die-cut-stickers", "sticker-pages"],
   "vinyl-lettering": ["vehicle-decals", "die-cut-stickers"],
+  "safety-warning-decals": ["facility-asset-labels", "die-cut-stickers"],
+  "facility-asset-labels": ["safety-warning-decals", "sticker-rolls"],
   // Vehicles
   "vehicle-wraps": ["vehicle-decals", "door-panel-graphics"],
   "door-panel-graphics": ["vehicle-wraps", "magnetic-signs"],
@@ -164,22 +166,38 @@ const SUB_PRODUCT_CONTENT = {
   "backdrops-popups": {
     desc: "Large-format backdrops and popup displays for events, trade shows, photo walls, and press conferences. Step-and-repeat and tension fabric options.",
     features: ["8ft \u00d7 8ft to 10ft \u00d7 20ft", "Wrinkle-free fabric", "Step-and-repeat layouts", "Easy setup frames", "Reusable hardware"],
-    faq: [],
+    faq: [
+      { q: "What\u2019s the difference between a popup display and a backdrop?", a: "Popup displays use a collapsible frame with magnetic panels for a curved or straight wall. Backdrops are tension fabric banners stretched over a frame \u2014 lighter and easier to transport." },
+      { q: "Can I reuse the hardware with a new graphic?", a: "Yes \u2014 all our popup and backdrop frames accept replacement graphics. Order just the printed panel for your next event." },
+      { q: "How long does setup take?", a: "Popup displays set up in 5\u201310 minutes with no tools. Tension fabric backdrops take 2\u20135 minutes \u2014 just stretch the fabric over the frame." },
+    ],
   },
   "x-banner-stands": {
     desc: "Budget-friendly X-banner stands for indoor displays. Lightweight, portable, and easy to assemble \u2014 great for offices and events.",
     features: ["Lightweight tripod frame", "No tools needed", "24\u2033 \u00d7 63\u2033 standard", "Includes carry bag", "Indoor use recommended"],
-    faq: [],
+    faq: [
+      { q: "Are X-banner stands suitable for outdoor use?", a: "X-banner stands are designed for indoor use only. For outdoor displays, we recommend retractable banner stands or feather flags." },
+      { q: "Can I replace the banner graphic?", a: "Yes \u2014 X-banner stands use grommets or loops to hold the print. Order a replacement graphic and swap it onto the same frame." },
+      { q: "How tall is an X-banner stand?", a: "Standard X-banner stands are 24\u2033 \u00d7 63\u2033 (about 5 feet tall). Tabletop models are also available at 10\u2033 \u00d7 15\u2033." },
+    ],
   },
   "tabletop-displays": {
     desc: "Compact countertop and tabletop displays for reception areas, trade shows, and retail counters. Professional presentation in a small footprint.",
     features: ["Retractable & easel styles", "8\u2033 \u00d7 12\u2033 to 24\u2033 \u00d7 36\u2033", "Portable & lightweight", "Includes carrying case", "Easy graphic swap"],
-    faq: [],
+    faq: [
+      { q: "What types of tabletop displays are available?", a: "We offer tabletop retractable banners (mini pull-ups), rigid tabletop signs with easel backs, and standoff-mounted acrylic displays." },
+      { q: "Are tabletop displays portable?", a: "Yes \u2014 all tabletop displays are lightweight and come with carrying cases. Retractable models fold down to under 2ft for easy transport." },
+      { q: "Can I use these at trade shows?", a: "Absolutely \u2014 tabletop displays are perfect for trade show tables, conference desks, and reception counters. They set up in seconds." },
+    ],
   },
   "tents-outdoor": {
     desc: "Custom printed canopy tents for outdoor events, farmers markets, and promotions. Full-color printing on durable polyester with steel or aluminum frames.",
     features: ["10\u2032 \u00d7 10\u2032 standard", "Full-color dye-sub print", "Steel & aluminum frames", "Side walls available", "Includes carry bag"],
-    faq: [],
+    faq: [
+      { q: "What sizes of tents are available?", a: "Standard is 10\u2032 \u00d7 10\u2032. We also offer 10\u2032 \u00d7 15\u2032 and 10\u2032 \u00d7 20\u2032. Custom sizes available on request." },
+      { q: "Are side walls included?", a: "Side walls are sold separately. Choose from full walls, half walls, or walls with windows/doors. They attach with Velcro strips." },
+      { q: "How wind-resistant are the tents?", a: "Our aluminum frames handle moderate wind. For windy conditions, use the included guy ropes and stakes. We also sell weighted sand bags for hard surfaces." },
+    ],
   },
   // Stickers
   "die-cut-stickers": {
@@ -192,12 +210,20 @@ const SUB_PRODUCT_CONTENT = {
   "sticker-pages": {
     desc: "Multiple stickers printed on sheets \u2014 perfect for sticker packs, product labels, and packaging inserts. Kiss-cut for easy peel.",
     features: ["Multiple designs per sheet", "Kiss-cut for easy peel", "Vinyl or paper stock", "Custom sheet layouts", "Bulk pricing available"],
-    faq: [],
+    faq: [
+      { q: "How many stickers fit on one sheet?", a: "It depends on sticker size. A standard 8.5\u2033\u00d711\u2033 sheet can fit 2\u201330+ stickers depending on dimensions. We\u2019ll optimize the layout for you." },
+      { q: "Can I mix different designs on one sheet?", a: "Yes \u2014 our sticker sheets support multiple unique designs per sheet. Upload all your designs and we\u2019ll arrange them." },
+      { q: "What\u2019s the difference between kiss-cut and die-cut sheets?", a: "Kiss-cut sheets cut through the sticker layer only, leaving the backing intact for easy peel. Die-cut cuts through everything, giving you individual stickers." },
+    ],
   },
   "sticker-rolls": {
     desc: "Custom labels on rolls for product packaging, branding, and retail. Compatible with standard label dispensers and applicators.",
     features: ["Roll sizes from 250 to 10,000+", "BOPP, vinyl, kraft, clear", "Compatible with dispensers", "Waterproof & oil-resistant options", "Sequential numbering available"],
-    faq: [],
+    faq: [
+      { q: "What is the minimum order for roll labels?", a: "Minimum order is 250 labels per design. For the best per-unit price, we recommend quantities of 1,000+." },
+      { q: "Are roll labels compatible with label applicators?", a: "Yes \u2014 our roll labels use standard 3\u2033 cores and are wound for use with manual and automatic label applicators and dispensers." },
+      { q: "What materials are available for roll labels?", a: "White BOPP (waterproof), clear BOPP, kraft paper, white vinyl, and freezer-grade vinyl. All materials are compatible with inkjet and thermal printers." },
+    ],
   },
   // Vehicles
   "vehicle-wraps": {
@@ -210,17 +236,51 @@ const SUB_PRODUCT_CONTENT = {
   "vehicle-decals": {
     desc: "Custom vinyl decals for company branding, DOT numbers, and decorative graphics. Easy to apply and remove without damaging paint.",
     features: ["Precision die-cut", "Removable without residue", "DOT & CVOR compliant", "Reflective options", "5+ year outdoor life"],
-    faq: [],
+    faq: [
+      { q: "Will decals damage my vehicle\u2019s paint?", a: "No \u2014 our vinyl decals use automotive-grade adhesive that removes cleanly without residue when you\u2019re ready to take them off." },
+      { q: "Are vehicle decals waterproof?", a: "Yes \u2014 all vehicle decals are printed on waterproof vinyl with UV laminate. They\u2019re designed to withstand car washes, rain, sun, and snow for 5+ years." },
+      { q: "Can I get DOT and CVOR number decals?", a: "Yes \u2014 we produce compliant USDOT, MC, CVOR, TSSA, and NSC number decals in regulation sizes. Just provide your numbers at checkout." },
+    ],
   },
   "door-panel-graphics": {
     desc: "Branded door panel graphics and lettering for company vehicles. Includes design, print, and optional professional installation.",
     features: ["Custom fit to any vehicle", "Full-color digital print", "Contour-cut vinyl", "Easy DIY application", "Installation service available"],
-    faq: [],
+    faq: [
+      { q: "Do I need to provide my vehicle\u2019s measurements?", a: "We have templates for most common vehicles. Just tell us the year, make, and model and we\u2019ll provide a template. For custom vehicles, you can send us photos with a tape measure." },
+      { q: "Can I install door panel graphics myself?", a: "Yes \u2014 we include application instructions and a squeegee tool. Most door graphics take 15\u201330 minutes to apply. Professional installation is also available." },
+      { q: "How long do door panel graphics last?", a: "Our premium cast vinyl graphics last 5\u20137 years outdoors with proper care. Calendered vinyl options last 3\u20135 years and are more budget-friendly." },
+    ],
   },
   "magnetic-signs": {
     desc: "Removable magnetic vehicle signs \u2014 great for contractors, delivery drivers, and anyone who uses a personal vehicle for business.",
     features: ["30mil magnetic material", "Removable & reusable", "Full-color printing", "UV laminate protection", "Standard & custom sizes"],
-    faq: [],
+    faq: [
+      { q: "Will magnetic signs damage my car paint?", a: "No \u2014 our 30mil magnetic signs are designed for automotive use. Remove them periodically to clean underneath and prevent moisture buildup." },
+      { q: "Can I use magnetic signs on aluminum body vehicles?", a: "Magnets only work on steel body panels. They won\u2019t stick to aluminum-bodied vehicles like some trucks and sports cars. Contact us if you\u2019re unsure about your vehicle." },
+      { q: "How fast can I drive with them on?", a: "Magnetic signs are safe at highway speeds when properly applied to a clean, flat surface. Avoid placing them over body lines or trim." },
+    ],
+  },
+  // Safety & Warning
+  "safety-warning-decals": {
+    desc: "OSHA, WHMIS, and GHS-compliant safety decals for workplaces, construction sites, and industrial facilities. Durable vinyl with aggressive adhesive for long-term indoor and outdoor use.",
+    features: ["OSHA / WHMIS / GHS compliant", "High-visibility colors", "Aggressive permanent adhesive", "UV & chemical resistant", "Custom text & pictograms"],
+    faq: [
+      { q: "Are these decals OSHA and WHMIS compliant?", a: "Yes \u2014 all safety decals follow OSHA, ANSI Z535, WHMIS 2015, and GHS standards for pictograms, colors, and text formatting." },
+      { q: "How long do safety decals last outdoors?", a: "Our vinyl safety decals with UV laminate last 5\u20137 years outdoors. Indoor applications last 10+ years. They resist chemicals, moisture, and abrasion." },
+      { q: "Can I order custom safety labels with our own text?", a: "Yes \u2014 we print fully custom safety labels with your text, pictograms, and branding. Just upload your artwork or describe what you need." },
+      { q: "What sizes are available?", a: "Standard sizes from 2\u2033\u00d73\u2033 to 14\u2033\u00d720\u2033. Custom sizes available for any application. Packs of 1, 5, 10, or bulk rolls." },
+    ],
+  },
+  // Facility & Asset
+  "facility-asset-labels": {
+    desc: "Industrial-grade labels for warehouse organization, asset tracking, pipe marking, and equipment identification. Durable materials designed for harsh environments.",
+    features: ["Industrial-grade adhesive", "Chemical & abrasion resistant", "ANSI/ASME pipe marking colors", "QR/barcode compatible", "Custom sizes & shapes"],
+    faq: [
+      { q: "What materials are used for facility labels?", a: "We use heavy-duty vinyl, polyester, and aluminum substrates depending on the application. All are designed for industrial environments and resist chemicals, moisture, and abrasion." },
+      { q: "Do pipe markers follow ANSI/ASME standards?", a: "Yes \u2014 our pipe markers follow ANSI/ASME A13.1 color coding. We match the correct background color (green for water, yellow for flammable, etc.) to your pipe contents." },
+      { q: "Can asset labels include QR codes or barcodes?", a: "Yes \u2014 we print scannable QR codes, barcodes (Code 128, UPC, etc.), and sequential numbering on durable polyester labels for asset tracking." },
+      { q: "How do I order custom warehouse labels?", a: "Upload your design or describe your requirements. We\u2019ll create a proof with correct sizing, colors, and codes. Minimum order is just 10 labels." },
+    ],
   },
 };
 

@@ -77,7 +77,35 @@ const SPECIALTY_CARDS = [
   },
 ];
 
-/* ── Section 4: Shop by Material pills ── */
+/* ── Section 4: Safety & Warning Decals ── */
+const SAFETY_CARDS = [
+  {
+    priceKey: "safety-warning",
+    title: "Safety & Warning Decals",
+    titleZh: "安全警示贴纸",
+    description: "OSHA, WHMIS, GHS-compliant safety decals. Fire, electrical, PPE, and hazard warning labels for workplaces.",
+    href: `${BASE}/safety-warning-decals`,
+    gradient: "from-red-500 to-orange-500",
+    fallbackPrice: "From $12",
+    cta: "Browse",
+  },
+];
+
+/* ── Section 5: Facility & Asset Labels ── */
+const FACILITY_CARDS = [
+  {
+    priceKey: "facility-asset",
+    title: "Facility & Asset Labels",
+    titleZh: "设施资产标签",
+    description: "Warehouse markers, pipe labels, rack tags, asset tracking, and equipment ID plates for industrial facilities.",
+    href: `${BASE}/facility-asset-labels`,
+    gradient: "from-blue-500 to-indigo-500",
+    fallbackPrice: "From $15",
+    cta: "Browse",
+  },
+];
+
+/* ── Section 6: Shop by Material pills ── */
 const MATERIAL_PILLS = [
   { id: "white-vinyl", label: "White Vinyl", href: `${BASE}/die-cut-stickers?material=white_vinyl` },
   { id: "matte-vinyl", label: "Matte Vinyl", href: `${BASE}/die-cut-stickers?material=matte_vinyl` },
@@ -208,7 +236,37 @@ export default function StickersCategoryClient({ stickerPrices = {}, stickerImag
           </div>
         </section>
 
-        {/* ── Section 4: Shop by Material ── */}
+        {/* ── Section 4: Safety & Warning Decals ── */}
+        <section className="mt-12">
+          <h2 className="text-xl font-semibold tracking-tight">
+            {t?.("category.safetyWarningDecals") || "Safety & Warning Decals"}
+          </h2>
+          <p className="mt-1 text-sm text-[var(--color-gray-500)]">
+            OSHA & WHMIS compliant labels for workplaces, warehouses, and job sites.
+          </p>
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
+            {SAFETY_CARDS.map((card) => (
+              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} size="medium" imageUrl={stickerImages[card.priceKey]} />
+            ))}
+          </div>
+        </section>
+
+        {/* ── Section 5: Facility & Asset Labels ── */}
+        <section className="mt-12">
+          <h2 className="text-xl font-semibold tracking-tight">
+            {t?.("category.facilityAssetLabels") || "Facility & Asset Labels"}
+          </h2>
+          <p className="mt-1 text-sm text-[var(--color-gray-500)]">
+            Industrial markers, pipe labels, rack tags, and asset tracking for facilities.
+          </p>
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
+            {FACILITY_CARDS.map((card) => (
+              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} size="medium" imageUrl={stickerImages[card.priceKey]} />
+            ))}
+          </div>
+        </section>
+
+        {/* ── Section 6: Shop by Material ── */}
         <section className="mt-12">
           <h2 className="text-xl font-semibold tracking-tight">Shop by Material</h2>
           <p className="mt-1 text-sm text-[var(--color-gray-500)]">
