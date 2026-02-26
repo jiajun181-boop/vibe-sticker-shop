@@ -8,7 +8,7 @@ export default function FloatingContactButton() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-20 right-4 z-40 md:bottom-20 md:right-6">
+    <div className="fixed bottom-[calc(152px+env(safe-area-inset-bottom))] right-4 z-40 md:bottom-20 md:right-6">
       {/* Expanded contact options */}
       {open && (
         <div className="mb-3 flex flex-col gap-2 items-end animate-in fade-in slide-in-from-bottom-2 duration-200">
