@@ -140,23 +140,27 @@ html {
 
 /* ═══════════════════════════════════════════════════════════════
    LINK + INPUT BASE
+   Must be inside @layer base so Tailwind utility classes (which
+   live in @layer utilities) can override these defaults.
    ═══════════════════════════════════════════════════════════════ */
 
-a {
-  color: inherit;
-  transition: color var(--duration-fast) var(--ease-out-cubic);
-}
-a:hover:not([class*="text-"]) {
-  color: var(--color-ink-black);
-}
+@layer base {
+  a {
+    color: inherit;
+    transition: color var(--duration-fast) var(--ease-out-cubic);
+  }
+  a:hover {
+    color: var(--color-ink-black);
+  }
 
-input, textarea, select {
-  transition: border-color var(--duration-normal) var(--ease-out-cubic),
-              box-shadow var(--duration-normal) var(--ease-out-cubic);
-}
-input:focus, textarea:focus, select:focus {
-  border-color: rgba(0, 0, 0, 0.38);
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+  input, textarea, select {
+    transition: border-color var(--duration-normal) var(--ease-out-cubic),
+                box-shadow var(--duration-normal) var(--ease-out-cubic);
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: rgba(0, 0, 0, 0.38);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
