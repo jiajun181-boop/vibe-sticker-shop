@@ -314,7 +314,7 @@ export default function ChatWidget() {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-brand)] text-[#fff] shadow-lg hover:bg-[var(--color-brand-dark)] hover:scale-105 transition-all md:bottom-6 md:right-6"
+        className="fixed bottom-[calc(theme(spacing.6)+72px+env(safe-area-inset-bottom))] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-brand)] text-[#fff] shadow-lg hover:bg-[var(--color-brand-dark)] hover:scale-105 transition-all lg:bottom-6 md:right-6"
         aria-label="Open chat"
       >
         {open ? (

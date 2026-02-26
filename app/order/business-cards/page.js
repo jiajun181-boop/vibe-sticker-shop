@@ -6,7 +6,7 @@ export function generateMetadata() {
   return {
     title: "Custom Business Cards — Order Online",
     description:
-      "Order custom business cards online. Choose from 10 premium finishes including gloss, matte, soft-touch, gold foil, linen, and more.",
+      "Order custom business cards online. Choose from premium finishes including gloss, matte, soft-touch, linen, pearl, and more.",
     openGraph: {
       title: "Custom Business Cards — Order Online",
       description:

@@ -67,9 +67,6 @@ const PRESETS = [
       ],
       addons: [
         { id: "rounded", name: "Rounded Corners", price: 0.02, type: "per_unit" },
-        { id: "uv_gloss", name: "UV Gloss Coating", price: 0.03, type: "per_unit" },
-        { id: "spot_uv", name: "Spot UV", price: 0.05, type: "per_unit" },
-        { id: "foil", name: "Foil Stamping", price: 15.0, type: "flat" },
       ],
       fileFee: 5.0,
       minimumPrice: 15.0,

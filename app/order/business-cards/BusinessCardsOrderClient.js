@@ -288,7 +288,7 @@ export default function BusinessCardsOrderClient() {
             unitCents={quote.unitCents}
             subtotalCents={quote.subtotalCents}
             taxCents={quote.taxCents}
-            totalCents={quote.subtotalCents}
+            totalCents={quote.totalCents}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
