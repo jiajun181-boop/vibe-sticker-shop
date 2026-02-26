@@ -97,7 +97,7 @@ export default function MobileBottomBar({
               <div className="h-5 w-20 animate-pulse rounded bg-gray-200" />
             ) : hasQuote ? (
               <>
-                <p className="text-lg font-black text-gray-900">{formatCad(totalCents)}</p>
+                <p className="text-lg font-black text-gray-900">{formatCad(totalCents)} <span className="text-[10px] font-normal text-gray-400">before tax</span></p>
                 {/* Dual pricing or summary text */}
                 {quantity > 1 ? (
                   <p className="truncate text-[11px] text-gray-500">

@@ -210,7 +210,7 @@ export default function RollLabelsQuoteForm() {
                   : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
               }`}
             >
-              {q >= 1000 ? `${q / 1000}K` : q}
+              {q.toLocaleString()}
             </button>
           ))}
         </div>

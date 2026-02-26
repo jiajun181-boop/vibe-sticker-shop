@@ -316,7 +316,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
                     : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                 }`}
               >
-                {q >= 1000 ? `${q / 1000}K` : q}
+                {q.toLocaleString()}
               </button>
             );
           })}
@@ -394,15 +394,12 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               <span>Subtotal ({activeQty.toLocaleString()} pcs)</span>
               <span className="font-medium text-gray-700">{formatCad(quote.subtotalCents)}</span>
             </div>
-            <div className="flex items-baseline justify-between text-xs text-gray-500">
-              <span>HST (13%)</span>
-              <span>{formatCad(quote.taxCents)}</span>
-            </div>
             <hr className="border-gray-200" />
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-black text-gray-900">Total</span>
-              <span className="text-xl font-black text-gray-900">{formatCad(quote.totalCents)}</span>
+              <span className="text-xl font-black text-gray-900">{formatCad(quote.subtotalCents)}</span>
             </div>
+            <p className="text-right text-[10px] text-gray-400">Before tax</p>
             {(() => {
               const hints = [];
               if (materialId !== cutting.materials[0].id) hints.push(t("configurator.priceIncludesMaterial"));

@@ -280,7 +280,7 @@ export default function SheetsConfigurator() {
                   : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
               }`}
             >
-              {q >= 1000 ? `${q / 1000}K` : q}
+              {q.toLocaleString()}
             </button>
           ))}
         </div>
@@ -361,15 +361,12 @@ export default function SheetsConfigurator() {
               <span>Subtotal</span>
               <span className="font-medium text-gray-700">{formatCad(pricing.subtotal)}</span>
             </div>
-            <div className="flex items-baseline justify-between text-xs text-gray-500">
-              <span>HST (13%)</span>
-              <span>{formatCad(pricing.tax)}</span>
-            </div>
             <hr className="border-gray-200" />
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-black text-gray-900">Total</span>
-              <span className="text-xl font-black text-gray-900">{formatCad(pricing.total)}</span>
+              <span className="text-xl font-black text-gray-900">{formatCad(pricing.subtotal)}</span>
             </div>
+            <p className="text-right text-[10px] text-gray-400">Before tax</p>
           </div>
         ) : (
           <p className="text-center text-xs text-gray-400">Select options for pricing</p>

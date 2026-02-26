@@ -241,7 +241,7 @@ export default function MiniConfigurator({ cuttingTypeId, onClose }) {
                       : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
                   }`}
                 >
-                  <span className="text-xs font-black">{q >= 1000 ? `${q / 1000}K` : q}</span>
+                  <span className="text-xs font-black">{q.toLocaleString()}</span>
                   {discount > 0 && (
                     <span className={`text-[9px] font-bold ${isActive ? "text-emerald-300" : "text-emerald-600"}`}>
                       -{discount}%
@@ -271,9 +271,9 @@ export default function MiniConfigurator({ cuttingTypeId, onClose }) {
             </p>
           ) : quoteData ? (
             <div>
-              <p className="text-lg font-black text-[var(--color-gray-900)]">{formatCad(totalCents)}</p>
+              <p className="text-lg font-black text-[var(--color-gray-900)]">{formatCad(subtotalCents)}</p>
               <p className="text-[11px] text-[var(--color-gray-500)]">
-                {formatCad(unitCents)}/ea &times; {quantity.toLocaleString()} + {formatCad(taxCents)} HST
+                {formatCad(unitCents)}/ea &times; {quantity.toLocaleString()} &middot; Before tax
               </p>
             </div>
           ) : (

@@ -643,7 +643,7 @@ export default function MarketingPrintOrderClient({
               unitCents={quote.unitCents}
               subtotalCents={quote.subtotalCents}
               taxCents={quote.taxCents}
-              totalCents={quote.totalCents}
+              totalCents={quote.subtotalCents}
               canAddToCart={canAddToCart}
               onAddToCart={handleAddToCart}
               onBuyNow={handleBuyNow}
@@ -662,7 +662,7 @@ export default function MarketingPrintOrderClient({
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
-        totalCents={quote.totalCents}
+        totalCents={quote.subtotalCents}
         summaryText={quote.quoteData ? `${formatCad(quote.unitCents)}/ea × ${effectiveQty}` : null}
         canAddToCart={canAddToCart}
         onAddToCart={handleAddToCart}

@@ -431,7 +431,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
             unitCents={quote.unitCents}
             subtotalCents={quote.subtotalCents}
             taxCents={quote.taxCents}
-            totalCents={quote.totalCents}
+            totalCents={quote.subtotalCents}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
@@ -447,7 +447,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
         hasQuote={isQuoteOnly || !!quote.quoteData}
-        totalCents={quote.totalCents}
+        totalCents={quote.subtotalCents}
         summaryText={
           isQuoteOnly
             ? "Custom pricing — request a quote"

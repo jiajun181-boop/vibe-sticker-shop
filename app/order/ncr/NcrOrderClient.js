@@ -416,7 +416,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
             unitCents={quote.unitCents}
             subtotalCents={quote.subtotalCents}
             taxCents={quote.taxCents}
-            totalCents={quote.totalCents}
+            totalCents={quote.subtotalCents}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
@@ -431,7 +431,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
-        totalCents={quote.totalCents}
+        totalCents={quote.subtotalCents}
         summaryText={
           quote.quoteData
             ? `${quantity.toLocaleString()} ${t("ncr.numbering.forms")}${numbering ? ` \u2022 #${numberStartInt}\u2013${numberEnd}` : ""}`

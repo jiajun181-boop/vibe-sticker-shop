@@ -20,7 +20,7 @@ export default function DiscountBadge({ quantities }) {
 
   if (!bestQty) return null;
 
-  const label = bestQty >= 1000 ? `${bestQty / 1000}K` : String(bestQty);
+  const label = bestQty.toLocaleString();
 
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-200">

@@ -495,7 +495,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
             unitCents={quote.unitCents}
             subtotalCents={quote.subtotalCents}
             taxCents={quote.taxCents}
-            totalCents={quote.totalCents}
+            totalCents={quote.subtotalCents}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
@@ -510,7 +510,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
-        totalCents={quote.totalCents}
+        totalCents={quote.subtotalCents}
         summaryText={quote.quoteData ? `${activeQty.toLocaleString()} × ${pageCount}pp ${t(`booklet.binding.${bindingId}`)}` : null}
         canAddToCart={canAddToCart}
         onAddToCart={handleAddToCart}

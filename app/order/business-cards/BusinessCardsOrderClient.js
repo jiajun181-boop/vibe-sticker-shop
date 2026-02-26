@@ -241,7 +241,7 @@ export default function BusinessCardsOrderClient() {
                       }`}
                     >
                       <span className="text-base font-black">
-                        {q >= 1000 ? `${q / 1000}K` : q}
+                        {q.toLocaleString()}
                       </span>
                     </button>
                   );
@@ -288,7 +288,7 @@ export default function BusinessCardsOrderClient() {
             unitCents={quote.unitCents}
             subtotalCents={quote.subtotalCents}
             taxCents={quote.taxCents}
-            totalCents={quote.totalCents}
+            totalCents={quote.subtotalCents}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
@@ -303,7 +303,7 @@ export default function BusinessCardsOrderClient() {
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
-        totalCents={quote.totalCents}
+        totalCents={quote.subtotalCents}
         summaryText={
           quote.quoteData
             ? `${formatCad(quote.unitCents)}/ea × ${activeQty.toLocaleString()}`

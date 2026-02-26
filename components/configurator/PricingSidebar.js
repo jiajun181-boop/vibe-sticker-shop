@@ -158,19 +158,16 @@ export default function PricingSidebar({
                 </span>
               </div>
             )}
-            <div className="flex items-baseline justify-between">
-              <span className="text-xs text-gray-500">{t?.("configurator.hst") || "HST (13%)"}</span>
-              <span className="text-sm text-gray-500">{formatCad(displayTax)}</span>
-            </div>
             <hr className="border-gray-100" />
             <div className="flex items-baseline justify-between">
               <span className="text-base font-black text-gray-900">{t?.("configurator.total") || "Total"}</span>
-              <span className="text-2xl font-black text-gray-900">{formatCad(displayTotal)}</span>
+              <span className="text-2xl font-black text-gray-900">{formatCad(displaySubtotal)}</span>
             </div>
+            <p className="text-right text-[10px] text-gray-400">{t?.("configurator.beforeTax") || "Before tax"}</p>
             {/* Dual pricing: unit price below total */}
             {quantity > 1 && (
               <p className="text-right text-xs text-gray-400">
-                {formatCad(Math.round(displayTotal / quantity))}/{t?.("configurator.each") || "each"}
+                {formatCad(Math.round(displaySubtotal / quantity))}/{t?.("configurator.each") || "each"}
               </p>
             )}
           </div>

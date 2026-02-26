@@ -421,15 +421,12 @@ export default function WwfInlineConfigurator({ wwfProductId }) {
                 <span>{formatCad(finishingSurchargeCents)}</span>
               </div>
             )}
-            <div className="flex items-baseline justify-between text-xs text-gray-500">
-              <span>HST (13%)</span>
-              <span>{formatCad(taxCents)}</span>
-            </div>
             <hr className="border-gray-200" />
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-black text-gray-900">Total</span>
-              <span className="text-xl font-black text-gray-900">{formatCad(totalCents)}</span>
+              <span className="text-xl font-black text-gray-900">{formatCad(subtotalCents)}</span>
             </div>
+            <p className="text-right text-[10px] text-gray-400">Before tax</p>
             {(() => {
               const hints = [];
               if (isMultiMaterial && materialId !== product.materials[0].id) hints.push(t("configurator.priceIncludesMaterial"));

@@ -2475,7 +2475,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           <MobileBottomBar
             quoteLoading={!!priceData.pending}
             hasQuote={!priceData.unpriced && !priceData.pending && typeof priceData.total === "number"}
-            totalCents={priceData.total || 0}
+            totalCents={priceData.subtotal || 0}
             summaryText={preTaxDisplay}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
