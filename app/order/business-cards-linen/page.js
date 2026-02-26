@@ -26,7 +26,7 @@ export default function BusinessCardsLinenPage() {
         </div>
       }
     >
-      <BusinessCardConfigurator config={config} />
+      <BusinessCardConfigurator slug="business-cards-linen" />
     </Suspense>
   );
 }

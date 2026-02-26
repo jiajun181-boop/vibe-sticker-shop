@@ -26,7 +26,7 @@ export default function BusinessCardsPearlPage() {
         </div>
       }
     >
-      <BusinessCardConfigurator config={config} />
+      <BusinessCardConfigurator slug="business-cards-pearl" />
     </Suspense>
   );
 }

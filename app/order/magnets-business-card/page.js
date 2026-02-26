@@ -26,7 +26,7 @@ export default function MagnetsBusinessCardPage() {
         </div>
       }
     >
-      <BusinessCardConfigurator config={config} />
+      <BusinessCardConfigurator slug="magnets-business-card" />
     </Suspense>
   );
 }

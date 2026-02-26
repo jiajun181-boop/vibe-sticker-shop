@@ -26,7 +26,7 @@ export default function BusinessCardsThickPage() {
         </div>
       }
     >
-      <BusinessCardConfigurator config={config} />
+      <BusinessCardConfigurator slug="business-cards-thick" />
     </Suspense>
   );
 }

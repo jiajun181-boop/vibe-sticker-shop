@@ -26,7 +26,7 @@ export default function BusinessCardsSoftTouchPage() {
         </div>
       }
     >
-      <BusinessCardConfigurator config={config} />
+      <BusinessCardConfigurator slug="business-cards-soft-touch" />
     </Suspense>
   );
 }

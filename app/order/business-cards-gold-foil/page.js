@@ -26,7 +26,7 @@ export default function BusinessCardsGoldFoilPage() {
         </div>
       }
     >
-      <BusinessCardConfigurator config={config} />
+      <BusinessCardConfigurator slug="business-cards-gold-foil" />
     </Suspense>
   );
 }

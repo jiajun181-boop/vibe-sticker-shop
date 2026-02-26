@@ -12,7 +12,7 @@ import {
   useConfiguratorCart,
 } from "@/components/configurator";
 import BusinessCardPreview from "@/components/business-card/BusinessCardPreview";
-import { computeMultiNameFileFees } from "@/lib/business-card-configs";
+import { getBusinessCardConfig, computeMultiNameFileFees } from "@/lib/business-card-configs";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -26,7 +26,8 @@ const formatCad = (cents) =>
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export default function BusinessCardConfigurator({ config }) {
+export default function BusinessCardConfigurator({ slug }) {
+  const config = getBusinessCardConfig(slug);
   const { t } = useTranslation();
 
   // ── State ──

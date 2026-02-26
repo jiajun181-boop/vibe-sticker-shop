@@ -26,7 +26,7 @@ export default function BusinessCardsClassicPage() {
         </div>
       }
     >
-      <BusinessCardConfigurator config={config} />
+      <BusinessCardConfigurator slug="business-cards-classic" />
     </Suspense>
   );
 }

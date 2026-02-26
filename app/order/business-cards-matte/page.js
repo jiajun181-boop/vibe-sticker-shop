@@ -26,7 +26,7 @@ export default function BusinessCardsMattePages() {
         </div>
       }
     >
-      <BusinessCardConfigurator config={config} />
+      <BusinessCardConfigurator slug="business-cards-matte" />
     </Suspense>
   );
 }
