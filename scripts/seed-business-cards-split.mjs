@@ -25,10 +25,11 @@ const QTY_CHOICES = [50, 100, 250, 300, 500, 1000, 2500, 3000, 4000, 5000];
 const MULTI_NAME = {
   enabled: true,
   maxNames: 20,
+  discountPerName: 500, // $5 off per name
   fileFees: [
-    { upToNames: 4, feePerName: 800 },
-    { upToNames: 9, feePerName: 500 },
-    { upToNames: 999, feePerName: 300 },
+    { upToNames: 5, feePerName: 1200 },   // names 2-5: $12/name
+    { upToNames: 10, feePerName: 1000 },   // names 6-10: $10/name
+    { upToNames: 999, feePerName: 800 },   // names 11+: $8/name
   ],
 };
 
@@ -233,7 +234,7 @@ async function main() {
         where: { slug: prod.slug },
         data: {
           name: prod.name,
-          category: "marketing-prints",
+          category: "marketing-business-print",
           description: prod.description,
           pricingUnit: "per_piece",
           basePrice,
@@ -249,7 +250,7 @@ async function main() {
         data: {
           slug: prod.slug,
           name: prod.name,
-          category: "marketing-prints",
+          category: "marketing-business-print",
           description: prod.description,
           pricingUnit: "per_piece",
           basePrice,

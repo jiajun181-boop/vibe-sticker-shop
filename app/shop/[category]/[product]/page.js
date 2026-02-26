@@ -556,6 +556,10 @@ export default async function ProductPage({ params }) {
   // ── Category configurator: check all configurator types via unified router ──
   const configurator = getConfiguratorForSlug(decodedSlug);
   if (configurator) {
+    // Business card products have dedicated /order/ pages — redirect there
+    if (configurator.component === "business-cards") {
+      redirect(`/order/${configurator.defaultValue}`);
+    }
     // Sticker products: render with StickerProductPageClient using fallback content
     if (configurator.component === "stickers") {
       const { STICKER_PAGE_CONTENT } = await import("@/lib/sticker-page-content");
