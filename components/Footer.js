@@ -234,7 +234,8 @@ export default function Footer({ locale = "en" }) {
       links: [
         { label: t("footer.contactUs"), href: "/contact" },
         { label: t("footer.orderStatus"), href: "/track-order" },
-        { label: t("footer.shipping"), href: "/returns" },
+        { label: t("footer.shipping"), href: "/shipping" },
+        { label: t("footer.refund"), href: "/refund" },
         { label: t("footer.wholesale"), href: "/wholesale" },
         { label: t("footer.company"), href: "/about" },
       ],
@@ -363,7 +364,8 @@ export default function Footer({ locale = "en" }) {
           <div className="flex flex-wrap items-center gap-4">
             <Link href="/privacy" className="transition-colors hover:text-[var(--color-moon-blue)]">{t("footer.privacy")}</Link>
             <Link href="/terms" className="transition-colors hover:text-[var(--color-moon-blue)]">{t("footer.terms")}</Link>
-            <Link href="/refund-policy" className="transition-colors hover:text-[var(--color-moon-blue)]">{t("footer.refund")}</Link>
+            <Link href="/shipping" className="transition-colors hover:text-[var(--color-moon-blue)]">{t("footer.shipping")}</Link>
+            <Link href="/refund" className="transition-colors hover:text-[var(--color-moon-blue)]">{t("footer.refund")}</Link>
           </div>
           <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
         </div>
