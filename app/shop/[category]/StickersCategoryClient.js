@@ -70,7 +70,7 @@ const SPECIALTY_CARDS = [
     priceKey: "vinyl-lettering",
     title: "Vinyl Lettering",
     description: "Individual cut letters & logos. For windows, walls & vehicles.",
-    href: "/order/vinyl-lettering",
+    href: `${BASE}/vinyl-lettering`,
     gradient: "from-emerald-400 to-teal-400",
     fallbackPrice: "From $80",
     cta: "Configure",
