@@ -252,7 +252,7 @@ export default function Navbar({ catalogConfig }) {
         <button
           type="button"
           onClick={() => setMobileMenuOpen(true)}
-          className="md:hidden p-1.5 -ml-1.5 text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)] transition-colors"
+          className="md:hidden p-2.5 -ml-2.5 text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)] transition-colors"
           aria-label="Menu"
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -510,7 +510,7 @@ export default function Navbar({ catalogConfig }) {
           <button
             type="button"
             onClick={() => setLocale(locale === "zh" ? "en" : "zh")}
-            className="md:hidden px-2 py-1 text-[10px] font-bold text-[var(--color-gray-500)] hover:text-[var(--color-gray-800)] transition-colors"
+            className="md:hidden px-2.5 py-2 text-xs font-bold text-[var(--color-gray-500)] hover:text-[var(--color-gray-800)] transition-colors"
           >
             {locale === "zh" ? "EN" : "中"}
           </button>

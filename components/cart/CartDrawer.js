@@ -435,7 +435,7 @@ export default function CartDrawer() {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, Math.max(1, item.quantity - 1))}
-                                className="h-8 w-8 rounded-sm border border-[var(--color-gray-200)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)]"
+                                className="h-10 w-10 rounded-sm border border-[var(--color-gray-200)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)]"
                                 aria-label={t("cart.decreaseQty")}
                               >
                                 -
@@ -445,7 +445,7 @@ export default function CartDrawer() {
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, item.quantity + 1)}
                                 disabled={item.quantity >= 999}
-                                className="h-8 w-8 rounded-sm border border-[var(--color-gray-200)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)] disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="h-10 w-10 rounded-sm border border-[var(--color-gray-200)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)] disabled:opacity-40 disabled:cursor-not-allowed"
                                 aria-label={t("cart.increaseQty")}
                               >
                                 +
