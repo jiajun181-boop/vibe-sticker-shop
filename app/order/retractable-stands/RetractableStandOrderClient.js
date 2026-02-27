@@ -96,7 +96,7 @@ export default function RetractableStandOrderClient() {
     setQuoteLoading(true);
     setQuoteError(null);
 
-    fetch("/api/quote", {
+    fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -104,7 +104,6 @@ export default function RetractableStandOrderClient() {
         quantity: activeQty,
         widthIn: tier.w,
         heightIn: tier.h,
-        sides: "single",
       }),
       signal: ac.signal,
     })

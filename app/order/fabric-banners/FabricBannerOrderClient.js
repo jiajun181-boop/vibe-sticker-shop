@@ -120,7 +120,7 @@ export default function FabricBannerOrderClient() {
     setQuoteLoading(true);
     setQuoteError(null);
 
-    fetch("/api/quote", {
+    fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -128,7 +128,6 @@ export default function FabricBannerOrderClient() {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
-        sides: sidesId,
       }),
       signal: ac.signal,
     })

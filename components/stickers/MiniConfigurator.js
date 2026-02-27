@@ -68,7 +68,7 @@ export default function MiniConfigurator({ cuttingTypeId, onClose }) {
     setQuoteLoading(true);
     setQuoteError(null);
 
-    fetch("/api/quote", {
+    fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

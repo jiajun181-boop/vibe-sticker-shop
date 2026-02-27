@@ -98,7 +98,7 @@ export default function VinylLetteringOrderClient() {
     setQuoteLoading(true);
     setQuoteError(null);
 
-    fetch("/api/quote", {
+    fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -106,7 +106,6 @@ export default function VinylLetteringOrderClient() {
         quantity: activeQty,
         widthIn,
         heightIn,
-        sides: "single",
       }),
       signal: ac.signal,
     })

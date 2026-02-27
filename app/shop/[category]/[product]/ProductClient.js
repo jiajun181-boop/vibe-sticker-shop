@@ -669,7 +669,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
     return null;
   }, [quantity, widthIn, heightIn, selectedSize, selectedSizeLabel, product.pricingPreset]);
 
-  // Debounced /api/quote fetch (300ms)
+  // Debounced /api/pricing/calculate fetch (300ms)
   const requestQuote = useCallback(
     async (slug, qty, w, h, mat, sizeLabel, addonIds, finishingIds, namesCount) => {
       const body = { slug, quantity: qty };
@@ -683,7 +683,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
       if (Array.isArray(finishingIds) && finishingIds.length > 0) body.finishings = finishingIds;
       if (namesCount && namesCount > 1) body.names = namesCount;
 
-      const res = await fetch("/api/quote", {
+      const res = await fetch("/api/pricing/calculate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

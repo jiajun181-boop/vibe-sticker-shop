@@ -85,7 +85,7 @@ export default function StickerSheetOrderClient() {
     setQuoteLoading(true);
     setQuoteError(null);
 
-    fetch("/api/quote", {
+    fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -93,7 +93,6 @@ export default function StickerSheetOrderClient() {
         quantity: activeQty,
         widthIn: sheetSize.w,
         heightIn: sheetSize.h,
-        sides: "single",
       }),
       signal: ac.signal,
     })

@@ -173,7 +173,7 @@ export default function VinylBannerOrderClient() {
     setQuoteLoading(true);
     setQuoteError(null);
 
-    fetch("/api/quote", {
+    fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -181,7 +181,6 @@ export default function VinylBannerOrderClient() {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
-        sides: sidesId,
       }),
       signal: ac.signal,
     })
@@ -195,7 +194,7 @@ export default function VinylBannerOrderClient() {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty, sidesId]);
+  }, [size.w, size.h, activeQty]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);

@@ -86,10 +86,10 @@ export default function KissCutStickerOrderClient() {
     setQuoteLoading(true);
     setQuoteError(null);
 
-    fetch("/api/quote", {
+    fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug: "kiss-cut-stickers", quantity: activeQty, widthIn: size.w, heightIn: size.h, sides: "single" }),
+      body: JSON.stringify({ slug: "kiss-cut-stickers", quantity: activeQty, widthIn: size.w, heightIn: size.h }),
       signal: ac.signal,
     })
       .then((r) => r.json().then((d) => ({ ok: r.ok, data: d })))
