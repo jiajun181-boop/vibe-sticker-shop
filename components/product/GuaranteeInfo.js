@@ -30,7 +30,7 @@ export default function GuaranteeInfo() {
           {t("guarantee.contact")}
         </li>
       </ul>
-      <Link href="/faq#returns" className="inline-block text-xs font-semibold text-[var(--color-gray-700)] underline hover:text-[var(--color-gray-900)]">
+      <Link href="/returns" className="inline-block text-xs font-semibold text-[var(--color-gray-700)] underline hover:text-[var(--color-gray-900)]">
         {t("guarantee.learnMore")}
       </Link>
     </div>

@@ -286,6 +286,22 @@ export default function PricingSidebar({
             {t?.("configurator.freeProof") || "Free Proof"}
           </span>
         </div>
+
+        {/* Quality guarantee + refund link */}
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 space-y-1.5">
+          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700">
+            <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+            </svg>
+            {t?.("configurator.qualityGuarantee") || "Quality Guarantee"}
+          </div>
+          <p className="text-[11px] text-emerald-600 leading-relaxed">
+            {t?.("configurator.guaranteeDesc") || "Free reprints if we make an error. You approve a digital proof before we print."}
+          </p>
+          <a href="/returns" className="inline-block text-[11px] font-semibold text-emerald-700 underline hover:text-emerald-900">
+            {t?.("configurator.refundPolicy") || "Refund & Return Policy"}
+          </a>
+        </div>
       </div>
     </aside>
   );

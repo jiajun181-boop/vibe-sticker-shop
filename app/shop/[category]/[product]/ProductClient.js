@@ -8,6 +8,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { validateDimensions } from "@/lib/materialLimits";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { PaymentBadges } from "@/components/TrustBadges";
+import GuaranteeInfo from "@/components/product/GuaranteeInfo";
 import { MobileBottomBar, ArtworkUpload, MaterialSwatchGrid } from "@/components/configurator";
 import ImageGallery from "@/components/product/ImageGallery";
 import { trackAddToCart, trackOptionChange, trackQuoteLoaded, trackBuyNow, trackUploadStarted, trackViewItem } from "@/lib/analytics";
@@ -2452,6 +2453,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         Custom Quote
                       </Link>
                     </div>
+                    <GuaranteeInfo />
+                    <PaymentBadges />
                   </div>
               </div>
 
