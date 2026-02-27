@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   ConfigStep,
@@ -95,7 +95,9 @@ export default function BusinessCardConfigurator({ slug }) {
     : 0;
 
   const totalSurcharge = roundedSurcharge + multiNamePrintCost + multiNameFileFees - multiNameDiscount;
-  quote.addSurcharge(totalSurcharge);
+  useEffect(() => {
+    quote.addSurcharge(totalSurcharge);
+  }, [totalSurcharge]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0;
 
