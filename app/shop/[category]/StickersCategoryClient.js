@@ -16,30 +16,65 @@ const BASE = "/shop/stickers-labels-decals";
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-/* ── Slug → filter tag mapping ── */
+/* ── Slugs excluded from main page (safety / industrial / facility) ── */
+const EXCLUDED_SLUGS = new Set([
+  // Safety & Warning
+  "fire-extinguisher-location-stickers", "first-aid-location-stickers",
+  "emergency-exit-egress-signs-set", "no-smoking-decals-set",
+  "safety-labels", "safety-notice-decal-pack",
+  "ppe-required-signs", "ppe-hard-hat-stickers",
+  "slip-trip-hazard-signs", "confined-space-warning-signs",
+  "high-voltage-warning-signs", "arc-flash-labels",
+  "lockout-tagout-labels", "crane-lift-capacity-labels",
+  "forklift-safety-decals", "hazard-ghs-labels",
+  // Industrial
+  "industrial-labels", "pipe-markers-color-coded", "pipe-markers-custom",
+  "chemical-storage-labels", "electrical-panel-labels",
+  "whmis-workplace-labels", "dock-door-numbers",
+  "rack-labels-warehouse", "warehouse-zone-labels",
+  // Facility / Asset
+  "asset-tags-tamper-evident", "asset-tags-qr-barcode",
+  "cable-panel-labels", "tool-box-bin-labels",
+]);
+
+/* ── Slug → filter tag mapping (core products only) ── */
 const SLUG_TAG = {
-  "die-cut-stickers": "die-cut",
-  "clear-singles": "die-cut",
-  "removable-stickers": "kiss-cut",
-  "kiss-cut-stickers": "kiss-cut",
-  "sticker-sheets": "sheets",
-  "kiss-cut-sticker-sheets": "sheets",
-  "stickers-multi-on-sheet": "sheets",
-  "sticker-pages": "sheets",
-  "roll-labels": "roll-labels",
-  "clear-labels": "roll-labels",
-  "kraft-paper-labels": "roll-labels",
-  "holographic-stickers": "specialty",
-  "vinyl-lettering": "specialty",
+  // Custom Stickers
+  "die-cut-stickers": "custom-stickers",
+  "kiss-cut-stickers": "custom-stickers",
+  "kiss-cut-sticker-sheets": "custom-stickers",
+  "removable-stickers": "custom-stickers",
+  "holographic-stickers": "custom-stickers",
+  "foil-stickers": "custom-stickers",
+  "clear-singles": "custom-stickers",
+  "heavy-duty-vinyl-stickers": "custom-stickers",
+  "stickers-color-on-clear": "custom-stickers",
+  "stickers-color-on-white": "custom-stickers",
+  // Labels & Rolls
+  "sticker-rolls": "labels-rolls",
+  "roll-labels": "labels-rolls",
+  "labels-roll-quote": "labels-rolls",
+  "clear-labels": "labels-rolls",
+  "kraft-paper-labels": "labels-rolls",
+  "white-bopp-labels": "labels-rolls",
+  "freezer-labels": "labels-rolls",
+  "barcode-labels": "labels-rolls",
+  "qr-code-labels": "labels-rolls",
+  // Sheets & Packs
+  "sticker-sheets": "sheets-packs",
+  "sticker-packs": "sheets-packs",
+  "stickers-multi-on-sheet": "sheets-packs",
+  // Vinyl Lettering
+  "vinyl-lettering": "vinyl-lettering",
+  "transfer-vinyl-lettering": "vinyl-lettering",
 };
 
 const FILTER_TABS = [
   { id: "all", key: "stickerCat.filter.all" },
-  { id: "die-cut", key: "stickerCat.filter.die-cut" },
-  { id: "kiss-cut", key: "stickerCat.filter.kiss-cut" },
-  { id: "sheets", key: "stickerCat.filter.sheets" },
-  { id: "roll-labels", key: "stickerCat.filter.roll-labels" },
-  { id: "specialty", key: "stickerCat.filter.specialty" },
+  { id: "custom-stickers", key: "stickerCat.filter.customStickers" },
+  { id: "labels-rolls", key: "stickerCat.filter.labelsRolls" },
+  { id: "sheets-packs", key: "stickerCat.filter.sheetsPacks" },
+  { id: "vinyl-lettering", key: "stickerCat.filter.vinylLettering" },
 ];
 
 /* ── Material pills ── */
@@ -60,8 +95,9 @@ const MATERIAL_PILLS = [
 
 /* ── Related categories ── */
 const RELATED = [
-  { title: "Safety & Warning Decals", titleZh: "安全警示贴纸", href: `${BASE}/safety-warning-decals` },
-  { title: "Facility & Asset Labels", titleZh: "设施资产标签", href: `${BASE}/facility-asset-labels` },
+  { titleKey: "stickerCat.related.safety", title: "Safety & Warning Decals", titleZh: "安全警示贴纸", desc: "Fire, PPE, hazard, lockout/tagout", descZh: "消防、PPE、危险、锁定/标签", href: `${BASE}/safety-warning-decals` },
+  { titleKey: "stickerCat.related.industrial", title: "Industrial Labels", titleZh: "工业标签", desc: "Pipe markers, chemical, electrical", descZh: "管道标识、化学品、电气", href: `${BASE}/industrial-labels` },
+  { titleKey: "stickerCat.related.facility", title: "Facility & Asset Labels", titleZh: "设施资产标签", desc: "Asset tags, cable labels, bin labels", descZh: "资产标签、线缆标签、箱标", href: `${BASE}/facility-asset-labels` },
 ];
 
 /* ── Product Card ── */
@@ -172,11 +208,11 @@ export default function StickersCategoryClient({ products = [] }) {
   const { t, locale } = useTranslation();
   const [activeFilter, setActiveFilter] = useState("all");
 
-  // Tag each product and filter
+  // Filter out safety/industrial/facility products, then tag the rest
   const taggedProducts = useMemo(() => {
     return products
-      .filter((p) => p.isActive !== false)
-      .map((p) => ({ ...p, filterTag: SLUG_TAG[p.slug] || "specialty" }));
+      .filter((p) => p.isActive !== false && !EXCLUDED_SLUGS.has(p.slug))
+      .map((p) => ({ ...p, filterTag: SLUG_TAG[p.slug] || "custom-stickers" }));
   }, [products]);
 
   const filteredProducts = useMemo(() => {
@@ -249,7 +285,7 @@ export default function StickersCategoryClient({ products = [] }) {
 
         {filteredProducts.length === 0 && (
           <div className="mt-12 text-center">
-            <p className="text-sm text-[var(--color-gray-400)]">No products found for this filter.</p>
+            <p className="text-sm text-[var(--color-gray-400)]">{t("shop.noProducts")}</p>
           </div>
         )}
 
@@ -275,19 +311,22 @@ export default function StickersCategoryClient({ products = [] }) {
         {/* Related categories */}
         <section className="mt-12">
           <h2 className="text-xl font-semibold tracking-tight">{t("stickerCat.related")}</h2>
-          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-3">
             {RELATED.map((cat) => (
               <Link
                 key={cat.href}
                 href={cat.href}
-                className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-4 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
+                className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-5 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
               >
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
                     {locale === "zh" ? cat.titleZh : cat.title}
                   </h3>
+                  <p className="mt-1 text-xs text-[var(--color-gray-500)] truncate">
+                    {locale === "zh" ? cat.descZh : cat.desc}
+                  </p>
                 </div>
-                <svg className="h-4 w-4 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>
               </Link>
