@@ -436,7 +436,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
                 <input
                   type="number"
                   min="1"
-                  max="1000"
+                  max="100"
                   value={customQty}
                   onChange={(e) => {
                     const v = parseInt(e.target.value, 10);

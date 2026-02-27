@@ -112,6 +112,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [dimErrors, setDimErrors] = useState([]);
   const [laminationId, setLaminationId] = useState("none");
+  const [shapeId, setShapeId] = useState("custom");
 
   // Derived dimensions
   const isCustomSize = sizeIdx === -1;
@@ -194,11 +195,12 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         material: materialId,
         materialName: t(`stickerOrder.mat.${materialId}`),
         lamination: lamination !== "none" ? lamination : null,
+        shape: cutting.shapes ? shapeId : undefined,
         fileName: uploadedFile?.name || null,
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.unitCents, activeQty, cuttingTypeId, widthIn, heightIn, isCustomSize, sizeIdx, cutting, slug, materialId, lamination, uploadedFile, t]);
+  }, [quote.quoteData, quote.unitCents, activeQty, cuttingTypeId, widthIn, heightIn, isCustomSize, sizeIdx, cutting, slug, materialId, lamination, shapeId, uploadedFile, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -220,6 +222,10 @@ export default function InlineConfigurator({ cuttingTypeId }) {
     setQuantity(q);
     setCustomQty("");
     trackOptionChange({ slug, option: "quantity", value: q, quantity: q });
+  }
+  function selectShape(id) {
+    setShapeId(id);
+    trackOptionChange({ slug, option: "shape", value: id, quantity: activeQty });
   }
 
   // Unit price display
@@ -296,6 +302,39 @@ export default function InlineConfigurator({ cuttingTypeId }) {
           </div>
         )}
       </div>
+
+      {/* Shape */}
+      {cutting.shapes && (
+        <div>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+            {t("stickerOrder.shape")}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {cutting.shapes.map((s) => {
+              const isActive = shapeId === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => selectShape(s.id)}
+                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                    isActive
+                      ? "border-gray-900 bg-gray-900 text-[#fff]"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  {t(s.label)}
+                </button>
+              );
+            })}
+          </div>
+          {shapeId === "custom" && (
+            <p className="mt-2 text-xs text-amber-600">
+              {t("stickerOrder.shape.customHint")}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Quantity */}
       <div>

@@ -137,7 +137,7 @@ export default function SignInlineConfigurator({ signTypeId }) {
       .filter(Boolean);
     return {
       id: signType.defaultSlug,
-      name: `Real Estate Sign \u2014 ${sizeLabel}`,
+      name: `${t(`sign.type.${signTypeId}`)} \u2014 ${sizeLabel}`,
       slug: signType.defaultSlug,
       price: Math.round(quote.subtotalCents / activeQty),
       quantity: activeQty,
@@ -154,7 +154,7 @@ export default function SignInlineConfigurator({ signTypeId }) {
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.subtotalCents, activeQty, signTypeId, widthIn, heightIn, isCustomSize, sizeIdx, signType, materialId, doubleSided, accessories, uploadedFile]);
+  }, [quote.quoteData, quote.subtotalCents, activeQty, signTypeId, widthIn, heightIn, isCustomSize, sizeIdx, signType, materialId, doubleSided, accessories, uploadedFile, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -322,7 +322,7 @@ export default function SignInlineConfigurator({ signTypeId }) {
           <input
             type="number"
             min="1"
-            max="999"
+            max="100"
             value={customQty}
             onChange={(e) => setCustomQty(e.target.value)}
             placeholder="Custom qty"

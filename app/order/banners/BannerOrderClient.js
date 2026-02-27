@@ -22,9 +22,9 @@ import {
 const INCH_TO_CM = 2.54;
 
 const PURCHASE_TYPES = [
-  { id: "full-kit", label: "Full Kit (Hardware + Print)", multiplier: 1.0 },
-  { id: "print-only", label: "Print Only (Replacement Graphic)", multiplier: 0.6 },
-  { id: "hardware-only", label: "Hardware Only (No Print)", multiplier: 0.4 },
+  { id: "full-kit", label: "banner.purchaseType.fullKit", multiplier: 1.0 },
+  { id: "print-only", label: "banner.purchaseType.printOnly", multiplier: 0.6 },
+  { id: "hardware-only", label: "banner.purchaseType.hardwareOnly", multiplier: 0.4 },
 ];
 
 export default function BannerOrderClient({ defaultType, productImages }) {
@@ -141,7 +141,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
       quantity: activeQty,
       options: {
         bannerType: typeId,
-        ...(isHardwareType && { purchaseType: PURCHASE_TYPES.find((p) => p.id === purchaseType)?.label || purchaseType }),
+        ...(isHardwareType && { purchaseType: t(PURCHASE_TYPES.find((p) => p.id === purchaseType)?.label || purchaseType) }),
         width: widthIn,
         height: heightIn,
         sizeLabel,
@@ -171,8 +171,8 @@ export default function BannerOrderClient({ defaultType, productImages }) {
   ];
   if (isHardwareType) {
     summaryLines.push({
-      label: "Purchase Type",
-      value: PURCHASE_TYPES.find((p) => p.id === purchaseType)?.label || purchaseType,
+      label: t("banner.purchaseType"),
+      value: t(PURCHASE_TYPES.find((p) => p.id === purchaseType)?.label || purchaseType),
     });
   }
   summaryLines.push(
@@ -195,7 +195,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
   const extraRows = [];
   if (purchaseDiscount !== 0) {
     const pctOff = purchaseType === "print-only" ? "-40%" : "-60%";
-    extraRows.push({ label: PURCHASE_TYPES.find((p) => p.id === purchaseType)?.label || purchaseType, value: pctOff });
+    extraRows.push({ label: t(PURCHASE_TYPES.find((p) => p.id === purchaseType)?.label || purchaseType), value: pctOff });
   }
   if (finishingSurcharge > 0) {
     extraRows.push({ label: t("banner.finishingSurcharge"), value: `+ $${(finishingSurcharge / 100).toFixed(2)}` });
@@ -256,7 +256,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
 
             {/* Step: Purchase Type (hardware products only) */}
             {isHardwareType && (
-              <ConfigStep number={++stepNum} title="Purchase Type" subtitle="Choose what you need — full kit, replacement print, or hardware only.">
+              <ConfigStep number={++stepNum} title={t("banner.purchaseType")} subtitle={t("banner.purchaseType.subtitle")}>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   {PURCHASE_TYPES.map((pt) => {
                     const isActive = purchaseType === pt.id;
@@ -276,10 +276,10 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                             <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                           </span>
                         )}
-                        <span className={`text-sm font-bold ${isActive ? "text-[var(--color-brand-dark,#0e7490)]" : "text-gray-800"}`}>{pt.label}</span>
+                        <span className={`text-sm font-bold ${isActive ? "text-[var(--color-brand-dark,#0e7490)]" : "text-gray-800"}`}>{t(pt.label)}</span>
                         {pt.multiplier < 1 && (
                           <span className="text-[11px] font-semibold text-emerald-600">
-                            {Math.round((1 - pt.multiplier) * 100)}% less than full kit
+                            {t("banner.purchaseType.lessPercent", { pct: String(Math.round((1 - pt.multiplier) * 100)) })}
                           </span>
                         )}
                       </button>
@@ -434,7 +434,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                 <input
                   type="number"
                   min="1"
-                  max="999999"
+                  max="50"
                   value={customQty}
                   onChange={(e) => setCustomQty(e.target.value)}
                   placeholder="e.g. 15"
