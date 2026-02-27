@@ -223,6 +223,7 @@ export default function Footer({ locale = "en" }) {
     {
       title: t("footer.resources"),
       links: [
+        { label: t("footer.howItWorks"), href: "/how-it-works" },
         { label: t("footer.artworkGuidelines"), href: "/artwork-guidelines" },
         { label: t("footer.requestQuote"), href: "/quote" },
         { label: t("footer.faq"), href: "/faq" },
