@@ -14,6 +14,11 @@ const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 // ─── Stand Tier Configuration ───
+// TODO: These priceCents are hardcoded frontend estimates. They should be
+// fetched from the pricing API (/api/pricing/calculate) per tier to ensure
+// consistency with backend pricing. Currently the tier buttons show these
+// cosmetic prices while the actual quote comes from /api/quote with slug
+// "roll-up-banners", and the two may diverge.
 
 const STAND_TIERS = [
   { id: "economy", label: 'Economy 33"\u00d780"', w: 33, h: 80, priceCents: 5900 },
@@ -125,7 +130,9 @@ export default function RetractableStandOrderClient() {
 
   const subtotalCents = quoteData?.totalCents ?? 0;
   const bannerSurcharge = (BANNER_MATERIALS.find((b) => b.id === bannerId)?.surcharge ?? 0) * activeQty;
-  // Print-only: deduct stand hardware cost (~40% discount estimate)
+  // TODO: This 35% print-only discount is a hardcoded frontend estimate with no
+  // backend pricing rule backing it. It should be replaced with an API-driven
+  // discount (e.g. separate "print-only" product slug or a pricing option).
   const printOnlyDiscount = orderType === "print-only" ? Math.round(subtotalCents * 0.35) : 0;
   const adjustedSubtotal = subtotalCents + bannerSurcharge - printOnlyDiscount;
   const totalCents = adjustedSubtotal;

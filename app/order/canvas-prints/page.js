@@ -1,28 +1,7 @@
-import { Suspense } from "react";
-import { getOrderPageImages } from "@/lib/order-page-images";
-import CanvasPrintOrderClient from "./CanvasPrintOrderClient";
+import { redirect } from "next/navigation";
 
-export function generateMetadata() {
-  return {
-    title: "Custom Canvas Prints — Order Online",
-    description: "Order custom canvas prints for wall art, photography, and business displays.",
-    openGraph: { title: "Custom Canvas Prints — Order Online", url: "/order/canvas-prints" },
-    alternates: { canonical: "https://www.lunarprint.ca/order/canvas-prints" },
-  };
-}
-
-export default async function CanvasPrintOrderPage() {
-  const productImages = await getOrderPageImages(["canvas-prints","classic-canvas-prints"]);
-
-  return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
-        </div>
-      }
-    >
-      <CanvasPrintOrderClient productImages={productImages} />
-    </Suspense>
-  );
+// Legacy canvas-prints page — redirect to the new /order/canvas/ configurator.
+// The old CanvasPrintOrderClient is kept for reference but is no longer routed to.
+export default function CanvasPrintOrderPage() {
+  redirect("/order/canvas");
 }

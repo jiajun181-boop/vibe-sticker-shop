@@ -116,6 +116,8 @@ export default function XBannerStandOrderClient() {
   const subtotalCents = quoteData?.totalCents ?? 0;
   const materialSurcharge = (MATERIALS.find((m) => m.id === material)?.surcharge ?? 0) * activeQty;
   const standSurcharge = orderType === "complete-kit" ? (STANDS.find((s) => s.id === stand)?.surcharge ?? 0) * activeQty : 0;
+  // TODO: This 35% print-only discount is a hardcoded frontend estimate with no
+  // backend pricing rule backing it. Should be replaced with API-driven pricing.
   const printOnlyDiscount = orderType === "print-only" ? Math.round(subtotalCents * 0.35) : 0;
   const adjustedSubtotal = subtotalCents + materialSurcharge + standSurcharge - printOnlyDiscount;
   const totalCents = adjustedSubtotal;
