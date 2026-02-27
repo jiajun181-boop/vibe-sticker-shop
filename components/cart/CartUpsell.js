@@ -21,8 +21,7 @@ const COMPLEMENT_RULES = {
 export default function CartUpsell() {
   const cart = useCartStore((s) => s.cart);
   const addItem = useCartStore((s) => s.addItem);
-  const { t, locale } = useTranslation();
-  const isZh = locale === "zh";
+  const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
@@ -96,7 +95,7 @@ export default function CartUpsell() {
                   price: item.basePrice,
                   options: { pricingUnit: item.pricingUnit, category: item.category },
                 });
-                showSuccessToast(isZh ? `${item.name} 已添加` : `${item.name} added`);
+                showSuccessToast(`${item.name} — ${t("cart.itemAdded")}`);
               }}
               className="rounded-sm bg-[var(--color-moon-blue-deep)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#fff] hover:bg-[var(--color-ink-black)]"
             >
