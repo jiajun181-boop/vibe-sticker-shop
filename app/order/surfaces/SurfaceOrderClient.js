@@ -22,7 +22,7 @@ import {
 const INCH_TO_CM = 2.54;
 const APPLICATION_LABELS = { window: "Window", wall: "Wall", floor: "Floor" };
 
-export default function SurfaceOrderClient({ defaultType, productImages }) {
+export default function SurfaceOrderClient({ defaultType, productSlug, productImages }) {
   const { t } = useTranslation();
 
   // --- State ---
@@ -147,8 +147,9 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
   const quoteEnabled = sizeMode === "multi"
     ? multiValid && effectiveQty > 0
     : widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0;
+  const effectiveSlug = productSlug || surfaceType.defaultSlug;
   const quote = useConfiguratorPrice({
-    slug: surfaceType.defaultSlug,
+    slug: effectiveSlug,
     quantity: effectiveQty,
     widthIn: effectiveW,
     heightIn: effectiveH,
@@ -174,9 +175,9 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
         ? `${widthIn.toFixed(1)}" × ${heightIn.toFixed(1)}"`
         : surfaceType.sizes[sizeIdx]?.label;
     return {
-      id: surfaceType.defaultSlug,
+      id: effectiveSlug,
       name: `${t(`surface.type.${typeId}`)} — ${sizeLabel}`,
-      slug: surfaceType.defaultSlug,
+      slug: effectiveSlug,
       price: Math.round(quote.subtotalCents / effectiveQty),
       quantity: effectiveQty,
       options: {

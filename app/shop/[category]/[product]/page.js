@@ -624,7 +624,7 @@ export default async function ProductPage({ params }) {
       signs: <SignOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
       vehicle: <VehicleOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
       canvas: <CanvasOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
-      surfaces: <SurfaceOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
+      surfaces: <SurfaceOrderClient defaultType={configurator.defaultValue} productSlug={decodedSlug} productImages={cfgImages} />,
       "marketing-print": <MarketingPrintOrderClient defaultType={configurator.defaultValue} hideTypeSelector={true} productImages={cfgImages} />,
     };
     return (
