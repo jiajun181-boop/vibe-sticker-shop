@@ -401,35 +401,14 @@ export default async function CategoryPage({ params }) {
     />
   );
 
-  // Stickers & Labels — custom category page with cut-type cards + material browser
+  // Stickers & Labels — flat product grid with filter tabs
   if (decoded === "stickers-labels-decals") {
     try {
-      // Build price map for sticker sub-type cards using displayFromPrice
-      const STICKER_CARD_SLUGS = {
-        "die-cut": ["die-cut-stickers", "clear-singles"],
-        "kiss-cut": ["removable-stickers", "kiss-cut-stickers"],
-        "sticker-sheets": ["sticker-sheets", "kiss-cut-sticker-sheets", "stickers-multi-on-sheet"],
-        "roll-labels": ["roll-labels", "clear-labels", "kraft-paper-labels"],
-        "holographic": ["holographic-stickers"],
-        "vinyl-lettering": ["vinyl-lettering"],
-      };
-      const stickerPrices = {};
-      const stickerImages = {};
-      for (const [cardId, slugs] of Object.entries(STICKER_CARD_SLUGS)) {
-        const slugSet = new Set(slugs);
-        const matching = products.filter(p => slugSet.has(p.slug));
-        const prices = matching.filter(p => p.fromPrice > 0).map(p => p.fromPrice);
-        if (prices.length > 0) stickerPrices[cardId] = Math.min(...prices);
-        if (matching.length > 0) {
-          const img = getProductImage(matching[0]);
-          if (img) stickerImages[cardId] = img;
-        }
-      }
       return (
         <>
           {seoSchemas}
-      <CategoryFaqSchema category={decoded} />
-          <StickersCategoryClient stickerPrices={stickerPrices} stickerImages={stickerImages} />
+          <CategoryFaqSchema category={decoded} />
+          <StickersCategoryClient products={toClientSafe(products)} />
         </>
       );
     } catch (err) {

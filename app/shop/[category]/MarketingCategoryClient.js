@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import CategoryHero from "@/components/category/CategoryHero";
+import CategoryFaq from "@/components/category/CategoryFaq";
 
 const BASE = "/shop/marketing-business-print";
 
@@ -136,15 +138,9 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
           ]}
         />
 
-        {/* Hero */}
-        <header className="mt-6">
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            Marketing & Business Print
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm sm:text-base text-[var(--color-gray-500)]">
-            Professional quality printing for Toronto businesses. From everyday essentials to custom corporate stationery.
-          </p>
-        </header>
+        <div className="mt-6">
+          <CategoryHero category="marketing-business-print" title="Marketing & Business Print" icon="📄" />
+        </div>
 
         {/* Sections */}
         {SECTIONS.map((section) => {
@@ -174,6 +170,8 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
             </section>
           );
         })}
+
+        <CategoryFaq category="marketing-business-print" />
 
         {/* Back to shop */}
         <div className="mt-12 text-center">

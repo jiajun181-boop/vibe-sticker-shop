@@ -7,6 +7,8 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import CategoryHero from "@/components/category/CategoryHero";
+import CategoryFaq from "@/components/category/CategoryFaq";
 import QuickAddButton from "@/components/product/QuickAddButton";
 
 const formatCad = (cents) =>
@@ -150,17 +152,9 @@ export default function SignsCategoryClient({
           ]}
         />
 
-        {/* Header */}
-        <header className="mt-6">
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            {categoryTitle}
-          </h1>
-          {totalCount > 0 && totalCount <= 20 ? null : (
-            <p className="mt-2 text-xs text-[var(--color-gray-400)]">
-              {totalCount} {t("mp.landing.products")}
-            </p>
-          )}
-        </header>
+        <div className="mt-6">
+          <CategoryHero category="signs-rigid-boards" title={categoryTitle} icon="🪧" />
+        </div>
 
         {/* Filter tab bar */}
         <div className="sticky top-[var(--nav-offset,64px)] z-20 -mx-4 sm:-mx-6 2xl:-mx-4 mt-4 border-b border-[var(--color-gray-200)] bg-[var(--color-gray-50)]/95 backdrop-blur-sm px-4 sm:px-6 2xl:px-4">
@@ -222,6 +216,8 @@ export default function SignsCategoryClient({
             No products available yet.
           </p>
         )}
+
+        <CategoryFaq category="signs-rigid-boards" />
 
         {/* Back to shop */}
         <div className="mt-12 text-center">

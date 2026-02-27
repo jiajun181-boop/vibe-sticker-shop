@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { turnaroundI18nKey } from "@/lib/turnaroundConfig";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import CategoryHero from "@/components/category/CategoryHero";
+import CategoryFaq from "@/components/category/CategoryFaq";
 import { ShapeIcon, getShapeBg } from "@/components/stickers/ShapeIcon";
 import DiscountBadge from "@/components/stickers/DiscountBadge";
 import TrustBadgeBar from "@/components/stickers/TrustBadgeBar";
@@ -284,34 +286,25 @@ export default function SubGroupLandingClient({
           ]}
         />
 
-        {/* Header */}
-        <header className="mt-6">
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            {categoryIcon && <span className="mr-2">{categoryIcon}</span>}
-            {categoryTitle}
-          </h1>
-          {totalCount > 10 && (
-            <p className="mt-1 text-sm text-[var(--color-gray-500)]">
-              {totalCount} {t("mp.landing.products")}
-            </p>
-          )}
+        <div className="mt-6">
+          <CategoryHero category={category} title={categoryTitle} icon={categoryIcon} />
+        </div>
 
-          {/* Trust badges for stickers category */}
-          {isStickersCategory && <TrustBadgeBar />}
+        {/* Trust badges for stickers category */}
+        {isStickersCategory && <TrustBadgeBar />}
 
-          {/* Search */}
-          <div className="relative mt-4 w-full sm:w-72">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-gray-400)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("shop.searchCategory") || "Search this category..."}
-              className="w-full rounded-full border border-[var(--color-gray-200)] bg-white pl-9 pr-4 py-2 text-sm focus:border-[var(--color-gray-400)] focus:outline-none"
-            />
-          </div>
-        </header>
+        {/* Search */}
+        <div className="relative mt-4 w-full sm:w-72">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-gray-400)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("shop.searchCategory") || "Search this category..."}
+            className="w-full rounded-full border border-[var(--color-gray-200)] bg-white pl-9 pr-4 py-2 text-sm focus:border-[var(--color-gray-400)] focus:outline-none"
+          />
+        </div>
 
         {/* Quick-jump pill bar */}
         {subGroups.length > 4 && (
@@ -425,6 +418,8 @@ export default function SubGroupLandingClient({
             </div>
           </section>
         )}
+
+        <CategoryFaq category={category} />
 
         {/* Back to shop */}
         <div className="mt-12 text-center">

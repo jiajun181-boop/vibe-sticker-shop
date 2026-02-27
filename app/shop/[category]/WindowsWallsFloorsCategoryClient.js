@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import CategoryHero from "@/components/category/CategoryHero";
+import CategoryFaq from "@/components/category/CategoryFaq";
 import { isSvgImage } from "@/lib/product-image";
 
 const BASE = "/shop/windows-walls-floors";
@@ -124,15 +126,9 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfIm
           ]}
         />
 
-        {/* Hero */}
-        <header className="mt-6">
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            Windows, Walls & Floors
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm sm:text-base text-[var(--color-gray-500)]">
-            Custom window films, wall graphics, and floor decals. Professional installation-ready vinyl with full-colour printing.
-          </p>
-        </header>
+        <div className="mt-6">
+          <CategoryHero category="windows-walls-floors" title="Windows, Walls & Floors" icon="🪟" />
+        </div>
 
         {/* Sections */}
         {SECTIONS.map((section) => {
@@ -162,6 +158,8 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfIm
             </section>
           );
         })}
+
+        <CategoryFaq category="windows-walls-floors" />
 
         {/* Back to shop */}
         <div className="mt-12 text-center">

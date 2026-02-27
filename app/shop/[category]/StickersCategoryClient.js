@@ -2,110 +2,47 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
+import { getProductImage, isSvgImage } from "@/lib/product-image";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { isSvgImage } from "@/lib/product-image";
+import CategoryHero from "@/components/category/CategoryHero";
+import CategoryFaq from "@/components/category/CategoryFaq";
+import QuickAddButton from "@/components/product/QuickAddButton";
 
 const BASE = "/shop/stickers-labels-decals";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-/* ── Section 1: Custom Stickers (Individual) ── */
-const INDIVIDUAL_CARDS = [
-  {
-    priceKey: "die-cut",
-    title: "Die-Cut Stickers",
-    description: "Cut to the exact shape of your design. Premium, standalone look.",
-    href: `${BASE}/die-cut-stickers`,
-    gradient: "from-violet-400 to-fuchsia-400",
-    fallbackPrice: "From $25 / 25 pcs",
-    cta: "Configure",
-  },
-  {
-    priceKey: "kiss-cut",
-    title: "Kiss-Cut Singles",
-    description: "Easy-peel backing stays intact. Great for giveaways and packaging.",
-    href: `${BASE}/kiss-cut-singles`,
-    gradient: "from-pink-400 to-rose-400",
-    fallbackPrice: "From $25 / 25 pcs",
-    cta: "Configure",
-  },
+/* ── Slug → filter tag mapping ── */
+const SLUG_TAG = {
+  "die-cut-stickers": "die-cut",
+  "clear-singles": "die-cut",
+  "removable-stickers": "kiss-cut",
+  "kiss-cut-stickers": "kiss-cut",
+  "sticker-sheets": "sheets",
+  "kiss-cut-sticker-sheets": "sheets",
+  "stickers-multi-on-sheet": "sheets",
+  "sticker-pages": "sheets",
+  "roll-labels": "roll-labels",
+  "clear-labels": "roll-labels",
+  "kraft-paper-labels": "roll-labels",
+  "holographic-stickers": "specialty",
+  "vinyl-lettering": "specialty",
+};
+
+const FILTER_TABS = [
+  { id: "all", key: "stickerCat.filter.all" },
+  { id: "die-cut", key: "stickerCat.filter.die-cut" },
+  { id: "kiss-cut", key: "stickerCat.filter.kiss-cut" },
+  { id: "sheets", key: "stickerCat.filter.sheets" },
+  { id: "roll-labels", key: "stickerCat.filter.roll-labels" },
+  { id: "specialty", key: "stickerCat.filter.specialty" },
 ];
 
-/* ── Section 2: Labels & Sheets (For Packaging) ── */
-const PACKAGING_CARDS = [
-  {
-    priceKey: "sticker-sheets",
-    title: "Sticker Sheets",
-    description: "Full page of stickers on paper or vinyl. Great for product labels.",
-    href: `${BASE}/sticker-pages`,
-    gradient: "from-sky-400 to-cyan-400",
-    fallbackPrice: "From $74 / 10 sheets",
-    cta: "Configure",
-  },
-  {
-    priceKey: "roll-labels",
-    title: "Roll Labels",
-    description: "High volume on rolls. Min 500+. 5\u20137 day lead time.",
-    href: `${BASE}/sticker-rolls`,
-    gradient: "from-amber-400 to-orange-400",
-    fallbackPrice: "From $159 / 500 pcs",
-    cta: "Get a Quote",
-  },
-];
-
-/* ── Section 3: Specialty Decals & Lettering ── */
-const SPECIALTY_CARDS = [
-  {
-    priceKey: "holographic",
-    title: "Holographic Stickers",
-    description: "Eye-catching rainbow holographic finish. Die-cut to any shape.",
-    href: `${BASE}/die-cut-stickers?material=holographic`,
-    gradient: "from-indigo-400 to-purple-400",
-    fallbackPrice: "From $93 / 100 pcs",
-    cta: "Configure",
-  },
-  {
-    priceKey: "vinyl-lettering",
-    title: "Vinyl Lettering",
-    description: "Individual cut letters & logos. For windows, walls & vehicles.",
-    href: `${BASE}/vinyl-lettering`,
-    gradient: "from-emerald-400 to-teal-400",
-    fallbackPrice: "From $80",
-    cta: "Configure",
-  },
-];
-
-/* ── Section 4: Safety & Warning Decals ── */
-const SAFETY_CARDS = [
-  {
-    priceKey: "safety-warning",
-    title: "Safety & Warning Decals",
-    titleZh: "安全警示贴纸",
-    description: "OSHA, WHMIS, GHS-compliant safety decals. Fire, electrical, PPE, and hazard warning labels for workplaces.",
-    href: `${BASE}/safety-warning-decals`,
-    gradient: "from-red-500 to-orange-500",
-    fallbackPrice: "From $12",
-    cta: "Browse",
-  },
-];
-
-/* ── Section 5: Facility & Asset Labels ── */
-const FACILITY_CARDS = [
-  {
-    priceKey: "facility-asset",
-    title: "Facility & Asset Labels",
-    titleZh: "设施资产标签",
-    description: "Warehouse markers, pipe labels, rack tags, asset tracking, and equipment ID plates for industrial facilities.",
-    href: `${BASE}/facility-asset-labels`,
-    gradient: "from-blue-500 to-indigo-500",
-    fallbackPrice: "From $15",
-    cta: "Browse",
-  },
-];
-
-/* ── Section 6: Shop by Material pills ── */
+/* ── Material pills ── */
 const MATERIAL_PILLS = [
   { id: "white-vinyl", label: "White Vinyl", href: `${BASE}/die-cut-stickers?material=white_vinyl` },
   { id: "matte-vinyl", label: "Matte Vinyl", href: `${BASE}/die-cut-stickers?material=matte_vinyl` },
@@ -121,55 +58,142 @@ const MATERIAL_PILLS = [
   { id: "white-cling", label: "White Cling", href: `${BASE}/die-cut-stickers?material=static_cling_white` },
 ];
 
-/* ── Shared card component ── */
-function ProductCard({ card, stickerPrices, size = "large", imageUrl }) {
-  const isLarge = size === "large";
-  const isSvg = imageUrl && isSvgImage(imageUrl);
+/* ── Related categories ── */
+const RELATED = [
+  { title: "Safety & Warning Decals", titleZh: "安全警示贴纸", href: `${BASE}/safety-warning-decals` },
+  { title: "Facility & Asset Labels", titleZh: "设施资产标签", href: `${BASE}/facility-asset-labels` },
+];
+
+/* ── Product Card ── */
+function ProductCard({ product, t }) {
+  const href = `/shop/${product.category}/${product.slug}`;
+  const imageSrc = getProductImage(product, product.category);
+  const isSvg = imageSrc && isSvgImage(imageSrc);
+  const price = product.fromPrice || product.basePrice || 0;
+  const turnaround = getTurnaround(product);
+  const tag = SLUG_TAG[product.slug];
+
   return (
-    <Link
-      href={card.href}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
-    >
-      <div className={`relative overflow-hidden ${imageUrl ? "bg-[var(--color-gray-100)]" : `bg-gradient-to-br ${card.gradient} flex items-center justify-center`} ${isLarge ? "aspect-[3/2]" : "aspect-[5/2]"}`}>
-        {imageUrl ? (
-          isSvg ? (
-            <img src={imageUrl} alt={card.title} className="h-full w-full object-cover" />
+    <article className="group overflow-hidden rounded-xl shadow-[var(--shadow-card)] bg-white transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1">
+      <Link href={href} className="block">
+        <div className="relative aspect-square sm:aspect-[4/3] bg-[var(--color-gray-100)]">
+          {imageSrc ? (
+            isSvg ? (
+              <img src={imageSrc} alt={product.name} className="h-full w-full object-cover" />
+            ) : (
+              <Image
+                src={imageSrc}
+                alt={product.name}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw"
+              />
+            )
           ) : (
-            <Image src={imageUrl} alt={card.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
-          )
-        ) : (
-          <p className="px-6 text-center text-lg font-bold text-[#fff] drop-shadow-md">
-            {card.title}
-          </p>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col p-5">
-        <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-lg" : "text-base"}`}>
-          {card.title}
-        </h3>
-        <p className="mt-1 text-sm text-[var(--color-gray-500)] leading-relaxed">
-          {card.description}
-        </p>
-        <div className="mt-auto pt-4 flex items-center justify-between">
-          <span className="text-sm font-bold text-[var(--color-gray-900)]">
-            {stickerPrices[card.priceKey]
-              ? `From ${formatCad(stickerPrices[card.priceKey])}`
-              : card.fallbackPrice}
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
-            {card.cta}
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-200 to-fuchsia-100">
+              <p className="px-4 text-center text-sm font-semibold text-gray-700 drop-shadow-sm">
+                {product.name}
+              </p>
+            </div>
+          )}
+
+          {/* Turnaround badge */}
+          {turnaround && (
+            <span className={`absolute top-2 left-2 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white ${turnaroundColor(turnaround)}`}>
+              {t(turnaroundI18nKey(turnaround))}
+            </span>
+          )}
+        </div>
+      </Link>
+
+      <div className="p-4">
+        <Link href={href}>
+          <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)] transition-colors line-clamp-2">
+            {product.name}
+          </h3>
+          {product.description && (
+            <p className="mt-1 text-[11px] text-[var(--color-gray-500)] line-clamp-2">
+              {product.description}
+            </p>
+          )}
+        </Link>
+        <div className="mt-3 flex items-center justify-between">
+          {price > 0 ? (
+            <span className="text-sm font-bold text-[var(--color-brand)]">
+              {t("product.from", { price: formatCad(price) })}
+            </span>
+          ) : (
+            <span className="text-xs text-[var(--color-gray-400)]">
+              {t("configurator.requestQuote")}
+            </span>
+          )}
+          <Link
+            href={href}
+            className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white hover:bg-[var(--color-brand-dark)] transition-colors"
+          >
+            {t("mp.landing.viewOrder")}
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
-          </span>
+          </Link>
         </div>
       </div>
-    </Link>
+    </article>
   );
 }
 
-export default function StickersCategoryClient({ stickerPrices = {}, stickerImages = {} }) {
-  const { t } = useTranslation();
+/* ── Why Choose Us icons ── */
+function WaterproofIcon() {
+  return (
+    <svg className="h-5 w-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+    </svg>
+  );
+}
+
+function BoltIcon() {
+  return (
+    <svg className="h-5 w-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+    </svg>
+  );
+}
+
+function ShapeIcon() {
+  return (
+    <svg className="h-5 w-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7.848 8.25l1.536.887M7.848 8.25a3 3 0 11-5.196-3 3 3 0 015.196 3zm1.536.887a2.165 2.165 0 011.083 1.839c.005.351.054.695.14 1.024M9.384 9.137l2.077 1.199M7.848 15.75l1.536-.887m-1.536.887a3 3 0 01-5.196 3 3 3 0 015.196-3zm1.536-.887a2.165 2.165 0 001.083-1.838c.005-.352.054-.695.14-1.025m-1.223 2.863l2.077-1.199m0-3.328a4.323 4.323 0 012.068-1.379l5.325-1.628a4.5 4.5 0 012.48-.044l.803.215-7.794 4.5m-2.882-1.664A4.331 4.331 0 0010.607 12m3.736 0l7.794 4.5-.802.215a4.5 4.5 0 01-2.48-.043l-5.326-1.629a4.324 4.324 0 01-2.068-1.379M14.343 12l-2.882 1.664" />
+    </svg>
+  );
+}
+
+/* ── Main Component ── */
+export default function StickersCategoryClient({ products = [] }) {
+  const { t, locale } = useTranslation();
+  const [activeFilter, setActiveFilter] = useState("all");
+
+  // Tag each product and filter
+  const taggedProducts = useMemo(() => {
+    return products
+      .filter((p) => p.isActive !== false)
+      .map((p) => ({ ...p, filterTag: SLUG_TAG[p.slug] || "specialty" }));
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    if (activeFilter === "all") return taggedProducts;
+    return taggedProducts.filter((p) => p.filterTag === activeFilter);
+  }, [taggedProducts, activeFilter]);
+
+  // Count per filter
+  const filterCounts = useMemo(() => {
+    const counts = { all: taggedProducts.length };
+    for (const tab of FILTER_TABS) {
+      if (tab.id !== "all") {
+        counts[tab.id] = taggedProducts.filter((p) => p.filterTag === tab.id).length;
+      }
+    }
+    return counts;
+  }, [taggedProducts]);
 
   return (
     <main className="bg-[var(--color-gray-50)] pb-20 pt-10 text-[var(--color-gray-900)]">
@@ -177,100 +201,63 @@ export default function StickersCategoryClient({ stickerPrices = {}, stickerImag
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: "Custom Stickers & Labels" },
+            { label: t("categoryHero.desc.stickers-labels-decals") ? "Custom Stickers & Labels" : "Custom Stickers & Labels" },
           ]}
         />
 
-        {/* Header */}
-        <header className="mt-6">
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            Custom Stickers & Labels
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm sm:text-base text-[var(--color-gray-500)]">
-            Custom printed stickers & labels on premium vinyl and paper.
-            <span className="mx-1.5 text-[var(--color-gray-300)]">&bull;</span>
-            Waterproof
-            <span className="mx-1.5 text-[var(--color-gray-300)]">&bull;</span>
-            UV Resistant
-            <span className="mx-1.5 text-[var(--color-gray-300)]">&bull;</span>
-            Any Shape, Any Size
-          </p>
-        </header>
+        {/* Hero */}
+        <div className="mt-6">
+          <CategoryHero
+            category="stickers-labels-decals"
+            title="Custom Stickers & Labels"
+            icon="🏷️"
+          />
+        </div>
 
-        {/* ── Section 1: Custom Stickers (Individual) ── */}
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">Custom Stickers (Individual)</h2>
-          <p className="mt-1 text-sm text-[var(--color-gray-500)]">
-            Perfect for handouts, events, and retail ready.
-          </p>
-          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
-            {INDIVIDUAL_CARDS.map((card) => (
-              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} imageUrl={stickerImages[card.priceKey]} />
-            ))}
+        {/* Filter tabs */}
+        <div className="mt-8 flex flex-wrap gap-2">
+          {FILTER_TABS.map((tab) => {
+            const count = filterCounts[tab.id] || 0;
+            if (tab.id !== "all" && count === 0) return null;
+            const isActive = activeFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveFilter(tab.id)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                  isActive
+                    ? "bg-[var(--color-brand)] text-white shadow-sm"
+                    : "bg-white text-[var(--color-gray-600)] border border-[var(--color-gray-200)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+                }`}
+              >
+                {t(tab.key)}
+                <span className={`ml-1.5 text-xs ${isActive ? "text-white/70" : "text-[var(--color-gray-400)]"}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Product grid */}
+        <div className="mt-6 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} t={t} />
+          ))}
+        </div>
+
+        {filteredProducts.length === 0 && (
+          <div className="mt-12 text-center">
+            <p className="text-sm text-[var(--color-gray-400)]">No products found for this filter.</p>
           </div>
-        </section>
+        )}
 
-        {/* ── Section 2: Labels & Sheets ── */}
+        {/* Shop by Material */}
         <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight">Labels & Sheets</h2>
+          <h2 className="text-xl font-semibold tracking-tight">{t("stickerCat.shopByMaterial")}</h2>
           <p className="mt-1 text-sm text-[var(--color-gray-500)]">
-            Best for applying to products, boxes, and mailers.
-          </p>
-          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
-            {PACKAGING_CARDS.map((card) => (
-              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} imageUrl={stickerImages[card.priceKey]} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Section 3: Specialty Decals & Lettering ── */}
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight">Specialty Decals & Lettering</h2>
-          <p className="mt-1 text-sm text-[var(--color-gray-500)]">
-            Stand out with unique finishes or window applications.
-          </p>
-          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
-            {SPECIALTY_CARDS.map((card) => (
-              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} size="medium" imageUrl={stickerImages[card.priceKey]} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Section 4: Safety & Warning Decals ── */}
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {t?.("category.safetyWarningDecals") || "Safety & Warning Decals"}
-          </h2>
-          <p className="mt-1 text-sm text-[var(--color-gray-500)]">
-            OSHA & WHMIS compliant labels for workplaces, warehouses, and job sites.
-          </p>
-          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
-            {SAFETY_CARDS.map((card) => (
-              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} size="medium" imageUrl={stickerImages[card.priceKey]} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Section 5: Facility & Asset Labels ── */}
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {t?.("category.facilityAssetLabels") || "Facility & Asset Labels"}
-          </h2>
-          <p className="mt-1 text-sm text-[var(--color-gray-500)]">
-            Industrial markers, pipe labels, rack tags, and asset tracking for facilities.
-          </p>
-          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
-            {FACILITY_CARDS.map((card) => (
-              <ProductCard key={card.priceKey} card={card} stickerPrices={stickerPrices} size="medium" imageUrl={stickerImages[card.priceKey]} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Section 6: Shop by Material ── */}
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight">Shop by Material</h2>
-          <p className="mt-1 text-sm text-[var(--color-gray-500)]">
-            Know what you need? Jump straight to your preferred material.
+            {t("stickerCat.shopByMaterialDesc")}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {MATERIAL_PILLS.map((mat) => (
@@ -285,6 +272,66 @@ export default function StickersCategoryClient({ stickerPrices = {}, stickerImag
           </div>
         </section>
 
+        {/* Related categories */}
+        <section className="mt-12">
+          <h2 className="text-xl font-semibold tracking-tight">{t("stickerCat.related")}</h2>
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
+            {RELATED.map((cat) => (
+              <Link
+                key={cat.href}
+                href={cat.href}
+                className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-4 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
+              >
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
+                    {locale === "zh" ? cat.titleZh : cat.title}
+                  </h3>
+                </div>
+                <svg className="h-4 w-4 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Why Choose Us */}
+        <section className="mt-12">
+          <h2 className="text-xl font-semibold tracking-tight">{t("stickerCat.whyChooseUs")}</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <WaterproofIcon />
+                <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">{t("stickerCat.waterproof")}</h3>
+              </div>
+              <p className="text-sm text-[var(--color-gray-700)]">{t("stickerCat.waterproofDesc")}</p>
+            </div>
+            <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <BoltIcon />
+                <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">{t("stickerCat.fastTurnaround")}</h3>
+              </div>
+              <p className="text-sm text-[var(--color-gray-700)]">{t("stickerCat.fastTurnaroundDesc")}</p>
+            </div>
+            <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <ShapeIcon />
+                <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">{t("stickerCat.anyShape")}</h3>
+              </div>
+              <p className="text-sm text-[var(--color-gray-700)]">{t("stickerCat.anyShapeDesc")}</p>
+              <Link
+                href="/quote"
+                className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
+              >
+                {t("configurator.requestQuote")}
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <CategoryFaq category="stickers-labels-decals" />
+
         {/* Back to shop */}
         <div className="mt-12 text-center">
           <Link
@@ -294,62 +341,8 @@ export default function StickersCategoryClient({ stickerPrices = {}, stickerImag
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
-            All Categories
+            {t("product.allCategories")}
           </Link>
-        </div>
-
-        {/* ── Section 5: Why Choose Us ── */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <svg className="h-5 w-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-              </svg>
-              <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-                Waterproof & UV Protected
-              </h3>
-            </div>
-            <p className="text-sm text-[var(--color-gray-700)]">
-              Our vinyl stickers are waterproof, dishwasher safe, and UV
-              protected for 3&ndash;5 years outdoor.
-            </p>
-          </div>
-
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <svg className="h-5 w-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-              </svg>
-              <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-                Fast Turnaround
-              </h3>
-            </div>
-            <p className="text-sm text-[var(--color-gray-700)]">
-              Standard 3&ndash;5 business days. Rush production available.
-              Free shipping on orders over $99.
-            </p>
-          </div>
-
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <svg className="h-5 w-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.848 8.25l1.536.887M7.848 8.25a3 3 0 11-5.196-3 3 3 0 015.196 3zm1.536.887a2.165 2.165 0 011.083 1.839c.005.351.054.695.14 1.024M9.384 9.137l2.077 1.199M7.848 15.75l1.536-.887m-1.536.887a3 3 0 01-5.196 3 3 3 0 015.196-3zm1.536-.887a2.165 2.165 0 001.083-1.838c.005-.352.054-.695.14-1.025m-1.223 2.863l2.077-1.199m0-3.328a4.323 4.323 0 012.068-1.379l5.325-1.628a4.5 4.5 0 012.48-.044l.803.215-7.794 4.5m-2.882-1.664A4.331 4.331 0 0010.607 12m3.736 0l7.794 4.5-.802.215a4.5 4.5 0 01-2.48-.043l-5.326-1.629a4.324 4.324 0 01-2.068-1.379M14.343 12l-2.882 1.664" />
-              </svg>
-              <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-                Any Shape, Any Size
-              </h3>
-            </div>
-            <p className="text-sm text-[var(--color-gray-700)]">
-              Custom die-cut to any shape from 0.5&quot; to 12&quot;.
-              Full color CMYK + white ink at 1440 DPI.
-            </p>
-            <Link
-              href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
-            >
-              Get a Quote
-            </Link>
-          </div>
         </div>
       </div>
     </main>

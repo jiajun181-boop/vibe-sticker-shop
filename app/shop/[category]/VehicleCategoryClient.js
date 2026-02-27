@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import CategoryHero from "@/components/category/CategoryHero";
+import CategoryFaq from "@/components/category/CategoryFaq";
 import { isSvgImage } from "@/lib/product-image";
 
 const BASE = "/shop/vehicle-graphics-fleet";
@@ -382,27 +384,9 @@ export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImage
           ]}
         />
 
-        <header className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                {t("vc.tagline")}
-              </p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-                {t("vc.title")}
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[var(--color-gray-600)] sm:text-base">
-                {t("vc.subtitle")}
-              </p>
-            </div>
-            <div className="grid gap-2 text-xs sm:grid-cols-2">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">{t("vc.badge.pickup")}</div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">{t("vc.badge.fleet")}</div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">{t("vc.badge.compliance")}</div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">{t("vc.badge.mobile")}</div>
-            </div>
-          </div>
-        </header>
+        <div className="mt-6">
+          <CategoryHero category="vehicle-graphics-fleet" title={t("vc.title")} icon="🚗" />
+        </div>
 
         {visibleSections.length > 0 && (
           <div className="sticky top-[calc(var(--promo-offset,0px)+var(--nav-offset,72px)+8px)] z-10 -mx-4 mt-5 border-y border-slate-200/70 bg-white/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 2xl:-mx-4 2xl:px-4">
@@ -473,6 +457,8 @@ export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImage
             </Link>
           </div>
         </div>
+
+        <CategoryFaq category="vehicle-graphics-fleet" />
 
         <div className="mt-12 text-center">
           <Link

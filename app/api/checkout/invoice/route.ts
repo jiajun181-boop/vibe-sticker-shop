@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { quoteProduct } from "@/lib/pricing/quote-server.js";
 import { checkoutLimiter, getClientIp } from "@/lib/rate-limit";
 import { getUserFromRequest } from "@/lib/auth";
+import { sendEmail } from "@/lib/email/resend";
+import { buildInvoiceConfirmationHtml } from "@/lib/email/templates/invoice-confirmation";
 
 const MetaSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
 
@@ -246,6 +248,35 @@ export async function POST(req: NextRequest) {
       },
       select: { id: true, customerEmail: true, totalAmount: true },
     });
+
+    // Send confirmation email (non-blocking)
+    try {
+      const orderWithItems = await prisma.order.findUnique({
+        where: { id: created.id },
+        include: { items: true },
+      });
+      const html = buildInvoiceConfirmationHtml({
+        orderId: created.id,
+        customerName: contactName,
+        companyName: companyName || null,
+        totalAmount: created.totalAmount,
+        paymentTerms,
+        items: (orderWithItems?.items || []).map((i: any) => ({
+          name: i.productName,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
+        })),
+      });
+      await sendEmail({
+        to: email,
+        subject: `Invoice Order Received — #${created.id.slice(0, 8)}`,
+        html,
+        template: "invoice-confirmation",
+        orderId: created.id,
+      });
+    } catch (emailErr) {
+      console.error("[Invoice checkout] email send failed:", emailErr);
+    }
 
     return NextResponse.json({
       ok: true,

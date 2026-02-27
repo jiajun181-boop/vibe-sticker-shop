@@ -6,6 +6,8 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import CategoryHero from "@/components/category/CategoryHero";
+import CategoryFaq from "@/components/category/CategoryFaq";
 import QuickAddButton from "@/components/product/QuickAddButton";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 
@@ -197,37 +199,13 @@ export default function CategoryLandingClient({
           ]}
         />
 
-        {/* Header */}
-        <header className="mt-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-                {categoryIcon && <span className="mr-2">{categoryIcon}</span>}
-                {categoryTitle}
-              </h1>
-              <p className="mt-1 text-sm text-[var(--color-gray-500)]">
-                {products.length} {t("mp.landing.products")}
-              </p>
-            </div>
+        <div className="mt-6">
+          <CategoryHero category={category} title={categoryTitle} icon={categoryIcon} />
+        </div>
 
-            {/* Sort */}
-            <div className="flex items-center gap-2">
-              <label className="text-xs uppercase tracking-[0.14em] text-[var(--color-gray-400)]">{t("shop.sort")}</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="rounded-sm border border-[var(--color-gray-300)] bg-white px-2 py-1.5 text-sm focus:border-[var(--color-gray-900)] focus:outline-none"
-              >
-                <option value="popular">{t("shop.sortPopular")}</option>
-                <option value="price-asc">{t("shop.sortPriceAsc")}</option>
-                <option value="price-desc">{t("shop.sortPriceDesc")}</option>
-                <option value="name">{t("shop.sortName")}</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="relative mt-4 w-full sm:w-72">
+        {/* Sort + Search */}
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="relative w-full sm:w-72">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-gray-400)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
@@ -238,7 +216,20 @@ export default function CategoryLandingClient({
               className="w-full rounded-sm border border-[var(--color-gray-200)] bg-white pl-9 pr-4 py-2 text-sm focus:border-[var(--color-gray-400)] focus:outline-none"
             />
           </div>
-        </header>
+          <div className="flex items-center gap-2">
+            <label className="text-xs uppercase tracking-[0.14em] text-[var(--color-gray-400)]">{t("shop.sort")}</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="rounded-sm border border-[var(--color-gray-300)] bg-white px-2 py-1.5 text-sm focus:border-[var(--color-gray-900)] focus:outline-none"
+            >
+              <option value="popular">{t("shop.sortPopular")}</option>
+              <option value="price-asc">{t("shop.sortPriceAsc")}</option>
+              <option value="price-desc">{t("shop.sortPriceDesc")}</option>
+              <option value="name">{t("shop.sortName")}</option>
+            </select>
+          </div>
+        </div>
 
         {useCaseCards.length > 0 && (
           <section className="mt-5 rounded-xl shadow-[var(--shadow-card)] bg-white p-4">
@@ -332,6 +323,8 @@ export default function CategoryLandingClient({
             )}
           </div>
         )}
+
+        <CategoryFaq category={category} />
 
         {/* Browse all categories link */}
         <div className="mt-12 text-center">
