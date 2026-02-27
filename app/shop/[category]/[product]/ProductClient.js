@@ -24,6 +24,7 @@ import { useFavoritesStore } from "@/lib/favorites";
 import RelatedLinks from "@/components/product/RelatedLinks";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import ProductSpecsSection from "@/components/product/ProductSpecsSection";
+import ReviewsSection from "@/components/product/ReviewsSection";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { isOversizedProduct } from "@/lib/pickup-hints";
 import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
@@ -2465,6 +2466,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         </section>
 
         {!embedded && <ProductSpecsSection specs={specs} productSpecs={productSpecs} t={t} />}
+
+        {!embedded && <ReviewsSection productId={product.id} productName={product.name} />}
 
         {!embedded && <RelatedProducts product={product} relatedProducts={relatedProducts} t={t} />}
 
