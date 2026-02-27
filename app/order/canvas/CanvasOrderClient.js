@@ -128,7 +128,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
     heightIn,
     material: materialId,
     options: quoteExtra,
-    enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
+    enabled: !isQuoteOnly && widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 
   // Add frame surcharge to quote
@@ -136,8 +136,10 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
     quote.addSurcharge(frameSurcharge);
   }, [frameSurcharge]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const isQuoteOnly = canvasType.quoteOnly === true;
+
   const canAddToCart =
-    quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
+    !isQuoteOnly && quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
 
   // Cart
   const buildCartItem = useCallback(() => {
@@ -698,41 +700,82 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
             </ConfigStep>
           </div>
 
-          <PricingSidebar
-            previewSlot={previewSlot}
-            summaryLines={summaryLines}
-            quoteLoading={quote.quoteLoading}
-            quoteError={quote.quoteError}
-            unitCents={quote.unitCents}
-            subtotalCents={quote.subtotalCents}
-            taxCents={quote.taxCents}
-            totalCents={quote.subtotalCents}
-            canAddToCart={canAddToCart}
-            onAddToCart={handleAddToCart}
-            onBuyNow={handleBuyNow}
-            buyNowLoading={buyNowLoading}
-            extraRows={extraRows}
-            badges={[t("canvas.badgeInk"), t("canvas.badgeShipping")]}
-            t={t}
-          />
+          {isQuoteOnly ? (
+            <div className="sticky top-24 space-y-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm lg:col-span-1">
+              {previewSlot}
+              <div className="space-y-1.5">
+                {summaryLines.map((line, i) => (
+                  <div key={i} className="flex items-baseline justify-between text-xs">
+                    <span className="text-gray-500">{line.label}</span>
+                    <span className="font-medium text-gray-700">{line.value}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+                <p className="text-sm font-bold text-amber-800">{t("canvas.quoteOnlyTitle")}</p>
+                <p className="mt-1 text-xs text-amber-700">{t("canvas.quoteOnlyDesc")}</p>
+              </div>
+              <a
+                href="/quote"
+                className="block w-full rounded-lg bg-gray-900 px-4 py-3 text-center text-sm font-bold uppercase tracking-wider text-[#fff] shadow-lg transition-all hover:bg-gray-800 active:scale-[0.98]"
+              >
+                {t("canvas.requestQuote")}
+              </a>
+              <a
+                href="tel:+14168889998"
+                className="block w-full rounded-lg border-2 border-gray-900 px-4 py-2.5 text-center text-sm font-bold uppercase tracking-wider text-gray-900 transition-all hover:bg-gray-50 active:scale-[0.98]"
+              >
+                {t("canvas.callForQuote")}
+              </a>
+            </div>
+          ) : (
+            <PricingSidebar
+              previewSlot={previewSlot}
+              summaryLines={summaryLines}
+              quoteLoading={quote.quoteLoading}
+              quoteError={quote.quoteError}
+              unitCents={quote.unitCents}
+              subtotalCents={quote.subtotalCents}
+              taxCents={quote.taxCents}
+              totalCents={quote.subtotalCents}
+              canAddToCart={canAddToCart}
+              onAddToCart={handleAddToCart}
+              onBuyNow={handleBuyNow}
+              buyNowLoading={buyNowLoading}
+              extraRows={extraRows}
+              badges={[t("canvas.badgeInk"), t("canvas.badgeShipping")]}
+              t={t}
+            />
+          )}
         </div>
       </div>
 
-      <MobileBottomBar
-        quoteLoading={quote.quoteLoading}
-        hasQuote={!!quote.quoteData}
-        totalCents={quote.subtotalCents}
-        summaryText={
-          quote.quoteData
-            ? `${formatCad(quote.unitCents)}/ea × ${activeQty}`
-            : null
-        }
-        canAddToCart={canAddToCart}
-        onAddToCart={handleAddToCart}
-        onBuyNow={handleBuyNow}
-        buyNowLoading={buyNowLoading}
-        t={t}
-      />
+      {isQuoteOnly ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,.08)] lg:hidden">
+          <a
+            href="/quote"
+            className="block w-full rounded-lg bg-gray-900 px-4 py-3 text-center text-sm font-bold uppercase tracking-wider text-[#fff] shadow-lg"
+          >
+            {t("canvas.requestQuote")}
+          </a>
+        </div>
+      ) : (
+        <MobileBottomBar
+          quoteLoading={quote.quoteLoading}
+          hasQuote={!!quote.quoteData}
+          totalCents={quote.subtotalCents}
+          summaryText={
+            quote.quoteData
+              ? `${formatCad(quote.unitCents)}/ea × ${activeQty}`
+              : null
+          }
+          canAddToCart={canAddToCart}
+          onAddToCart={handleAddToCart}
+          onBuyNow={handleBuyNow}
+          buyNowLoading={buyNowLoading}
+          t={t}
+        />
+      )}
     </main>
   );
 }

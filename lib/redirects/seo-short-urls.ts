@@ -19,8 +19,8 @@ export const seoShortUrlRedirects = [
   // ── /canvas/* ──
   { source: "/canvas/canvas-collages", destination: "/shop/canvas-prints/canvas-collages", permanent: true },
   { source: "/canvas/classic-canvas-prints", destination: "/shop/canvas-prints/classic-canvas-prints", permanent: true },
-  { source: "/canvas/floating-frame-canvas", destination: "/shop/canvas-prints/floating-frame-canvas", permanent: true },
-  { source: "/canvas/hex-canvas-prints", destination: "/shop/canvas-prints/hex-canvas-prints", permanent: true },
+  { source: "/canvas/floating-frame-canvas", destination: "/shop/canvas-prints", permanent: true },
+  { source: "/canvas/hex-canvas-prints", destination: "/shop/canvas-prints", permanent: true },
   { source: "/canvas/large-format-canvas", destination: "/shop/canvas-prints/large-format-canvas", permanent: true },
   { source: "/canvas/rolled-canvas-prints", destination: "/shop/canvas-prints/rolled-canvas-prints", permanent: true },
   { source: "/canvas/triptych-canvas-split", destination: "/shop/canvas-prints/triptych-canvas-split", permanent: true },

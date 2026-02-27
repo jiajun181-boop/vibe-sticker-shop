@@ -36,6 +36,12 @@ export default function SignInlineConfigurator({ signTypeId }) {
   const paramMaterial = searchParams.get("material");
   const paramQty = searchParams.get("qty");
 
+  // --- Purchase type support ---
+  const hasPurchaseTypes = Array.isArray(signType.purchaseTypes) && signType.purchaseTypes.length > 0;
+  const [purchaseType, setPurchaseType] = useState(signType.defaultPurchaseType || "full-kit");
+  const isFrameOnly = hasPurchaseTypes && purchaseType === "frame-only";
+  const isPanelOnly = hasPurchaseTypes && (purchaseType === "panel-only" || purchaseType === "print-only");
+
   // --- State ---
   const [materialId, setMaterialId] = useState(
     paramMaterial && signType.materials.some((m) => m.id === paramMaterial)
@@ -100,12 +106,30 @@ export default function SignInlineConfigurator({ signTypeId }) {
     setDimErrors(errs);
   }, [widthIn, heightIn, signType]);
 
+  // --- Frame accessory for purchase type ---
+  const frameAccessoryId = useMemo(() => {
+    if (!hasPurchaseTypes) return null;
+    const pt = signType.purchaseTypes.find((p) => p.id === purchaseType);
+    return pt?.frameAccessory || null;
+  }, [hasPurchaseTypes, signType, purchaseType]);
+
   // --- Accessory surcharges ---
   const accessorySurcharge = useMemo(() => {
-    return accessories.reduce((sum, aId) => {
+    if (isFrameOnly) return 0; // frame-only pricing handled separately
+    // For panel-only, filter out the frame accessory
+    const effectiveAccessories = isPanelOnly
+      ? accessories.filter((aId) => aId !== frameAccessoryId)
+      : accessories;
+    return effectiveAccessories.reduce((sum, aId) => {
       return sum + (ACCESSORY_OPTIONS[aId]?.surcharge ?? 0) * activeQty;
     }, 0);
-  }, [accessories, activeQty]);
+  }, [accessories, activeQty, isFrameOnly, isPanelOnly, frameAccessoryId]);
+
+  // --- Frame-only pricing ---
+  const frameOnlyTotalCents = useMemo(() => {
+    if (!isFrameOnly || !frameAccessoryId) return 0;
+    return (ACCESSORY_OPTIONS[frameAccessoryId]?.surcharge ?? 0) * activeQty;
+  }, [isFrameOnly, frameAccessoryId, activeQty]);
 
   // --- Quote ---
   const quote = useConfiguratorPrice({
@@ -115,7 +139,7 @@ export default function SignInlineConfigurator({ signTypeId }) {
     heightIn,
     material: materialId,
     options: { doubleSided },
-    enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
+    enabled: !isFrameOnly && widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 
   // Apply surcharges (accessories + double-sided)
@@ -124,15 +148,38 @@ export default function SignInlineConfigurator({ signTypeId }) {
     quote.addSurcharge(accessorySurcharge + dsExtra);
   }, [accessorySurcharge, doubleSided, quote.rawSubtotalCents]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
+  const canAddToCart = isFrameOnly
+    ? activeQty > 0 && frameOnlyTotalCents > 0
+    : quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
 
   // --- Cart ---
   const buildCartItem = useCallback(() => {
-    if (!quote.quoteData || activeQty <= 0) return null;
+    if (activeQty <= 0) return null;
+
+    // Frame-only mode
+    if (isFrameOnly && frameAccessoryId) {
+      const frameOpt = ACCESSORY_OPTIONS[frameAccessoryId];
+      return {
+        id: `${signType.defaultSlug}-frame`,
+        name: `${frameOpt?.label || "Frame"} × ${activeQty}`,
+        slug: signType.defaultSlug,
+        price: frameOpt?.surcharge ?? 0,
+        quantity: activeQty,
+        options: {
+          signType: signTypeId,
+          purchaseType: "frame-only",
+          accessory: frameOpt?.label,
+        },
+        forceNewLine: true,
+      };
+    }
+
+    if (!quote.quoteData) return null;
     const sizeLabel = isCustomSize
       ? `${widthIn.toFixed(1)}" \u00d7 ${heightIn.toFixed(1)}"`
       : signType.sizes[sizeIdx]?.label;
     const accessoryLabels = accessories
+      .filter((aId) => !isPanelOnly || aId !== frameAccessoryId)
       .map((aId) => ACCESSORY_OPTIONS[aId]?.label)
       .filter(Boolean);
     return {
@@ -143,6 +190,7 @@ export default function SignInlineConfigurator({ signTypeId }) {
       quantity: activeQty,
       options: {
         signType: signTypeId,
+        purchaseType: purchaseType || undefined,
         material: materialId,
         materialName: signType.materials.find((m) => m.id === materialId)?.label || materialId,
         width: widthIn,
@@ -154,7 +202,7 @@ export default function SignInlineConfigurator({ signTypeId }) {
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.subtotalCents, activeQty, signTypeId, widthIn, heightIn, isCustomSize, sizeIdx, signType, materialId, doubleSided, accessories, uploadedFile, t]);
+  }, [quote.quoteData, quote.subtotalCents, activeQty, signTypeId, widthIn, heightIn, isCustomSize, sizeIdx, signType, materialId, doubleSided, accessories, uploadedFile, t, isFrameOnly, isPanelOnly, frameAccessoryId, purchaseType]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -191,7 +239,36 @@ export default function SignInlineConfigurator({ signTypeId }) {
 
   return (
     <div className="space-y-5">
-      {/* Material */}
+      {/* Purchase Type (A-Frame / Real Estate only) */}
+      {hasPurchaseTypes && (
+        <div>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+            {t("sign.purchaseType")}
+          </h3>
+          <div className="flex gap-2">
+            {signType.purchaseTypes.map((pt) => {
+              const isActive = purchaseType === pt.id;
+              return (
+                <button
+                  key={pt.id}
+                  type="button"
+                  onClick={() => setPurchaseType(pt.id)}
+                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                    isActive
+                      ? "border-gray-900 bg-gray-900 text-[#fff]"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  {t(`sign.${pt.id}`)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Material, Size, Printing (hidden for frame-only) */}
+      {!isFrameOnly && (<>
       <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
           Material
@@ -293,6 +370,7 @@ export default function SignInlineConfigurator({ signTypeId }) {
           </div>
         </div>
       )}
+      </>)}
 
       {/* Quantity */}
       <div>
@@ -334,14 +412,16 @@ export default function SignInlineConfigurator({ signTypeId }) {
         </div>
       </div>
 
-      {/* Accessories */}
-      {signType.accessories.length > 0 && (
+      {/* Accessories (hidden for frame-only; filter frame accessories for panel-only) */}
+      {!isFrameOnly && signType.accessories.length > 0 && (
         <div>
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
             Accessories
           </h3>
           <div className="space-y-2">
-            {signType.accessories.map((aId) => {
+            {signType.accessories
+              .filter((aId) => !isPanelOnly || aId !== frameAccessoryId)
+              .map((aId) => {
               const acc = ACCESSORY_OPTIONS[aId];
               if (!acc) return null;
               const checked = accessories.includes(aId);
@@ -367,8 +447,8 @@ export default function SignInlineConfigurator({ signTypeId }) {
         </div>
       )}
 
-      {/* Upload Artwork */}
-      <div>
+      {/* Upload Artwork (hidden for frame-only) */}
+      {!isFrameOnly && <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
           Artwork <span className="font-normal normal-case text-gray-400">(optional)</span>
         </h3>
@@ -378,11 +458,24 @@ export default function SignInlineConfigurator({ signTypeId }) {
           onRemove={() => setUploadedFile(null)}
           t={t}
         />
-      </div>
+      </div>}
 
       {/* Price Summary */}
       <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-        {quote.quoteLoading ? (
+        {isFrameOnly ? (
+          <div className="space-y-1.5">
+            <div className="flex items-baseline justify-between text-xs text-gray-500">
+              <span>{ACCESSORY_OPTIONS[frameAccessoryId]?.label} × {activeQty}</span>
+              <span className="font-medium text-gray-700">{formatCad(frameOnlyTotalCents)}</span>
+            </div>
+            <hr className="border-gray-200" />
+            <div className="flex items-baseline justify-between">
+              <span className="text-sm font-black text-gray-900">Total</span>
+              <span className="text-xl font-black text-gray-900">{formatCad(frameOnlyTotalCents)}</span>
+            </div>
+            <p className="text-right text-[10px] text-gray-400">Before tax</p>
+          </div>
+        ) : quote.quoteLoading ? (
           <div className="space-y-2">
             <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
             <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />

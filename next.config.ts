@@ -150,6 +150,21 @@ const nextConfig: NextConfig = {
       { source: "/shop/windows-walls-floors/static-cling-frosted", destination: "/shop/windows-walls-floors/static-cling", permanent: true },
       { source: "/shop/windows-walls-floors/static-cling-standard", destination: "/shop/windows-walls-floors/static-cling", permanent: true },
 
+      // ── Deactivated product redirects (Feb 2026 cleanup) ──
+      { source: "/shop/stickers-labels-decals/removable-stickers", destination: "/shop/stickers-labels-decals/kiss-cut-singles", permanent: true },
+      { source: "/shop/stickers-labels-decals/labels-roll-quote", destination: "/shop/stickers-labels-decals/sticker-rolls", permanent: true },
+      { source: "/shop/stickers-labels-decals/kiss-cut-sticker-sheets", destination: "/shop/stickers-labels-decals/sticker-pages", permanent: true },
+      { source: "/shop/stickers-labels-decals/stickers-multi-on-sheet", destination: "/shop/stickers-labels-decals/sticker-pages", permanent: true },
+      { source: "/shop/:cat/parking-lot-stencils", destination: "/shop/stickers-labels-decals/facility-asset-labels", permanent: true },
+      { source: "/shop/:cat/valve-tags-engraved", destination: "/shop/stickers-labels-decals/facility-asset-labels", permanent: true },
+      { source: "/shop/:cat/equipment-rating-plates", destination: "/shop/stickers-labels-decals/facility-asset-labels", permanent: true },
+      { source: "/shop/:cat/aisle-markers-hanging", destination: "/shop/stickers-labels-decals/facility-asset-labels", permanent: true },
+      { source: "/shop/canvas-prints/hex-canvas-prints", destination: "/shop/canvas-prints", permanent: true },
+      { source: "/shop/canvas-prints/floating-frame-canvas", destination: "/shop/canvas-prints", permanent: true },
+      { source: "/shop/:cat/ifta-cab-card-holder", destination: "/shop/vehicle-graphics-fleet/inspection-compliance", permanent: true },
+      { source: "/shop/:cat/fleet-vehicle-inspection-book", destination: "/shop/vehicle-graphics-fleet/inspection-compliance", permanent: true },
+      { source: "/shop/:cat/hours-of-service-log-holder", destination: "/shop/vehicle-graphics-fleet/inspection-compliance", permanent: true },
+
       // ── Legacy /order/ routes → current product pages ──
       { source: "/order/banners", destination: "/shop/banners-displays/vinyl-banners", permanent: true },
       { source: "/order/canvas", destination: "/shop/canvas-prints", permanent: true },
