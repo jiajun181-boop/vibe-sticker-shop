@@ -42,8 +42,6 @@ const SLUG_TAG = {
   // Custom Stickers
   "die-cut-stickers": "custom-stickers",
   "kiss-cut-stickers": "custom-stickers",
-  "kiss-cut-sticker-sheets": "custom-stickers",
-  "removable-stickers": "custom-stickers",
   "holographic-stickers": "custom-stickers",
   "foil-stickers": "custom-stickers",
   "clear-singles": "custom-stickers",
@@ -53,7 +51,6 @@ const SLUG_TAG = {
   // Labels & Rolls
   "sticker-rolls": "labels-rolls",
   "roll-labels": "labels-rolls",
-  "labels-roll-quote": "labels-rolls",
   "clear-labels": "labels-rolls",
   "kraft-paper-labels": "labels-rolls",
   "white-bopp-labels": "labels-rolls",
@@ -63,7 +60,6 @@ const SLUG_TAG = {
   // Sheets & Packs
   "sticker-sheets": "sheets-packs",
   "sticker-packs": "sheets-packs",
-  "stickers-multi-on-sheet": "sheets-packs",
   // Vinyl Lettering
   "vinyl-lettering": "vinyl-lettering",
   "transfer-vinyl-lettering": "vinyl-lettering",
