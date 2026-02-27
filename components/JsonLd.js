@@ -21,23 +21,67 @@ const CATEGORY_DISPLAY_NAMES = {
 export function OrganizationSchema() {
   const data = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": ["Organization", "LocalBusiness"],
+    "@id": `${SITE_URL}/#organization`,
     name: "La Lunar Printing Inc.",
     url: SITE_URL,
     logo: `${SITE_URL}/logo-lunarprint.png`,
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: "+1-647-783-4728",
-      contactType: "customer service",
-      areaServed: "CA",
-      availableLanguage: ["English", "Chinese"],
-    },
+    image: `${SITE_URL}/logo-social.png`,
+    telephone: "+1-647-783-4728",
+    email: "info@lunarprint.ca",
+    description: "Toronto custom printing shop. Stickers, labels, banners, signs, vehicle wraps, business cards & more. Factory-direct pricing, fast turnaround.",
+    foundingDate: "2018",
+    priceRange: "$$",
+    currenciesAccepted: "CAD",
+    paymentAccepted: "Visa, Mastercard, American Express, e-Transfer",
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        telephone: "+1-647-783-4728",
+        contactType: "customer service",
+        availableLanguage: "English",
+      },
+      {
+        "@type": "ContactPoint",
+        telephone: "+1-647-886-9288",
+        contactType: "customer service",
+        availableLanguage: "Chinese",
+      },
+    ],
     address: {
       "@type": "PostalAddress",
-      addressLocality: "Toronto",
+      streetAddress: "11 Progress Ave #21",
+      addressLocality: "Scarborough",
       addressRegion: "ON",
+      postalCode: "M1P 4S7",
       addressCountry: "CA",
     },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 43.7758678,
+      longitude: -79.2520749,
+    },
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        opens: "10:00",
+        closes: "18:00",
+      },
+    ],
+    areaServed: [
+      { "@type": "Country", name: "Canada" },
+      { "@type": "Country", name: "United States" },
+    ],
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5.0",
+      reviewCount: "21",
+      bestRating: "5",
+    },
+    sameAs: [
+      "https://www.google.com/maps/place/La+Lunar+Printing+Inc./@43.7758678,-79.2546498,17z",
+    ],
   };
   return (
     <script

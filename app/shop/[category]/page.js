@@ -7,6 +7,7 @@ import { computeFromPrice } from "@/lib/pricing/from-price";
 import { getSmartDefaults } from "@/lib/pricing/get-smart-defaults";
 import { getCuttingTypeForSlug, getCuttingType } from "@/lib/sticker-order-config";
 import { CATEGORY_FAQ_SCHEMAS } from "@/lib/seo/category-faq-schemas";
+import { BreadcrumbSchemaFromItems, CollectionPageSchema } from "@/components/JsonLd";
 import { getProductImage } from "@/lib/product-image";
 import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
@@ -26,6 +27,25 @@ function CategoryFaqSchema({ category }) {
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
+  );
+}
+
+function CategorySeoSchemas({ category, categoryName, description, products }) {
+  return (
+    <>
+      <BreadcrumbSchemaFromItems items={[
+        { name: "Shop", url: `${SITE_URL}/shop` },
+        { name: categoryName },
+      ]} />
+      {products && products.length > 0 && (
+        <CollectionPageSchema
+          name={categoryName}
+          description={description || `Custom ${categoryName} printing — professional quality, fast turnaround.`}
+          url={`${SITE_URL}/shop/${category}`}
+          products={products}
+        />
+      )}
+    </>
   );
 }
 
@@ -371,6 +391,16 @@ export default async function CategoryPage({ params }) {
     }
   }
 
+  // Shared SEO schemas for all category pages (breadcrumb + collection)
+  const categoryTitle = meta?.title || decoded.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const seoSchemas = (
+    <CategorySeoSchemas
+      category={decoded}
+      categoryName={categoryTitle}
+      products={products}
+    />
+  );
+
   // Stickers & Labels — custom category page with cut-type cards + material browser
   if (decoded === "stickers-labels-decals") {
     try {
@@ -397,7 +427,8 @@ export default async function CategoryPage({ params }) {
       }
       return (
         <>
-          <CategoryFaqSchema category={decoded} />
+          {seoSchemas}
+      <CategoryFaqSchema category={decoded} />
           <StickersCategoryClient stickerPrices={stickerPrices} stickerImages={stickerImages} />
         </>
       );
@@ -456,7 +487,8 @@ export default async function CategoryPage({ params }) {
 
     return (
       <>
-        <CategoryFaqSchema category={decoded} />
+        {seoSchemas}
+      <CategoryFaqSchema category={decoded} />
         <MarketingCategoryClient marketingPrices={marketingPrices} marketingImages={marketingImages} marketingImages2={marketingImages2} />
       </>
     );
@@ -498,7 +530,8 @@ export default async function CategoryPage({ params }) {
 
     return (
       <>
-        <CategoryFaqSchema category={decoded} />
+        {seoSchemas}
+      <CategoryFaqSchema category={decoded} />
         <BannersCategoryClient bannerPrices={bannerPrices} bannerImages={bannerImages} bannerImages2={bannerImages2} />
       </>
     );
@@ -519,7 +552,8 @@ export default async function CategoryPage({ params }) {
 
     return (
       <>
-        <CategoryFaqSchema category={decoded} />
+        {seoSchemas}
+      <CategoryFaqSchema category={decoded} />
         <SignsCategoryClient
           category={decoded}
           categoryTitle={meta?.title || "Signs & Display Boards"}
@@ -562,7 +596,8 @@ export default async function CategoryPage({ params }) {
 
     return (
       <>
-        <CategoryFaqSchema category={decoded} />
+        {seoSchemas}
+      <CategoryFaqSchema category={decoded} />
         <WindowsWallsFloorsCategoryClient wwfPrices={wwfPrices} wwfImages={wwfImages} wwfImages2={wwfImages2} />
       </>
     );
@@ -597,7 +632,8 @@ export default async function CategoryPage({ params }) {
 
     return (
       <>
-        <CategoryFaqSchema category={decoded} />
+        {seoSchemas}
+      <CategoryFaqSchema category={decoded} />
         <CanvasCategoryClient canvasPrices={canvasPrices} canvasImages={canvasImages} canvasImages2={canvasImages2} />
       </>
     );
@@ -676,7 +712,8 @@ export default async function CategoryPage({ params }) {
 
     return (
       <>
-        <CategoryFaqSchema category={decoded} />
+        {seoSchemas}
+      <CategoryFaqSchema category={decoded} />
         <VehicleCategoryClient vehiclePrices={vehiclePrices} vehicleImages={vehicleImages} vehicleImages2={vehicleImages2} />
       </>
     );
@@ -718,7 +755,8 @@ export default async function CategoryPage({ params }) {
 
       return (
         <>
-          <CategoryFaqSchema category={decoded} />
+          {seoSchemas}
+      <CategoryFaqSchema category={decoded} />
           <CategoryLandingClient
             category={decoded}
             categoryTitle={meta?.title || decoded}
@@ -823,7 +861,8 @@ export default async function CategoryPage({ params }) {
 
     return (
       <>
-        <CategoryFaqSchema category={decoded} />
+        {seoSchemas}
+      <CategoryFaqSchema category={decoded} />
         <SubGroupLandingClient
           category={decoded}
           categoryTitle={meta?.title || decoded}
@@ -870,6 +909,7 @@ export default async function CategoryPage({ params }) {
 
   return (
     <>
+      {seoSchemas}
       <CategoryFaqSchema category={decoded} />
       <CategoryLandingClient
         category={decoded}
