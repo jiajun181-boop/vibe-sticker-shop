@@ -64,7 +64,7 @@ function sortProducts(list, sortBy, catOrder) {
 /* ── Category Card Grid ─────────────────────────────────────────── */
 
 /* ── Small category card (no sub-groups) ──────────────────────── */
-function SmallCard({ catSlug, meta, count, previews, t }) {
+function SmallCard({ catSlug, meta, count, previews, t, catTitle }) {
   return (
     <Link
       href={meta?.href || `/shop/${catSlug}`}
@@ -83,7 +83,7 @@ function SmallCard({ catSlug, meta, count, previews, t }) {
         <div className="mt-2 flex -space-x-1.5">
           {previews.map((url, i) => (
             <div key={i} className="relative h-7 w-7 rounded-full border-2 border-white overflow-hidden bg-[var(--color-gray-100)]">
-              <Image src={url} alt="" fill className="object-cover" sizes="28px" unoptimized={url.endsWith(".svg")} />
+              <Image src={url} alt={`${catTitle || catSlug} product preview`} fill className="object-cover" sizes="28px" unoptimized={url.endsWith(".svg")} />
             </div>
           ))}
           {count > previews.length && (
@@ -159,7 +159,8 @@ function renderCategoryCards(categorySlugs, categoryMeta, categoryCounts, catego
       return <ParentCard key={catSlug} catSlug={catSlug} meta={meta} count={count} t={t} />;
     }
 
-    return <SmallCard key={catSlug} catSlug={catSlug} meta={meta} count={count} previews={previews} t={t} />;
+    const catTitle = t(`catalog.cat.${catSlug}`) !== `catalog.cat.${catSlug}` ? t(`catalog.cat.${catSlug}`) : (meta?.title || catSlug);
+    return <SmallCard key={catSlug} catSlug={catSlug} meta={meta} count={count} previews={previews} t={t} catTitle={catTitle} />;
   });
 }
 

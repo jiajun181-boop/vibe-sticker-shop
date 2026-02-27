@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { calculatePrice } from "@/lib/pricing/template-resolver";
+import { createRateLimiter, getClientIp } from "@/lib/rate-limit";
+
+const pricingLimiter = createRateLimiter({ windowMs: 60_000, max: 30 });
 
 /**
  * POST /api/pricing/calculate — Public pricing endpoint
@@ -44,6 +47,12 @@ import { calculatePrice } from "@/lib/pricing/template-resolver";
  * }
  */
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const { success: allowed } = pricingLimiter.check(ip);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const { slug } = body;

@@ -510,7 +510,7 @@ export default function Navbar({ catalogConfig }) {
           <button
             type="button"
             onClick={() => setLocale(locale === "zh" ? "en" : "zh")}
-            className="md:hidden px-2.5 py-2 text-xs font-bold text-[var(--color-gray-500)] hover:text-[var(--color-gray-800)] transition-colors"
+            className="md:hidden px-2.5 py-3 text-xs font-bold text-[var(--color-gray-500)] hover:text-[var(--color-gray-800)] transition-colors"
           >
             {locale === "zh" ? "EN" : "中"}
           </button>
@@ -519,7 +519,7 @@ export default function Navbar({ catalogConfig }) {
           {!authLoading && (
             <Link
               href={authUser ? "/account" : "/login"}
-              className="md:hidden p-2 text-[var(--color-gray-500)] hover:text-[var(--color-gray-800)] transition-colors"
+              className="md:hidden p-2.5 text-[var(--color-gray-500)] hover:text-[var(--color-gray-800)] transition-colors"
               aria-label={authUser ? t("nav.account") : t("nav.login")}
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -566,7 +566,7 @@ export default function Navbar({ catalogConfig }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("nav.searchPlaceholder")}
-              className="w-full rounded-full border border-[var(--color-gray-300)] bg-[var(--color-paper-cream)] pl-9 pr-4 py-2 text-sm outline-none focus:border-[var(--color-moon-blue)] focus:bg-white"
+              className="w-full rounded-full border border-[var(--color-gray-300)] bg-[var(--color-paper-cream)] pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[var(--color-moon-blue)] focus:bg-white"
             />
           </form>
           {renderSearchDropdown(mobileDropdownRef)}
@@ -588,7 +588,7 @@ export default function Navbar({ catalogConfig }) {
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="rounded-sm p-1.5 text-[var(--color-gray-400)] transition-colors hover:bg-[var(--color-gray-100)] hover:text-[var(--color-gray-700)]"
+                className="rounded-sm p-2.5 text-[var(--color-gray-400)] transition-colors hover:bg-[var(--color-gray-100)] hover:text-[var(--color-gray-700)]"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

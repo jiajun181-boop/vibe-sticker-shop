@@ -84,7 +84,7 @@ function SubGroupCard({ group, t, stickerConfig, isExpanded, onExpand }) {
                   <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-[var(--color-gray-100)]">
                     <Image
                       src={prod.imageUrl}
-                      alt=""
+                      alt={prod.name || "Product preview"}
                       fill
                       className="object-cover"
                       sizes="32px"
@@ -128,7 +128,7 @@ function CardInner({ group, t, stickerConfig, ctaLabel }) {
           <div className="relative h-full w-full overflow-hidden">
             <Image
               src={group.previews[0]}
-              alt=""
+              alt={group.title || "Product category"}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"

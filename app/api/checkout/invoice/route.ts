@@ -194,7 +194,7 @@ export async function POST(req: NextRequest) {
     );
 
     const subtotalAmount = pricedItems.reduce((sum, p) => sum + p.repriced.lineTotal, 0);
-    const shippingAmount = subtotalAmount >= 15000 ? 0 : 1500;
+    const shippingAmount = subtotalAmount >= 9900 ? 0 : 1500;
     const taxAmount = Math.round((subtotalAmount + shippingAmount) * 0.13);
     const totalAmount = subtotalAmount + shippingAmount + taxAmount;
 

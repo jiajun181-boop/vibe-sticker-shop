@@ -188,7 +188,7 @@ export default function RollLabelsOrderClient() {
         subtitle="BOPP, Paper & Poly — full colour, any shape, any size"
         badges={[
           t?.("rl.badge.fullColor") || "Full Colour CMYK",
-          t?.("rl.badge.shipping") || "Free Shipping $150+",
+          t?.("rl.badge.shipping") || "Free Shipping $99+",
           t?.("rl.badge.proof") || "Free Digital Proof",
         ]}
       />
@@ -405,7 +405,7 @@ export default function RollLabelsOrderClient() {
               ]}
               badges={[
                 t?.("rl.badge.fullColor") || "Full Colour CMYK",
-                t?.("rl.badge.shipping") || "Free Shipping $150+",
+                t?.("rl.badge.shipping") || "Free Shipping $99+",
                 t?.("rl.badge.proof") || "Free Digital Proof",
               ]}
               t={t}
