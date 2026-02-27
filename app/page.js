@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerT, getServerLocale } from "@/lib/i18n/server";
 import { OrganizationSchema, WebSiteSchema } from "@/components/JsonLd";
 import DualEntryHero from "@/components/home/DualEntryHero";
+import GoogleReviews from "@/components/home/GoogleReviews";
 import HomeScrollWrapper from "@/components/home/HomeScrollWrapper";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 
@@ -256,7 +257,10 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* 5. CTA */}
+        {/* 5. Google Reviews */}
+        <GoogleReviews />
+
+        {/* 6. CTA */}
         <section className="bg-[var(--color-brand)] py-16 md:py-20">
           <div className="mx-auto max-w-2xl px-4 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-[#fff] tracking-tight">
