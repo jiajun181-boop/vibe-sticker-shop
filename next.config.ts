@@ -158,6 +158,7 @@ const nextConfig: NextConfig = {
       { source: "/order/kiss-cut-stickers", destination: "/shop/stickers-labels-decals/kiss-cut-singles", permanent: true },
       { source: "/order/sticker-rolls", destination: "/shop/stickers-labels-decals/sticker-rolls", permanent: true },
       { source: "/order/surfaces", destination: "/shop/windows-walls-floors", permanent: true },
+      { source: "/order/acrylic-signs", destination: "/shop/signs-rigid-boards", permanent: true },
 
       ...categoryReorgRedirectsV1,
       ...codexUrlMappingRedirects,

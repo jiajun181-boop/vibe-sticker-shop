@@ -161,7 +161,7 @@ const SIGNS_PRODUCT_SECTIONS = [
     key: "boards-material",
     title: "Custom Boards by Material",
     description: "Choose your substrate. Priced by the square foot for custom sizes.",
-    productSlugs: ["coroplast-signs", "coroplast-board-prints", "foam-board-prints", "foamboard-sheet", "pvc-sintra-prints", "pvc-sintra-signs", "pvc-board-signs", "acm-dibond-signs", "aluminum-composite", "acrylic-signs"],
+    productSlugs: ["coroplast-signs", "coroplast-board-prints", "foam-board-prints", "foamboard-sheet", "pvc-sintra-prints", "pvc-sintra-signs", "pvc-board-signs", "acm-dibond-signs", "aluminum-composite"],
     noImageGradient: "from-gray-200 to-gray-300",
     noImageIcon: "\uD83D\uDD27",
   },

@@ -33,7 +33,7 @@ export default async function sitemap() {
   // (their /shop/ destinations are already in the sitemap via product pages)
   const orderPages = [
     "ncr", "fabric-banners",
-    "foam-board-signs", "acrylic-signs", "aluminum-signs", "pvc-signs", "a-frame-signs",
+    "foam-board-signs", "aluminum-signs", "pvc-signs", "a-frame-signs",
     "canvas-prints", "vehicle-wraps", "vehicle-decals", "magnetic-signs",
     "window-films", "wall-floor-graphics",
     "retractable-stands", "x-banner-stands", "backdrops", "flags",

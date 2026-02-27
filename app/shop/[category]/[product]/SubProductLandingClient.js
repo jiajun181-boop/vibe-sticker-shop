@@ -185,7 +185,7 @@ const SUB_PRODUCT_CONTENT = {
     desc: "Compact countertop and tabletop displays for reception areas, trade shows, and retail counters. Professional presentation in a small footprint.",
     features: ["Retractable & easel styles", "8\u2033 \u00d7 12\u2033 to 24\u2033 \u00d7 36\u2033", "Portable & lightweight", "Includes carrying case", "Easy graphic swap"],
     faq: [
-      { q: "What types of tabletop displays are available?", a: "We offer tabletop retractable banners (mini pull-ups), rigid tabletop signs with easel backs, and standoff-mounted acrylic displays." },
+      { q: "What types of tabletop displays are available?", a: "We offer tabletop retractable banners (mini pull-ups), rigid tabletop signs with easel backs, and foam board or PVC displays with standoff mounts." },
       { q: "Are tabletop displays portable?", a: "Yes \u2014 all tabletop displays are lightweight and come with carrying cases. Retractable models fold down to under 2ft for easy transport." },
       { q: "Can I use these at trade shows?", a: "Absolutely \u2014 tabletop displays are perfect for trade show tables, conference desks, and reception counters. They set up in seconds." },
     ],

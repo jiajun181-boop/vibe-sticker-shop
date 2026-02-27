@@ -33,7 +33,7 @@ const MATERIAL_CATEGORIES = [
       { name: "Foam Board", specs: '3/16"-1/2", 48"x96"', usage: "Indoor displays, presentations", products: ["foam-board"] },
       { name: "PVC/Sintra", specs: '3mm-6mm, 48"x96"', usage: "Indoor/outdoor signage", products: ["pvc-board-signs"] },
       { name: "Aluminum Composite Panel", specs: '3mm, 48"x96"', usage: "Long-term outdoor signage", products: ["aluminum-sign"] },
-      { name: "Acrylic/Plexiglass", specs: '1/8"-1/4", 48"x48"', usage: "Premium office signage", products: ["acrylic-sign"] },
+      // Acrylic/Plexiglass removed — no UV flatbed printer available
     ],
   },
   {
@@ -238,12 +238,7 @@ const TEXTURE_PATTERNS = {
       <line x1="40" y1="0" x2="0" y2="40" stroke="#9ca3af" strokeWidth="0.2" opacity="0.3" />
     </svg>
   ),
-  "Acrylic/Plexiglass": (
-    <svg width="40" height="40" viewBox="0 0 40 40" className="rounded">
-      <defs><linearGradient id="acr" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.6" /><stop offset="50%" stopColor="#fff" stopOpacity="0.9" /><stop offset="100%" stopColor="#e0f2fe" stopOpacity="0.6" /></linearGradient></defs>
-      <rect width="40" height="40" fill="url(#acr)" stroke="#7dd3fc" strokeWidth="0.5" />
-    </svg>
-  ),
+  // Acrylic/Plexiglass SVG removed — no UV flatbed printer
   // Paper stock
   "14pt Cardstock (C2S)": (
     <svg width="40" height="40" viewBox="0 0 40 40" className="rounded">

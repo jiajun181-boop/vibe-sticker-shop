@@ -31,6 +31,8 @@ import SurfaceOrderClient from "@/app/order/surfaces/SurfaceOrderClient";
 import CanvasOrderClient from "@/app/order/canvas/CanvasOrderClient";
 import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 
 export const revalidate = 60;
 
@@ -627,6 +629,7 @@ export default async function ProductPage({ params }) {
       surfaces: <SurfaceOrderClient defaultType={configurator.defaultValue} productSlug={decodedSlug} productImages={cfgImages} />,
       "marketing-print": <MarketingPrintOrderClient defaultType={configurator.defaultValue} hideTypeSelector={true} productImages={cfgImages} />,
     };
+    const cfgFaqItems = getConfiguratorFaqs(decodedSlug);
     return (
       <>
         {cfgProduct && <ProductSchema product={toClientSafe(cfgProduct)} />}
@@ -640,6 +643,11 @@ export default async function ProductPage({ params }) {
         >
           {CONFIGURATOR_COMPONENTS[configurator.component]}
         </Suspense>
+        {cfgFaqItems && (
+          <div className="mx-auto max-w-4xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+            <FaqAccordion items={cfgFaqItems} />
+          </div>
+        )}
       </>
     );
   }
@@ -695,6 +703,7 @@ export default async function ProductPage({ params }) {
   }
   const safeRelated = toClientSafe(relatedProducts);
   const catalogCfg = await getCatalogConfig();
+  const productFaqItems = getConfiguratorFaqs(decodedSlug);
 
   return (
     <>
@@ -706,6 +715,11 @@ export default async function ProductPage({ params }) {
       <Suspense>
         <ProductClient product={safeProduct} relatedProducts={safeRelated} catalogConfig={catalogCfg} />
       </Suspense>
+      {productFaqItems && (
+        <div className="mx-auto max-w-4xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+          <FaqAccordion items={productFaqItems} />
+        </div>
+      )}
     </>
   );
 }

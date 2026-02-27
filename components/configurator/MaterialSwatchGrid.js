@@ -12,7 +12,7 @@ export const MATERIAL_META = {
   "4mm-coroplast": { pattern: "fluted", baseColor: "#f5f3ef", subtitle: "4mm Corrugated Plastic", description: "Lightweight, weather-resistant. Great for yard signs.", durability: "Outdoor 1-2 years", weight: "Light" },
   "coroplast": { pattern: "fluted", baseColor: "#f5f3ef", subtitle: "4mm Corrugated Plastic", description: "Lightweight, weather-resistant. Great for yard signs.", durability: "Outdoor 1-2 years", weight: "Light" },
   "foam-board": { pattern: "stipple", baseColor: "#ffffff", subtitle: '3/16"\u20131/2" Polystyrene', description: "Indoor displays and presentations.", durability: "Indoor only", weight: "Ultra-light" },
-  "acrylic": { pattern: "gloss", baseColor: "#e8f4f8", subtitle: '1/8"\u20131/4" Plexiglass', description: "Premium office and retail signage.", durability: "Indoor/Outdoor 5yr+", weight: "Medium" },
+  // Acrylic removed — no UV flatbed printer available
   "aluminum-040": { pattern: "brushed", baseColor: "#d8dce2", subtitle: "3mm Aluminum Composite", description: "Premium long-term outdoor signage.", durability: "Outdoor 5yr+", weight: "Medium" },
   "aluminum": { pattern: "brushed", baseColor: "#d8dce2", subtitle: "3mm Aluminum Composite", description: "Premium long-term outdoor signage.", durability: "Outdoor 5yr+", weight: "Medium" },
   "pvc-sintra": { pattern: "smooth", baseColor: "#f8f8f8", subtitle: "3mm\u20136mm Expanded PVC", description: "Versatile indoor/outdoor signage.", durability: "Outdoor 3-5 years", weight: "Light" },

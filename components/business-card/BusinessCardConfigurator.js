@@ -13,6 +13,8 @@ import {
 } from "@/components/configurator";
 import BusinessCardPreview from "@/components/business-card/BusinessCardPreview";
 import { getBusinessCardConfig, computeMultiNameFileFees } from "@/lib/business-card-configs";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -516,6 +518,17 @@ export default function BusinessCardConfigurator({ slug }) {
         buyNowLoading={buyNowLoading}
         t={t}
       />
+
+      {/* FAQ Section */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs(slug);
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
     </main>
   );
 }
