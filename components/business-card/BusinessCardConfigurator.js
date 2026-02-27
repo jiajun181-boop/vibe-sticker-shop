@@ -62,8 +62,8 @@ export default function BusinessCardConfigurator({ slug }) {
 
   // ── Size label for pricing ──
   const sizeLabel = useMemo(
-    () => config.buildSizeLabel({ sideId, layerId, foilCoverage, foilSides }),
-    [config, sideId, layerId, foilCoverage, foilSides]
+    () => config.buildSizeLabel({ sideId, layerId, foilCoverage, foilSides, finishingId }),
+    [config, sideId, layerId, foilCoverage, foilSides, finishingId]
   );
 
   // ── Pricing ──

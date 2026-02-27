@@ -26,7 +26,7 @@ export default function SurfaceOrderClient({ defaultType, productImages }) {
   const { t } = useTranslation();
 
   // --- State ---
-  const [typeId, setTypeId] = useState(defaultType || "window-graphic");
+  const [typeId, setTypeId] = useState(defaultType || "transparent-color");
   const surfaceType = useMemo(() => getSurfaceType(typeId), [typeId]);
 
   const [sizeIdx, setSizeIdx] = useState(0);

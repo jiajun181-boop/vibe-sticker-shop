@@ -13,69 +13,19 @@ import {
   useConfiguratorCart,
 } from "@/components/configurator";
 import BookletPreview from "@/components/booklet/BookletPreview";
+import {
+  BINDINGS,
+  SIZES,
+  PAGE_COUNTS_SADDLE,
+  PAGE_COUNTS_GENERAL,
+  INTERIOR_PAPERS,
+  COVER_PAPERS,
+  COVER_COATINGS,
+  QUANTITIES,
+} from "@/lib/booklet-order-config";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
-
-// ─── Booklet Configuration ───
-
-const BINDINGS = [
-  {
-    id: "saddle-stitch",
-    slug: "booklets-saddle-stitch",
-    icon: "staple",
-    pageRule: "multiple-of-4",
-    minPages: 8,
-    maxPages: 32,
-  },
-  {
-    id: "perfect-bound",
-    slug: "booklets-perfect-bound",
-    icon: "spine",
-    pageRule: "any",
-    minPages: 24,
-    maxPages: 400,
-  },
-  {
-    id: "wire-o",
-    slug: "booklets-wire-o",
-    icon: "coil",
-    pageRule: "any",
-    minPages: 12,
-    maxPages: 100,
-  },
-];
-
-const SIZES = [
-  { id: "half-letter", label: '5.5" × 8.5" finished (flat 8.5" × 11")', w: 5.5, h: 8.5 },
-  { id: "letter", label: '8.5" × 11" finished (flat 11" × 17")', w: 8.5, h: 11 },
-  { id: "6x9", label: '6" × 9" finished (flat 9" × 12")', w: 6, h: 9 },
-  { id: "letter-landscape", label: '8.5" × 5.5" finished (flat 8.5" × 11")', w: 8.5, h: 5.5 },
-];
-
-const PAGE_COUNTS_SADDLE = [8, 12, 16, 20, 24, 28, 32];
-const PAGE_COUNTS_GENERAL = [12, 16, 20, 24, 28, 32, 36, 40, 48, 64, 80, 100, 120, 160, 200, 250, 300, 400];
-
-const INTERIOR_PAPERS = [
-  { id: "100lb-gloss-text", label: "100lb Gloss Text" },
-  { id: "100lb-matte-text", label: "100lb Matte Text" },
-  { id: "80lb-uncoated", label: "80lb Uncoated" },
-  { id: "70lb-offset", label: "70lb Offset" },
-];
-
-const COVER_PAPERS = [
-  { id: "self-cover", label: null },
-  { id: "14pt-c2s", label: "14pt C2S" },
-];
-
-const COVER_COATINGS = [
-  { id: "none", label: null },
-  { id: "gloss-lam", label: null },
-  { id: "matte-lam", label: null },
-  { id: "soft-touch", label: null },
-];
-
-const QUANTITIES = [25, 50, 100, 250, 500, 1000];
 
 // ─── Icons ───
 
