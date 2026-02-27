@@ -16,26 +16,31 @@ const BASE = "/shop/stickers-labels-decals";
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-/* ── Slugs excluded from main page (safety / industrial / facility) ── */
-const EXCLUDED_SLUGS = new Set([
-  // Safety & Warning
-  "fire-extinguisher-location-stickers", "first-aid-location-stickers",
-  "emergency-exit-egress-signs-set", "no-smoking-decals-set",
-  "safety-labels", "safety-notice-decal-pack",
-  "ppe-required-signs", "ppe-hard-hat-stickers",
-  "slip-trip-hazard-signs", "confined-space-warning-signs",
-  "high-voltage-warning-signs", "arc-flash-labels",
-  "lockout-tagout-labels", "crane-lift-capacity-labels",
-  "forklift-safety-decals", "hazard-ghs-labels",
-  // Industrial
-  "industrial-labels", "pipe-markers-color-coded", "pipe-markers-custom",
-  "chemical-storage-labels", "electrical-panel-labels",
-  "whmis-workplace-labels", "dock-door-numbers",
-  "rack-labels-warehouse", "warehouse-zone-labels",
-  // Facility / Asset
-  "asset-tags-tamper-evident", "asset-tags-qr-barcode",
-  "cable-panel-labels", "tool-box-bin-labels",
-]);
+/* ── Core sticker products shown on main page (whitelist, in display order) ── */
+const CORE_STICKER_SLUGS = [
+  "die-cut-stickers",
+  "kiss-cut-stickers",
+  "holographic-stickers",
+  "foil-stickers",
+  "stickers-color-on-clear",
+  "stickers-color-on-white",
+  "clear-singles",
+  "heavy-duty-vinyl-stickers",
+  "sticker-sheets",
+  "sticker-packs",
+  "sticker-rolls",
+  "roll-labels",
+  "clear-labels",
+  "kraft-paper-labels",
+  "white-bopp-labels",
+  "barcode-labels",
+  "qr-code-labels",
+  "freezer-labels",
+  "vinyl-lettering",
+  "transfer-vinyl-lettering",
+];
+const CORE_SET = new Set(CORE_STICKER_SLUGS);
+const CORE_ORDER = new Map(CORE_STICKER_SLUGS.map((s, i) => [s, i]));
 
 /* ── Slug → filter tag mapping (core products only) ── */
 const SLUG_TAG = {
@@ -204,11 +209,12 @@ export default function StickersCategoryClient({ products = [] }) {
   const { t, locale } = useTranslation();
   const [activeFilter, setActiveFilter] = useState("all");
 
-  // Filter out safety/industrial/facility products, then tag the rest
+  // Whitelist: only show core sticker products, sorted by display order
   const taggedProducts = useMemo(() => {
     return products
-      .filter((p) => p.isActive !== false && !EXCLUDED_SLUGS.has(p.slug))
-      .map((p) => ({ ...p, filterTag: SLUG_TAG[p.slug] || "custom-stickers" }));
+      .filter((p) => p.isActive !== false && CORE_SET.has(p.slug))
+      .map((p) => ({ ...p, filterTag: SLUG_TAG[p.slug] || "custom-stickers" }))
+      .sort((a, b) => (CORE_ORDER.get(a.slug) ?? 99) - (CORE_ORDER.get(b.slug) ?? 99));
   }, [products]);
 
   const filteredProducts = useMemo(() => {
