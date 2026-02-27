@@ -7,6 +7,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import VehiclePreview from "@/components/vehicle/VehiclePreview";
+import { WRAP_UI_TYPES, WRAP_SLUG_MAP } from "@/lib/vehicle-order-config";
 
 const DEBOUNCE_MS = 300;
 
@@ -15,11 +16,7 @@ const formatCad = (cents) =>
 
 // ─── Vehicle Wraps Configuration ───
 
-const TYPES = [
-  { id: "full-wrap", icon: "full" },
-  { id: "partial-wrap", icon: "partial" },
-  { id: "door-panels", icon: "door" },
-];
+const TYPES = WRAP_UI_TYPES;
 
 const VEHICLES = [
   { id: "sedan", surcharge: 0, icon: "sedan" },
@@ -169,10 +166,10 @@ export default function VehicleWrapOrderClient() {
     ];
 
     return {
-      id: "vehicle-wraps",
+      id: WRAP_SLUG_MAP[typeId] || "vehicle-wraps",
       name: nameParts.join(" \u2014 "),
-      slug: "vehicle-wraps",
-      price: Math.round(adjustedSubtotal / activeQty),
+      slug: WRAP_SLUG_MAP[typeId] || "vehicle-wraps",
+      price: 0,
       quantity: activeQty,
       options: {
         type: typeId,
@@ -403,7 +400,7 @@ export default function VehicleWrapOrderClient() {
 
             <VehiclePreview
               vehicleBody={{ sedan: "car", suv: "suv", truck: "pickup", van: "van" }[vehicleId] || "car"}
-              graphicType={typeId === "door-panels" ? "door-graphics" : typeId}
+              graphicType={typeId}
             />
 
             <dl className="space-y-2 text-sm">
@@ -417,8 +414,8 @@ export default function VehicleWrapOrderClient() {
             <hr className="border-gray-100" />
 
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
-              <p className="text-sm font-semibold text-amber-800">Custom Quote Required</p>
-              <p className="mt-1 text-xs text-amber-700">Vehicle wraps are priced per project. Contact us for a free estimate.</p>
+              <p className="text-sm font-semibold text-amber-800">{t("vw.quoteRequired")}</p>
+              <p className="mt-1 text-xs text-amber-700">{t("vw.quoteRequiredDesc")}</p>
             </div>
 
             <div className="space-y-3">
@@ -426,7 +423,7 @@ export default function VehicleWrapOrderClient() {
                 href="/quote"
                 className="block w-full rounded-full bg-gray-900 px-4 py-3 text-center text-sm font-semibold text-[#fff] transition-all hover:bg-gray-800"
               >
-                Request a Quote
+                {t("vw.requestQuote")}
               </a>
             </div>
 
@@ -443,7 +440,7 @@ export default function VehicleWrapOrderClient() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-gray-900">Custom Quote Required</p>
+            <p className="text-sm font-semibold text-gray-900">{t("vw.quoteRequired")}</p>
             <p className="truncate text-[11px] text-gray-500">
               {t(`vw.type.${typeId}`)} — {t(`vw.vehicle.${vehicleId}`)}
             </p>
@@ -452,7 +449,7 @@ export default function VehicleWrapOrderClient() {
             href="/quote"
             className="shrink-0 rounded-full bg-gray-900 px-5 py-2.5 text-xs font-semibold text-[#fff] transition-all hover:bg-gray-800"
           >
-            Request a Quote
+            {t("vw.requestQuote")}
           </a>
         </div>
       </div>

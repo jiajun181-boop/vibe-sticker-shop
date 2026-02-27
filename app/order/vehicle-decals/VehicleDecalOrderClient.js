@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { DECAL_UI_TYPES, DECAL_SLUG_MAP } from "@/lib/vehicle-order-config";
 
 const DEBOUNCE_MS = 300;
 
@@ -14,11 +15,7 @@ const formatCad = (cents) =>
 
 // ─── Vehicle Decal Configuration ───
 
-const TYPES = [
-  { id: "company-lettering" },
-  { id: "dot-mc" },
-  { id: "unit-numbers" },
-];
+const TYPES = DECAL_UI_TYPES;
 
 const SIZES_BY_TYPE = {
   "company-lettering": [
@@ -142,11 +139,11 @@ export default function VehicleDecalOrderClient() {
     setQuoteLoading(true);
     setQuoteError(null);
 
-    fetch("/api/quote", {
+    fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slug: "vehicle-decals",
+        slug: DECAL_SLUG_MAP[typeId] || "vehicle-decals",
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
@@ -164,7 +161,7 @@ export default function VehicleDecalOrderClient() {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty]);
+  }, [typeId, size.w, size.h, activeQty]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -189,9 +186,9 @@ export default function VehicleDecalOrderClient() {
     if (!quoteData || activeQty <= 0) return null;
 
     return {
-      id: "vehicle-decals",
+      id: DECAL_SLUG_MAP[typeId] || "vehicle-decals",
       name: `${t("vd.title")} \u2014 ${t(`vd.type.${typeId}`)} ${size.tag}`,
-      slug: "vehicle-decals",
+      slug: DECAL_SLUG_MAP[typeId] || "vehicle-decals",
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
       options: {
