@@ -150,6 +150,15 @@ const nextConfig: NextConfig = {
       { source: "/shop/windows-walls-floors/static-cling-frosted", destination: "/shop/windows-walls-floors/static-cling", permanent: true },
       { source: "/shop/windows-walls-floors/static-cling-standard", destination: "/shop/windows-walls-floors/static-cling", permanent: true },
 
+      // ── Legacy /order/ routes → current product pages ──
+      { source: "/order/banners", destination: "/shop/banners-displays/vinyl-banners", permanent: true },
+      { source: "/order/canvas", destination: "/shop/canvas-prints", permanent: true },
+      { source: "/order/signs", destination: "/shop/signs-rigid-boards/yard-sign", permanent: true },
+      { source: "/order/vehicle", destination: "/shop/vehicle-graphics-fleet", permanent: true },
+      { source: "/order/kiss-cut-stickers", destination: "/shop/stickers-labels-decals/kiss-cut-singles", permanent: true },
+      { source: "/order/sticker-rolls", destination: "/shop/stickers-labels-decals/sticker-rolls", permanent: true },
+      { source: "/order/surfaces", destination: "/shop/windows-walls-floors", permanent: true },
+
       ...categoryReorgRedirectsV1,
       ...codexUrlMappingRedirects,
       ...seoShortUrlRedirects,
