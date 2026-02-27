@@ -23,24 +23,8 @@ import {
 const INCH_TO_CM = 2.54;
 
 const TYPE_GROUPS = {
-  single: {
-    label: "Single Canvas",
-    ids: ["standard", "gallery-wrap", "framed", "panoramic"],
-  },
-  split: {
-    label: "Split Panel Sets",
-    ids: ["split-2", "split-3", "split-5"],
-  },
-};
-
-const TYPE_DESCRIPTIONS = {
-  standard: "Classic stretched canvas on wood frame",
-  "gallery-wrap": "Image wraps around 1.5\" deep frame edges",
-  framed: "Canvas mounted in a premium wood frame",
-  panoramic: "Wide-format for landscapes and cityscapes",
-  "split-2": "Your image across 2 panels",
-  "split-3": "Triptych — image split across 3 panels",
-  "split-5": "Pentaptych — image split across 5 panels",
+  single: { ids: ["standard", "gallery-wrap", "framed", "panoramic"] },
+  split: { ids: ["split-2", "split-3", "split-5"] },
 };
 
 export default function CanvasOrderClient({ defaultType, productImages }) {
@@ -222,7 +206,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
   if (canvasType.panels > 1) {
     summaryLines.splice(1, 0, {
       label: t("canvas.panels"),
-      value: `${canvasType.panels} Panels`,
+      value: `${canvasType.panels} ${t("canvas.panelsUnit")}`,
     });
   }
 
@@ -374,7 +358,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
 
             {/* Image Positioning (only shown when image uploaded) */}
             {uploadedFile && widthIn > 0 && heightIn > 0 && (
-              <ConfigStep number={stepNum++} title="Image Position" subtitle="Drag to reposition, scroll to zoom" optional>
+              <ConfigStep number={stepNum++} title={t("canvas.imagePosition")} subtitle={t("canvas.imagePositionSub")} optional>
                 <ImageCropper
                   imageUrl={uploadedFile.url}
                   aspectRatio={widthIn / heightIn}
@@ -392,7 +376,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
               {Object.entries(TYPE_GROUPS).map(([groupKey, group]) => (
                 <div key={groupKey} className="mb-4 last:mb-0">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
-                    {group.label}
+                    {t(`canvas.type.${groupKey}Group`)}
                   </p>
                   <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
                     {group.ids.map((id) => {
@@ -435,7 +419,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
                               isActive ? "text-gray-300" : "text-gray-500"
                             }`}
                           >
-                            {TYPE_DESCRIPTIONS[id] || ""}
+                            {t(`canvas.type.${id}.desc`)}
                           </span>
                         </button>
                       );

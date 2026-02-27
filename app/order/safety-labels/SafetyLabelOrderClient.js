@@ -6,40 +6,12 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { CATEGORIES, SIZES, MATERIALS, ADHESIVES, QUANTITIES, SLUG_MAP } from "@/lib/safety-label-order-config";
 
 const DEBOUNCE_MS = 300;
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
-
-// ─── Safety Label Configuration ───
-
-const CATEGORIES = [
-  { id: "fire-emergency" },
-  { id: "hazard-warning" },
-  { id: "ppe-equipment" },
-  { id: "electrical-chemical" },
-];
-
-const SIZES = [
-  { id: "2x3", label: '2" \u00d7 3"', w: 2, h: 3 },
-  { id: "3x5", label: '3" \u00d7 5"', w: 3, h: 5 },
-  { id: "4x6", label: '4" \u00d7 6"', w: 4, h: 6 },
-  { id: "7x10", label: '7" \u00d7 10"', w: 7, h: 10 },
-];
-
-const MATERIALS = [
-  { id: "vinyl", surcharge: 0 },
-  { id: "polyester", surcharge: 5 },
-  { id: "reflective", surcharge: 12 },
-];
-
-const ADHESIVES = [
-  { id: "permanent", surcharge: 0 },
-  { id: "removable", surcharge: 3 },
-];
-
-const QUANTITIES = [10, 25, 50, 100, 250, 500];
 
 // ─── Icons ───
 
@@ -125,15 +97,15 @@ export default function SafetyLabelOrderClient() {
     setQuoteLoading(true);
     setQuoteError(null);
 
-    fetch("/api/quote", {
+    const slug = SLUG_MAP[category] || "safety-labels";
+    fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slug: "safety-labels",
+        slug,
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
-        sides: "single",
       }),
       signal: ac.signal,
     })
@@ -147,7 +119,7 @@ export default function SafetyLabelOrderClient() {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [activeQty, size.w, size.h]);
+  }, [activeQty, size.w, size.h, category]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -170,10 +142,11 @@ export default function SafetyLabelOrderClient() {
 
   function buildCartItem() {
     if (!quoteData || activeQty <= 0) return null;
+    const slug = SLUG_MAP[category] || "safety-labels";
     return {
-      id: "safety-labels",
+      id: slug,
       name: `${t(`sl.category.${category}`)} — ${size.label}`,
-      slug: "safety-labels",
+      slug,
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
       options: {

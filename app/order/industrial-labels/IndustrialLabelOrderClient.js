@@ -6,59 +6,12 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { TYPES, SIZES_BY_TYPE, DEFAULT_SIZE_IDX, MATERIALS, LAMINATIONS, QUANTITIES, SLUG_MAP } from "@/lib/industrial-label-order-config";
 
 const DEBOUNCE_MS = 300;
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
-
-// ─── Industrial Label Configuration ───
-
-const TYPES = [
-  { id: "asset-tag", icon: "asset" },
-  { id: "pipe-marker", icon: "pipe" },
-  { id: "warehouse", icon: "warehouse" },
-  { id: "cable", icon: "cable" },
-];
-
-const SIZES_BY_TYPE = {
-  "asset-tag": [
-    { id: "1.5x3", label: '1.5" \u00d7 3"', w: 1.5, h: 3 },
-    { id: "2x4", label: '2" \u00d7 4"', w: 2, h: 4 },
-    { id: "3x5", label: '3" \u00d7 5"', w: 3, h: 5 },
-  ],
-  "pipe-marker": [
-    { id: "1x8", label: '1" \u00d7 8"', w: 1, h: 8 },
-    { id: "2x8", label: '2" \u00d7 8"', w: 2, h: 8 },
-    { id: "4x24", label: '4" \u00d7 24"', w: 4, h: 24 },
-  ],
-  "warehouse": [
-    { id: "2x4", label: '2" \u00d7 4"', w: 2, h: 4 },
-    { id: "3x5", label: '3" \u00d7 5"', w: 3, h: 5 },
-    { id: "4x6", label: '4" \u00d7 6"', w: 4, h: 6 },
-  ],
-  "cable": [
-    { id: "0.5x1.5", label: '0.5" \u00d7 1.5"', w: 0.5, h: 1.5 },
-    { id: "0.75x2", label: '0.75" \u00d7 2"', w: 0.75, h: 2 },
-    { id: "1x3", label: '1" \u00d7 3"', w: 1, h: 3 },
-  ],
-};
-
-const DEFAULT_SIZE_IDX = { "asset-tag": 1, "pipe-marker": 1, "warehouse": 0, "cable": 1 };
-
-const MATERIALS = [
-  { id: "vinyl", surcharge: 0 },
-  { id: "polyester", surcharge: 5 },
-  { id: "aluminum-foil", surcharge: 12 },
-];
-
-const LAMINATIONS = [
-  { id: "gloss-lam", surcharge: 0 },
-  { id: "matte-lam", surcharge: 2 },
-  { id: "extra-durable", surcharge: 6 },
-];
-
-const QUANTITIES = [25, 50, 100, 250, 500, 1000];
 
 // ─── Icons ───
 
@@ -153,15 +106,15 @@ export default function IndustrialLabelOrderClient() {
     setQuoteLoading(true);
     setQuoteError(null);
 
-    fetch("/api/quote", {
+    const slug = SLUG_MAP[typeId] || "industrial-labels";
+    fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slug: "industrial-labels",
+        slug,
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
-        sides: "single",
       }),
       signal: ac.signal,
     })
@@ -175,7 +128,7 @@ export default function IndustrialLabelOrderClient() {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty]);
+  }, [size.w, size.h, activeQty, typeId]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -199,10 +152,11 @@ export default function IndustrialLabelOrderClient() {
   function buildCartItem() {
     if (!quoteData || activeQty <= 0) return null;
 
+    const slug = SLUG_MAP[typeId] || "industrial-labels";
     return {
-      id: "industrial-labels",
+      id: slug,
       name: `${t(`il.type.${typeId}`)} — ${size.label}`,
-      slug: "industrial-labels",
+      slug,
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
       options: {

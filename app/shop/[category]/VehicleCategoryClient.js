@@ -210,14 +210,15 @@ const SECTIONS = [
 ];
 
 function PriceLabel({ price }) {
+  const { t } = useTranslation();
   if (price > 0) {
     return (
       <span className="text-xs font-bold text-[var(--color-gray-900)]">
-        From {formatCad(price)}
+        {t("vc.from")} {formatCad(price)}
       </span>
     );
   }
-  return <span className="text-[11px] text-[var(--color-gray-400)]">Get a quote</span>;
+  return <span className="text-[11px] text-[var(--color-gray-400)]">{t("vc.getQuote")}</span>;
 }
 
 function Badge({ label, tone = "neutral" }) {
@@ -297,6 +298,7 @@ function ProductCard({ item, price, premium = false, cta = "View", imageUrl }) {
 }
 
 function ComplianceListItem({ item, price }) {
+  const { t } = useTranslation();
   return (
     <Link
       href={item.href}
@@ -305,7 +307,7 @@ function ComplianceListItem({ item, price }) {
       <div className="min-w-0">
         <p className="text-sm font-semibold leading-tight text-[var(--color-gray-900)]">{item.name}</p>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] text-[var(--color-gray-500)]">Commercial fleet compliance decal</span>
+          <span className="text-[11px] text-[var(--color-gray-500)]">{t("vc.complianceDecal")}</span>
           {item.badges?.map((b) => (
             <Badge key={b} label={b} tone="success" />
           ))}
@@ -376,7 +378,7 @@ export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImage
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: "Vehicle Graphics & Fleet Branding" },
+            { label: t("vc.breadcrumb") },
           ]}
         />
 
@@ -384,21 +386,20 @@ export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImage
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                B2B Vehicle Branding & Compliance
+                {t("vc.tagline")}
               </p>
               <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-                Vehicle Graphics & Fleet Branding
+                {t("vc.title")}
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[var(--color-gray-600)] sm:text-base">
-                Built for contractors, owner-operators, and fleet teams. Find wraps, door branding, DOT/CVOR decals,
-                and safety labels in a cleaner buyer-first layout.
+                {t("vc.subtitle")}
               </p>
             </div>
             <div className="grid gap-2 text-xs sm:grid-cols-2">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">Same-day local pickup options</div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">Fleet quote + install support</div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">DOT / CVOR compliance grouping</div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">Mobile-friendly quick jump sections</div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">{t("vc.badge.pickup")}</div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">{t("vc.badge.fleet")}</div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">{t("vc.badge.compliance")}</div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">{t("vc.badge.mobile")}</div>
             </div>
           </div>
         </header>
@@ -407,7 +408,7 @@ export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImage
           <div className="sticky top-[calc(var(--promo-offset,0px)+var(--nav-offset,72px)+8px)] z-10 -mx-4 mt-5 border-y border-slate-200/70 bg-white/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 2xl:-mx-4 2xl:px-4">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
               <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Quick Jump
+                {t("vc.quickJump")}
               </span>
               {visibleSections.map((section) => (
                 <a
@@ -438,7 +439,7 @@ export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImage
                   href="/quote"
                   className="inline-flex items-center gap-2 self-start rounded-full border border-[var(--color-gray-300)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
                 >
-                  Request Fleet Quote
+                  {t("vc.requestFleetQuote")}
                 </Link>
               )}
             </div>
@@ -448,27 +449,27 @@ export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImage
 
         <div className="mt-12 grid gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Fast Fleet Ordering</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">{t("vc.feature1.title")}</h3>
             <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              Quick-jump sections help drivers and dispatch teams get directly to DOT/CVOR decals without scrolling through wrap and signage products.
+              {t("vc.feature1.desc")}
             </p>
           </div>
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Soft-Hidden Sub-Parts</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">{t("vc.feature2.title")}</h3>
             <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              Redundant sub-part SKUs are not shown in the landing grid, but remain in your catalog and direct URLs for ops and quoting workflows.
+              {t("vc.feature2.desc")}
             </p>
           </div>
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Quote + Install Support</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">{t("vc.feature3.title")}</h3>
             <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              Large wrap projects are clearly marked as quote-led, with installation support highlighted for commercial buyers.
+              {t("vc.feature3.desc")}
             </p>
             <Link
               href="/quote"
               className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
             >
-              Get a Quote
+              {t("vc.getQuote")}
             </Link>
           </div>
         </div>
@@ -481,7 +482,7 @@ export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImage
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
-            All Categories
+            {t("vc.allCategories")}
           </Link>
         </div>
       </div>
