@@ -94,6 +94,10 @@ export default function useConfiguratorPrice({
     setSurcharges(cents);
   }, []);
 
+  const retry = useCallback(() => {
+    fetchPrice();
+  }, [fetchPrice]);
+
   return {
     quoteData,
     quoteLoading,
@@ -104,5 +108,6 @@ export default function useConfiguratorPrice({
     taxCents,
     totalCents,
     addSurcharge,
+    retry,
   };
 }

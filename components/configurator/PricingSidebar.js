@@ -46,6 +46,7 @@ export default function PricingSidebar({
   activeQty,
   quoteOnly,
   onRequestQuote,
+  onRetryPrice,
 }) {
   // ─── Rush Production ───
   const [rushProduction, setRushProduction] = useState(false);
@@ -133,7 +134,26 @@ export default function PricingSidebar({
             ))}
           </div>
         ) : quoteError ? (
-          <p className="text-xs font-medium text-red-500">{quoteError}</p>
+          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-4 space-y-2 text-center">
+            <p className="text-sm font-medium text-red-700">
+              {t?.("configurator.priceError") || "Unable to calculate price"}
+            </p>
+            {onRetryPrice && (
+              <button
+                type="button"
+                onClick={onRetryPrice}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-red-700"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                </svg>
+                {t?.("configurator.retry") || "Try Again"}
+              </button>
+            )}
+            <p className="text-xs text-red-500">
+              {t?.("configurator.priceErrorHelp") || "Still having trouble? Call (647) 783-4728"}
+            </p>
+          </div>
         ) : unitCents > 0 ? (
           <div className="space-y-2.5">
             <div className="flex items-baseline justify-between">
@@ -218,6 +238,22 @@ export default function PricingSidebar({
             </div>
           </label>
         )}
+
+        {/* Disabled hint */}
+        {(() => {
+          const hint = !canAddToCart
+            ? quoteLoading
+              ? t?.("configurator.calculating") || "Calculating price..."
+              : quoteError
+              ? t?.("configurator.fixError") || "Fix the error above"
+              : unitCents === 0
+              ? t?.("configurator.selectFirst") || "Select options above"
+              : t?.("configurator.completeOptions") || "Complete all required options"
+            : null;
+          return hint ? (
+            <p className="text-center text-xs text-amber-600">{hint}</p>
+          ) : null;
+        })()}
 
         {/* Action buttons */}
         <div className="space-y-2.5 pt-2">

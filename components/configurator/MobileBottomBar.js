@@ -37,6 +37,8 @@ export default function MobileBottomBar({
   t,
   quoteOnly,
   onRequestQuote,
+  quoteError,
+  onRetryPrice,
 }) {
   // ─── Add to Cart Animation ───
   const [atcState, setAtcState] = useState("idle");
@@ -95,6 +97,21 @@ export default function MobileBottomBar({
           <div className="min-w-0 flex-1">
             {quoteLoading ? (
               <div className="h-5 w-20 animate-pulse rounded bg-gray-200" />
+            ) : quoteError ? (
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-medium text-red-600">
+                  {t?.("configurator.priceError") || "Unable to calculate price"}
+                </p>
+                {onRetryPrice && (
+                  <button
+                    type="button"
+                    onClick={onRetryPrice}
+                    className="shrink-0 rounded bg-red-600 px-2 py-1 text-[10px] font-bold text-white"
+                  >
+                    {t?.("configurator.retry") || "Retry"}
+                  </button>
+                )}
+              </div>
             ) : hasQuote ? (
               <>
                 <p className="text-lg font-black text-gray-900">{formatCad(totalCents)} <span className="text-[10px] font-normal text-gray-400">before tax</span></p>
@@ -107,6 +124,8 @@ export default function MobileBottomBar({
                   <p className="truncate text-[11px] text-gray-500">{summaryText}</p>
                 ) : null}
               </>
+            ) : !canAddToCart && !quoteLoading ? (
+              <p className="text-xs text-amber-600">{t?.("configurator.selectFirst") || "Select options above"}</p>
             ) : (
               <p className="text-sm text-gray-400">{placeholderText || t?.("configurator.selectOptions") || "Select options"}</p>
             )}
