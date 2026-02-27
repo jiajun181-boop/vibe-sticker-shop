@@ -115,17 +115,17 @@ function shouldShow(canvasPrices, item) {
   return keys.some((k) => k in canvasPrices);
 }
 
-function PriceTag({ price, quoteOnly = false }) {
+function PriceTag({ price, quoteOnly = false, t }) {
   if (quoteOnly) {
-    return <span className="text-xs font-semibold text-[var(--color-gray-600)]">Custom quote</span>;
+    return <span className="text-xs font-semibold text-[var(--color-gray-600)]">{t("shop.customQuote")}</span>;
   }
   if (price > 0) {
-    return <span className="text-sm font-semibold text-[var(--color-gray-900)]">From {formatCad(price)}</span>;
+    return <span className="text-sm font-semibold text-[var(--color-gray-900)]">{t("shop.fromLabel")} {formatCad(price)}</span>;
   }
-  return <span className="text-xs text-[var(--color-gray-400)]">Get a quote</span>;
+  return <span className="text-xs text-[var(--color-gray-400)]">{t("shop.getQuote")}</span>;
 }
 
-function CanvasCard({ item, price, variant = "standard", imageUrl }) {
+function CanvasCard({ item, price, variant = "standard", imageUrl, t }) {
   const isLarge = variant === "large";
   const isWide = variant === "wide";
   const isSvg = imageUrl && isSvgImage(imageUrl);
@@ -205,11 +205,11 @@ function CanvasCard({ item, price, variant = "standard", imageUrl }) {
         <div className="min-w-0">
           <h3 className="text-sm font-semibold leading-tight text-[var(--color-gray-900)] sm:text-base">{item.name}</h3>
           <div className="mt-1">
-            <PriceTag price={price} quoteOnly={item.quoteOnly} />
+            <PriceTag price={price} quoteOnly={item.quoteOnly} t={t} />
           </div>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--color-gray-200)] bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-700)] transition-colors group-hover:border-[var(--color-brand)] group-hover:text-[var(--color-gray-900)]">
-          {item.quoteOnly ? "Quote" : "Configure"}
+          {item.quoteOnly ? t("shop.quoteLabel") : t("shop.configure")}
           <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
           </svg>
@@ -219,7 +219,7 @@ function CanvasCard({ item, price, variant = "standard", imageUrl }) {
   );
 }
 
-function SectionGrid({ section, canvasPrices, canvasImages = {} }) {
+function SectionGrid({ section, canvasPrices, canvasImages = {}, t }) {
   const visibleItems = section.items.filter((item) => shouldShow(canvasPrices, item));
   if (!visibleItems.length) return null;
 
@@ -233,6 +233,7 @@ function SectionGrid({ section, canvasPrices, canvasImages = {} }) {
             price={getPrice(canvasPrices, item)}
             variant={idx === 1 ? "large" : "standard"}
             imageUrl={canvasImages[item.key]}
+            t={t}
           />
         ))}
       </div>
@@ -243,7 +244,7 @@ function SectionGrid({ section, canvasPrices, canvasImages = {} }) {
     return (
       <div className="mt-5 grid gap-4 md:grid-cols-3">
         {visibleItems.map((item) => (
-          <CanvasCard key={item.key} item={item} price={getPrice(canvasPrices, item)} variant="large" imageUrl={canvasImages[item.key]} />
+          <CanvasCard key={item.key} item={item} price={getPrice(canvasPrices, item)} variant="large" imageUrl={canvasImages[item.key]} t={t} />
         ))}
       </div>
     );
@@ -258,6 +259,7 @@ function SectionGrid({ section, canvasPrices, canvasImages = {} }) {
           price={getPrice(canvasPrices, item)}
           variant={idx === 0 ? "wide" : "standard"}
           imageUrl={canvasImages[item.key]}
+          t={t}
         />
       ))}
     </div>
@@ -289,7 +291,7 @@ export default function CanvasCategoryClient({ canvasPrices = {}, canvasImages =
                 <p className="mt-1 text-sm text-[var(--color-gray-500)]">{section.subtitle}</p>
               </div>
             </div>
-            <SectionGrid section={section} canvasPrices={canvasPrices} canvasImages={canvasImages} />
+            <SectionGrid section={section} canvasPrices={canvasPrices} canvasImages={canvasImages} t={t} />
           </section>
         ))}
 
@@ -317,7 +319,7 @@ export default function CanvasCategoryClient({ canvasPrices = {}, canvasImages =
               href="/order/canvas-prints"
               className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
             >
-              Configure &amp; Quote
+              {t("shop.configureQuote")}
             </Link>
           </div>
         </div>
@@ -330,7 +332,7 @@ export default function CanvasCategoryClient({ canvasPrices = {}, canvasImages =
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
-            All Categories
+            {t("shop.backToCategories")}
           </Link>
         </div>
       </div>

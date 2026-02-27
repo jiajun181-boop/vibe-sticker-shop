@@ -133,6 +133,28 @@ export default function InteracCheckoutPage() {
               {loading ? "Placing Order..." : "Place Order with Interac e-Transfer"}
             </button>
           </form>
+
+          {/* Trust signals */}
+          <div className="mt-6 space-y-3">
+            <div className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+              Secure 256-bit SSL Checkout
+            </div>
+            <div className="flex items-center justify-center gap-3 text-[11px] font-bold tracking-wider text-gray-300">
+              <span>VISA</span><span>MC</span><span>AMEX</span><span>INTERAC</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-700">
+              <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
+              <span className="font-semibold">Quality Guarantee — Free reprints if we make an error</span>
+            </div>
+            <p className="text-center text-[11px] text-gray-400">
+              <a href="/returns" className="underline hover:text-gray-600">Refund &amp; Return Policy</a>
+            </p>
+          </div>
         </>
       )}
     </div>

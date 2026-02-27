@@ -18,8 +18,8 @@ const formatCad = (cents) =>
 
 // Badge config per product slug
 const PRODUCT_BADGES = {
-  "real-estate-sign": { label: "Best Seller", color: "bg-orange-100 text-orange-700" },
-  "yard-sign": { label: "Same Day Available", color: "bg-emerald-100 text-emerald-700" },
+  "real-estate-sign": { labelKey: "shop.bestSeller", color: "bg-orange-100 text-orange-700" },
+  "yard-sign": { labelKey: "shop.sameDayAvailable", color: "bg-emerald-100 text-emerald-700" },
 };
 
 // Products that use "Add to Cart" instead of "Configure"
@@ -58,7 +58,7 @@ function SignProductCard({ product, section, category }) {
           {/* Badge overlay */}
           {badge && (
             <span className={`absolute top-2 left-2 rounded-full px-2.5 py-1 text-[10px] font-bold ${badge.color}`}>
-              {badge.label}
+              {t(badge.labelKey)}
             </span>
           )}
         </div>
@@ -78,7 +78,7 @@ function SignProductCard({ product, section, category }) {
         <div className="mt-auto pt-3">
           {price > 0 && (
             <p className="text-sm font-bold text-[var(--color-gray-900)] mb-2">
-              From {formatCad(price)}
+              {t("shop.fromLabel")} {formatCad(price)}
             </p>
           )}
           <div className="flex items-center gap-2">
@@ -89,7 +89,7 @@ function SignProductCard({ product, section, category }) {
               href={href}
               className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-gray-900)] px-3.5 py-2 text-[10px] font-semibold text-[#fff] transition-colors hover:bg-black"
             >
-              {isSimpleAdd ? "Add to Cart" : "Configure"}
+              {isSimpleAdd ? t("shop.addToCart") : t("shop.configure")}
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
@@ -213,7 +213,7 @@ export default function SignsCategoryClient({
 
         {allProducts.length === 0 && (
           <p className="mt-12 text-center text-sm text-[var(--color-gray-500)]">
-            No products available yet.
+            {t("shop.noProducts")}
           </p>
         )}
 
@@ -228,7 +228,7 @@ export default function SignsCategoryClient({
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
-            All Categories
+            {t("shop.backToCategories")}
           </Link>
         </div>
 

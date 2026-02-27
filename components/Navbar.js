@@ -480,7 +480,7 @@ export default function Navbar({ catalogConfig }) {
           {/* Get a Quote CTA */}
           <Link
             href="/quote"
-            className="btn-primary-pill hidden md:inline-flex px-4 py-2 text-xs"
+            className="btn-primary-pill inline-flex px-3 py-1.5 text-[10px] md:px-4 md:py-2 md:text-xs"
           >
             {t("nav.getQuote")}
           </Link>

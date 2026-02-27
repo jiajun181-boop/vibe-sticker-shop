@@ -94,7 +94,10 @@ export default async function HomePage() {
         {/* 1. Hero */}
         <DualEntryHero totalCount={totalCount} />
 
-        {/* 2. Shop by Category — 7 gradient cards */}
+        {/* 2. Google Reviews — social proof right after hero */}
+        <GoogleReviews />
+
+        {/* 3. Shop by Category — 7 gradient cards */}
         <section className="py-16 md:py-20 bg-white animate-on-scroll">
           <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <h2 className="heading-2 text-center mb-3">
@@ -130,7 +133,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* 3. Popular Products — auto-scrolling marquee */}
+        {/* 4. Popular Products — auto-scrolling marquee */}
         {featured.length > 0 && (
           <section className="py-16 md:py-20 bg-[var(--color-gray-50)] animate-on-scroll overflow-hidden">
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
@@ -222,7 +225,7 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* 4. Trust Signals */}
+        {/* 5. Trust Signals */}
         <section className="py-16 md:py-20 bg-white animate-on-scroll">
           <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
             <div className="grid gap-6 sm:grid-cols-3">
@@ -256,9 +259,6 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-
-        {/* 5. Google Reviews */}
-        <GoogleReviews />
 
         {/* 6. CTA */}
         <section className="bg-[var(--color-brand)] py-16 md:py-20">
