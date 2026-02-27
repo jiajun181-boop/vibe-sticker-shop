@@ -10,6 +10,16 @@ const FAQ_CATEGORIES = [
       { q: "faq.ordering.q1", a: "faq.ordering.a1" },
       { q: "faq.ordering.q2", a: "faq.ordering.a2" },
       { q: "faq.ordering.q3", a: "faq.ordering.a3" },
+      { q: "faq.ordering.q4", a: "faq.ordering.a4" },
+      { q: "faq.ordering.q5", a: "faq.ordering.a5" },
+    ],
+  },
+  {
+    key: "proofs",
+    items: [
+      { q: "faq.proofs.q1", a: "faq.proofs.a1" },
+      { q: "faq.proofs.q2", a: "faq.proofs.a2" },
+      { q: "faq.proofs.q3", a: "faq.proofs.a3" },
     ],
   },
   {
@@ -18,6 +28,24 @@ const FAQ_CATEGORIES = [
       { q: "faq.files.q1", a: "faq.files.a1" },
       { q: "faq.files.q2", a: "faq.files.a2" },
       { q: "faq.files.q3", a: "faq.files.a3" },
+      { q: "faq.files.q4", a: "faq.files.a4" },
+      { q: "faq.files.q5", a: "faq.files.a5" },
+    ],
+  },
+  {
+    key: "design",
+    items: [
+      { q: "faq.design.q1", a: "faq.design.a1" },
+      { q: "faq.design.q2", a: "faq.design.a2" },
+      { q: "faq.design.q3", a: "faq.design.a3" },
+    ],
+  },
+  {
+    key: "production",
+    items: [
+      { q: "faq.production.q1", a: "faq.production.a1" },
+      { q: "faq.production.q2", a: "faq.production.a2" },
+      { q: "faq.production.q3", a: "faq.production.a3" },
     ],
   },
   {
@@ -25,6 +53,7 @@ const FAQ_CATEGORIES = [
     items: [
       { q: "faq.shipping.q1", a: "faq.shipping.a1" },
       { q: "faq.shipping.q2", a: "faq.shipping.a2" },
+      { q: "faq.shipping.q3", a: "faq.shipping.a3" },
     ],
   },
   {
@@ -32,6 +61,7 @@ const FAQ_CATEGORIES = [
     items: [
       { q: "faq.returns.q1", a: "faq.returns.a1" },
       { q: "faq.returns.q2", a: "faq.returns.a2" },
+      { q: "faq.returns.q3", a: "faq.returns.a3" },
     ],
   },
   {
@@ -39,6 +69,7 @@ const FAQ_CATEGORIES = [
     items: [
       { q: "faq.payment.q1", a: "faq.payment.a1" },
       { q: "faq.payment.q2", a: "faq.payment.a2" },
+      { q: "faq.payment.q3", a: "faq.payment.a3" },
     ],
   },
 ];
