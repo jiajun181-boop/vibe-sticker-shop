@@ -153,7 +153,7 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
               <p className="mt-1 text-sm text-[var(--color-gray-500)]">{section.subtitle}</p>
               <div className={`mt-4 grid gap-4 ${
                 section.size === "large"
-                  ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                  ? "grid-cols-2 lg:grid-cols-3"
                   : "grid-cols-2 sm:grid-cols-3"
               }`}>
                 {visibleItems.map((item) => (

@@ -155,7 +155,7 @@ export default function MobileBottomBar({
                   disabled={!canAddToCart || buyNowLoading}
                   className={`shrink-0 rounded-sm border-2 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
                     canAddToCart && !buyNowLoading
-                      ? "border-gray-900 text-gray-900"
+                      ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800"
                       : "cursor-not-allowed border-gray-200 text-gray-400"
                   }`}
                 >

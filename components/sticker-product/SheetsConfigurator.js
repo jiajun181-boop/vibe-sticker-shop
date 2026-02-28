@@ -23,12 +23,10 @@ const INCH_TO_CM = 2.54;
 const MAX_SHEET_SIZE = 12; // max sticker dimension on 12×18 sheet
 const SHEET_W = 12;
 const SHEET_H = 18;
-const GAP = 0.125;
-
 const formatCad = (dollars) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(dollars);
 
-const SHEET_QUANTITIES = [25, 50, 100, 250, 500];
+const STICKER_QUANTITIES = [50, 100, 250, 500, 1000, 2500, 5000];
 
 const STICKER_SHAPES = [
   { id: "circle", label: "stickerOrder.shape.circle" },
@@ -73,8 +71,8 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
   const [laminationId, setLaminationId] = useState("none");
   const [printMode, setPrintMode] = useState("white_color");
   const [turnaroundId, setTurnaroundId] = useState("standard");
-  const [sheetCount, setSheetCount] = useState(50);
-  const [customSheetCount, setCustomSheetCount] = useState("");
+  const [stickerQty, setStickerQty] = useState(100);
+  const [customStickerQty, setCustomStickerQty] = useState("");
   const [numDesigns, setNumDesigns] = useState(1);
   const [multiMaxW, setMultiMaxW] = useState("2");
   const [multiMaxH, setMultiMaxH] = useState("2");
@@ -117,13 +115,13 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
     return unit === "cm" ? raw / INCH_TO_CM : raw;
   }, [mode, isCustomSize, sizeIdx, customW, customH, unit, isSingleDim, multiMaxH]);
 
-  const activeSheetCount = useMemo(() => {
-    if (customSheetCount !== "") {
-      const n = parseInt(customSheetCount, 10);
+  const activeStickerQty = useMemo(() => {
+    if (customStickerQty !== "") {
+      const n = parseInt(customStickerQty, 10);
       return n > 0 ? n : 0;
     }
-    return sheetCount;
-  }, [sheetCount, customSheetCount]);
+    return stickerQty;
+  }, [stickerQty, customStickerQty]);
 
   // --- Conditional logic ---
   const isWhiteInkMaterial = WHITE_INK_MATERIALS.includes(materialId);
@@ -149,29 +147,21 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
     return errs;
   }, [widthIn, heightIn]);
 
-  // --- Stickers per sheet ---
+  // --- Stickers per sheet (matches pricing calculation) ---
   const perSheet = useMemo(() => {
     if (widthIn <= 0 || heightIn <= 0) return 0;
-    // Calculate with gap
-    const cols1 = Math.floor(SHEET_W / (widthIn + GAP));
-    const rows1 = Math.floor(SHEET_H / (heightIn + GAP));
-    const cols2 = Math.floor(SHEET_W / (heightIn + GAP));
-    const rows2 = Math.floor(SHEET_H / (widthIn + GAP));
-    return Math.max(cols1 * rows1, cols2 * rows2, 1);
+    return stickersPerSheet(widthIn, heightIn, "rect");
   }, [widthIn, heightIn]);
-
-  const totalStickers = activeSheetCount * perSheet;
 
   // --- Pricing ---
   const lamType = laminationId === "none" ? "gloss" : laminationId === "matte-lam" ? "matte" : laminationId;
   const turnaround = TURNAROUND_OPTIONS.find((t) => t.id === turnaroundId) || TURNAROUND_OPTIONS[0];
 
   const pricing = useMemo(() => {
-    if (widthIn <= 0 || heightIn <= 0 || activeSheetCount <= 0 || dimErrors.length > 0) {
+    if (widthIn <= 0 || heightIn <= 0 || activeStickerQty <= 0 || dimErrors.length > 0) {
       return null;
     }
-    const totalQty = activeSheetCount * perSheet;
-    const result = calcPaperLabelPrice(widthIn, heightIn, totalQty, "rect", lamType);
+    const result = calcPaperLabelPrice(widthIn, heightIn, activeStickerQty, "rect", lamType);
     const designFee = mode === "multi" ? setupFee(numDesigns) : 0;
     let subtotal = result.totalPrice + designFee;
     if (turnaroundId === "rush") subtotal *= turnaround.multiplier;
@@ -180,9 +170,9 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
       designFee,
       subtotal,
     };
-  }, [widthIn, heightIn, activeSheetCount, perSheet, lamType, numDesigns, dimErrors, turnaroundId, turnaround, mode]);
+  }, [widthIn, heightIn, activeStickerQty, lamType, numDesigns, dimErrors, turnaroundId, turnaround, mode]);
 
-  const canAddToCart = pricing !== null && activeSheetCount > 0;
+  const canAddToCart = pricing !== null && activeStickerQty > 0;
 
   // --- Cart ---
   const sizeLabel = useMemo(() => {
@@ -192,7 +182,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
   }, [mode, isCustomSize, widthIn, heightIn, sizeIdx]);
 
   const buildCartItem = useCallback(() => {
-    if (!pricing || activeSheetCount <= 0) return null;
+    if (!pricing || activeStickerQty <= 0) return null;
     const unitCents = Math.round((pricing.totalPrice / pricing.actualQty) * 100);
     return {
       id: `sticker-sheets-${materialId}-${widthIn}x${heightIn}`,
@@ -207,9 +197,10 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
         material: materialId,
         materialName: t(`stickerOrder.mat.${materialId}`),
         lamination: laminationId !== "none" ? laminationId : null,
-        stickersPerSheet: perSheet,
+        stickersPerSheet: pricing.perSheet,
         sheetsOrdered: pricing.sheetsNeeded,
         totalStickers: pricing.actualQty,
+        sheetSize: `${SHEET_W}" × ${SHEET_H}"`,
         ...(mode === "multi" && { designs: numDesigns }),
         ...(pricing.designFee > 0 && { setupFee: `$${pricing.designFee.toFixed(2)}` }),
         turnaround: turnaroundId,
@@ -217,7 +208,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
       },
       forceNewLine: true,
     };
-  }, [pricing, activeSheetCount, materialId, widthIn, heightIn, sizeLabel, perSheet, numDesigns, mode, laminationId, turnaroundId, uploadedFile, t]);
+  }, [pricing, activeStickerQty, materialId, widthIn, heightIn, sizeLabel, numDesigns, mode, laminationId, turnaroundId, uploadedFile, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -455,38 +446,53 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
         </div>
       )}
 
-      {/* Sheet Count (Quantity) */}
+      {/* Quantity (Stickers) */}
       <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          {t("stickerOrder.sheets.sheetCount")}
+          Quantity
         </h3>
         <div className="flex flex-wrap gap-2">
-          {SHEET_QUANTITIES.map((q) => (
+          {STICKER_QUANTITIES.map((q) => (
             <button key={q} type="button"
-              onClick={() => { setSheetCount(q); setCustomSheetCount(""); }}
+              onClick={() => { setStickerQty(q); setCustomStickerQty(""); }}
               className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                customSheetCount === "" && sheetCount === q
+                customStickerQty === "" && stickerQty === q
                   ? "border-gray-900 bg-gray-900 text-[#fff]"
                   : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
               }`}
             >
-              {q}
+              {q.toLocaleString()}
             </button>
           ))}
         </div>
         <div className="mt-2 flex items-center gap-2">
-          <input type="number" min="1" max="9999" value={customSheetCount}
-            onChange={(e) => setCustomSheetCount(e.target.value)}
-            placeholder="Custom"
-            className="w-24 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-gray-900 focus:outline-none"
+          <input type="number" min="1" max="999999" value={customStickerQty}
+            onChange={(e) => setCustomStickerQty(e.target.value)}
+            placeholder="Custom qty"
+            className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-gray-900 focus:outline-none"
           />
-          {perSheet > 0 && activeSheetCount > 0 && (
-            <span className="text-[11px] text-gray-500">
-              = {totalStickers.toLocaleString()} stickers total
-            </span>
-          )}
+          <span className="text-[11px] text-gray-400">stickers</span>
         </div>
       </div>
+
+      {/* Delivery Summary */}
+      {pricing && (
+        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2.5">
+          <div className="flex items-start gap-2">
+            <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+            </svg>
+            <div className="text-[11px] text-emerald-800">
+              <p className="font-semibold">
+                You&apos;ll receive {pricing.actualQty.toLocaleString()} stickers
+              </p>
+              <p className="mt-0.5 text-emerald-600">
+                {pricing.sheetsNeeded} sheet{pricing.sheetsNeeded !== 1 ? "s" : ""} &times; {pricing.perSheet} stickers/sheet &mdash; Sheet size: {SHEET_W}&quot; &times; {SHEET_H}&quot;
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Turnaround */}
       <div>
@@ -535,7 +541,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
               <span className="font-medium text-gray-700">{formatCad(pricing.totalPrice)}</span>
             </div>
             <div className="flex items-baseline justify-between text-[11px] text-gray-400">
-              <span>{pricing.actualQty.toLocaleString()} stickers total ({perSheet}/sheet)</span>
+              <span>{pricing.actualQty.toLocaleString()} stickers ({pricing.perSheet}/sheet)</span>
               <span>{formatCad(pricing.unitPrice)}/sticker</span>
             </div>
             {pricing.designFee > 0 && (
@@ -573,7 +579,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
         </button>
         <button type="button" onClick={handleBuyNow} disabled={!canAddToCart || buyNowLoading}
           className={`w-full rounded-lg border-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all ${
-            canAddToCart && !buyNowLoading ? "border-gray-900 text-gray-900 hover:bg-gray-50 active:scale-[0.98]" : "cursor-not-allowed border-gray-200 text-gray-400"
+            canAddToCart && !buyNowLoading ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800 active:scale-[0.98]" : "cursor-not-allowed border-gray-200 text-gray-400"
           }`}
         >
           {buyNowLoading ? "Processing..." : "Buy Now"}
