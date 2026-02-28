@@ -159,20 +159,39 @@ export default function InlineConfigurator({ cuttingTypeId }) {
   const [printMode, setPrintMode] = useState("white_color");
   const [turnaroundId, setTurnaroundId] = useState("standard");
 
+  // --- Shape-dependent preset sizes ---
+  const SQUARE_PRESETS = useMemo(() => [
+    { label: '2" × 2"', w: 2, h: 2 },
+    { label: '3" × 3"', w: 3, h: 3 },
+    { label: '4" × 4"', w: 4, h: 4 },
+  ], []);
+  const RECT_PRESETS = useMemo(() => [
+    { label: '2" × 3.5"', w: 2, h: 3.5 },
+    { label: '3" × 5"', w: 3, h: 5 },
+    { label: '4" × 6"', w: 4, h: 6 },
+  ], []);
+
+  const shapePresets = useMemo(() => {
+    if (!cutting.shapes) return cutting.sizes; // No shapes? Use default sizes
+    if (shapeId === "custom") return []; // Custom shape: no presets
+    if (shapeId === "circle" || shapeId === "square") return SQUARE_PRESETS;
+    return RECT_PRESETS; // rectangle, oval
+  }, [shapeId, cutting.shapes, cutting.sizes, SQUARE_PRESETS, RECT_PRESETS]);
+
   // --- Derived: shape-dependent dimensions ---
-  const isCustomSize = sizeIdx === -1;
+  const isCustomSize = sizeIdx === -1 || shapePresets.length === 0;
   const isSingleDimShape = shapeId === "circle" || shapeId === "square";
 
   const widthIn = useMemo(() => {
-    if (!isCustomSize) return cutting.sizes[sizeIdx]?.w ?? 2;
+    if (!isCustomSize && shapePresets[sizeIdx]) return shapePresets[sizeIdx].w;
     const raw = parseFloat(customW);
     if (!raw || raw <= 0) return 0;
     const inches = unit === "cm" ? raw / INCH_TO_CM : raw;
     return inches;
-  }, [isCustomSize, sizeIdx, cutting, customW, unit]);
+  }, [isCustomSize, sizeIdx, shapePresets, customW, unit]);
 
   const heightIn = useMemo(() => {
-    if (!isCustomSize) return cutting.sizes[sizeIdx]?.h ?? 2;
+    if (!isCustomSize && shapePresets[sizeIdx]) return shapePresets[sizeIdx].h;
     // For circle/square, height = width
     if (isSingleDimShape) {
       const raw = parseFloat(customW);
@@ -182,7 +201,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
     const raw = parseFloat(customH);
     if (!raw || raw <= 0) return 0;
     return unit === "cm" ? raw / INCH_TO_CM : raw;
-  }, [isCustomSize, sizeIdx, cutting, customW, customH, unit, isSingleDimShape]);
+  }, [isCustomSize, sizeIdx, shapePresets, customW, customH, unit, isSingleDimShape]);
 
   const activeQty = useMemo(() => {
     if (customQty !== "") {
@@ -271,7 +290,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
     if (!quote.quoteData || activeQty <= 0) return null;
     const sizeLabel = isCustomSize
       ? `${widthIn.toFixed(2)}" × ${heightIn.toFixed(2)}"`
-      : cutting.sizes[sizeIdx]?.label;
+      : shapePresets[sizeIdx]?.label || `${widthIn}" × ${heightIn}"`;
     return {
       id: slug,
       name: `${t(`stickerOrder.type.${cuttingTypeId}`)} — ${sizeLabel}`,
@@ -294,7 +313,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.unitCents, activeQty, cuttingTypeId, widthIn, heightIn, isCustomSize, sizeIdx, cutting, slug, materialId, lamination, shapeId, uploadedFile, t, isFoil, foilColor, isWhiteInkMaterial, printMode, turnaroundId]);
+  }, [quote.quoteData, quote.unitCents, activeQty, cuttingTypeId, widthIn, heightIn, isCustomSize, sizeIdx, shapePresets, slug, materialId, lamination, shapeId, uploadedFile, t, isFoil, foilColor, isWhiteInkMaterial, printMode, turnaroundId]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -306,7 +325,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
     setSizeIdx(idx);
     setCustomW("");
     setCustomH("");
-    trackOptionChange({ slug, option: "size", value: idx === -1 ? "custom" : cutting.sizes[idx]?.label, quantity: activeQty });
+    trackOptionChange({ slug, option: "size", value: idx === -1 ? "custom" : shapePresets[idx]?.label, quantity: activeQty });
   }
   function selectMaterial(id) {
     setMaterialId(id);
@@ -319,6 +338,14 @@ export default function InlineConfigurator({ cuttingTypeId }) {
   }
   function selectShape(id) {
     setShapeId(id);
+    // Reset size to first preset (or custom mode for custom shape)
+    if (id === "custom") {
+      setSizeIdx(-1);
+    } else {
+      setSizeIdx(0);
+      setCustomW("");
+      setCustomH("");
+    }
     trackOptionChange({ slug, option: "shape", value: id, quantity: activeQty });
   }
 
@@ -418,8 +445,8 @@ export default function InlineConfigurator({ cuttingTypeId }) {
           Size
         </h3>
         <div className="flex flex-wrap gap-2">
-          {cutting.sizes.map((s, i) => {
-            const isActive = sizeIdx === i;
+          {shapePresets.map((s, i) => {
+            const isActive = !isCustomSize && sizeIdx === i;
             return (
               <button
                 key={i}
@@ -435,17 +462,19 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               </button>
             );
           })}
-          <button
-            type="button"
-            onClick={() => selectSize(-1)}
-            className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-              isCustomSize
-                ? "border-gray-900 bg-gray-900 text-[#fff]"
-                : "border-dashed border-gray-300 text-gray-500 hover:border-gray-500"
-            }`}
-          >
-            Custom
-          </button>
+          {shapePresets.length > 0 && (
+            <button
+              type="button"
+              onClick={() => selectSize(-1)}
+              className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                isCustomSize
+                  ? "border-gray-900 bg-gray-900 text-[#fff]"
+                  : "border-dashed border-gray-300 text-gray-500 hover:border-gray-500"
+              }`}
+            >
+              Custom
+            </button>
+          )}
         </div>
         {isCustomSize && (
           <div className="mt-2">

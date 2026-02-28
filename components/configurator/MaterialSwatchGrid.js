@@ -44,6 +44,25 @@ export const MATERIAL_META = {
   "perforated": { pattern: "mesh", baseColor: "#f0f0f0", subtitle: "Perforated Window Film", description: "One-way vision film.", durability: "Outdoor 2-3 years", weight: "Light" },
   "white-cling": { pattern: "smooth-white", baseColor: "#ffffff", subtitle: "White Static Cling", description: "Removable, no adhesive.", durability: "Indoor", weight: "Light" },
   "clear-cling": { pattern: "checkerboard", baseColor: "transparent", subtitle: "Clear Static Cling", description: "Removable, transparent.", durability: "Indoor", weight: "Light" },
+  // ── New sticker material IDs (kebab-case from sticker-order-config) ──
+  "matte-vinyl": { pattern: "smooth", baseColor: "#f0f0ee", subtitle: "3mil Matte Vinyl", description: "Non-glare, premium look.", durability: "Outdoor 3-5 years", weight: "Light" },
+  "clear-vinyl": { pattern: "checkerboard", baseColor: "transparent", subtitle: "3mil Clear Vinyl", description: "Transparent background stickers.", durability: "Outdoor 3-5 years", weight: "Light" },
+  "frosted-vinyl": { pattern: "frosted", baseColor: "#e8edf2", subtitle: "Frosted Vinyl", description: "Etched glass look.", durability: "Outdoor 3-5 years", weight: "Light" },
+  "holographic-vinyl": { pattern: "holographic", baseColor: "#e8e0f0", subtitle: "Holographic Film", description: "Rainbow sparkle effect.", durability: "Outdoor 2-3 years", weight: "Light" },
+  "3m-reflective": { pattern: "brushed", baseColor: "#d8dce2", subtitle: "3M Reflective Vinyl", description: "High visibility, 3M Scotchlite.", durability: "Outdoor 5yr+", weight: "Light" },
+  "heavy-duty-vinyl": { pattern: "smooth", baseColor: "#e8e8e8", subtitle: "Heavy-Duty Vinyl", description: "Extra thick, industrial grade.", durability: "Outdoor 5yr+", weight: "Medium" },
+  "gloss-paper": { pattern: "gloss", baseColor: "#fffdf8", subtitle: "Glossy Paper", description: "Bright indoor stickers.", durability: "Indoor only", weight: "Ultra-light" },
+  "matte-paper": { pattern: "smooth-white", baseColor: "#f8f6f4", subtitle: "Matte Paper", description: "Non-glare indoor stickers.", durability: "Indoor only", weight: "Ultra-light" },
+  "soft-touch-paper": { pattern: "smooth", baseColor: "#faf5f0", subtitle: "Soft-Touch Paper", description: "Velvety feel premium paper.", durability: "Indoor only", weight: "Ultra-light" },
+  "foil-stamping": { pattern: "gloss", baseColor: "#f0d890", subtitle: "Foil Stamping", description: "Metallic accent finish.", durability: "Indoor", weight: "Light" },
+  "clear-static-cling": { pattern: "checkerboard", baseColor: "transparent", subtitle: "Clear Static Cling", description: "Removable, transparent, no adhesive.", durability: "Indoor", weight: "Light" },
+  "frosted-static-cling": { pattern: "frosted", baseColor: "#e8edf2", subtitle: "Frosted Static Cling", description: "Removable, frosted look.", durability: "Indoor", weight: "Light" },
+  "white-static-cling": { pattern: "smooth-white", baseColor: "#ffffff", subtitle: "White Static Cling", description: "Removable, opaque, no adhesive.", durability: "Indoor", weight: "Light" },
+  // ── Roll labels BOPP IDs (kebab-case from sticker-order-config) ──
+  "white-gloss-bopp": { pattern: "gloss", baseColor: "#ffffff", subtitle: "White Gloss BOPP", description: "Waterproof product labels.", durability: "Outdoor 3-5 years", weight: "Light" },
+  "matte-white-bopp": { pattern: "smooth-white", baseColor: "#f5f5f5", subtitle: "Matte White BOPP", description: "Non-glare product labels.", durability: "Outdoor 3-5 years", weight: "Light" },
+  "silver-brushed-bopp": { pattern: "brushed", baseColor: "#c0c0c0", subtitle: "Silver Brushed BOPP", description: "Metallic finish labels.", durability: "Outdoor 2-3 years", weight: "Light" },
+  "freezer-grade-bopp": { pattern: "smooth", baseColor: "#e0eaf0", subtitle: "Freezer Grade BOPP", description: "Cold-resistant adhesive.", durability: "Outdoor 3-5 years", weight: "Light" },
 };
 
 // ─── SVG Texture Pattern Renderer ────────────────────────────────────────────
@@ -206,6 +225,27 @@ function TexturePattern({ pattern, baseColor, uid, width = "100%", height = 56 }
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill={`url(#${patId})`} />
+        </svg>
+      );
+    }
+
+    // Frosted glass effect — soft blur overlay on white
+    case "frosted": {
+      const filterId = `frost-${uid}`;
+      return (
+        <svg width={width} height={height} className="block w-full" preserveAspectRatio="none" aria-hidden="true">
+          <rect width="100%" height="100%" fill={bg} />
+          <defs>
+            <filter id={filterId}>
+              <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="4" seed="5" result="noise" />
+              <feColorMatrix type="saturate" values="0" in="noise" result="gray" />
+              <feComponentTransfer in="gray">
+                <feFuncA type="discrete" tableValues="0 0.06 0.12 0.18 0.12 0.06 0" />
+              </feComponentTransfer>
+            </filter>
+          </defs>
+          <rect width="100%" height="100%" filter={`url(#${filterId})`} />
+          <rect width="100%" height="100%" fill="#b8cee0" fillOpacity="0.12" />
         </svg>
       );
     }

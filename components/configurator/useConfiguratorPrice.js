@@ -46,6 +46,8 @@ export default function useConfiguratorPrice({
     if (abortRef.current) abortRef.current.abort();
     if (!enabled || !slug || quantity <= 0) {
       setQuoteData(null);
+      setQuoteLoading(false);
+      setQuoteError(null);
       return;
     }
     const ac = new AbortController();
