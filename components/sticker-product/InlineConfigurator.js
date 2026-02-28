@@ -13,6 +13,7 @@ import {
   TURNAROUND_OPTIONS,
   PRINT_MODES,
   CUSTOM_SHAPE_SURCHARGE,
+  MATERIAL_GROUP_LABELS,
 } from "@/lib/sticker-order-config";
 import {
   trackOptionChange,
@@ -359,16 +360,41 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
           Material
         </h3>
-        <MaterialSwatchGrid
-          materials={cutting.materials.map((mat) => ({
-            id: mat.id,
-            label: t(`stickerOrder.mat.${mat.id}`),
-            subtitle: MATERIAL_HINTS[mat.id] || undefined,
-          }))}
-          selectedId={materialId}
-          onSelect={selectMaterial}
-          columns={cutting.materials.length <= 3 ? 3 : 4}
-        />
+        {(() => {
+          // Group materials by their group field
+          const groups = [];
+          const seen = new Set();
+          for (const mat of cutting.materials) {
+            const g = mat.group || "other";
+            if (!seen.has(g)) { seen.add(g); groups.push(g); }
+          }
+          const hasMultipleGroups = groups.length > 1;
+
+          return groups.map((groupId) => {
+            const groupMats = cutting.materials
+              .filter((m) => (m.group || "other") === groupId)
+              .map((mat) => ({
+                id: mat.id,
+                label: t(`stickerOrder.mat.${mat.id}`),
+                subtitle: MATERIAL_HINTS[mat.id] || undefined,
+              }));
+            return (
+              <div key={groupId} className={hasMultipleGroups ? "mb-3" : ""}>
+                {hasMultipleGroups && (
+                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                    {MATERIAL_GROUP_LABELS[groupId] || groupId}
+                  </p>
+                )}
+                <MaterialSwatchGrid
+                  materials={groupMats}
+                  selectedId={materialId}
+                  onSelect={selectMaterial}
+                  columns={groupMats.length <= 3 ? 3 : 4}
+                />
+              </div>
+            );
+          });
+        })()}
         {/* Static cling hint */}
         {isStaticCling && (
           <p className="mt-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-medium text-blue-700">

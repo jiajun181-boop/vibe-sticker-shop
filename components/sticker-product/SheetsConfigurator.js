@@ -16,6 +16,7 @@ import {
   WHITE_INK_MATERIALS,
   TURNAROUND_OPTIONS,
   PRINT_MODES,
+  MATERIAL_GROUP_LABELS,
 } from "@/lib/sticker-order-config";
 
 const INCH_TO_CM = 2.54;
@@ -233,16 +234,40 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
       {/* Material */}
       <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">Material</h3>
-        <MaterialSwatchGrid
-          materials={cutting.materials.map((mat) => ({
-            id: mat.id,
-            label: t(`stickerOrder.mat.${mat.id}`),
-            subtitle: MATERIAL_HINTS[mat.id] || undefined,
-          }))}
-          selectedId={materialId}
-          onSelect={setMaterialId}
-          columns={4}
-        />
+        {(() => {
+          const groups = [];
+          const seen = new Set();
+          for (const mat of cutting.materials) {
+            const g = mat.group || "other";
+            if (!seen.has(g)) { seen.add(g); groups.push(g); }
+          }
+          const hasMultipleGroups = groups.length > 1;
+
+          return groups.map((groupId) => {
+            const groupMats = cutting.materials
+              .filter((m) => (m.group || "other") === groupId)
+              .map((mat) => ({
+                id: mat.id,
+                label: t(`stickerOrder.mat.${mat.id}`),
+                subtitle: MATERIAL_HINTS[mat.id] || undefined,
+              }));
+            return (
+              <div key={groupId} className={hasMultipleGroups ? "mb-3" : ""}>
+                {hasMultipleGroups && (
+                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                    {MATERIAL_GROUP_LABELS[groupId] || groupId}
+                  </p>
+                )}
+                <MaterialSwatchGrid
+                  materials={groupMats}
+                  selectedId={materialId}
+                  onSelect={setMaterialId}
+                  columns={groupMats.length <= 3 ? 3 : 4}
+                />
+              </div>
+            );
+          });
+        })()}
       </div>
 
       {/* Same Design: Shape + Size */}
