@@ -30,6 +30,7 @@ import VehicleOrderClient from "@/app/order/vehicle/VehicleOrderClient";
 import SurfaceOrderClient from "@/app/order/surfaces/SurfaceOrderClient";
 import CanvasOrderClient from "@/app/order/canvas/CanvasOrderClient";
 import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
+import VinylLetteringOrderClient from "@/app/order/vinyl-lettering/VinylLetteringOrderClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
@@ -561,6 +562,30 @@ export default async function ProductPage({ params }) {
     // Business card products have dedicated /order/ pages — redirect there
     if (configurator.component === "business-cards") {
       redirect(`/order/${configurator.defaultValue}`);
+    }
+    // Vinyl Lettering has its own dedicated configurator (text + logo modes)
+    if (configurator.component === "stickers" && configurator.defaultValue === "vinyl-lettering") {
+      const vlProduct = await prisma.product.findFirst({
+        where: { slug: decodedSlug, isActive: true },
+        include: { images: { orderBy: { sortOrder: "asc" } } },
+      });
+      const vlAssets = vlProduct ? await getProductAssets(vlProduct.id) : [];
+      const vlImages = vlAssets.length > 0 ? vlAssets : toClientSafe(vlProduct?.images || []);
+      return (
+        <>
+          {vlProduct && <ProductSchema product={toClientSafe(vlProduct)} />}
+          <BreadcrumbSchema category={decodedCategory} productName={vlProduct?.name || "Vinyl Lettering & Decals"} />
+          <Suspense
+            fallback={
+              <div className="flex min-h-[60vh] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+              </div>
+            }
+          >
+            <VinylLetteringOrderClient productImages={vlImages} />
+          </Suspense>
+        </>
+      );
     }
     // Sticker products: render with StickerProductPageClient using fallback content
     if (configurator.component === "stickers") {
