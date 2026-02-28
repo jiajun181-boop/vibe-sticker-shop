@@ -51,6 +51,9 @@ export default function VinylLetteringOrderClient() {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
+  // Type: "text" (lettering) or "logo" (logo & shape decal)
+  const [type, setType] = useState("text");
+
   const [heightId, setHeightId] = useState("2in");
   const [color, setColor] = useState("black");
   const [material, setMaterial] = useState("standard");
@@ -59,6 +62,10 @@ export default function VinylLetteringOrderClient() {
   const [customQty, setCustomQty] = useState("");
   const [letteringText, setLetteringText] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
+
+  // Logo mode dimensions
+  const [logoWidth, setLogoWidth] = useState("6");
+  const [logoHeight, setLogoHeight] = useState("6");
 
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -81,9 +88,11 @@ export default function VinylLetteringOrderClient() {
     return quantity;
   }, [quantity, customQty]);
 
-  // For quote: widthIn = letterHeight * 4 (estimated width), heightIn = letterHeight value
-  const widthIn = letterHeight.value * 4;
-  const heightIn = letterHeight.value;
+  // Dimensions for quote — text mode estimates from letter height, logo mode uses user input
+  const parsedLogoW = Math.min(53, Math.max(0.5, parseFloat(logoWidth) || 0));
+  const parsedLogoH = Math.min(53, Math.max(0.5, parseFloat(logoHeight) || 0));
+  const widthIn = type === "text" ? letterHeight.value * 4 : parsedLogoW;
+  const heightIn = type === "text" ? letterHeight.value : parsedLogoH;
 
   // ─── Quote ───
 
@@ -142,17 +151,22 @@ export default function VinylLetteringOrderClient() {
 
   function buildCartItem() {
     if (!quoteData || activeQty <= 0) return null;
+    const isLogo = type === "logo";
     const textSnippet = letteringText.trim().slice(0, 40);
+    const nameDesc = isLogo
+      ? `${parsedLogoW}" × ${parsedLogoH}" ${t(`vl.color.${color}`)}`
+      : `${letterHeight.label} ${t(`vl.color.${color}`)}${textSnippet ? ` "${textSnippet}"` : ""}`;
     return {
       id: "vinyl-lettering",
-      name: `${t("vl.title")} — ${letterHeight.label} ${t(`vl.color.${color}`)}${textSnippet ? ` "${textSnippet}"` : ""}`,
+      name: `${t("vl.title")} — ${nameDesc}`,
       slug: "vinyl-lettering",
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
       options: {
-        letterHeight: heightId,
-        letterHeightLabel: letterHeight.label,
-        letteringText: letteringText.trim() || null,
+        type,
+        ...(isLogo
+          ? { widthIn: parsedLogoW, heightIn: parsedLogoH }
+          : { letterHeight: heightId, letterHeightLabel: letterHeight.label, letteringText: letteringText.trim() || null }),
         color,
         material,
         application,
@@ -222,20 +236,58 @@ export default function VinylLetteringOrderClient() {
         {/* ── LEFT: Options ── */}
         <div className="space-y-8 lg:col-span-3">
 
-          {/* Your Text */}
-          <Section label={t("vl.textInput")}>
-            <textarea
-              value={letteringText}
-              onChange={(e) => setLetteringText(e.target.value)}
-              placeholder={t("vl.enterText")}
-              rows={3}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-            />
-            <p className="mt-1.5 text-xs text-gray-500">{t("vl.textInputHint")}</p>
+          {/* Step 1: Type Selector */}
+          <Section label={t("vl.type.label")}>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setType("text")}
+                className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
+                  type === "text"
+                    ? "border-gray-900 bg-gray-50 shadow-sm"
+                    : "border-gray-200 bg-white hover:border-gray-400"
+                }`}
+              >
+                <svg className="h-8 w-8 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                </svg>
+                <span className="text-sm font-semibold text-gray-900">{t("vl.type.text")}</span>
+                <span className="text-[11px] text-gray-500">{t("vl.type.textDesc")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setType("logo")}
+                className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
+                  type === "logo"
+                    ? "border-gray-900 bg-gray-50 shadow-sm"
+                    : "border-gray-200 bg-white hover:border-gray-400"
+                }`}
+              >
+                <svg className="h-8 w-8 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+                </svg>
+                <span className="text-sm font-semibold text-gray-900">{t("vl.type.logo")}</span>
+                <span className="text-[11px] text-gray-500">{t("vl.type.logoDesc")}</span>
+              </button>
+            </div>
           </Section>
 
-          {/* Live Preview */}
-          {letteringText.trim() && (
+          {/* Text mode: Your Text input */}
+          {type === "text" && (
+            <Section label={t("vl.textInput")}>
+              <textarea
+                value={letteringText}
+                onChange={(e) => setLetteringText(e.target.value)}
+                placeholder={t("vl.enterText")}
+                rows={3}
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+              />
+              <p className="mt-1.5 text-xs text-gray-500">{t("vl.textInputHint")}</p>
+            </Section>
+          )}
+
+          {/* Text mode: Live Preview */}
+          {type === "text" && letteringText.trim() && (
             <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-5">
               <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">{t("vl.preview") || "Preview"}</p>
               <div
@@ -260,16 +312,58 @@ export default function VinylLetteringOrderClient() {
             </div>
           )}
 
-          {/* Letter Height */}
-          <Section label={t("vl.letterHeight")}>
-            <div className="flex flex-wrap gap-2">
-              {LETTER_HEIGHTS.map((h) => (
-                <Chip key={h.id} active={heightId === h.id} onClick={() => setHeightId(h.id)}>
-                  {h.label}
-                </Chip>
-              ))}
-            </div>
-          </Section>
+          {/* Text mode: Letter Height */}
+          {type === "text" && (
+            <Section label={t("vl.letterHeight")}>
+              <div className="flex flex-wrap gap-2">
+                {LETTER_HEIGHTS.map((h) => (
+                  <Chip key={h.id} active={heightId === h.id} onClick={() => setHeightId(h.id)}>
+                    {h.label}
+                  </Chip>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* Logo mode: Dimensions */}
+          {type === "logo" && (
+            <Section label={t("vl.logo.dimensions")}>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <label className="mb-1 block text-xs text-gray-500">{t("vl.logo.width")}</label>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="0.5"
+                      max="53"
+                      step="0.5"
+                      value={logoWidth}
+                      onChange={(e) => setLogoWidth(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                    />
+                    <span className="text-sm text-gray-500">in</span>
+                  </div>
+                </div>
+                <span className="mt-5 text-gray-400">×</span>
+                <div className="flex-1">
+                  <label className="mb-1 block text-xs text-gray-500">{t("vl.logo.height")}</label>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="0.5"
+                      max="53"
+                      step="0.5"
+                      value={logoHeight}
+                      onChange={(e) => setLogoHeight(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                    />
+                    <span className="text-sm text-gray-500">in</span>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-1.5 text-xs text-gray-500">{t("vl.logo.dimensionsHint")}</p>
+            </Section>
+          )}
 
           {/* Color */}
           <Section label={t("vl.color.label")}>
@@ -391,9 +485,15 @@ export default function VinylLetteringOrderClient() {
             <h2 className="text-base font-bold text-gray-900">{t("vl.summary")}</h2>
 
             <dl className="space-y-2 text-sm">
-              <Row label={t("vl.letterHeight")} value={letterHeight.label} />
-              {letteringText.trim() && (
+              <Row label={t("vl.type.label")} value={type === "text" ? t("vl.type.text") : t("vl.type.logo")} />
+              {type === "text" && (
+                <Row label={t("vl.letterHeight")} value={letterHeight.label} />
+              )}
+              {type === "text" && letteringText.trim() && (
                 <Row label={t("vl.textInput")} value={`"${letteringText.trim().slice(0, 20)}${letteringText.trim().length > 20 ? "…" : ""}"`} />
+              )}
+              {type === "logo" && (
+                <Row label={t("vl.logo.dimensions")} value={`${parsedLogoW}" × ${parsedLogoH}"`} />
               )}
               <Row
                 label={t("vl.color.label")}
@@ -488,7 +588,7 @@ export default function VinylLetteringOrderClient() {
       <div className="mt-16 space-y-12">
         {/* Description */}
         <section>
-          <h2 className="text-xl font-bold text-gray-900">About Vinyl Lettering</h2>
+          <h2 className="text-xl font-bold text-gray-900">About Vinyl Lettering & Decals</h2>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
             Custom vinyl lettering is precision-cut from premium outdoor-grade vinyl film, producing
             crisp, paint-like text for storefronts, vehicles, boats, and interior decor. Each character
@@ -576,7 +676,7 @@ export default function VinylLetteringOrderClient() {
               <>
                 <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
                 <p className="truncate text-[11px] text-gray-500">
-                  {activeQty} × {letterHeight.label} {t(`vl.color.${color}`)}
+                  {activeQty} × {type === "text" ? `${letterHeight.label} ` : `${parsedLogoW}" × ${parsedLogoH}" `}{t(`vl.color.${color}`)}
                 </p>
               </>
             ) : (

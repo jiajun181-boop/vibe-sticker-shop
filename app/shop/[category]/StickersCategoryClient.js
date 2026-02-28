@@ -20,62 +20,30 @@ const formatCad = (cents) =>
 const CORE_STICKER_SLUGS = [
   "die-cut-stickers",
   "kiss-cut-stickers",
-  "holographic-stickers",
-  "foil-stickers",
-  "stickers-color-on-clear",
-  "stickers-color-on-white",
-  "clear-singles",
-  "heavy-duty-vinyl-stickers",
   "sticker-sheets",
-  "sticker-packs",
-  "sticker-rolls",
+  "kiss-cut-sticker-sheets",
   "roll-labels",
-  "clear-labels",
-  "kraft-paper-labels",
-  "white-bopp-labels",
-  "barcode-labels",
-  "qr-code-labels",
-  "freezer-labels",
   "vinyl-lettering",
-  "transfer-vinyl-lettering",
 ];
 const CORE_SET = new Set(CORE_STICKER_SLUGS);
 const CORE_ORDER = new Map(CORE_STICKER_SLUGS.map((s, i) => [s, i]));
 
 /* ── Slug → filter tag mapping (core products only) ── */
 const SLUG_TAG = {
-  // Custom Stickers
-  "die-cut-stickers": "custom-stickers",
-  "kiss-cut-stickers": "custom-stickers",
-  "holographic-stickers": "custom-stickers",
-  "foil-stickers": "custom-stickers",
-  "clear-singles": "custom-stickers",
-  "heavy-duty-vinyl-stickers": "custom-stickers",
-  "stickers-color-on-clear": "custom-stickers",
-  "stickers-color-on-white": "custom-stickers",
-  // Labels & Rolls
-  "sticker-rolls": "labels-rolls",
-  "roll-labels": "labels-rolls",
-  "clear-labels": "labels-rolls",
-  "kraft-paper-labels": "labels-rolls",
-  "white-bopp-labels": "labels-rolls",
-  "freezer-labels": "labels-rolls",
-  "barcode-labels": "labels-rolls",
-  "qr-code-labels": "labels-rolls",
-  // Sheets & Packs
-  "sticker-sheets": "sheets-packs",
-  "sticker-packs": "sheets-packs",
-  // Vinyl Lettering
-  "vinyl-lettering": "vinyl-lettering",
-  "transfer-vinyl-lettering": "vinyl-lettering",
+  "die-cut-stickers": "stickers",
+  "kiss-cut-stickers": "stickers",
+  "sticker-sheets": "sheets",
+  "kiss-cut-sticker-sheets": "sheets",
+  "roll-labels": "roll-labels",
+  "vinyl-lettering": "lettering",
 };
 
 const FILTER_TABS = [
   { id: "all", key: "stickerCat.filter.all" },
-  { id: "custom-stickers", key: "stickerCat.filter.customStickers" },
-  { id: "labels-rolls", key: "stickerCat.filter.labelsRolls" },
-  { id: "sheets-packs", key: "stickerCat.filter.sheetsPacks" },
-  { id: "vinyl-lettering", key: "stickerCat.filter.vinylLettering" },
+  { id: "stickers", key: "stickerCat.filter.stickers" },
+  { id: "sheets", key: "stickerCat.filter.sheets" },
+  { id: "roll-labels", key: "stickerCat.filter.rollLabels" },
+  { id: "lettering", key: "stickerCat.filter.lettering" },
 ];
 
 /* ── Material pills ── */
@@ -113,7 +81,7 @@ function ProductCard({ product, t }) {
   return (
     <article className="group overflow-hidden rounded-xl shadow-[var(--shadow-card)] bg-white transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1">
       <Link href={href} className="block">
-        <div className="relative aspect-square sm:aspect-[4/3] bg-[var(--color-gray-100)]">
+        <div className="relative aspect-square sm:aspect-[4/3] bg-[var(--color-gray-100)] overflow-hidden">
           {imageSrc ? (
             isSvg ? (
               <img src={imageSrc} alt={product.name} className="h-full w-full object-cover" />
@@ -134,9 +102,9 @@ function ProductCard({ product, t }) {
             </div>
           )}
 
-          {/* Turnaround badge */}
+          {/* Turnaround badge — constrained inside image area */}
           {turnaround && (
-            <span className={`absolute top-2 left-2 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white ${turnaroundColor(turnaround)}`}>
+            <span className={`absolute top-1.5 left-1.5 max-w-[calc(100%-12px)] truncate rounded-full px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold text-white ${turnaroundColor(turnaround)}`}>
               {t(turnaroundI18nKey(turnaround))}
             </span>
           )}
@@ -213,7 +181,7 @@ export default function StickersCategoryClient({ products = [] }) {
   const taggedProducts = useMemo(() => {
     return products
       .filter((p) => p.isActive !== false && CORE_SET.has(p.slug))
-      .map((p) => ({ ...p, filterTag: SLUG_TAG[p.slug] || "custom-stickers" }))
+      .map((p) => ({ ...p, filterTag: SLUG_TAG[p.slug] || "stickers" }))
       .sort((a, b) => (CORE_ORDER.get(a.slug) ?? 99) - (CORE_ORDER.get(b.slug) ?? 99));
   }, [products]);
 

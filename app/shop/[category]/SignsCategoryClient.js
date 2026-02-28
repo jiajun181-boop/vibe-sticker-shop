@@ -57,7 +57,7 @@ function SignProductCard({ product, section, category }) {
           )}
           {/* Badge overlay */}
           {badge && (
-            <span className={`absolute top-2 left-2 rounded-full px-2.5 py-1 text-[10px] font-bold ${badge.color}`}>
+            <span className={`absolute top-2 left-2 max-w-[calc(100%-16px)] truncate rounded-full px-2.5 py-1 text-[10px] font-bold ${badge.color}`}>
               {t(badge.labelKey)}
             </span>
           )}

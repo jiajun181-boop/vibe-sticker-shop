@@ -110,15 +110,13 @@ const nextConfig: NextConfig = {
       { source: "/shop", destination: "/shop/stickers-labels-decals", permanent: false, has: [{ type: "query", key: "category", value: "facility-asset-labels" }] },
 
       // ── Product deduplication — old slugs to canonical ──
-      // Note: do NOT add :cat wildcard redirects for slugs that are current subgroup names
-      // (die-cut-stickers, kiss-cut-singles, sticker-pages, sticker-rolls, vinyl-lettering, etc.)
+      // Note: do NOT add :cat wildcard redirects for slugs that are current product/subgroup names
+      // (die-cut-stickers, kiss-cut-stickers, sticker-sheets, roll-labels, vinyl-lettering, etc.)
       { source: "/shop/:cat/feather-flag", destination: "/shop/banners-displays/flags-hardware", permanent: true },
       { source: "/shop/:cat/teardrop-flag", destination: "/shop/banners-displays/flags-hardware", permanent: true },
       { source: "/shop/:cat/die-cut-singles", destination: "/shop/stickers-labels-decals/die-cut-stickers", permanent: true },
-      { source: "/shop/:cat/sticker-sheets", destination: "/shop/stickers-labels-decals/sticker-pages", permanent: true },
-      { source: "/shop/:cat/kiss-cut-sticker-sheets", destination: "/shop/stickers-labels-decals/sticker-pages", permanent: true },
-      { source: "/shop/:cat/clear-labels", destination: "/shop/stickers-labels-decals/sticker-rolls", permanent: true },
-      { source: "/shop/:cat/white-bopp-labels", destination: "/shop/stickers-labels-decals/sticker-rolls", permanent: true },
+      { source: "/shop/:cat/clear-labels", destination: "/shop/stickers-labels-decals/roll-labels", permanent: true },
+      { source: "/shop/:cat/white-bopp-labels", destination: "/shop/stickers-labels-decals/roll-labels", permanent: true },
       { source: "/shop/:cat/transfer-vinyl-lettering", destination: "/shop/stickers-labels-decals/vinyl-lettering", permanent: true },
       { source: "/shop/:cat/foam-board", destination: "/shop/signs-rigid-boards", permanent: true },
       { source: "/shop/:cat/coroplast-yard-signs", destination: "/shop/signs-rigid-boards/yard-sign", permanent: true },
@@ -151,10 +149,25 @@ const nextConfig: NextConfig = {
       { source: "/shop/windows-walls-floors/static-cling-standard", destination: "/shop/windows-walls-floors/static-cling", permanent: true },
 
       // ── Deactivated product redirects (Feb 2026 cleanup) ──
-      { source: "/shop/stickers-labels-decals/removable-stickers", destination: "/shop/stickers-labels-decals/kiss-cut-singles", permanent: true },
-      { source: "/shop/stickers-labels-decals/labels-roll-quote", destination: "/shop/stickers-labels-decals/sticker-rolls", permanent: true },
-      { source: "/shop/stickers-labels-decals/kiss-cut-sticker-sheets", destination: "/shop/stickers-labels-decals/sticker-pages", permanent: true },
-      { source: "/shop/stickers-labels-decals/stickers-multi-on-sheet", destination: "/shop/stickers-labels-decals/sticker-pages", permanent: true },
+      { source: "/shop/stickers-labels-decals/removable-stickers", destination: "/shop/stickers-labels-decals/kiss-cut-stickers", permanent: true },
+      { source: "/shop/stickers-labels-decals/labels-roll-quote", destination: "/shop/stickers-labels-decals/roll-labels", permanent: true },
+      { source: "/shop/stickers-labels-decals/stickers-multi-on-sheet", destination: "/shop/stickers-labels-decals/kiss-cut-sticker-sheets", permanent: true },
+      // Stickers restructure — deactivated products → parent configurators (Feb 2026)
+      { source: "/shop/stickers-labels-decals/holographic-stickers", destination: "/shop/stickers-labels-decals/die-cut-stickers", permanent: true },
+      { source: "/shop/stickers-labels-decals/stickers-color-on-clear", destination: "/shop/stickers-labels-decals/die-cut-stickers", permanent: true },
+      { source: "/shop/stickers-labels-decals/stickers-color-on-white", destination: "/shop/stickers-labels-decals/die-cut-stickers", permanent: true },
+      { source: "/shop/stickers-labels-decals/clear-singles", destination: "/shop/stickers-labels-decals/die-cut-stickers", permanent: true },
+      { source: "/shop/stickers-labels-decals/foil-stickers", destination: "/shop/stickers-labels-decals/die-cut-stickers", permanent: true },
+      { source: "/shop/stickers-labels-decals/heavy-duty-vinyl-stickers", destination: "/shop/stickers-labels-decals/die-cut-stickers", permanent: true },
+      { source: "/shop/stickers-labels-decals/sticker-packs", destination: "/shop/stickers-labels-decals", permanent: true },
+      { source: "/shop/stickers-labels-decals/sticker-rolls", destination: "/shop/stickers-labels-decals/roll-labels", permanent: true },
+      { source: "/shop/stickers-labels-decals/kraft-paper-labels", destination: "/shop/stickers-labels-decals/roll-labels", permanent: true },
+      { source: "/shop/stickers-labels-decals/barcode-labels", destination: "/shop/stickers-labels-decals/roll-labels", permanent: true },
+      { source: "/shop/stickers-labels-decals/qr-code-labels", destination: "/shop/stickers-labels-decals/roll-labels", permanent: true },
+      { source: "/shop/stickers-labels-decals/freezer-labels", destination: "/shop/stickers-labels-decals/roll-labels", permanent: true },
+      // Old nav sub-group slugs → new product slugs
+      { source: "/shop/stickers-labels-decals/kiss-cut-singles", destination: "/shop/stickers-labels-decals/kiss-cut-stickers", permanent: true },
+      { source: "/shop/stickers-labels-decals/sticker-pages", destination: "/shop/stickers-labels-decals/sticker-sheets", permanent: true },
       { source: "/shop/:cat/parking-lot-stencils", destination: "/shop/stickers-labels-decals/facility-asset-labels", permanent: true },
       { source: "/shop/:cat/valve-tags-engraved", destination: "/shop/stickers-labels-decals/facility-asset-labels", permanent: true },
       { source: "/shop/:cat/equipment-rating-plates", destination: "/shop/stickers-labels-decals/facility-asset-labels", permanent: true },
@@ -170,8 +183,8 @@ const nextConfig: NextConfig = {
       { source: "/order/canvas", destination: "/shop/canvas-prints", permanent: true },
       { source: "/order/signs", destination: "/shop/signs-rigid-boards/yard-sign", permanent: true },
       { source: "/order/vehicle", destination: "/shop/vehicle-graphics-fleet", permanent: true },
-      { source: "/order/kiss-cut-stickers", destination: "/shop/stickers-labels-decals/kiss-cut-singles", permanent: true },
-      { source: "/order/sticker-rolls", destination: "/shop/stickers-labels-decals/sticker-rolls", permanent: true },
+      { source: "/order/kiss-cut-stickers", destination: "/shop/stickers-labels-decals/kiss-cut-stickers", permanent: true },
+      { source: "/order/sticker-rolls", destination: "/shop/stickers-labels-decals/roll-labels", permanent: true },
       { source: "/order/surfaces", destination: "/shop/windows-walls-floors", permanent: true },
       { source: "/order/acrylic-signs", destination: "/shop/signs-rigid-boards", permanent: true },
 

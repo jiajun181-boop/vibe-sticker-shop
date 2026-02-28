@@ -43,6 +43,7 @@ export default function RollLabelsOrderClient() {
   const [finishId, setFinishId] = useState("matte-lam");
   const [windId, setWindId] = useState("any");
   const [labelsPerRoll, setLabelsPerRoll] = useState("any");
+  const [customPerRoll, setCustomPerRoll] = useState(100);
   const [perforation, setPerforation] = useState(false);
   const [foodUse, setFoodUse] = useState(false);
   const [turnaroundId, setTurnaroundId] = useState("standard");
@@ -134,7 +135,7 @@ export default function RollLabelsOrderClient() {
         ink: inkId,
         finishing: finishId,
         wind: windId,
-        labelsPerRoll,
+        labelsPerRoll: labelsPerRoll === "custom" ? String(customPerRoll) : labelsPerRoll,
         perforation,
         foodUse,
         turnaround: turnaroundId,
@@ -142,7 +143,7 @@ export default function RollLabelsOrderClient() {
       artworkUrl: uploadedFile?.url || null,
       forceNewLine: true,
     };
-  }, [typeId, shapeId, dim1, dim2, qty, stockId, inkId, finishId, windId, labelsPerRoll, perforation, foodUse, turnaroundId, subtotalCents, uploadedFile, shape]);
+  }, [typeId, shapeId, dim1, dim2, qty, stockId, inkId, finishId, windId, labelsPerRoll, customPerRoll, perforation, foodUse, turnaroundId, subtotalCents, uploadedFile, shape]);
 
   const handleAddToCart = useCallback(() => {
     addToCart(buildCartItem());
@@ -311,7 +312,23 @@ export default function RollLabelsOrderClient() {
 
             {/* STEP 9: Labels Per Roll */}
             <ConfigStep number={inks.length > 1 ? 9 : 8} title={t?.("rl.step.perRoll") || "Labels Per Roll"}>
-              <RadioGroup options={LABELS_PER_ROLL} value={labelsPerRoll} onChange={setLabelsPerRoll} cols={4} />
+              <RadioGroup options={LABELS_PER_ROLL} value={labelsPerRoll} onChange={setLabelsPerRoll} cols={5} />
+              {labelsPerRoll === "custom" && (
+                <div className="mt-3">
+                  <label className="mb-1 block text-xs font-medium text-gray-600">
+                    {t?.("rl.customPerRoll") || "Enter number of labels per roll"}
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10000"
+                    step="1"
+                    value={customPerRoll}
+                    onChange={(e) => setCustomPerRoll(Math.max(1, Math.round(Number(e.target.value))))}
+                    className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-brand)] focus:ring-1 focus:ring-[var(--color-brand)]"
+                  />
+                </div>
+              )}
             </ConfigStep>
 
             {/* STEP 10: Perforation + Food Use */}
