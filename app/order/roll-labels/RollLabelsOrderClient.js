@@ -15,6 +15,7 @@ import {
   SHAPES,
   STOCKS,
   INK_COLORS,
+  WHITE_INK_STOCKS,
   QUANTITIES,
   FINISHINGS,
   WIND_DIRECTIONS,
@@ -53,7 +54,9 @@ export default function RollLabelsOrderClient() {
   // ─── Derived ──────────────────────────────────────────────────────────────
   const shape = SHAPES.find((s) => s.id === shapeId) || SHAPES[0];
   const stocks = STOCKS[typeId] || [];
-  const inks = INK_COLORS[typeId] || [];
+  // Use white ink options when stock is transparent (e.g. clear BOPP)
+  const inkKey = WHITE_INK_STOCKS.includes(stockId) ? `${typeId}_clear` : typeId;
+  const inks = INK_COLORS[inkKey] || INK_COLORS[typeId] || [];
   const turnaround = TURNAROUNDS.find((t) => t.id === turnaroundId) || TURNAROUNDS[0];
 
   // Reset stock/ink when type changes
@@ -268,7 +271,14 @@ export default function RollLabelsOrderClient() {
               <RadioGroup
                 options={stocks}
                 value={stockId}
-                onChange={setStockId}
+                onChange={(id) => {
+                  setStockId(id);
+                  // Reset ink when switching to/from clear (different ink options)
+                  const newInkKey = WHITE_INK_STOCKS.includes(id) ? `${typeId}_clear` : typeId;
+                  const newInks = INK_COLORS[newInkKey] || INK_COLORS[typeId] || [];
+                  const defInk = newInks.find((i) => i.default) || newInks[0];
+                  if (defInk) setInkId(defInk.id);
+                }}
                 cols={stocks.length <= 4 ? 2 : 3}
               />
             </ConfigStep>

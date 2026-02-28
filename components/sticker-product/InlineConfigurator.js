@@ -7,6 +7,12 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   getCuttingType,
   resolveProductSlug,
+  LAMINATION_RULES,
+  WHITE_INK_MATERIALS,
+  FOIL_SUB_OPTIONS,
+  TURNAROUND_OPTIONS,
+  PRINT_MODES,
+  CUSTOM_SHAPE_SURCHARGE,
 } from "@/lib/sticker-order-config";
 import {
   trackOptionChange,
@@ -27,16 +33,38 @@ const formatCad = (cents) =>
 
 const MATERIAL_HINTS = {
   "white-vinyl": "Durable, waterproof",
-  matte: "Non-glare, premium",
-  clear: "Transparent background",
-  holographic: "Rainbow sparkle",
-  reflective: "High visibility",
-  "glossy-paper": "Bright, indoor",
+  "matte-vinyl": "Non-glare, premium",
+  "clear-vinyl": "Transparent background",
+  "frosted-vinyl": "Etched glass look",
+  "holographic-vinyl": "Rainbow sparkle",
+  "3m-reflective": "High visibility",
+  "heavy-duty-vinyl": "Extra thick, industrial",
+  "gloss-paper": "Bright, indoor",
+  "matte-paper": "Smooth, indoor",
+  "soft-touch-paper": "Velvety feel",
+  "foil-stamping": "Metallic accent",
+  "clear-static-cling": "No adhesive, reusable",
+  "frosted-static-cling": "No adhesive, frosted",
+  "white-static-cling": "No adhesive, opaque",
 };
 
 // Map frontend material IDs → API material alias + implicit lamination
 const MATERIAL_API_MAP = {
   "white-vinyl": { alias: "white-vinyl", lam: null },
+  "matte-vinyl": { alias: "matte-vinyl", lam: "matte" },
+  "clear-vinyl": { alias: "clear-vinyl", lam: null },
+  "frosted-vinyl": { alias: "frosted-vinyl", lam: null },
+  "holographic-vinyl": { alias: "holographic-vinyl", lam: null },
+  "3m-reflective": { alias: "3m-reflective", lam: null },
+  "heavy-duty-vinyl": { alias: "heavy-duty-vinyl", lam: null },
+  "gloss-paper": { alias: "gloss-paper", lam: null },
+  "matte-paper": { alias: "matte-paper", lam: null },
+  "soft-touch-paper": { alias: "soft-touch-paper", lam: null },
+  "foil-stamping": { alias: "foil-stamping", lam: null },
+  "clear-static-cling": { alias: "clear-static-cling", lam: null },
+  "frosted-static-cling": { alias: "frosted-static-cling", lam: null },
+  "white-static-cling": { alias: "white-static-cling", lam: null },
+  // Legacy / other cutting types
   matte: { alias: "matte", lam: "matte" },
   clear: { alias: "clear", lam: null },
   holographic: { alias: "holographic", lam: null },
@@ -69,12 +97,26 @@ const CUT_TYPE_MAP = {
   magnets: "die_cut",
 };
 
+// SVG shape icons
+function ShapeIcon({ shapeId, className = "h-4 w-4" }) {
+  switch (shapeId) {
+    case "circle":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="9" /></svg>;
+    case "square":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="4" y="4" width="16" height="16" rx="1" /></svg>;
+    case "rectangle":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="2" y="6" width="20" height="12" rx="1" /></svg>;
+    case "oval":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><ellipse cx="12" cy="12" rx="10" ry="7" /></svg>;
+    case "custom":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>;
+    default:
+      return null;
+  }
+}
+
 /**
  * Compact inline configurator for the rich sticker product page right column.
- * No ConfigHero, no step numbers — streamlined for embedding.
- *
- * Props:
- *  - cuttingTypeId: locked cutting type (e.g. "die-cut")
  */
 export default function InlineConfigurator({ cuttingTypeId }) {
   const { t } = useTranslation();
@@ -112,23 +154,35 @@ export default function InlineConfigurator({ cuttingTypeId }) {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [dimErrors, setDimErrors] = useState([]);
   const [laminationId, setLaminationId] = useState("none");
-  const [shapeId, setShapeId] = useState("custom");
+  const [shapeId, setShapeId] = useState("circle");
+  const [foilColor, setFoilColor] = useState("gold");
+  const [printMode, setPrintMode] = useState("white_color");
+  const [turnaroundId, setTurnaroundId] = useState("standard");
 
-  // Derived dimensions
+  // --- Derived: shape-dependent dimensions ---
   const isCustomSize = sizeIdx === -1;
+  const isSingleDimShape = shapeId === "circle" || shapeId === "square";
+
   const widthIn = useMemo(() => {
     if (!isCustomSize) return cutting.sizes[sizeIdx]?.w ?? 2;
     const raw = parseFloat(customW);
     if (!raw || raw <= 0) return 0;
-    return unit === "cm" ? raw / INCH_TO_CM : raw;
+    const inches = unit === "cm" ? raw / INCH_TO_CM : raw;
+    return inches;
   }, [isCustomSize, sizeIdx, cutting, customW, unit]);
 
   const heightIn = useMemo(() => {
     if (!isCustomSize) return cutting.sizes[sizeIdx]?.h ?? 2;
+    // For circle/square, height = width
+    if (isSingleDimShape) {
+      const raw = parseFloat(customW);
+      if (!raw || raw <= 0) return 0;
+      return unit === "cm" ? raw / INCH_TO_CM : raw;
+    }
     const raw = parseFloat(customH);
     if (!raw || raw <= 0) return 0;
     return unit === "cm" ? raw / INCH_TO_CM : raw;
-  }, [isCustomSize, sizeIdx, cutting, customH, unit]);
+  }, [isCustomSize, sizeIdx, cutting, customW, customH, unit, isSingleDimShape]);
 
   const activeQty = useMemo(() => {
     if (customQty !== "") {
@@ -142,6 +196,38 @@ export default function InlineConfigurator({ cuttingTypeId }) {
     () => resolveProductSlug(cuttingTypeId, materialId),
     [cuttingTypeId, materialId]
   );
+
+  // --- Conditional logic ---
+  const isStaticCling = materialId.includes("static-cling") || materialId.includes("cling");
+  const isFoil = materialId === "foil-stamping";
+  const isWhiteInkMaterial = WHITE_INK_MATERIALS.includes(materialId);
+  const isHolographic = materialId === "holographic-vinyl";
+  const hideLamination = LAMINATION_RULES.hide.includes(materialId);
+  const showPaperWarning = LAMINATION_RULES.paperWarning.includes(materialId) && laminationId === "none";
+  const isCustomShape = shapeId === "custom";
+
+  // Reset lamination when it should be hidden
+  useEffect(() => {
+    if (hideLamination && laminationId !== "none") {
+      setLaminationId("none");
+    }
+  }, [hideLamination, laminationId]);
+
+  // Available print modes (holographic: no C+W+C)
+  const availablePrintModes = useMemo(() => {
+    if (!isWhiteInkMaterial) return [];
+    if (isHolographic) return PRINT_MODES.filter((m) => m.id !== "color_white_color");
+    return PRINT_MODES;
+  }, [isWhiteInkMaterial, isHolographic]);
+
+  // Reset print mode when material changes
+  useEffect(() => {
+    if (!isWhiteInkMaterial) {
+      setPrintMode("white_color");
+    } else if (isHolographic && printMode === "color_white_color") {
+      setPrintMode("white_color");
+    }
+  }, [isWhiteInkMaterial, isHolographic, printMode]);
 
   // --- Validate dimensions ---
   useEffect(() => {
@@ -158,6 +244,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
   // --- Pricing ---
   const matApi = MATERIAL_API_MAP[materialId] || { alias: materialId, lam: null };
   const lamination = matApi.lam || (laminationId === "matte-lam" ? "matte" : laminationId === "gloss" ? "gloss" : "none");
+  const turnaround = TURNAROUND_OPTIONS.find((t) => t.id === turnaroundId) || TURNAROUND_OPTIONS[0];
 
   const quote = useConfiguratorPrice({
     slug,
@@ -169,6 +256,10 @@ export default function InlineConfigurator({ cuttingTypeId }) {
       cutType: CUT_TYPE_MAP[cuttingTypeId] || "die_cut",
       isSticker: true,
       lamination,
+      ...(isCustomShape && { shapeSurcharge: CUSTOM_SHAPE_SURCHARGE }),
+      ...(isWhiteInkMaterial && { printMode }),
+      ...(turnaroundId === "rush" && { turnaroundMultiplier: turnaround.multiplier }),
+      ...(isFoil && { foilColor }),
     },
     enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
@@ -196,11 +287,14 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         materialName: t(`stickerOrder.mat.${materialId}`),
         lamination: lamination !== "none" ? lamination : null,
         shape: cutting.shapes ? shapeId : undefined,
+        ...(isFoil && { foilColor }),
+        ...(isWhiteInkMaterial && { printMode }),
+        turnaround: turnaroundId,
         fileName: uploadedFile?.name || null,
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.unitCents, activeQty, cuttingTypeId, widthIn, heightIn, isCustomSize, sizeIdx, cutting, slug, materialId, lamination, shapeId, uploadedFile, t]);
+  }, [quote.quoteData, quote.unitCents, activeQty, cuttingTypeId, widthIn, heightIn, isCustomSize, sizeIdx, cutting, slug, materialId, lamination, shapeId, uploadedFile, t, isFoil, foilColor, isWhiteInkMaterial, printMode, turnaroundId]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -248,7 +342,75 @@ export default function InlineConfigurator({ cuttingTypeId }) {
           onSelect={selectMaterial}
           columns={cutting.materials.length <= 3 ? 3 : 4}
         />
+        {/* Static cling hint */}
+        {isStaticCling && (
+          <p className="mt-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-medium text-blue-700">
+            {t("stickerOrder.staticClingHint")}
+          </p>
+        )}
       </div>
+
+      {/* Foil sub-options */}
+      {isFoil && (
+        <div>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+            {t("stickerOrder.foil.label")}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {FOIL_SUB_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setFoilColor(opt.id)}
+                className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                  foilColor === opt.id
+                    ? "border-gray-900 bg-gray-900 text-[#fff]"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                }`}
+              >
+                {t(opt.label)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Shape */}
+      {cutting.shapes && (
+        <div>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+            {t("stickerOrder.shape")}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {cutting.shapes.map((s) => {
+              const isActive = shapeId === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => selectShape(s.id)}
+                  className={`flex items-center gap-1.5 rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                    isActive
+                      ? "border-gray-900 bg-gray-900 text-[#fff]"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  <ShapeIcon shapeId={s.id} className={`h-3.5 w-3.5 ${isActive ? "text-white" : "text-gray-500"}`} />
+                  {t(s.label)}
+                </button>
+              );
+            })}
+          </div>
+          {isCustomShape && (
+            <div className="mt-2 space-y-1">
+              <p className="flex items-center gap-1.5 text-xs text-amber-600">
+                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">+15%</span>
+                {t("stickerOrder.shape.customHint")}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Size */}
       <div>
@@ -287,52 +449,68 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         </div>
         {isCustomSize && (
           <div className="mt-2">
-            <CustomDimensions
-              customW={customW}
-              customH={customH}
-              onChangeW={setCustomW}
-              onChangeH={setCustomH}
-              unit={unit}
-              onChangeUnit={setUnit}
-              minLabel={`${cutting.minIn}" × ${cutting.minIn}"`}
-              maxLabel={`${cutting.maxW}" × ${cutting.maxH}"`}
-              dimErrors={dimErrors}
-              t={t}
-            />
+            {isSingleDimShape ? (
+              /* Circle: Diameter, Square: Size — single input */
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-gray-500">
+                  {shapeId === "circle" ? t("stickerOrder.shape.diameter") : t("stickerOrder.shape.sideLength")}
+                </label>
+                <input
+                  type="number"
+                  min={cutting.minIn}
+                  max={cutting.maxW}
+                  step="0.25"
+                  value={customW}
+                  onChange={(e) => setCustomW(e.target.value)}
+                  className="w-20 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/10"
+                  placeholder={`${cutting.minIn}" – ${cutting.maxW}"`}
+                />
+                <span className="text-xs text-gray-400">in</span>
+                {dimErrors.length > 0 && (
+                  <span className="text-[11px] text-red-500">{dimErrors[0]}</span>
+                )}
+              </div>
+            ) : (
+              /* Rectangle / Oval / Custom: Width × Height */
+              <CustomDimensions
+                customW={customW}
+                customH={customH}
+                onChangeW={setCustomW}
+                onChangeH={setCustomH}
+                unit={unit}
+                onChangeUnit={setUnit}
+                minLabel={`${cutting.minIn}" × ${cutting.minIn}"`}
+                maxLabel={`${cutting.maxW}" × ${cutting.maxH}"`}
+                dimErrors={dimErrors}
+                t={t}
+              />
+            )}
           </div>
         )}
       </div>
 
-      {/* Shape */}
-      {cutting.shapes && (
+      {/* White Ink / Print Mode */}
+      {isWhiteInkMaterial && availablePrintModes.length > 0 && (
         <div>
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            {t("stickerOrder.shape")}
+            {t("stickerOrder.printMode.label")}
           </h3>
           <div className="flex flex-wrap gap-2">
-            {cutting.shapes.map((s) => {
-              const isActive = shapeId === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => selectShape(s.id)}
-                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                    isActive
-                      ? "border-gray-900 bg-gray-900 text-[#fff]"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  {t(s.label)}
-                </button>
-              );
-            })}
+            {availablePrintModes.map((mode) => (
+              <button
+                key={mode.id}
+                type="button"
+                onClick={() => setPrintMode(mode.id)}
+                className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                  printMode === mode.id
+                    ? "border-gray-900 bg-gray-900 text-[#fff]"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                }`}
+              >
+                {t(mode.label)}
+              </button>
+            ))}
           </div>
-          {shapeId === "custom" && (
-            <p className="mt-2 text-xs text-amber-600">
-              {t("stickerOrder.shape.customHint")}
-            </p>
-          )}
         </div>
       )}
 
@@ -380,7 +558,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
       </div>
 
       {/* Lamination */}
-      {cutting.lamination && cutting.lamination.length > 1 && (
+      {!hideLamination && cutting.lamination && cutting.lamination.length > 1 && (
         <div>
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
             Lamination
@@ -401,8 +579,43 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               </button>
             ))}
           </div>
+          {showPaperWarning && (
+            <p className="mt-2 text-[11px] text-amber-600">
+              {t("stickerOrder.lamination.paperWarning")}
+            </p>
+          )}
         </div>
       )}
+
+      {/* Turnaround */}
+      <div>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+          {t("stickerOrder.turnaround.label")}
+        </h3>
+        <div className="flex gap-2">
+          {TURNAROUND_OPTIONS.map((opt) => {
+            const isActive = turnaroundId === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setTurnaroundId(opt.id)}
+                className={`flex-1 rounded-lg border-2 px-3 py-2 text-center transition-all ${
+                  isActive
+                    ? "border-gray-900 bg-gray-900 text-[#fff]"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                }`}
+              >
+                <span className="block text-xs font-bold">{t(opt.label)}</span>
+                <span className={`block text-[10px] ${isActive ? "text-gray-300" : "text-gray-400"}`}>
+                  {t(opt.desc)}
+                  {opt.id === "rush" && <span className="ml-1 font-bold text-amber-400">{t("stickerOrder.turnaround.rushSurcharge")}</span>}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Upload Artwork */}
       <div>
@@ -416,6 +629,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
           onBegin={() => trackUploadStarted({ slug })}
           t={t}
         />
+        <p className="mt-1.5 text-[10px] text-gray-400">{t("stickerOrder.uploadAfterCheckout")}</p>
       </div>
 
       {/* Price Summary */}
@@ -433,6 +647,12 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               <span>Subtotal ({activeQty.toLocaleString()} pcs)</span>
               <span className="font-medium text-gray-700">{formatCad(quote.subtotalCents)}</span>
             </div>
+            {turnaroundId === "rush" && (
+              <div className="flex items-baseline justify-between text-xs text-amber-600">
+                <span>Rush surcharge</span>
+                <span className="font-medium">+50%</span>
+              </div>
+            )}
             <hr className="border-gray-200" />
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-black text-gray-900">Total</span>

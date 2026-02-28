@@ -33,7 +33,9 @@ export default function useConfiguratorPrice({
   enabled = true,
 }) {
   const [quoteData, setQuoteData] = useState(null);
-  const [quoteLoading, setQuoteLoading] = useState(false);
+  // Start with loading=true when enabled, so skeleton shows immediately
+  // instead of briefly flashing "Select options" during the debounce gap
+  const [quoteLoading, setQuoteLoading] = useState(enabled);
   const [quoteError, setQuoteError] = useState(null);
   const [surcharges, setSurcharges] = useState(0);
 

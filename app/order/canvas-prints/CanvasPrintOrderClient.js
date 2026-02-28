@@ -97,7 +97,7 @@ export default function CanvasPrintOrderClient() {
   const [cropData, setCropData] = useState({ x: 0, y: 0, zoom: 1 });
 
   const [quoteData, setQuoteData] = useState(null);
-  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteLoading, setQuoteLoading] = useState(true);
   const [quoteError, setQuoteError] = useState(null);
   const [buyNowLoading, setBuyNowLoading] = useState(false);
 

@@ -46,22 +46,6 @@ const FILTER_TABS = [
   { id: "lettering", key: "stickerCat.filter.lettering" },
 ];
 
-/* ── Material pills ── */
-const MATERIAL_PILLS = [
-  { id: "white-vinyl", label: "White Vinyl", href: `${BASE}/die-cut-stickers?material=white_vinyl` },
-  { id: "matte-vinyl", label: "Matte Vinyl", href: `${BASE}/die-cut-stickers?material=matte_vinyl` },
-  { id: "clear-vinyl", label: "Clear Vinyl", href: `${BASE}/die-cut-stickers?material=clear_vinyl` },
-  { id: "frosted-vinyl", label: "Frosted Vinyl", href: `${BASE}/die-cut-stickers?material=frosted_vinyl` },
-  { id: "3m-reflective", label: "3M Reflective", href: `${BASE}/die-cut-stickers?material=reflective_3m` },
-  { id: "gloss-paper", label: "Gloss Paper", href: `${BASE}/die-cut-stickers?material=paper_gloss` },
-  { id: "matte-paper", label: "Matte Paper", href: `${BASE}/die-cut-stickers?material=paper_matte` },
-  { id: "soft-touch", label: "Soft Touch", href: `${BASE}/die-cut-stickers?material=paper_soft` },
-  { id: "foil-stamping", label: "Foil Stamping", href: `${BASE}/die-cut-stickers?material=paper_foil` },
-  { id: "clear-cling", label: "Clear Cling", href: `${BASE}/die-cut-stickers?material=static_cling_clear` },
-  { id: "frosted-cling", label: "Frosted Cling", href: `${BASE}/die-cut-stickers?material=static_cling_frosted` },
-  { id: "white-cling", label: "White Cling", href: `${BASE}/die-cut-stickers?material=static_cling_white` },
-];
-
 /* ── Related categories ── */
 const RELATED = [
   { titleKey: "stickerCat.related.safety", title: "Safety & Warning Decals", titleZh: "安全警示贴纸", desc: "Fire, PPE, hazard, lockout/tagout", descZh: "消防、PPE、危险、锁定/标签", href: `${BASE}/safety-warning-decals` },
@@ -258,25 +242,6 @@ export default function StickersCategoryClient({ products = [] }) {
             <p className="text-sm text-[var(--color-gray-400)]">{t("shop.noProducts")}</p>
           </div>
         )}
-
-        {/* Shop by Material */}
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight">{t("stickerCat.shopByMaterial")}</h2>
-          <p className="mt-1 text-sm text-[var(--color-gray-500)]">
-            {t("stickerCat.shopByMaterialDesc")}
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {MATERIAL_PILLS.map((mat) => (
-              <Link
-                key={mat.id}
-                href={mat.href}
-                className="rounded-full border border-[var(--color-gray-200)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-gray-700)] transition-colors hover:bg-[var(--color-brand-50)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
-              >
-                {mat.label}
-              </Link>
-            ))}
-          </div>
-        </section>
 
         {/* Related categories */}
         <section className="mt-12">

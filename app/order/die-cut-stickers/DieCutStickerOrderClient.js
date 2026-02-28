@@ -56,7 +56,7 @@ export default function DieCutStickerOrderClient() {
   const [contourData, setContourData] = useState(null);
 
   const [quoteData, setQuoteData] = useState(null);
-  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteLoading, setQuoteLoading] = useState(true);
   const [quoteError, setQuoteError] = useState(null);
   const [buyNowLoading, setBuyNowLoading] = useState(false);
 

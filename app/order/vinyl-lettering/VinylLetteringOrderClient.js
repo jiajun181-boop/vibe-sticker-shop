@@ -29,9 +29,17 @@ const COLORS = [
   { id: "white", hex: "#ffffff", surcharge: 0 },
   { id: "red", hex: "#dc2626", surcharge: 0 },
   { id: "blue", hex: "#1d4ed8", surcharge: 0 },
+  { id: "orange", hex: "#ea580c", surcharge: 0 },
+  { id: "green", hex: "#16a34a", surcharge: 0 },
+  { id: "yellow", hex: "#eab308", surcharge: 0 },
+  { id: "purple", hex: "#9333ea", surcharge: 0 },
+  { id: "pink", hex: "#ec4899", surcharge: 0 },
+  { id: "brown", hex: "#92400e", surcharge: 0 },
   { id: "gold", hex: "#ca8a04", surcharge: 5 },
   { id: "silver", hex: "#9ca3af", surcharge: 5 },
 ];
+
+const REFLECTIVE_COLORS = ["white", "silver", "yellow", "red", "orange", "green", "blue"];
 
 const MATERIALS = [
   { id: "standard", surcharge: 0 },
@@ -45,6 +53,28 @@ const APPLICATIONS = [
 
 const QUANTITIES = [1, 2, 5, 10, 25, 50];
 
+// googleFamily: only set for fonts that need Google Fonts loading
+// System fonts (Arial, Helvetica, Times, Impact) are available natively
+const FONTS = [
+  { id: "arial", label: "Arial", family: "Arial, sans-serif" },
+  { id: "helvetica", label: "Helvetica", family: "'Helvetica Neue', Helvetica, Arial, sans-serif" },
+  { id: "times", label: "Times New Roman", family: "'Times New Roman', serif" },
+  { id: "impact", label: "Impact", family: "Impact, sans-serif" },
+  { id: "montserrat", label: "Montserrat", family: "'Montserrat', sans-serif", googleFamily: "Montserrat:wght@400;700" },
+  { id: "roboto", label: "Roboto", family: "'Roboto', sans-serif", googleFamily: "Roboto:wght@400;700" },
+  { id: "open-sans", label: "Open Sans", family: "'Open Sans', sans-serif", googleFamily: "Open+Sans:wght@400;700" },
+  { id: "lobster", label: "Lobster", family: "'Lobster', cursive", googleFamily: "Lobster" },
+  { id: "permanent-marker", label: "Permanent Marker", family: "'Permanent Marker', cursive", googleFamily: "Permanent+Marker" },
+  { id: "oswald", label: "Oswald", family: "'Oswald', sans-serif", googleFamily: "Oswald:wght@400;700" },
+  { id: "playfair", label: "Playfair Display", family: "'Playfair Display', serif", googleFamily: "Playfair+Display:wght@400;700" },
+  { id: "raleway", label: "Raleway", family: "'Raleway', sans-serif", googleFamily: "Raleway:wght@400;700" },
+];
+
+const TURNAROUND_OPTIONS = [
+  { id: "standard", multiplier: 1.0 },
+  { id: "rush", multiplier: 1.5 },
+];
+
 // ─── Main Component ───
 
 export default function VinylLetteringOrderClient() {
@@ -53,6 +83,8 @@ export default function VinylLetteringOrderClient() {
 
   // Type: "text" (lettering) or "logo" (logo & shape decal)
   const [type, setType] = useState("text");
+  // Logo sub-mode: "cut" (single color) or "printed" (full color)
+  const [logoMode, setLogoMode] = useState("cut");
 
   const [heightId, setHeightId] = useState("2in");
   const [color, setColor] = useState("black");
@@ -61,6 +93,8 @@ export default function VinylLetteringOrderClient() {
   const [quantity, setQuantity] = useState(5);
   const [customQty, setCustomQty] = useState("");
   const [letteringText, setLetteringText] = useState("");
+  const [fontId, setFontId] = useState("arial");
+  const [turnaroundId, setTurnaroundId] = useState("standard");
   const [uploadedFile, setUploadedFile] = useState(null);
 
   // Logo mode dimensions
@@ -68,7 +102,7 @@ export default function VinylLetteringOrderClient() {
   const [logoHeight, setLogoHeight] = useState("6");
 
   const [quoteData, setQuoteData] = useState(null);
-  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteLoading, setQuoteLoading] = useState(true);
   const [quoteError, setQuoteError] = useState(null);
   const [buyNowLoading, setBuyNowLoading] = useState(false);
 
@@ -88,11 +122,30 @@ export default function VinylLetteringOrderClient() {
     return quantity;
   }, [quantity, customQty]);
 
+  // Filter colors for reflective material
+  const availableColors = useMemo(() => {
+    if (material === "reflective") {
+      return COLORS.filter((c) => REFLECTIVE_COLORS.includes(c.id));
+    }
+    return COLORS;
+  }, [material]);
+
+  // Reset color if not available for current material
+  useEffect(() => {
+    if (material === "reflective" && !REFLECTIVE_COLORS.includes(color)) {
+      setColor("white");
+    }
+  }, [material, color]);
+
+  const selectedFont = useMemo(() => FONTS.find((f) => f.id === fontId) || FONTS[0], [fontId]);
+
   // Dimensions for quote — text mode estimates from letter height, logo mode uses user input
   const parsedLogoW = Math.min(53, Math.max(0.5, parseFloat(logoWidth) || 0));
   const parsedLogoH = Math.min(53, Math.max(0.5, parseFloat(logoHeight) || 0));
   const widthIn = type === "text" ? letterHeight.value * 4 : parsedLogoW;
   const heightIn = type === "text" ? letterHeight.value : parsedLogoH;
+
+  const turnaround = TURNAROUND_OPTIONS.find((t) => t.id === turnaroundId) || TURNAROUND_OPTIONS[0];
 
   // ─── Quote ───
 
@@ -141,8 +194,11 @@ export default function VinylLetteringOrderClient() {
   const subtotalCents = quoteData?.totalCents ?? 0;
   const colorSurcharge = (COLORS.find((c) => c.id === color)?.surcharge ?? 0) * activeQty;
   const materialSurcharge = (MATERIALS.find((m) => m.id === material)?.surcharge ?? 0) * activeQty;
+  // Printed vinyl logo surcharge (+30%)
+  const printedVinylSurcharge = (type === "logo" && logoMode === "printed") ? Math.round(subtotalCents * 0.30) : 0;
 
-  const adjustedSubtotal = subtotalCents + colorSurcharge + materialSurcharge;
+  let adjustedSubtotal = subtotalCents + colorSurcharge + materialSurcharge + printedVinylSurcharge;
+  if (turnaroundId === "rush") adjustedSubtotal = Math.round(adjustedSubtotal * turnaround.multiplier);
   const totalCents = adjustedSubtotal;
 
   const canAddToCart = quoteData && !quoteLoading && activeQty > 0;
@@ -154,7 +210,7 @@ export default function VinylLetteringOrderClient() {
     const isLogo = type === "logo";
     const textSnippet = letteringText.trim().slice(0, 40);
     const nameDesc = isLogo
-      ? `${parsedLogoW}" × ${parsedLogoH}" ${t(`vl.color.${color}`)}`
+      ? `${parsedLogoW}" × ${parsedLogoH}" ${logoMode === "printed" ? "Full Color" : t(`vl.color.${color}`)}`
       : `${letterHeight.label} ${t(`vl.color.${color}`)}${textSnippet ? ` "${textSnippet}"` : ""}`;
     return {
       id: "vinyl-lettering",
@@ -165,11 +221,12 @@ export default function VinylLetteringOrderClient() {
       options: {
         type,
         ...(isLogo
-          ? { widthIn: parsedLogoW, heightIn: parsedLogoH }
-          : { letterHeight: heightId, letterHeightLabel: letterHeight.label, letteringText: letteringText.trim() || null }),
-        color,
+          ? { widthIn: parsedLogoW, heightIn: parsedLogoH, logoMode }
+          : { letterHeight: heightId, letterHeightLabel: letterHeight.label, letteringText: letteringText.trim() || null, font: fontId }),
+        ...(!(isLogo && logoMode === "printed") && { color }),
         material,
         application,
+        turnaround: turnaroundId,
         fileName: uploadedFile?.name || null,
       },
       forceNewLine: true,
@@ -220,10 +277,20 @@ export default function VinylLetteringOrderClient() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Load only the selected Google Font on demand (not all 8 at once) */}
+      {selectedFont.googleFamily && (
+        // eslint-disable-next-line @next/next/no-page-custom-font
+        <link
+          key={selectedFont.id}
+          rel="stylesheet"
+          href={`https://fonts.googleapis.com/css2?family=${selectedFont.googleFamily}&display=swap`}
+        />
+      )}
+
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("vl.breadcrumb"), href: "/shop/vinyl-lettering" },
+          { label: t("vl.breadcrumb"), href: "/shop/stickers-labels-decals/vinyl-lettering" },
           { label: t("vl.order") },
         ]}
       />
@@ -272,6 +339,34 @@ export default function VinylLetteringOrderClient() {
             </div>
           </Section>
 
+          {/* Logo mode: Cut vs Printed sub-option */}
+          {type === "logo" && (
+            <Section label={t("vl.type.logo")}>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setLogoMode("cut")}
+                  className={`rounded-xl border-2 p-3 text-left transition-all ${
+                    logoMode === "cut" ? "border-gray-900 bg-gray-50 shadow-sm" : "border-gray-200 bg-white hover:border-gray-400"
+                  }`}
+                >
+                  <span className="block text-xs font-bold text-gray-900">{t("vl.logo.cutVinyl")}</span>
+                  <span className="block mt-0.5 text-[10px] text-gray-500">{t("vl.logo.cutVinylDesc")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLogoMode("printed")}
+                  className={`rounded-xl border-2 p-3 text-left transition-all ${
+                    logoMode === "printed" ? "border-gray-900 bg-gray-50 shadow-sm" : "border-gray-200 bg-white hover:border-gray-400"
+                  }`}
+                >
+                  <span className="block text-xs font-bold text-gray-900">{t("vl.logo.printedVinyl")}</span>
+                  <span className="block mt-0.5 text-[10px] text-gray-500">{t("vl.logo.printedVinylDesc")}</span>
+                </button>
+              </div>
+            </Section>
+          )}
+
           {/* Text mode: Your Text input */}
           {type === "text" && (
             <Section label={t("vl.textInput")}>
@@ -283,6 +378,29 @@ export default function VinylLetteringOrderClient() {
                 className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
               />
               <p className="mt-1.5 text-xs text-gray-500">{t("vl.textInputHint")}</p>
+            </Section>
+          )}
+
+          {/* Text mode: Font Selector */}
+          {type === "text" && (
+            <Section label={t("vl.font.label")}>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {FONTS.map((font) => (
+                  <button
+                    key={font.id}
+                    type="button"
+                    onClick={() => setFontId(font.id)}
+                    className={`rounded-lg border-2 px-3 py-2 text-left transition-all ${
+                      fontId === font.id
+                        ? "border-gray-900 bg-gray-50 shadow-sm"
+                        : "border-gray-200 bg-white hover:border-gray-400"
+                    }`}
+                  >
+                    <span className="block text-sm font-medium text-gray-800" style={{ fontFamily: font.family }}>{font.label}</span>
+                    <span className="block text-[10px] text-gray-400" style={{ fontFamily: font.family }}>Abc 123</span>
+                  </button>
+                ))}
+              </div>
             </Section>
           )}
 
@@ -299,6 +417,7 @@ export default function VinylLetteringOrderClient() {
                   style={{
                     color: COLORS.find((c) => c.id === color)?.hex || "#1a1a1a",
                     fontSize: `${Math.min(letterHeight.value * 6, 72)}px`,
+                    fontFamily: selectedFont.family,
                     letterSpacing: "0.02em",
                     maxWidth: "100%",
                   }}
@@ -307,7 +426,7 @@ export default function VinylLetteringOrderClient() {
                 </p>
               </div>
               <p className="mt-2 text-[11px] text-gray-400 text-center">
-                {letterHeight.label} {t(`vl.color.${color}`)} · {t(`vl.material.${material}`)}
+                {letterHeight.label} {t(`vl.color.${color}`)} · {selectedFont.label} · {t(`vl.material.${material}`)}
               </p>
             </div>
           )}
@@ -365,32 +484,34 @@ export default function VinylLetteringOrderClient() {
             </Section>
           )}
 
-          {/* Color */}
-          <Section label={t("vl.color.label")}>
-            <div className="flex flex-wrap gap-3">
-              {COLORS.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setColor(c.id)}
-                  className={`flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-medium transition-all ${
-                    color === c.id
-                      ? "border-gray-900 bg-gray-50 shadow-sm"
-                      : "border-gray-200 bg-white hover:border-gray-400"
-                  }`}
-                >
-                  <span
-                    className="inline-block h-4 w-4 rounded-full border border-gray-200"
-                    style={{ backgroundColor: c.hex }}
-                  />
-                  {t(`vl.color.${c.id}`)}
-                  {c.surcharge > 0 && (
-                    <span className="ml-1 text-[11px] opacity-70">+{formatCad(c.surcharge)}/ea</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </Section>
+          {/* Color — hide for printed vinyl logo mode */}
+          {!(type === "logo" && logoMode === "printed") && (
+            <Section label={t("vl.color.label")}>
+              <div className="flex flex-wrap gap-3">
+                {availableColors.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setColor(c.id)}
+                    className={`flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-medium transition-all ${
+                      color === c.id
+                        ? "border-gray-900 bg-gray-50 shadow-sm"
+                        : "border-gray-200 bg-white hover:border-gray-400"
+                    }`}
+                  >
+                    <span
+                      className="inline-block h-4 w-4 rounded-full border border-gray-200"
+                      style={{ backgroundColor: c.hex }}
+                    />
+                    {t(`vl.color.${c.id}`)}
+                    {c.surcharge > 0 && (
+                      <span className="ml-1 text-[11px] opacity-70">+{formatCad(c.surcharge)}/ea</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </Section>
+          )}
 
           {/* Material */}
           <Section label={t("vl.material.label")}>
@@ -444,6 +565,31 @@ export default function VinylLetteringOrderClient() {
             </div>
           </Section>
 
+          {/* Turnaround */}
+          <Section label={t("vl.turnaround.label")}>
+            <div className="flex gap-2">
+              {TURNAROUND_OPTIONS.map((opt) => {
+                const isActive = turnaroundId === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setTurnaroundId(opt.id)}
+                    className={`flex-1 rounded-lg border-2 px-3 py-2 text-center transition-all ${
+                      isActive ? "border-gray-900 bg-gray-900 text-[#fff]" : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    <span className="block text-xs font-bold">{t(`vl.turnaround.${opt.id}`)}</span>
+                    <span className={`block text-[10px] ${isActive ? "text-gray-300" : "text-gray-400"}`}>
+                      {t(`vl.turnaround.${opt.id}Desc`)}
+                      {opt.id === "rush" && <span className="ml-1 font-bold text-amber-400">{t("vl.turnaround.rushSurcharge")}</span>}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+
           {/* Artwork Upload */}
           <Section label={t("vl.artwork")} optional>
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
@@ -486,8 +632,14 @@ export default function VinylLetteringOrderClient() {
 
             <dl className="space-y-2 text-sm">
               <Row label={t("vl.type.label")} value={type === "text" ? t("vl.type.text") : t("vl.type.logo")} />
+              {type === "logo" && (
+                <Row label="Mode" value={logoMode === "printed" ? t("vl.logo.printedVinyl") : t("vl.logo.cutVinyl")} />
+              )}
               {type === "text" && (
-                <Row label={t("vl.letterHeight")} value={letterHeight.label} />
+                <>
+                  <Row label={t("vl.letterHeight")} value={letterHeight.label} />
+                  <Row label={t("vl.font.label")} value={selectedFont.label} />
+                </>
               )}
               {type === "text" && letteringText.trim() && (
                 <Row label={t("vl.textInput")} value={`"${letteringText.trim().slice(0, 20)}${letteringText.trim().length > 20 ? "…" : ""}"`} />
@@ -495,20 +647,23 @@ export default function VinylLetteringOrderClient() {
               {type === "logo" && (
                 <Row label={t("vl.logo.dimensions")} value={`${parsedLogoW}" × ${parsedLogoH}"`} />
               )}
-              <Row
-                label={t("vl.color.label")}
-                value={
-                  <span className="flex items-center gap-1.5">
-                    <span
-                      className="inline-block h-3 w-3 rounded-full border border-gray-200"
-                      style={{ backgroundColor: COLORS.find((c) => c.id === color)?.hex }}
-                    />
-                    {t(`vl.color.${color}`)}
-                  </span>
-                }
-              />
+              {!(type === "logo" && logoMode === "printed") && (
+                <Row
+                  label={t("vl.color.label")}
+                  value={
+                    <span className="flex items-center gap-1.5">
+                      <span
+                        className="inline-block h-3 w-3 rounded-full border border-gray-200"
+                        style={{ backgroundColor: COLORS.find((c) => c.id === color)?.hex }}
+                      />
+                      {t(`vl.color.${color}`)}
+                    </span>
+                  }
+                />
+              )}
               <Row label={t("vl.material.label")} value={t(`vl.material.${material}`)} />
               <Row label={t("vl.application.label")} value={t(`vl.application.${application}`)} />
+              <Row label={t("vl.turnaround.label")} value={t(`vl.turnaround.${turnaroundId}`)} />
               <Row label={t("vl.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
             </dl>
 
@@ -530,6 +685,12 @@ export default function VinylLetteringOrderClient() {
                 )}
                 {materialSurcharge > 0 && (
                   <Row label={t(`vl.material.${material}`)} value={`+ ${formatCad(materialSurcharge)}`} />
+                )}
+                {printedVinylSurcharge > 0 && (
+                  <Row label="Full color print" value={`+ ${formatCad(printedVinylSurcharge)}`} />
+                )}
+                {turnaroundId === "rush" && (
+                  <Row label="Rush surcharge" value="+50%" />
                 )}
                 <Row label={t("vl.subtotal")} value={formatCad(adjustedSubtotal)} />
                 <div className="flex justify-between border-t border-gray-100 pt-2">
@@ -586,7 +747,6 @@ export default function VinylLetteringOrderClient() {
 
       {/* ── Product Content ── */}
       <div className="mt-16 space-y-12">
-        {/* Description */}
         <section>
           <h2 className="text-xl font-bold text-gray-900">About Vinyl Lettering & Decals</h2>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
@@ -598,7 +758,6 @@ export default function VinylLetteringOrderClient() {
           </p>
         </section>
 
-        {/* Specs */}
         <section>
           <h2 className="text-lg font-bold text-gray-900">Specifications</h2>
           <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
@@ -609,9 +768,9 @@ export default function VinylLetteringOrderClient() {
                   ["Adhesive", "Permanent pressure-sensitive, repositionable for 10 min"],
                   ["Durability", "5–8 years outdoor, 10+ years indoor"],
                   ["Sizes", '1″ to 12″ letter height; custom sizes available'],
-                  ["Colors", "Black, White, Red, Blue, Gold, Silver + 50 more on request"],
+                  ["Colors", "12 standard + 50 more on request"],
                   ["Finish", "Gloss, Matte, or Reflective"],
-                  ["Turnaround", "2–3 business days standard"],
+                  ["Turnaround", "1–2 business days standard, same day rush"],
                 ].map(([label, value]) => (
                   <tr key={label}>
                     <td className="whitespace-nowrap bg-gray-50 px-4 py-2.5 font-medium text-gray-700">{label}</td>
@@ -623,7 +782,6 @@ export default function VinylLetteringOrderClient() {
           </div>
         </section>
 
-        {/* Use Cases */}
         <section>
           <h2 className="text-lg font-bold text-gray-900">Popular Uses</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -641,7 +799,6 @@ export default function VinylLetteringOrderClient() {
           </div>
         </section>
 
-        {/* FAQ */}
         <section>
           <h2 className="text-lg font-bold text-gray-900">FAQ</h2>
           <div className="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-200">
@@ -676,7 +833,7 @@ export default function VinylLetteringOrderClient() {
               <>
                 <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
                 <p className="truncate text-[11px] text-gray-500">
-                  {activeQty} × {type === "text" ? `${letterHeight.label} ` : `${parsedLogoW}" × ${parsedLogoH}" `}{t(`vl.color.${color}`)}
+                  {activeQty} × {type === "text" ? `${letterHeight.label} ` : `${parsedLogoW}" × ${parsedLogoH}" `}{!(type === "logo" && logoMode === "printed") && t(`vl.color.${color}`)}
                 </p>
               </>
             ) : (

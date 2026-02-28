@@ -7,6 +7,7 @@ import { MobileBottomBar } from "@/components/configurator";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { STICKER_COMPARISON_TABLE } from "@/lib/sticker-page-content";
 import InlineConfigurator from "./InlineConfigurator";
+import SheetsConfigurator from "./SheetsConfigurator";
 import ProductDetailsTabs from "./ProductDetailsTabs";
 import UseCaseGallery from "./UseCaseGallery";
 import ComparisonTable from "./ComparisonTable";
@@ -86,7 +87,11 @@ export default function StickerProductPageClient({
 
               {/* Inline configurator */}
               <div id="configurator">
-                <InlineConfigurator cuttingTypeId={cuttingTypeId} />
+                {cuttingTypeId === "sheets" ? (
+                  <SheetsConfigurator mode={product?.slug === "kiss-cut-sticker-sheets" ? "multiple" : "same"} />
+                ) : (
+                  <InlineConfigurator cuttingTypeId={cuttingTypeId} />
+                )}
               </div>
             </div>
           </div>

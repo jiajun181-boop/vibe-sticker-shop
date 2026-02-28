@@ -31,6 +31,7 @@ import SurfaceOrderClient from "@/app/order/surfaces/SurfaceOrderClient";
 import CanvasOrderClient from "@/app/order/canvas/CanvasOrderClient";
 import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
 import VinylLetteringOrderClient from "@/app/order/vinyl-lettering/VinylLetteringOrderClient";
+import RollLabelsOrderClient from "@/app/order/roll-labels/RollLabelsOrderClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
@@ -583,6 +584,28 @@ export default async function ProductPage({ params }) {
             }
           >
             <VinylLetteringOrderClient productImages={vlImages} />
+          </Suspense>
+        </>
+      );
+    }
+    // Roll Labels have their own dedicated configurator (Sinalite live pricing)
+    if (configurator.component === "stickers" && configurator.defaultValue === "roll-labels") {
+      const rlProduct = await prisma.product.findFirst({
+        where: { slug: decodedSlug, isActive: true },
+        include: { images: { orderBy: { sortOrder: "asc" } } },
+      });
+      return (
+        <>
+          {rlProduct && <ProductSchema product={toClientSafe(rlProduct)} />}
+          <BreadcrumbSchema category={decodedCategory} productName={rlProduct?.name || "Roll Labels"} />
+          <Suspense
+            fallback={
+              <div className="flex min-h-[60vh] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+              </div>
+            }
+          >
+            <RollLabelsOrderClient />
           </Suspense>
         </>
       );
