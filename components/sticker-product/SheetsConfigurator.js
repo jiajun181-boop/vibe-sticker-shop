@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { trackUploadStarted } from "@/lib/analytics";
-import { ArtworkUpload, CustomDimensions, useConfiguratorCart, MaterialSwatchGrid } from "@/components/configurator";
+import { ArtworkUpload, CustomDimensions, useConfiguratorCart, MaterialSwatchGrid, MobileBottomBar } from "@/components/configurator";
 import {
   MIN_SIZE,
   calcPaperLabelPrice,
@@ -591,6 +591,19 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
         <span className="text-gray-300">|</span>
         <span>Free proof</span>
       </div>
+
+      {/* Mobile bottom bar with live price */}
+      <MobileBottomBar
+        quoteLoading={false}
+        hasQuote={!!pricing}
+        totalCents={pricing ? Math.round(pricing.subtotal * 100) : 0}
+        quantity={pricing?.actualQty || 0}
+        canAddToCart={canAddToCart}
+        onAddToCart={handleAddToCart}
+        onBuyNow={handleBuyNow}
+        buyNowLoading={buyNowLoading}
+        t={t}
+      />
     </div>
   );
 }

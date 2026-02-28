@@ -25,6 +25,7 @@ import {
   useConfiguratorPrice,
   useConfiguratorCart,
   MaterialSwatchGrid,
+  MobileBottomBar,
 } from "@/components/configurator";
 
 const INCH_TO_CM = 2.54;
@@ -766,6 +767,20 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         <span className="text-gray-300">|</span>
         <span>Free proof</span>
       </div>
+
+      {/* Mobile bottom bar with live price */}
+      <MobileBottomBar
+        quoteLoading={quote.quoteLoading}
+        quoteError={quote.quoteError}
+        hasQuote={!!quote.quoteData}
+        totalCents={quote.subtotalCents || 0}
+        quantity={activeQty}
+        canAddToCart={canAddToCart}
+        onAddToCart={handleAddToCart}
+        onBuyNow={handleBuyNow}
+        buyNowLoading={buyNowLoading}
+        t={t}
+      />
     </div>
   );
 }

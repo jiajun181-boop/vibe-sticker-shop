@@ -3,7 +3,6 @@
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageGallery from "@/components/product/ImageGallery";
 import RelatedProducts from "@/components/product/RelatedProducts";
-import { MobileBottomBar } from "@/components/configurator";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { STICKER_COMPARISON_TABLE } from "@/lib/sticker-page-content";
 import InlineConfigurator from "./InlineConfigurator";
@@ -53,7 +52,7 @@ export default function StickerProductPageClient({
       <div className="mx-auto max-w-[1600px] px-4 pb-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-5 lg:gap-10">
           {/* LEFT: Gallery + intro */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-2">
             <ImageGallery images={images} productName={intro.headline} />
 
             {/* Highlights row */}
@@ -73,7 +72,7 @@ export default function StickerProductPageClient({
           </div>
 
           {/* RIGHT: Title + Configurator */}
-          <div className="mt-6 lg:col-span-2 lg:mt-0">
+          <div className="mt-6 lg:col-span-3 lg:mt-0">
             <div className="sticky top-20 space-y-5">
               {/* Product title */}
               <div>
@@ -124,49 +123,11 @@ export default function StickerProductPageClient({
         />
       </div>
 
-      {/* Mobile bottom bar — uses a simplified version since InlineConfigurator handles its own state */}
-      <MobileBottomBarBridge cuttingTypeId={cuttingTypeId} />
+      {/* Mobile bottom bar is rendered inside InlineConfigurator/SheetsConfigurator */}
     </main>
   );
 }
 
-/**
- * Mobile sticky CTA bar — scrolls to the configurator section with strong CTA.
- */
-function MobileBottomBarBridge() {
-  const { t } = useTranslation();
-  const scrollToConfigurator = () => {
-    const el = document.getElementById("configurator");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    else window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  return (
-    <>
-      <div
-        className="fixed inset-x-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] lg:hidden"
-        style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom))" }}
-      >
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-gray-900">{t("productPage.readyToOrder")}</p>
-            <p className="text-[11px] text-gray-500">{t("productPage.customizeAndOrder")}</p>
-          </div>
-          <button
-            type="button"
-            onClick={scrollToConfigurator}
-            className="shrink-0 flex items-center gap-1.5 rounded-lg bg-[var(--color-brand)] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#fff] shadow-lg hover:bg-[var(--color-brand-dark)]"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l2.828 2.818L15 13.182" />
-            </svg>
-            {t("productPage.getYourPrice")}
-          </button>
-        </div>
-      </div>
-      <div className="lg:hidden" style={{ height: "calc(var(--mobile-nav-offset, 72px) + 80px)" }} />
-    </>
-  );
-}
 
 function HighlightIcon({ type }) {
   const iconClass = "h-5 w-5 text-gray-900";
