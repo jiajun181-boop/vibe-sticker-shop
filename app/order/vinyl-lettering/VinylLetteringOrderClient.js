@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
 
 const DEBOUNCE_MS = 300;
 
@@ -77,7 +78,7 @@ const TURNAROUND_OPTIONS = [
 
 // ─── Main Component ───
 
-export default function VinylLetteringOrderClient() {
+export default function VinylLetteringOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -302,6 +303,12 @@ export default function VinylLetteringOrderClient() {
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
         <div className="space-y-8 lg:col-span-3">
+          {/* Product Images */}
+          {productImages.length > 0 && (
+            <div className="mb-2">
+              <ImageGallery images={productImages} productName={t("vl.title")} />
+            </div>
+          )}
 
           {/* Step 1: Type Selector */}
           <Section label={t("vl.type.label")}>
@@ -728,7 +735,7 @@ export default function VinylLetteringOrderClient() {
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading
-                    ? "border-gray-900 text-gray-900 hover:bg-gray-50"
+                    ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800"
                     : "cursor-not-allowed border-gray-200 text-gray-400"
                 }`}
               >
