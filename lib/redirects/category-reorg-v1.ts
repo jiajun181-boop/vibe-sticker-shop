@@ -76,7 +76,7 @@ export const categoryReorgRedirectsV1 = [
   },
   {
     "source": "/shop/marketing-prints/presentation-folders",
-    "destination": "/shop/marketing-business-print/folders",
+    "destination": "/shop/marketing-business-print/presentation-folders",
     "permanent": true
   },
   {
@@ -96,17 +96,17 @@ export const categoryReorgRedirectsV1 = [
   },
   {
     "source": "/shop/marketing-prints/loyalty-cards",
-    "destination": "/shop/marketing-business-print/tickets-coupons",
+    "destination": "/shop/marketing-business-print/loyalty-cards",
     "permanent": true
   },
   {
     "source": "/shop/packaging/tags",
-    "destination": "/shop/marketing-business-print/packaging-tags",
+    "destination": "/shop/marketing-business-print/tags",
     "permanent": true
   },
   {
     "source": "/shop/packaging/inserts-packaging",
-    "destination": "/shop/marketing-business-print/packaging-inserts-seals",
+    "destination": "/shop/marketing-business-print/inserts-packaging",
     "permanent": true
   },
   {

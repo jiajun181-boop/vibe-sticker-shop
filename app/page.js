@@ -228,7 +228,7 @@ export default async function HomePage() {
         {/* 5. Trust Signals */}
         <section className="py-16 md:py-20 bg-white animate-on-scroll">
           <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
-            <div className="grid gap-6 sm:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 text-center">
                 <span className="text-3xl">&#x1F1E8;&#x1F1E6;</span>
                 <h3 className="mt-3 text-base font-bold text-[var(--color-gray-900)]">
@@ -254,6 +254,15 @@ export default async function HomePage() {
                 </h3>
                 <p className="mt-2 text-sm text-[var(--color-gray-500)]">
                   {t("home.factoryDirectDesc")}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 text-center">
+                <span className="text-3xl">&#x1F3C6;</span>
+                <h3 className="mt-3 text-base font-bold text-[var(--color-gray-900)]">
+                  {isZh ? "8年行业经验" : "8 Years in Business"}
+                </h3>
+                <p className="mt-2 text-sm text-[var(--color-gray-500)]">
+                  {isZh ? "自2018年起服务客户，值得信赖的印刷合作伙伴。" : "Trusted printing partner since 2018. Thousands of satisfied customers across Canada."}
                 </p>
               </div>
             </div>

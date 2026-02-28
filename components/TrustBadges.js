@@ -16,7 +16,6 @@ export function PaymentBadges() {
         <span>VISA</span>
         <span>MC</span>
         <span>AMEX</span>
-        <span>PAYPAL</span>
       </div>
     </div>
   );

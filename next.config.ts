@@ -129,8 +129,6 @@ const nextConfig: NextConfig = {
       { source: "/shop/:cat/wall-decals", destination: "/shop/windows-walls-floors/wall-graphics", permanent: true },
       { source: "/shop/:cat/lawn-signs-h-stake", destination: "/shop/signs-rigid-boards/yard-sign", permanent: true },
       { source: "/shop/:cat/self-inking-stamps", destination: "/shop/marketing-business-print/stamps", permanent: true },
-      { source: "/shop/:cat/hang-tags", destination: "/shop/marketing-business-print", permanent: true },
-      { source: "/shop/:cat/rp-hang-tags", destination: "/shop/marketing-business-print", permanent: true },
       { source: "/shop/:cat/rp-menus", destination: "/shop/marketing-business-print/menus", permanent: true },
       { source: "/shop/:cat/rp-tickets", destination: "/shop/marketing-business-print/tickets-coupons", permanent: true },
       // ── WWF v2: old sub-group URLs → new product pages ──

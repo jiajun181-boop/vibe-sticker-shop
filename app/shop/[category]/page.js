@@ -429,7 +429,7 @@ export default async function CategoryPage({ params }) {
       "letterhead": ["letterhead"],
       "notepads": ["notepads", "notepads-custom"],
       "stamps": ["stamps-s510", "stamps-s520", "stamps-s827", "stamps-s542", "stamps-r512", "stamps-r524", "stamps-r532", "stamps-r552"],
-      "calendars": ["calendars-wall", "calendars-wall-desk"],
+      "calendars": ["calendars-wall", "calendars-wall-desk", "calendars-desk"],
       "certificates": ["certificates"],
       "envelopes": ["envelopes"],
       "menus": ["menus-laminated", "menus-takeout", "table-mat"],
@@ -444,6 +444,8 @@ export default async function CategoryPage({ params }) {
       "bookmarks": ["bookmarks", "bookmarks-custom"],
       "loyalty-cards": ["loyalty-cards"],
       "document-printing": ["document-printing"],
+      "inserts-packaging": ["inserts-packaging"],
+      "presentation-folders": ["presentation-folders"],
     };
 
     const marketingPrices = {};
