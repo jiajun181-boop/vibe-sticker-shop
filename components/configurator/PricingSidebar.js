@@ -295,7 +295,7 @@ export default function PricingSidebar({
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-sm border-2 px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
                   canAddToCart && !buyNowLoading
-                    ? "border-gray-900 text-gray-900 hover:bg-gray-50 active:scale-[0.98]"
+                    ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800 active:scale-[0.98]"
                     : "cursor-not-allowed border-gray-200 text-gray-400"
                 }`}
               >

@@ -2424,10 +2424,10 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       type="button"
                       onClick={handleBuyNow}
                       disabled={!canAddToCart || buyNowLoading}
-                      className={`btn-secondary-pill w-full px-4 py-3 text-xs transition-all ${
-                        !canAddToCart || buyNowLoading
-                          ? "cursor-not-allowed border-[var(--color-gray-200)] bg-[var(--color-gray-100)] text-[var(--color-gray-400)]"
-                          : ""
+                      className={`w-full rounded-full border-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all ${
+                        canAddToCart && !buyNowLoading
+                          ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800"
+                          : "cursor-not-allowed border-gray-200 text-gray-400"
                       }`}
                     >
                       {buyNowLoading ? "Processing..." : "Buy Now"}

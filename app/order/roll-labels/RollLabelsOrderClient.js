@@ -5,6 +5,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   ConfigStep,
   ConfigHero,
+  ConfigProductGallery,
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
@@ -29,7 +30,7 @@ const HST_RATE = 0.13;
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-export default function RollLabelsOrderClient() {
+export default function RollLabelsOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const addToCart = useCartStore((s) => s.addToCart);
 
@@ -196,6 +197,7 @@ export default function RollLabelsOrderClient() {
           t?.("rl.badge.proof") || "Free Digital Proof",
         ]}
       />
+      <ConfigProductGallery images={productImages} />
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">

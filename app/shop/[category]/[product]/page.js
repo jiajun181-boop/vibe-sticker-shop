@@ -594,6 +594,8 @@ export default async function ProductPage({ params }) {
         where: { slug: decodedSlug, isActive: true },
         include: { images: { orderBy: { sortOrder: "asc" } } },
       });
+      const rlAssets = rlProduct ? await getProductAssets(rlProduct.id) : [];
+      const rlImages = rlAssets.length > 0 ? rlAssets : toClientSafe(rlProduct?.images || []);
       return (
         <>
           {rlProduct && <ProductSchema product={toClientSafe(rlProduct)} />}
@@ -605,7 +607,7 @@ export default async function ProductPage({ params }) {
               </div>
             }
           >
-            <RollLabelsOrderClient />
+            <RollLabelsOrderClient productImages={rlImages} />
           </Suspense>
         </>
       );
