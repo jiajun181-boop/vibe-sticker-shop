@@ -6,6 +6,9 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { DECAL_UI_TYPES, DECAL_SLUG_MAP } from "@/lib/vehicle-order-config";
 
 const DEBOUNCE_MS = 300;
@@ -90,7 +93,7 @@ function TypeIcon({ type, className = "h-7 w-7" }) {
 
 // ─── Main Component ───
 
-export default function VehicleDecalOrderClient() {
+export default function VehicleDecalOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -252,7 +255,7 @@ export default function VehicleDecalOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("vd.breadcrumb"), href: "/shop/signage/vehicle-decals" },
+          { label: t("vd.breadcrumb"), href: "/shop/vehicle-graphics-fleet" },
           { label: t("vd.order") },
         ]}
       />
@@ -260,6 +263,10 @@ export default function VehicleDecalOrderClient() {
       <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
         {t("vd.title")}
       </h1>
+
+      {productImages?.length > 0 && (
+        <ImageGallery images={productImages} />
+      )}
 
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
@@ -493,6 +500,16 @@ export default function VehicleDecalOrderClient() {
           </div>
         </aside>
       </div>
+
+      {(() => {
+        const faqItems = getConfiguratorFaqs("vehicle-decals");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       {/* ── MOBILE: Bottom bar ── */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">

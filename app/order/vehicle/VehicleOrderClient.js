@@ -20,6 +20,8 @@ import {
   useConfiguratorCart,
 } from "@/components/configurator";
 import VehiclePreview from "@/components/vehicle/VehiclePreview";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const INCH_TO_CM = 2.54;
 
@@ -443,6 +445,16 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
           />
         </div>
       </div>
+
+      {(() => {
+        const faqItems = getConfiguratorFaqs(typeId);
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
