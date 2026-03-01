@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Textbox, Rect, Circle, Triangle, Line, FabricImage } from "fabric";
 import { useEditorStore } from "@/lib/design-studio/editor-store";
-import { getDesignTemplatesByCategory } from "@/lib/design-studio/templates";
+import { getDesignTemplatesByCategory, getTemplateCategory } from "@/lib/design-studio/templates";
 import { getCanvasDimensions } from "@/lib/design-studio/product-configs";
 import {
   createPrintGuides,
@@ -23,9 +23,16 @@ const PRESET_COLORS = [
   "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899", "#6b7280",
 ];
 
-export default function ToolPanel({ fabricRef, productSpec, mobile = false }) {
+export default function ToolPanel({ fabricRef, productSpec, mobile = false, initialTab }) {
   const { activePanel, setActivePanel, showGuides, pushUndo, setCanvasJSON, setTemplateId } =
     useEditorStore();
+
+  // On mobile, switch to the requested tab when panel opens
+  useEffect(() => {
+    if (mobile && initialTab != null && TABS[initialTab]) {
+      setActivePanel(TABS[initialTab].id);
+    }
+  }, [mobile, initialTab, setActivePanel]);
 
   const getCanvas = () => fabricRef?.current;
 
@@ -167,7 +174,7 @@ function TemplateThumbnail({ template }) {
 
 // --- Template Grid ---
 function TemplateGrid({ productSpec, fabricRef, saveState, setTemplateId }) {
-  const category = productSpec?.slug || "business-cards";
+  const category = getTemplateCategory(productSpec?.slug);
   const templates = getDesignTemplatesByCategory(category);
   const { showGuides } = useEditorStore();
 
