@@ -59,7 +59,7 @@ function ProductCard({ product, t, compact }) {
   return (
     <article className="group overflow-hidden rounded-xl shadow-[var(--shadow-card)] bg-white transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1">
       <Link href={href} className="block">
-        <div className={`relative bg-[var(--color-gray-100)] ${compact ? "aspect-square" : "aspect-square sm:aspect-[4/3]"}`}>
+        <div className={`relative bg-[var(--color-gray-100)] ${compact ? "aspect-square" : "aspect-[4/3]"}`}>
           {imageSrc ? (
             <Image
               src={imageSrc}
@@ -82,7 +82,7 @@ function ProductCard({ product, t, compact }) {
           {!compact && (() => {
             const tk = getTurnaround(product);
             return (
-              <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold mb-1 ${turnaroundColor(tk)}`}>
+              <span className={`hidden sm:inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold mb-1 ${turnaroundColor(tk)}`}>
                 {t(turnaroundI18nKey(tk))}
               </span>
             );
@@ -91,7 +91,7 @@ function ProductCard({ product, t, compact }) {
             {product.name}
           </h3>
           {!compact && product.description && (
-            <p className="mt-1 text-[11px] text-[var(--color-gray-500)] line-clamp-2">
+            <p className="mt-1 hidden sm:block text-[11px] text-[var(--color-gray-500)] line-clamp-2">
               {product.description}
             </p>
           )}
@@ -103,9 +103,9 @@ function ProductCard({ product, t, compact }) {
         </div>
       </Link>
       {!compact ? (
-        <div className="px-3 pb-3 sm:px-4 sm:pb-4">
+        <div className="px-2.5 pb-2.5 sm:px-4 sm:pb-4">
           <div className="mt-1 flex items-center gap-2">
-            <QuickAddButton product={product} />
+            <span className="hidden sm:inline"><QuickAddButton product={product} /></span>
             <Link
               href={href}
               className="inline-block rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-[#fff] transition-colors hover:bg-[var(--color-brand-dark)]"

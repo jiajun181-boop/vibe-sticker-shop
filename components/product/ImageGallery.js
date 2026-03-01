@@ -87,7 +87,7 @@ export default function ImageGallery({ images, productName }) {
   return (
     <div className="space-y-3">
       <div
-        className="relative aspect-square overflow-hidden rounded-3xl border border-[var(--color-gray-200)] bg-gradient-to-br from-white to-gray-50 shadow-sm"
+        className="relative aspect-[4/3] sm:aspect-square overflow-hidden rounded-3xl border border-[var(--color-gray-200)] bg-gradient-to-br from-white to-gray-50 shadow-sm"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >

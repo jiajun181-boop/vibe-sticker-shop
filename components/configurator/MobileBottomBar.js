@@ -134,7 +134,7 @@ export default function MobileBottomBar({
             <button
               type="button"
               onClick={onRequestQuote}
-              className="shrink-0 rounded-sm bg-gray-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#fff] shadow-lg hover:bg-gray-800"
+              className="shrink-0 rounded-xl bg-gray-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#fff] shadow-lg hover:bg-gray-800"
             >
               {t?.("configurator.requestQuote") || "Get Quote"}
             </button>
@@ -144,7 +144,7 @@ export default function MobileBottomBar({
                 type="button"
                 onClick={handleAtcClick}
                 disabled={!canAddToCart || atcState !== "idle"}
-                className={`shrink-0 rounded-sm px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${atcBgClass}`}
+                className={`shrink-0 rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${atcBgClass}`}
               >
                 {atcContent}
               </button>
@@ -153,10 +153,10 @@ export default function MobileBottomBar({
                   type="button"
                   onClick={onBuyNow}
                   disabled={!canAddToCart || buyNowLoading}
-                  className={`shrink-0 rounded-sm border-2 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                  className={`shrink-0 rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
                     canAddToCart && !buyNowLoading
-                      ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800"
-                      : "cursor-not-allowed border-gray-200 text-gray-400"
+                      ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800"
+                      : "cursor-not-allowed bg-gray-100 text-gray-400"
                   }`}
                 >
                   {buyNowLoading ? "..." : (t?.("configurator.buyNow") || "Buy Now")}
