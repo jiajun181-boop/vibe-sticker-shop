@@ -58,7 +58,7 @@ export default function FavoritesPage() {
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           {favorites.map((fav) => {
             const href = `/shop/${fav.category}/${fav.slug}`;
-            const imageSrc = fav.image || "/products/placeholder.png";
+            const imageSrc = fav.image || "/api/product-image/generic";
             const priceText = fav.basePrice > 0 ? formatCad(fav.basePrice) : "";
 
             return (

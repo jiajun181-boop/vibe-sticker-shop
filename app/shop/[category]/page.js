@@ -9,6 +9,7 @@ import { getCuttingTypeForSlug, getCuttingType } from "@/lib/sticker-order-confi
 import { CATEGORY_FAQ_SCHEMAS } from "@/lib/seo/category-faq-schemas";
 import { BreadcrumbSchemaFromItems, CollectionPageSchema } from "@/components/JsonLd";
 import { getProductImage } from "@/lib/product-image";
+import { getProductPrimaryImage } from "@/lib/assets";
 import CategoryLandingClient from "./CategoryLandingClient";
 import SubGroupLandingClient from "./SubGroupLandingClient";
 import SignsCategoryClient from "./SignsCategoryClient";
@@ -457,11 +458,21 @@ export default async function CategoryPage({ params }) {
       if (matching.length > 0) {
         const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
         marketingPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
-        // Pick best image from matching products
-        const withImage = matching.find((p) => p.images?.[0]?.url);
-        if (withImage) {
-          marketingImages[key] = withImage.images[0].url;
-          if (withImage.images[1]?.url) marketingImages2[key] = withImage.images[1].url;
+        // Pick best image: check Asset system first (admin uploads), then legacy ProductImage
+        for (const p of matching) {
+          const asset = await getProductPrimaryImage(p.id);
+          if (asset?.url && !asset.url.startsWith("/products/")) {
+            marketingImages[key] = asset.url;
+            break;
+          }
+        }
+        // Fallback to legacy ProductImage if no Asset found
+        if (!marketingImages[key]) {
+          const withImage = matching.find((p) => p.images?.[0]?.url);
+          if (withImage) {
+            marketingImages[key] = withImage.images[0].url;
+            if (withImage.images[1]?.url) marketingImages2[key] = withImage.images[1].url;
+          }
         }
       }
     }
