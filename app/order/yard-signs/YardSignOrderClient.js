@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
 
 const DEBOUNCE_MS = 300;
 
@@ -75,7 +76,7 @@ function MaterialIcon({ type, className = "h-7 w-7" }) {
 
 // ─── Main Component ───
 
-export default function YardSignOrderClient() {
+export default function YardSignOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -126,6 +127,7 @@ export default function YardSignOrderClient() {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        options: { doubleSided: sidesId === "double" },
       }),
       signal: ac.signal,
     })
@@ -139,7 +141,7 @@ export default function YardSignOrderClient() {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty]);
+  }, [size.w, size.h, activeQty, sidesId]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -235,7 +237,7 @@ export default function YardSignOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("ys.breadcrumb"), href: "/shop/signs-banners/yard-signs" },
+          { label: t("ys.breadcrumb"), href: "/shop/signs-rigid-boards" },
           { label: t("ys.order") },
         ]}
       />
@@ -247,6 +249,12 @@ export default function YardSignOrderClient() {
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
         <div className="space-y-8 lg:col-span-3">
+          {/* Product Images */}
+          {productImages.length > 0 && (
+            <div className="mb-2">
+              <ImageGallery images={productImages} productName={t("ys.title")} />
+            </div>
+          )}
 
           {/* Size */}
           <Section label={t("ys.size")}>

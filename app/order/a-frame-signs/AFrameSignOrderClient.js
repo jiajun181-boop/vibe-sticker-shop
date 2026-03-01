@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
 
 const DEBOUNCE_MS = 300;
 
@@ -39,7 +40,7 @@ const QUANTITIES = [1, 2, 5, 10, 25];
 
 // ─── Main Component ───
 
-export default function AFrameSignOrderClient() {
+export default function AFrameSignOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -90,6 +91,7 @@ export default function AFrameSignOrderClient() {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        options: { doubleSided: sides === "double" },
       }),
       signal: ac.signal,
     })
@@ -193,7 +195,7 @@ export default function AFrameSignOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("af.breadcrumb"), href: "/shop/signage-displays/a-frame-signs" },
+          { label: t("af.breadcrumb"), href: "/shop/signs-rigid-boards" },
           { label: t("af.order") },
         ]}
       />
@@ -205,6 +207,12 @@ export default function AFrameSignOrderClient() {
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
         <div className="space-y-8 lg:col-span-3">
+          {/* Product Images */}
+          {productImages.length > 0 && (
+            <div className="mb-2">
+              <ImageGallery images={productImages} productName={t("af.title")} />
+            </div>
+          )}
 
           {/* Size */}
           <Section label={t("af.size")}>

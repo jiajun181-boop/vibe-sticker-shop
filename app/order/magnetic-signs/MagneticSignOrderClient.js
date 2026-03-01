@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
 
 const DEBOUNCE_MS = 300;
 
@@ -60,7 +61,7 @@ function ThicknessIcon({ type, className = "h-7 w-7" }) {
 
 // ─── Main Component ───
 
-export default function MagneticSignOrderClient() {
+export default function MagneticSignOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -213,7 +214,7 @@ export default function MagneticSignOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("ms.breadcrumb"), href: "/shop/signage/magnetic-signs" },
+          { label: t("ms.breadcrumb"), href: "/shop/signs-rigid-boards" },
           { label: t("ms.order") },
         ]}
       />
@@ -225,6 +226,12 @@ export default function MagneticSignOrderClient() {
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
         <div className="space-y-8 lg:col-span-3">
+          {/* Product Images */}
+          {productImages.length > 0 && (
+            <div className="mb-2">
+              <ImageGallery images={productImages} productName={t("ms.title")} />
+            </div>
+          )}
 
           {/* Size */}
           <Section label={t("ms.size")}>

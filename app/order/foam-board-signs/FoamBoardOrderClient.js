@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
 import { ProofPreview } from "@/components/configurator";
 
 const DEBOUNCE_MS = 300;
@@ -77,7 +78,7 @@ function ThicknessIcon({ type, className = "h-7 w-7" }) {
 
 // ─── Main Component ───
 
-export default function FoamBoardOrderClient() {
+export default function FoamBoardOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -130,6 +131,7 @@ export default function FoamBoardOrderClient() {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        options: { doubleSided: sidesId === "double" },
       }),
       signal: ac.signal,
     })
@@ -244,7 +246,7 @@ export default function FoamBoardOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("fb.breadcrumb"), href: "/shop/signs-banners/foam-board-signs" },
+          { label: t("fb.breadcrumb"), href: "/shop/signs-rigid-boards" },
           { label: t("fb.order") },
         ]}
       />
@@ -256,6 +258,12 @@ export default function FoamBoardOrderClient() {
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
         <div className="space-y-8 lg:col-span-3">
+          {/* Product Images */}
+          {productImages.length > 0 && (
+            <div className="mb-2">
+              <ImageGallery images={productImages} productName={t("fb.title")} />
+            </div>
+          )}
 
           {/* Size */}
           <Section label={t("fb.size")}>

@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
 
 const DEBOUNCE_MS = 300;
 
@@ -43,7 +44,7 @@ const QUANTITIES = [1, 5, 10, 25, 50];
 
 // ─── Main Component ───
 
-export default function PvcSignOrderClient() {
+export default function PvcSignOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -94,6 +95,7 @@ export default function PvcSignOrderClient() {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        options: { doubleSided: sides === "double" },
       }),
       signal: ac.signal,
     })
@@ -198,7 +200,7 @@ export default function PvcSignOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("pv.breadcrumb"), href: "/shop/signage/pvc-signs" },
+          { label: t("pv.breadcrumb"), href: "/shop/signs-rigid-boards" },
           { label: t("pv.order") },
         ]}
       />
@@ -210,6 +212,12 @@ export default function PvcSignOrderClient() {
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
         <div className="space-y-8 lg:col-span-3">
+          {/* Product Images */}
+          {productImages.length > 0 && (
+            <div className="mb-2">
+              <ImageGallery images={productImages} productName={t("pv.title")} />
+            </div>
+          )}
 
           {/* Size */}
           <Section label={t("pv.size")}>
