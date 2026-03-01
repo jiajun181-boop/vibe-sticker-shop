@@ -28,19 +28,33 @@ export default async function sitemap() {
     { url: `${SITE_URL}/partner`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
   ];
 
-  // Configurator order pages — only include routes that actually exist in app/order/*/page.js
-  // Exclude order slugs that have 308 redirects in codex-url-mapping / synonym-redirects
-  // (their /shop/ destinations are already in the sitemap via product pages)
+  // Configurator order pages — all routes with app/order/*/page.js
   const orderPages = [
-    "ncr", "fabric-banners",
+    // Stickers & Labels
+    "decals", "safety-labels", "industrial-labels", "vinyl-lettering", "roll-labels",
+    "magnets-business-card",
+    // Signs
     "foam-board-signs", "aluminum-signs", "pvc-signs", "a-frame-signs",
-    "canvas-prints", "vehicle-wraps", "vehicle-decals", "magnetic-signs",
-    "window-films", "wall-floor-graphics",
+    "magnetic-signs", "yard-signs",
+    // Banners & Displays
+    "vinyl-banners", "mesh-banners", "fabric-banners",
     "retractable-stands", "x-banner-stands", "backdrops", "flags",
-    "brochures", "door-hangers", "menus",
-    "stamps", "tags", "calendars", "marketing-print",
-    "shelf-displays",
-    "vinyl-lettering", "decals", "safety-labels", "industrial-labels",
+    // Canvas
+    "canvas", "canvas-prints",
+    // Windows, Walls & Floors
+    "window-films", "wall-floor-graphics",
+    // Vehicle
+    "vehicle-wraps", "vehicle-decals",
+    // Marketing & Business Print
+    "marketing-print", "ncr", "booklets",
+    "business-cards", "business-cards-classic", "business-cards-gloss",
+    "business-cards-matte", "business-cards-pearl", "business-cards-soft-touch",
+    "business-cards-gold-foil", "business-cards-linen", "business-cards-thick",
+    "brochures", "flyers", "postcards", "posters", "door-hangers", "menus",
+    "bookmarks", "calendars", "certificates", "coupons", "envelopes",
+    "greeting-cards", "invitation-cards", "letterhead", "loyalty-cards",
+    "notepads", "stamps", "tags", "tickets",
+    "rack-cards", "table-tents", "tabletop-displays", "shelf-displays",
     "presentation-folders", "retail-tags",
     "inserts-packaging", "order-forms", "waivers-releases",
   ].map((slug) => ({
