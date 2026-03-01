@@ -6,6 +6,9 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const DEBOUNCE_MS = 300;
 
@@ -41,6 +44,11 @@ const LAMINATIONS = [
 
 const QUANTITIES = [1, 2, 5, 10, 25];
 
+const TYPE_SLUG_MAP = {
+  "wall-graphic": "wall-graphics",
+  "floor-graphic": "floor-graphics",
+};
+
 // ─── Icons ───
 
 function TypeIcon({ type, className = "h-8 w-8" }) {
@@ -71,7 +79,7 @@ function TypeIcon({ type, className = "h-8 w-8" }) {
 
 // ─── Main Component ───
 
-export default function WallFloorGraphicOrderClient() {
+export default function WallFloorGraphicOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -127,7 +135,7 @@ export default function WallFloorGraphicOrderClient() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slug: "wall-floor-graphics",
+        slug: TYPE_SLUG_MAP[typeId] || "wall-graphics",
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
@@ -144,7 +152,7 @@ export default function WallFloorGraphicOrderClient() {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty]);
+  }, [typeId, size.w, size.h, activeQty]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -172,10 +180,11 @@ export default function WallFloorGraphicOrderClient() {
       size.tag,
     ];
 
+    const slug = TYPE_SLUG_MAP[typeId] || "wall-graphics";
     return {
-      id: "wall-floor-graphics",
+      id: slug,
       name: nameParts.join(" \u2014 "),
-      slug: "wall-floor-graphics",
+      slug,
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
       options: {
@@ -243,7 +252,7 @@ export default function WallFloorGraphicOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("wg.breadcrumb"), href: "/shop/wall-floor-graphics" },
+          { label: t("wg.breadcrumb"), href: "/shop/windows-walls-floors" },
           { label: t("wg.order") },
         ]}
       />
@@ -251,6 +260,10 @@ export default function WallFloorGraphicOrderClient() {
       <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
         {t("wg.title")}
       </h1>
+
+      {productImages?.length > 0 && (
+        <ImageGallery images={productImages} />
+      )}
 
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
@@ -480,6 +493,16 @@ export default function WallFloorGraphicOrderClient() {
           </div>
         </aside>
       </div>
+
+      {(() => {
+        const faqItems = getConfiguratorFaqs("wall-floor-graphics");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       {/* ── MOBILE: Bottom bar ── */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">

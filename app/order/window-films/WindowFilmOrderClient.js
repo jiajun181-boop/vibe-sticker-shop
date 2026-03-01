@@ -6,6 +6,9 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const DEBOUNCE_MS = 300;
 
@@ -41,6 +44,13 @@ const ADHESIVES = [
 ];
 
 const QUANTITIES = [1, 5, 10, 25, 50];
+
+const TYPE_SLUG_MAP = {
+  "static-cling": "static-cling",
+  "adhesive-film": "opaque-window-graphics",
+  "one-way-vision": "one-way-vision",
+  "privacy-frost": "frosted-window-film",
+};
 
 // ─── Icons ───
 
@@ -88,7 +98,7 @@ function TypeIcon({ type, className = "h-7 w-7" }) {
 
 // ─── Main Component ───
 
-export default function WindowFilmOrderClient() {
+export default function WindowFilmOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -146,7 +156,7 @@ export default function WindowFilmOrderClient() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slug: "frosted-window-film",
+        slug: TYPE_SLUG_MAP[typeId] || "frosted-window-film",
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
@@ -163,7 +173,7 @@ export default function WindowFilmOrderClient() {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty]);
+  }, [typeId, size.w, size.h, activeQty]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -258,7 +268,7 @@ export default function WindowFilmOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("wf.breadcrumb"), href: "/shop/signs-banners/window-films" },
+          { label: t("wf.breadcrumb"), href: "/shop/windows-walls-floors" },
           { label: t("wf.order") },
         ]}
       />
@@ -266,6 +276,10 @@ export default function WindowFilmOrderClient() {
       <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
         {t("wf.title")}
       </h1>
+
+      {productImages?.length > 0 && (
+        <ImageGallery images={productImages} />
+      )}
 
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
@@ -487,6 +501,16 @@ export default function WindowFilmOrderClient() {
           </div>
         </aside>
       </div>
+
+      {(() => {
+        const faqItems = getConfiguratorFaqs("window-films");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       {/* ── MOBILE: Bottom bar ── */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
