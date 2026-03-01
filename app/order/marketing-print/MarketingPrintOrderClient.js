@@ -118,7 +118,7 @@ export default function MarketingPrintOrderClient({
 
   // --- Quote ---
   const quote = useConfiguratorPrice({
-    slug: typeId,
+    slug: printType.pricingSlug || typeId,
     quantity: effectiveQty,
     widthIn,
     heightIn,
