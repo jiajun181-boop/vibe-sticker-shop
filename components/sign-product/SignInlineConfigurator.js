@@ -142,11 +142,10 @@ export default function SignInlineConfigurator({ signTypeId }) {
     enabled: !isFrameOnly && widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 
-  // Apply surcharges (accessories + double-sided)
+  // Apply surcharges (accessories only — double-sided is already priced by the API template)
   useEffect(() => {
-    const dsExtra = doubleSided ? Math.round(quote.rawSubtotalCents * 0.5) : 0;
-    quote.addSurcharge(accessorySurcharge + dsExtra);
-  }, [accessorySurcharge, doubleSided, quote.rawSubtotalCents]); // eslint-disable-line react-hooks/exhaustive-deps
+    quote.addSurcharge(accessorySurcharge);
+  }, [accessorySurcharge]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canAddToCart = isFrameOnly
     ? activeQty > 0 && frameOnlyTotalCents > 0

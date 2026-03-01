@@ -152,8 +152,6 @@ export default function SignOrderClient({ defaultType, productImages }) {
   }, [accessories, activeQty]);
 
   // Double-sided surcharge (50% more)
-  const doubleSidedMultiplier = doubleSided ? 1.5 : 1.0;
-
   // Quote
   const quote = useConfiguratorPrice({
     slug: signType.defaultSlug,
@@ -165,12 +163,10 @@ export default function SignOrderClient({ defaultType, productImages }) {
     enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 
-  // Add surcharges
+  // Add surcharges (double-sided is already priced by the API template)
   useEffect(() => {
-    // For double-sided, add the raw subtotal * 0.5 as surcharge
-    const dsExtra = doubleSided ? Math.round(quote.rawSubtotalCents * 0.5) : 0;
-    quote.addSurcharge(accessorySurcharge + dsExtra);
-  }, [accessorySurcharge, doubleSided, quote.rawSubtotalCents]); // eslint-disable-line react-hooks/exhaustive-deps
+    quote.addSurcharge(accessorySurcharge);
+  }, [accessorySurcharge]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
 
