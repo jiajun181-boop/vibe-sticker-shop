@@ -6,6 +6,9 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const DEBOUNCE_MS = 300;
 
@@ -86,7 +89,7 @@ function AppIcon({ type, className = "h-8 w-8" }) {
 
 // ─── Main Component ───
 
-export default function DecalOrderClient() {
+export default function DecalOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -207,7 +210,7 @@ export default function DecalOrderClient() {
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <Breadcrumbs items={[
         { label: t("nav.shop"), href: "/shop" },
-        { label: t("decal.breadcrumb"), href: "/shop/stickers-labels-decals/decals" },
+        { label: t("decal.breadcrumb"), href: "/shop/stickers-labels-decals" },
         { label: t("decal.order") },
       ]} />
 
@@ -215,6 +218,12 @@ export default function DecalOrderClient() {
 
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         <div className="space-y-8 lg:col-span-3">
+
+          {productImages.length > 0 && (
+            <div className="mb-2">
+              <ImageGallery images={productImages} productName={t("decal.title")} />
+            </div>
+          )}
 
           <Section label={t("decal.app.label")}>
             <div className="grid grid-cols-3 gap-3">
@@ -344,6 +353,16 @@ export default function DecalOrderClient() {
           </div>
         </aside>
       </div>
+
+      {(() => {
+        const faqItems = getConfiguratorFaqs("decals");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-3">

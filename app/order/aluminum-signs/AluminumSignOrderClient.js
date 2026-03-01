@@ -7,6 +7,8 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageGallery from "@/components/product/ImageGallery";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const DEBOUNCE_MS = 300;
 
@@ -477,6 +479,16 @@ export default function AluminumSignOrderClient({ productImages = [] }) {
           </div>
         </aside>
       </div>
+
+      {(() => {
+        const faqItems = getConfiguratorFaqs("aluminum-signs");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       {/* ── MOBILE: Bottom bar ── */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
