@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
 
 const DEBOUNCE_MS = 300;
 
@@ -53,7 +54,7 @@ const QUANTITIES = [1, 2, 5];
 
 // ─── Main Component ───
 
-export default function BackdropOrderClient() {
+export default function BackdropOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -213,7 +214,7 @@ export default function BackdropOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("bd.breadcrumb"), href: "/shop/signage-displays/backdrops" },
+          { label: t("bd.breadcrumb"), href: "/shop/banners-displays" },
           { label: t("bd.order") },
         ]}
       />
@@ -221,6 +222,12 @@ export default function BackdropOrderClient() {
       <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
         {t("bd.title")}
       </h1>
+
+      {productImages.length > 0 && (
+        <div className="mb-8">
+          <ImageGallery images={productImages} productName={t("bd.title")} />
+        </div>
+      )}
 
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}

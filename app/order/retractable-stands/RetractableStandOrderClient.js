@@ -6,7 +6,10 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
 import RollUpStandSections from "@/components/banners/RollUpStandSections";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const DEBOUNCE_MS = 300;
 
@@ -54,7 +57,7 @@ function TierIcon({ tier, className = "h-10 w-10" }) {
 
 // ─── Main Component ───
 
-export default function RetractableStandOrderClient() {
+export default function RetractableStandOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -219,6 +222,12 @@ export default function RetractableStandOrderClient() {
       <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
         {t("rs.title")}
       </h1>
+
+      {productImages.length > 0 && (
+        <div className="mb-8">
+          <ImageGallery images={productImages} productName={t("rs.title")} />
+        </div>
+      )}
 
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
@@ -412,6 +421,17 @@ export default function RetractableStandOrderClient() {
 
       {/* ── Product content sections ── */}
       <RollUpStandSections />
+
+      {/* FAQ */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs("retractable-stands");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       {/* ── MOBILE: Bottom bar ── */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">

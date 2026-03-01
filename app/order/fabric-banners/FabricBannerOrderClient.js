@@ -6,6 +6,9 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const DEBOUNCE_MS = 300;
 
@@ -77,7 +80,7 @@ function MaterialIcon({ type, className = "h-7 w-7" }) {
 
 // ─── Main Component ───
 
-export default function FabricBannerOrderClient() {
+export default function FabricBannerOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -237,7 +240,7 @@ export default function FabricBannerOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("fabr.breadcrumb"), href: "/shop/banners-displays/fabric-banners" },
+          { label: t("fabr.breadcrumb"), href: "/shop/banners-displays" },
           { label: t("fabr.order") },
         ]}
       />
@@ -245,6 +248,12 @@ export default function FabricBannerOrderClient() {
       <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
         {t("fabr.title")}
       </h1>
+
+      {productImages.length > 0 && (
+        <div className="mb-8">
+          <ImageGallery images={productImages} productName={t("fabr.title")} />
+        </div>
+      )}
 
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
@@ -459,6 +468,17 @@ export default function FabricBannerOrderClient() {
           </div>
         </aside>
       </div>
+
+      {/* FAQ */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs("fabric-banners");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       {/* ── MOBILE: Bottom bar ── */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">

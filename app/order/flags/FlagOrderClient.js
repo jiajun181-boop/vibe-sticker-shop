@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
 import { trackAddToCart } from "@/lib/analytics";
 
 const DEBOUNCE_MS = 300;
@@ -60,7 +61,7 @@ const PURCHASE_TYPES = [
 
 // ─── Main Component ───
 
-export default function FlagOrderClient() {
+export default function FlagOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -230,7 +231,7 @@ export default function FlagOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("fl.breadcrumb"), href: "/shop/signage-displays/flags" },
+          { label: t("fl.breadcrumb"), href: "/shop/banners-displays" },
           { label: t("fl.order") },
         ]}
       />
@@ -238,6 +239,12 @@ export default function FlagOrderClient() {
       <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
         {t("fl.title")}
       </h1>
+
+      {productImages.length > 0 && (
+        <div className="mb-8">
+          <ImageGallery images={productImages} productName={t("fl.title")} />
+        </div>
+      )}
 
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}

@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImageGallery from "@/components/product/ImageGallery";
 
 const DEBOUNCE_MS = 300;
 
@@ -38,7 +39,7 @@ const QUANTITIES = [1, 2, 5, 10];
 
 // ─── Main Component ───
 
-export default function XBannerStandOrderClient() {
+export default function XBannerStandOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
@@ -203,6 +204,12 @@ export default function XBannerStandOrderClient() {
       <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
         {t("xb.title")}
       </h1>
+
+      {productImages.length > 0 && (
+        <div className="mb-8">
+          <ImageGallery images={productImages} productName={t("xb.title")} />
+        </div>
+      )}
 
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
