@@ -13,6 +13,8 @@ import {
   useConfiguratorCart,
 } from "@/components/configurator";
 import BookletPreview from "@/components/booklet/BookletPreview";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import {
   BINDINGS,
   SIZES,
@@ -456,6 +458,17 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
           />
         </div>
       </div>
+
+      {/* FAQ Section */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs("booklets");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}

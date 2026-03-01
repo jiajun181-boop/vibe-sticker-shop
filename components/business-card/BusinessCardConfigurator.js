@@ -5,6 +5,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   ConfigStep,
   ConfigHero,
+  ConfigProductGallery,
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
@@ -28,7 +29,7 @@ const formatCad = (cents) =>
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export default function BusinessCardConfigurator({ slug }) {
+export default function BusinessCardConfigurator({ slug, productImages = [] }) {
   const config = getBusinessCardConfig(slug);
   const { t } = useTranslation();
 
@@ -243,6 +244,11 @@ export default function BusinessCardConfigurator({ slug }) {
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* LEFT COLUMN — Steps */}
           <div className="space-y-6 lg:col-span-2">
+
+            {/* Product Gallery */}
+            {productImages?.length > 0 && (
+              <ConfigProductGallery images={productImages} inline />
+            )}
 
             {/* SIDES STEP */}
             {config.steps.sides && (

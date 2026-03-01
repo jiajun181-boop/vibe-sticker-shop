@@ -12,6 +12,8 @@ import {
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -427,6 +429,17 @@ export default function NcrOrderClient({ defaultType, productImages }) {
           />
         </div>
       </div>
+
+      {/* FAQ Section */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs("ncr-forms");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}

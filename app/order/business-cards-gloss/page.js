@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getBusinessCardConfig } from "@/lib/business-card-configs";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import BusinessCardConfigurator from "@/components/business-card/BusinessCardConfigurator";
 
 const config = getBusinessCardConfig("business-cards-gloss");
@@ -17,7 +18,9 @@ export function generateMetadata() {
   };
 }
 
-export default function BusinessCardsGlossPage() {
+export default async function BusinessCardsGlossPage() {
+  const productImages = await getOrderPageImages(["business-cards-gloss","business-cards"]);
+
   return (
     <Suspense
       fallback={
@@ -26,7 +29,7 @@ export default function BusinessCardsGlossPage() {
         </div>
       }
     >
-      <BusinessCardConfigurator slug="business-cards-gloss" />
+      <BusinessCardConfigurator slug="business-cards-gloss" productImages={productImages} />
     </Suspense>
   );
 }

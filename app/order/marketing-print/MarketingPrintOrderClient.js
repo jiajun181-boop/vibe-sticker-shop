@@ -8,6 +8,8 @@ import {
   FINISHING_LABELS,
 } from "@/lib/marketing-print-order-config";
 import BrochureFoldPreview from "@/components/brochure/BrochureFoldPreview";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import {
   ConfigStep,
   ConfigHero,
@@ -658,6 +660,17 @@ export default function MarketingPrintOrderClient({
           )}
         </div>
       </div>
+
+      {/* FAQ Section */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs(typeId);
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}

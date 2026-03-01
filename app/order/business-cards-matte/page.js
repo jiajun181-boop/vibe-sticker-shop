@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getBusinessCardConfig } from "@/lib/business-card-configs";
+import { getOrderPageImages } from "@/lib/order-page-images";
 import BusinessCardConfigurator from "@/components/business-card/BusinessCardConfigurator";
 
 const config = getBusinessCardConfig("business-cards-matte");
@@ -17,7 +18,9 @@ export function generateMetadata() {
   };
 }
 
-export default function BusinessCardsMattePages() {
+export default async function BusinessCardsMattePages() {
+  const productImages = await getOrderPageImages(["business-cards-matte","business-cards"]);
+
   return (
     <Suspense
       fallback={
@@ -26,7 +29,7 @@ export default function BusinessCardsMattePages() {
         </div>
       }
     >
-      <BusinessCardConfigurator slug="business-cards-matte" />
+      <BusinessCardConfigurator slug="business-cards-matte" productImages={productImages} />
     </Suspense>
   );
 }
