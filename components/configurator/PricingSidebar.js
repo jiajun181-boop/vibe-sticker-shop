@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import EmailQuotePopover from "./EmailQuotePopover";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -24,6 +25,7 @@ const formatCad = (cents) =>
  *  - activeQty                         — current qty (highlights matching volume row)
  *  - quoteOnly                         — if true, show "Request Quote" instead of ATC/Buy Now
  *  - onRequestQuote                    — handler for quote-only mode
+ *  - productName                       — product display name for email quote
  */
 export default function PricingSidebar({
   summaryLines = [],
@@ -47,6 +49,7 @@ export default function PricingSidebar({
   quoteOnly,
   onRequestQuote,
   onRetryPrice,
+  productName,
 }) {
   // ─── Rush Production ───
   const [rushProduction, setRushProduction] = useState(false);
@@ -92,12 +95,12 @@ export default function PricingSidebar({
 
   const atcClasses =
     atcState === "added"
-      ? "w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider bg-emerald-600 text-[#fff] cursor-default"
+      ? "w-full rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider bg-emerald-600 text-[#fff] cursor-default"
       : atcState === "adding"
-      ? "w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider bg-gray-600 text-[#fff] cursor-wait"
+      ? "w-full rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider bg-gray-600 text-[#fff] cursor-wait"
       : canAddToCart
-      ? "w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all duration-200 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
-      : "w-full rounded-sm px-4 py-3.5 text-sm font-bold uppercase tracking-wider cursor-not-allowed bg-gray-200 text-gray-400";
+      ? "w-full rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all duration-200 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
+      : "w-full rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider cursor-not-allowed bg-gray-200 text-gray-400";
 
   return (
     <aside className="hidden lg:block">
@@ -293,10 +296,10 @@ export default function PricingSidebar({
                 type="button"
                 onClick={handleBuyNowClick}
                 disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-sm border-2 px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
                   canAddToCart && !buyNowLoading
-                    ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800 active:scale-[0.98]"
-                    : "cursor-not-allowed border-gray-200 text-gray-400"
+                    ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800 active:scale-[0.98]"
+                    : "cursor-not-allowed bg-gray-100 text-gray-400"
                 }`}
               >
                 {buyNowLoading ? (t?.("configurator.processing") || "Processing...") : (t?.("configurator.buyNow") || "Buy Now")}
@@ -304,6 +307,18 @@ export default function PricingSidebar({
             </>
           )}
         </div>
+
+        {/* Email quote */}
+        {productName && unitCents > 0 && !quoteOnly && (
+          <EmailQuotePopover
+            productName={productName}
+            summaryLines={summaryLines}
+            unitCents={unitCents}
+            subtotalCents={subtotalCents}
+            quantity={quantity}
+            t={t}
+          />
+        )}
 
         {/* Trust signals */}
         <div className="flex items-center justify-center gap-4 text-[11px] text-gray-400">

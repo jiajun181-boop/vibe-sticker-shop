@@ -395,7 +395,7 @@ export default function XBannerStandOrderClient({ productImages = [] }) {
                 {t("xb.addToCart")}
               </button>
               <button type="button" onClick={handleBuyNow} disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart && !buyNowLoading ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed border-gray-200 text-gray-400"}`}>
+                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"}`}>
                 {buyNowLoading ? t("xb.processing") : t("xb.buyNow")}
               </button>
             </div>

@@ -345,7 +345,7 @@ export default function DecalOrderClient({ productImages = [] }) {
             ) : <p className="text-xs text-gray-400">{t("decal.selectOptions")}</p>}
             <div className="space-y-3">
               <button type="button" onClick={handleAddToCart} disabled={!canAddToCart} className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>{t("decal.addToCart")}</button>
-              <button type="button" onClick={handleBuyNow} disabled={!canAddToCart || buyNowLoading} className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart && !buyNowLoading ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed border-gray-200 text-gray-400"}`}>{buyNowLoading ? t("decal.processing") : t("decal.buyNow")}</button>
+              <button type="button" onClick={handleBuyNow} disabled={!canAddToCart || buyNowLoading} className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"}`}>{buyNowLoading ? t("decal.processing") : t("decal.buyNow")}</button>
             </div>
             <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
               <span>{t("decal.badge.contourCut")}</span><span className="text-gray-300">|</span><span>{t("decal.badge.shipping")}</span>
