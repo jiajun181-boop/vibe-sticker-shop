@@ -2,7 +2,7 @@ export function isStatusTokenAuthorized(
   expectedToken: string | null | undefined,
   providedToken: string | null | undefined
 ) {
-  if (!expectedToken) return true;
+  if (!expectedToken) return false;
   return expectedToken === providedToken;
 }
 

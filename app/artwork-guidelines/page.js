@@ -159,7 +159,7 @@ export default async function ArtworkGuidelinesPage() {
             <a href="mailto:info@lunarprint.ca" className="font-medium underline hover:text-[#fff]">info@lunarprint.ca</a>{" "}
             and our preflight team will check it for free. You can also call us at{" "}
             <a href="tel:+16478869288" className="font-medium underline hover:text-[#fff]">647-886-9288</a>.
-            We offer professional <Link href="/design-services" className="underline hover:text-[#fff]">design services</Link> starting at $50.
+            We offer professional <Link href="/design-services" className="underline hover:text-[#fff]">design services</Link> — text edits from $20, full design from $50+.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <a

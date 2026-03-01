@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useCartStore } from "@/lib/store";
+import { useCartStore, FREE_SHIPPING_THRESHOLD, SHIPPING_OPTIONS } from "@/lib/store";
 import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Image from "next/image";
@@ -12,8 +12,7 @@ import CartUpsell from "@/components/cart/CartUpsell";
 import { getProductImage } from "@/lib/product-image";
 import { isOversizedProduct } from "@/lib/pickup-hints";
 
-const FREE_SHIPPING_THRESHOLD = 9900;
-const SHIPPING_COST = 1500;
+const SHIPPING_COST = SHIPPING_OPTIONS.find((o) => o.id === "local")?.price ?? 1500;
 const HST_RATE = 0.13;
 const CHECKOUT_COOLDOWN_MS = 8000;
 

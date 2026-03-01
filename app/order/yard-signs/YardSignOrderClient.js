@@ -25,9 +25,8 @@ const SIZES = [
 ];
 
 const MATERIALS = [
-  { id: "4mm-corrugated", surcharge: 0 },
-  { id: "6mm-corrugated", surcharge: 50 },
-  { id: "10mm-corrugated", surcharge: 100 },
+  { id: "4mm-coroplast", surcharge: 0 },
+  { id: "6mm-coroplast", surcharge: 50 },
 ];
 
 const SIDES = [
@@ -37,8 +36,8 @@ const SIDES = [
 
 const HARDWARE = [
   { id: "none", surcharge: 0 },
-  { id: "h-stakes", surcharge: 150 },
-  { id: "step-stakes", surcharge: 200 },
+  { id: "h-stake", surcharge: 150 },
+  { id: "wire-stake", surcharge: 100 },
 ];
 
 const QUANTITIES = [1, 5, 10, 25, 50, 100];
@@ -48,27 +47,19 @@ const QUANTITIES = [1, 5, 10, 25, 50, 100];
 function MaterialIcon({ type, className = "h-7 w-7" }) {
   const common = { className, strokeWidth: 1.5, fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" };
   switch (type) {
-    case "4mm-corrugated":
+    case "4mm-coroplast":
       return (
         <svg {...common}>
           <rect x="3" y="4" width="18" height="16" rx="1" />
           <path strokeLinecap="round" d="M7 8h10M7 12h10M7 16h10" opacity="0.4" />
         </svg>
       );
-    case "6mm-corrugated":
+    case "6mm-coroplast":
       return (
         <svg {...common}>
           <rect x="3" y="4" width="18" height="16" rx="1" />
           <path strokeLinecap="round" d="M7 8h10M7 12h10M7 16h10" />
           <path d="M3 4h18v3H3z" opacity="0.15" fill="currentColor" />
-        </svg>
-      );
-    case "10mm-corrugated":
-      return (
-        <svg {...common}>
-          <rect x="3" y="3" width="18" height="18" rx="1" strokeWidth="2" />
-          <path strokeLinecap="round" d="M7 8h10M7 12h10M7 16h10" />
-          <path d="M3 3h18v4H3z" opacity="0.2" fill="currentColor" />
         </svg>
       );
     default:
@@ -83,7 +74,7 @@ export default function YardSignOrderClient({ productImages = [] }) {
   const { addItem, openCart } = useCartStore();
 
   const [sizeIdx, setSizeIdx] = useState(1); // 18×24 default
-  const [materialId, setMaterialId] = useState("4mm-corrugated");
+  const [materialId, setMaterialId] = useState("4mm-coroplast");
   const [sidesId, setSidesId] = useState("single");
   const [hardwareId, setHardwareId] = useState("none");
   const [quantity, setQuantity] = useState(10);
@@ -272,7 +263,7 @@ export default function YardSignOrderClient({ productImages = [] }) {
 
           {/* Material */}
           <Section label={t("ys.material.label")}>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {MATERIALS.map((m) => (
                 <button
                   key={m.id}

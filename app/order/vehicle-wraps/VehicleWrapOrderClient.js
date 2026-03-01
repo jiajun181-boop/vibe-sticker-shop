@@ -22,10 +22,12 @@ const formatCad = (cents) =>
 const TYPES = WRAP_UI_TYPES;
 
 const VEHICLES = [
-  { id: "sedan", surcharge: 0, icon: "sedan" },
+  { id: "car", surcharge: 0, icon: "sedan" },
   { id: "suv", surcharge: 5000, icon: "suv" },
-  { id: "truck", surcharge: 7000, icon: "truck" },
   { id: "van", surcharge: 8000, icon: "van" },
+  { id: "pickup", surcharge: 7000, icon: "truck" },
+  { id: "box-truck", surcharge: 10000, icon: "truck" },
+  { id: "trailer", surcharge: 15000, icon: "truck" },
 ];
 
 const MATERIALS = [
@@ -135,7 +137,7 @@ export default function VehicleWrapOrderClient({ productImages = [] }) {
   const { addItem, openCart } = useCartStore();
 
   const [typeId, setTypeId] = useState("full-wrap");
-  const [vehicleId, setVehicleId] = useState("sedan");
+  const [vehicleId, setVehicleId] = useState("car");
   const [materialId, setMaterialId] = useState("cast-vinyl");
   const [laminationId, setLaminationId] = useState("gloss");
   const [quantity, setQuantity] = useState(1);
@@ -275,7 +277,7 @@ export default function VehicleWrapOrderClient({ productImages = [] }) {
 
           {/* Vehicle */}
           <Section label={t("vw.vehicle.label")}>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {VEHICLES.map((v) => (
                 <button
                   key={v.id}
@@ -406,7 +408,7 @@ export default function VehicleWrapOrderClient({ productImages = [] }) {
             <h2 className="text-base font-bold text-gray-900">{t("vw.summary")}</h2>
 
             <VehiclePreview
-              vehicleBody={{ sedan: "car", suv: "suv", truck: "pickup", van: "van" }[vehicleId] || "car"}
+              vehicleBody={vehicleId}
               graphicType={typeId}
             />
 

@@ -27,9 +27,9 @@ const SIZES = [
 ];
 
 const THICKNESSES = [
-  { id: "3mm", surcharge: 0 },
-  { id: "5mm", surcharge: 50 },
-  { id: "10mm", surcharge: 150 },
+  { id: "3/16-foam", surcharge: 0 },
+  { id: "1/2-foam", surcharge: 50 },
+  { id: "gatorboard", surcharge: 150 },
 ];
 
 const SIDES = [
@@ -39,8 +39,8 @@ const SIDES = [
 
 const MOUNTINGS = [
   { id: "none", surcharge: 0 },
-  { id: "easel-back", surcharge: 200 },
-  { id: "adhesive-velcro", surcharge: 100 },
+  { id: "easel-back", surcharge: 75 },
+  { id: "standoffs", surcharge: 400 },
 ];
 
 const QUANTITIES = [1, 5, 10, 25, 50];
@@ -50,14 +50,14 @@ const QUANTITIES = [1, 5, 10, 25, 50];
 function ThicknessIcon({ type, className = "h-7 w-7" }) {
   const common = { className, strokeWidth: 1.5, fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" };
   switch (type) {
-    case "3mm":
+    case "3/16-foam":
       return (
         <svg {...common}>
           <rect x="4" y="6" width="16" height="12" rx="1" />
           <path strokeLinecap="round" d="M8 10h8M8 14h6" opacity="0.4" />
         </svg>
       );
-    case "5mm":
+    case "1/2-foam":
       return (
         <svg {...common}>
           <rect x="4" y="5" width="16" height="14" rx="1" />
@@ -65,7 +65,7 @@ function ThicknessIcon({ type, className = "h-7 w-7" }) {
           <path d="M4 5h16v3H4z" opacity="0.15" fill="currentColor" />
         </svg>
       );
-    case "10mm":
+    case "gatorboard":
       return (
         <svg {...common}>
           <rect x="3" y="3" width="18" height="18" rx="1" strokeWidth="2" />
@@ -85,7 +85,7 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
   const { addItem, openCart } = useCartStore();
 
   const [sizeIdx, setSizeIdx] = useState(2); // 18×24 Small default
-  const [thicknessId, setThicknessId] = useState("3mm");
+  const [thicknessId, setThicknessId] = useState("3/16-foam");
   const [sidesId, setSidesId] = useState("single");
   const [mountingId, setMountingId] = useState("none");
   const [quantity, setQuantity] = useState(10);

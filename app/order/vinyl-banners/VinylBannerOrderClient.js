@@ -28,8 +28,7 @@ const PRESET_SIZES = [
 
 const MATERIALS = [
   { id: "13oz-vinyl", surcharge: 0 },
-  { id: "15oz-vinyl", surcharge: 200 },
-  { id: "mesh", surcharge: 150 },
+  { id: "15oz-blockout", surcharge: 200 },
 ];
 
 const FINISHINGS = [
@@ -78,19 +77,12 @@ function MaterialIcon({ type, className = "h-7 w-7" }) {
           <path strokeLinecap="round" d="M7 8h10M7 12h10M7 16h10" opacity="0.4" />
         </svg>
       );
-    case "15oz-vinyl":
+    case "15oz-blockout":
       return (
         <svg {...common}>
           <rect x="3" y="4" width="18" height="16" rx="1" />
           <path strokeLinecap="round" d="M7 8h10M7 12h10M7 16h10" />
           <path d="M3 4h18v3H3z" opacity="0.15" fill="currentColor" />
-        </svg>
-      );
-    case "mesh":
-      return (
-        <svg {...common}>
-          <rect x="3" y="4" width="18" height="16" rx="1" />
-          <path strokeLinecap="round" d="M7 8h4M13 8h4M7 12h4M13 12h4M7 16h4M13 16h4" opacity="0.6" />
         </svg>
       );
     default:
@@ -139,7 +131,7 @@ export default function VinylBannerOrderClient({ productImages = [] }) {
   // Compute effective size in inches
   const size = useMemo(() => {
     if (sizeMode === "custom") {
-      const wInches = Math.max(12, Math.min(60, (parseInt(customWFt, 10) || 0) * 12 + (parseInt(customWIn, 10) || 0)));
+      const wInches = Math.max(12, Math.min(196, (parseInt(customWFt, 10) || 0) * 12 + (parseInt(customWIn, 10) || 0)));
       const hInches = Math.max(12, Math.min(600, (parseInt(customHFt, 10) || 0) * 12 + (parseInt(customHIn, 10) || 0)));
       const wFt = Math.floor(wInches / 12);
       const wRem = wInches % 12;
@@ -184,6 +176,7 @@ export default function VinylBannerOrderClient({ productImages = [] }) {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        material: materialId,
       }),
       signal: ac.signal,
     })

@@ -26,9 +26,8 @@ const SIZES = [
 ];
 
 const MATERIALS = [
-  { id: "polyester-knit", surcharge: 0 },
+  { id: "polyester", surcharge: 0 },
   { id: "satin", surcharge: 200 },
-  { id: "canvas", surcharge: 300 },
 ];
 
 const FINISHINGS = [
@@ -50,7 +49,7 @@ const QUANTITIES = [1, 2, 5, 10];
 function MaterialIcon({ type, className = "h-7 w-7" }) {
   const common = { className, strokeWidth: 1.5, fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" };
   switch (type) {
-    case "polyester-knit":
+    case "polyester":
       return (
         <svg {...common}>
           <rect x="3" y="4" width="18" height="16" rx="2" />
@@ -65,14 +64,6 @@ function MaterialIcon({ type, className = "h-7 w-7" }) {
           <path d="M3 14c4-2 8 2 12 0s5-1 6-1" opacity="0.25" />
         </svg>
       );
-    case "canvas":
-      return (
-        <svg {...common}>
-          <rect x="3" y="4" width="18" height="16" rx="2" strokeWidth="2" />
-          <path strokeLinecap="round" d="M7 8h10M7 12h10M7 16h10" opacity="0.3" />
-          <path d="M3 4h18v3H3z" opacity="0.12" fill="currentColor" />
-        </svg>
-      );
     default:
       return null;
   }
@@ -85,7 +76,7 @@ export default function FabricBannerOrderClient({ productImages = [] }) {
   const { addItem, openCart } = useCartStore();
 
   const [sizeIdx, setSizeIdx] = useState(1); // 3×5 default
-  const [materialId, setMaterialId] = useState("polyester-knit");
+  const [materialId, setMaterialId] = useState("polyester");
   const [finishingId, setFinishingId] = useState("pole-pocket-top");
   const [sidesId, setSidesId] = useState("single");
   const [quantity, setQuantity] = useState(1);
@@ -127,10 +118,11 @@ export default function FabricBannerOrderClient({ productImages = [] }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slug: "fabric-banners",
+        slug: "fabric-banner",
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        material: materialId,
       }),
       signal: ac.signal,
     })
@@ -174,9 +166,9 @@ export default function FabricBannerOrderClient({ productImages = [] }) {
     ];
 
     return {
-      id: "fabric-banners",
+      id: "fabric-banner",
       name: nameParts.join(" — "),
-      slug: "fabric-banners",
+      slug: "fabric-banner",
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
       options: {
@@ -272,7 +264,7 @@ export default function FabricBannerOrderClient({ productImages = [] }) {
 
           {/* Material */}
           <Section label={t("fabr.material.label")}>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {MATERIALS.map((m) => (
                 <button
                   key={m.id}

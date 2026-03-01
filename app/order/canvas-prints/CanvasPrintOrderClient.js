@@ -23,7 +23,6 @@ const SIZES = [
   { id: "16x20", label: '16" \u00d7 20"', w: 16, h: 20 },
   { id: "18x24", label: '18" \u00d7 24"', w: 18, h: 24 },
   { id: "24x36", label: '24" \u00d7 36"', w: 24, h: 36 },
-  { id: "30x40", label: '30" \u00d7 40"', tag: "XL", w: 30, h: 40 },
 ];
 
 const WRAP_DEPTHS = [
@@ -127,14 +126,20 @@ export default function CanvasPrintOrderClient() {
     setQuoteLoading(true);
     setQuoteError(null);
 
+    const slug = wrapId === "1.5in" ? "canvas-gallery-wrap" : "canvas-standard";
     fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slug: "canvas-standard",
+        slug,
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        options: {
+          edge: EDGE_TO_TREATMENT[edgeId] || edgeId,
+          coating: coatingId,
+          barDepth: wrapId === "1.5in" ? 1.5 : 0.75,
+        },
       }),
       signal: ac.signal,
     })
@@ -148,7 +153,7 @@ export default function CanvasPrintOrderClient() {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty]);
+  }, [size.w, size.h, activeQty, wrapId, edgeId, coatingId]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -178,9 +183,9 @@ export default function CanvasPrintOrderClient() {
     ];
 
     return {
-      id: "canvas-prints",
+      id: wrapId === "1.5in" ? "canvas-gallery-wrap" : "canvas-standard",
       name: nameParts.join(" \u2014 "),
-      slug: "canvas-prints",
+      slug: wrapId === "1.5in" ? "canvas-gallery-wrap" : "canvas-standard",
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
       options: {

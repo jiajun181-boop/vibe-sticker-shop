@@ -25,9 +25,9 @@ const SIZES = [
 ];
 
 const THICKNESSES = [
-  { id: "0.040", surcharge: 0 },
-  { id: "0.063", surcharge: 200 },
-  { id: "0.080", surcharge: 400 },
+  { id: "aluminum-040", surcharge: 0 },
+  { id: "aluminum-063", surcharge: 200 },
+  { id: "acm-dibond", surcharge: 400 },
 ];
 
 const SIDES = [
@@ -60,7 +60,7 @@ export default function AluminumSignOrderClient({ productImages = [] }) {
   const { addItem, openCart } = useCartStore();
 
   const [sizeIdx, setSizeIdx] = useState(1); // 18x24 default
-  const [thickness, setThickness] = useState("0.040");
+  const [thickness, setThickness] = useState("aluminum-040");
   const [sides, setSides] = useState("single");
   const [corners, setCorners] = useState("square");
   const [holes, setHoles] = useState("none");

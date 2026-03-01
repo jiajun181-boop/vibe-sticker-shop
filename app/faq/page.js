@@ -18,7 +18,7 @@ const FAQ_ITEMS_EN = [
   { question: "Do I need to include bleed?", answer: "For most printed products, we recommend 0.125\u2033 (3 mm) bleed on all sides. Products that require bleed will show this in their specifications." },
   { question: "Will the printed colours match my screen exactly?", answer: "CMYK printing can differ slightly from RGB screens. Our digital proof includes a colour disclaimer. For colour-critical jobs, we can produce a physical proof (additional fee)." },
   { question: "Can I use a photo from my phone?", answer: "Yes, if it's high-resolution (at least 2 MP for small prints, 8+ MP for large formats). We check every file and will let you know if quality is insufficient." },
-  { question: "Can you design my artwork?", answer: "Yes! Our in-house design team can create your artwork from scratch or modify existing files. Design services start at $25." },
+  { question: "Can you design my artwork?", answer: "Yes! Our in-house design team can create your artwork from scratch or modify existing files. Simple text edits from $20, label/sticker design from $50, business cards from $75. See our Design Services page for full pricing." },
   { question: "What if I only have a rough idea or sketch?", answer: "No problem \u2014 send us your sketch, reference images, or a description and our designers will create a professional layout for you." },
   { question: "Do you offer logo vectorization?", answer: "Yes. If you only have a low-res logo (JPG/PNG), we can recreate it as a high-quality vector file for $25\u2013$50 depending on complexity." },
   { question: "How long does standard production take?", answer: "Most products are produced in 2\u20134 business days after proof approval. Business cards and stickers are often ready in 1\u20132 days." },
@@ -39,7 +39,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca"
 
 export async function generateMetadata() {
   return {
-    title: "FAQ",
+    title: "FAQ — Frequently Asked Questions | La Lunar Printing",
     description: "Frequently asked questions about ordering, file requirements, shipping, and returns at La Lunar Printing.",
     alternates: { canonical: `${SITE_URL}/faq` },
   };

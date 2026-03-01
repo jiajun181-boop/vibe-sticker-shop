@@ -27,8 +27,8 @@ const PRESET_SIZES = [
 ];
 
 const MATERIALS = [
-  { id: "8oz-mesh", surcharge: 0 },
-  { id: "9oz-mesh", surcharge: 100 },
+  { id: "mesh-standard", surcharge: 0 },
+  { id: "mesh-heavy", surcharge: 100 },
 ];
 
 // Mesh: only grommets & hemmed edges (no pole pockets — mesh too soft)
@@ -50,14 +50,14 @@ const QUANTITIES = [1, 2, 5, 10, 25];
 function MaterialIcon({ type, className = "h-7 w-7" }) {
   const common = { className, strokeWidth: 1.5, fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" };
   switch (type) {
-    case "8oz-mesh":
+    case "mesh-standard":
       return (
         <svg {...common}>
           <rect x="3" y="4" width="18" height="16" rx="1" />
           <path strokeLinecap="round" d="M7 8h4M13 8h4M7 12h4M13 12h4M7 16h4M13 16h4" opacity="0.5" />
         </svg>
       );
-    case "9oz-mesh":
+    case "mesh-heavy":
       return (
         <svg {...common}>
           <rect x="3" y="4" width="18" height="16" rx="1" strokeWidth="2" />
@@ -85,7 +85,7 @@ export default function MeshBannerOrderClient({ productImages = [] }) {
   const [customHFt, setCustomHFt] = useState("6");
   const [customHIn, setCustomHIn] = useState("0");
 
-  const [materialId, setMaterialId] = useState("8oz-mesh");
+  const [materialId, setMaterialId] = useState("mesh-standard");
   const [finishingId, setFinishingId] = useState("hemmed-grommets");
   const [turnaroundId, setTurnaroundId] = useState("standard");
   const [quantity, setQuantity] = useState(1);
@@ -147,6 +147,7 @@ export default function MeshBannerOrderClient({ productImages = [] }) {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        material: materialId,
       }),
       signal: ac.signal,
     })

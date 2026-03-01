@@ -23,9 +23,8 @@ const SIZES = [
 ];
 
 const MATERIALS = [
-  { id: "corrugated-inserts", surcharge: 0 },
-  { id: "aluminum-inserts", surcharge: 500 },   // +$5.00/ea
-  { id: "pvc-inserts", surcharge: 300 },         // +$3.00/ea
+  { id: "4mm-coroplast", surcharge: 0 },
+  { id: "aluminum-panel", surcharge: 500 },   // +$5.00/ea
 ];
 
 const SIDES = [
@@ -47,7 +46,7 @@ export default function AFrameSignOrderClient({ productImages = [] }) {
   const { addItem, openCart } = useCartStore();
 
   const [sizeIdx, setSizeIdx] = useState(0); // 24x36 default
-  const [material, setMaterial] = useState("corrugated-inserts");
+  const [material, setMaterial] = useState("4mm-coroplast");
   const [sides, setSides] = useState("single");
   const [frame, setFrame] = useState("included");
   const [quantity, setQuantity] = useState(1);

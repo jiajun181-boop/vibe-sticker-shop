@@ -13,6 +13,7 @@ import {
 } from "@/lib/pricing/sticker-pricing";
 import {
   getCuttingType,
+  STICKER_SHAPES,
   LAMINATION_RULES,
   WHITE_INK_MATERIALS,
   TURNAROUND_OPTIONS,
@@ -25,16 +26,6 @@ const PROD_SHEET_W = 12;
 const PROD_SHEET_H = 18;
 const formatCad = (dollars) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(dollars);
-
-const STICKER_QUANTITIES = [50, 100, 250, 500, 1000, 2500, 5000];
-
-const STICKER_SHAPES = [
-  { id: "circle", label: "stickerOrder.shape.circle" },
-  { id: "square", label: "stickerOrder.shape.square" },
-  { id: "rectangle", label: "stickerOrder.shape.rectangle" },
-  { id: "oval", label: "stickerOrder.shape.oval" },
-  { id: "custom", label: "stickerOrder.shape.custom" },
-];
 
 const MATERIAL_HINTS = {
   "white-vinyl": "Durable, waterproof",
@@ -320,7 +311,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
           <div>
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">{t("stickerOrder.shape")}</h3>
             <div className="flex flex-wrap gap-2">
-              {STICKER_SHAPES.map((s) => (
+              {(cutting.shapes || STICKER_SHAPES).map((s) => (
                 <button
                   key={s.id}
                   type="button"
@@ -526,7 +517,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
           Quantity
         </h3>
         <div className="flex flex-wrap gap-2">
-          {STICKER_QUANTITIES.map((q) => (
+          {cutting.quantities.map((q) => (
             <button key={q} type="button"
               onClick={() => { setStickerQty(q); setCustomStickerQty(""); }}
               className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${

@@ -112,7 +112,7 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
           <div className="px-4">
             {departments.map((dept) => {
               const key = dept.key;
-              const meta = categoryMeta[key];
+              const meta = departmentMeta[key];
               const isOpen = !!expanded[key];
               const subGroups = meta?.subGroups || [];
 

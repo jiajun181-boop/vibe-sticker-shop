@@ -15,25 +15,10 @@ import {
 } from "@/components/configurator";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import { FORM_TYPES, SIZES, QUANTITIES } from "@/lib/ncr-order-config";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
-
-// ─── NCR Configuration ───
-
-const FORM_TYPES = [
-  { id: "2-copy", parts: 2, slug: "ncr-forms-duplicate", label: "2 Copy", colors: "White / Yellow" },
-  { id: "3-copy", parts: 3, slug: "ncr-forms-triplicate", label: "3 Copy", colors: "White / Yellow / Pink" },
-  { id: "4-copy", parts: 4, slug: "ncr-invoices", label: "4 Copy", colors: "White / Yellow / Pink / Gold" },
-];
-
-const SIZES = [
-  { id: "half-letter", label: '5.5" × 8.5"', w: 5.5, h: 8.5 },
-  { id: "letter", label: '8.5" × 11"', w: 8.5, h: 11 },
-  { id: "legal", label: '8.5" × 14"', w: 8.5, h: 14 },
-];
-
-const QUANTITIES = [100, 250, 500, 1000, 2500, 5000, 7500, 10000];
 
 // ─── Main Component ───
 

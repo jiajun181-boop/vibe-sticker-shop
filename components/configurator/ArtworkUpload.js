@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { UploadButton } from "@/utils/uploadthing";
 import { showErrorToast } from "@/components/Toast";
+import { PRODUCT_PRINT_SPECS } from "@/lib/design-studio/product-configs";
 
 const ARTWORK_OPTIONS = [
   {
@@ -84,6 +85,12 @@ export default function ArtworkUpload({
   const [internalOption, setInternalOption] = useState(null);
   const selectedOption = controlledOption !== undefined ? controlledOption : internalOption;
 
+  // Only show "Design Online" if the product is supported in the design editor
+  const hasDesignEditor = slug && PRODUCT_PRINT_SPECS[slug];
+  const visibleOptions = hasDesignEditor
+    ? ARTWORK_OPTIONS
+    : ARTWORK_OPTIONS.filter((o) => o.id !== "design-online");
+
   const handleOptionChange = (id) => {
     if (onArtworkOptionChange) {
       onArtworkOptionChange(id);
@@ -99,7 +106,7 @@ export default function ArtworkUpload({
   return (
     <div className="space-y-3">
       {/* Radio options */}
-      {ARTWORK_OPTIONS.map((opt) => (
+      {visibleOptions.map((opt) => (
         <button
           key={opt.id}
           type="button"
@@ -214,7 +221,7 @@ export default function ArtworkUpload({
             {t?.("configurator.designOnlineNote") || "Use our free online design editor to create your artwork. Choose from templates or start from scratch."}
           </p>
           <Link
-            href={`/design/${slug || "business-cards"}${designParams ? `?${new URLSearchParams(designParams).toString()}` : ""}`}
+            href={`/design/${slug}${designParams ? `?${new URLSearchParams(designParams).toString()}` : ""}`}
             className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-800"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

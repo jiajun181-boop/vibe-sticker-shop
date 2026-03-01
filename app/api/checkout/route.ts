@@ -403,6 +403,7 @@ export async function POST(req: Request) {
     const isFreeShipping = isPickup || afterDiscount >= FREE_SHIPPING_THRESHOLD;
     const shippingCost = isFreeShipping ? 0 : 1500;
 
+    // Tax is calculated by Stripe's automatic_tax; this estimate is for metadata only
     const taxableAmount = afterDiscount + shippingCost;
     const estimatedTax = Math.round(taxableAmount * 0.13);
     const estimatedTotal = afterDiscount + shippingCost + estimatedTax;

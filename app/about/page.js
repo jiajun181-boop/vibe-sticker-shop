@@ -8,11 +8,11 @@ const BRAND = "La Lunar Printing Inc.";
 export async function generateMetadata() {
   return {
     title: `About Us | ${BRAND}`,
-    description: "Toronto's leading printing service provider. 30+ years of experience, competitive prices, fast turnaround (1-2 days), official invoices, one-stop printing solutions. Serving North America.",
+    description: "Toronto's leading printing service provider since 2018. Competitive prices, fast turnaround (1-2 days), official invoices, one-stop printing solutions. Serving North America.",
     alternates: { canonical: `${SITE_URL}/about` },
     openGraph: {
       title: `About ${BRAND} — Toronto's Trusted Printing Partner`,
-      description: "30+ years of professional printing experience. Competitive prices, fast turnaround, high quality. Stickers, labels, banners, signs & more. Serving North America.",
+      description: "Professional custom printing since 2018. Competitive prices, fast turnaround, high quality. Stickers, labels, banners, signs & more. Serving North America.",
       url: `${SITE_URL}/about`,
       siteName: BRAND,
       type: "website",

@@ -47,8 +47,8 @@ export default function ShippingPolicyPage() {
         <section>
           <h2 className="text-xl font-semibold text-[var(--color-gray-900)]">3. Shipping Costs</h2>
           <ul className="mt-2 list-disc space-y-1 pl-6">
-            <li><strong>Free standard shipping</strong> on orders over $150 CAD (within Canada)</li>
-            <li>Orders under $150 CAD: flat rate shipping calculated at checkout</li>
+            <li><strong>Free standard shipping</strong> on orders over $99 CAD (within Canada)</li>
+            <li>Orders under $99 CAD: flat rate shipping calculated at checkout</li>
             <li>Express and priority shipping available at additional cost</li>
             <li>US orders: shipping rates calculated based on weight and destination</li>
             <li>Oversized items (banners, signs, large-format) may incur additional shipping fees</li>
@@ -84,7 +84,7 @@ export default function ShippingPolicyPage() {
           <p className="mt-2">
             Shipping questions? Email{" "}
             <a href="mailto:info@lunarprint.ca" className="text-[var(--color-brand)] underline">info@lunarprint.ca</a>{" "}
-            or call <a href="tel:+16476185839" className="text-[var(--color-brand)] underline">(647) 618-5839</a>.
+            or call <a href="tel:+16477834728" className="text-[var(--color-brand)] underline">(647) 783-4728</a>.
           </p>
         </section>
       </div>

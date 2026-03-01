@@ -36,6 +36,7 @@ async function main() {
 
     if (!existsSync(pngPath)) {
       skipped++;
+      console.log(`  ✗ No PNG: ${product.slug}`);
       continue;
     }
 

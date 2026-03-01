@@ -29,7 +29,7 @@ export default function ReturnsPage() {
 
         <h2>How to Report an Issue</h2>
         <ul>
-          <li>Contact us within <strong>2 days of receiving your order</strong>.</li>
+          <li>Contact us within <strong>7 days of receiving your order</strong>.</li>
           <li>Provide 2&ndash;3 photos from different angles along with your order number.</li>
           <li>
             Send to: <a href="mailto:info@lunarprint.ca" className="text-[var(--color-gray-900)] underline">info@lunarprint.ca</a> or
@@ -60,7 +60,7 @@ export default function ReturnsPage() {
           <li><strong>Rich black (CMYK)</strong> &mdash; slight misregistration or ghosting on small text is acceptable in offset and digital printing.</li>
           <li><strong>Cutting/finishing tolerance of 1&ndash;2 mm</strong> &mdash; standard deviation in trim and die-cutting.</li>
           <li><strong>Special processes</strong> (die cutting, foiling, numbering, perforation, scoring, folding) &mdash; up to 3&ndash;5% production loss is industry standard.</li>
-          <li><strong>Claims reported beyond 2 days</strong> after delivery.</li>
+          <li><strong>Claims reported beyond 7 days</strong> after delivery.</li>
           <li><strong>Customer file errors</strong> &mdash; layout mistakes, images below 300 DPI, wrong colour mode, typos, or design issues in customer-supplied artwork.</li>
           <li><strong>Improper storage</strong> &mdash; damage from moisture, staining, or mishandling after delivery.</li>
           <li><strong>Shipping delays</strong> caused by the courier or logistics provider.</li>
