@@ -39,10 +39,18 @@ export default function SignProductPageClient({
   const SIGN_TYPE_MAP = {
     "real-estate-signs": "real-estate",
     "yard-sign": "yard-sign",
+    "yard-signs": "yard-sign",
     "election-signs": "yard-sign",
     "open-house-signs": "real-estate",
     "directional-signs": "aluminum-sign",
+    "aluminum-signs": "aluminum-sign",
     "pvc-board-signs": "pvc-sign",
+    "pvc-signs": "pvc-sign",
+    "foam-board-signs": "foam-board",
+    "foam-board-prints": "foam-board",
+    "a-frame-signs": "a-frame",
+    "magnetic-signs": "yard-sign",
+    "event-boards": "event-board",
   };
   const configuratorTypeId = SIGN_TYPE_MAP[signTypeId] || signTypeId;
 
