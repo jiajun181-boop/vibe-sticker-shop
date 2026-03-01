@@ -3,12 +3,13 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { trackUploadStarted } from "@/lib/analytics";
-import { ArtworkUpload, CustomDimensions, useConfiguratorCart, MaterialSwatchGrid, MobileBottomBar } from "@/components/configurator";
+import { ArtworkUpload, CustomDimensions, useConfiguratorCart, MaterialSwatchGrid, MobileBottomBar, TemplateDownloadButton } from "@/components/configurator";
 import {
   MIN_SIZE,
   calcPaperLabelPrice,
   stickersPerSheet,
   setupFee,
+  CUSTOMER_SHEET_SIZES,
 } from "@/lib/pricing/sticker-pricing";
 import {
   getCuttingType,
@@ -20,9 +21,8 @@ import {
 } from "@/lib/sticker-order-config";
 
 const INCH_TO_CM = 2.54;
-const MAX_SHEET_SIZE = 12; // max sticker dimension on 12×18 sheet
-const SHEET_W = 12;
-const SHEET_H = 18;
+const PROD_SHEET_W = 12;
+const PROD_SHEET_H = 18;
 const formatCad = (dollars) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(dollars);
 
@@ -62,6 +62,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
   const { t } = useTranslation();
   const cutting = useMemo(() => getCuttingType("sheets"), []);
   const mode = modeProp === "multiple" ? "multi" : "same";
+  const [sheetSizeId, setSheetSizeId] = useState(CUSTOMER_SHEET_SIZES[0].id);
   const [shapeId, setShapeId] = useState("circle");
   const [sizeIdx, setSizeIdx] = useState(0);
   const [customW, setCustomW] = useState("");
@@ -78,6 +79,14 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
   const [multiMaxH, setMultiMaxH] = useState("2");
   const [uploadedFile, setUploadedFile] = useState(null);
 
+  const customerSheet = useMemo(
+    () => CUSTOMER_SHEET_SIZES.find((s) => s.id === sheetSizeId) || CUSTOMER_SHEET_SIZES[0],
+    [sheetSizeId]
+  );
+  const MAX_SHEET_W = customerSheet.w;
+  const MAX_SHEET_H = customerSheet.h;
+  const MAX_STICKER_DIM = Math.max(MAX_SHEET_W, MAX_SHEET_H);
+
   const PRESET_SIZES = [
     { w: 1, h: 1, label: '1"×1"' },
     { w: 2, h: 2, label: '2"×2"' },
@@ -92,17 +101,17 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
 
   const widthIn = useMemo(() => {
     if (mode === "multi") {
-      return Math.min(MAX_SHEET_SIZE, Math.max(0, parseFloat(multiMaxW) || 0));
+      return Math.min(MAX_STICKER_DIM, Math.max(0, parseFloat(multiMaxW) || 0));
     }
     if (!isCustomSize) return PRESET_SIZES[sizeIdx]?.w ?? 2;
     const raw = parseFloat(customW);
     if (!raw || raw <= 0) return 0;
     return unit === "cm" ? raw / INCH_TO_CM : raw;
-  }, [mode, isCustomSize, sizeIdx, customW, unit, multiMaxW]);
+  }, [mode, isCustomSize, sizeIdx, customW, unit, multiMaxW, MAX_STICKER_DIM]);
 
   const heightIn = useMemo(() => {
     if (mode === "multi") {
-      return Math.min(MAX_SHEET_SIZE, Math.max(0, parseFloat(multiMaxH) || 0));
+      return Math.min(MAX_STICKER_DIM, Math.max(0, parseFloat(multiMaxH) || 0));
     }
     if (!isCustomSize) return PRESET_SIZES[sizeIdx]?.h ?? 2;
     if (isSingleDim) {
@@ -113,7 +122,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
     const raw = parseFloat(customH);
     if (!raw || raw <= 0) return 0;
     return unit === "cm" ? raw / INCH_TO_CM : raw;
-  }, [mode, isCustomSize, sizeIdx, customW, customH, unit, isSingleDim, multiMaxH]);
+  }, [mode, isCustomSize, sizeIdx, customW, customH, unit, isSingleDim, multiMaxH, MAX_STICKER_DIM]);
 
   const activeStickerQty = useMemo(() => {
     if (customStickerQty !== "") {
@@ -137,21 +146,26 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
     return PRINT_MODES;
   }, [isWhiteInkMaterial]);
 
-  // --- Dimension validation ---
+  // --- Dimension validation (sticker must fit on selected customer sheet) ---
   const dimErrors = useMemo(() => {
     const errs = [];
     if (widthIn > 0 && widthIn < MIN_SIZE) errs.push(`Min ${MIN_SIZE}"`);
     if (heightIn > 0 && heightIn < MIN_SIZE) errs.push(`Min ${MIN_SIZE}"`);
-    if (widthIn > MAX_SHEET_SIZE) errs.push(`Max ${MAX_SHEET_SIZE}"`);
-    if (heightIn > MAX_SHEET_SIZE) errs.push(`Max ${MAX_SHEET_SIZE}"`);
+    const stickerMin = Math.min(widthIn, heightIn);
+    const stickerMax = Math.max(widthIn, heightIn);
+    const sheetMin = Math.min(MAX_SHEET_W, MAX_SHEET_H);
+    const sheetMax = Math.max(MAX_SHEET_W, MAX_SHEET_H);
+    if (stickerMin > 0 && stickerMax > 0 && (stickerMin > sheetMin || stickerMax > sheetMax)) {
+      errs.push(`Sticker too large for ${customerSheet.label} sheet`);
+    }
     return errs;
-  }, [widthIn, heightIn]);
+  }, [widthIn, heightIn, MAX_SHEET_W, MAX_SHEET_H, customerSheet.label]);
 
-  // --- Stickers per sheet (matches pricing calculation) ---
+  // --- Stickers per customer sheet ---
   const perSheet = useMemo(() => {
     if (widthIn <= 0 || heightIn <= 0) return 0;
-    return stickersPerSheet(widthIn, heightIn, "rect");
-  }, [widthIn, heightIn]);
+    return stickersPerSheet(widthIn, heightIn, "rect", customerSheet.w, customerSheet.h);
+  }, [widthIn, heightIn, customerSheet]);
 
   // --- Pricing ---
   const lamType = laminationId === "none" ? "gloss" : laminationId === "matte-lam" ? "matte" : laminationId;
@@ -161,16 +175,19 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
     if (widthIn <= 0 || heightIn <= 0 || activeStickerQty <= 0 || dimErrors.length > 0) {
       return null;
     }
-    const result = calcPaperLabelPrice(widthIn, heightIn, activeStickerQty, "rect", lamType);
+    const matMult = cutting.materials.find((m) => m.id === materialId)?.multiplier || 1;
+    const result = calcPaperLabelPrice(widthIn, heightIn, activeStickerQty, "rect", lamType, customerSheet);
     const designFee = mode === "multi" ? setupFee(numDesigns) : 0;
-    let subtotal = result.totalPrice + designFee;
+    let subtotal = (result.totalPrice * matMult) + designFee;
     if (turnaroundId === "rush") subtotal *= turnaround.multiplier;
     return {
       ...result,
+      totalPrice: Math.round(result.totalPrice * matMult * 100) / 100,
       designFee,
-      subtotal,
+      subtotal: Math.round(subtotal * 100) / 100,
+      matMult,
     };
-  }, [widthIn, heightIn, activeStickerQty, lamType, numDesigns, dimErrors, turnaroundId, turnaround, mode]);
+  }, [widthIn, heightIn, activeStickerQty, lamType, numDesigns, dimErrors, turnaroundId, turnaround, mode, customerSheet, materialId, cutting.materials]);
 
   const canAddToCart = pricing !== null && activeStickerQty > 0;
 
@@ -183,9 +200,9 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
 
   const buildCartItem = useCallback(() => {
     if (!pricing || activeStickerQty <= 0) return null;
-    const unitCents = Math.round((pricing.totalPrice / pricing.actualQty) * 100);
+    const unitCents = Math.round((pricing.subtotal / pricing.actualQty) * 100);
     return {
-      id: `sticker-sheets-${materialId}-${widthIn}x${heightIn}`,
+      id: `sticker-sheets-${materialId}-${sheetSizeId}-${widthIn}x${heightIn}`,
       name: `Sticker Sheets — ${sizeLabel}`,
       slug: "sticker-sheets",
       price: unitCents,
@@ -200,7 +217,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
         stickersPerSheet: pricing.perSheet,
         sheetsOrdered: pricing.sheetsNeeded,
         totalStickers: pricing.actualQty,
-        sheetSize: `${SHEET_W}" × ${SHEET_H}"`,
+        sheetSize: customerSheet.label,
         ...(mode === "multi" && { designs: numDesigns }),
         ...(pricing.designFee > 0 && { setupFee: `$${pricing.designFee.toFixed(2)}` }),
         turnaround: turnaroundId,
@@ -208,7 +225,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
       },
       forceNewLine: true,
     };
-  }, [pricing, activeStickerQty, materialId, widthIn, heightIn, sizeLabel, numDesigns, mode, laminationId, turnaroundId, uploadedFile, t]);
+  }, [pricing, activeStickerQty, materialId, sheetSizeId, widthIn, heightIn, sizeLabel, numDesigns, mode, laminationId, turnaroundId, uploadedFile, t, customerSheet]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -217,11 +234,6 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
 
   return (
     <div className="space-y-5">
-      {/* Delivered on sheets notice */}
-      <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-center text-[11px] font-medium text-blue-700">
-        {t("stickerOrder.sheets.deliveredOn")}
-      </div>
-
       {/* Material */}
       <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">Material</h3>
@@ -261,6 +273,46 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
         })()}
       </div>
 
+      {/* Sheet Size — customer delivery size */}
+      <div>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+          {t("stickerOrder.sheets.sheetSize") || "Sheet Size"}
+        </h3>
+        <p className="mb-2 text-[11px] text-gray-500">
+          {t("stickerOrder.sheets.sheetSizeHint") || "Choose the sheet size you\u2019ll receive. Stickers are pre-cut and easy to peel."}
+        </p>
+        <div className="flex gap-2">
+          {CUSTOMER_SHEET_SIZES.map((sz) => (
+            <button
+              key={sz.id}
+              type="button"
+              onClick={() => {
+                setSheetSizeId(sz.id);
+                // Reset sticker size if current size won't fit on new sheet
+                if (!isCustomSize && PRESET_SIZES[sizeIdx]) {
+                  const ps = PRESET_SIZES[sizeIdx];
+                  const sMin = Math.min(ps.w, ps.h);
+                  const sMax = Math.max(ps.w, ps.h);
+                  const shMin = Math.min(sz.w, sz.h);
+                  const shMax = Math.max(sz.w, sz.h);
+                  if (sMin > shMin || sMax > shMax) setSizeIdx(0);
+                }
+              }}
+              className={`flex-1 rounded-xl border-2 px-3 py-3 text-center transition-all ${
+                sheetSizeId === sz.id
+                  ? "border-gray-900 bg-gray-900 text-[#fff]"
+                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+              }`}
+            >
+              <span className="block text-sm font-bold">{sz.label}</span>
+              <span className={`block text-[10px] ${sheetSizeId === sz.id ? "text-gray-300" : "text-gray-400"}`}>
+                {sz.desc}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Same Design: Shape + Size */}
       {mode === "same" && (
         <>
@@ -289,20 +341,29 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
           <div>
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">Sticker Size</h3>
             <div className="flex flex-wrap gap-2">
-              {PRESET_SIZES.map((s, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => { setSizeIdx(i); setCustomW(""); setCustomH(""); }}
-                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                    sizeIdx === i
-                      ? "border-gray-900 bg-gray-900 text-[#fff]"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  {s.label}
-                </button>
-              ))}
+              {PRESET_SIZES.filter((s) => {
+                const sMin = Math.min(s.w, s.h);
+                const sMax = Math.max(s.w, s.h);
+                const shMin = Math.min(MAX_SHEET_W, MAX_SHEET_H);
+                const shMax = Math.max(MAX_SHEET_W, MAX_SHEET_H);
+                return sMin <= shMin && sMax <= shMax;
+              }).map((s) => {
+                const origIdx = PRESET_SIZES.indexOf(s);
+                return (
+                  <button
+                    key={origIdx}
+                    type="button"
+                    onClick={() => { setSizeIdx(origIdx); setCustomW(""); setCustomH(""); }}
+                    className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                      sizeIdx === origIdx
+                        ? "border-gray-900 bg-gray-900 text-[#fff]"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
               <button
                 type="button"
                 onClick={() => { setSizeIdx(-1); setCustomW(""); setCustomH(""); }}
@@ -323,7 +384,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
                       {shapeId === "circle" ? t("stickerOrder.shape.diameter") : t("stickerOrder.shape.sideLength")}
                     </label>
                     <input
-                      type="number" min={MIN_SIZE} max={MAX_SHEET_SIZE} step="0.25"
+                      type="number" min={MIN_SIZE} max={MAX_STICKER_DIM} step="0.25"
                       value={customW}
                       onChange={(e) => setCustomW(e.target.value)}
                       className="w-20 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-gray-900 focus:outline-none"
@@ -335,7 +396,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
                     customW={customW} customH={customH}
                     onChangeW={setCustomW} onChangeH={setCustomH}
                     unit={unit} onChangeUnit={setUnit}
-                    minLabel={`${MIN_SIZE}" × ${MIN_SIZE}"`} maxLabel={`${MAX_SHEET_SIZE}" × ${MAX_SHEET_SIZE}"`}
+                    minLabel={`${MIN_SIZE}" × ${MIN_SIZE}"`} maxLabel={`${MAX_SHEET_W}" × ${MAX_SHEET_H}"`}
                     dimErrors={dimErrors} t={t}
                   />
                 )}
@@ -343,7 +404,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
             )}
             {perSheet > 0 && (
               <p className="mt-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-medium text-blue-700">
-                {t("stickerOrder.sheets.perSheet").replace("{count}", perSheet)}
+                {perSheet} stickers per sheet ({customerSheet.label})
               </p>
             )}
           </div>
@@ -360,7 +421,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
             <div className="flex items-center gap-3">
               <div className="flex-1">
                 <label className="mb-1 block text-[10px] text-gray-500">Width</label>
-                <input type="number" min="0.5" max={MAX_SHEET_SIZE} step="0.25" value={multiMaxW}
+                <input type="number" min="0.5" max={MAX_STICKER_DIM} step="0.25" value={multiMaxW}
                   onChange={(e) => setMultiMaxW(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-gray-900 focus:outline-none"
                 />
@@ -368,7 +429,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
               <span className="mt-4 text-gray-400">×</span>
               <div className="flex-1">
                 <label className="mb-1 block text-[10px] text-gray-500">Height</label>
-                <input type="number" min="0.5" max={MAX_SHEET_SIZE} step="0.25" value={multiMaxH}
+                <input type="number" min="0.5" max={MAX_STICKER_DIM} step="0.25" value={multiMaxH}
                   onChange={(e) => setMultiMaxH(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-gray-900 focus:outline-none"
                 />
@@ -377,7 +438,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
             </div>
             {perSheet > 0 && (
               <p className="mt-2 text-[11px] text-gray-500">
-                Each sheet: {SHEET_W}&quot; × {SHEET_H}&quot;, accommodates {perSheet} stickers of {widthIn}&quot;×{heightIn}&quot;
+                Each {customerSheet.label} sheet accommodates {perSheet} stickers of {widthIn}&quot;×{heightIn}&quot;
               </p>
             )}
           </div>
@@ -403,6 +464,19 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
             <p className="mt-2 text-[11px] text-gray-500">{t("stickerOrder.sheets.multiHint")}</p>
           </div>
         </>
+      )}
+
+      {/* Template Download */}
+      {widthIn > 0 && heightIn > 0 && (
+        <TemplateDownloadButton
+          width={widthIn}
+          height={heightIn}
+          bleed={0.125}
+          unit="in"
+          dpi={300}
+          product="Sticker Sheets"
+          slug="sticker-sheets"
+        />
       )}
 
       {/* White ink */}
@@ -484,10 +558,10 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
             </svg>
             <div className="text-[11px] text-emerald-800">
               <p className="font-semibold">
-                You&apos;ll receive {pricing.actualQty.toLocaleString()} stickers
+                You&apos;ll receive {pricing.actualQty.toLocaleString()} stickers on {pricing.sheetsNeeded} sheet{pricing.sheetsNeeded !== 1 ? "s" : ""}
               </p>
               <p className="mt-0.5 text-emerald-600">
-                {pricing.sheetsNeeded} sheet{pricing.sheetsNeeded !== 1 ? "s" : ""} &times; {pricing.perSheet} stickers/sheet &mdash; Sheet size: {SHEET_W}&quot; &times; {SHEET_H}&quot;
+                {pricing.perSheet} stickers/sheet &mdash; Sheet size: {customerSheet.label} &mdash; Pre-cut, easy to peel
               </p>
             </div>
           </div>
@@ -537,13 +611,19 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
         {pricing ? (
           <div className="space-y-1.5">
             <div className="flex items-baseline justify-between text-xs text-gray-500">
-              <span>{pricing.sheetsNeeded} sheets × {formatCad(pricing.totalPrice / pricing.sheetsNeeded)}/sheet</span>
+              <span>{pricing.sheetsNeeded} sheets ({customerSheet.label})</span>
               <span className="font-medium text-gray-700">{formatCad(pricing.totalPrice)}</span>
             </div>
             <div className="flex items-baseline justify-between text-[11px] text-gray-400">
               <span>{pricing.actualQty.toLocaleString()} stickers ({pricing.perSheet}/sheet)</span>
-              <span>{formatCad(pricing.unitPrice)}/sticker</span>
+              <span>{formatCad(pricing.subtotal / pricing.actualQty)}/sticker</span>
             </div>
+            {pricing.cuttingFee > 0 && (
+              <div className="flex items-baseline justify-between text-[11px] text-gray-400">
+                <span>Cutting &amp; finishing</span>
+                <span>included</span>
+              </div>
+            )}
             {pricing.designFee > 0 && (
               <div className="flex items-baseline justify-between text-xs text-gray-500">
                 <span>Multi-design setup ({numDesigns} designs)</span>
