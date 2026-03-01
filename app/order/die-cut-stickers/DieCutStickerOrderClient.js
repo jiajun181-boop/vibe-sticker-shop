@@ -18,10 +18,10 @@ const formatCad = (cents) =>
 // ─── Die-Cut Sticker Configuration ───
 
 const MATERIALS = [
-  { id: "white-vinyl", surcharge: 0, desc: "dc.mat.whiteVinylDesc" },
-  { id: "clear-vinyl", surcharge: 3, desc: "dc.mat.clearVinylDesc" },
-  { id: "holographic", surcharge: 8, desc: "dc.mat.holographicDesc" },
-  { id: "kraft", surcharge: 5, desc: "dc.mat.kraftDesc" },
+  { id: "white-vinyl", desc: "dc.mat.whiteVinylDesc" },
+  { id: "clear-vinyl", desc: "dc.mat.clearVinylDesc" },
+  { id: "holographic", desc: "dc.mat.holographicDesc" },
+  { id: "kraft", desc: "dc.mat.kraftDesc" },
 ];
 
 const SIZES = [
@@ -88,14 +88,14 @@ export default function DieCutStickerOrderClient() {
     fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug: "die-cut-stickers", quantity: activeQty, widthIn: size.w, heightIn: size.h }),
+      body: JSON.stringify({ slug: "die-cut-stickers", quantity: activeQty, widthIn: size.w, heightIn: size.h, material: materialId }),
       signal: ac.signal,
     })
       .then((r) => r.json().then((d) => ({ ok: r.ok, data: d })))
       .then(({ ok, data }) => { if (!ok) throw new Error(data.error || "Quote failed"); setQuoteData(data); })
       .catch((err) => { if (err.name === "AbortError") return; setQuoteError(err.message); })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty]);
+  }, [size.w, size.h, activeQty, materialId]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -106,10 +106,8 @@ export default function DieCutStickerOrderClient() {
   // ─── Pricing ───
 
   const subtotalCents = quoteData?.totalCents ?? 0;
-  const materialSurcharge = (MATERIALS.find((m) => m.id === materialId)?.surcharge ?? 0) * activeQty;
   const finishSurcharge = (FINISHES.find((f) => f.id === finishId)?.surcharge ?? 0) * activeQty;
-  const adjustedSubtotal = subtotalCents + materialSurcharge + finishSurcharge;
-  const totalCents = adjustedSubtotal;
+  const totalCents = subtotalCents + finishSurcharge;
 
   const requiresProof = uploadedFile != null;
   const canAddToCart = quoteData && !quoteLoading && activeQty > 0 && (!requiresProof || proofConfirmed);
@@ -120,7 +118,7 @@ export default function DieCutStickerOrderClient() {
       id: "die-cut-stickers",
       name: `${t("dc.title")} — ${size.tag}`,
       slug: "die-cut-stickers",
-      price: Math.round(adjustedSubtotal / activeQty),
+      price: Math.round(totalCents / activeQty),
       quantity: activeQty,
       options: {
         material: materialId,
@@ -208,9 +206,6 @@ export default function DieCutStickerOrderClient() {
                   <span className={`mt-0.5 block text-[11px] leading-tight ${materialId === mat.id ? "text-gray-500" : "text-gray-400"}`}>
                     {t(mat.desc)}
                   </span>
-                  {mat.surcharge > 0 && (
-                    <span className="mt-1 block text-[11px] font-medium text-amber-600">+{formatCad(mat.surcharge)}/ea</span>
-                  )}
                   {materialId === mat.id && (
                     <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gray-900" />
                   )}
@@ -334,16 +329,14 @@ export default function DieCutStickerOrderClient() {
             ) : quoteData ? (
               <dl className="space-y-2 text-sm">
                 <Row label={t("dc.basePrice")} value={formatCad(subtotalCents)} />
-                {materialSurcharge > 0 && <Row label={t(`dc.mat.${materialId}`)} value={`+ ${formatCad(materialSurcharge)}`} />}
                 {finishSurcharge > 0 && <Row label={t(`dc.finish.${finishId}`)} value={`+ ${formatCad(finishSurcharge)}`} />}
-                <Row label={t("dc.subtotal")} value={formatCad(adjustedSubtotal)} />
                 <div className="flex justify-between border-t border-gray-100 pt-2">
                   <dt className="font-semibold text-gray-900">{t("dc.total")}</dt>
                   <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
                 </div>
                 {activeQty > 1 && (
                   <div className="pt-1">
-                    <p className="text-[11px] text-gray-400">{formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("dc.each")}</p>
+                    <p className="text-[11px] text-gray-400">{formatCad(Math.round(totalCents / activeQty))}/{t("dc.each")}</p>
                   </div>
                 )}
               </dl>
@@ -393,7 +386,7 @@ export default function DieCutStickerOrderClient() {
               <>
                 <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
                 <p className="truncate text-[11px] text-gray-500">
-                  {formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("dc.each")} &times; {activeQty.toLocaleString()}
+                  {formatCad(Math.round(totalCents / activeQty))}/{t("dc.each")} &times; {activeQty.toLocaleString()}
                 </p>
               </>
             ) : (

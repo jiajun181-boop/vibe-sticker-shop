@@ -113,6 +113,7 @@ export default function MagneticSignOrderClient({ productImages = [] }) {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        material: thickness,
       }),
       signal: ac.signal,
     })
@@ -126,7 +127,7 @@ export default function MagneticSignOrderClient({ productImages = [] }) {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty]);
+  }, [size.w, size.h, activeQty, thickness]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);

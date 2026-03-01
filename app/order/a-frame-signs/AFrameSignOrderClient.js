@@ -93,6 +93,7 @@ export default function AFrameSignOrderClient({ productImages = [] }) {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        material,
         options: { doubleSided: sides === "double" },
       }),
       signal: ac.signal,
@@ -107,7 +108,7 @@ export default function AFrameSignOrderClient({ productImages = [] }) {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty, sides]);
+  }, [size.w, size.h, activeQty, sides, material]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);

@@ -133,6 +133,7 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        material: thicknessId,
         options: { doubleSided: sidesId === "double" },
       }),
       signal: ac.signal,
@@ -147,7 +148,7 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty, sidesId]);
+  }, [size.w, size.h, activeQty, sidesId, thicknessId]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);

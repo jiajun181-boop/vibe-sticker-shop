@@ -129,6 +129,7 @@ export default function YardSignOrderClient({ productImages = [] }) {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        material: materialId,
         options: { doubleSided: sidesId === "double" },
       }),
       signal: ac.signal,
@@ -143,7 +144,7 @@ export default function YardSignOrderClient({ productImages = [] }) {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty, sidesId]);
+  }, [size.w, size.h, activeQty, sidesId, materialId]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);

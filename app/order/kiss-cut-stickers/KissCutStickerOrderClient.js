@@ -18,9 +18,9 @@ const formatCad = (cents) =>
 // ─── Kiss-Cut Sticker Configuration ───
 
 const MATERIALS = [
-  { id: "white-vinyl", surcharge: 0, desc: "kc.mat.whiteVinylDesc" },
-  { id: "clear-vinyl", surcharge: 3, desc: "kc.mat.clearVinylDesc" },
-  { id: "holographic", surcharge: 8, desc: "kc.mat.holographicDesc" },
+  { id: "white-vinyl", desc: "kc.mat.whiteVinylDesc" },
+  { id: "clear-vinyl", desc: "kc.mat.clearVinylDesc" },
+  { id: "holographic", desc: "kc.mat.holographicDesc" },
 ];
 
 const SIZES = [
@@ -91,14 +91,14 @@ export default function KissCutStickerOrderClient() {
     fetch("/api/pricing/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug: "kiss-cut-stickers", quantity: activeQty, widthIn: size.w, heightIn: size.h }),
+      body: JSON.stringify({ slug: "kiss-cut-stickers", quantity: activeQty, widthIn: size.w, heightIn: size.h, material: materialId }),
       signal: ac.signal,
     })
       .then((r) => r.json().then((d) => ({ ok: r.ok, data: d })))
       .then(({ ok, data }) => { if (!ok) throw new Error(data.error || "Quote failed"); setQuoteData(data); })
       .catch((err) => { if (err.name === "AbortError") return; setQuoteError(err.message); })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty]);
+  }, [size.w, size.h, activeQty, materialId]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -109,11 +109,9 @@ export default function KissCutStickerOrderClient() {
   // ─── Pricing ───
 
   const subtotalCents = quoteData?.totalCents ?? 0;
-  const materialSurcharge = (MATERIALS.find((m) => m.id === materialId)?.surcharge ?? 0) * activeQty;
   const backingSurcharge = (BACKING_SHAPES.find((b) => b.id === backingId)?.surcharge ?? 0) * activeQty;
   const finishSurcharge = (FINISHES.find((f) => f.id === finishId)?.surcharge ?? 0) * activeQty;
-  const adjustedSubtotal = subtotalCents + materialSurcharge + backingSurcharge + finishSurcharge;
-  const totalCents = adjustedSubtotal;
+  const totalCents = subtotalCents + backingSurcharge + finishSurcharge;
 
   const requiresProof = uploadedFile != null;
   const canAddToCart = quoteData && !quoteLoading && activeQty > 0 && (!requiresProof || proofConfirmed);
@@ -124,7 +122,7 @@ export default function KissCutStickerOrderClient() {
       id: "kiss-cut-stickers",
       name: `${t("kc.title")} — ${size.tag}`,
       slug: "kiss-cut-stickers",
-      price: Math.round(adjustedSubtotal / activeQty),
+      price: Math.round(totalCents / activeQty),
       quantity: activeQty,
       options: {
         material: materialId,
@@ -214,9 +212,6 @@ export default function KissCutStickerOrderClient() {
                   <span className={`mt-0.5 block text-[11px] leading-tight ${materialId === mat.id ? "text-gray-500" : "text-gray-400"}`}>
                     {t(mat.desc)}
                   </span>
-                  {mat.surcharge > 0 && (
-                    <span className="mt-1 block text-[11px] font-medium text-amber-600">+{formatCad(mat.surcharge)}/ea</span>
-                  )}
                   {materialId === mat.id && (
                     <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gray-900" />
                   )}
@@ -352,17 +347,15 @@ export default function KissCutStickerOrderClient() {
             ) : quoteData ? (
               <dl className="space-y-2 text-sm">
                 <Row label={t("kc.basePrice")} value={formatCad(subtotalCents)} />
-                {materialSurcharge > 0 && <Row label={t(`kc.mat.${materialId}`)} value={`+ ${formatCad(materialSurcharge)}`} />}
                 {backingSurcharge > 0 && <Row label={t(`kc.backing.${backingId}`)} value={`+ ${formatCad(backingSurcharge)}`} />}
                 {finishSurcharge > 0 && <Row label={t(`kc.finish.${finishId}`)} value={`+ ${formatCad(finishSurcharge)}`} />}
-                <Row label={t("kc.subtotal")} value={formatCad(adjustedSubtotal)} />
                 <div className="flex justify-between border-t border-gray-100 pt-2">
                   <dt className="font-semibold text-gray-900">{t("kc.total")}</dt>
                   <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
                 </div>
                 {activeQty > 1 && (
                   <div className="pt-1">
-                    <p className="text-[11px] text-gray-400">{formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("kc.each")}</p>
+                    <p className="text-[11px] text-gray-400">{formatCad(Math.round(totalCents / activeQty))}/{t("kc.each")}</p>
                   </div>
                 )}
               </dl>
@@ -412,7 +405,7 @@ export default function KissCutStickerOrderClient() {
               <>
                 <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
                 <p className="truncate text-[11px] text-gray-500">
-                  {formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("kc.each")} &times; {activeQty.toLocaleString()}
+                  {formatCad(Math.round(totalCents / activeQty))}/{t("kc.each")} &times; {activeQty.toLocaleString()}
                 </p>
               </>
             ) : (

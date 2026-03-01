@@ -108,6 +108,7 @@ export default function AluminumSignOrderClient({ productImages = [] }) {
         quantity: activeQty,
         widthIn: size.w,
         heightIn: size.h,
+        material: thickness,
         options: { doubleSided: sides === "double" },
       }),
       signal: ac.signal,
@@ -122,7 +123,7 @@ export default function AluminumSignOrderClient({ productImages = [] }) {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty, sides]);
+  }, [size.w, size.h, activeQty, sides, thickness]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
