@@ -450,6 +450,61 @@ export default function AFrameSignOrderClient({ productImages = [] }) {
         </div>
       </div>
 
+      {/* ── Product Content ── */}
+      <div className="mt-16 space-y-12">
+        <section>
+          <h2 className="text-xl font-bold text-gray-900">About A-Frame Signs</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
+            Portable double-sided sidewalk signs, perfect for restaurants, retail stores, and real estate open houses. Our A-Frame signs feature convenient insert panels that slide in and out, making it easy to swap messages and promotions without purchasing a new sign. Printed with vivid, weather-resistant inks at La Lunar Printing in Toronto, these signs are built to grab attention on busy sidewalks and storefronts.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">Specifications</h2>
+          <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-gray-100">
+                {[
+                  ["Insert Material", "Coroplast (corrugated plastic), Aluminum, or PVC"],
+                  ["Available Sizes", '24" \u00d7 36" (Standard) and 24" \u00d7 48" (Tall)'],
+                  ["Frame Options", "Plastic folding frame (included) or upgraded metal frame"],
+                  ["Durability", "2\u20135 years outdoor use depending on material"],
+                  ["Turnaround", "1\u20132 business days for standard orders"],
+                ].map(([label, value]) => (
+                  <tr key={label}>
+                    <td className="whitespace-nowrap bg-gray-50 px-4 py-2.5 font-medium text-gray-700">{label}</td>
+                    <td className="px-4 py-2.5 text-gray-600">{value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">FAQ</h2>
+          <div className="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-200">
+            {[
+              { q: "How do I change the inserts on an A-Frame sign?", a: "Our A-Frame signs use a simple slide-in channel system. Just pull the existing insert panel out from the top or side of the frame and slide the new one in. No tools are required, and the swap takes only a few seconds." },
+              { q: "Can I use A-Frame signs indoors and outdoors?", a: "Yes, A-Frame signs work well in both settings. They are commonly used on sidewalks, patios, and parking lots outdoors, as well as in lobbies, trade show booths, and retail floors indoors. Coroplast and aluminum inserts are best for outdoor use." },
+              { q: "How wind-resistant are A-Frame signs?", a: "A-Frame signs are designed to withstand moderate wind conditions. The metal frame upgrade provides additional stability and weight. For high-wind locations, we recommend placing sandbags at the base or using the heavier aluminum insert panels for added rigidity." },
+              { q: "Are A-Frame signs double-sided?", a: "Yes, all of our A-Frame signs support double-sided inserts, giving you two faces of advertising space. You can choose single-sided if you prefer, or select double-sided to display your message on both sides of the frame at no extra charge." },
+              { q: "Can I order custom sizes?", a: "We offer two standard sizes: 24\" \u00d7 36\" and 24\" \u00d7 48\". If you need a custom size, please contact our team at La Lunar Printing and we will do our best to accommodate your request with a custom quote." },
+            ].map((faq, i) => (
+              <details key={i} className="group">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50">
+                  {faq.q}
+                  <svg className="h-4 w-4 shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </summary>
+                <p className="px-4 pb-3 text-sm leading-relaxed text-gray-600">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      </div>
+
       <div className="h-20 lg:hidden" />
     </main>
   );

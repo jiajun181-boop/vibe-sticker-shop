@@ -466,6 +466,62 @@ export default function PvcSignOrderClient({ productImages = [] }) {
         </div>
       </div>
 
+      {/* ── Product Content ── */}
+      <div className="mt-16 space-y-12">
+        <section>
+          <h2 className="text-xl font-bold text-gray-900">About PVC Signs</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
+            Rigid PVC (Sintra) signs combine indoor and outdoor versatility with a smooth surface for sharp, high-resolution printing. Lightweight yet durable, PVC signs are an excellent choice for retail signage, property management notices, wayfinding displays, and construction site boards. Printed with UV-cured inks at La Lunar Printing in Toronto, our PVC signs deliver professional results that withstand the elements.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">Specifications</h2>
+          <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-gray-100">
+                {[
+                  ["Material", "3mm, 6mm, or 10mm PVC Sintra board"],
+                  ["Printing", "UV direct print, full colour CMYK"],
+                  ["Durability", "3\u20135 years outdoor use"],
+                  ["Finish", "Smooth matte surface"],
+                  ["Mounting", "Grommets, pre-drilled holes, or adhesive velcro"],
+                  ["Weather Resistance", "Waterproof, UV-resistant, will not rot or corrode"],
+                ].map(([label, value]) => (
+                  <tr key={label}>
+                    <td className="whitespace-nowrap bg-gray-50 px-4 py-2.5 font-medium text-gray-700">{label}</td>
+                    <td className="px-4 py-2.5 text-gray-600">{value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">FAQ</h2>
+          <div className="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-200">
+            {[
+              { q: "What is the difference between PVC and Coroplast signs?", a: "PVC (Sintra) is a solid, rigid plastic board with a smooth surface that produces sharper print quality. Coroplast is a corrugated (fluted) plastic that is more flexible and lightweight. PVC is better for professional-looking signage and indoor displays, while Coroplast is more economical for high-volume outdoor applications like real estate and election signs." },
+              { q: "How does PVC compare to acrylic signs?", a: "PVC is opaque, lightweight, and more affordable than acrylic. Acrylic (plexiglass) is transparent or translucent, heavier, and offers a high-end glass-like appearance. PVC is ideal for printed signage, while acrylic is preferred for upscale reception signs, backlit displays, and situations where transparency is desired." },
+              { q: "How long do PVC signs last outdoors?", a: "Our PVC signs are rated for 3\u20135 years of outdoor use. The material itself is waterproof and will not rot, warp, or corrode. The UV-cured inks resist fading from sun exposure. For maximum longevity, we recommend the 6mm or 10mm thickness which provides extra rigidity against wind flex." },
+              { q: "Can I get custom shapes cut from PVC?", a: "Our standard production handles rectangular PVC signs with square corners. If you need custom contour cuts, rounded corners, or die-cut shapes, please contact our team at La Lunar Printing for a custom quote. Our CNC routing equipment can handle most custom shape requests." },
+              { q: "How do I clean and maintain PVC signs?", a: "PVC signs are very low-maintenance. Simply wipe them down with a damp cloth and mild soap when needed. Avoid abrasive cleaners or solvents, as they can damage the printed surface. For signs in high-traffic areas, periodic cleaning will keep the colours looking vibrant and professional." },
+            ].map((faq, i) => (
+              <details key={i} className="group">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50">
+                  {faq.q}
+                  <svg className="h-4 w-4 shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </summary>
+                <p className="px-4 pb-3 text-sm leading-relaxed text-gray-600">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      </div>
+
       <div className="h-20 lg:hidden" />
     </main>
   );

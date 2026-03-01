@@ -465,6 +465,63 @@ export default function MagneticSignOrderClient({ productImages = [] }) {
         </div>
       </div>
 
+      {/* ── Product Content ── */}
+      <div className="mt-16 space-y-12">
+        <section>
+          <h2 className="text-xl font-bold text-gray-900">About Magnetic Signs</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
+            Custom magnetic signs for vehicles, metal doors, and temporary signage. Made from premium flexible magnetic material with full-colour UV printing, our magnetic signs are easy to apply and remove without damaging paint or surfaces. Perfect for service vehicles, delivery vans, real estate agents, and any business that needs portable, reusable signage. Produced at La Lunar Printing in Toronto with vibrant, weather-resistant inks.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">Specifications</h2>
+          <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-gray-100">
+                {[
+                  ["Material", "30mil (standard) or 45mil (heavy-duty) flexible magnet"],
+                  ["Printing", "UV-resistant, full colour CMYK"],
+                  ["Durability", "3\u20135 years with proper care"],
+                  ["Corners", "Square or rounded"],
+                  ["Sizes", '12" \u00d7 18" up to 24" \u00d7 36"'],
+                  ["Adhesion", "Vehicle-safe magnetic grip; will not scratch paint"],
+                ].map(([label, value]) => (
+                  <tr key={label}>
+                    <td className="whitespace-nowrap bg-gray-50 px-4 py-2.5 font-medium text-gray-700">{label}</td>
+                    <td className="px-4 py-2.5 text-gray-600">{value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">FAQ</h2>
+          <div className="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-200">
+            {[
+              { q: "Will magnetic signs damage my vehicle's paint?", a: "No, our magnetic signs are designed to be vehicle-safe. The magnetic backing is smooth and will not scratch or damage automotive paint finishes. To avoid any issues, make sure the vehicle surface is clean and dry before applying, and remove the sign periodically to clean both surfaces and prevent moisture buildup." },
+              { q: "What thickness should I choose: 30mil or 45mil?", a: "Our 30mil magnet is suitable for standard use on flat or gently curved vehicle surfaces at city driving speeds. The 45mil heavy-duty option provides a stronger magnetic grip, making it better for highway driving, larger signs, and slightly curved surfaces like van panels. If you drive at highway speeds frequently, we recommend the 45mil." },
+              { q: "Can I use magnetic signs on any vehicle?", a: "Magnetic signs work on any steel or iron body panels. They will not adhere to aluminum, fibreglass, or plastic body panels. Most cars, trucks, and vans have steel doors and body panels. If you are unsure, test with a refrigerator magnet on the area where you plan to place your sign." },
+              { q: "How do I clean my magnetic signs?", a: "Wipe the printed side with a damp cloth and mild soap. Clean the magnetic backing with a dry cloth to remove any road grime or dust. Avoid using harsh chemicals, abrasive cleaners, or pressure washers directly on the printed surface, as these can damage the UV coating over time." },
+              { q: "Do magnetic signs hold up in rain and car washes?", a: "Our UV-printed magnetic signs are water-resistant and can handle rain without issue. However, we recommend removing them before going through an automatic car wash, as the brushes and high-pressure water can dislodge or damage the sign. Hand washing around the sign is perfectly fine." },
+              { q: "How should I store magnetic signs when not in use?", a: "Store your magnetic signs flat on a clean, dry surface. Do not fold or roll them tightly, as this can cause permanent curling or cracking of the printed surface. If stacking multiple signs, place a sheet of paper between them to prevent the printed surfaces from sticking together. Keep them away from extreme heat sources." },
+            ].map((faq, i) => (
+              <details key={i} className="group">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50">
+                  {faq.q}
+                  <svg className="h-4 w-4 shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </summary>
+                <p className="px-4 pb-3 text-sm leading-relaxed text-gray-600">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      </div>
+
       <div className="h-20 lg:hidden" />
     </main>
   );

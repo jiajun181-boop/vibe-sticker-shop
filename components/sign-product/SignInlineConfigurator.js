@@ -234,7 +234,16 @@ export default function SignInlineConfigurator({ signTypeId }) {
 
   const MATERIAL_HINTS = {
     "4mm-coroplast": "Lightweight, 1\u20132yr outdoor",
+    "6mm-coroplast": "Thicker, 2\u20133yr outdoor",
+    "10mm-coroplast": "Heavy-duty, max rigidity",
+    "3/16-foam": "Standard indoor boards",
+    "1/2-foam": "Extra thick, won\u2019t flex",
+    "gatorboard": "Heavy-duty, won\u2019t warp",
     "aluminum-040": "Rigid, premium, 5yr+",
+    "aluminum-063": "Extra-thick aluminum, 5yr+",
+    "acm-dibond": "Aluminum composite, ultra-flat",
+    "3mm-pvc": "Versatile indoor/outdoor",
+    "6mm-pvc": "Thick PVC, premium finish",
   };
 
   return (

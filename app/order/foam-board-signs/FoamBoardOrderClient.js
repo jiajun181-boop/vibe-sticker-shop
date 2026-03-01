@@ -532,6 +532,62 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
         </div>
       </div>
 
+      {/* ── Product Content ── */}
+      <div className="mt-16 space-y-12">
+        <section>
+          <h2 className="text-xl font-bold text-gray-900">About Foam Board Signs</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
+            Lightweight foam board prints for indoor events, presentations, trade shows, and retail displays. Our foam board signs feature a smooth matte finish with vibrant full-colour printing, making them an excellent choice for professional presentations, point-of-purchase displays, and event signage. Produced at La Lunar Printing in Toronto with precision cutting and high-resolution UV printing for crisp, eye-catching results.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">Specifications</h2>
+          <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-gray-100">
+                {[
+                  ["Material", "3mm, 5mm, or 10mm foam board (polystyrene core)"],
+                  ["Sizes", '8.5" \u00d7 11" up to 36" \u00d7 48"'],
+                  ["Finish", "Smooth matte surface"],
+                  ["Mounting", "Easel back, adhesive velcro strips, or none"],
+                  ["Turnaround", "Same-day production available for standard sizes"],
+                  ["Recommended Use", "Indoor use; not recommended for prolonged outdoor exposure"],
+                ].map(([label, value]) => (
+                  <tr key={label}>
+                    <td className="whitespace-nowrap bg-gray-50 px-4 py-2.5 font-medium text-gray-700">{label}</td>
+                    <td className="px-4 py-2.5 text-gray-600">{value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">FAQ</h2>
+          <div className="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-200">
+            {[
+              { q: "Can I use foam board signs outdoors?", a: "Foam board signs are designed primarily for indoor use. While they can be used outdoors for short-duration events (a few hours), extended exposure to rain, humidity, or direct sunlight can cause warping and deterioration. For outdoor signage, we recommend Coroplast, aluminum, or PVC signs instead." },
+              { q: "How do I mount a foam board sign?", a: "We offer easel backs that attach to the rear of the board for freestanding tabletop display, as well as adhesive velcro strips for wall mounting. You can also use Command strips, double-sided tape, or lean the board on a stand. For heavier 10mm boards, we recommend velcro or mechanical fasteners." },
+              { q: "Do you offer an easel back option?", a: "Yes, we offer a self-adhesive cardboard easel back that attaches to the rear of the foam board. This is perfect for tabletop presentations, point-of-sale displays, and event signage where you need the sign to stand on its own without any additional hardware." },
+              { q: "What is the largest foam board size available?", a: "Our largest standard foam board size is 36\" \u00d7 48\". This is ideal for trade show displays, large presentation boards, and retail signage. If you need something larger, please contact our team for a custom quote as we may be able to accommodate oversize requests." },
+              { q: "What is the difference between foam board and Gatorboard?", a: "Standard foam board has a polystyrene foam core with paper facings, making it lightweight and affordable but more prone to denting. Gatorboard uses a denser wood-fibre core with stronger facings, resulting in a more rigid and durable board. For heavy-duty applications, our 10mm foam board provides extra rigidity at a lower cost than Gatorboard." },
+            ].map((faq, i) => (
+              <details key={i} className="group">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50">
+                  {faq.q}
+                  <svg className="h-4 w-4 shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </summary>
+                <p className="px-4 pb-3 text-sm leading-relaxed text-gray-600">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      </div>
+
       <div className="h-20 lg:hidden" />
     </main>
   );

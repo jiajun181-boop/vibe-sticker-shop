@@ -500,6 +500,67 @@ export default function YardSignOrderClient({ productImages = [] }) {
         </div>
       </div>
 
+      {/* ── Product Content ── */}
+      <div className="mt-16 space-y-12">
+        <section>
+          <h2 className="text-xl font-bold text-gray-900">About Custom Yard Signs</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-gray-600">
+            Our custom yard signs are printed on durable corrugated plastic (Coroplast) using
+            UV-resistant inks for vibrant, weather-resistant signage. Perfect for real estate,
+            elections, events, and business promotions. Each sign is precision-cut and ready for
+            outdoor use with H-wire stakes or step stakes.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">Specifications</h2>
+          <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-gray-100">
+                {[
+                  ["Material", "Corrugated plastic (Coroplast) — 4mm, 6mm, or 10mm"],
+                  ["Printing", "Full colour CMYK, UV-resistant latex inks"],
+                  ["Durability", "1–3 years outdoor depending on thickness"],
+                  ["Sizes", '12×18", 18×24", 24×36", 36×48" — custom sizes available'],
+                  ["Finish", "Matte, weather-resistant surface"],
+                  ["Turnaround", "Same day production available (order before 12 PM)"],
+                  ["Hardware", "H-wire stakes and step stakes sold separately"],
+                ].map(([label, value]) => (
+                  <tr key={label}>
+                    <td className="whitespace-nowrap bg-gray-50 px-4 py-2.5 font-medium text-gray-700">{label}</td>
+                    <td className="px-4 py-2.5 text-gray-600">{value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-gray-900">FAQ</h2>
+          <div className="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-200">
+            {[
+              { q: "How long do yard signs last outdoors?", a: "4mm Coroplast signs typically last 1–2 years outdoors. For longer-lasting signs, choose 6mm or 10mm thickness. All our signs use UV-resistant inks that resist fading." },
+              { q: "What size yard sign should I choose?", a: "18×24\" is the most popular size for real estate and election signs. 12×18\" works well for directional arrows and smaller yard signs. 24×36\" and larger are ideal for high-visibility locations." },
+              { q: "How do I install yard signs?", a: "Simply slide the sign onto H-wire stakes (sold separately) and push the stakes into the ground. No tools required. For harder ground, use step stakes which have a flat base you can step on." },
+              { q: "Can I print on both sides?", a: "Yes! Double-sided printing is available for all yard sign sizes. Both sides are printed in full colour with UV-resistant inks." },
+              { q: "Do you offer same-day production?", a: "Yes, orders placed before 12 PM can be produced same day. Rush orders are available for pickup at our Scarborough location or next-day GTA delivery." },
+              { q: "What file format should my artwork be?", a: "We accept PDF, AI, PSD, PNG, and JPG files. For best results, provide a high-resolution PDF with 0.125\" bleed on all sides. We offer a free digital proof before production." },
+            ].map((faq, i) => (
+              <details key={i} className="group">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50">
+                  {faq.q}
+                  <svg className="h-4 w-4 shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </summary>
+                <p className="px-4 pb-3 text-sm leading-relaxed text-gray-600">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      </div>
+
       <div className="h-20 lg:hidden" />
     </main>
   );
