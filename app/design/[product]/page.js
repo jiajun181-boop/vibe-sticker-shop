@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { DesignStudio } from "@/components/design-studio";
 import { getProductSpec } from "@/lib/design-studio/product-configs";
@@ -10,27 +11,35 @@ export default function DesignPage() {
 
   const slug = product || "business-cards";
 
-  // Parse URL params for custom dimensions / cart context
-  const overrides = {
-    width: searchParams.get("width"),
-    height: searchParams.get("height"),
-    sides: searchParams.get("sides"),
-  };
+  // Memoize productSpec to prevent infinite re-render loops
+  const widthParam = searchParams.get("width");
+  const heightParam = searchParams.get("height");
+  const sidesParam = searchParams.get("sides");
 
-  const productSpec = getProductSpec(slug, overrides);
+  const productSpec = useMemo(() => {
+    return getProductSpec(slug, {
+      width: widthParam,
+      height: heightParam,
+      sides: sidesParam,
+    });
+  }, [slug, widthParam, heightParam, sidesParam]);
 
-  // Build cart item context from URL params
-  const cartItemContext = {
+  // Memoize cart context
+  const nameParam = searchParams.get("name");
+  const priceParam = searchParams.get("price");
+  const qtyParam = searchParams.get("qty");
+
+  const cartItemContext = useMemo(() => ({
     id: slug,
     slug,
-    name: searchParams.get("name") || productSpec?.label || slug,
-    price: parseInt(searchParams.get("price") || "0", 10), // cents
-    qty: parseInt(searchParams.get("qty") || "1", 10),
+    name: nameParam || productSpec?.label || slug,
+    price: parseInt(priceParam || "0", 10),
+    qty: parseInt(qtyParam || "1", 10),
     options: {
       widthIn: productSpec?.widthIn,
       heightIn: productSpec?.heightIn,
     },
-  };
+  }), [slug, nameParam, priceParam, qtyParam, productSpec]);
 
   if (!productSpec) {
     return (
@@ -40,7 +49,7 @@ export default function DesignPage() {
             Product Not Found
           </h1>
           <p className="mt-2 text-sm text-gray-500">
-            The product "{slug}" is not available for online design.
+            The product &ldquo;{slug}&rdquo; is not available for online design.
           </p>
         </div>
       </div>

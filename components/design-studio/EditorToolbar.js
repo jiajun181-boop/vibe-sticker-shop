@@ -3,15 +3,14 @@
 import { useEditorStore } from "@/lib/design-studio/editor-store";
 
 export default function EditorToolbar({ productSpec, onApprove }) {
-  const {
-    undoStack,
-    redoStack,
-    undo,
-    redo,
-    zoom,
-    showGuides,
-    toggleGuides,
-  } = useEditorStore();
+  // Use individual selectors to prevent unnecessary re-renders
+  const undoStack = useEditorStore((s) => s.undoStack);
+  const redoStack = useEditorStore((s) => s.redoStack);
+  const undo = useEditorStore((s) => s.undo);
+  const redo = useEditorStore((s) => s.redo);
+  const zoom = useEditorStore((s) => s.zoom);
+  const showGuides = useEditorStore((s) => s.showGuides);
+  const toggleGuides = useEditorStore((s) => s.toggleGuides);
 
   return (
     <div className="flex h-12 items-center justify-between border-b border-gray-200 bg-white px-4">

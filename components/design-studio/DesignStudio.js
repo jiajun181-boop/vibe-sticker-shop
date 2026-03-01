@@ -18,7 +18,7 @@ import ContextMenu from "./ContextMenu";
  *
  * Props:
  *  - productSlug: string — product identifier
- *  - productSpec: object — from getProductSpec()
+ *  - productSpec: object — from getProductSpec() (memoized by parent)
  *  - cartItemContext: { id, slug, name, price, qty, options } — for cart integration
  */
 export default function DesignStudio({
@@ -29,23 +29,29 @@ export default function DesignStudio({
   const [showApproval, setShowApproval] = useState(false);
   const [mobilePanel, setMobilePanel] = useState(null); // null | 'tools' | 'properties'
   const canvasElRef = useRef(null);
+  const fontsPreloaded = useRef(false);
 
-  const { setProductContext, resetEditor } = useEditorStore();
   const { fabricRef } = useFabricCanvas(canvasElRef, productSpec);
 
-  // Set product context on mount + preload fonts
+  // Set product context on mount — use slug as stable dependency
   useEffect(() => {
-    if (productSlug && productSpec) {
-      const currentSlug = useEditorStore.getState().productSlug;
-      // Reset if switching products
-      if (currentSlug && currentSlug !== productSlug) {
-        resetEditor();
-      }
-      setProductContext(productSlug, productSpec);
+    if (!productSlug || !productSpec) return;
+
+    const store = useEditorStore.getState();
+    // Reset if switching products
+    if (store.productSlug && store.productSlug !== productSlug) {
+      store.resetEditor();
     }
-    // Preload all Google Fonts for instant preview
-    preloadAllFonts();
-  }, [productSlug, productSpec, setProductContext, resetEditor]);
+    store.setProductContext(productSlug, productSpec);
+
+    // Preload fonts once
+    if (!fontsPreloaded.current) {
+      fontsPreloaded.current = true;
+      preloadAllFonts();
+    }
+    // Only re-run when slug changes (productSpec is memoized by parent)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productSlug]);
 
   // Listen for undo/redo restore events from toolbar
   useEffect(() => {

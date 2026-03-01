@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useCallback, useState } from "react";
+import { useRef, useEffect, useCallback, useState, useMemo } from "react";
 import { getCanvasDimensions } from "@/lib/design-studio/product-configs";
 import { useEditorStore } from "@/lib/design-studio/editor-store";
 
@@ -18,10 +18,16 @@ export default function EditorCanvas({ productSpec, canvasElRef }) {
   const containerRef = useRef(null);
   const hRulerRef = useRef(null);
   const vRulerRef = useRef(null);
-  const { zoom, setZoom } = useEditorStore();
+  // Use individual selectors to avoid unnecessary re-renders
+  const zoom = useEditorStore((s) => s.zoom);
+  const setZoom = useEditorStore((s) => s.setZoom);
   const [containerSize, setContainerSize] = useState({ w: 800, h: 600 });
 
-  const dims = productSpec ? getCanvasDimensions(productSpec) : null;
+  // Memoize dims to prevent recalculation on every render
+  const dims = useMemo(
+    () => (productSpec ? getCanvasDimensions(productSpec) : null),
+    [productSpec]
+  );
 
   // Observe container size for responsive scaling
   useEffect(() => {
@@ -43,6 +49,7 @@ export default function EditorCanvas({ productSpec, canvasElRef }) {
   }, []);
 
   // Auto-fit zoom when container or canvas size changes
+  const prevZoomRef = useRef(null);
   useEffect(() => {
     if (!dims) return;
     const padding = 60;
@@ -50,8 +57,13 @@ export default function EditorCanvas({ productSpec, canvasElRef }) {
     const availH = containerSize.h - padding - RULER_SIZE;
     const scaleX = availW / dims.width;
     const scaleY = availH / dims.height;
-    const fitZoom = Math.min(scaleX, scaleY, 1);
-    setZoom(Math.max(0.1, fitZoom));
+    const fitZoom = Math.round(Math.min(scaleX, scaleY, 1) * 1000) / 1000;
+    const newZoom = Math.max(0.1, fitZoom);
+    // Only update if value actually changed to avoid re-render loops
+    if (prevZoomRef.current !== newZoom) {
+      prevZoomRef.current = newZoom;
+      setZoom(newZoom);
+    }
   }, [containerSize, dims, setZoom]);
 
   // Draw rulers whenever zoom or dimensions change
