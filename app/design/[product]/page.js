@@ -1,25 +1,57 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import DesignEditor from "@/components/editor/DesignEditor";
+import { useParams, useSearchParams } from "next/navigation";
+import { DesignStudio } from "@/components/design-studio";
+import { getProductSpec } from "@/lib/design-studio/product-configs";
 
 export default function DesignPage() {
   const { product } = useParams();
+  const searchParams = useSearchParams();
 
-  const productLabel = (product || "business-cards")
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const slug = product || "business-cards";
+
+  // Parse URL params for custom dimensions / cart context
+  const overrides = {
+    width: searchParams.get("width"),
+    height: searchParams.get("height"),
+    sides: searchParams.get("sides"),
+  };
+
+  const productSpec = getProductSpec(slug, overrides);
+
+  // Build cart item context from URL params
+  const cartItemContext = {
+    id: slug,
+    slug,
+    name: searchParams.get("name") || productSpec?.label || slug,
+    price: parseInt(searchParams.get("price") || "0", 10), // cents
+    qty: parseInt(searchParams.get("qty") || "1", 10),
+    options: {
+      widthIn: productSpec?.widthIn,
+      heightIn: productSpec?.heightIn,
+    },
+  };
+
+  if (!productSpec) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-xl font-bold text-gray-800">
+            Product Not Found
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            The product "{slug}" is not available for online design.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Design Your {productLabel}</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Choose a template, customize text and colors, then export a print-ready file.
-        </p>
-      </div>
-
-      <DesignEditor product={product || "business-cards"} />
-    </div>
+    <DesignStudio
+      productSlug={slug}
+      productSpec={productSpec}
+      cartItemContext={cartItemContext}
+    />
   );
 }

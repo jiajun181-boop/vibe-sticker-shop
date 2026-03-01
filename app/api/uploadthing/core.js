@@ -45,4 +45,13 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ metadata }) => {
       return { uploadedBy: metadata?.uploadedBy };
     }),
+
+  designSnapshotUploader: f({
+    image: { maxFileSize: "16MB", maxFileCount: 1 },
+    pdf: { maxFileSize: "32MB", maxFileCount: 1 },
+  })
+    .middleware(requireAuthenticatedUpload)
+    .onUploadComplete(async ({ metadata }) => {
+      return { uploadedBy: metadata?.uploadedBy };
+    }),
 };

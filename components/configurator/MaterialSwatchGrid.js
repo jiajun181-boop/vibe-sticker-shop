@@ -250,19 +250,22 @@ function TexturePattern({ pattern, baseColor, uid, width = "100%", height = 56 }
       );
     }
 
-    // Classic transparency checkerboard
+    // Clear / transparent material — glass-like gradient instead of raw checkerboard
     case "checkerboard": {
-      const patId = `checker-${uid}`;
+      const gradId = `clear-${uid}`;
       return (
         <svg width={width} height={height} className="block w-full" preserveAspectRatio="none" aria-hidden="true">
-          <rect width="100%" height="100%" fill="#ffffff" />
           <defs>
-            <pattern id={patId} x="0" y="0" width="12" height="12" patternUnits="userSpaceOnUse">
-              <rect x="0" y="0" width="6" height="6" fill="#e0e0e0" />
-              <rect x="6" y="6" width="6" height="6" fill="#e0e0e0" />
-            </pattern>
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f0f4f8" />
+              <stop offset="30%" stopColor="#e4ecf4" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#e8eff6" />
+              <stop offset="100%" stopColor="#f0f4f8" />
+            </linearGradient>
           </defs>
-          <rect width="100%" height="100%" fill={`url(#${patId})`} />
+          <rect width="100%" height="100%" fill={`url(#${gradId})`} />
+          <rect width="100%" height="100%" fill="#ffffff" fillOpacity="0.3" />
         </svg>
       );
     }

@@ -172,12 +172,33 @@ export async function handleCheckoutCompleted(
           version: 1,
           imageUrl: proofImageUrl,
           fileName: meta?.fileName ? `proof-${meta.fileName}` : "auto-proof.png",
-          notes: `Customer-confirmed proof — auto-generated contour with ${meta?.bleedMm || 3}mm bleed`,
+          notes: meta?.designStudio
+            ? "Customer-approved design from Design Studio"
+            : `Customer-confirmed proof — auto-generated contour with ${meta?.bleedMm || 3}mm bleed`,
           status: "approved",
           reviewedAt: new Date(),
           uploadedBy: "customer",
         },
       });
+
+      // For Design Studio items, also create an OrderFile with the print-ready PDF
+      if (meta?.designStudio && meta?.artworkPdfUrl) {
+        await tx.orderFile.create({
+          data: {
+            orderId: newOrder.id,
+            fileUrl: meta.artworkPdfUrl,
+            storageKey: meta.artworkKey || null,
+            fileName: `design-studio-${item.name || "artwork"}.pdf`,
+            mimeType: "application/pdf",
+            fileExt: "pdf",
+            widthIn: typeof meta.widthIn === "number" ? meta.widthIn : null,
+            heightIn: typeof meta.heightIn === "number" ? meta.heightIn : null,
+            hasBleed: true,
+            bleedIn: 0.125,
+            preflightStatus: "approved",
+          },
+        });
+      }
     }
 
     // Create system note
