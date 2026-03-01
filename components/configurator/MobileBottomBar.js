@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import EmailQuotePopover from "./EmailQuotePopover";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -22,6 +23,10 @@ const formatCad = (cents) =>
  *  - t                  — translation function
  *  - quoteOnly          — show "Request Quote" instead
  *  - onRequestQuote     — handler for quote-only
+ *  - productName        — product display name for email quote
+ *  - summaryLines       — [{ label, value }] for email quote
+ *  - unitCents          — unit price for email quote
+ *  - subtotalCents      — subtotal for email quote
  */
 export default function MobileBottomBar({
   quoteLoading,
@@ -39,6 +44,10 @@ export default function MobileBottomBar({
   onRequestQuote,
   quoteError,
   onRetryPrice,
+  productName,
+  summaryLines,
+  unitCents = 0,
+  subtotalCents = 0,
 }) {
   // ─── Add to Cart Animation ───
   const [atcState, setAtcState] = useState("idle");
@@ -165,6 +174,19 @@ export default function MobileBottomBar({
             </>
           )}
         </div>
+        {/* Email quote (mobile) */}
+        {productName && unitCents > 0 && hasQuote && !quoteOnly && (
+          <div className="mx-auto mt-2 max-w-lg">
+            <EmailQuotePopover
+              productName={productName}
+              summaryLines={summaryLines || []}
+              unitCents={unitCents}
+              subtotalCents={subtotalCents}
+              quantity={quantity}
+              t={t}
+            />
+          </div>
+        )}
         {/* Trust signals */}
         <div className="mx-auto mt-2 flex max-w-lg items-center justify-center gap-3 text-[10px] text-gray-400">
           <span className="inline-flex items-center gap-0.5">
