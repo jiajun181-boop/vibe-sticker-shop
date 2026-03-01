@@ -7,6 +7,8 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { ProofPreview } from "@/components/configurator";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const DEBOUNCE_MS = 300;
 
@@ -184,7 +186,7 @@ export default function KissCutStickerOrderClient() {
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <Breadcrumbs items={[
         { label: t("nav.shop"), href: "/shop" },
-        { label: t("kc.breadcrumb"), href: "/shop/stickers-labels-decals/kiss-cut-stickers" },
+        { label: t("kc.breadcrumb"), href: "/shop/stickers-labels-decals" },
         { label: t("kc.order") },
       ]} />
 
@@ -383,8 +385,8 @@ export default function KissCutStickerOrderClient() {
                 type="button"
                 onClick={handleBuyNow}
                 disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
-                  canAddToCart && !buyNowLoading ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed border-gray-200 text-gray-400"
+                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
+                  canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"
                 }`}
               >
                 {buyNowLoading ? t("kc.processing") : t("kc.buyNow")}
@@ -431,8 +433,8 @@ export default function KissCutStickerOrderClient() {
             type="button"
             onClick={handleBuyNow}
             disabled={!canAddToCart || buyNowLoading}
-            className={`shrink-0 rounded-full border-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
-              canAddToCart && !buyNowLoading ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed border-gray-200 text-gray-400"
+            className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
+              canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"
             }`}
           >
             {buyNowLoading ? "..." : t("kc.buyNow")}
@@ -440,6 +442,17 @@ export default function KissCutStickerOrderClient() {
         </div>
       </div>
       <div className="h-20 lg:hidden" />
+
+      {/* ── FAQ ── */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs("kiss-cut-stickers");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
     </main>
   );
 }

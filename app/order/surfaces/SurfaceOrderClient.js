@@ -15,6 +15,7 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
+  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -445,6 +446,18 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
               )}
             </ConfigStep>
 
+            {/* Design template download */}
+            {widthIn > 0 && heightIn > 0 && (
+              <TemplateDownloadButton
+                slug={typeId}
+                width={widthIn}
+                height={heightIn}
+                product={t(`surface.type.${typeId}`)}
+                dpi={300}
+                t={t}
+              />
+            )}
+
             {/* Step 3: Material */}
             <ConfigStep number={stepNum++} title={t("surface.material")} subtitle={t("surface.materialSubtitle")}>
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
@@ -642,6 +655,7 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
             subtotalCents={quote.subtotalCents}
             taxCents={quote.taxCents}
             totalCents={quote.subtotalCents}
+            quantity={effectiveQty}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
@@ -649,6 +663,7 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
             extraRows={extraRows}
             badges={[t("surface.badgeDurable"), t("surface.badgeShipping")]}
             t={t}
+            productName={t(`surface.type.${typeId}`)}
           />
         </div>
       </div>
@@ -657,12 +672,17 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
         totalCents={quote.subtotalCents}
+        quantity={effectiveQty}
         summaryText={quote.quoteData ? `${formatCad(quote.unitCents)}/ea × ${effectiveQty}` : null}
         canAddToCart={canAddToCart}
         onAddToCart={handleAddToCart}
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
+        productName={t(`surface.type.${typeId}`)}
+        summaryLines={summaryLines}
+        unitCents={quote.unitCents}
+        subtotalCents={quote.subtotalCents}
       />
     </main>
   );

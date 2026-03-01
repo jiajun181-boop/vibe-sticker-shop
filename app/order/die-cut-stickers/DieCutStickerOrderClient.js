@@ -7,6 +7,8 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { ProofPreview } from "@/components/configurator";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const DEBOUNCE_MS = 300;
 
@@ -178,7 +180,7 @@ export default function DieCutStickerOrderClient() {
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <Breadcrumbs items={[
         { label: t("nav.shop"), href: "/shop" },
-        { label: t("dc.breadcrumb"), href: "/shop/stickers-labels-decals/die-cut-stickers" },
+        { label: t("dc.breadcrumb"), href: "/shop/stickers-labels-decals" },
         { label: t("dc.order") },
       ]} />
 
@@ -364,8 +366,8 @@ export default function DieCutStickerOrderClient() {
                 type="button"
                 onClick={handleBuyNow}
                 disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
-                  canAddToCart && !buyNowLoading ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed border-gray-200 text-gray-400"
+                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
+                  canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"
                 }`}
               >
                 {buyNowLoading ? t("dc.processing") : t("dc.buyNow")}
@@ -412,8 +414,8 @@ export default function DieCutStickerOrderClient() {
             type="button"
             onClick={handleBuyNow}
             disabled={!canAddToCart || buyNowLoading}
-            className={`shrink-0 rounded-full border-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
-              canAddToCart && !buyNowLoading ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed border-gray-200 text-gray-400"
+            className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
+              canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"
             }`}
           >
             {buyNowLoading ? "..." : t("dc.buyNow")}
@@ -421,6 +423,17 @@ export default function DieCutStickerOrderClient() {
         </div>
       </div>
       <div className="h-20 lg:hidden" />
+
+      {/* ── FAQ ── */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs("die-cut-stickers");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
     </main>
   );
 }

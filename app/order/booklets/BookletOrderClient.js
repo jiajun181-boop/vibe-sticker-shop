@@ -9,6 +9,7 @@ import {
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
+  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -263,6 +264,18 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
               </div>
             </ConfigStep>
 
+            {/* Design template download */}
+            <TemplateDownloadButton
+              slug={binding.slug}
+              width={bindingId === "saddle-stitch" ? size.w * 2 : size.w}
+              height={size.h}
+              product={`${t(`booklet.binding.${bindingId}`)} Booklet — ${size.label}`}
+              dpi={300}
+              folds={bindingId === "saddle-stitch" ? 1 : 0}
+              foldType="bifold"
+              t={t}
+            />
+
             {/* Page Count */}
             <ConfigStep number={3} title={t("booklet.pageCount")}>
               <div className="flex flex-wrap gap-2">
@@ -448,6 +461,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
             subtotalCents={quote.subtotalCents}
             taxCents={quote.taxCents}
             totalCents={quote.subtotalCents}
+            quantity={activeQty}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
@@ -455,6 +469,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
             extraRows={extraRows}
             badges={[t("booklet.badge.fullColor"), t("booklet.badge.shipping"), t("booklet.badge.proof")]}
             t={t}
+            productName={`${t(`booklet.binding.${bindingId}`)} Booklet`}
           />
         </div>
       </div>
@@ -474,12 +489,17 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
         totalCents={quote.subtotalCents}
+        quantity={activeQty}
         summaryText={quote.quoteData ? `${activeQty.toLocaleString()} × ${pageCount}pp ${t(`booklet.binding.${bindingId}`)}` : null}
         canAddToCart={canAddToCart}
         onAddToCart={handleAddToCart}
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
+        productName={`${t(`booklet.binding.${bindingId}`)} Booklet`}
+        summaryLines={summaryLines}
+        unitCents={quote.unitCents}
+        subtotalCents={quote.subtotalCents}
       />
     </main>
   );

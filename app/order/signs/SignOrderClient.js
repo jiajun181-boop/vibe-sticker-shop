@@ -14,6 +14,7 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
+  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -345,6 +346,18 @@ export default function SignOrderClient({ defaultType, productImages }) {
               )}
             </ConfigStep>
 
+            {/* Design template download */}
+            {widthIn > 0 && heightIn > 0 && (
+              <TemplateDownloadButton
+                slug={typeId}
+                width={widthIn}
+                height={heightIn}
+                product={t(`sign.type.${typeId}`)}
+                dpi={300}
+                t={t}
+              />
+            )}
+
             {/* Step: Double-sided toggle (if applicable) */}
             {signType.doubleSided !== undefined && (
               <ConfigStep number={stepNum++} title={t("sign.sides")} subtitle={t("sign.sidesSubtitle")}>
@@ -464,6 +477,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
             subtotalCents={quote.subtotalCents}
             taxCents={quote.taxCents}
             totalCents={quote.subtotalCents}
+            quantity={activeQty}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
@@ -471,6 +485,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
             extraRows={extraRows}
             badges={[t("sign.badgeWeatherproof"), t("sign.badgeShipping")]}
             t={t}
+            productName={t(`sign.type.${typeId}`)}
           />
         </div>
       </div>
@@ -479,12 +494,17 @@ export default function SignOrderClient({ defaultType, productImages }) {
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
         totalCents={quote.subtotalCents}
+        quantity={activeQty}
         summaryText={quote.quoteData ? `${formatCad(quote.unitCents)}/ea × ${activeQty}` : null}
         canAddToCart={canAddToCart}
         onAddToCart={handleAddToCart}
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
+        productName={t(`sign.type.${typeId}`)}
+        summaryLines={summaryLines}
+        unitCents={quote.unitCents}
+        subtotalCents={quote.subtotalCents}
       />
     </main>
   );

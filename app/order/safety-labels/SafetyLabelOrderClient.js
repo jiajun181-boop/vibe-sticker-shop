@@ -10,6 +10,7 @@ import ImageGallery from "@/components/product/ImageGallery";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { CATEGORIES, SIZES, MATERIALS, ADHESIVES, QUANTITIES, SLUG_MAP } from "@/lib/safety-label-order-config";
+import TemplateDownloadButton from "@/components/configurator/TemplateDownloadButton";
 
 const DEBOUNCE_MS = 300;
 
@@ -266,6 +267,19 @@ export default function SafetyLabelOrderClient({ productImages = [] }) {
               ))}
             </div>
           </Section>
+
+          {/* Template Download */}
+          {size && (
+            <TemplateDownloadButton
+              width={size.w}
+              height={size.h}
+              bleed={0.125}
+              unit="in"
+              dpi={300}
+              product={t(`sl.category.${category}`)}
+              slug={SLUG_MAP[category] || "safety-labels"}
+            />
+          )}
 
           {/* Material */}
           <Section label={t("sl.material.label")}>

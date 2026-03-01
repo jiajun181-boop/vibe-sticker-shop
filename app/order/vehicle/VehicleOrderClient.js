@@ -16,6 +16,7 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
+  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -373,6 +374,18 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
               </ConfigStep>
             )}
 
+            {/* Design template download (non-quote-only products) */}
+            {!isQuoteOnly && widthIn > 0 && heightIn > 0 && (
+              <TemplateDownloadButton
+                slug={typeId}
+                width={widthIn}
+                height={heightIn}
+                product={t(`vehicle.type.${typeId}`)}
+                dpi={300}
+                t={t}
+              />
+            )}
+
             {/* Quantity */}
             <ConfigStep number={stepNum++} title={t("vehicle.quantity")} subtitle={t("vehicle.quantitySubtitle")}>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -434,6 +447,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
             subtotalCents={quote.subtotalCents}
             taxCents={quote.taxCents}
             totalCents={quote.subtotalCents}
+            quantity={activeQty}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
@@ -442,6 +456,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
             t={t}
             quoteOnly={isQuoteOnly}
             onRequestQuote={handleRequestQuote}
+            productName={t(`vehicle.type.${typeId}`)}
           />
         </div>
       </div>
@@ -460,6 +475,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
         quoteLoading={quote.quoteLoading}
         hasQuote={isQuoteOnly || !!quote.quoteData}
         totalCents={quote.subtotalCents}
+        quantity={activeQty}
         summaryText={
           isQuoteOnly
             ? "Custom pricing — request a quote"
@@ -474,6 +490,10 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
         t={t}
         quoteOnly={isQuoteOnly}
         onRequestQuote={handleRequestQuote}
+        productName={t(`vehicle.type.${typeId}`)}
+        summaryLines={summaryLines}
+        unitCents={quote.unitCents}
+        subtotalCents={quote.subtotalCents}
       />
     </main>
   );

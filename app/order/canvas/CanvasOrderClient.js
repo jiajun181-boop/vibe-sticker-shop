@@ -740,6 +740,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
               subtotalCents={quote.subtotalCents}
               taxCents={quote.taxCents}
               totalCents={quote.subtotalCents}
+              quantity={activeQty}
               canAddToCart={canAddToCart}
               onAddToCart={handleAddToCart}
               onBuyNow={handleBuyNow}
@@ -747,6 +748,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
               extraRows={extraRows}
               badges={[t("canvas.badgeInk"), t("canvas.badgeShipping")]}
               t={t}
+              productName={t(`canvas.type.${typeId}`)}
             />
           )}
         </div>
@@ -777,6 +779,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
           quoteLoading={quote.quoteLoading}
           hasQuote={!!quote.quoteData}
           totalCents={quote.subtotalCents}
+          quantity={activeQty}
           summaryText={
             quote.quoteData
               ? `${formatCad(quote.unitCents)}/ea × ${activeQty}`
@@ -787,6 +790,10 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
           onBuyNow={handleBuyNow}
           buyNowLoading={buyNowLoading}
           t={t}
+          productName={t(`canvas.type.${typeId}`)}
+          summaryLines={summaryLines}
+          unitCents={quote.unitCents}
+          subtotalCents={quote.subtotalCents}
         />
       )}
     </main>

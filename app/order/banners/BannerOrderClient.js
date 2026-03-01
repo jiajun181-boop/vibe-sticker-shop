@@ -15,6 +15,7 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
+  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -339,6 +340,18 @@ export default function BannerOrderClient({ defaultType, productImages }) {
               )}
             </ConfigStep>
 
+            {/* Design template download */}
+            {widthIn > 0 && heightIn > 0 && (
+              <TemplateDownloadButton
+                slug={typeId}
+                width={widthIn}
+                height={heightIn}
+                product={t(`banner.type.${typeId}`)}
+                dpi={150}
+                t={t}
+              />
+            )}
+
             {/* Step: Material */}
             {bannerType.materials.length > 1 && (
               <ConfigStep number={++stepNum} title={t("banner.material")} subtitle={t("banner.materialSubtitle")}>
@@ -470,6 +483,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
             subtotalCents={quote.subtotalCents}
             taxCents={quote.taxCents}
             totalCents={quote.subtotalCents}
+            quantity={activeQty}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
@@ -477,6 +491,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
             extraRows={extraRows}
             badges={[t("banner.badgeWeatherproof"), t("banner.badgeShipping")]}
             t={t}
+            productName={t(`banner.type.${typeId}`)}
           />
         </div>
       </div>
@@ -485,12 +500,17 @@ export default function BannerOrderClient({ defaultType, productImages }) {
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
         totalCents={quote.subtotalCents}
+        quantity={activeQty}
         summaryText={quote.quoteData ? `${formatCad(quote.unitCents)}/ea × ${activeQty}` : null}
         canAddToCart={canAddToCart}
         onAddToCart={handleAddToCart}
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
+        productName={t(`banner.type.${typeId}`)}
+        summaryLines={summaryLines}
+        unitCents={quote.unitCents}
+        subtotalCents={quote.subtotalCents}
       />
     </main>
   );

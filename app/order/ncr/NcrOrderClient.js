@@ -9,6 +9,7 @@ import {
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
+  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -240,6 +241,16 @@ export default function NcrOrderClient({ defaultType, productImages }) {
               </div>
             </ConfigStep>
 
+            {/* Design template download */}
+            <TemplateDownloadButton
+              slug={formType.slug}
+              width={size.w}
+              height={size.h}
+              product={`${formType.label} NCR Forms`}
+              dpi={300}
+              t={t}
+            />
+
             {/* Print Color */}
             <ConfigStep number={++step} title="Print Color">
               <div className="flex flex-wrap gap-2">
@@ -419,6 +430,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
             subtotalCents={quote.subtotalCents}
             taxCents={quote.taxCents}
             totalCents={quote.subtotalCents}
+            quantity={quantity}
             canAddToCart={canAddToCart}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
@@ -426,6 +438,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
             extraRows={extraRows}
             badges={[t("ncr.badge.carbonless"), t("ncr.badge.shipping")]}
             t={t}
+            productName={`${formType.label} NCR Forms`}
           />
         </div>
       </div>
@@ -445,6 +458,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
         totalCents={quote.subtotalCents}
+        quantity={quantity}
         summaryText={
           quote.quoteData
             ? `${quantity.toLocaleString()} ${t("ncr.numbering.forms")}${numbering ? ` \u2022 #${numberStartInt}\u2013${numberEnd}` : ""}`
@@ -455,6 +469,10 @@ export default function NcrOrderClient({ defaultType, productImages }) {
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
+        productName={`${formType.label} NCR Forms`}
+        summaryLines={summaryLines}
+        unitCents={quote.unitCents}
+        subtotalCents={quote.subtotalCents}
       />
     </main>
   );

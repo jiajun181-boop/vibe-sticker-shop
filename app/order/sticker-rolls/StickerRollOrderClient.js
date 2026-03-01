@@ -6,6 +6,8 @@ import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const DEBOUNCE_MS = 300;
 
@@ -243,7 +245,7 @@ export default function StickerRollOrderClient() {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("sr.breadcrumb"), href: "/shop/stickers-labels-decals/roll-labels" },
+          { label: t("sr.breadcrumb"), href: "/shop/stickers-labels-decals" },
           { label: t("sr.order") },
         ]}
       />
@@ -447,10 +449,10 @@ export default function StickerRollOrderClient() {
                 type="button"
                 onClick={handleBuyNow}
                 disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
+                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading
-                    ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800"
-                    : "cursor-not-allowed border-gray-200 text-gray-400"
+                    ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800"
+                    : "cursor-not-allowed bg-gray-100 text-gray-400"
                 }`}
               >
                 {buyNowLoading ? t("sr.processing") : t("sr.buyNow")}
@@ -499,6 +501,17 @@ export default function StickerRollOrderClient() {
       </div>
 
       <div className="h-20 lg:hidden" />
+
+      {/* ── FAQ ── */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs("sticker-rolls");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
     </main>
   );
 }

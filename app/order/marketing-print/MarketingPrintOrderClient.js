@@ -18,6 +18,7 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   LetterheadTemplateBuilder,
+  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -410,6 +411,28 @@ export default function MarketingPrintOrderClient({
               )}
             </ConfigStep>
 
+            {/* Design template download */}
+            {!["stamps", "envelopes", "calendars-wall", "calendars-desk", "certificates", "tabletop-displays", "presentation-folders"].includes(typeId) && widthIn > 0 && heightIn > 0 && (
+              <TemplateDownloadButton
+                slug={typeId}
+                width={typeId.startsWith("brochures-") || typeId === "greeting-cards" ? widthIn : widthIn}
+                height={typeId.startsWith("brochures-") || typeId === "greeting-cards" ? heightIn : heightIn}
+                product={printType.label}
+                dpi={300}
+                folds={
+                  typeId === "brochures-bi-fold" || typeId === "greeting-cards" ? 1
+                  : typeId === "brochures-tri-fold" || typeId === "brochures-z-fold" ? 2
+                  : 0
+                }
+                foldType={
+                  typeId === "brochures-tri-fold" ? "tri-fold"
+                  : typeId === "brochures-z-fold" ? "z-fold"
+                  : "bifold"
+                }
+                t={t}
+              />
+            )}
+
             {/* Step: Paper / Stock (hidden if single option) */}
             {hasPaperStep && (
               <ConfigStep number={++step} title={t("marketingPrint.paper", "Paper / Stock")}>
@@ -646,6 +669,7 @@ export default function MarketingPrintOrderClient({
               subtotalCents={quote.subtotalCents}
               taxCents={quote.taxCents}
               totalCents={quote.subtotalCents}
+              quantity={effectiveQty}
               canAddToCart={canAddToCart}
               onAddToCart={handleAddToCart}
               onBuyNow={handleBuyNow}
@@ -656,6 +680,7 @@ export default function MarketingPrintOrderClient({
                 t("marketingPrint.badgeShipping", "Fast shipping"),
               ]}
               t={t}
+              productName={printType.label}
             />
           )}
         </div>
@@ -676,12 +701,17 @@ export default function MarketingPrintOrderClient({
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
         totalCents={quote.subtotalCents}
+        quantity={effectiveQty}
         summaryText={quote.quoteData ? `${formatCad(quote.unitCents)}/ea × ${effectiveQty}` : null}
         canAddToCart={canAddToCart}
         onAddToCart={handleAddToCart}
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
+        productName={printType.label}
+        summaryLines={summaryLines}
+        unitCents={quote.unitCents}
+        subtotalCents={quote.subtotalCents}
       />
     </main>
   );
