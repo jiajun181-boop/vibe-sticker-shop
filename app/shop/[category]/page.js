@@ -458,7 +458,7 @@ export default async function CategoryPage({ params }) {
       if (matching.length > 0) {
         const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
         marketingPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
-        // Pick best image: check Asset system first (admin uploads), then legacy ProductImage
+        // Pick best image: check Asset system first (admin uploads), then legacy, then dynamic API
         for (const p of matching) {
           const asset = await getProductPrimaryImage(p.id);
           if (asset?.url && !asset.url.startsWith("/products/")) {
@@ -466,13 +466,23 @@ export default async function CategoryPage({ params }) {
             break;
           }
         }
-        // Fallback to legacy ProductImage if no Asset found
+        // Fallback: legacy ProductImage (skip local /products/ paths — files removed)
         if (!marketingImages[key]) {
-          const withImage = matching.find((p) => p.images?.[0]?.url);
+          const withImage = matching.find((p) => {
+            const url = p.images?.[0]?.url;
+            return url && !url.startsWith("/products/");
+          });
           if (withImage) {
             marketingImages[key] = withImage.images[0].url;
-            if (withImage.images[1]?.url) marketingImages2[key] = withImage.images[1].url;
+            if (withImage.images[1]?.url && !withImage.images[1].url.startsWith("/products/")) {
+              marketingImages2[key] = withImage.images[1].url;
+            }
           }
+        }
+        // Final fallback: dynamic API branded SVG
+        if (!marketingImages[key]) {
+          const firstSlug = matching[0]?.slug || key;
+          marketingImages[key] = `/api/product-image/${encodeURIComponent(firstSlug)}?name=${encodeURIComponent(matching[0]?.name || key)}`;
         }
       }
     }
