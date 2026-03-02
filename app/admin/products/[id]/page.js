@@ -1431,7 +1431,7 @@ export default function ProductDetailPage() {
                   >
                     {/* Image thumbnail — draggable area */}
                     <div className="relative cursor-grab active:cursor-grabbing">
-                      <img src={img.url} alt={img.alt || product.name} className="h-28 w-full object-cover" />
+                      <img src={img.url} alt={img.alt || product.name} className="h-28 w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                       {idx === 0 && (
                         <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-[#fff]">Cover</span>
                       )}

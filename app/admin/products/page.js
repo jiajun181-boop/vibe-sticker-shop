@@ -1399,17 +1399,17 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                     return (
                       <tr key={product.id} className="hover:bg-[#fafafa]">
                         <td className="px-4 py-3">
-                          {imgUrl ? (
-                            <img
-                              src={imgUrl}
-                              alt={product.name}
-                              className="h-10 w-10 rounded-[3px] object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-[3px] bg-[#f5f5f5] text-[#999] text-sm">
-                              ?
-                            </div>
-                          )}
+                          <div className="relative h-10 w-10">
+                            <div className="absolute inset-0 flex items-center justify-center rounded-[3px] bg-[#f5f5f5] text-[#999] text-sm">?</div>
+                            {imgUrl && (
+                              <img
+                                src={imgUrl}
+                                alt={product.name}
+                                className="absolute inset-0 h-full w-full rounded-[3px] object-cover"
+                                onError={(e) => { e.currentTarget.style.display = "none"; }}
+                              />
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <p className="font-medium text-black">
@@ -1500,17 +1500,17 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                     href={`/admin/products/${product.id}`}
                     className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[#fafafa]"
                   >
-                    {imgUrl ? (
-                      <img
-                        src={imgUrl}
-                        alt={product.name}
-                        className="h-12 w-12 flex-shrink-0 rounded-[3px] object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[3px] bg-[#f5f5f5] text-[#999]">
-                        ?
-                      </div>
-                    )}
+                    <div className="relative h-12 w-12 flex-shrink-0">
+                      <div className="absolute inset-0 flex items-center justify-center rounded-[3px] bg-[#f5f5f5] text-[#999]">?</div>
+                      {imgUrl && (
+                        <img
+                          src={imgUrl}
+                          alt={product.name}
+                          className="absolute inset-0 h-full w-full rounded-[3px] object-cover"
+                          onError={(e) => { e.currentTarget.style.display = "none"; }}
+                        />
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-black truncate">
                         {product.name}
