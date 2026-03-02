@@ -41,6 +41,36 @@ const MATERIAL_HINTS = {
   "foil-stamping": "Metallic accent",
 };
 
+// SVG shape icons (consistent with InlineConfigurator)
+function ShapeIcon({ shapeId, className = "h-4 w-4" }) {
+  switch (shapeId) {
+    case "circle":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="9" /></svg>;
+    case "square":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="4" y="4" width="16" height="16" rx="1" /></svg>;
+    case "rectangle":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="2" y="6" width="20" height="12" rx="1" /></svg>;
+    case "oval":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><ellipse cx="12" cy="12" rx="10" ry="7" /></svg>;
+    case "custom":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>;
+    default:
+      return null;
+  }
+}
+
+const SQUARE_PRESETS = [
+  { w: 1, h: 1, label: '1" × 1"' },
+  { w: 2, h: 2, label: '2" × 2"' },
+  { w: 3, h: 3, label: '3" × 3"' },
+  { w: 4, h: 4, label: '4" × 4"' },
+];
+const RECT_PRESETS = [
+  { w: 2, h: 3.5, label: '2" × 3.5"' },
+  { w: 3, h: 5, label: '3" × 5"' },
+  { w: 4, h: 6, label: '4" × 6"' },
+];
+
 /**
  * Sticker Sheets configurator — Same Design or Multiple Designs mode.
  * Uses per-sheet pricing model on 12" × 18" sheets.
@@ -78,23 +108,29 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
   const MAX_SHEET_H = customerSheet.h;
   const MAX_STICKER_DIM = Math.max(MAX_SHEET_W, MAX_SHEET_H);
 
-  const PRESET_SIZES = [
-    { w: 1, h: 1, label: '1"×1"' },
-    { w: 2, h: 2, label: '2"×2"' },
-    { w: 2, h: 3.5, label: '2"×3.5"' },
-    { w: 3, h: 3, label: '3"×3"' },
-    { w: 4, h: 4, label: '4"×4"' },
-  ];
+  // Shape-dependent preset sizes (like InlineConfigurator)
+  const shapePresets = useMemo(() => {
+    if (shapeId === "custom") return [];
+    if (shapeId === "circle" || shapeId === "square") return SQUARE_PRESETS;
+    return RECT_PRESETS;
+  }, [shapeId]);
 
   // --- Derived dimensions ---
-  const isCustomSize = sizeIdx === -1;
+  const isCustomSize = sizeIdx === -1 || shapePresets.length === 0;
   const isSingleDim = shapeId === "circle" || shapeId === "square";
+
+  function selectShape(id) {
+    setShapeId(id);
+    setSizeIdx(0);
+    setCustomW("");
+    setCustomH("");
+  }
 
   const widthIn = useMemo(() => {
     if (mode === "multi") {
       return Math.min(MAX_STICKER_DIM, Math.max(0, parseFloat(multiMaxW) || 0));
     }
-    if (!isCustomSize) return PRESET_SIZES[sizeIdx]?.w ?? 2;
+    if (!isCustomSize) return shapePresets[sizeIdx]?.w ?? 2;
     const raw = parseFloat(customW);
     if (!raw || raw <= 0) return 0;
     return unit === "cm" ? raw / INCH_TO_CM : raw;
@@ -104,7 +140,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
     if (mode === "multi") {
       return Math.min(MAX_STICKER_DIM, Math.max(0, parseFloat(multiMaxH) || 0));
     }
-    if (!isCustomSize) return PRESET_SIZES[sizeIdx]?.h ?? 2;
+    if (!isCustomSize) return shapePresets[sizeIdx]?.h ?? 2;
     if (isSingleDim) {
       const raw = parseFloat(customW);
       if (!raw || raw <= 0) return 0;
@@ -186,7 +222,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
   const sizeLabel = useMemo(() => {
     if (mode === "multi") return `${widthIn}" × ${heightIn}"`;
     if (isCustomSize) return `${widthIn.toFixed(widthIn % 1 === 0 ? 0 : 2)}" × ${heightIn.toFixed(heightIn % 1 === 0 ? 0 : 2)}"`;
-    return PRESET_SIZES[sizeIdx]?.label || "";
+    return shapePresets[sizeIdx]?.label || "";
   }, [mode, isCustomSize, widthIn, heightIn, sizeIdx]);
 
   const buildCartItem = useCallback(() => {
@@ -280,8 +316,8 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
               onClick={() => {
                 setSheetSizeId(sz.id);
                 // Reset sticker size if current size won't fit on new sheet
-                if (!isCustomSize && PRESET_SIZES[sizeIdx]) {
-                  const ps = PRESET_SIZES[sizeIdx];
+                if (!isCustomSize && shapePresets[sizeIdx]) {
+                  const ps = shapePresets[sizeIdx];
                   const sMin = Math.min(ps.w, ps.h);
                   const sMax = Math.max(ps.w, ps.h);
                   const shMin = Math.min(sz.w, sz.h);
@@ -315,13 +351,14 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
                 <button
                   key={s.id}
                   type="button"
-                  onClick={() => setShapeId(s.id)}
-                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                  onClick={() => selectShape(s.id)}
+                  className={`flex items-center gap-1.5 rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
                     shapeId === s.id
                       ? "border-gray-900 bg-gray-900 text-[#fff]"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
+                  <ShapeIcon shapeId={s.id} className={`h-3.5 w-3.5 ${shapeId === s.id ? "text-white" : "text-gray-500"}`} />
                   {t(s.label)}
                 </button>
               ))}
@@ -332,29 +369,29 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
           <div>
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">Sticker Size</h3>
             <div className="flex flex-wrap gap-2">
-              {PRESET_SIZES.filter((s) => {
-                const sMin = Math.min(s.w, s.h);
-                const sMax = Math.max(s.w, s.h);
-                const shMin = Math.min(MAX_SHEET_W, MAX_SHEET_H);
-                const shMax = Math.max(MAX_SHEET_W, MAX_SHEET_H);
-                return sMin <= shMin && sMax <= shMax;
-              }).map((s) => {
-                const origIdx = PRESET_SIZES.indexOf(s);
-                return (
+              {shapePresets
+                .map((s, idx) => ({ ...s, idx }))
+                .filter((s) => {
+                  const sMin = Math.min(s.w, s.h);
+                  const sMax = Math.max(s.w, s.h);
+                  const shMin = Math.min(MAX_SHEET_W, MAX_SHEET_H);
+                  const shMax = Math.max(MAX_SHEET_W, MAX_SHEET_H);
+                  return sMin <= shMin && sMax <= shMax;
+                })
+                .map((s) => (
                   <button
-                    key={origIdx}
+                    key={s.idx}
                     type="button"
-                    onClick={() => { setSizeIdx(origIdx); setCustomW(""); setCustomH(""); }}
+                    onClick={() => { setSizeIdx(s.idx); setCustomW(""); setCustomH(""); }}
                     className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                      sizeIdx === origIdx
+                      sizeIdx === s.idx
                         ? "border-gray-900 bg-gray-900 text-[#fff]"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                     }`}
                   >
                     {s.label}
                   </button>
-                );
-              })}
+                ))}
               <button
                 type="button"
                 onClick={() => { setSizeIdx(-1); setCustomW(""); setCustomH(""); }}

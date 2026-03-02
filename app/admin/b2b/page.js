@@ -1,21 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
-const FILTERS = [
-  { key: "all", label: "All" },
-  { key: "pending", label: "Pending" },
-  { key: "approved", label: "Approved" },
+const FILTER_KEYS = [
+  { key: "all", labelKey: "admin.b2b.all" },
+  { key: "pending", labelKey: "admin.b2b.pending" },
+  { key: "approved", labelKey: "admin.b2b.approved" },
 ];
 
-const TIERS = [
-  { key: "bronze", label: "Bronze" },
-  { key: "silver", label: "Silver" },
-  { key: "gold", label: "Gold" },
-  { key: "platinum", label: "Platinum" },
+const TIER_KEYS = [
+  { key: "bronze", labelKey: "admin.b2b.bronze" },
+  { key: "silver", labelKey: "admin.b2b.silver" },
+  { key: "gold", labelKey: "admin.b2b.gold" },
+  { key: "platinum", labelKey: "admin.b2b.platinum" },
 ];
 
 export default function AdminB2BPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState("accounts"); // "accounts" | "invites"
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
@@ -60,8 +62,8 @@ export default function AdminB2BPage() {
   async function handleAction(userId, action) {
     const user = users.find((u) => u.id === userId);
     const label = user?.companyName || user?.name || user?.email || userId;
-    const verb = action === "approve" ? "Approve" : "Reject";
-    if (!confirm(`${verb} B2B account for "${label}"?`)) return;
+    const verb = action === "approve" ? t("admin.b2b.approve") : t("admin.b2b.reject");
+    if (!confirm(`${verb} B2B — "${label}"?`)) return;
 
     setActionLoading(userId);
     try {
@@ -88,22 +90,22 @@ export default function AdminB2BPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage({ type: "success", text: `Invite sent to ${inviteForm.email}` });
+        setMessage({ type: "success", text: `${t("admin.b2b.inviteSent")} ${inviteForm.email}` });
         setShowInviteForm(false);
         setInviteForm({ email: "", companyName: "", tier: "bronze", discount: "15", note: "" });
         loadInvites();
       } else {
-        setMessage({ type: "error", text: data.error || "Failed to send invite" });
+        setMessage({ type: "error", text: data.error || t("admin.b2b.inviteFailed") });
       }
     } catch {
-      setMessage({ type: "error", text: "Network error" });
+      setMessage({ type: "error", text: t("admin.b2b.networkError") });
     } finally {
       setInviteSending(false);
     }
   }
 
   async function handleRevokeInvite(id) {
-    if (!confirm("Revoke this invite?")) return;
+    if (!confirm(t("admin.b2b.revokeConfirm"))) return;
     await fetch(`/api/admin/b2b/invites?id=${id}`, { method: "DELETE" });
     loadInvites();
   }
@@ -111,7 +113,7 @@ export default function AdminB2BPage() {
   function copyInviteLink(token) {
     const url = `${window.location.origin}/invite/${token}`;
     navigator.clipboard.writeText(url).then(() => {
-      setMessage({ type: "success", text: "Link copied!" });
+      setMessage({ type: "success", text: t("admin.b2b.linkCopied") });
       setTimeout(() => setMessage(null), 2000);
     });
   }
@@ -121,15 +123,15 @@ export default function AdminB2BPage() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg font-semibold text-black">B2B / Partners</h1>
-          <p className="text-sm text-[#999]">Manage B2B accounts and partner invitations</p>
+          <h1 className="text-lg font-semibold text-black">{t("admin.b2b.title")}</h1>
+          <p className="text-sm text-[#999]">{t("admin.b2b.description")}</p>
         </div>
         <button
           type="button"
           onClick={() => { setShowInviteForm(true); setTab("invites"); }}
           className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
         >
-          + Invite Partner
+          {t("admin.b2b.invitePartner")}
         </button>
       </div>
 
@@ -142,18 +144,18 @@ export default function AdminB2BPage() {
       {/* Tabs */}
       <div className="mb-4 flex gap-1 rounded-[3px] border border-[#e0e0e0] p-1 w-fit">
         {[
-          { key: "accounts", label: "B2B Accounts" },
-          { key: "invites", label: "Invitations" },
-        ].map((t) => (
+          { key: "accounts", labelKey: "admin.b2b.accounts" },
+          { key: "invites", labelKey: "admin.b2b.invitations" },
+        ].map((tb) => (
           <button
-            key={t.key}
+            key={tb.key}
             type="button"
-            onClick={() => setTab(t.key)}
+            onClick={() => setTab(tb.key)}
             className={`rounded-md px-4 py-1.5 text-xs font-semibold transition-colors ${
-              tab === t.key ? "bg-black text-[#fff]" : "text-[#999] hover:text-black"
+              tab === tb.key ? "bg-black text-[#fff]" : "text-[#999] hover:text-black"
             }`}
           >
-            {t.label}
+            {t(tb.labelKey)}
           </button>
         ))}
       </div>
@@ -162,7 +164,7 @@ export default function AdminB2BPage() {
       {tab === "accounts" && (
         <>
           <div className="mb-4 flex flex-wrap gap-1 rounded-[3px] border border-[#e0e0e0] p-1 w-fit">
-            {FILTERS.map((f) => (
+            {FILTER_KEYS.map((f) => (
               <button
                 key={f.key}
                 type="button"
@@ -171,7 +173,7 @@ export default function AdminB2BPage() {
                   filter === f.key ? "bg-black text-[#fff]" : "text-[#999] hover:text-black"
                 }`}
               >
-                {f.label}
+                {t(f.labelKey)}
               </button>
             ))}
           </div>
@@ -184,7 +186,7 @@ export default function AdminB2BPage() {
             </div>
           ) : users.length === 0 ? (
             <div className="rounded-[3px] border border-[#e0e0e0] p-8 text-center text-sm text-[#999]">
-              No B2B accounts found.
+              {t("admin.b2b.noAccounts")}
             </div>
           ) : (
             <>
@@ -193,14 +195,14 @@ export default function AdminB2BPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-[#fafafa] text-left text-xs font-semibold uppercase tracking-wider text-[#999]">
                     <tr>
-                      <th className="px-4 py-3">Company / Name</th>
-                      <th className="px-4 py-3">Email</th>
-                      <th className="px-4 py-3">Tier</th>
-                      <th className="px-4 py-3">Discount</th>
-                      <th className="px-4 py-3">Orders</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3">Registered</th>
-                      <th className="px-4 py-3">Actions</th>
+                      <th className="px-4 py-3">{t("admin.b2b.companyName")}</th>
+                      <th className="px-4 py-3">{t("admin.b2b.email")}</th>
+                      <th className="px-4 py-3">{t("admin.b2b.tier")}</th>
+                      <th className="px-4 py-3">{t("admin.b2b.discount")}</th>
+                      <th className="px-4 py-3">{t("admin.b2b.orders")}</th>
+                      <th className="px-4 py-3">{t("admin.b2b.status")}</th>
+                      <th className="px-4 py-3">{t("admin.b2b.registered")}</th>
+                      <th className="px-4 py-3">{t("admin.common.actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e0e0e0]">
@@ -224,17 +226,17 @@ export default function AdminB2BPage() {
                         <td className="px-4 py-3 text-[#666]">{user._count?.orders || 0}</td>
                         <td className="px-4 py-3">
                           {user.b2bApproved ? (
-                            <span className="rounded-[2px] bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">Approved</span>
+                            <span className="rounded-[2px] bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">{t("admin.b2b.approved")}</span>
                           ) : (
-                            <span className="rounded-[2px] bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Pending</span>
+                            <span className="rounded-[2px] bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">{t("admin.b2b.pending")}</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-xs text-[#999]">{new Date(user.createdAt).toLocaleDateString("en-CA")}</td>
                         <td className="px-4 py-3">
                           {!user.b2bApproved && (
                             <div className="flex gap-2">
-                              <button type="button" onClick={() => handleAction(user.id, "approve")} disabled={actionLoading === user.id} className="rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-[#fff] hover:bg-emerald-700 disabled:opacity-50">Approve</button>
-                              <button type="button" onClick={() => handleAction(user.id, "reject")} disabled={actionLoading === user.id} className="rounded-md bg-red-100 px-2.5 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50">Reject</button>
+                              <button type="button" onClick={() => handleAction(user.id, "approve")} disabled={actionLoading === user.id} className="rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-[#fff] hover:bg-emerald-700 disabled:opacity-50">{t("admin.b2b.approve")}</button>
+                              <button type="button" onClick={() => handleAction(user.id, "reject")} disabled={actionLoading === user.id} className="rounded-md bg-red-100 px-2.5 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50">{t("admin.b2b.reject")}</button>
                             </div>
                           )}
                         </td>
@@ -255,9 +257,9 @@ export default function AdminB2BPage() {
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1">
                         {user.b2bApproved ? (
-                          <span className="rounded-[2px] bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">Approved</span>
+                          <span className="rounded-[2px] bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">{t("admin.b2b.approved")}</span>
                         ) : (
-                          <span className="rounded-[2px] bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Pending</span>
+                          <span className="rounded-[2px] bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">{t("admin.b2b.pending")}</span>
                         )}
                         {user.partnerTier && <TierBadge tier={user.partnerTier} />}
                       </div>
@@ -268,8 +270,8 @@ export default function AdminB2BPage() {
                     </div>
                     {!user.b2bApproved && (
                       <div className="mt-3 flex gap-2">
-                        <button type="button" onClick={() => handleAction(user.id, "approve")} disabled={actionLoading === user.id} className="rounded-md bg-emerald-600 px-2.5 py-1.5 text-[11px] font-semibold text-[#fff] hover:bg-emerald-700 disabled:opacity-50">Approve</button>
-                        <button type="button" onClick={() => handleAction(user.id, "reject")} disabled={actionLoading === user.id} className="rounded-md bg-red-100 px-2.5 py-1.5 text-[11px] font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50">Reject</button>
+                        <button type="button" onClick={() => handleAction(user.id, "approve")} disabled={actionLoading === user.id} className="rounded-md bg-emerald-600 px-2.5 py-1.5 text-[11px] font-semibold text-[#fff] hover:bg-emerald-700 disabled:opacity-50">{t("admin.b2b.approve")}</button>
+                        <button type="button" onClick={() => handleAction(user.id, "reject")} disabled={actionLoading === user.id} className="rounded-md bg-red-100 px-2.5 py-1.5 text-[11px] font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50">{t("admin.b2b.reject")}</button>
                       </div>
                     )}
                   </div>
@@ -286,11 +288,11 @@ export default function AdminB2BPage() {
           {/* Invite form */}
           {showInviteForm && (
             <div className="mb-4 rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-              <h2 className="mb-3 text-sm font-semibold text-black">Send Partner Invitation</h2>
+              <h2 className="mb-3 text-sm font-semibold text-black">{t("admin.b2b.sendInvite")}</h2>
               <form onSubmit={handleSendInvite} className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-[#666]">Email *</label>
+                    <label className="mb-1 block text-xs font-medium text-[#666]">{t("admin.b2b.email")} *</label>
                     <input
                       type="email"
                       value={inviteForm.email}
@@ -301,7 +303,7 @@ export default function AdminB2BPage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-[#666]">Company Name</label>
+                    <label className="mb-1 block text-xs font-medium text-[#666]">{t("admin.b2b.companyName")}</label>
                     <input
                       type="text"
                       value={inviteForm.companyName}
@@ -311,19 +313,19 @@ export default function AdminB2BPage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-[#666]">Partner Tier</label>
+                    <label className="mb-1 block text-xs font-medium text-[#666]">{t("admin.b2b.tier")}</label>
                     <select
                       value={inviteForm.tier}
                       onChange={(e) => setInviteForm({ ...inviteForm, tier: e.target.value })}
                       className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                     >
-                      {TIERS.map((t) => (
-                        <option key={t.key} value={t.key}>{t.label}</option>
+                      {TIER_KEYS.map((tk) => (
+                        <option key={tk.key} value={tk.key}>{t(tk.labelKey)}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-[#666]">Discount %</label>
+                    <label className="mb-1 block text-xs font-medium text-[#666]">{t("admin.b2b.discount")} %</label>
                     <input
                       type="number"
                       min="0"
@@ -335,7 +337,7 @@ export default function AdminB2BPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-[#666]">Internal Note</label>
+                  <label className="mb-1 block text-xs font-medium text-[#666]">{t("admin.b2b.internalNote")}</label>
                   <input
                     type="text"
                     value={inviteForm.note}
@@ -346,10 +348,10 @@ export default function AdminB2BPage() {
                 </div>
                 <div className="flex gap-2">
                   <button type="submit" disabled={inviteSending} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:bg-[#999]">
-                    {inviteSending ? "Sending..." : "Send Invite"}
+                    {inviteSending ? t("admin.b2b.sending") : t("admin.b2b.sendInviteBtn")}
                   </button>
                   <button type="button" onClick={() => setShowInviteForm(false)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-semibold text-[#666] hover:border-black">
-                    Cancel
+                    {t("admin.common.cancel")}
                   </button>
                 </div>
               </form>
@@ -365,20 +367,20 @@ export default function AdminB2BPage() {
             </div>
           ) : invites.length === 0 ? (
             <div className="rounded-[3px] border border-[#e0e0e0] p-8 text-center text-sm text-[#999]">
-              No invitations sent yet.
+              {t("admin.b2b.noInvites")}
             </div>
           ) : (
             <div className="overflow-x-auto rounded-[3px] border border-[#e0e0e0]">
               <table className="w-full text-sm">
                 <thead className="bg-[#fafafa] text-left text-xs font-semibold uppercase tracking-wider text-[#999]">
                   <tr>
-                    <th className="px-4 py-3">Email</th>
-                    <th className="px-4 py-3">Company</th>
-                    <th className="px-4 py-3">Tier</th>
-                    <th className="px-4 py-3">Discount</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Sent</th>
-                    <th className="px-4 py-3">Actions</th>
+                    <th className="px-4 py-3">{t("admin.b2b.email")}</th>
+                    <th className="px-4 py-3">{t("admin.b2b.companyName")}</th>
+                    <th className="px-4 py-3">{t("admin.b2b.tier")}</th>
+                    <th className="px-4 py-3">{t("admin.b2b.discount")}</th>
+                    <th className="px-4 py-3">{t("admin.b2b.status")}</th>
+                    <th className="px-4 py-3">{t("admin.b2b.sent")}</th>
+                    <th className="px-4 py-3">{t("admin.common.actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#e0e0e0]">
@@ -393,11 +395,11 @@ export default function AdminB2BPage() {
                         <td className="px-4 py-3 text-[#666]">{inv.discount > 0 ? `${inv.discount}%` : "—"}</td>
                         <td className="px-4 py-3">
                           {accepted ? (
-                            <span className="rounded-[2px] bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">Accepted</span>
+                            <span className="rounded-[2px] bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">{t("admin.b2b.accepted")}</span>
                           ) : expired ? (
-                            <span className="rounded-[2px] bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">Expired</span>
+                            <span className="rounded-[2px] bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">{t("admin.b2b.expired")}</span>
                           ) : (
-                            <span className="rounded-[2px] bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Pending</span>
+                            <span className="rounded-[2px] bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">{t("admin.b2b.pending")}</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-xs text-[#999]">{new Date(inv.createdAt).toLocaleDateString("en-CA")}</td>
@@ -405,12 +407,12 @@ export default function AdminB2BPage() {
                           <div className="flex gap-2">
                             {!accepted && !expired && (
                               <button type="button" onClick={() => copyInviteLink(inv.token)} className="rounded-md border border-[#d0d0d0] px-2.5 py-1 text-[11px] font-semibold text-[#666] hover:border-black hover:text-black">
-                                Copy Link
+                                {t("admin.b2b.copyLink")}
                               </button>
                             )}
                             {!accepted && (
                               <button type="button" onClick={() => handleRevokeInvite(inv.id)} className="rounded-md bg-red-100 px-2.5 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-200">
-                                Revoke
+                                {t("admin.b2b.revoke")}
                               </button>
                             )}
                           </div>

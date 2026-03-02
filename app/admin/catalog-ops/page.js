@@ -6,23 +6,25 @@ import Link from "next/link";
 import ProductsPage from "@/app/admin/products/page";
 import CatalogPage from "@/app/admin/catalog/page";
 import PricingPage from "@/app/admin/pricing/page";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
-const TABS = [
-  { key: "products", label: "All Products", href: "/admin/products" },
-  { key: "catalog", label: "Catalog Settings", href: "/admin/catalog" },
-  { key: "pricing", label: "Pricing", href: "/admin/pricing" },
+const TAB_KEYS = [
+  { key: "products", labelKey: "admin.catalogOps.tabProducts", href: "/admin/products" },
+  { key: "catalog", labelKey: "admin.catalogOps.tabCatalog", href: "/admin/catalog" },
+  { key: "pricing", labelKey: "admin.catalogOps.tabPricing", href: "/admin/pricing" },
 ];
-const CATEGORY_OPTIONS = [
-  { value: "all", label: "All Categories" },
-  { value: "marketing-business-print", label: "Marketing & Business Print" },
-  { value: "stickers-labels-decals", label: "Stickers & Labels" },
-  { value: "signs-rigid-boards", label: "Signs & Display Boards" },
-  { value: "banners-displays", label: "Banners & Displays" },
-  { value: "windows-walls-floors", label: "Windows, Walls & Floors Decals" },
-  { value: "vehicle-graphics-fleet", label: "Vehicle Graphics & Fleet Branding" },
+const CATEGORY_OPTION_KEYS = [
+  { value: "all", labelKey: "admin.catalogOps.categoryAll" },
+  { value: "marketing-business-print", labelKey: "admin.catalogOps.categoryMarketingBusiness" },
+  { value: "stickers-labels-decals", labelKey: "admin.catalogOps.categoryStickersLabels" },
+  { value: "signs-rigid-boards", labelKey: "admin.catalogOps.categorySignsBoards" },
+  { value: "banners-displays", labelKey: "admin.catalogOps.categoryBannersDisplays" },
+  { value: "windows-walls-floors", labelKey: "admin.catalogOps.categoryWindowsWallsFloors" },
+  { value: "vehicle-graphics-fleet", labelKey: "admin.catalogOps.categoryVehicleGraphics" },
 ];
 
 export default function CatalogOpsPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") || "products";
@@ -32,7 +34,7 @@ export default function CatalogOpsPage() {
   const [statsLoading, setStatsLoading] = useState(false);
 
   const activeTab = useMemo(() => {
-    return TABS.some((t) => t.key === tab) ? tab : "products";
+    return TAB_KEYS.some((tk) => tk.key === tab) ? tab : "products";
   }, [tab]);
 
   useEffect(() => {
@@ -106,29 +108,29 @@ export default function CatalogOpsPage() {
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-black">Catalog Ops</h1>
+            <h1 className="text-xl font-semibold text-black">{t("admin.catalogOps.title")}</h1>
             <p className="mt-0.5 text-sm text-[#999]">
-              Manage products, catalog structure, and pricing in one workspace.
+              {t("admin.catalogOps.description")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {TABS.map((t) => (
+            {TAB_KEYS.map((tk) => (
               <button
-                key={t.key}
+                key={tk.key}
                 type="button"
-                onClick={() => switchTab(t.key)}
+                onClick={() => switchTab(tk.key)}
                 className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
-                  activeTab === t.key
+                  activeTab === tk.key
                     ? "bg-black text-[#fff]"
                     : "bg-[#f5f5f5] text-black hover:bg-[#fafafa]"
                 }`}
               >
-                {t.label}
+                {t(tk.labelKey)}
               </button>
             ))}
           </div>
         </div>
-        <div className="mt-3 text-xs text-[#999]">Single workspace mode enabled.</div>
+        <div className="mt-3 text-xs text-[#999]">{t("admin.catalogOps.workspaceMode")}</div>
         <div className="mt-3 grid gap-2 rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3 lg:grid-cols-[1fr_auto_auto_auto]">
           <input
             type="text"
@@ -137,7 +139,7 @@ export default function CatalogOpsPage() {
             onKeyDown={(e) => {
               if (e.key === "Enter") updateWorkspaceFilters();
             }}
-            placeholder="Quick search products..."
+            placeholder={t("admin.catalogOps.searchPlaceholder")}
             className="rounded-[3px] border border-[#d0d0d0] bg-white px-3 py-2 text-sm outline-none focus:border-black"
           />
           <select
@@ -145,9 +147,9 @@ export default function CatalogOpsPage() {
             onChange={(e) => setWorkspaceCategory(e.target.value)}
             className="rounded-[3px] border border-[#d0d0d0] bg-white px-3 py-2 text-sm outline-none focus:border-black"
           >
-            {CATEGORY_OPTIONS.map((opt) => (
+            {CATEGORY_OPTION_KEYS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.label}
+                {t(opt.labelKey)}
               </option>
             ))}
           </select>
@@ -156,42 +158,42 @@ export default function CatalogOpsPage() {
             onClick={updateWorkspaceFilters}
             className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
-            Apply
+            {t("admin.catalogOps.apply")}
           </button>
           <button
             type="button"
             onClick={clearWorkspaceFilters}
             className="rounded-[3px] border border-[#d0d0d0] bg-white px-4 py-2 text-xs font-semibold text-black hover:bg-[#f5f5f5]"
           >
-            Reset
+            {t("admin.catalogOps.reset")}
           </button>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
           <span className="rounded-[2px] border border-[#e0e0e0] bg-white px-2.5 py-1 text-[#666]">
-            Products:{" "}
+            {t("admin.catalogOps.statProducts")}{" "}
             <span className="font-semibold text-black">
               {statsLoading ? "..." : stats.products ?? "-"}
             </span>
           </span>
           <span className="rounded-[2px] border border-[#e0e0e0] bg-white px-2.5 py-1 text-[#666]">
-            Categories:{" "}
+            {t("admin.catalogOps.statCategories")}{" "}
             <span className="font-semibold text-black">
               {statsLoading ? "..." : stats.categories ?? "-"}
             </span>
           </span>
           <span className="rounded-[2px] border border-[#e0e0e0] bg-white px-2.5 py-1 text-[#666]">
-            Pricing Presets:{" "}
+            {t("admin.catalogOps.statPricingPresets")}{" "}
             <span className="font-semibold text-black">
               {statsLoading ? "..." : stats.presets ?? "-"}
             </span>
           </span>
           <span className="ml-auto text-[#999]">
-            Focus mode:{" "}
-            <Link href="/admin/products" className="text-black underline hover:no-underline">Products</Link>{" "}
+            {t("admin.catalogOps.focusMode")}{" "}
+            <Link href="/admin/products" className="text-black underline hover:no-underline">{t("admin.catalogOps.focusProducts")}</Link>{" "}
             ·{" "}
-            <Link href="/admin/catalog" className="text-black underline hover:no-underline">Catalog</Link>{" "}
+            <Link href="/admin/catalog" className="text-black underline hover:no-underline">{t("admin.catalogOps.focusCatalog")}</Link>{" "}
             ·{" "}
-            <Link href="/admin/pricing" className="text-black underline hover:no-underline">Pricing</Link>
+            <Link href="/admin/pricing" className="text-black underline hover:no-underline">{t("admin.catalogOps.focusPricing")}</Link>
           </span>
         </div>
       </div>

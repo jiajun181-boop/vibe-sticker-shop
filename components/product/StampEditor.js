@@ -1,14 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { UploadButton } from "@/utils/uploadthing";
 import { STAMP_TEMPLATES, STAMP_TEMPLATE_CATEGORIES, INK_COLORS } from "@/lib/stampTemplates";
+import { drawBorder } from "@/lib/stamp/borders";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import StampFontPicker from "./stamp/StampFontPicker";
+import StampBorderPicker from "./stamp/StampBorderPicker";
+import StampHalftoneUpload from "./stamp/StampHalftoneUpload";
 
 // ── Constants ──────────────────────────────────────────
-const CW = 600; // canvas logical width
-const CH = 600; // canvas logical height (square for round stamps)
-const PPI = 200; // pixels-per-inch for preview (not production)
+const CW = 600;
+const CH = 600;
+const PPI = 200;
 const CARD_W_IN = 3.375;
 const CARD_H_IN = 2.125;
 
@@ -18,12 +21,12 @@ function hexToRgb(hex) {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-/** Binary-search for the largest fontSize that fits all lines within `maxW × maxH`. */
-function fitFontSize(ctx, lines, font, maxW, maxH) {
+function fitFontSize(ctx, lines, fontFamily, maxW, maxH) {
   let lo = 8, hi = 200, best = lo;
+  const fam = fontFamily.includes(" ") ? `"${fontFamily}"` : fontFamily;
   while (lo <= hi) {
     const mid = (lo + hi) >> 1;
-    ctx.font = `bold ${mid}px ${font}`;
+    ctx.font = `bold ${mid}px ${fam}`;
     const widthOk = lines.every((l) => ctx.measureText(l).width <= maxW);
     const totalH = lines.length * mid * 1.25;
     if (widthOk && totalH <= maxH) { best = mid; lo = mid + 1; }
@@ -46,36 +49,47 @@ export default function StampEditor({
   const { t } = useTranslation();
   const canvasRef = useRef(null);
   const logoImgRef = useRef(null);
+  const halftoneCanvasRef = useRef(null); // Processed halftone canvas
 
   // Internal state
   const [curveAmount, setCurveAmount] = useState(50);
   const [logoFile, setLogoFile] = useState(null);
   const [logoScale, setLogoScale] = useState(40);
+  const [borderId, setBorderId] = useState("none");
+  const [halftoneEnabled, setHalftoneEnabled] = useState(false);
+  const [halftoneIntensity, setHalftoneIntensity] = useState("medium");
   const [templateCat, setTemplateCat] = useState("business");
   const [showRef, setShowRef] = useState(false);
+  const [renderTick, setRenderTick] = useState(0); // Force re-render after halftone processes
 
-  // Notify parent of extras changes
+  // Notify parent of all state changes
   const notifyParent = useCallback(
     (patch) => {
       if (!onChange) return;
       onChange({
         color: patch.color ?? undefined,
+        text: patch.text ?? undefined,
+        font: patch.font ?? undefined,
         curveAmount: patch.curveAmount ?? curveAmount,
         logoFile: patch.logoFile !== undefined ? patch.logoFile : logoFile,
         template: patch.template ?? undefined,
+        border: patch.border ?? borderId,
+        halftoneEnabled: patch.halftoneEnabled ?? halftoneEnabled,
+        halftoneIntensity: patch.halftoneIntensity ?? halftoneIntensity,
       });
     },
-    [onChange, curveAmount, logoFile],
+    [onChange, curveAmount, logoFile, borderId, halftoneEnabled, halftoneIntensity],
   );
 
-  // Load logo image when URL changes
+  // Load logo image when URL changes (for non-halftone mode)
   useEffect(() => {
     if (!logoFile?.url) { logoImgRef.current = null; return; }
+    if (halftoneEnabled) return; // Halftone component handles its own image
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => { logoImgRef.current = img; };
     img.src = logoFile.url;
-  }, [logoFile?.url]);
+  }, [logoFile?.url, halftoneEnabled]);
 
   // ── Canvas render ─────────────────────────────────
   useEffect(() => {
@@ -110,42 +124,48 @@ export default function StampEditor({
       ctx.arc(cx, cy, radius, 0, Math.PI * 2);
       ctx.stroke();
     } else {
-      const rx = cx - stampW / 2;
-      const ry = cy - stampH / 2;
       ctx.beginPath();
-      ctx.roundRect(rx, ry, stampW, stampH, 8);
+      ctx.roundRect(cx - stampW / 2, cy - stampH / 2, stampW, stampH, 8);
       ctx.stroke();
     }
     ctx.setLineDash([]);
     ctx.restore();
 
-    // ── 2. Render logo ──
+    // ── 2. Draw decorative border ──
+    drawBorder(ctx, borderId, shape, cx, cy, stampW, stampH, radius, color);
+
+    // ── 3. Render image/logo ──
+    const halftoneCanvas = halftoneCanvasRef.current;
     const logoImg = logoImgRef.current;
-    if (logoImg) {
+    const imgSource = halftoneEnabled && halftoneCanvas ? halftoneCanvas : logoImg;
+
+    if (imgSource) {
       const scale = logoScale / 100;
       const maxDim = isRound ? radius * 0.8 : Math.min(stampW, stampH) * 0.4;
       const imgW = maxDim * scale;
-      const imgH = (logoImg.height / logoImg.width) * imgW;
-      ctx.globalAlpha = 0.85;
-      ctx.drawImage(logoImg, cx - imgW / 2, cy - imgH / 2, imgW, imgH);
+      const imgH = halftoneEnabled
+        ? imgW // Halftone is always square
+        : (imgSource.height / imgSource.width) * imgW;
+      ctx.globalAlpha = halftoneEnabled ? 1 : 0.85;
+      ctx.drawImage(imgSource, cx - imgW / 2, cy - imgH / 2, imgW, imgH);
       ctx.globalAlpha = 1;
     }
 
-    // ── 3. Render text ──
+    // ── 4. Render text ──
     const lines = (text || "").split("\n").filter((l) => l.trim());
     if (lines.length === 0) lines.push(" ");
     const [r, g, b] = hexToRgb(color);
+    const fam = font.includes(" ") ? `"${font}"` : font;
 
     if (isRound && curveAmount > 5) {
-      // Curved text for round stamps
-      const curve = curveAmount / 100; // 0–1
+      const curve = curveAmount / 100;
       const textRadius = radius * 0.78;
 
       // Line 1 — top arc
       if (lines[0]) {
         const chars = lines[0].split("");
         const fontSize = fitFontSize(ctx, [lines[0]], font, textRadius * 1.6, textRadius * 0.4);
-        ctx.font = `bold ${fontSize}px ${font}`;
+        ctx.font = `bold ${fontSize}px ${fam}`;
         ctx.fillStyle = color;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -170,7 +190,7 @@ export default function StampEditor({
       if (lines[1]) {
         const chars = lines[1].split("");
         const fontSize = fitFontSize(ctx, [lines[1]], font, textRadius * 1.4, textRadius * 0.35);
-        ctx.font = `bold ${fontSize}px ${font}`;
+        ctx.font = `bold ${fontSize}px ${fam}`;
         ctx.fillStyle = color;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -196,7 +216,7 @@ export default function StampEditor({
       if (lines.length > 2) {
         const remaining = lines.slice(2);
         const fs = fitFontSize(ctx, remaining, font, radius * 1.2, radius * 0.5);
-        ctx.font = `bold ${fs}px ${font}`;
+        ctx.font = `bold ${fs}px ${fam}`;
         ctx.fillStyle = color;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -210,7 +230,7 @@ export default function StampEditor({
       const maxW = (isRound ? radius * 1.4 : stampW) - margin * 2;
       const maxH = (isRound ? radius * 1.4 : stampH) - margin * 2;
       const fs = fitFontSize(ctx, lines, font, maxW, maxH);
-      ctx.font = `bold ${fs}px ${font}`;
+      ctx.font = `bold ${fs}px ${fam}`;
       ctx.fillStyle = color;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -220,14 +240,12 @@ export default function StampEditor({
       lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lh));
     }
 
-    // ── 4. Ink texture noise ──
+    // ── 5. Ink texture noise ──
     try {
       const imgData = ctx.getImageData(0, 0, CW * dpr, CH * dpr);
       const d = imgData.data;
       for (let i = 0; i < d.length; i += 4) {
-        // Skip white / near-white pixels (background)
         if (d[i] > 240 && d[i + 1] > 240 && d[i + 2] > 240) continue;
-        // Check if pixel is roughly the ink color
         const dr = Math.abs(d[i] - r);
         const dg = Math.abs(d[i + 1] - g);
         const db = Math.abs(d[i + 2] - b);
@@ -236,16 +254,15 @@ export default function StampEditor({
           d[i] = Math.max(0, Math.min(255, d[i] + noise));
           d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + noise));
           d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + noise));
-          // Random slight transparency for ink bleed effect
           if (Math.random() < 0.03) d[i + 3] = Math.max(120, d[i + 3] - 40);
         }
       }
       ctx.putImageData(imgData, 0, 0);
     } catch {
-      // Canvas tainted or cross-origin — skip texture
+      // Canvas tainted — skip texture
     }
 
-    // ── 5. Size reference ──
+    // ── 6. Size reference ──
     if (showRef) {
       const cardW = CARD_W_IN * PPI;
       const cardH = CARD_H_IN * PPI;
@@ -263,11 +280,20 @@ export default function StampEditor({
       ctx.fillText(t("stamp.referenceCard"), CW - 12, CH - 10);
       ctx.restore();
     }
-  }, [text, font, color, shape, widthIn, heightIn, diameterIn, curveAmount, logoFile, logoScale, showRef, t]);
+  }, [text, font, color, shape, widthIn, heightIn, diameterIn, curveAmount, logoFile, logoScale, showRef, borderId, halftoneEnabled, renderTick, t]);
 
   // ── Handlers ──────────────────────────────────────
   function handleColorSelect(hex) {
     notifyParent({ color: hex });
+  }
+
+  function handleFontSelect(family) {
+    notifyParent({ font: family });
+  }
+
+  function handleBorderSelect(id) {
+    setBorderId(id);
+    notifyParent({ border: id });
   }
 
   function handleCurveChange(val) {
@@ -276,14 +302,21 @@ export default function StampEditor({
   }
 
   function handleTemplateSelect(tmpl) {
-    notifyParent({
-      color: tmpl.color,
-      template: tmpl.id,
-      curveAmount: tmpl.curve ?? curveAmount,
-    });
     if (tmpl.curve != null) setCurveAmount(tmpl.curve);
-    // Propagate text/font via onChange — parent updates editorText/editorFont
-    if (onChange) onChange({ color: tmpl.color, text: tmpl.text, font: tmpl.font, curveAmount: tmpl.curve ?? curveAmount, logoFile, template: tmpl.id });
+    if (tmpl.border) setBorderId(tmpl.border);
+    if (onChange) {
+      onChange({
+        color: tmpl.color,
+        text: tmpl.text,
+        font: tmpl.font,
+        curveAmount: tmpl.curve ?? curveAmount,
+        logoFile,
+        template: tmpl.id,
+        border: tmpl.border || borderId,
+        halftoneEnabled,
+        halftoneIntensity,
+      });
+    }
   }
 
   function handleLogoUpload(file) {
@@ -294,7 +327,22 @@ export default function StampEditor({
   function handleLogoRemove() {
     setLogoFile(null);
     logoImgRef.current = null;
-    notifyParent({ logoFile: null });
+    halftoneCanvasRef.current = null;
+    setHalftoneEnabled(false);
+    notifyParent({ logoFile: null, halftoneEnabled: false });
+  }
+
+  function handleHalftoneToggle(enabled) {
+    setHalftoneEnabled(enabled);
+    if (!enabled) halftoneCanvasRef.current = null;
+    setRenderTick((t) => t + 1);
+    notifyParent({ halftoneEnabled: enabled });
+  }
+
+  function handleHalftoneIntensityChange(intensity) {
+    setHalftoneIntensity(intensity);
+    setRenderTick((t) => t + 1);
+    notifyParent({ halftoneIntensity: intensity });
   }
 
   // ── Render ────────────────────────────────────────
@@ -322,6 +370,9 @@ export default function StampEditor({
         <p className="mt-2 text-center text-[10px] text-[var(--color-gray-400)]">{t("stamp.previewHint")}</p>
       </div>
 
+      {/* Font selector */}
+      <StampFontPicker selected={font} onSelect={handleFontSelect} />
+
       {/* Ink color presets */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.inkColor")}</p>
@@ -338,6 +389,9 @@ export default function StampEditor({
           ))}
         </div>
       </div>
+
+      {/* Border selector */}
+      <StampBorderPicker selected={borderId} color={color} onSelect={handleBorderSelect} />
 
       {/* Curve slider (round stamps only) */}
       {shape === "round" && (
@@ -358,16 +412,34 @@ export default function StampEditor({
         </div>
       )}
 
+      {/* Image upload with halftone */}
+      <StampHalftoneUpload
+        logoFile={logoFile}
+        logoScale={logoScale}
+        halftoneEnabled={halftoneEnabled}
+        halftoneIntensity={halftoneIntensity}
+        color={color}
+        onLogoUpload={handleLogoUpload}
+        onLogoRemove={handleLogoRemove}
+        onLogoScaleChange={setLogoScale}
+        onHalftoneToggle={handleHalftoneToggle}
+        onHalftoneIntensityChange={handleHalftoneIntensityChange}
+        halftoneDataRef={halftoneCanvasRef}
+      />
+
       {/* Template selector */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.templates")}</p>
-        <div className="flex gap-1 mb-2">
+        <div
+          className="flex gap-1 mb-2 overflow-x-auto pb-1"
+          style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none" }}
+        >
           {STAMP_TEMPLATE_CATEGORIES.map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setTemplateCat(cat)}
-              className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${templateCat === cat ? "bg-[var(--color-gray-900)] text-[#fff]" : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-200)]"}`}
+              className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${templateCat === cat ? "bg-[var(--color-gray-900)] text-[#fff]" : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-200)]"}`}
             >
               {t(`stamp.templateCat.${cat}`)}
             </button>
@@ -386,52 +458,6 @@ export default function StampEditor({
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Logo upload */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.logo")}</p>
-        {!logoFile ? (
-          <UploadButton
-            endpoint="artworkUploader"
-            onClientUploadComplete={(res) => {
-              const f = Array.isArray(res) ? res[0] : null;
-              if (f) handleLogoUpload({ url: f.url, key: f.key, name: f.name });
-            }}
-            onUploadError={(e) => console.error("[stamp logo]", e)}
-            appearance={{
-              button: "!bg-[var(--color-gray-900)] !text-[#fff] !text-xs !rounded-full !px-4 !py-2 !font-semibold hover:!bg-black",
-              allowedContent: "!text-[10px] !text-[var(--color-gray-400)]",
-            }}
-          />
-        ) : (
-          <div className="rounded-xl border border-[var(--color-gray-200)] p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[var(--color-gray-900)] truncate max-w-[200px]">{logoFile.name}</span>
-              <button
-                type="button"
-                onClick={handleLogoRemove}
-                className="text-xs font-semibold text-red-600 hover:text-red-800"
-              >
-                {t("stamp.removeLogo")}
-              </button>
-            </div>
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-[var(--color-gray-500)]">{t("stamp.logoSize")}</span>
-                <span className="text-[10px] text-[var(--color-gray-500)]">{logoScale}%</span>
-              </div>
-              <input
-                type="range"
-                min={10}
-                max={100}
-                value={logoScale}
-                onChange={(e) => setLogoScale(Number(e.target.value))}
-                className="w-full accent-gray-900"
-              />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

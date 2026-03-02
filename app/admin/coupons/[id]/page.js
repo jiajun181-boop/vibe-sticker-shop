@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -15,6 +16,7 @@ function toDateInputValue(dateStr) {
 }
 
 export default function CouponDetailPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams();
   const couponId = params.id;
@@ -92,14 +94,14 @@ export default function CouponDetailPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        showMsg(data.error || "Failed to save", true);
+        showMsg(data.error || t("admin.couponDetail.saveFailed"), true);
       } else {
         const data = await res.json();
         setCoupon((prev) => ({ ...prev, ...data }));
-        showMsg("Coupon saved!");
+        showMsg(t("admin.couponDetail.saved"));
       }
     } catch {
-      showMsg("Network error", true);
+      showMsg(t("admin.couponDetail.networkError"), true);
     } finally {
       setSaving(false);
     }
@@ -108,7 +110,7 @@ export default function CouponDetailPage() {
   async function handleDelete() {
     if (
       !confirm(
-        `Delete coupon "${coupon.code}"? If it has linked orders, it will be deactivated instead.`
+        t("admin.couponDetail.deleteConfirm", { code: coupon.code })
       )
     )
       return;
@@ -120,23 +122,23 @@ export default function CouponDetailPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        showMsg(data.error || "Failed to delete coupon", true);
+        showMsg(data.error || t("admin.couponDetail.deleteFailed"), true);
       } else if (data.deactivated) {
         showMsg(data.message);
         fetchCoupon();
       } else {
-        showMsg("Coupon deleted");
+        showMsg(t("admin.couponDetail.deleted"));
         setTimeout(() => router.push("/admin/coupons"), 1000);
       }
     } catch {
-      showMsg("Network error", true);
+      showMsg(t("admin.couponDetail.networkError"), true);
     }
   }
 
   if (loading) {
     return (
       <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-        Loading...
+        {t("admin.common.loading")}
       </div>
     );
   }
@@ -207,13 +209,13 @@ export default function CouponDetailPage() {
       <form onSubmit={handleSave} className="space-y-6">
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
           <h2 className="mb-4 text-sm font-semibold text-black">
-            Coupon Details
+            {t("admin.couponDetail.title")}
           </h2>
 
           <div className="space-y-4">
             <div>
               <label className="mb-1 block text-xs font-medium text-[#999]">
-                Code *
+                {t("admin.coupons.code")} *
               </label>
               <input
                 type="text"
@@ -227,20 +229,20 @@ export default function CouponDetailPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">
-                  Type *
+                  {t("admin.coupons.type")} *
                 </label>
                 <select
                   value={form.type || "percentage"}
                   onChange={(e) => updateField("type", e.target.value)}
                   className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 >
-                  <option value="percentage">Percentage</option>
-                  <option value="fixed">Fixed Amount</option>
+                  <option value="percentage">{t("admin.coupons.percentage")}</option>
+                  <option value="fixed">{t("admin.coupons.fixed")}</option>
                 </select>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">
-                  Value * (cents or % x 100)
+                  {t("admin.coupons.valueLabel")} *
                 </label>
                 <input
                   type="number"
@@ -256,27 +258,27 @@ export default function CouponDetailPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">
-                  Min Order Amount (cents)
+                  {t("admin.coupons.minOrderCents")}
                 </label>
                 <input
                   type="number"
                   min="0"
                   value={form.minAmount ?? ""}
                   onChange={(e) => updateField("minAmount", e.target.value)}
-                  placeholder="No minimum"
+                  placeholder={t("admin.couponDetail.noMinimum")}
                   className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">
-                  Max Uses
+                  {t("admin.coupons.maxUses")}
                 </label>
                 <input
                   type="number"
                   min="1"
                   value={form.maxUses ?? ""}
                   onChange={(e) => updateField("maxUses", e.target.value)}
-                  placeholder="Unlimited"
+                  placeholder={t("admin.couponDetail.unlimited")}
                   className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 />
               </div>
@@ -285,7 +287,7 @@ export default function CouponDetailPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">
-                  Valid From *
+                  {t("admin.coupons.validFrom")} *
                 </label>
                 <input
                   type="date"
@@ -297,7 +299,7 @@ export default function CouponDetailPage() {
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">
-                  Valid To *
+                  {t("admin.coupons.validTo")} *
                 </label>
                 <input
                   type="date"
@@ -311,13 +313,13 @@ export default function CouponDetailPage() {
 
             <div>
               <label className="mb-1 block text-xs font-medium text-[#999]">
-                Description
+                {t("admin.coupons.description")}
               </label>
               <textarea
                 rows={2}
                 value={form.description || ""}
                 onChange={(e) => updateField("description", e.target.value)}
-                placeholder="Optional internal note"
+                placeholder={t("admin.coupons.optionalNote")}
                 className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
               />
             </div>
@@ -331,7 +333,7 @@ export default function CouponDetailPage() {
             disabled={saving}
             className="rounded-[3px] bg-black px-6 py-2.5 text-sm font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? t("admin.common.saving") : t("admin.couponDetail.saveChanges")}
           </button>
           <button
             type="button"
@@ -342,14 +344,14 @@ export default function CouponDetailPage() {
                 : "border-green-200 text-green-600 hover:bg-green-50"
             }`}
           >
-            {form.isActive ? "Deactivate" : "Activate"}
+            {form.isActive ? t("admin.couponDetail.deactivate") : t("admin.couponDetail.activate")}
           </button>
           <button
             type="button"
             onClick={handleDelete}
             className="rounded-[3px] border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
           >
-            Delete
+            {t("admin.common.delete")}
           </button>
         </div>
       </form>
@@ -357,9 +359,9 @@ export default function CouponDetailPage() {
       {/* Usage History */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
         <h2 className="mb-4 text-sm font-semibold text-black">
-          Usage History
+          {t("admin.couponDetail.usageHistory")}
           <span className="ml-2 text-xs font-normal text-[#999]">
-            ({coupon._count?.orders || 0} total orders)
+            ({coupon._count?.orders || 0} {t("admin.couponDetail.totalOrders")})
           </span>
         </h2>
 
@@ -369,13 +371,13 @@ export default function CouponDetailPage() {
               <thead>
                 <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
                   <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                    Order ID
+                    {t("admin.couponDetail.orderId")}
                   </th>
                   <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                    Total
+                    {t("admin.couponDetail.total")}
                   </th>
                   <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                    Date
+                    {t("admin.couponDetail.date")}
                   </th>
                   <th className="px-4 py-2" />
                 </tr>
@@ -399,7 +401,7 @@ export default function CouponDetailPage() {
                         href={`/admin/orders/${order.id}`}
                         className="text-xs font-medium text-black underline hover:no-underline"
                       >
-                        View
+                        {t("admin.common.view")}
                       </Link>
                     </td>
                   </tr>
@@ -409,36 +411,36 @@ export default function CouponDetailPage() {
           </div>
         ) : (
           <div className="flex h-24 items-center justify-center text-sm text-[#999]">
-            No orders have used this coupon yet.
+            {t("admin.couponDetail.noOrdersYet")}
           </div>
         )}
       </div>
 
       {/* Quick Info */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-        <h2 className="mb-3 text-sm font-semibold text-black">Quick Info</h2>
+        <h2 className="mb-3 text-sm font-semibold text-black">{t("admin.couponDetail.quickInfo")}</h2>
         <dl className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
           <div>
-            <dt className="text-[#999]">Used</dt>
+            <dt className="text-[#999]">{t("admin.couponDetail.used")}</dt>
             <dd className="mt-0.5 font-semibold text-black">
               {coupon.usedCount}
               {coupon.maxUses ? ` / ${coupon.maxUses}` : ""}
             </dd>
           </div>
           <div>
-            <dt className="text-[#999]">Created</dt>
+            <dt className="text-[#999]">{t("admin.couponDetail.created")}</dt>
             <dd className="mt-0.5 text-black">
               {new Date(coupon.createdAt).toLocaleDateString("en-CA")}
             </dd>
           </div>
           <div>
-            <dt className="text-[#999]">Updated</dt>
+            <dt className="text-[#999]">{t("admin.couponDetail.updated")}</dt>
             <dd className="mt-0.5 text-black">
               {new Date(coupon.updatedAt).toLocaleDateString("en-CA")}
             </dd>
           </div>
           <div>
-            <dt className="text-[#999]">Orders</dt>
+            <dt className="text-[#999]">{t("admin.couponDetail.orders")}</dt>
             <dd className="mt-0.5 font-semibold text-black">
               {coupon._count?.orders || 0}
             </dd>

@@ -1237,6 +1237,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             stampLogoKey: stampExtras.logoFile?.key || null,
             stampCurveAmount: stampExtras.curveAmount || 0,
             stampTemplate: stampExtras.template || null,
+            stampBorder: stampExtras.border || "none",
+            stampHalftoneEnabled: stampExtras.halftoneEnabled || false,
+            stampHalftoneIntensity: stampExtras.halftoneIntensity || "medium",
           } : {}),
         }
       : {
@@ -1800,6 +1803,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                       />
                     </label>
 
+                    {/* Font + color pickers — hidden for stamp mode (StampEditor has its own) */}
+                    {editorMode !== "box" && (
                     <div className="grid grid-cols-2 gap-3">
                       <label className="text-xs text-[var(--color-gray-600)]">
                         {t("product.font")}
@@ -1814,7 +1819,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                         </select>
                       </label>
 
-                      {editorMode !== "box" && <label className="text-xs text-[var(--color-gray-600)]">
+                      <label className="text-xs text-[var(--color-gray-600)]">
                         {t("product.color")}
                         <input
                           type="color"
@@ -1822,8 +1827,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                           onChange={(e) => setEditorColor(e.target.value)}
                           className="mt-1 h-[42px] w-full rounded-xl border border-[var(--color-gray-300)] bg-white px-2 py-2"
                         />
-                      </label>}
+                      </label>
                     </div>
+                    )}
 
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("product.sizeUnit")}</p>
@@ -1908,6 +1914,9 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                             curveAmount: patch.curveAmount,
                             logoFile: patch.logoFile,
                             template: patch.template,
+                            border: patch.border || "none",
+                            halftoneEnabled: patch.halftoneEnabled || false,
+                            halftoneIntensity: patch.halftoneIntensity || "medium",
                           };
                         }}
                       />

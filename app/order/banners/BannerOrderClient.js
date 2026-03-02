@@ -255,7 +255,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                             <span className="text-sm font-bold">{t(`banner.type.${bt.id}`)}</span>
                             {bt.includesHardware && (
                               <span className={`text-[10px] font-bold ${typeId === bt.id ? "text-emerald-300" : "text-emerald-600"}`}>
-                                Includes hardware
+                                {t("banner.includesHardware")}
                               </span>
                             )}
                           </button>

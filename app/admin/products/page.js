@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import ProductForm from "./product-form";
 import { createProduct, toggleProductStatus, deleteProduct } from "./actions";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -261,11 +262,12 @@ function buildCategoryTree(products, catalogConfig) {
 }
 
 export default function ProductsPage({ embedded = false, basePath = "/admin/products" } = {}) {
+  const { t } = useTranslation();
   return (
     <Suspense
       fallback={
         <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-          Loading...
+          {t("admin.products.loading")}
         </div>
       }
     >
@@ -277,6 +279,7 @@ export default function ProductsPage({ embedded = false, basePath = "/admin/prod
 function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
   const [products, setProducts] = useState([]);
   const [catalogProducts, setCatalogProducts] = useState([]);
@@ -322,7 +325,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     const unknown = dynamic.filter((c) => !configured.includes(c)).sort((a, b) => a.localeCompare(b));
     const ordered = [...known, ...unknown];
     return [
-      { value: "all", label: "All" },
+      { value: "all", label: t("admin.common.all") },
       ...ordered.map((c) => ({
         value: c,
         label: catalogConfig?.categoryMeta?.[c]?.title || titleizeSlug(c),
@@ -335,7 +338,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
   );
   const bulkSubseriesOptions = useMemo(() => {
     const selectedCategory = tree.find((c) => c.category === bulkCategory);
-    if (!selectedCategory) return [{ value: "uncategorized", label: "Uncategorized" }];
+    if (!selectedCategory) return [{ value: "uncategorized", label: t("admin.products.uncategorized") }];
     return selectedCategory.subseries.map((s) => ({ value: s.slug, label: s.title }));
   }, [tree, bulkCategory]);
   const uncategorizedEntries = useMemo(() => {
@@ -601,8 +604,8 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       }
       showMsg(
         movedEntries.length
-          ? `Auto-assigned ${movedEntries.length} products by slug rules.`
-          : "No matching suggestion to apply."
+          ? t("admin.products.autoAssigned").replace("{count}", movedEntries.length)
+          : t("admin.products.noSuggestion")
       );
       setSelectedProductIds([]);
       fetchProducts();
@@ -639,8 +642,8 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
         });
         showMsg(
           isCopy
-            ? `Copied "${product.name}" to ${titleizeSlug(targetSubseriesSlug)}.`
-            : `Moved "${product.name}" to ${titleizeSlug(targetSubseriesSlug)}.`
+            ? t("admin.products.copiedTo").replace("{name}", product.name).replace("{target}", titleizeSlug(targetSubseriesSlug))
+            : t("admin.products.movedTo").replace("{name}", product.name).replace("{target}", titleizeSlug(targetSubseriesSlug))
         );
         fetchProducts();
       }
@@ -672,7 +675,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
         if ((ordered[i].sortOrder ?? 0) === nextSort) continue;
         await patchProductSortOrder(ordered[i].id, nextSort);
       }
-      showMsg(`Reordered "${movedItem.name}".`);
+      showMsg(t("admin.products.reordered").replace("{name}", movedItem.name));
       fetchProducts();
     } catch (err) {
       showMsg(err.message || "Reorder failed", true);
@@ -705,7 +708,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
         if ((ordered[i].sortOrder ?? 0) === nextSort) continue;
         await patchProductSortOrder(ordered[i].id, nextSort);
       }
-      showMsg(`Updated order for "${temp.name}".`);
+      showMsg(t("admin.products.orderUpdated").replace("{name}", temp.name));
       fetchProducts();
     } catch (err) {
       showMsg(err.message || "Reorder failed", true);
@@ -758,8 +761,8 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       }
       showMsg(
         movedCount > 0
-          ? `Moved ${movedCount} products to ${titleizeSlug(bulkSubseries)}.`
-          : "Selected products are already in the target subseries."
+          ? t("admin.products.bulkMoved").replace("{count}", movedCount).replace("{target}", titleizeSlug(bulkSubseries))
+          : t("admin.products.alreadyInTarget")
       );
       setSelectedProductIds([]);
       fetchProducts();
@@ -775,7 +778,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
   function handleCopySelected() {
     if (!selectedProductIds.length) return;
     setCopiedProductIds(selectedProductIds);
-    showMsg(`Copied ${selectedProductIds.length} products.`);
+    showMsg(t("admin.products.copiedCount").replace("{count}", selectedProductIds.length));
   }
 
   async function handlePasteCopied() {
@@ -804,8 +807,8 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       }
       showMsg(
         copiedCount > 0
-          ? `Pasted ${copiedCount} products into ${titleizeSlug(bulkSubseries)}.`
-          : "Copied products are already in the target subseries."
+          ? t("admin.products.pastedCount").replace("{count}", copiedCount).replace("{target}", titleizeSlug(bulkSubseries))
+          : t("admin.products.alreadyPasted")
       );
       fetchProducts();
     } catch (err) {
@@ -824,7 +827,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       for (const entry of lastMove.entries) {
         await patchProductClassification(entry.id, { category: entry.fromCategory, tags: entry.fromTags });
       }
-      showMsg(`Undid last move (${lastMove.entries.length} products).`);
+      showMsg(t("admin.products.undone").replace("{count}", lastMove.entries.length));
       setLastMove(null);
       setSelectedProductIds([]);
       fetchProducts();
@@ -841,7 +844,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     const result = await createProduct(formData);
     if (result?.error) return result;
     setShowForm(false);
-    showMsg("Product created!");
+    showMsg(t("admin.products.created"));
     fetchProducts();
     return result;
   }
@@ -850,17 +853,17 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     const result = await toggleProductStatus(id);
     if (result?.error) showMsg(result.error, true);
     else {
-      showMsg(currentlyActive ? "Product deactivated" : "Product activated");
+      showMsg(currentlyActive ? t("admin.products.deactivated") : t("admin.products.activated"));
       fetchProducts();
     }
   }
 
   async function handleDelete(product) {
-    if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
+    if (!confirm(t("admin.products.deleteConfirm").replace("{name}", product.name))) return;
     const result = await deleteProduct(product.id);
     if (result?.error) showMsg(result.error, true);
     else {
-      showMsg("Product deleted");
+      showMsg(t("admin.products.deleted"));
       fetchProducts();
     }
   }
@@ -869,13 +872,13 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
     <div className="space-y-4">
       {!embedded && (
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-black">Products</h1>
+          <h1 className="text-xl font-semibold text-black">{t("admin.products.title")}</h1>
           <button
             type="button"
             onClick={() => setShowForm(true)}
             className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
-            + Add Product
+            {t("admin.products.addProduct")}
           </button>
         </div>
       )}
@@ -886,7 +889,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
             onClick={() => setShowForm(true)}
             className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
-            + Add Product
+            {t("admin.products.addProduct")}
           </button>
         </div>
       )}
@@ -905,14 +908,14 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       )}
       {lastMove?.entries?.length ? (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-[3px] border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm text-blue-800">
-          <span>Last change: {lastMove.entries.length} products moved.</span>
+          <span>{t("admin.products.lastChange").replace("{count}", lastMove.entries.length)}</span>
           <button
             type="button"
             onClick={handleUndoLastMove}
             disabled={moving}
             className="rounded-md border border-blue-300 bg-white px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
           >
-            Undo
+            {t("admin.products.undo")}
           </button>
         </div>
       ) : null}
@@ -950,7 +953,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 : "bg-white text-amber-700 hover:bg-amber-50"
             }`}
           >
-            Uncategorized ({uncategorizedEntries.length})
+            {t("admin.products.uncategorized")} ({uncategorizedEntries.length})
           </button>
         </div>
 
@@ -960,14 +963,14 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search products..."
+            placeholder={t("admin.products.searchPlaceholder")}
             className="w-full sm:w-56 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-gray-900"
           />
           <button
             type="submit"
             className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
-            Search
+            {t("admin.common.search")}
           </button>
         </form>
       </div>
@@ -976,38 +979,38 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="border-b border-[#e0e0e0] bg-[#fafafa] px-4 py-3">
           <h2 className="text-sm font-semibold text-black">
-            Category &rarr; Subseries &rarr; Products
+            {t("admin.products.categorySubseriesProducts")}
           </h2>
           <p className="mt-0.5 text-xs text-[#999]">
-            Current filter view: {catalogProducts.length} products
+            {t("admin.products.currentView").replace("{count}", catalogProducts.length)}
           </p>
           <p className="mt-1 text-[11px] text-[#999]">
-            Drag a product card into another subseries to reclassify it.
+            {t("admin.products.dragHint")}
           </p>
           <p className="mt-1 text-[11px] text-[#999]">
-            Hold Ctrl/Command while dragging to copy into another subseries.
+            {t("admin.products.ctrlDragHint")}
           </p>
           <p className="mt-1 text-[11px] text-[#999]">
-            Shopify-style: select multiple cards then bulk move.
+            {t("admin.products.bulkHint")}
           </p>
           {uncategorizedEntries.length > 0 && (
             <div className="mt-2 flex flex-wrap items-center gap-2 rounded-[3px] border border-amber-200 bg-amber-50 px-3 py-2">
               <p className="text-xs font-medium text-amber-800">
-                {uncategorizedEntries.length} products are uncategorized.
+                {t("admin.products.uncategorizedCount").replace("{count}", uncategorizedEntries.length)}
               </p>
               <button
                 type="button"
                 onClick={selectAllUncategorized}
                 className="rounded border border-amber-300 px-2 py-0.5 text-[11px] font-medium text-amber-800 hover:bg-amber-100"
               >
-                Select All Uncategorized
+                {t("admin.products.selectAllUncategorized")}
               </button>
               <button
                 type="button"
                 onClick={() => setShowOnlyUncategorized((v) => !v)}
                 className="rounded border border-amber-300 px-2 py-0.5 text-[11px] font-medium text-amber-800 hover:bg-amber-100"
               >
-                {showOnlyUncategorized ? "Show All Categories" : "Only Uncategorized"}
+                {showOnlyUncategorized ? t("admin.products.showAll") : t("admin.products.onlyUncategorized")}
               </button>
               <button
                 type="button"
@@ -1015,7 +1018,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 disabled={moving || uncategorizedSuggestions.length === 0}
                 className="rounded border border-amber-300 px-2 py-0.5 text-[11px] font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50"
               >
-                Auto Assign ({uncategorizedSuggestions.length})
+                {t("admin.products.autoAssign")} ({uncategorizedSuggestions.length})
               </button>
             </div>
           )}
@@ -1023,10 +1026,10 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
         <div className="border-b border-[#e0e0e0] bg-white px-4 py-3">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
             <p className="text-xs font-medium text-black">
-              Selected: <span className="font-semibold">{selectedProductIds.length}</span>
+              {t("admin.products.selected")}: <span className="font-semibold">{selectedProductIds.length}</span>
               {copiedProductIds.length ? (
                 <span className="ml-2 text-[#999]">
-                  | Clipboard: <span className="font-semibold">{copiedProductIds.length}</span>
+                  | {t("admin.products.clipboard")}: <span className="font-semibold">{copiedProductIds.length}</span>
                 </span>
               ) : null}
             </p>
@@ -1059,7 +1062,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 disabled={moving || selectedProductIds.length === 0}
                 className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {moving ? "Moving..." : "Move Selected"}
+                {moving ? t("admin.products.moving") : t("admin.products.moveSelected")}
               </button>
               <button
                 type="button"
@@ -1067,7 +1070,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 disabled={moving || selectedProductIds.length === 0}
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Copy Selected
+                {t("admin.products.copySelected")}
               </button>
               <button
                 type="button"
@@ -1075,7 +1078,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 disabled={moving || copiedProductIds.length === 0}
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Paste to Target
+                {t("admin.products.pasteToTarget")}
               </button>
               <button
                 type="button"
@@ -1083,7 +1086,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 disabled={selectedProductIds.length === 0}
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Clear Selection
+                {t("admin.products.clearSelection")}
               </button>
               <button
                 type="button"
@@ -1091,7 +1094,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 disabled={moving || !lastMove?.entries?.length}
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Undo Last Move
+                {t("admin.products.undoLastMove")}
               </button>
             </div>
           </div>
@@ -1264,7 +1267,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                     href={`/admin/products/${p.id}`}
                                     className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-black underline hover:no-underline"
                                   >
-                                    Edit
+                                    {t("admin.common.edit")}
                                   </Link>
                                 </div>
                                 <div className="mt-1.5 flex flex-wrap items-center gap-1">
@@ -1273,7 +1276,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                     onClick={() => handleNudgeWithinSubseries(p.id, group.products, "up")}
                                     disabled={moving}
                                     className="rounded border border-[#d0d0d0] px-1.5 py-0.5 text-[10px] font-medium text-black hover:bg-[#fafafa] disabled:opacity-50"
-                                    title="Move up"
+                                    title={t("admin.products.moveUp")}
                                   >
                                     ↑
                                   </button>
@@ -1282,7 +1285,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                     onClick={() => handleNudgeWithinSubseries(p.id, group.products, "down")}
                                     disabled={moving}
                                     className="rounded border border-[#d0d0d0] px-1.5 py-0.5 text-[10px] font-medium text-black hover:bg-[#fafafa] disabled:opacity-50"
-                                    title="Move down"
+                                    title={t("admin.products.moveDown")}
                                   >
                                     ↓
                                   </button>
@@ -1303,9 +1306,9 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                         ? "border-amber-300 bg-amber-50 text-amber-800"
                                         : "border-[#d0d0d0] text-black hover:bg-[#fafafa]"
                                     }`}
-                                    title={p.isFeatured ? "Unpin from featured" : "Pin to featured"}
+                                    title={p.isFeatured ? t("admin.products.unpinFeatured") : t("admin.products.pinFeatured")}
                                   >
-                                    {p.isFeatured ? "Pinned" : "Pin"}
+                                    {p.isFeatured ? t("admin.products.pinned") : t("admin.products.pin")}
                                   </button>
                                   <button
                                     type="button"
@@ -1324,9 +1327,9 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                         ? "border-[#d0d0d0] text-black hover:bg-[#fafafa]"
                                         : "border-emerald-300 bg-emerald-50 text-emerald-800"
                                     }`}
-                                    title={p.isActive ? "Hide product" : "Activate product"}
+                                    title={p.isActive ? t("admin.products.hideProduct") : t("admin.products.activateProduct")}
                                   >
-                                    {p.isActive ? "Hide" : "Show"}
+                                    {p.isActive ? t("admin.products.hide") : t("admin.products.show")}
                                   </button>
                                 </div>
                               </div>
@@ -1347,11 +1350,11 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            Loading...
+            {t("admin.common.loading")}
           </div>
         ) : products.length === 0 ? (
           <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-[#999]">
-            <p>No products found</p>
+            <p>{t("admin.products.noProducts")}</p>
             {categoryFilter !== "all" && (
               <button
                 type="button"
@@ -1361,7 +1364,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 }}
                 className="text-xs text-black underline hover:no-underline"
               >
-                Clear filters
+                {t("admin.products.clearFilters")}
               </button>
             )}
           </div>
@@ -1373,19 +1376,19 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                 <thead>
                   <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Image
+                      {t("admin.products.image")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Name
+                      {t("admin.products.name")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Category
+                      {t("admin.products.category")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Price
+                      {t("admin.products.price")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Status
+                      {t("admin.products.status")}
                     </th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -1445,7 +1448,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                             {formatCad(product.basePrice)}
                           </span>
                           <span className="ml-1 text-xs text-[#999]">
-                            /{product.pricingUnit === "per_sqft" ? "sqft" : "pc"}
+                            /{product.pricingUnit === "per_sqft" ? t("admin.products.perSqft") : t("admin.products.perPiece")}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -1460,7 +1463,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                                 : "bg-[#f5f5f5] text-[#999]"
                             }`}
                           >
-                            {product.isActive ? "Active" : "Inactive"}
+                            {product.isActive ? t("admin.products.active") : t("admin.products.inactive")}
                           </button>
                         </td>
                         <td className="px-4 py-3">
@@ -1469,14 +1472,14 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                               href={`/admin/products/${product.id}`}
                               className="text-xs font-medium text-black underline hover:no-underline"
                             >
-                              Edit
+                              {t("admin.common.edit")}
                             </Link>
                             <button
                               type="button"
                               onClick={() => handleDelete(product)}
                               className="text-xs font-medium text-red-500 hover:text-red-700"
                             >
-                              Delete
+                              {t("admin.products.delete")}
                             </button>
                           </div>
                         </td>
@@ -1544,7 +1547,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
                               : "bg-[#f5f5f5] text-[#999]"
                           }`}
                         >
-                          {product.isActive ? "Active" : "Inactive"}
+                          {product.isActive ? t("admin.products.active") : t("admin.products.inactive")}
                         </span>
                       </div>
                     </div>
@@ -1560,8 +1563,8 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-[#999]">
-            Showing {(pagination.page - 1) * pagination.limit + 1}-
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+            {t("admin.common.showing")} {(pagination.page - 1) * pagination.limit + 1}-
+            {Math.min(pagination.page * pagination.limit, pagination.total)} {t("admin.common.of")}{" "}
             {pagination.total}
           </p>
           <div className="flex gap-1">
@@ -1571,7 +1574,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
               onClick={() => updateParams({ page: String(page - 1) })}
               className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
-              Previous
+              {t("admin.common.previous")}
             </button>
             <button
               type="button"
@@ -1579,7 +1582,7 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
               onClick={() => updateParams({ page: String(page + 1) })}
               className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
-              Next
+              {t("admin.common.next")}
             </button>
           </div>
         </div>

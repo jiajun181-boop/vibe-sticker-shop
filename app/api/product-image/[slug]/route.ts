@@ -42,11 +42,13 @@ function pickPalette(category: string, slug: string): [string, string, string] {
     return ["#0E4D2A", "#1E8449", "#27AE60"];
   if (key.includes("stamp"))
     return ["#1B2631", "#2C3E50", "#34495E"];
+  if (key.includes("brochure") || key.includes("booklet") || key.includes("folder"))
+    return ["#4A3728", "#6B4F3A", "#8D6E4C"];
   if (key.includes("card") || key.includes("business"))
     return ["#1A2744", "#2E4057", "#3D5A80"];
   if (key.includes("poster") || key.includes("print") || key.includes("flyer"))
     return ["#0C5A40", "#1A8A6A", "#26A07A"];
-  if (key.includes("envelope") || key.includes("folder") || key.includes("brochure"))
+  if (key.includes("envelope"))
     return ["#4A3728", "#6B4F3A", "#8D6E4C"];
   if (key.includes("pipe") || key.includes("asset") || key.includes("warehouse"))
     return ["#1C2833", "#2E4053", "#566573"];
@@ -93,6 +95,24 @@ function pickIllustration(category: string, slug: string): string {
       <rect x="130" y="190" width="140" height="30" rx="6" fill="white" opacity="0.4"/>
       <!-- Hanging rope -->
       <path d="M50 60 Q50 20 100 10 L300 10 Q350 20 350 60" fill="none" stroke="white" stroke-width="3" opacity="0.5"/>
+    </g>`;
+  }
+
+  // Brochure / Booklet / Folder (before cards, since "marketing-business-print" contains "business")
+  if (key.includes("brochure") || key.includes("booklet") || key.includes("folder") || key.includes("presentation")) {
+    return `<g transform="translate(740, 170)" opacity="0.25">
+      <!-- Open folder/brochure -->
+      <path d="M30 40 L30 380 Q30 400 50 400 L280 400 Q300 400 300 380 L300 40 Q300 20 280 20 L50 20 Q30 20 30 40 Z" fill="white"/>
+      <!-- Fold line -->
+      <line x1="165" y1="30" x2="165" y2="390" stroke="white" stroke-width="2" stroke-dasharray="6 4" opacity="0.3"/>
+      <!-- Content on left -->
+      <rect x="50" y="60" width="90" height="12" rx="2" fill="white" opacity="0.25"/>
+      <rect x="50" y="85" width="80" height="8" rx="2" fill="white" opacity="0.15"/>
+      <rect x="50" y="120" width="90" height="80" rx="4" fill="white" opacity="0.15"/>
+      <!-- Content on right -->
+      <rect x="185" y="60" width="90" height="12" rx="2" fill="white" opacity="0.25"/>
+      <rect x="185" y="85" width="80" height="8" rx="2" fill="white" opacity="0.15"/>
+      <rect x="185" y="120" width="90" height="80" rx="4" fill="white" opacity="0.15"/>
     </g>`;
   }
 
@@ -269,24 +289,6 @@ function pickIllustration(category: string, slug: string): string {
       <rect x="180" y="170" width="110" height="10" rx="2" fill="white" opacity="0.2"/>
       <!-- Stamp -->
       <rect x="310" y="60" width="40" height="50" rx="2" fill="white" opacity="0.3"/>
-    </g>`;
-  }
-
-  // Brochure / Booklet / Folder
-  if (key.includes("brochure") || key.includes("booklet") || key.includes("folder") || key.includes("presentation")) {
-    return `<g transform="translate(740, 170)" opacity="0.25">
-      <!-- Open folder/brochure -->
-      <path d="M30 40 L30 380 Q30 400 50 400 L280 400 Q300 400 300 380 L300 40 Q300 20 280 20 L50 20 Q30 20 30 40 Z" fill="white"/>
-      <!-- Fold line -->
-      <line x1="165" y1="30" x2="165" y2="390" stroke="white" stroke-width="2" stroke-dasharray="6 4" opacity="0.3"/>
-      <!-- Content on left -->
-      <rect x="50" y="60" width="90" height="12" rx="2" fill="white" opacity="0.25"/>
-      <rect x="50" y="85" width="80" height="8" rx="2" fill="white" opacity="0.15"/>
-      <rect x="50" y="120" width="90" height="80" rx="4" fill="white" opacity="0.15"/>
-      <!-- Content on right -->
-      <rect x="185" y="60" width="90" height="12" rx="2" fill="white" opacity="0.25"/>
-      <rect x="185" y="85" width="80" height="8" rx="2" fill="white" opacity="0.15"/>
-      <rect x="185" y="120" width="90" height="80" rx="4" fill="white" opacity="0.15"/>
     </g>`;
   }
 

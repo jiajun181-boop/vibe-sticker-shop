@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -49,7 +50,7 @@ const productionColors = {
   canceled: "bg-red-100 text-red-700",
 };
 
-const priorityLabels = ["Normal", "High", "Urgent"];
+const priorityLabelKeys = ["admin.orderDetail.priorityNormal", "admin.orderDetail.priorityHigh", "admin.orderDetail.priorityUrgent"];
 const priorityColors = [
   "bg-[#f5f5f5] text-black border-[#d0d0d0]",
   "bg-yellow-100 text-yellow-800 border-yellow-400",
@@ -92,6 +93,7 @@ function parseSizeRows(item) {
 export default function OrderDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -169,12 +171,12 @@ export default function OrderDetailPage() {
       const data = await res.json();
       if (res.ok) {
         setOrder(data);
-        setMessage("Status updated");
+        setMessage(t("admin.orderDetail.statusUpdated"));
         fetchTimeline();
         setTimeout(() => setMessage(""), 3000);
       }
     } catch {
-      setMessage("Update failed");
+      setMessage(t("admin.orderDetail.updateFailed"));
     } finally {
       setSaving(false);
     }
@@ -251,7 +253,7 @@ export default function OrderDetailPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-[#999]">
-        Loading...
+        {t("admin.common.loading")}
       </div>
     );
   }
@@ -259,9 +261,9 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-2">
-        <p className="text-sm text-[#999]">Order not found</p>
+        <p className="text-sm text-[#999]">{t("admin.orderDetail.notFound")}</p>
         <Link href="/admin/orders" className="text-sm text-black underline hover:no-underline">
-          Back to Orders
+          {t("admin.orderDetail.backToOrders")}
         </Link>
       </div>
     );
@@ -285,18 +287,18 @@ export default function OrderDetailPage() {
                 onClick={() => router.push("/admin/orders")}
                 className="text-xs text-[#999] hover:text-black"
               >
-                &larr; Back to Orders
+                &larr; {t("admin.orderDetail.backToOrders")}
               </button>
               <button
                 type="button"
                 onClick={() => window.print()}
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1 text-xs font-medium text-black hover:bg-[#fafafa]"
               >
-                Print Invoice
+                {t("admin.orderDetail.printInvoice")}
               </button>
             </div>
             <h1 className="text-xl font-semibold text-black">
-              Order Details
+              {t("admin.orderDetail.title")}
             </h1>
             <p className="mt-0.5 font-mono text-xs text-[#999]">{order.id}</p>
           </div>
@@ -313,16 +315,16 @@ export default function OrderDetailPage() {
           {/* Left column - main info */}
           <div className="space-y-6 lg:col-span-2">
             {/* Customer info */}
-            <Section title="Customer">
+            <Section title={t("admin.orderDetail.customer")}>
               <div className="grid gap-3 sm:grid-cols-3">
-                <InfoField label="Email" value={order.customerEmail} />
-                <InfoField label="Name" value={order.customerName || "\u2014"} />
-                <InfoField label="Phone" value={order.customerPhone || "\u2014"} />
+                <InfoField label={t("admin.orderDetail.email")} value={order.customerEmail} />
+                <InfoField label={t("admin.orderDetail.name")} value={order.customerName || "\u2014"} />
+                <InfoField label={t("admin.orderDetail.phone")} value={order.customerPhone || "\u2014"} />
               </div>
             </Section>
 
             {/* Order items */}
-            <Section title={`Items (${order.items?.length || 0})`}>
+            <Section title={`${t("admin.orderDetail.items")} (${order.items?.length || 0})`}>
               {order.items && order.items.length > 0 ? (
                 <div className="divide-y divide-[#e0e0e0]">
                   {order.items.map((item) => (
@@ -333,7 +335,7 @@ export default function OrderDetailPage() {
                             {item.productName}
                           </p>
                           <p className="text-xs text-[#999]">
-                            {item.productType} &middot; Qty: {item.quantity}
+                            {item.productType} &middot; {t("admin.orderDetail.qty")}: {item.quantity}
                           </p>
                           {/* Specs */}
                           <div className="mt-1 flex flex-wrap gap-2 text-xs text-[#999]">
@@ -360,7 +362,7 @@ export default function OrderDetailPage() {
                             {formatCad(item.totalPrice)}
                           </p>
                           <p className="text-xs text-[#999]">
-                            {formatCad(item.unitPrice)} each
+                            {formatCad(item.unitPrice)} {t("admin.orderDetail.each")}
                           </p>
                         </div>
                       </div>
@@ -368,15 +370,15 @@ export default function OrderDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-[#999]">No items</p>
+                <p className="text-sm text-[#999]">{t("admin.orderDetail.noItems")}</p>
               )}
             </Section>
 
             {/* Amount breakdown */}
-            <Section title="Amount">
+            <Section title={t("admin.orderDetail.amount")}>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[#666]">Subtotal</span>
+                  <span className="text-[#666]">{t("admin.orderDetail.subtotal")}</span>
                   <span className="font-medium text-black">
                     {formatCad(order.subtotalAmount)}
                   </span>
@@ -384,7 +386,7 @@ export default function OrderDetailPage() {
                 {order.coupon && (
                   <div className="flex justify-between">
                     <span className="text-[#666]">
-                      Coupon ({order.coupon.code})
+                      {t("admin.orderDetail.coupon")} ({order.coupon.code})
                     </span>
                     <span className="font-medium text-green-700">
                       -{formatCad(order.coupon.discountAmount || 0)}
@@ -392,43 +394,43 @@ export default function OrderDetailPage() {
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-[#666]">Tax (13% HST)</span>
+                  <span className="text-[#666]">{t("admin.orderDetail.tax")}</span>
                   <span className="font-medium text-black">
                     {formatCad(order.taxAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#666]">Shipping</span>
+                  <span className="text-[#666]">{t("admin.orderDetail.shipping")}</span>
                   <span className="font-medium text-black">
                     {order.shippingAmount === 0
-                      ? "FREE"
+                      ? t("admin.orderDetail.free")
                       : formatCad(order.shippingAmount)}
                   </span>
                 </div>
                 {order.refundAmount > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-red-600">Refund</span>
+                    <span className="text-red-600">{t("admin.orderDetail.refund")}</span>
                     <span className="font-medium text-red-600">
                       -{formatCad(order.refundAmount)}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between border-t border-[#e0e0e0] pt-2 text-base font-semibold">
-                  <span>Total</span>
+                  <span>{t("admin.orderDetail.total")}</span>
                   <span>{formatCad(order.totalAmount)} CAD</span>
                 </div>
               </div>
             </Section>
 
             {/* Notes */}
-            <Section title="Notes">
+            <Section title={t("admin.orderDetail.notes")}>
               <div className="space-y-3">
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={noteText}
                     onChange={(e) => setNoteText(e.target.value)}
-                    placeholder="Add a note..."
+                    placeholder={t("admin.orderDetail.addNotePlaceholder")}
                     className="flex-1 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                     onKeyDown={(e) => e.key === "Enter" && handleAddNote()}
                   />
@@ -439,7 +441,7 @@ export default function OrderDetailPage() {
                       onChange={(e) => setIsInternalNote(e.target.checked)}
                       className="rounded border-[#d0d0d0]"
                     />
-                    Internal
+                    {t("admin.orderDetail.internal")}
                   </label>
                   <button
                     type="button"
@@ -447,7 +449,7 @@ export default function OrderDetailPage() {
                     disabled={addingNote || !noteText.trim()}
                     className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:bg-[#999]"
                   >
-                    {addingNote ? "..." : "Add"}
+                    {addingNote ? "..." : t("admin.orderDetail.add")}
                   </button>
                 </div>
 
@@ -464,7 +466,7 @@ export default function OrderDetailPage() {
                           {new Date(note.createdAt).toLocaleString()}
                           {note.isInternal && (
                             <span className="ml-2 rounded bg-[#e0e0e0] px-1.5 py-0.5 text-xs text-[#666]">
-                              Internal
+                              {t("admin.orderDetail.internal")}
                             </span>
                           )}
                         </p>
@@ -472,13 +474,13 @@ export default function OrderDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-[#999]">No notes yet</p>
+                  <p className="text-xs text-[#999]">{t("admin.orderDetail.noNotes")}</p>
                 )}
               </div>
             </Section>
 
             {/* Order Timeline */}
-            <Section title="Timeline">
+            <Section title={t("admin.orderDetail.timeline")}>
               {timeline.length > 0 ? (
                 <div className="relative pl-6 border-l-2 border-[#e0e0e0]">
                   {timeline.map((event, idx) => {
@@ -512,7 +514,7 @@ export default function OrderDetailPage() {
                   })}
                 </div>
               ) : (
-                <p className="text-xs text-[#999]">No timeline events</p>
+                <p className="text-xs text-[#999]">{t("admin.orderDetail.noTimeline")}</p>
               )}
             </Section>
           </div>
@@ -520,25 +522,25 @@ export default function OrderDetailPage() {
           {/* Right column - status & meta */}
           <div className="space-y-6">
             {/* Status update */}
-            <Section title="Update Status">
+            <Section title={t("admin.orderDetail.updateStatus")}>
               <div className="space-y-3">
                 <SelectField
-                  label="Order Status"
-                  hint="Order lifecycle: draft \u2192 pending \u2192 paid \u2192 canceled / refunded"
+                  label={t("admin.orderDetail.orderStatus")}
+                  hint={t("admin.orderDetail.orderStatusHint")}
                   value={status}
                   onChange={setStatus}
                   options={statusOptions}
                 />
                 <SelectField
-                  label="Payment Status"
-                  hint="Payment state only \u2014 changes automatically when Stripe confirms"
+                  label={t("admin.orderDetail.paymentStatus")}
+                  hint={t("admin.orderDetail.paymentStatusHint")}
                   value={paymentStatus}
                   onChange={setPaymentStatus}
                   options={paymentOptions}
                 />
                 <SelectField
-                  label="Production Status"
-                  hint="Fulfillment progress: preflight \u2192 in production \u2192 ready to ship \u2192 shipped"
+                  label={t("admin.orderDetail.productionStatus")}
+                  hint={t("admin.orderDetail.productionStatusHint")}
                   value={productionStatus}
                   onChange={setProductionStatus}
                   options={productionOptions}
@@ -554,25 +556,25 @@ export default function OrderDetailPage() {
                   disabled={saving}
                   className="w-full rounded-[3px] bg-black py-2.5 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:bg-[#999]"
                 >
-                  {saving ? "Saving..." : "Update Status"}
+                  {saving ? t("admin.common.saving") : t("admin.orderDetail.updateStatus")}
                 </button>
               </div>
             </Section>
 
             {/* Tags, Priority, Archive */}
-            <Section title="Tags & Priority">
+            <Section title={t("admin.orderDetail.tagsPriority")}>
               <div className="space-y-4">
                 {/* Tags */}
                 <div>
                   <label className="mb-1 block text-xs font-medium text-[#666]">
-                    Tags
+                    {t("admin.orderDetail.tags")}
                   </label>
                   <input
                     type="text"
                     value={tagsInput}
                     onChange={(e) => setTagsInput(e.target.value)}
                     onBlur={handleTagsBlur}
-                    placeholder="e.g. rush, wholesale, VIP"
+                    placeholder={t("admin.orderDetail.tagsPlaceholder")}
                     className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
                   {tagsInput && (
@@ -596,12 +598,12 @@ export default function OrderDetailPage() {
                 {/* Priority */}
                 <div>
                   <label className="mb-1 block text-xs font-medium text-[#666]">
-                    Priority
+                    {t("admin.orderDetail.priority")}
                   </label>
                   <div className="flex gap-2">
-                    {priorityLabels.map((label, idx) => (
+                    {priorityLabelKeys.map((key, idx) => (
                       <button
-                        key={label}
+                        key={key}
                         type="button"
                         onClick={() => handlePriorityChange(idx)}
                         className={`flex-1 rounded-[3px] border px-2 py-1.5 text-xs font-semibold transition-colors ${
@@ -610,11 +612,11 @@ export default function OrderDetailPage() {
                             : "border-[#e0e0e0] bg-white text-[#999] hover:bg-[#fafafa]"
                         }`}
                       >
-                        {label}
+                        {t(key)}
                       </button>
                     ))}
                   </div>
-                  <p className="mt-1 text-[10px] text-[#999]">Normal = standard queue &middot; High = prioritize today &middot; Urgent = drop everything</p>
+                  <p className="mt-1 text-[10px] text-[#999]">{t("admin.orderDetail.priorityHint")}</p>
                 </div>
 
                 {/* Archive Toggle */}
@@ -628,14 +630,14 @@ export default function OrderDetailPage() {
                         : "border-[#e0e0e0] bg-white text-[#666] hover:bg-[#fafafa]"
                     }`}
                   >
-                    {isArchived ? "Archived - Click to Unarchive" : "Archive Order"}
+                    {isArchived ? t("admin.orderDetail.archivedUnarchive") : t("admin.orderDetail.archiveOrder")}
                   </button>
                 </div>
 
                 {/* Estimated Completion */}
                 <div>
                   <label className="mb-1 block text-xs font-medium text-[#666]">
-                    Estimated Completion
+                    {t("admin.orderDetail.estimatedCompletion")}
                   </label>
                   <input
                     type="date"
@@ -643,21 +645,21 @@ export default function OrderDetailPage() {
                     onChange={handleEstimatedCompletionChange}
                     className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
-                  <p className="mt-1 text-[10px] text-[#999]">When the customer should expect their order ready</p>
+                  <p className="mt-1 text-[10px] text-[#999]">{t("admin.orderDetail.estimatedCompletionHint")}</p>
                 </div>
               </div>
             </Section>
 
             {/* Metadata */}
-            <Section title="Details">
+            <Section title={t("admin.orderDetail.details")}>
               <div className="space-y-2 text-xs">
-                <InfoField label="Currency" value={order.currency?.toUpperCase()} />
+                <InfoField label={t("admin.orderDetail.currency")} value={order.currency?.toUpperCase()} />
                 <InfoField
-                  label="Stripe Session"
+                  label={t("admin.orderDetail.stripeSession")}
                   value={order.stripeSessionId ? order.stripeSessionId.slice(0, 20) + "..." : "\u2014"}
                 />
                 <InfoField
-                  label="Payment Intent"
+                  label={t("admin.orderDetail.paymentIntent")}
                   value={
                     order.stripePaymentIntentId
                       ? order.stripePaymentIntentId.slice(0, 20) + "..."
@@ -665,7 +667,7 @@ export default function OrderDetailPage() {
                   }
                 />
                 <InfoField
-                  label="Paid At"
+                  label={t("admin.orderDetail.paidAt")}
                   value={
                     order.paidAt
                       ? new Date(order.paidAt).toLocaleString()
@@ -673,11 +675,11 @@ export default function OrderDetailPage() {
                   }
                 />
                 <InfoField
-                  label="Created"
+                  label={t("admin.orderDetail.created")}
                   value={new Date(order.createdAt).toLocaleString()}
                 />
                 <InfoField
-                  label="Updated"
+                  label={t("admin.orderDetail.updated")}
                   value={new Date(order.updatedAt).toLocaleString()}
                 />
               </div>
@@ -685,7 +687,7 @@ export default function OrderDetailPage() {
 
             {/* Files with Preflight Review */}
             {order.files && order.files.length > 0 && (
-              <Section title={`Files (${order.files.length})`}>
+              <Section title={`${t("admin.orderDetail.files")} (${order.files.length})`}>
                 <div className="space-y-2">
                   {order.files.map((file) => (
                     <div key={file.id} className="rounded-[3px] border border-[#e0e0e0] px-3 py-2">
@@ -750,13 +752,14 @@ export default function OrderDetailPage() {
 
 /* ========== Print Invoice Component ========== */
 function PrintInvoice({ order }) {
+  const { t } = useTranslation();
   return (
     <div className="p-8 text-sm text-black">
       {/* Invoice Header */}
       <div className="flex items-start justify-between border-b border-[#d0d0d0] pb-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Vibe Sticker Shop</h1>
-          <p className="text-[#999] mt-1">Invoice</p>
+          <p className="text-[#999] mt-1">{t("admin.orderDetail.invoice")}</p>
         </div>
         <div className="text-right">
           <p className="font-semibold">Order #{order.id.slice(0, 8)}</p>
@@ -769,7 +772,7 @@ function PrintInvoice({ order }) {
       {/* Customer Info */}
       <div className="mb-6">
         <h2 className="text-xs font-semibold uppercase text-[#999] mb-2">
-          Bill To
+          {t("admin.orderDetail.billTo")}
         </h2>
         <p className="font-medium">{order.customerName || order.customerEmail}</p>
         <p>{order.customerEmail}</p>
@@ -780,11 +783,11 @@ function PrintInvoice({ order }) {
       <table className="w-full mb-6 border-collapse">
         <thead>
           <tr className="border-b border-[#d0d0d0] text-left text-xs font-semibold uppercase text-[#999]">
-            <th className="pb-2">Item</th>
-            <th className="pb-2">Type</th>
-            <th className="pb-2 text-center">Qty</th>
-            <th className="pb-2 text-right">Unit Price</th>
-            <th className="pb-2 text-right">Total</th>
+            <th className="pb-2">{t("admin.orderDetail.item")}</th>
+            <th className="pb-2">{t("admin.orderDetail.type")}</th>
+            <th className="pb-2 text-center">{t("admin.orderDetail.qty")}</th>
+            <th className="pb-2 text-right">{t("admin.orderDetail.unitPrice")}</th>
+            <th className="pb-2 text-right">{t("admin.orderDetail.total")}</th>
           </tr>
         </thead>
         <tbody>
@@ -827,40 +830,40 @@ function PrintInvoice({ order }) {
       {/* Amounts */}
       <div className="ml-auto w-64 space-y-1 text-sm">
         <div className="flex justify-between">
-          <span>Subtotal</span>
+          <span>{t("admin.orderDetail.subtotal")}</span>
           <span>{formatCad(order.subtotalAmount)}</span>
         </div>
         {order.coupon && (
           <div className="flex justify-between text-green-700">
-            <span>Coupon ({order.coupon.code})</span>
+            <span>{t("admin.orderDetail.coupon")} ({order.coupon.code})</span>
             <span>-{formatCad(order.coupon.discountAmount || 0)}</span>
           </div>
         )}
         <div className="flex justify-between">
-          <span>Tax (13% HST)</span>
+          <span>{t("admin.orderDetail.tax")}</span>
           <span>{formatCad(order.taxAmount)}</span>
         </div>
         <div className="flex justify-between">
-          <span>Shipping</span>
+          <span>{t("admin.orderDetail.shipping")}</span>
           <span>
-            {order.shippingAmount === 0 ? "FREE" : formatCad(order.shippingAmount)}
+            {order.shippingAmount === 0 ? t("admin.orderDetail.free") : formatCad(order.shippingAmount)}
           </span>
         </div>
         {order.refundAmount > 0 && (
           <div className="flex justify-between text-red-600">
-            <span>Refund</span>
+            <span>{t("admin.orderDetail.refund")}</span>
             <span>-{formatCad(order.refundAmount)}</span>
           </div>
         )}
         <div className="flex justify-between border-t border-[#d0d0d0] pt-2 text-base font-bold">
-          <span>Total</span>
+          <span>{t("admin.orderDetail.total")}</span>
           <span>{formatCad(order.totalAmount)} CAD</span>
         </div>
       </div>
 
       {/* Footer */}
       <div className="mt-10 border-t border-[#e0e0e0] pt-4 text-center text-xs text-[#999]">
-        <p>Thank you for your order!</p>
+        <p>{t("admin.orderDetail.thankYou")}</p>
         <p className="mt-1">Vibe Sticker Shop</p>
       </div>
     </div>
@@ -910,6 +913,7 @@ function SelectField({ label, value, onChange, options, hint }) {
 
 /* ========== Preflight Review Actions ========== */
 function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
+  const { t } = useTranslation();
   const [acting, setActing] = useState(false);
   const [notes, setNotes] = useState("");
 
@@ -935,7 +939,7 @@ function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
         type="text"
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
-        placeholder="Review notes..."
+        placeholder={t("admin.orderDetail.reviewNotesPlaceholder")}
         className="flex-1 rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-gray-400"
       />
       <button
@@ -944,7 +948,7 @@ function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
         disabled={acting}
         className="rounded bg-green-600 px-2.5 py-1 text-[10px] font-semibold text-[#fff] hover:bg-green-700 disabled:opacity-50"
       >
-        Approve
+        {t("admin.orderDetail.approve")}
       </button>
       <button
         type="button"
@@ -952,7 +956,7 @@ function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
         disabled={acting}
         className="rounded bg-red-600 px-2.5 py-1 text-[10px] font-semibold text-[#fff] hover:bg-red-700 disabled:opacity-50"
       >
-        Reject
+        {t("admin.orderDetail.reject")}
       </button>
     </div>
   );
@@ -967,6 +971,7 @@ const proofStatusColors = {
 };
 
 function ProofSection({ orderId }) {
+  const { t } = useTranslation();
   const [proofs, setProofs] = useState([]);
   const [loadingProofs, setLoadingProofs] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -1019,7 +1024,7 @@ function ProofSection({ orderId }) {
   }
 
   return (
-    <Section title={`Proofs (${proofs.length})`}>
+    <Section title={`${t("admin.orderDetail.proofs")} (${proofs.length})`}>
       <div className="space-y-3">
         {/* Upload form */}
         <div className="space-y-2 rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
@@ -1027,20 +1032,20 @@ function ProofSection({ orderId }) {
             type="text"
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="Image URL"
+            placeholder={t("admin.orderDetail.imageUrl")}
             className="w-full rounded-[3px] border border-[#d0d0d0] px-2.5 py-1.5 text-xs outline-none focus:border-black"
           />
           <input
             type="text"
             value={fileName}
             onChange={(e) => setFileName(e.target.value)}
-            placeholder="File name (optional)"
+            placeholder={t("admin.orderDetail.fileNameOptional")}
             className="w-full rounded-[3px] border border-[#d0d0d0] px-2.5 py-1.5 text-xs outline-none focus:border-black"
           />
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Notes (optional)"
+            placeholder={t("admin.orderDetail.notesOptional")}
             rows={2}
             className="w-full rounded-[3px] border border-[#d0d0d0] px-2.5 py-1.5 text-xs outline-none focus:border-black resize-none"
           />
@@ -1050,15 +1055,15 @@ function ProofSection({ orderId }) {
             disabled={submitting || !imageUrl.trim()}
             className="w-full rounded-[3px] bg-black py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:bg-[#999]"
           >
-            {submitting ? "Uploading..." : "Upload Proof"}
+            {submitting ? t("admin.orderDetail.uploading") : t("admin.orderDetail.uploadProof")}
           </button>
         </div>
 
         {/* Proof list */}
         {loadingProofs ? (
-          <p className="text-xs text-[#999]">Loading proofs...</p>
+          <p className="text-xs text-[#999]">{t("admin.orderDetail.loadingProofs")}</p>
         ) : proofs.length === 0 ? (
-          <p className="text-xs text-[#999]">No proofs yet</p>
+          <p className="text-xs text-[#999]">{t("admin.orderDetail.noProofs")}</p>
         ) : (
           <div className="space-y-2">
             {proofs.map((proof) => (
@@ -1099,12 +1104,12 @@ function ProofSection({ orderId }) {
                 )}
                 {proof.notes && (
                   <p className="mt-2 text-xs text-[#666]">
-                    <span className="font-medium text-black">Notes:</span> {proof.notes}
+                    <span className="font-medium text-black">{t("admin.orderDetail.notes")}:</span> {proof.notes}
                   </p>
                 )}
                 {proof.customerComment && (
                   <p className="mt-1 text-xs text-[#666]">
-                    <span className="font-medium text-black">Customer:</span>{" "}
+                    <span className="font-medium text-black">{t("admin.orderDetail.customer")}:</span>{" "}
                     {proof.customerComment}
                   </p>
                 )}
@@ -1119,6 +1124,7 @@ function ProofSection({ orderId }) {
 
 /* ========== Order Actions (Ship / Refund) ========== */
 function OrderActions({ order, onUpdate }) {
+  const { t } = useTranslation();
   const [shipOpen, setShipOpen] = useState(false);
   const [refundOpen, setRefundOpen] = useState(false);
   const [acting, setActing] = useState(false);
@@ -1154,14 +1160,14 @@ function OrderActions({ order, onUpdate }) {
       });
       const data = await res.json();
       if (res.ok) {
-        setActionMsg("Shipped successfully!");
+        setActionMsg(t("admin.orderDetail.shippedSuccess"));
         setShipOpen(false);
         onUpdate();
       } else {
-        setActionMsg(data.error || "Ship failed");
+        setActionMsg(data.error || t("admin.orderDetail.shipFailed"));
       }
     } catch {
-      setActionMsg("Ship failed");
+      setActionMsg(t("admin.orderDetail.shipFailed"));
     } finally {
       setActing(false);
     }
@@ -1172,7 +1178,7 @@ function OrderActions({ order, onUpdate }) {
     setActionMsg("");
     const amountCents = Math.round(parseFloat(refundAmount) * 100);
     if (!amountCents || amountCents <= 0) {
-      setActionMsg("Enter a valid amount");
+      setActionMsg(t("admin.orderDetail.enterValidAmount"));
       setActing(false);
       return;
     }
@@ -1182,26 +1188,26 @@ function OrderActions({ order, onUpdate }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amountCents,
-          reason: refundReason || "Refund issued by admin",
+          reason: refundReason || t("admin.orderDetail.refundByAdmin"),
         }),
       });
       const data = await res.json();
       if (res.ok) {
-        setActionMsg("Refund issued!");
+        setActionMsg(t("admin.orderDetail.refundIssued"));
         setRefundOpen(false);
         onUpdate();
       } else {
-        setActionMsg(data.error || "Refund failed");
+        setActionMsg(data.error || t("admin.orderDetail.refundFailed"));
       }
     } catch {
-      setActionMsg("Refund failed");
+      setActionMsg(t("admin.orderDetail.refundFailed"));
     } finally {
       setActing(false);
     }
   }
 
   return (
-    <Section title="Actions">
+    <Section title={t("admin.orderDetail.actions")}>
       <div className="space-y-3">
         {actionMsg && (
           <p className={`text-xs font-medium ${actionMsg.includes("fail") ? "text-red-600" : "text-green-600"}`}>
@@ -1216,17 +1222,17 @@ function OrderActions({ order, onUpdate }) {
             onClick={() => setShipOpen(true)}
             className="w-full rounded-lg bg-purple-600 py-2.5 text-xs font-semibold text-[#fff] hover:bg-purple-700"
           >
-            Mark as Shipped
+            {t("admin.orderDetail.markAsShipped")}
           </button>
         )}
         {shipOpen && (
           <div className="space-y-2 rounded-lg border border-purple-200 bg-purple-50 p-3">
-            <p className="text-xs font-semibold text-purple-900">Ship Order</p>
+            <p className="text-xs font-semibold text-purple-900">{t("admin.orderDetail.shipOrder")}</p>
             <input
               type="text"
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}
-              placeholder="Tracking number"
+              placeholder={t("admin.orderDetail.trackingNumber")}
               className="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs outline-none"
             />
             <select
@@ -1253,14 +1259,14 @@ function OrderActions({ order, onUpdate }) {
                 disabled={acting || !trackingNumber}
                 className="flex-1 rounded bg-purple-600 py-1.5 text-xs font-semibold text-[#fff] hover:bg-purple-700 disabled:bg-gray-400"
               >
-                {acting ? "..." : "Confirm Ship"}
+                {acting ? "..." : t("admin.orderDetail.confirmShip")}
               </button>
               <button
                 type="button"
                 onClick={() => setShipOpen(false)}
                 className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
               >
-                Cancel
+                {t("admin.common.cancel")}
               </button>
             </div>
           </div>
@@ -1273,13 +1279,13 @@ function OrderActions({ order, onUpdate }) {
             onClick={() => { setRefundOpen(true); setRefundAmount(maxRefund.toFixed(2)); }}
             className="w-full rounded-lg border border-red-300 py-2.5 text-xs font-semibold text-red-700 hover:bg-red-50"
           >
-            Issue Refund
+            {t("admin.orderDetail.issueRefund")}
           </button>
         )}
         {refundOpen && (
           <div className="space-y-2 rounded-lg border border-red-200 bg-red-50 p-3">
-            <p className="text-xs font-semibold text-red-900">Issue Refund</p>
-            <p className="text-[10px] text-red-600">Max: ${maxRefund.toFixed(2)} CAD</p>
+            <p className="text-xs font-semibold text-red-900">{t("admin.orderDetail.issueRefund")}</p>
+            <p className="text-[10px] text-red-600">{t("admin.orderDetail.maxRefund")}: ${maxRefund.toFixed(2)} CAD</p>
             <div className="flex items-center gap-1">
               <span className="text-xs text-gray-600">$</span>
               <input
@@ -1296,7 +1302,7 @@ function OrderActions({ order, onUpdate }) {
               type="text"
               value={refundReason}
               onChange={(e) => setRefundReason(e.target.value)}
-              placeholder="Reason (optional)"
+              placeholder={t("admin.orderDetail.reasonOptional")}
               className="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs outline-none"
             />
             <div className="flex gap-2">
@@ -1306,21 +1312,21 @@ function OrderActions({ order, onUpdate }) {
                 disabled={acting}
                 className="flex-1 rounded bg-red-600 py-1.5 text-xs font-semibold text-[#fff] hover:bg-red-700 disabled:bg-gray-400"
               >
-                {acting ? "..." : "Confirm Refund"}
+                {acting ? "..." : t("admin.orderDetail.confirmRefund")}
               </button>
               <button
                 type="button"
                 onClick={() => setRefundOpen(false)}
                 className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
               >
-                Cancel
+                {t("admin.common.cancel")}
               </button>
             </div>
           </div>
         )}
 
         {!canShip && !canRefund && (
-          <p className="text-xs text-gray-600 text-center py-2">No actions available for this order status</p>
+          <p className="text-xs text-gray-600 text-center py-2">{t("admin.orderDetail.noActions")}</p>
         )}
       </div>
     </Section>

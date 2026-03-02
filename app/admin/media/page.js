@@ -4,13 +4,15 @@ import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { resizeImageFile } from "@/lib/client-image-resize";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function MediaPage() {
+  const { t } = useTranslation();
   return (
     <Suspense
       fallback={
         <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-          Loading...
+          {t("admin.common.loading")}
         </div>
       }
     >
@@ -20,6 +22,7 @@ export default function MediaPage() {
 }
 
 function MediaContent() {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -212,12 +215,12 @@ function MediaContent() {
       const res = await fetch("/api/admin/media/health");
       const data = await res.json();
       if (!res.ok) {
-        setMessage({ text: data.error || "Failed to load media health", isError: true });
+        setMessage({ text: data.error || t("admin.media.healthLoadFailed"), isError: true });
         return;
       }
       setHealth(data);
     } catch {
-      setMessage({ text: "Failed to load media health", isError: true });
+      setMessage({ text: t("admin.media.healthLoadFailed"), isError: true });
     } finally {
       setHealthLoading(false);
     }
@@ -242,13 +245,13 @@ function MediaContent() {
       const res = await fetch(`/api/admin/products?${params}`);
       const data = await res.json();
       if (!res.ok) {
-        showMsg(data.error || "Product search failed", true);
+        showMsg(data.error || t("admin.media.productSearchFailed"), true);
         setResultsFn([]);
         return;
       }
       setResultsFn(data.products || []);
     } catch {
-      showMsg("Product search failed", true);
+      showMsg(t("admin.media.productSearchFailed"), true);
       setResultsFn([]);
     } finally {
       setLoadingFn(false);
@@ -385,7 +388,7 @@ function MediaContent() {
   async function handleUpload(e) {
     e.preventDefault();
     const pending = uploadFiles.filter((f) => f.status === "ready");
-    if (pending.length === 0) { showMsg("Select files first", true); return; }
+    if (pending.length === 0) { showMsg(t("admin.media.selectFilesFirst"), true); return; }
 
     setUploading(true);
     let doneCount = 0;
@@ -404,7 +407,7 @@ function MediaContent() {
         const data = await res.json();
 
         if (!res.ok) {
-          const errMsg = data.error || "Upload failed";
+          const errMsg = data.error || t("admin.media.uploadFailed");
           console.error("[Upload failed]", entry.file.name, errMsg);
           setUploadFiles((prev) => prev.map((f) => f.id === entry.id ? { ...f, status: "error", errorMsg: errMsg } : f));
           errorCount++;
@@ -428,9 +431,9 @@ function MediaContent() {
     fetchAssets();
     fetchHealth();
     if (errorCount === 0) {
-      showMsg(`${doneCount} image${doneCount > 1 ? "s" : ""} uploaded`);
+      showMsg(t("admin.media.imagesUploaded", { count: doneCount }));
     } else {
-      showMsg(`${doneCount} uploaded, ${errorCount} failed`, true);
+      showMsg(t("admin.media.uploadPartialFail", { done: doneCount, failed: errorCount }), true);
     }
   }
 
@@ -448,9 +451,9 @@ function MediaContent() {
       const mapping = parseCsvMapping(text);
       setBatchCsvMap(mapping);
       setBatchCsvLoaded(Object.keys(mapping).length > 0);
-      showMsg(`CSV mapping loaded: ${Object.keys(mapping).length} rows`);
+      showMsg(t("admin.media.csvMappingLoaded", { count: Object.keys(mapping).length }));
     } catch {
-      showMsg("Failed to parse CSV mapping", true);
+      showMsg(t("admin.media.csvParseFailed"), true);
     } finally {
       if (batchCsvRef.current) batchCsvRef.current.value = "";
     }
@@ -465,7 +468,7 @@ function MediaContent() {
   async function retryFailedRows() {
     const retryRows = batchReport.filter((r) => ["failed", "uploaded_unmatched"].includes(r.status) && r.file);
     if (!retryRows.length) {
-      showMsg("No retryable rows", true);
+      showMsg(t("admin.media.noRetryableRows"), true);
       return;
     }
     const retryFiles = retryRows.map((r) => r.file);
@@ -478,7 +481,7 @@ function MediaContent() {
     e.preventDefault();
     const filesToRun = explicitFiles || batchFiles;
     if (!filesToRun.length) {
-      showMsg("Select batch files first", true);
+      showMsg(t("admin.media.selectBatchFilesFirst"), true);
       return;
     }
     setBatchUploading(true);
@@ -499,7 +502,7 @@ function MediaContent() {
         const uploadData = await uploadRes.json();
         if (!uploadRes.ok) {
           row.status = "failed";
-          row.error = uploadData?.error || "Upload failed";
+          row.error = uploadData?.error || t("admin.media.uploadFailed");
           nextReport.push(row);
           continue;
         }
@@ -518,7 +521,7 @@ function MediaContent() {
         }
       } catch (err) {
         row.status = "failed";
-        row.error = err?.message || "Unknown error";
+        row.error = err?.message || t("admin.media.unknownError");
       }
       nextReport.push(row);
       setBatchReport([...nextReport]);
@@ -527,7 +530,7 @@ function MediaContent() {
     setBatchUploading(false);
     fetchAssets();
     fetchHealth();
-    showMsg("Batch upload finished");
+    showMsg(t("admin.media.batchUploadFinished"));
   }
 
   // ── Background removal ──
@@ -544,10 +547,10 @@ function MediaContent() {
       const url = URL.createObjectURL(blob);
       setBgRemovedBlob(blob);
       setBgRemovedPreview(url);
-      showMsg("Background removed successfully");
+      showMsg(t("admin.media.bgRemoveSuccess"));
     } catch (err) {
       console.error("Background removal failed:", err);
-      showMsg("Background removal failed — try a clearer photo", true);
+      showMsg(t("admin.media.bgRemoveFailed"), true);
     } finally {
       setBgRemoving(false);
     }
@@ -567,17 +570,17 @@ function MediaContent() {
 
       const res = await fetch("/api/admin/assets", { method: "POST", body: formData });
       if (!res.ok) {
-        showMsg("Failed to save background-removed image", true);
+        showMsg(t("admin.media.bgSaveFailed"), true);
         return;
       }
-      showMsg("Saved as new asset");
+      showMsg(t("admin.media.savedAsNewAsset"));
       setBgRemovedBlob(null);
       if (bgRemovedPreview) URL.revokeObjectURL(bgRemovedPreview);
       setBgRemovedPreview(null);
       fetchAssets();
       fetchHealth();
     } catch {
-      showMsg("Failed to save", true);
+      showMsg(t("admin.media.saveFailed"), true);
     } finally {
       setBgSaving(false);
     }
@@ -617,14 +620,14 @@ function MediaContent() {
       });
       if (!res.ok) {
         const data = await res.json();
-        showMsg(data.error || "Failed to save", true);
+        showMsg(data.error || t("admin.media.saveFailed"), true);
         return;
       }
-      showMsg("Asset updated");
+      showMsg(t("admin.media.assetUpdated"));
       setSelectedAsset(null);
       fetchAssets();
     } catch {
-      showMsg("Failed to save", true);
+      showMsg(t("admin.media.saveFailed"), true);
     } finally {
       setSavingDetail(false);
     }
@@ -635,12 +638,12 @@ function MediaContent() {
     if (!deleteTarget) return;
     try {
       const res = await fetch(`/api/admin/assets/${deleteTarget.id}`, { method: "DELETE" });
-      if (!res.ok) { showMsg("Failed to archive", true); return; }
-      showMsg("Asset archived");
+      if (!res.ok) { showMsg(t("admin.media.archiveFailed"), true); return; }
+      showMsg(t("admin.media.assetArchived"));
       fetchAssets();
       fetchHealth();
     } catch {
-      showMsg("Failed to archive", true);
+      showMsg(t("admin.media.archiveFailed"), true);
     } finally {
       setDeleteTarget(null);
     }
@@ -651,12 +654,12 @@ function MediaContent() {
     if (!deleteTarget) return;
     try {
       const res = await fetch(`/api/admin/assets/${deleteTarget.id}?permanent=true`, { method: "DELETE" });
-      if (!res.ok) { showMsg("Failed to delete permanently", true); return; }
-      showMsg("Asset permanently deleted");
+      if (!res.ok) { showMsg(t("admin.media.permanentDeleteFailed"), true); return; }
+      showMsg(t("admin.media.permanentlyDeleted"));
       fetchAssets();
       fetchHealth();
     } catch {
-      showMsg("Failed to delete permanently", true);
+      showMsg(t("admin.media.permanentDeleteFailed"), true);
     } finally {
       setDeleteTarget(null);
     }
@@ -666,12 +669,12 @@ function MediaContent() {
   async function handleDeleteLegacy(id) {
     try {
       const res = await fetch(`/api/admin/media?id=${id}`, { method: "DELETE" });
-      if (!res.ok) { showMsg("Failed to delete", true); return; }
-      showMsg("Image deleted");
+      if (!res.ok) { showMsg(t("admin.media.deleteFailed"), true); return; }
+      showMsg(t("admin.media.imageDeleted"));
       fetchLegacy();
       fetchHealth();
     } catch {
-      showMsg("Failed to delete", true);
+      showMsg(t("admin.media.deleteFailed"), true);
     }
   }
 
@@ -695,11 +698,11 @@ function MediaContent() {
     setLinkingInDetail(true);
     try {
       await linkAssetToProduct(selectedAsset, detailProductId);
-      showMsg("Asset linked to product");
+      showMsg(t("admin.media.assetLinked"));
       fetchAssets();
       fetchHealth();
     } catch (err) {
-      showMsg(err?.message || "Failed to link asset", true);
+      showMsg(err?.message || t("admin.media.linkFailed"), true);
     } finally {
       setLinkingInDetail(false);
     }
@@ -737,20 +740,20 @@ function MediaContent() {
             <svg className="mx-auto h-12 w-12 text-[#fff]/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
-            <p className="mt-3 text-sm font-semibold text-[#fff]">Drop images to upload</p>
+            <p className="mt-3 text-sm font-semibold text-[#fff]">{t("admin.media.dropToUpload")}</p>
           </div>
         </div>
       )}
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-black">Media Library</h1>
+        <h1 className="text-xl font-semibold text-black">{t("admin.media.title")}</h1>
         <button
           type="button"
           onClick={() => setShowUpload(true)}
           className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
         >
-          + Upload Asset
+          {t("admin.media.uploadAsset")}
         </button>
       </div>
 
@@ -768,57 +771,57 @@ function MediaContent() {
           onClick={() => setTab("assets")}
           className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${tab === "assets" ? "bg-white text-black shadow-sm" : "text-[#999] hover:text-black"}`}
         >
-          Asset Library
+          {t("admin.media.assetLibrary")}
         </button>
         <button
           type="button"
           onClick={() => setTab("legacy")}
           className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${tab === "legacy" ? "bg-white text-black shadow-sm" : "text-[#999] hover:text-black"}`}
         >
-          Product Images (old)
+          {t("admin.media.productImagesOld")}
         </button>
       </div>
 
         {tab === "assets" && (
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-black">Image Health Check</h2>
+            <h2 className="text-sm font-semibold text-black">{t("admin.media.imageHealthCheck")}</h2>
             <button
               type="button"
               onClick={fetchHealth}
               className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
             >
-              {healthLoading ? "Refreshing..." : "Refresh"}
+              {healthLoading ? t("admin.media.refreshing") : t("admin.media.refresh")}
             </button>
           </div>
           {!health ? (
-            <p className="text-xs text-[#999]">{healthLoading ? "Loading..." : "No health report yet."}</p>
+            <p className="text-xs text-[#999]">{healthLoading ? t("admin.common.loading") : t("admin.media.noHealthReport")}</p>
           ) : (
             <>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-                  <p className="text-[11px] text-[#666]">Total Assets</p>
+                  <p className="text-[11px] text-[#666]">{t("admin.media.totalAssets")}</p>
                   <p className="text-base font-semibold text-black">{health.summary.totalAssets}</p>
                 </div>
                 <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-                  <p className="text-[11px] text-[#666]">Unused Images</p>
-                  <p className="text-[10px] text-[#bbb]">Not linked to any product</p>
+                  <p className="text-[11px] text-[#666]">{t("admin.media.unusedImages")}</p>
+                  <p className="text-[10px] text-[#bbb]">{t("admin.media.notLinkedToProduct")}</p>
                   <p className="text-base font-semibold text-black">{health.summary.orphanAssets}</p>
                 </div>
                 <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-                  <p className="text-[11px] text-[#666]">Missing URLs</p>
-                  <p className="text-[10px] text-[#bbb]">Placeholder / broken links</p>
+                  <p className="text-[11px] text-[#666]">{t("admin.media.missingUrls")}</p>
+                  <p className="text-[10px] text-[#bbb]">{t("admin.media.placeholderBrokenLinks")}</p>
                   <p className="text-base font-semibold text-black">{health.summary.placeholderAssets}</p>
                 </div>
                 <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-                  <p className="text-[11px] text-[#666]">Active Products Missing Image</p>
+                  <p className="text-[11px] text-[#666]">{t("admin.media.activeProductsMissingImage")}</p>
                   <p className="text-base font-semibold text-black">{health.summary.activeProductsWithoutImage}</p>
                 </div>
               </div>
               {(health.orphanExamples?.length > 0 || health.missingImageProducts?.length > 0) && (
                 <div className="grid gap-2 lg:grid-cols-2">
                   <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#666]">Unused Images</p>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#666]">{t("admin.media.unusedImages")}</p>
                     <div className="space-y-1 text-xs">
                       {(health.orphanExamples || []).slice(0, 5).map((a) => (
                         <div key={a.id} className="truncate text-[#666]" title={a.originalName}>
@@ -828,7 +831,7 @@ function MediaContent() {
                     </div>
                   </div>
                   <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#666]">Products Missing Image</p>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#666]">{t("admin.media.productsMissingImage")}</p>
                     <div className="space-y-1 text-xs">
                       {(health.missingImageProducts || []).slice(0, 5).map((p) => (
                         <Link key={p.id} href={`/admin/products/${p.id}`} className="block truncate text-black underline hover:no-underline" title={`${p.name} (${p.slug})`}>
@@ -851,11 +854,11 @@ function MediaContent() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={tab === "assets" ? "Search by name, alt text..." : "Search by alt text or product..."}
+            placeholder={tab === "assets" ? t("admin.media.searchAssetsPlaceholder") : t("admin.media.searchLegacyPlaceholder")}
             className="w-full sm:w-72 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button type="submit" className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]">
-            Search
+            {t("admin.common.search")}
           </button>
         </form>
         {tab === "assets" && (
@@ -864,10 +867,10 @@ function MediaContent() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none"
           >
-            <option value="">All Status</option>
-            <option value="published">Published</option>
-            <option value="uploaded">Uploaded</option>
-            <option value="archived">Archived</option>
+            <option value="">{t("admin.media.allStatus")}</option>
+            <option value="published">{t("admin.media.published")}</option>
+            <option value="uploaded">{t("admin.media.uploaded")}</option>
+            <option value="archived">{t("admin.media.archived")}</option>
           </select>
         )}
         {searchParams.get("search") && (
@@ -876,7 +879,7 @@ function MediaContent() {
             onClick={() => { setSearch(""); updateParams({ search: null, page: "1" }); }}
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]"
           >
-            Clear
+            {t("admin.common.clear")}
           </button>
         )}
       </div>
@@ -885,12 +888,12 @@ function MediaContent() {
       {tab === "assets" && (
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-3 sm:p-5">
           {loading ? (
-            <div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading...</div>
+            <div className="flex h-48 items-center justify-center text-sm text-[#999]">{t("admin.common.loading")}</div>
           ) : assets.length === 0 ? (
             <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-[#999]">
-              <p>No assets found</p>
+              <p>{t("admin.media.noAssetsFound")}</p>
               <button type="button" onClick={() => setShowUpload(true)} className="text-xs text-black underline hover:no-underline">
-                Upload your first asset
+                {t("admin.media.uploadFirstAsset")}
               </button>
             </div>
           ) : (
@@ -911,14 +914,14 @@ function MediaContent() {
                           onClick={() => openDetail(asset)}
                           className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1.5 text-[10px] font-medium text-black hover:bg-[#fafafa]"
                         >
-                          Edit
+                          {t("admin.common.edit")}
                         </button>
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(asset)}
                           className="rounded-[3px] border border-red-200 bg-red-50 px-2.5 py-1.5 text-[10px] font-medium text-red-600 hover:bg-red-100"
                         >
-                          Delete
+                          {t("admin.common.delete")}
                         </button>
                       </div>
                     </div>
@@ -956,7 +959,7 @@ function MediaContent() {
                         <div className="space-y-1">
                           <p className="text-xs text-[#fff]/90 truncate">{asset.originalName}</p>
                           <p className="text-[10px] text-[#fff]/90">
-                            {asset.widthPx}x{asset.heightPx} · {formatBytes(asset.sizeBytes)} · {asset.linkCount || 0} links
+                            {asset.widthPx}x{asset.heightPx} · {formatBytes(asset.sizeBytes)} · {asset.linkCount || 0} {t("admin.media.links")}
                           </p>
                         </div>
                       </div>
@@ -973,9 +976,9 @@ function MediaContent() {
       {tab === "legacy" && (
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
           {loading ? (
-            <div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading...</div>
+            <div className="flex h-48 items-center justify-center text-sm text-[#999]">{t("admin.common.loading")}</div>
           ) : legacyImages.length === 0 ? (
-            <div className="flex h-48 items-center justify-center text-sm text-[#999]">No legacy images found</div>
+            <div className="flex h-48 items-center justify-center text-sm text-[#999]">{t("admin.media.noLegacyImages")}</div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {legacyImages.map((image) => (
@@ -1016,15 +1019,15 @@ function MediaContent() {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-[#999]">
-            Showing {(pagination.page - 1) * pagination.limit + 1}-
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
+            {t("admin.common.showing")} {(pagination.page - 1) * pagination.limit + 1}-
+            {Math.min(pagination.page * pagination.limit, pagination.total)} {t("admin.common.of")} {pagination.total}
           </p>
           <div className="flex gap-1">
             <button type="button" disabled={page <= 1} onClick={() => updateParams({ page: String(page - 1) })} className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40">
-              Previous
+              {t("admin.common.previous")}
             </button>
             <button type="button" disabled={page >= pagination.totalPages} onClick={() => updateParams({ page: String(page + 1) })} className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40">
-              Next
+              {t("admin.common.next")}
             </button>
           </div>
         </div>
@@ -1035,7 +1038,7 @@ function MediaContent() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setShowUpload(false); }}>
           <div className="bg-white rounded-[3px] shadow-lg w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-black">Upload Images</h2>
+              <h2 className="text-sm font-semibold text-black">{t("admin.media.uploadImages")}</h2>
               <button type="button" onClick={() => { setShowUpload(false); setUploadFiles([]); }} className="text-[#999] hover:text-[#666] text-lg leading-none">&times;</button>
             </div>
 
@@ -1055,11 +1058,11 @@ function MediaContent() {
                 <svg className="h-8 w-8 text-[#999]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-                <p className="text-xs text-[#999]">Drop images here, click to browse, or Ctrl+V to paste</p>
-                <p className="text-[10px] text-[#999]">Multiple files OK — JPEG, PNG, WebP, SVG (max 20MB each)</p>
+                <p className="text-xs text-[#999]">{t("admin.media.dropBrowsePaste")}</p>
+                <p className="text-[10px] text-[#999]">{t("admin.media.multipleFilesHint")}</p>
                 {uploadProductId && uploadProductQuery && (
                   <p className="mt-1 rounded bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700">
-                    Auto-matched: {uploadProductQuery}
+                    {t("admin.media.autoMatched")}: {uploadProductQuery}
                     <button type="button" onClick={(e) => { e.stopPropagation(); setUploadProductId(""); setUploadProductQuery(""); setUploadProductResults([]); }} className="ml-1 text-green-500 hover:text-red-500">&times;</button>
                   </p>
                 )}
@@ -1085,26 +1088,26 @@ function MediaContent() {
                             type="text"
                             value={entry.alt}
                             onChange={(e) => updateUploadFileAlt(entry.id, e.target.value)}
-                            placeholder="Alt text"
+                            placeholder={t("admin.media.altText")}
                             disabled={entry.status !== "ready"}
                             className="w-full rounded-[2px] border border-transparent px-1.5 py-0.5 text-xs outline-none hover:border-[#d0d0d0] focus:border-black disabled:bg-transparent"
                           />
                           <p className="px-1.5 text-[10px] text-[#999] truncate">
                             {entry.file.name} ({formatBytes(entry.file.size)})
-                            {entry.wasResized && <span className="ml-1 text-blue-500">resized</span>}
+                            {entry.wasResized && <span className="ml-1 text-blue-500">{t("admin.media.resized")}</span>}
                           </p>
                         </div>
                         {entry.status === "ready" && (
                           <button type="button" onClick={() => removeUploadFile(entry.id)} className="flex-shrink-0 text-[#999] hover:text-red-500 text-sm">&times;</button>
                         )}
                         {entry.status === "uploading" && (
-                          <span className="flex-shrink-0 text-[10px] font-medium text-blue-600">Uploading...</span>
+                          <span className="flex-shrink-0 text-[10px] font-medium text-blue-600">{t("admin.media.uploading")}</span>
                         )}
                         {entry.status === "done" && (
-                          <span className="flex-shrink-0 rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-600">Uploaded</span>
+                          <span className="flex-shrink-0 rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-600">{t("admin.media.uploaded")}</span>
                         )}
                         {entry.status === "error" && (
-                          <span className="flex-shrink-0 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-500" title={entry.errorMsg || ""}>{entry.errorMsg || "Failed"}</span>
+                          <span className="flex-shrink-0 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-500" title={entry.errorMsg || ""}>{entry.errorMsg || t("admin.media.failed")}</span>
                         )}
                       </div>
                     </div>
@@ -1114,20 +1117,20 @@ function MediaContent() {
 
               {/* Tags (optional, applies to all) */}
               <details className="rounded-[3px] border border-[#e0e0e0]">
-                <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-[#666]">Tags & Product Link (optional)</summary>
+                <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-[#666]">{t("admin.media.tagsProductLink")}</summary>
                 <div className="border-t border-[#e0e0e0] p-3 space-y-3">
                   <div>
-                    <label className="block text-[11px] font-medium text-[#666] mb-1">Tags (comma-separated)</label>
-                    <input type="text" value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} placeholder="product, banner, hero..." className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
+                    <label className="block text-[11px] font-medium text-[#666] mb-1">{t("admin.media.tagsLabel")}</label>
+                    <input type="text" value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} placeholder={t("admin.media.tagsPlaceholder")} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-[#666] mb-1">Link to Product</label>
+                    <label className="block text-[11px] font-medium text-[#666] mb-1">{t("admin.media.linkToProduct")}</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={uploadProductQuery}
                         onChange={(e) => setUploadProductQuery(e.target.value)}
-                        placeholder="Search product name or slug"
+                        placeholder={t("admin.media.searchProductPlaceholder")}
                         className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                       />
                       <button
@@ -1135,7 +1138,7 @@ function MediaContent() {
                         onClick={() => searchProducts(uploadProductQuery, setUploadProductLoading, setUploadProductResults)}
                         className="rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-medium text-black hover:bg-[#fafafa]"
                       >
-                        {uploadProductLoading ? "..." : "Find"}
+                        {uploadProductLoading ? "..." : t("admin.media.find")}
                       </button>
                     </div>
                     {uploadProductResults.length > 0 && (
@@ -1144,7 +1147,7 @@ function MediaContent() {
                         onChange={(e) => setUploadProductId(e.target.value)}
                         className="mt-2 w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                       >
-                        <option value="">Select product (optional)</option>
+                        <option value="">{t("admin.media.selectProductOptional")}</option>
                         {uploadProductResults.map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.name} ({p.slug})
@@ -1158,51 +1161,51 @@ function MediaContent() {
 
               {/* Batch CSV auto-match (advanced, collapsed) */}
               <details className="rounded-[3px] border border-[#e0e0e0]">
-                <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-[#666]">Batch CSV Auto-Match (advanced)</summary>
+                <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-[#666]">{t("admin.media.batchCsvTitle")}</summary>
                 <div className="border-t border-[#e0e0e0] p-3 space-y-2">
-                  <p className="text-[10px] text-[#999]">Upload a CSV (filename, product-slug) to auto-link images to products by name.</p>
+                  <p className="text-[10px] text-[#999]">{t("admin.media.batchCsvDesc")}</p>
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => batchCsvRef.current?.click()}
                       className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1 text-[11px] font-medium text-black hover:bg-[#fafafa]"
                     >
-                      Load CSV map
+                      {t("admin.media.loadCsvMap")}
                     </button>
                     <button
                       type="button"
                       onClick={() => batchInputRef.current?.click()}
                       className="rounded-[3px] border border-[#d0d0d0] px-2.5 py-1 text-[11px] font-medium text-black hover:bg-[#fafafa]"
                     >
-                      Select batch files
+                      {t("admin.media.selectBatchFiles")}
                     </button>
                     <input ref={batchCsvRef} type="file" accept=".csv,text/csv" onChange={handleBatchCsvChange} className="hidden" />
                     <input ref={batchInputRef} type="file" accept="image/*" multiple onChange={handleBatchFileChange} className="hidden" />
                   </div>
                   <label className="flex items-center gap-2 text-xs text-[#666]">
                     <input type="checkbox" checked={batchAutoLink} onChange={(e) => setBatchAutoLink(e.target.checked)} className="rounded border-[#d0d0d0]" />
-                    Auto-link by filename to product slug
+                    {t("admin.media.autoLinkByFilename")}
                   </label>
                   {batchCsvLoaded && (
                     <div className="flex items-center justify-between rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] px-2 py-1.5 text-[11px] text-[#666]">
-                      <span>CSV mapping loaded: {Object.keys(batchCsvMap).length} keys</span>
-                      <button type="button" onClick={() => { setBatchCsvMap({}); setBatchCsvLoaded(false); }} className="rounded-[3px] border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-medium text-black hover:bg-white">Clear</button>
+                      <span>{t("admin.media.csvMappingLoaded", { count: Object.keys(batchCsvMap).length })}</span>
+                      <button type="button" onClick={() => { setBatchCsvMap({}); setBatchCsvLoaded(false); }} className="rounded-[3px] border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-medium text-black hover:bg-white">{t("admin.common.clear")}</button>
                     </div>
                   )}
-                  {batchFiles.length > 0 && <p className="text-[11px] text-[#666]">{batchFiles.length} batch files selected</p>}
+                  {batchFiles.length > 0 && <p className="text-[11px] text-[#666]">{t("admin.media.batchFilesSelected", { count: batchFiles.length })}</p>}
                   <button
                     type="button"
                     disabled={!batchFiles.length || batchUploading}
                     onClick={handleBatchUpload}
                     className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-semibold text-black hover:bg-[#fafafa] disabled:opacity-50"
                   >
-                    {batchUploading ? "Batch uploading..." : "Run Batch Upload"}
+                    {batchUploading ? t("admin.media.batchUploading") : t("admin.media.runBatchUpload")}
                   </button>
                   {batchReport.length > 0 && (
                     <>
                       <div className="flex items-center justify-between text-[11px] text-[#666]">
-                        <span>linked: {batchReport.filter((r) => r.status === "linked").length} | unmatched: {batchReport.filter((r) => r.status === "uploaded_unmatched").length} | failed: {batchReport.filter((r) => r.status === "failed").length}</span>
-                        <button type="button" onClick={retryFailedRows} disabled={!batchReport.some((r) => ["failed", "uploaded_unmatched"].includes(r.status))} className="rounded-[3px] border border-[#d0d0d0] px-2 py-1 text-[10px] font-medium text-black hover:bg-[#fafafa] disabled:opacity-40">Retry</button>
+                        <span>{t("admin.media.linked")}: {batchReport.filter((r) => r.status === "linked").length} | {t("admin.media.unmatched")}: {batchReport.filter((r) => r.status === "uploaded_unmatched").length} | {t("admin.media.failedLabel")}: {batchReport.filter((r) => r.status === "failed").length}</span>
+                        <button type="button" onClick={retryFailedRows} disabled={!batchReport.some((r) => ["failed", "uploaded_unmatched"].includes(r.status))} className="rounded-[3px] border border-[#d0d0d0] px-2 py-1 text-[10px] font-medium text-black hover:bg-[#fafafa] disabled:opacity-40">{t("admin.media.retry")}</button>
                       </div>
                       <div className="max-h-28 overflow-auto rounded-[3px] border border-[#e0e0e0] p-2 text-[11px]">
                         {batchReport.map((r, idx) => (
@@ -1217,23 +1220,23 @@ function MediaContent() {
               {/* Actions */}
               <div className="flex items-center justify-between pt-2">
                 <p className="text-[11px] text-[#999]">
-                  {uploadFiles.filter((f) => f.status === "ready").length} ready
+                  {uploadFiles.filter((f) => f.status === "ready").length} {t("admin.media.ready")}
                   {uploadFiles.filter((f) => f.status === "done").length > 0 && (
-                    <span className="ml-1 text-green-600">{uploadFiles.filter((f) => f.status === "done").length} uploaded</span>
+                    <span className="ml-1 text-green-600">{uploadFiles.filter((f) => f.status === "done").length} {t("admin.media.uploaded")}</span>
                   )}
                 </p>
                 <div className="flex gap-2">
                   {uploadFiles.some((f) => f.status === "done") && uploadFiles.every((f) => f.status !== "ready") ? (
                     <button type="button" onClick={() => { setShowUpload(false); setUploadFiles([]); setUploadProductQuery(""); setUploadProductResults([]); setUploadProductId(""); }} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]">
-                      Done
+                      {t("admin.media.done")}
                     </button>
                   ) : (
                     <>
                       <button type="button" onClick={() => { setShowUpload(false); setUploadFiles([]); }} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
-                        Cancel
+                        {t("admin.common.cancel")}
                       </button>
                       <button type="submit" disabled={uploadFiles.filter((f) => f.status === "ready").length === 0 || uploading} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50">
-                        {uploading ? "Uploading..." : `Upload ${uploadFiles.filter((f) => f.status === "ready").length}`}
+                        {uploading ? t("admin.media.uploading") : `${t("admin.media.upload")} ${uploadFiles.filter((f) => f.status === "ready").length}`}
                       </button>
                     </>
                   )}
@@ -1259,7 +1262,7 @@ function MediaContent() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setSelectedAsset(null); }}>
           <div className="bg-white rounded-[3px] shadow-lg w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-black">Asset Detail</h2>
+              <h2 className="text-sm font-semibold text-black">{t("admin.media.assetDetail")}</h2>
               <button type="button" onClick={() => setSelectedAsset(null)} className="text-[#999] hover:text-[#666] text-lg leading-none">&times;</button>
             </div>
 
@@ -1275,7 +1278,7 @@ function MediaContent() {
                   />
                 </div>
                 <p className="mt-2 text-[10px] text-[#999] text-center">
-                  Click image to set crop center point
+                  {t("admin.media.clickToSetFocal")}
                 </p>
 
                 {/* Background Removal */}
@@ -1290,14 +1293,14 @@ function MediaContent() {
                       {bgRemoving ? (
                         <span className="flex items-center justify-center gap-2">
                           <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                          Removing Background...
+                          {t("admin.media.removingBg")}
                         </span>
-                      ) : "Remove Background"}
+                      ) : t("admin.media.removeBg")}
                     </button>
 
                     {bgRemovedPreview && (
                       <div className="space-y-2">
-                        <p className="text-[11px] font-medium text-[#666]">Result Preview</p>
+                        <p className="text-[11px] font-medium text-[#666]">{t("admin.media.resultPreview")}</p>
                         <div className="relative aspect-square rounded-[3px] overflow-hidden border border-[#e0e0e0]" style={{ backgroundImage: "linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(-45deg, #eee 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eee 75%), linear-gradient(-45deg, transparent 75%, #eee 75%)", backgroundSize: "16px 16px", backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px" }}>
                           <img src={bgRemovedPreview} alt="Background removed" className="h-full w-full object-contain" />
                         </div>
@@ -1307,7 +1310,7 @@ function MediaContent() {
                           disabled={bgSaving}
                           className="w-full rounded-[3px] bg-black px-3 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
                         >
-                          {bgSaving ? "Saving..." : "Save as New Asset"}
+                          {bgSaving ? t("admin.common.saving") : t("admin.media.saveAsNewAsset")}
                         </button>
                       </div>
                     )}
@@ -1319,49 +1322,49 @@ function MediaContent() {
               <div className="space-y-3">
                 <dl className="space-y-2 text-xs">
                   <div className="flex justify-between">
-                    <dt className="text-[#999]">File</dt>
+                    <dt className="text-[#999]">{t("admin.media.file")}</dt>
                     <dd className="text-black truncate max-w-[200px]">{selectedAsset.originalName}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[#999]">Dimensions</dt>
+                    <dt className="text-[#999]">{t("admin.media.dimensions")}</dt>
                     <dd className="text-black">{selectedAsset.widthPx}x{selectedAsset.heightPx}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[#999]">Size</dt>
+                    <dt className="text-[#999]">{t("admin.media.size")}</dt>
                     <dd className="text-black">{formatBytes(selectedAsset.sizeBytes)}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[#999]">Type</dt>
+                    <dt className="text-[#999]">{t("admin.media.type")}</dt>
                     <dd className="text-black">{selectedAsset.mimeType}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[#999]">Status</dt>
+                    <dt className="text-[#999]">{t("admin.media.status")}</dt>
                     <dd className="text-black">{selectedAsset.status}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[#999]">Linked to</dt>
-                    <dd className="text-black">{selectedAsset.linkCount || 0} product{(selectedAsset.linkCount || 0) !== 1 ? "s" : ""}</dd>
+                    <dt className="text-[#999]">{t("admin.media.linkedTo")}</dt>
+                    <dd className="text-black">{t("admin.media.productCount", { count: selectedAsset.linkCount || 0 })}</dd>
                   </div>
                 </dl>
 
                 <div>
-                  <label className="block text-xs font-medium text-[#666] mb-1">Alt Text</label>
+                  <label className="block text-xs font-medium text-[#666] mb-1">{t("admin.media.altText")}</label>
                   <input type="text" value={editAlt} onChange={(e) => setEditAlt(e.target.value)} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-[#666] mb-1">Tags</label>
-                  <input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} placeholder="Comma-separated tags" className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
+                  <label className="block text-xs font-medium text-[#666] mb-1">{t("admin.media.tags")}</label>
+                  <input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} placeholder={t("admin.media.commaSeparatedTags")} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
                 </div>
 
                 <div className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
-                  <label className="block text-xs font-medium text-[#666]">Link This Asset to Product</label>
+                  <label className="block text-xs font-medium text-[#666]">{t("admin.media.linkAssetToProduct")}</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={detailProductQuery}
                       onChange={(e) => setDetailProductQuery(e.target.value)}
-                      placeholder="Search product name or slug"
+                      placeholder={t("admin.media.searchProductPlaceholder")}
                       className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                     />
                     <button
@@ -1369,7 +1372,7 @@ function MediaContent() {
                       onClick={() => searchProducts(detailProductQuery, setDetailProductLoading, setDetailProductResults)}
                       className="rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-medium text-black hover:bg-[#fafafa]"
                     >
-                      {detailProductLoading ? "..." : "Find"}
+                      {detailProductLoading ? "..." : t("admin.media.find")}
                     </button>
                   </div>
                   {detailProductResults.length > 0 && (
@@ -1378,7 +1381,7 @@ function MediaContent() {
                       onChange={(e) => setDetailProductId(e.target.value)}
                       className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                     >
-                      <option value="">Select product</option>
+                      <option value="">{t("admin.media.selectProduct")}</option>
                       {detailProductResults.map((p) => (
                         <option key={p.id} value={p.id}>
                           {p.name} ({p.slug})
@@ -1392,19 +1395,19 @@ function MediaContent() {
                     onClick={handleDetailLink}
                     className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-semibold text-black hover:bg-[#fafafa] disabled:opacity-50"
                   >
-                    {linkingInDetail ? "Linking..." : "Link to Selected Product"}
+                    {linkingInDetail ? t("admin.media.linking") : t("admin.media.linkToSelectedProduct")}
                   </button>
                 </div>
 
                 <div className="flex gap-2 pt-2">
                   <button type="button" onClick={saveDetail} disabled={savingDetail} className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50">
-                    {savingDetail ? "Saving..." : "Save Changes"}
+                    {savingDetail ? t("admin.common.saving") : t("admin.media.saveChanges")}
                   </button>
                   <button type="button" onClick={() => { setDeleteTarget(selectedAsset); setSelectedAsset(null); }} className="rounded-[3px] border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-100">
-                    Delete
+                    {t("admin.common.delete")}
                   </button>
                   <button type="button" onClick={() => setSelectedAsset(null)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-black hover:bg-[#fafafa]">
-                    Close
+                    {t("admin.media.close")}
                   </button>
                 </div>
               </div>
@@ -1417,19 +1420,19 @@ function MediaContent() {
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setDeleteTarget(null); }}>
           <div className="bg-white rounded-[3px] shadow-lg w-full max-w-sm mx-4 p-6">
-            <h2 className="text-sm font-semibold text-black mb-2">Delete Asset</h2>
+            <h2 className="text-sm font-semibold text-black mb-2">{t("admin.media.deleteAsset")}</h2>
             <p className="text-xs text-[#999] mb-4 truncate">
               {deleteTarget.originalName}
             </p>
             <div className="flex flex-col gap-2">
               <button type="button" onClick={handleArchive} className="w-full rounded-[3px] border border-[#d0d0d0] py-2.5 text-xs font-medium text-black hover:bg-[#fafafa]">
-                Archive (can restore later)
+                {t("admin.media.archiveRestore")}
               </button>
               <button type="button" onClick={handlePermanentDelete} className="w-full rounded-[3px] bg-red-600 py-2.5 text-xs font-semibold text-[#fff] hover:bg-red-700">
-                Permanent Delete
+                {t("admin.media.permanentDelete")}
               </button>
               <button type="button" onClick={() => setDeleteTarget(null)} className="w-full rounded-[3px] border border-[#d0d0d0] py-2.5 text-xs font-medium text-[#999] hover:bg-[#fafafa]">
-                Cancel
+                {t("admin.common.cancel")}
               </button>
             </div>
           </div>

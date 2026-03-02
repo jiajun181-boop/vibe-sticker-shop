@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function AdminApiKeysPage() {
+  const { t } = useTranslation();
   const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -33,7 +35,7 @@ export default function AdminApiKeysPage() {
       setKeys((prev) => [data.apiKey, ...prev]);
       setNewKeyName("");
     } catch {
-      alert("Failed to create API key");
+      alert(t("admin.apiKeys.createFailed"));
     } finally {
       setCreating(false);
     }
@@ -42,8 +44,8 @@ export default function AdminApiKeysPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">API Keys</h1>
-        <span className="text-sm text-gray-500">B2B bulk order access</span>
+        <h1 className="text-lg font-semibold">{t("admin.apiKeys.title")}</h1>
+        <span className="text-sm text-gray-500">{t("admin.apiKeys.subtitle")}</span>
       </div>
 
       {/* Create */}
@@ -52,7 +54,7 @@ export default function AdminApiKeysPage() {
           type="text"
           value={newKeyName}
           onChange={(e) => setNewKeyName(e.target.value)}
-          placeholder="Key name (e.g., Acme Corp)"
+          placeholder={t("admin.apiKeys.namePlaceholder")}
           className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
           required
         />
@@ -61,14 +63,14 @@ export default function AdminApiKeysPage() {
           disabled={creating}
           className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-[#fff] hover:bg-black disabled:opacity-50"
         >
-          {creating ? "Creating..." : "Create Key"}
+          {creating ? t("admin.apiKeys.creating") : t("admin.apiKeys.createKey")}
         </button>
       </form>
 
       {/* New key display */}
       {newKeyResult && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-          <p className="mb-2 text-xs font-semibold text-emerald-700">New API Key (copy now — shown only once):</p>
+          <p className="mb-2 text-xs font-semibold text-emerald-700">{t("admin.apiKeys.newKeyHint")}</p>
           <code className="block rounded bg-white px-3 py-2 text-sm font-mono text-gray-900 select-all">
             {newKeyResult}
           </code>
@@ -77,7 +79,7 @@ export default function AdminApiKeysPage() {
             onClick={() => setNewKeyResult(null)}
             className="mt-2 text-xs text-emerald-600 hover:underline"
           >
-            Dismiss
+            {t("admin.apiKeys.dismiss")}
           </button>
         </div>
       )}
@@ -91,17 +93,17 @@ export default function AdminApiKeysPage() {
         </div>
       ) : keys.length === 0 ? (
         <div className="rounded-lg border bg-white p-8 text-center text-sm text-gray-500">
-          No API keys created yet.
+          {t("admin.apiKeys.noKeys")}
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border bg-white">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-gray-50 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Key Prefix</th>
-                <th className="px-4 py-3">Created</th>
-                <th className="px-4 py-3">Last Used</th>
+                <th className="px-4 py-3">{t("admin.apiKeys.name")}</th>
+                <th className="px-4 py-3">{t("admin.apiKeys.keyPrefix")}</th>
+                <th className="px-4 py-3">{t("admin.apiKeys.created")}</th>
+                <th className="px-4 py-3">{t("admin.apiKeys.lastUsed")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -115,7 +117,7 @@ export default function AdminApiKeysPage() {
                     {new Date(k.createdAt).toLocaleDateString("en-CA")}
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-500">
-                    {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString("en-CA") : "Never"}
+                    {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString("en-CA") : t("admin.apiKeys.never")}
                   </td>
                 </tr>
               ))}

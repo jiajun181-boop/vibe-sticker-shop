@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function AdminInventoryPage() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lowStockOnly, setLowStockOnly] = useState(false);
@@ -36,7 +38,7 @@ export default function AdminInventoryPage() {
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Inventory Management</h1>
+        <h1 className="text-2xl font-bold">{t("admin.inventory.title")}</h1>
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -44,7 +46,7 @@ export default function AdminInventoryPage() {
             onChange={(e) => setLowStockOnly(e.target.checked)}
             className="rounded"
           />
-          Low stock only
+          {t("admin.inventory.lowStockOnly")}
         </label>
       </div>
 
@@ -55,21 +57,21 @@ export default function AdminInventoryPage() {
       ) : products.length === 0 ? (
         <p className="text-gray-500">
           {lowStockOnly
-            ? "No low-stock products."
-            : "No products with inventory tracking enabled."}
+            ? t("admin.inventory.noLowStock")
+            : t("admin.inventory.noTracking")}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Product</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-600">Stock</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-600">Reserved</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-600">Available</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-600">Threshold</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-600">Status</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-600">Actions</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-600">{t("admin.inventory.product")}</th>
+                <th className="px-4 py-3 text-center font-medium text-gray-600">{t("admin.inventory.stock")}</th>
+                <th className="px-4 py-3 text-center font-medium text-gray-600">{t("admin.inventory.reserved")}</th>
+                <th className="px-4 py-3 text-center font-medium text-gray-600">{t("admin.inventory.available")}</th>
+                <th className="px-4 py-3 text-center font-medium text-gray-600">{t("admin.inventory.threshold")}</th>
+                <th className="px-4 py-3 text-center font-medium text-gray-600">{t("admin.inventory.status")}</th>
+                <th className="px-4 py-3 text-center font-medium text-gray-600">{t("admin.common.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -94,18 +96,18 @@ export default function AdminInventoryPage() {
                             : "bg-green-100 text-green-700"
                         }`}
                       >
-                        {isLow ? "Low" : "OK"}
+                        {isLow ? t("admin.inventory.low") : t("admin.inventory.ok")}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button
                         onClick={() => {
-                          const qty = prompt("Set stock quantity:", String(product.stockQuantity));
+                          const qty = prompt(t("admin.inventory.setStock"), String(product.stockQuantity));
                           if (qty !== null) handleUpdate(product.id, "stockQuantity", parseInt(qty));
                         }}
                         className="text-xs text-blue-600 hover:underline"
                       >
-                        Update
+                        {t("admin.common.update")}
                       </button>
                     </td>
                   </tr>

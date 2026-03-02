@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -31,6 +32,7 @@ const productionColors = {
 export default function CustomerDetailPage() {
   const { email: rawEmail } = useParams();
   const router = useRouter();
+  const { t } = useTranslation();
   const email = decodeURIComponent(rawEmail);
 
   const [customer, setCustomer] = useState(null);
@@ -53,7 +55,7 @@ export default function CustomerDetailPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-[#999]">
-        Loading...
+        {t("admin.common.loading")}
       </div>
     );
   }
@@ -61,12 +63,12 @@ export default function CustomerDetailPage() {
   if (!customer) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-2">
-        <p className="text-sm text-[#999]">Customer not found</p>
+        <p className="text-sm text-[#999]">{t("admin.customerDetail.customerNotFound")}</p>
         <Link
           href="/admin/customers"
           className="text-sm text-black underline hover:no-underline"
         >
-          Back to Customers
+          {t("admin.customerDetail.backToCustomers")}
         </Link>
       </div>
     );
@@ -81,10 +83,10 @@ export default function CustomerDetailPage() {
           onClick={() => router.push("/admin/customers")}
           className="mb-1 text-xs text-[#999] hover:text-black"
         >
-          &larr; Back to Customers
+          &larr; {t("admin.customerDetail.backToCustomers")}
         </button>
         <h1 className="text-xl font-semibold text-black">
-          Customer Details
+          {t("admin.customerDetail.title")}
         </h1>
       </div>
 
@@ -92,25 +94,25 @@ export default function CustomerDetailPage() {
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="text-xs text-[#999]">Email</p>
+            <p className="text-xs text-[#999]">{t("admin.customers.email")}</p>
             <p className="mt-0.5 text-sm font-medium text-black">
               {customer.email}
             </p>
           </div>
           <div>
-            <p className="text-xs text-[#999]">Name</p>
+            <p className="text-xs text-[#999]">{t("admin.customers.name")}</p>
             <p className="mt-0.5 text-sm font-medium text-black">
               {customer.name || "\u2014"}
             </p>
           </div>
           <div>
-            <p className="text-xs text-[#999]">Total Orders</p>
+            <p className="text-xs text-[#999]">{t("admin.customerDetail.totalOrders")}</p>
             <p className="mt-0.5 text-sm font-semibold text-black">
               {customer.orderCount}
             </p>
           </div>
           <div>
-            <p className="text-xs text-[#999]">Lifetime Spend</p>
+            <p className="text-xs text-[#999]">{t("admin.customerDetail.lifetimeSpend")}</p>
             <p className="mt-0.5 text-sm font-semibold text-black">
               {formatCad(customer.totalSpent)}
             </p>
@@ -121,7 +123,7 @@ export default function CustomerDetailPage() {
       {/* Order history */}
       <div>
         <h2 className="mb-3 text-sm font-semibold text-black">
-          Order History ({customer.orders?.length || 0})
+          {t("admin.customerDetail.orderHistory")} ({customer.orders?.length || 0})
         </h2>
 
         <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
@@ -133,22 +135,22 @@ export default function CustomerDetailPage() {
                   <thead>
                     <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                        Order ID
+                        {t("admin.customerDetail.orderId")}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                        Status
+                        {t("admin.orders.status")}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                        Production
+                        {t("admin.orders.production")}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                        Items
+                        {t("admin.customerDetail.items")}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                        Amount
+                        {t("admin.orders.amount")}
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                        Date
+                        {t("admin.orders.date")}
                       </th>
                       <th className="px-4 py-3" />
                     </tr>
@@ -182,7 +184,7 @@ export default function CustomerDetailPage() {
                         </td>
                         <td className="px-4 py-3 text-xs text-[#666]">
                           {order.items?.length || 0}{" "}
-                          {(order.items?.length || 0) === 1 ? "item" : "items"}
+                          {(order.items?.length || 0) === 1 ? t("admin.customerDetail.item") : t("admin.customerDetail.items")}
                         </td>
                         <td className="px-4 py-3 font-semibold text-black">
                           {formatCad(order.totalAmount)}
@@ -195,7 +197,7 @@ export default function CustomerDetailPage() {
                             href={`/admin/orders/${order.id}`}
                             className="text-xs font-medium text-black underline hover:no-underline"
                           >
-                            View
+                            {t("admin.common.view")}
                           </Link>
                         </td>
                       </tr>
@@ -219,7 +221,7 @@ export default function CustomerDetailPage() {
                         </p>
                         <p className="mt-0.5 text-xs text-[#999]">
                           {order.items?.length || 0}{" "}
-                          {(order.items?.length || 0) === 1 ? "item" : "items"}
+                          {(order.items?.length || 0) === 1 ? t("admin.customerDetail.item") : t("admin.customerDetail.items")}
                         </p>
                       </div>
                       <span className="text-sm font-semibold text-black">
@@ -252,7 +254,7 @@ export default function CustomerDetailPage() {
             </>
           ) : (
             <div className="flex h-32 items-center justify-center text-sm text-[#999]">
-              No orders found
+              {t("admin.customerDetail.noOrdersFound")}
             </div>
           )}
         </div>

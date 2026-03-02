@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CATALOG_DEFAULTS } from "@/lib/catalogConfig";
 import { resizeImageFile } from "@/lib/client-image-resize";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const categoryMeta = CATALOG_DEFAULTS.categoryMeta;
 const CATEGORY_ORDER = [
@@ -25,6 +26,7 @@ function filenameToAlt(name) {
 }
 
 export default function ImageDashboardPage() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [stats, setStats] = useState({ total: 0, withImages: 0, missingImages: 0 });
   const [loading, setLoading] = useState(true);
@@ -141,7 +143,7 @@ export default function ImageDashboardPage() {
       setJustUploaded((prev) => ({ ...prev, [product.id]: true }));
       setTimeout(() => setJustUploaded((prev) => { const n = { ...prev }; delete n[product.id]; return n; }), 3000);
     } catch (err) {
-      alert("Upload failed: " + (err.message || "Unknown error"));
+      alert(t("admin.imageDashboard.uploadFailed") + " " + (err.message || "Unknown error"));
     } finally {
       setUploading((prev) => ({ ...prev, [product.id]: false }));
     }
@@ -167,7 +169,7 @@ export default function ImageDashboardPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <h1 className="text-lg font-bold text-[#111]">Image Dashboard</h1>
+        <h1 className="text-lg font-bold text-[#111]">{t("admin.imageDashboard.title")}</h1>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-20 animate-pulse rounded-[2px] border border-[#e0e0e0] bg-white" />
@@ -183,20 +185,20 @@ export default function ImageDashboardPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-bold text-[#111]">Image Dashboard</h1>
+      <h1 className="text-lg font-bold text-[#111]">{t("admin.imageDashboard.title")}</h1>
 
       {/* Stats bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-[2px] border border-[#e0e0e0] bg-white px-4 py-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">Total Products</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">{t("admin.imageDashboard.totalProducts")}</p>
           <p className="mt-1 text-2xl font-bold text-[#111]">{stats.total}</p>
         </div>
         <div className="rounded-[2px] border border-[#e0e0e0] bg-white px-4 py-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">With Images</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">{t("admin.imageDashboard.withImages")}</p>
           <p className="mt-1 text-2xl font-bold text-emerald-700">{stats.withImages}</p>
         </div>
         <div className="rounded-[2px] border border-[#e0e0e0] bg-white px-4 py-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-red-600">Missing Images</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-red-600">{t("admin.imageDashboard.missingImages")}</p>
           <p className="mt-1 text-2xl font-bold text-red-700">{stats.missingImages}</p>
         </div>
       </div>
@@ -204,7 +206,7 @@ export default function ImageDashboardPage() {
       {/* Search */}
       <input
         type="text"
-        placeholder="Filter by product name or slug..."
+        placeholder={t("admin.imageDashboard.searchPlaceholder")}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="w-full rounded-[3px] border border-[#d0d0d0] bg-white px-3 py-2 text-sm outline-none focus:border-black"
@@ -231,7 +233,7 @@ export default function ImageDashboardPage() {
                 </span>
                 {missing > 0 && (
                   <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
-                    {missing} missing
+                    {missing} {t("admin.imageDashboard.missing")}
                   </span>
                 )}
                 <svg
@@ -291,7 +293,7 @@ export default function ImageDashboardPage() {
                             : "bg-emerald-50 text-emerald-700"
                         }`}
                       >
-                        {product.imageCount} {product.imageCount === 1 ? "image" : "images"}
+                        {product.imageCount} {product.imageCount === 1 ? t("admin.imageDashboard.image") : t("admin.imageDashboard.images")}
                       </span>
 
                       {/* Action buttons — full-width row on mobile, inline on desktop */}
@@ -312,7 +314,7 @@ export default function ImageDashboardPage() {
                             disabled={uploading[product.id]}
                             className="h-11 sm:h-auto w-full sm:w-auto rounded-[3px] bg-teal-600 px-2.5 py-1.5 text-xs font-semibold text-[#fff] transition-colors hover:bg-teal-700 disabled:opacity-50"
                           >
-                            {uploading[product.id] ? "Uploading..." : "Upload"}
+                            {uploading[product.id] ? t("admin.imageDashboard.uploading") : t("admin.imageDashboard.upload")}
                           </button>
                         </div>
 
@@ -323,7 +325,7 @@ export default function ImageDashboardPage() {
                           rel="noopener noreferrer"
                           className="flex h-11 sm:h-auto flex-1 sm:flex-initial items-center justify-center rounded-[3px] border border-[#e0e0e0] px-2.5 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-[#000] hover:text-black"
                         >
-                          View
+                          {t("admin.common.view")}
                         </a>
 
                         {/* Edit link */}
@@ -331,7 +333,7 @@ export default function ImageDashboardPage() {
                           href={`/admin/products/${product.id}`}
                           className="flex h-11 sm:h-auto flex-1 sm:flex-initial items-center justify-center rounded-[3px] border border-[#e0e0e0] px-2.5 py-1.5 text-xs font-medium text-[#4f46e5] transition-colors hover:border-[#4f46e5]"
                         >
-                          Edit
+                          {t("admin.common.edit")}
                         </Link>
                       </div>
                     </div>
@@ -345,7 +347,7 @@ export default function ImageDashboardPage() {
 
         {orderedCategories.length === 0 && (
           <p className="py-8 text-center text-sm text-[#999]">
-            {search ? "No products match your search." : "No products found."}
+            {search ? t("admin.imageDashboard.noMatch") : t("admin.imageDashboard.noProducts")}
           </p>
         )}
       </div>
