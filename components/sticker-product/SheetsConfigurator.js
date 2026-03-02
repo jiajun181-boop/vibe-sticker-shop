@@ -516,11 +516,11 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
           Quantity
         </h3>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
           {cutting.quantities.map((q) => (
             <button key={q} type="button"
               onClick={() => { setStickerQty(q); setCustomStickerQty(""); }}
-              className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+              className={`flex-shrink-0 rounded-full border-2 px-3 py-2 text-xs font-bold transition-all ${
                 customStickerQty === "" && stickerQty === q
                   ? "border-gray-900 bg-gray-900 text-[#fff]"
                   : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"

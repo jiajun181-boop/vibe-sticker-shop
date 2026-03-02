@@ -226,7 +226,7 @@ export default function MiniConfigurator({ cuttingTypeId, onClose }) {
           <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[var(--color-gray-500)]">
             Quantity
           </label>
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
             {cutting.quantities.map((q) => {
               const isActive = quantity === q;
               const discount = q >= 1000 ? 18 : q >= 500 ? 12 : q >= 250 ? 7 : q >= 100 ? 3 : 0;
@@ -235,7 +235,7 @@ export default function MiniConfigurator({ cuttingTypeId, onClose }) {
                   key={q}
                   type="button"
                   onClick={() => setQuantity(q)}
-                  className={`flex flex-col items-center rounded-lg border-2 px-2 py-2 transition-all ${
+                  className={`flex-shrink-0 flex flex-col items-center rounded-full border-2 px-2 py-2 transition-all ${
                     isActive
                       ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
                       : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"

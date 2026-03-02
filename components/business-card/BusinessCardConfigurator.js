@@ -12,6 +12,7 @@ import {
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
+import QuantityScroller from "@/components/configurator/QuantityScroller";
 import BusinessCardPreview from "@/components/business-card/BusinessCardPreview";
 import { getBusinessCardConfig, computeMultiNameFileFees } from "@/lib/business-card-configs";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
@@ -384,37 +385,16 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
 
             {/* QUANTITY STEP */}
             <ConfigStep number={++stepNum} title={t("bc.quantity")} subtitle="More you order, more you save">
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-                {config.quantities.map((q) => {
-                  const isActive = customQty === "" && quantity === q;
-                  return (
-                    <button
-                      key={q}
-                      type="button"
-                      onClick={() => { setQuantity(q); setCustomQty(""); }}
-                      className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
-                        isActive
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      <span className="text-base font-black">{q.toLocaleString()}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-3 flex items-center gap-3">
-                <label className="text-xs font-medium text-gray-500">{t("bc.customQty")}:</label>
-                <input
-                  type="number"
-                  min="25"
-                  max="999999"
-                  value={customQty}
-                  onChange={(e) => setCustomQty(e.target.value)}
-                  placeholder="e.g. 300"
-                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
-                />
-              </div>
+              <QuantityScroller
+                quantities={config.quantities}
+                selected={quantity}
+                onSelect={setQuantity}
+                customQty={customQty}
+                onCustomChange={setCustomQty}
+                t={t}
+                min={25}
+                placeholder="e.g. 300"
+              />
             </ConfigStep>
 
             {/* MULTI-NAME STEP */}

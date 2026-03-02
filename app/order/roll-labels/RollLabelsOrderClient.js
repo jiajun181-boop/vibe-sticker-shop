@@ -228,7 +228,41 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
 
             {/* STEP 2: Shape */}
             <ConfigStep number={2} title={t?.("rl.step.shape") || "Shape"}>
-              <RadioGroup options={SHAPES} value={shapeId} onChange={setShapeId} cols={5} />
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+                {SHAPES.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setShapeId(s.id)}
+                    className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
+                      shapeId === s.id
+                        ? "border-[var(--color-brand)] bg-[var(--color-brand)]/5 shadow-sm"
+                        : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                    }`}
+                  >
+                    <svg viewBox="0 0 48 48" className="h-10 w-10" fill="none">
+                      {s.id === "circle" && (
+                        <circle cx="24" cy="24" r="18" className={shapeId === s.id ? "stroke-[var(--color-brand)]" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" strokeDasharray={s.id === "custom" ? "4 3" : "none"} />
+                      )}
+                      {s.id === "oval" && (
+                        <ellipse cx="24" cy="24" rx="20" ry="14" className={shapeId === s.id ? "stroke-[var(--color-brand)]" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" />
+                      )}
+                      {s.id === "square" && (
+                        <rect x="7" y="7" width="34" height="34" rx="3" className={shapeId === s.id ? "stroke-[var(--color-brand)]" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" />
+                      )}
+                      {s.id === "rectangle" && (
+                        <rect x="4" y="11" width="40" height="26" rx="3" className={shapeId === s.id ? "stroke-[var(--color-brand)]" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" />
+                      )}
+                      {s.id === "custom" && (
+                        <path d="M24 4 L42 16 L38 38 L10 38 L6 16 Z" className={shapeId === s.id ? "stroke-[var(--color-brand)]" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" strokeDasharray="4 3" />
+                      )}
+                    </svg>
+                    <span className={`text-xs font-semibold ${shapeId === s.id ? "text-[var(--color-brand)]" : "text-gray-600"}`}>
+                      {s.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </ConfigStep>
 
             {/* STEP 3: Size */}
@@ -332,8 +366,61 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
             </ConfigStep>
 
             {/* STEP 8: Wind Direction */}
-            <ConfigStep number={inks.length > 1 ? 8 : 7} title={t?.("rl.step.wind") || "Wind Direction"}>
-              <RadioGroup options={WIND_DIRECTIONS} value={windId} onChange={setWindId} cols={5} />
+            <ConfigStep number={inks.length > 1 ? 8 : 7} title={t?.("rl.step.wind") || "Unwind Direction"}>
+              <p className="mb-3 text-xs text-gray-500">
+                {t?.("rl.windHint") || "Select how labels unwind from the roll. This affects how labels feed into your applicator."}
+              </p>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+                {WIND_DIRECTIONS.map((wd) => (
+                  <button
+                    key={wd.id}
+                    type="button"
+                    onClick={() => setWindId(wd.id)}
+                    className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-3 transition-all ${
+                      windId === wd.id
+                        ? "border-[var(--color-brand)] bg-[var(--color-brand)]/5 shadow-sm"
+                        : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                    }`}
+                  >
+                    <svg viewBox="0 0 64 64" className="h-14 w-14" fill="none">
+                      {/* Roll body */}
+                      <ellipse cx="32" cy="32" rx="10" ry="26" className="stroke-gray-300" strokeWidth="1.5" />
+                      <ellipse cx="32" cy="32" rx="4" ry="26" className="fill-gray-100 stroke-gray-300" strokeWidth="1" />
+                      {/* Label rectangle on the roll */}
+                      <rect x="20" y="20" width="24" height="24" rx="2"
+                        className={windId === wd.id ? "fill-[var(--color-brand)]/15 stroke-[var(--color-brand)]" : "fill-gray-100 stroke-gray-400 group-hover:stroke-gray-600"}
+                        strokeWidth="1.5"
+                      />
+                      {/* "A" text in label */}
+                      <text x="32" y="36" textAnchor="middle" className={windId === wd.id ? "fill-[var(--color-brand)]" : "fill-gray-500"} fontSize="12" fontWeight="bold">A</text>
+                      {/* Direction arrow */}
+                      {wd.id === "top" && (
+                        <path d="M32 16 L32 4 M32 4 L27 9 M32 4 L37 9" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      )}
+                      {wd.id === "bottom" && (
+                        <path d="M32 48 L32 60 M32 60 L27 55 M32 60 L37 55" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      )}
+                      {wd.id === "right" && (
+                        <path d="M48 32 L60 32 M60 32 L55 27 M60 32 L55 37" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      )}
+                      {wd.id === "left" && (
+                        <path d="M16 32 L4 32 M4 32 L9 27 M4 32 L9 37" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      )}
+                      {wd.id === "any" && (
+                        <>
+                          <path d="M32 16 L32 10 M32 10 L29 13 M32 10 L35 13" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M32 48 L32 54 M32 54 L29 51 M32 54 L35 51" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M48 32 L54 32 M54 32 L51 29 M54 32 L51 35" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M16 32 L10 32 M10 32 L13 29 M10 32 L13 35" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </>
+                      )}
+                    </svg>
+                    <span className={`text-[11px] font-semibold leading-tight text-center ${windId === wd.id ? "text-[var(--color-brand)]" : "text-gray-600"}`}>
+                      {wd.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </ConfigStep>
 
             {/* STEP 9: Labels Per Roll */}

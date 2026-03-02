@@ -73,49 +73,48 @@ const SECTIONS = [
   },
 ];
 
-function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
-  const isLarge = size === "large";
+function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
   const [hovered, setHovered] = useState(false);
   const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
   return (
     <Link
       href={item.href}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className={`relative overflow-hidden ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
+      <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-gray-100)]">
         {showUrl ? (
           <Image
             src={showUrl}
             alt={item.name}
             fill
             className="object-cover transition-all duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
         ) : (
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
-            <p className="px-6 text-center text-lg font-bold text-[#fff] drop-shadow-md">
+            <p className="px-4 text-center text-sm font-bold text-[#fff] drop-shadow-md">
               {item.name}
             </p>
           </div>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-base" : "text-sm"}`}>
+      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
+        <h3 className="text-sm font-semibold text-[var(--color-gray-900)] leading-tight">
           {item.name}
         </h3>
-        <div className="mt-auto pt-3 flex items-center justify-between">
+        <div className="mt-1.5 flex items-center justify-between">
           {price > 0 ? (
-            <span className="text-sm font-bold text-[var(--color-gray-900)]">
+            <span className="text-xs font-bold text-[var(--color-gray-900)]">
               {t("shop.fromLabel")} {formatCad(price)}
             </span>
           ) : (
-            <span className="text-xs text-[var(--color-gray-400)]">{t("shop.getQuote")}</span>
+            <span className="text-[11px] text-[var(--color-gray-400)]">{t("shop.getQuote")}</span>
           )}
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3.5 py-1.5 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
             {t("shop.configure")}
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
           </span>
@@ -148,20 +147,15 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
           if (visibleItems.length === 0) return null;
 
           return (
-            <section key={section.key} className="mt-12">
-              <h2 className="text-xl font-semibold tracking-tight">{section.title}</h2>
-              <p className="mt-1 text-sm text-[var(--color-gray-500)]">{section.subtitle}</p>
-              <div className={`mt-4 grid gap-4 ${
-                section.size === "large"
-                  ? "grid-cols-2 lg:grid-cols-3"
-                  : "grid-cols-2 sm:grid-cols-3"
-              }`}>
+            <section key={section.key} className="mt-8">
+              <h2 className="text-base font-semibold tracking-tight">{section.title}</h2>
+              <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">{section.subtitle}</p>
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {visibleItems.map((item) => (
                   <ProductCard
                     key={item.key}
                     item={item}
                     price={marketingPrices[item.key] || 0}
-                    size={section.size}
                     imageUrl={marketingImages[item.key]}
                     hoverImageUrl={marketingImages2[item.key]}
                     t={t}

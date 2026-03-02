@@ -20,6 +20,38 @@ import BannersCategoryClient from "./BannersCategoryClient";
 import VehicleCategoryClient from "./VehicleCategoryClient";
 import CanvasCategoryClient from "./CanvasCategoryClient";
 
+// Server-side image resolution: checks Asset system first, then iterates ProductImage
+// records for external URLs, falls back to dynamic API.
+async function resolveProductImageServer(product) {
+  const asset = await getProductPrimaryImage(product.id);
+  if (asset?.url && !asset.url.startsWith("/products/")) {
+    return asset.url;
+  }
+  // Check ProductImage records for external URLs
+  if (Array.isArray(product.images)) {
+    for (const img of product.images) {
+      const url = typeof img?.url === "string" ? img.url.trim() : "";
+      if (url && !url.startsWith("/products/")) return url;
+    }
+  }
+  // Dynamic API fallback (branded SVG)
+  return getProductImage(product, product.category);
+}
+
+// Resolve secondary image for hover effects
+function resolveSecondaryImage(product) {
+  if (!Array.isArray(product.images)) return null;
+  let foundFirst = false;
+  for (const img of product.images) {
+    const url = typeof img?.url === "string" ? img.url.trim() : "";
+    if (url && !url.startsWith("/products/")) {
+      if (foundFirst) return url; // second external URL
+      foundFirst = true;
+    }
+  }
+  return null;
+}
+
 function CategoryFaqSchema({ category }) {
   const schema = CATEGORY_FAQ_SCHEMAS[category];
   if (!schema) return null;
@@ -373,11 +405,45 @@ export default async function CategoryPage({ params }) {
       isActive: true,
     },
     include: {
-      images: { take: 2, orderBy: { sortOrder: "asc" } },
+      images: { take: 5, orderBy: { sortOrder: "asc" } },
       pricingPreset: true,
     },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
+
+  // Batch-resolve images from the Asset system (UploadThing uploads).
+  // Admin uploads create Asset + AssetLink records. Product.images (legacy ProductImage)
+  // may only have old seeded /products/*.png URLs that no longer exist on disk.
+  // Inject the Asset URL as the first image entry so client-side getProductImage() finds it.
+  const allProductIds = products.map((p) => p.id);
+  const allAssetLinks = allProductIds.length > 0
+    ? await prisma.assetLink.findMany({
+        where: {
+          entityType: "product",
+          entityId: { in: allProductIds },
+          asset: { status: "published" },
+        },
+        include: { asset: true },
+        orderBy: { sortOrder: "asc" },
+      })
+    : [];
+
+  const assetUrlMap = {};
+  for (const link of allAssetLinks) {
+    if (!assetUrlMap[link.entityId]) {
+      const url = link.asset?.originalUrl;
+      if (url && !url.startsWith("/products/")) {
+        assetUrlMap[link.entityId] = url;
+      }
+    }
+  }
+
+  for (const p of products) {
+    if (assetUrlMap[p.id]) {
+      // Prepend the Asset URL so getProductImage() finds it first
+      p.images = [{ url: assetUrlMap[p.id], sortOrder: -1 }, ...(p.images || [])];
+    }
+  }
 
   // Use pre-computed minPrice for listings (write-time calculation).
   // Falls back to computeFromPrice() only when minPrice is missing.
@@ -524,9 +590,10 @@ export default async function CategoryPage({ params }) {
       if (matching.length > 0) {
         const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
         bannerPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
-        const img = getProductImage(matching[0]);
+        const img = await resolveProductImageServer(matching[0]);
         if (img) bannerImages[key] = img;
-        if (matching[0].images?.[1]?.url) bannerImages2[key] = matching[0].images[1].url;
+        const img2 = resolveSecondaryImage(matching[0]);
+        if (img2) bannerImages2[key] = img2;
       }
     }
 
@@ -590,9 +657,10 @@ export default async function CategoryPage({ params }) {
       if (matching.length > 0) {
         const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
         wwfPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
-        const img = getProductImage(matching[0]);
+        const img = await resolveProductImageServer(matching[0]);
         if (img) wwfImages[key] = img;
-        if (matching[0].images?.[1]?.url) wwfImages2[key] = matching[0].images[1].url;
+        const img2 = resolveSecondaryImage(matching[0]);
+        if (img2) wwfImages2[key] = img2;
       }
     }
 
@@ -626,9 +694,10 @@ export default async function CategoryPage({ params }) {
       if (matching.length > 0) {
         const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
         canvasPrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
-        const img = getProductImage(matching[0]);
+        const img = await resolveProductImageServer(matching[0]);
         if (img) canvasImages[key] = img;
-        if (matching[0].images?.[1]?.url) canvasImages2[key] = matching[0].images[1].url;
+        const img2 = resolveSecondaryImage(matching[0]);
+        if (img2) canvasImages2[key] = img2;
       }
     }
 
@@ -706,9 +775,10 @@ export default async function CategoryPage({ params }) {
       if (matching.length > 0) {
         const prices = matching.map((p) => p.fromPrice).filter((p) => p > 0);
         vehiclePrices[key] = prices.length > 0 ? Math.min(...prices) : 0;
-        const img = getProductImage(matching[0]);
+        const img = await resolveProductImageServer(matching[0]);
         if (img) vehicleImages[key] = img;
-        if (matching[0].images?.[1]?.url) vehicleImages2[key] = matching[0].images[1].url;
+        const img2 = resolveSecondaryImage(matching[0]);
+        if (img2) vehicleImages2[key] = img2;
       }
     }
 

@@ -602,7 +602,7 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
             {/* Quantity (hidden in multi-size mode — qty is per row) */}
             {sizeMode === "single" && (
             <ConfigStep number={stepNum++} title={t("surface.quantity")} subtitle={t("surface.quantitySubtitle")}>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
                 {surfaceType.quantities.map((q) => {
                   const isActive = customQty === "" && quantity === q;
                   return (
@@ -610,7 +610,7 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
                       key={q}
                       type="button"
                       onClick={() => { setQuantity(q); setCustomQty(""); }}
-                      className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
+                      className={`flex-shrink-0 flex flex-col items-center gap-0.5 rounded-full border-2 px-2 py-3 transition-all duration-150 ${
                         isActive
                           ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"

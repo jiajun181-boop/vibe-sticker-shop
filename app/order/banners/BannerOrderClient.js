@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   BANNER_TYPES,
+  BANNER_TYPE_GROUPS,
   FINISHING_OPTIONS,
   getBannerType,
 } from "@/lib/banner-order-config";
@@ -225,33 +226,44 @@ export default function BannerOrderClient({ defaultType, productImages }) {
           <div className="space-y-6 lg:col-span-2">
             {(() => { let stepNum = 0; return (<>
 
-            {/* Step: Banner Type */}
+            {/* Step: Banner Type (grouped) */}
             <ConfigStep number={++stepNum} title={t("banner.type.label")} subtitle={t("banner.type.subtitle")}>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {BANNER_TYPES.map((bt) => (
-                  <button
-                    key={bt.id}
-                    type="button"
-                    onClick={() => setTypeId(bt.id)}
-                    className={`group relative flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition-all duration-200 ${
-                      typeId === bt.id
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
-                    }`}
-                  >
-                    {typeId === bt.id && (
-                      <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                      </span>
-                    )}
-                    <span className="text-sm font-bold">{t(`banner.type.${bt.id}`)}</span>
-                    {bt.includesHardware && (
-                      <span className={`text-[10px] font-bold ${typeId === bt.id ? "text-emerald-300" : "text-emerald-600"}`}>
-                        Includes hardware
-                      </span>
-                    )}
-                  </button>
-                ))}
+              <div className="space-y-5">
+                {BANNER_TYPE_GROUPS.map((grp) => {
+                  const groupItems = BANNER_TYPES.filter((bt) => bt.group === grp.id);
+                  if (groupItems.length === 0) return null;
+                  return (
+                    <div key={grp.id}>
+                      <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-gray-400">{t(`banner.group.${grp.id}`) || grp.label}</h3>
+                      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+                        {groupItems.map((bt) => (
+                          <button
+                            key={bt.id}
+                            type="button"
+                            onClick={() => setTypeId(bt.id)}
+                            className={`group relative flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition-all duration-200 ${
+                              typeId === bt.id
+                                ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
+                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
+                            }`}
+                          >
+                            {typeId === bt.id && (
+                              <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
+                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                              </span>
+                            )}
+                            <span className="text-sm font-bold">{t(`banner.type.${bt.id}`)}</span>
+                            {bt.includesHardware && (
+                              <span className={`text-[10px] font-bold ${typeId === bt.id ? "text-emerald-300" : "text-emerald-600"}`}>
+                                Includes hardware
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </ConfigStep>
 
@@ -423,7 +435,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
               title={t("banner.quantity")}
               subtitle={t("banner.quantitySubtitle")}
             >
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
                 {bannerType.quantities.map((q) => {
                   const isActive = customQty === "" && quantity === q;
                   return (
@@ -431,7 +443,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                       key={q}
                       type="button"
                       onClick={() => { setQuantity(q); setCustomQty(""); }}
-                      className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
+                      className={`flex-shrink-0 flex flex-col items-center gap-0.5 rounded-full border-2 px-2 py-3 transition-all duration-150 ${
                         isActive
                           ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"

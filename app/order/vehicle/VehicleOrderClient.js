@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   VEHICLE_TYPES,
+  VEHICLE_TYPE_GROUPS,
   VEHICLE_TYPE_OPTIONS,
   getVehicleType,
 } from "@/lib/vehicle-order-config";
@@ -220,33 +221,46 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           <div className="space-y-6 lg:col-span-2">
 
-            {/* Step 1: Type */}
+            {/* Step 1: Type (grouped) */}
             <ConfigStep number={stepNum++} title={t("vehicle.type.label")} subtitle={t("vehicle.type.subtitle")}>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {VEHICLE_TYPES.map((vt) => (
-                  <button
-                    key={vt.id}
-                    type="button"
-                    onClick={() => setTypeId(vt.id)}
-                    className={`group relative flex flex-col items-center gap-1.5 rounded-2xl border-2 p-4 text-center transition-all duration-200 ${
-                      typeId === vt.id
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
-                    }`}
-                  >
-                    {typeId === vt.id && (
-                      <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                      </span>
-                    )}
-                    <span className="text-sm font-bold">{t(`vehicle.type.${vt.id}`)}</span>
-                    {vt.quoteOnly && (
-                      <span className={`text-[10px] font-bold ${typeId === vt.id ? "text-amber-300" : "text-amber-600"}`}>
-                        Quote only
-                      </span>
-                    )}
-                  </button>
-                ))}
+              <div className="space-y-5">
+                {VEHICLE_TYPE_GROUPS.map((grp) => {
+                  const items = VEHICLE_TYPES.filter((vt) => vt.group === grp.id);
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={grp.id}>
+                      <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                        {t(`vehicle.group.${grp.id}`, grp.label)}
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                        {items.map((vt) => (
+                          <button
+                            key={vt.id}
+                            type="button"
+                            onClick={() => setTypeId(vt.id)}
+                            className={`group relative flex flex-col items-center gap-1.5 rounded-2xl border-2 p-4 text-center transition-all duration-200 ${
+                              typeId === vt.id
+                                ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
+                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
+                            }`}
+                          >
+                            {typeId === vt.id && (
+                              <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
+                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                              </span>
+                            )}
+                            <span className="text-sm font-bold">{t(`vehicle.type.${vt.id}`)}</span>
+                            {vt.quoteOnly && (
+                              <span className={`text-[10px] font-bold ${typeId === vt.id ? "text-amber-300" : "text-amber-600"}`}>
+                                Quote only
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </ConfigStep>
 
@@ -388,7 +402,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
 
             {/* Quantity */}
             <ConfigStep number={stepNum++} title={t("vehicle.quantity")} subtitle={t("vehicle.quantitySubtitle")}>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
                 {vehicleType.quantities.map((q) => {
                   const isActive = customQty === "" && quantity === q;
                   return (
@@ -396,7 +410,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
                       key={q}
                       type="button"
                       onClick={() => { setQuantity(q); setCustomQty(""); }}
-                      className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
+                      className={`flex-shrink-0 flex flex-col items-center gap-0.5 rounded-full border-2 px-2 py-3 transition-all duration-150 ${
                         isActive
                           ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"

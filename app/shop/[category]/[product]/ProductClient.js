@@ -2235,7 +2235,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                   <input
                                     type="number"
                                     min={costPlusDefaults?.minDimensionIn || 0.5}
-                                    max={costPlusDefaults?.maxWidthIn || 53}
+                                    max={costPlusDefaults?.maxWidthIn || 48}
                                     step="0.25"
                                     value={widthIn}
                                     onChange={(e) => setSizeValue("w", e.target.value)}
@@ -2247,7 +2247,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                                   <input
                                     type="number"
                                     min={costPlusDefaults?.minDimensionIn || 0.5}
-                                    max={costPlusDefaults?.maxHeightIn || 53}
+                                    max={costPlusDefaults?.maxHeightIn || 48}
                                     step="0.25"
                                     value={heightIn}
                                     onChange={(e) => setSizeValue("h", e.target.value)}
@@ -2257,7 +2257,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                               </div>
                               {costPlusDefaults?.minDimensionIn && (
                                 <p className="text-[11px] text-[var(--color-gray-500)]">
-                                  Min {costPlusDefaults.minDimensionIn}" &times; {costPlusDefaults.minDimensionIn}" &mdash; Max {costPlusDefaults.maxWidthIn || 53}" &times; {costPlusDefaults.maxHeightIn || 53}"
+                                  Min {costPlusDefaults.minDimensionIn}" &times; {costPlusDefaults.minDimensionIn}" &mdash; Max {costPlusDefaults.maxWidthIn || 48}" &times; {costPlusDefaults.maxHeightIn || 48}"
                                 </p>
                               )}
                             </div>

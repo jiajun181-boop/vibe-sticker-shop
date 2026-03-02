@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   PRINT_TYPES,
+  PRINT_TYPE_GROUPS,
   getMarketingPrintType,
   FINISHING_LABELS,
 } from "@/lib/marketing-print-order-config";
@@ -22,6 +23,7 @@ import {
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
+import QuantityScroller from "@/components/configurator/QuantityScroller";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -262,21 +264,34 @@ export default function MarketingPrintOrderClient({
             {/* Step: Print Type (hidden when direct-entry) */}
             {!hideTypeSelector && (
               <ConfigStep number={++step} title={t("marketingPrint.type", "Product Type")}>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-                  {PRINT_TYPES.map((pt) => (
-                    <button
-                      key={pt.id}
-                      type="button"
-                      onClick={() => handleTypeChange(pt.id)}
-                      className={`rounded-xl border-2 px-3 py-2.5 text-sm font-bold transition-all duration-150 ${
-                        typeId === pt.id
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      {pt.label}
-                    </button>
-                  ))}
+                <div className="space-y-5">
+                  {PRINT_TYPE_GROUPS.map((grp) => {
+                    const items = PRINT_TYPES.filter((pt) => pt.group === grp.id);
+                    if (items.length === 0) return null;
+                    return (
+                      <div key={grp.id}>
+                        <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                          {t(`marketingPrint.group.${grp.id}`, grp.label)}
+                        </p>
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                          {items.map((pt) => (
+                            <button
+                              key={pt.id}
+                              type="button"
+                              onClick={() => handleTypeChange(pt.id)}
+                              className={`rounded-xl border-2 px-3 py-2.5 text-sm font-bold transition-all duration-150 ${
+                                typeId === pt.id
+                                  ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
+                                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                              }`}
+                            >
+                              {pt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </ConfigStep>
             )}
@@ -433,6 +448,30 @@ export default function MarketingPrintOrderClient({
               />
             )}
 
+            {/* Step: Quantity — placed right after Size for easy price comparison */}
+            <ConfigStep number={++step} title={t("marketingPrint.quantity", "Quantity")}>
+              {printType.quantityMode === "input" ? (
+                <input
+                  type="number"
+                  min={1}
+                  placeholder="Enter quantity"
+                  value={customQty}
+                  onChange={(e) => setCustomQty(e.target.value)}
+                  className="w-40 rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                />
+              ) : (
+                <QuantityScroller
+                  quantities={printType.quantities}
+                  selected={quantity}
+                  onSelect={setQuantity}
+                  customQty={customQty}
+                  onCustomChange={setCustomQty}
+                  t={t}
+                  placeholder="e.g. 200"
+                />
+              )}
+            </ConfigStep>
+
             {/* Step: Paper / Stock (hidden if single option) */}
             {hasPaperStep && (
               <ConfigStep number={++step} title={t("marketingPrint.paper", "Paper / Stock")}>
@@ -540,41 +579,6 @@ export default function MarketingPrintOrderClient({
                 </div>
               </ConfigStep>
             ))}
-
-            {/* Step: Quantity */}
-            <ConfigStep number={++step} title={t("marketingPrint.quantity", "Quantity")}>
-              {printType.quantityMode !== "input" && (
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                  {printType.quantities.map((q) => (
-                    <button
-                      key={q}
-                      type="button"
-                      onClick={() => { setQuantity(q); setCustomQty(""); }}
-                      className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
-                        quantity === q && !customQty
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      <span className="text-base font-black">{q.toLocaleString()}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className={`flex items-center gap-3 ${printType.quantityMode !== "input" ? "mt-3" : ""}`}>
-                {printType.quantityMode !== "input" && (
-                  <label className="text-xs font-medium text-gray-500">{t("marketingPrint.customQty", "Custom")}:</label>
-                )}
-                <input
-                  type="number"
-                  min={1}
-                  placeholder={printType.quantityMode === "input" ? "Enter quantity" : "e.g. 200"}
-                  value={customQty}
-                  onChange={(e) => setCustomQty(e.target.value)}
-                  className="w-40 rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
-                />
-              </div>
-            </ConfigStep>
 
             {/* Step: Artwork */}
             <ConfigStep number={++step} title={t("marketingPrint.artwork", "Artwork")} optional>

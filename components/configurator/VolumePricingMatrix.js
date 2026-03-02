@@ -84,8 +84,8 @@ export default function VolumePricingMatrix({
 
   return (
     <div className="space-y-3">
-      {/* Tier grid */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+      {/* Horizontal scrollable tier row */}
+      <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
         {tiers.map((qty, idx) => {
           const price = tierPrices[qty];
           const isSelected = !isCustom && selectedQty === qty;
@@ -99,7 +99,7 @@ export default function VolumePricingMatrix({
                 onSelectQty?.(qty);
                 onCustomQtyChange?.("");
               }}
-              className={`relative rounded-xl border-2 px-3 py-3.5 text-center transition-all ${
+              className={`relative flex-shrink-0 rounded-xl border-2 px-3 py-3 text-center transition-all ${
                 isSelected
                   ? "border-teal-500 bg-teal-50 shadow-md"
                   : "border-gray-200 bg-white shadow-sm hover:border-gray-400 hover:shadow-md"

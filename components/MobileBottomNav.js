@@ -112,9 +112,10 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
           <div className="px-4">
             {departments.map((dept) => {
               const key = dept.key;
-              const meta = departmentMeta[key];
+              const catMeta = categoryMeta[key];
+              const deptMeta = departmentMeta[key];
               const isOpen = !!expanded[key];
-              const subGroups = meta?.subGroups || [];
+              const subGroups = catMeta?.subGroups || [];
 
               return (
                 <div key={key} className="border-b border-[var(--color-gray-200)]">
@@ -124,9 +125,9 @@ function CategoryDrawer({ open, onClose, departments, departmentMeta, categoryMe
                     className="flex w-full items-center justify-between py-3 text-left"
                   >
                     <span className="flex items-center gap-2.5">
-                      <span className="text-lg leading-none">{meta?.icon || "📦"}</span>
+                      <span className="text-lg leading-none">{catMeta?.icon || "📦"}</span>
                       <span className="text-lg font-semibold text-[var(--color-gray-800)]">
-                        {isZh ? (meta?.titleZh || departmentMeta?.[key]?.titleZh || meta?.title || departmentMeta?.[key]?.title || key) : (meta?.title || departmentMeta?.[key]?.title || key)}
+                        {isZh ? (deptMeta?.titleZh || catMeta?.titleZh || catMeta?.title || key) : (deptMeta?.title || catMeta?.title || key)}
                       </span>
                     </span>
                     <ChevronIcon

@@ -143,8 +143,8 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
   const selectedFont = useMemo(() => FONTS.find((f) => f.id === fontId) || FONTS[0], [fontId]);
 
   // Dimensions for quote — text mode estimates from letter height, logo mode uses user input
-  const parsedLogoW = Math.min(53, Math.max(0.5, parseFloat(logoWidth) || 0));
-  const parsedLogoH = Math.min(53, Math.max(0.5, parseFloat(logoHeight) || 0));
+  const parsedLogoW = Math.min(48, Math.max(0.5, parseFloat(logoWidth) || 0));
+  const parsedLogoH = Math.min(48, Math.max(0.5, parseFloat(logoHeight) || 0));
   const widthIn = type === "text" ? letterHeight.value * 4 : parsedLogoW;
   const heightIn = type === "text" ? letterHeight.value : parsedLogoH;
 
@@ -463,7 +463,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
                     <input
                       type="number"
                       min="0.5"
-                      max="53"
+                      max="48"
                       step="0.5"
                       value={logoWidth}
                       onChange={(e) => setLogoWidth(e.target.value)}
@@ -479,7 +479,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
                     <input
                       type="number"
                       min="0.5"
-                      max="53"
+                      max="48"
                       step="0.5"
                       value={logoHeight}
                       onChange={(e) => setLogoHeight(e.target.value)}
