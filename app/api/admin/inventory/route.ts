@@ -68,6 +68,8 @@ export async function PATCH(req: NextRequest) {
       },
     });
 
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/shop", "layout");
     return NextResponse.json({ product: updated });
   } catch (err) {
     console.error("[Inventory PATCH] Error:", err);

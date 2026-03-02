@@ -238,15 +238,15 @@ export default function AdminLayout({ children }) {
     setPwMsg("");
     setPwError("");
     if (!pwCurrent || !pwNew) {
-      setPwError("Please fill in all fields");
+      setPwError(t("admin.password.fillAll"));
       return;
     }
     if (pwNew.length < 8) {
-      setPwError("New password must be at least 8 characters");
+      setPwError(t("admin.password.minLength"));
       return;
     }
     if (pwNew !== pwConfirm) {
-      setPwError("New passwords do not match");
+      setPwError(t("admin.password.mismatch"));
       return;
     }
     setPwSaving(true);
@@ -358,7 +358,7 @@ export default function AdminLayout({ children }) {
             <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
-            Change Password
+            {t("admin.password.title")}
           </button>
           <button
             type="button"
@@ -432,11 +432,11 @@ export default function AdminLayout({ children }) {
       {pwModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={(e) => { if (e.target === e.currentTarget) setPwModal(false); }}>
           <div className="w-full max-w-sm mx-4 rounded-[3px] bg-white p-6 shadow-xl">
-            <h3 className="text-sm font-bold text-[#111] mb-4">Change Password</h3>
+            <h3 className="text-sm font-bold text-[#111] mb-4">{t("admin.password.title")}</h3>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-[11px] font-medium text-[#666] mb-1">Current Password</label>
+                <label className="block text-[11px] font-medium text-[#666] mb-1">{t("admin.password.current")}</label>
                 <input
                   type="password"
                   value={pwCurrent}
@@ -446,17 +446,17 @@ export default function AdminLayout({ children }) {
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-[#666] mb-1">New Password</label>
+                <label className="block text-[11px] font-medium text-[#666] mb-1">{t("admin.password.new")}</label>
                 <input
                   type="password"
                   value={pwNew}
                   onChange={(e) => setPwNew(e.target.value)}
                   className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-                  placeholder="Min 8 characters"
+                  placeholder={t("admin.password.minLength")}
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-[#666] mb-1">Confirm New Password</label>
+                <label className="block text-[11px] font-medium text-[#666] mb-1">{t("admin.password.confirm")}</label>
                 <input
                   type="password"
                   value={pwConfirm}
@@ -476,14 +476,14 @@ export default function AdminLayout({ children }) {
                 disabled={pwSaving}
                 className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
               >
-                {pwSaving ? "Saving..." : "Update Password"}
+                {pwSaving ? t("admin.password.updating") : t("admin.password.update")}
               </button>
               <button
                 type="button"
                 onClick={() => setPwModal(false)}
                 className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]"
               >
-                Cancel
+                {t("admin.common.cancel")}
               </button>
             </div>
           </div>

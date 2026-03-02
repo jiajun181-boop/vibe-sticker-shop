@@ -96,6 +96,8 @@ export async function PUT(request) {
       update: { value: config },
     });
 
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/shop", "layout");
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[Catalog] PUT error:", err);

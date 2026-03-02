@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const DEFAULTS = {
   "store.name": "Vibe Sticker Shop",
@@ -24,6 +25,7 @@ function dollarsToCents(dollars) {
 }
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -100,18 +102,16 @@ export default function SettingsPage() {
 
       if (!res.ok) throw new Error("Failed to save settings");
 
-      setMessage({ type: "success", text: "Settings saved successfully." });
-      // Re-fetch to get canonical values from server
+      setMessage({ type: "success", text: t("admin.settings.saved") });
       await fetchSettings();
     } catch (err) {
       console.error("Failed to save settings:", err);
-      setMessage({ type: "error", text: "Failed to save settings. Please try again." });
+      setMessage({ type: "error", text: t("admin.settings.saveFailed") });
     } finally {
       setSaving(false);
     }
   }
 
-  // For display, convert cents stored values to dollars
   function displayDollars(key) {
     const val = settings[key];
     if (typeof val === "number" && val >= 100) {
@@ -123,14 +123,14 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex h-48 items-center justify-center text-sm text-gray-600">
-        Loading settings...
+        {t("admin.settings.loading")}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
+      <h1 className="text-xl font-semibold text-gray-900">{t("admin.settings.title")}</h1>
 
       {message && (
         <div
@@ -145,28 +145,27 @@ export default function SettingsPage() {
       )}
 
       <form onSubmit={handleSave} className="space-y-4">
-        {/* Store Information */}
         <Section
-          title="Store Information"
+          title={t("admin.settings.storeInfo")}
           isOpen={openSections.store}
           onToggle={() => toggleSection("store")}
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
-              label="Store Name"
+              label={t("admin.settings.storeName")}
               type="text"
               value={settings["store.name"]}
               onChange={(v) => updateSetting("store.name", v)}
             />
             <Field
-              label="Email"
+              label={t("admin.settings.email")}
               type="email"
               value={settings["store.email"]}
               onChange={(v) => updateSetting("store.email", v)}
               placeholder="hello@lunarprint.ca"
             />
             <Field
-              label="Phone"
+              label={t("admin.settings.phone")}
               type="tel"
               value={settings["store.phone"]}
               onChange={(v) => updateSetting("store.phone", v)}
@@ -174,7 +173,7 @@ export default function SettingsPage() {
             />
             <div className="sm:col-span-2">
               <label className="mb-1 block text-xs font-medium text-gray-600">
-                Address
+                {t("admin.settings.address")}
               </label>
               <textarea
                 rows={3}
@@ -187,41 +186,39 @@ export default function SettingsPage() {
           </div>
         </Section>
 
-        {/* Shipping Configuration */}
         <Section
-          title="Shipping Configuration"
+          title={t("admin.settings.shipping")}
           isOpen={openSections.shipping}
           onToggle={() => toggleSection("shipping")}
         >
           <div className="grid gap-4 sm:grid-cols-3">
             <DollarField
-              label="Free Shipping Threshold"
+              label={t("admin.settings.freeThreshold")}
               value={displayDollars("shipping.freeThreshold")}
               onChange={(v) => updateSetting("shipping.freeThreshold", v)}
             />
             <DollarField
-              label="Local Shipping Rate"
+              label={t("admin.settings.localRate")}
               value={displayDollars("shipping.localRate")}
               onChange={(v) => updateSetting("shipping.localRate", v)}
             />
             <DollarField
-              label="Nationwide Shipping Rate"
+              label={t("admin.settings.nationwideRate")}
               value={displayDollars("shipping.nationwideRate")}
               onChange={(v) => updateSetting("shipping.nationwideRate", v)}
             />
           </div>
         </Section>
 
-        {/* Tax Configuration */}
         <Section
-          title="Tax Configuration"
+          title={t("admin.settings.tax")}
           isOpen={openSections.tax}
           onToggle={() => toggleSection("tax")}
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-600">
-                HST Rate (%)
+                {t("admin.settings.hstRate")}
               </label>
               <div className="relative">
                 <input
@@ -248,14 +245,13 @@ export default function SettingsPage() {
                 />
                 <div className="h-5 w-9 rounded-full bg-gray-300 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-gray-900 peer-checked:after:translate-x-full" />
               </label>
-              <span className="text-sm text-gray-700">Tax collection enabled</span>
+              <span className="text-sm text-gray-700">{t("admin.settings.taxEnabled")}</span>
             </div>
           </div>
         </Section>
 
-        {/* Order Settings */}
         <Section
-          title="Order Settings"
+          title={t("admin.settings.order")}
           isOpen={openSections.order}
           onToggle={() => toggleSection("order")}
         >
@@ -272,19 +268,18 @@ export default function SettingsPage() {
               <div className="h-5 w-9 rounded-full bg-gray-300 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-gray-900 peer-checked:after:translate-x-full" />
             </label>
             <span className="text-sm text-gray-700">
-              Send automatic order confirmation emails
+              {t("admin.settings.autoConfirmEmail")}
             </span>
           </div>
         </Section>
 
-        {/* Save Button */}
         <div className="flex justify-end pt-2">
           <button
             type="submit"
             disabled={saving}
             className="rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-semibold text-[#fff] transition-colors hover:bg-black disabled:opacity-50"
           >
-            {saving ? "Saving..." : "Save All Settings"}
+            {saving ? t("admin.settings.saving") : t("admin.settings.saveAll")}
           </button>
         </div>
       </form>

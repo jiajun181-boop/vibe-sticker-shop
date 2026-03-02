@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -49,6 +50,7 @@ export default function OrdersPage() {
 function OrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
   const [orders, setOrders] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -60,6 +62,12 @@ function OrdersContent() {
   const page = parseInt(searchParams.get("page") || "1");
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
+
+  const statusLabel = (s) => t(`admin.orders.${s}`, s);
+  const productionLabel = (s) => {
+    const map = { not_started: t("admin.orders.productionNotStarted"), preflight: t("admin.orders.productionNotStarted"), in_production: t("admin.orders.productionInProgress"), ready_to_ship: t("admin.orders.productionReady"), shipped: t("admin.orders.productionShipped"), completed: t("admin.orders.productionDelivered") };
+    return map[s] || (s ? s.replace(/_/g, " ") : "");
+  };
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -189,13 +197,13 @@ function OrdersContent() {
                 setStatusFilter(s);
                 updateParams({ status: s === "all" ? null : s, page: "1" });
               }}
-              className={`rounded-[3px] px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+              className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
                 statusFilter === s
                   ? "bg-black text-[#fff]"
                   : "bg-white text-[#666] border border-[#e0e0e0] hover:border-black hover:text-black"
               }`}
             >
-              {s}
+              {statusLabel(s)}
             </button>
           ))}
         </div>
@@ -206,14 +214,14 @@ function OrdersContent() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search email or order ID..."
+            placeholder={t("admin.orders.searchPlaceholder")}
             className="w-full sm:w-64 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button
             type="submit"
             className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
-            Search
+            {t("admin.common.search")}
           </button>
         </form>
       </div>
@@ -223,7 +231,7 @@ function OrdersContent() {
         <div className="sticky top-0 z-10 rounded-[3px] border border-[#e0e0e0] bg-white p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-sm font-medium text-black">
-              {selectedOrders.length} order{selectedOrders.length > 1 ? "s" : ""} selected
+              {t("admin.orders.selected", { count: selectedOrders.length }).replace("{count}", selectedOrders.length)}
             </span>
             <div className="flex flex-wrap gap-2">
               <select
@@ -232,24 +240,24 @@ function OrdersContent() {
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs text-black"
                 defaultValue=""
               >
-                <option value="" disabled>Update Status...</option>
-                <option value="pending">Mark Pending</option>
-                <option value="paid">Mark Paid</option>
-                <option value="canceled">Mark Canceled</option>
-                <option value="refunded">Mark Refunded</option>
+                <option value="" disabled>{t("admin.orders.updateStatus")}</option>
+                <option value="pending">{t("admin.orders.markPending")}</option>
+                <option value="paid">{t("admin.orders.markPaid")}</option>
+                <option value="canceled">{t("admin.orders.markCanceled")}</option>
+                <option value="refunded">{t("admin.orders.markRefunded")}</option>
               </select>
               <button
                 onClick={handleBulkExport}
                 disabled={bulkUpdating}
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:border-black"
               >
-                Export CSV
+                {t("admin.common.export")}
               </button>
               <button
                 onClick={() => setSelectedOrders([])}
                 className="text-xs text-[#999] hover:text-black"
               >
-                Clear
+                {t("admin.common.clear")}
               </button>
             </div>
           </div>
@@ -260,11 +268,11 @@ function OrdersContent() {
       <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            Loading...
+            {t("admin.common.loading")}
           </div>
         ) : orders.length === 0 ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            No orders found
+            {t("admin.orders.noOrders")}
           </div>
         ) : (
           <>
@@ -282,25 +290,25 @@ function OrdersContent() {
                       />
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Order
+                      {t("admin.orders.title", "Order")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Customer
+                      {t("admin.orders.customer")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Amount
+                      {t("admin.orders.amount")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Status
+                      {t("admin.orders.status")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Payment
+                      {t("admin.orders.status", "Payment")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Production
+                      {t("admin.orders.production")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Date
+                      {t("admin.orders.date")}
                     </th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -342,7 +350,7 @@ function OrdersContent() {
                             statusColors[order.status] || "bg-gray-100"
                           }`}
                         >
-                          {order.status}
+                          {statusLabel(order.status)}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -361,7 +369,7 @@ function OrdersContent() {
                             "bg-gray-100"
                           }`}
                         >
-                          {order.productionStatus?.replace(/_/g, " ")}
+                          {productionLabel(order.productionStatus)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-xs text-[#999]">
@@ -372,7 +380,7 @@ function OrdersContent() {
                           href={`/admin/orders/${order.id}`}
                           className="text-xs font-medium text-black underline hover:no-underline"
                         >
-                          View
+                          {t("admin.common.view")}
                         </Link>
                       </td>
                     </tr>
@@ -425,7 +433,7 @@ function OrdersContent() {
                           "bg-gray-100"
                         }`}
                       >
-                        {order.productionStatus?.replace(/_/g, " ")}
+                        {productionLabel(order.productionStatus)}
                       </span>
                       <span className="text-xs text-[#999]">
                         {new Date(order.createdAt).toLocaleDateString()}
@@ -443,8 +451,8 @@ function OrdersContent() {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-[#999]">
-            Showing {(pagination.page - 1) * pagination.limit + 1}-
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+            {t("admin.common.showing")} {(pagination.page - 1) * pagination.limit + 1}-
+            {Math.min(pagination.page * pagination.limit, pagination.total)} {t("admin.common.of")}{" "}
             {pagination.total}
           </p>
           <div className="flex gap-1">
@@ -454,7 +462,7 @@ function OrdersContent() {
               onClick={() => updateParams({ page: String(page - 1) })}
               className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:border-black disabled:opacity-40"
             >
-              Previous
+              {t("admin.common.previous")}
             </button>
             <button
               type="button"
@@ -462,7 +470,7 @@ function OrdersContent() {
               onClick={() => updateParams({ page: String(page + 1) })}
               className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:border-black disabled:opacity-40"
             >
-              Next
+              {t("admin.common.next")}
             </button>
           </div>
         </div>

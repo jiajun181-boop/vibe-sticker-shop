@@ -173,6 +173,7 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
   const [rollbackTarget, setRollbackTarget] = useState("");
   const [rollbackLoading, setRollbackLoading] = useState(false);
   const [rollbackMsg, setRollbackMsg] = useState(null);
+  const [showFormulas, setShowFormulas] = useState(false);
 
   useEffect(() => {
     if (embedded) return;
@@ -853,6 +854,162 @@ export default function PricingPresetsPage({ embedded = false } = {}) {
             <p className="text-sm mt-1">
               Run the seed script to create default presets.
             </p>
+          </div>
+        )}
+      </div>
+
+      {/* ── Pricing Formula Reference ── */}
+      <div className="mt-8 rounded-[3px] border border-[#e0e0e0] bg-white">
+        <button
+          type="button"
+          onClick={() => setShowFormulas((v) => !v)}
+          className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-[#fafafa]"
+        >
+          <div>
+            <h2 className="text-sm font-bold text-[#111]">{t("admin.pricing.formulaTitle", "Pricing Formula Reference")}</h2>
+            <p className="text-xs text-[#999] mt-0.5">{t("admin.pricing.formulaDesc", "How prices are calculated for each product type")}</p>
+          </div>
+          <svg className={`h-5 w-5 text-[#999] transition-transform ${showFormulas ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+        </button>
+        {showFormulas && (
+          <div className="border-t border-[#e0e0e0] px-6 py-5 space-y-6 text-xs text-[#333]">
+
+            {/* General formula */}
+            <div>
+              <h3 className="font-bold text-sm text-[#111] mb-2">{t("admin.pricing.generalFormula", "General Formula (All Templates)")}</h3>
+              <div className="bg-[#f5f5f5] rounded-[3px] p-4 font-mono text-xs leading-relaxed">
+                <p>{t("admin.pricing.fSelling", "Selling Price")} = {t("admin.pricing.fCost", "Total Cost")} ÷ (1 - {t("admin.pricing.fMargin", "Margin")})</p>
+                <p className="mt-1">{t("admin.pricing.fFinal", "Final Price")} = roundUp99({t("admin.pricing.fSelling", "Selling Price")}) → $XX.99</p>
+              </div>
+              <p className="mt-2 text-[#666]">{t("admin.pricing.marginExplain", "Margin is tiered by product category × quantity. Higher qty = lower margin.")}</p>
+            </div>
+
+            {/* Margin tiers table */}
+            <div>
+              <h3 className="font-bold text-sm text-[#111] mb-2">{t("admin.pricing.marginTiers", "Margin Tiers")}</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-[#f5f5f5]">
+                      <th className="px-3 py-2 text-left font-semibold border border-[#e0e0e0]">{t("admin.pricing.category", "Category")}</th>
+                      <th className="px-3 py-2 text-center font-semibold border border-[#e0e0e0]">1-24</th>
+                      <th className="px-3 py-2 text-center font-semibold border border-[#e0e0e0]">25-99</th>
+                      <th className="px-3 py-2 text-center font-semibold border border-[#e0e0e0]">100-499</th>
+                      <th className="px-3 py-2 text-center font-semibold border border-[#e0e0e0]">500-999</th>
+                      <th className="px-3 py-2 text-center font-semibold border border-[#e0e0e0]">1000+</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["Stickers / Labels / Decals", "80%", "80%", "75%", "68%", "50%"],
+                      ["Signs / Boards", "75%", "60%", "50%", "45%", "40%"],
+                      ["Banners / Displays", "75%", "68%", "60%", "55%", "50%"],
+                      ["Paper Print (Cards/Flyers)", "75%", "75%", "70%", "65%", "45%"],
+                      ["Canvas Prints", "75%", "70%", "65%", "65%", "65%"],
+                      ["Window/Wall/Floor", "75%", "70%", "65%", "60%", "55%"],
+                      ["Vehicle Graphics", "70%", "65%", "60%", "60%", "60%"],
+                    ].map(([cat, ...cols]) => (
+                      <tr key={cat}>
+                        <td className="px-3 py-1.5 font-medium border border-[#e0e0e0]">{cat}</td>
+                        {cols.map((c, i) => (
+                          <td key={i} className="px-3 py-1.5 text-center border border-[#e0e0e0]">{c}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-2 text-[#666]">{t("admin.pricing.marginExample", "Example: Stickers qty 100, margin = 75%. Cost $5 → Sell $5 ÷ (1-0.75) = $20 → $19.99")}</p>
+            </div>
+
+            {/* Template A: Vinyl Print */}
+            <div className="border-t border-[#e0e0e0] pt-4">
+              <h3 className="font-bold text-sm text-[#111] mb-2">Template A: Vinyl Print (Stickers / Labels / Decals)</h3>
+              <div className="bg-[#f5f5f5] rounded-[3px] p-4 font-mono text-xs leading-relaxed space-y-1">
+                <p>sqft = (width + 0.25) × (height + 0.25) ÷ 144</p>
+                <p>materialCost = sqft × material.costPerSqft × qty</p>
+                <p>inkCost = sqft × inkRate × qty</p>
+                <p>laminationCost = sqft × lam.costPerSqft × qty</p>
+                <p>cutCost = perimeter × $0.008 × qty</p>
+                <p>totalCost = materialCost + inkCost + laminationCost + cutCost</p>
+                <p>+ setupFee $12 + surcharges (shape, print mode)</p>
+              </div>
+              <p className="mt-1 text-[#666]">Min price: $25. Ink rate ~ $0.17/sqft. White vinyl ~ $0.40/sqft.</p>
+            </div>
+
+            {/* Template B: Board Sign */}
+            <div className="border-t border-[#e0e0e0] pt-4">
+              <h3 className="font-bold text-sm text-[#111] mb-2">Template B: Board Sign (Coroplast / Foam / PVC / Aluminum)</h3>
+              <div className="bg-[#f5f5f5] rounded-[3px] p-4 font-mono text-xs leading-relaxed space-y-1">
+                <p>sqft = width × height ÷ 144</p>
+                <p>boardCost = sqft × board.costPerSqft × qty</p>
+                <p>vinylCost = sqft × vinyl.costPerSqft × qty</p>
+                <p>inkCost = sqft × inkRate × qty</p>
+                <p>laminationCost = sqft × lam.costPerSqft × qty</p>
+                <p>totalCost = boardCost + vinylCost + inkCost + laminationCost</p>
+              </div>
+              <p className="mt-1 text-[#666]">Min price: $15. Coroplast 4mm ~ $0.60/sqft.</p>
+            </div>
+
+            {/* Template C: Banner */}
+            <div className="border-t border-[#e0e0e0] pt-4">
+              <h3 className="font-bold text-sm text-[#111] mb-2">Template C: Banner (Vinyl / Mesh / Fabric)</h3>
+              <div className="bg-[#f5f5f5] rounded-[3px] p-4 font-mono text-xs leading-relaxed space-y-1">
+                <p>sqft = width × height ÷ 144</p>
+                <p>materialCost = sqft × material.costPerSqft × qty</p>
+                <p>inkCost = sqft × inkRate × qty</p>
+                <p>finishingCost = (grommets/hems per DB pricing)</p>
+                <p>accessoryCost = hardware price × 2.5× markup</p>
+                <p>totalCost = materialCost + inkCost + finishingCost + accessoryCost</p>
+                <p>+ setupFee ($28 qty 1-2, $15 qty 3-5, $10 qty 6+)</p>
+              </div>
+              <p className="mt-1 text-[#666]">Min price: $15. 13oz vinyl ~ $0.30/sqft.</p>
+            </div>
+
+            {/* Template D: Paper Print */}
+            <div className="border-t border-[#e0e0e0] pt-4">
+              <h3 className="font-bold text-sm text-[#111] mb-2">Template D: Paper Print (Cards / Flyers / Postcards / Menus)</h3>
+              <div className="bg-[#f5f5f5] rounded-[3px] p-4 font-mono text-xs leading-relaxed space-y-1">
+                <p>piecesPerSheet = imposition(12×18 parent, piece size)</p>
+                <p>sheetsNeeded = ceil(qty ÷ piecesPerSheet)</p>
+                <p>paperCost = sheetsNeeded × paper.costPerSheet</p>
+                <p>inkCost = qty × inkClick × passes</p>
+                <p>laminationCost = parentSheet sqft × sheetsNeeded × lam.costPerSqft</p>
+                <p>cuttingCost = sheetsNeeded × $0.25</p>
+                <p>totalCost = paperCost + inkCost + laminationCost + cuttingCost</p>
+                <p className="text-[#999]">(Oversize pieces: area-proportional scaling)</p>
+              </div>
+              <p className="mt-1 text-[#666]">Min price: $15. Ink click ~ $0.036. 14pt cardstock ~ $0.24/sheet.</p>
+            </div>
+
+            {/* Template E: Canvas */}
+            <div className="border-t border-[#e0e0e0] pt-4">
+              <h3 className="font-bold text-sm text-[#111] mb-2">Template E: Canvas Print</h3>
+              <div className="bg-[#f5f5f5] rounded-[3px] p-4 font-mono text-xs leading-relaxed space-y-1">
+                <p>sqft = width × height ÷ 144</p>
+                <p>canvasCost = sqft × canvas.costPerSqft × qty</p>
+                <p>inkCost = sqft × inkRate × qty</p>
+                <p>frameCost = (2 × width + 2 × height) × $/inch lookup</p>
+                <p>assemblyCost = $5.00 per canvas</p>
+                <p>totalCost = canvasCost + inkCost + (frameCost + assemblyCost) × qty</p>
+              </div>
+              <p className="mt-1 text-[#666]">Min price: $49. Canvas material ~ $1.20/sqft.</p>
+            </div>
+
+            {/* Template F: Vinyl Cut */}
+            <div className="border-t border-[#e0e0e0] pt-4">
+              <h3 className="font-bold text-sm text-[#111] mb-2">Template F: Vinyl Cut Lettering (Vehicle Graphics)</h3>
+              <div className="bg-[#f5f5f5] rounded-[3px] p-4 font-mono text-xs leading-relaxed space-y-1">
+                <p>sqft = width × height ÷ 144</p>
+                <p>materialCost = sqft × vinyl.costPerSqft × qty</p>
+                <p>cutLabor = perimeter × $0.008 × qty</p>
+                <p>weedLabor = sqft × $2.00 × qty</p>
+                <p>transferTape = sqft × $0.30 × qty</p>
+                <p>totalCost = materialCost + cutLabor + weedLabor + transferTape</p>
+              </div>
+              <p className="mt-1 text-[#666]">Min price: $15. Oracal 651 ~ $0.55/sqft.</p>
+            </div>
+
           </div>
         )}
       </div>

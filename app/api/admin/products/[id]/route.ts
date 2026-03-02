@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { slugify, validateSlug } from "@/lib/slugify";
@@ -197,6 +198,7 @@ export async function PATCH(
     },
   });
 
+  revalidatePath("/shop", "layout");
   return NextResponse.json(await attachImageSourceMeta(product));
 }
 
@@ -215,5 +217,6 @@ export async function DELETE(
     data: { isActive: false },
   });
 
+  revalidatePath("/shop", "layout");
   return NextResponse.json({ success: true, deactivated: true, id: product.id });
 }

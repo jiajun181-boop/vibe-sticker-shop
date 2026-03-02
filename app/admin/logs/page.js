@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const ACTION_COLORS = {
   created: "bg-green-50 text-green-700",
@@ -11,14 +12,16 @@ const ACTION_COLORS = {
   imported: "bg-cyan-50 text-cyan-700",
 };
 
-const ENTITY_OPTIONS = [
-  { value: "", label: "All Entities" },
-  { value: "order", label: "Order" },
-  { value: "product", label: "Product" },
-  { value: "coupon", label: "Coupon" },
-  { value: "setting", label: "Setting" },
-  { value: "media", label: "Media" },
-];
+function getEntityOptions(t) {
+  return [
+    { value: "", label: t("admin.logs.allEntities") },
+    { value: "order", label: t("admin.logs.order") },
+    { value: "product", label: t("admin.logs.product") },
+    { value: "coupon", label: t("admin.logs.coupon") },
+    { value: "setting", label: t("admin.logs.setting") },
+    { value: "media", label: t("admin.logs.media") },
+  ];
+}
 
 export default function LogsPage() {
   return (
@@ -37,6 +40,7 @@ export default function LogsPage() {
 function LogsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
   const [logs, setLogs] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -106,6 +110,32 @@ function LogsContent() {
     return ACTION_COLORS[actionName] || "bg-gray-100 text-gray-700";
   }
 
+  function formatDetailKey(key) {
+    const labels = {
+      orderId: "Order ID", productId: "Product ID", slug: "Slug",
+      name: "Name", category: "Category", amount: "Amount",
+      reason: "Reason", email: "Email", status: "Status",
+      changedFields: "Changed", primaryImageId: "Primary Image",
+      couponCode: "Coupon Code", discount: "Discount",
+      oldStatus: "Old Status", newStatus: "New Status",
+      qty: "Quantity", total: "Total", ip: "IP",
+    };
+    return labels[key] || key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
+  }
+
+  function formatDetailValue(key, value) {
+    if (value === null || value === undefined) return "—";
+    if (key === "amount" || key === "total") {
+      const num = typeof value === "number" ? value : parseFloat(value);
+      return isNaN(num) ? String(value) : `$${(num / 100).toFixed(2)}`;
+    }
+    if (Array.isArray(value)) return value.join(", ");
+    if (typeof value === "object") {
+      return Object.entries(value).map(([k, v]) => `${formatDetailKey(k)}: ${v}`).join(", ");
+    }
+    return String(value);
+  }
+
   function renderDetails(details) {
     if (!details) return null;
 
@@ -117,8 +147,8 @@ function LogsContent() {
         <div className="flex flex-wrap gap-x-4 gap-y-1">
           {entries.map(([key, value]) => (
             <span key={key} className="text-xs text-gray-600">
-              <span className="font-medium text-gray-600">{key}:</span>{" "}
-              {typeof value === "object" ? JSON.stringify(value) : String(value)}
+              <span className="font-medium text-gray-600">{formatDetailKey(key)}:</span>{" "}
+              {formatDetailValue(key, value)}
             </span>
           ))}
         </div>
@@ -130,7 +160,7 @@ function LogsContent() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-gray-900">Activity Log</h1>
+      <h1 className="text-xl font-semibold text-gray-900">{t("admin.logs.title")}</h1>
 
       {/* Filters */}
       <div className="rounded-xl border border-gray-200 bg-white p-4">
@@ -140,7 +170,7 @@ function LogsContent() {
             onChange={(e) => setEntity(e.target.value)}
             className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 outline-none focus:border-gray-900"
           >
-            {ENTITY_OPTIONS.map((opt) => (
+            {getEntityOptions(t).map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
@@ -151,12 +181,12 @@ function LogsContent() {
             type="text"
             value={action}
             onChange={(e) => setAction(e.target.value)}
-            placeholder="Action..."
+            placeholder={t("admin.logs.actionPlaceholder")}
             className="w-32 rounded-lg border border-gray-300 px-3 py-1.5 text-xs outline-none focus:border-gray-900"
           />
 
           <div className="flex items-center gap-1.5">
-            <label className="text-xs text-gray-600">From</label>
+            <label className="text-xs text-gray-600">{t("admin.common.from")}</label>
             <input
               type="date"
               value={dateFrom}
@@ -166,7 +196,7 @@ function LogsContent() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <label className="text-xs text-gray-600">To</label>
+            <label className="text-xs text-gray-600">{t("admin.common.to")}</label>
             <input
               type="date"
               value={dateTo}
@@ -180,7 +210,7 @@ function LogsContent() {
             onClick={handleFilter}
             className="rounded-lg bg-gray-900 px-4 py-1.5 text-xs font-semibold text-[#fff] hover:bg-black"
           >
-            Filter
+            {t("admin.common.filter")}
           </button>
 
           {(entity || action || dateFrom || dateTo) && (
@@ -189,7 +219,7 @@ function LogsContent() {
               onClick={handleClearFilters}
               className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100"
             >
-              Clear
+              {t("admin.common.clear")}
             </button>
           )}
         </div>
@@ -198,11 +228,11 @@ function LogsContent() {
       {/* Log entries */}
       {loading ? (
         <div className="flex h-48 items-center justify-center text-sm text-gray-600">
-          Loading activity logs...
+          {t("admin.logs.loadingLogs")}
         </div>
       ) : logs.length === 0 ? (
         <div className="flex h-48 items-center justify-center text-sm text-gray-600">
-          No activity logs found
+          {t("admin.logs.noLogs")}
         </div>
       ) : (
         <div className="space-y-3">
@@ -250,8 +280,8 @@ function LogsContent() {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-gray-600">
-            Showing {(pagination.page - 1) * pagination.limit + 1}-
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+            {t("admin.common.showing")} {(pagination.page - 1) * pagination.limit + 1}-
+            {Math.min(pagination.page * pagination.limit, pagination.total)} {t("admin.common.of")}{" "}
             {pagination.total}
           </p>
           <div className="flex gap-1">
@@ -261,7 +291,7 @@ function LogsContent() {
               onClick={() => updateParams({ page: String(page - 1) })}
               className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
             >
-              Previous
+              {t("admin.common.previous")}
             </button>
             <button
               type="button"
@@ -269,7 +299,7 @@ function LogsContent() {
               onClick={() => updateParams({ page: String(page + 1) })}
               className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40"
             >
-              Next
+              {t("admin.common.next")}
             </button>
           </div>
         </div>

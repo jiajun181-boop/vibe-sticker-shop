@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -10,11 +11,12 @@ const formatCad = (cents) =>
   );
 
 export default function CustomersPage() {
+  const { t } = useTranslation();
   return (
     <Suspense
       fallback={
         <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-          Loading...
+          {t("admin.customers.loading")}
         </div>
       }
     >
@@ -26,6 +28,7 @@ export default function CustomersPage() {
 function CustomersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
   const [customers, setCustomers] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -84,17 +87,16 @@ function CustomersContent() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-black">Customers</h1>
+      <h1 className="text-xl font-semibold text-black">{t("admin.customers.title")}</h1>
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {/* Sort dropdown */}
         <div className="flex items-center gap-2">
           <label
             htmlFor="sort-select"
             className="text-xs font-medium text-[#999]"
           >
-            Sort by
+            {t("admin.customers.sortBy")}
           </label>
           <select
             id="sort-select"
@@ -102,29 +104,28 @@ function CustomersContent() {
             onChange={handleSortChange}
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-black"
           >
-            <option value="totalSpent:desc">Total Spent (High to Low)</option>
-            <option value="totalSpent:asc">Total Spent (Low to High)</option>
-            <option value="orderCount:desc">Order Count (High to Low)</option>
-            <option value="orderCount:asc">Order Count (Low to High)</option>
-            <option value="lastOrder:desc">Last Order (Newest)</option>
-            <option value="lastOrder:asc">Last Order (Oldest)</option>
+            <option value="totalSpent:desc">{t("admin.customers.totalSpentDesc")}</option>
+            <option value="totalSpent:asc">{t("admin.customers.totalSpentAsc")}</option>
+            <option value="orderCount:desc">{t("admin.customers.orderCountDesc")}</option>
+            <option value="orderCount:asc">{t("admin.customers.orderCountAsc")}</option>
+            <option value="lastOrder:desc">{t("admin.customers.lastOrderDesc")}</option>
+            <option value="lastOrder:asc">{t("admin.customers.lastOrderAsc")}</option>
           </select>
         </div>
 
-        {/* Search */}
         <form onSubmit={handleSearch} className="flex gap-2">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search email or name..."
+            placeholder={t("admin.customers.searchPlaceholder")}
             className="w-full sm:w-64 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button
             type="submit"
             className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
-            Search
+            {t("admin.common.search")}
           </button>
         </form>
       </div>
@@ -133,11 +134,11 @@ function CustomersContent() {
       <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            Loading...
+            {t("admin.customers.loading")}
           </div>
         ) : customers.length === 0 ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            No customers found
+            {t("admin.customers.noCustomers")}
           </div>
         ) : (
           <>
@@ -147,22 +148,22 @@ function CustomersContent() {
                 <thead>
                   <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Email
+                      {t("admin.customers.email")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Name
+                      {t("admin.customers.name")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Orders
+                      {t("admin.customers.orders")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Total Spent
+                      {t("admin.customers.totalSpent")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      First Order
+                      {t("admin.customers.firstOrder")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Last Order
+                      {t("admin.customers.lastOrder")}
                     </th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -197,7 +198,7 @@ function CustomersContent() {
                           href={`/admin/customers/${encodeURIComponent(customer.email)}`}
                           className="text-xs font-medium text-black underline hover:no-underline"
                         >
-                          View
+                          {t("admin.customers.view")}
                         </Link>
                       </td>
                     </tr>
@@ -232,10 +233,10 @@ function CustomersContent() {
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <span className="rounded-xl bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
                       {customer.orderCount}{" "}
-                      {customer.orderCount === 1 ? "order" : "orders"}
+                      {customer.orderCount === 1 ? t("admin.customers.order") : t("admin.customers.ordersPlural")}
                     </span>
                     <span className="text-xs text-[#999]">
-                      Last:{" "}
+                      {t("admin.customers.last")}{" "}
                       {new Date(customer.lastOrder).toLocaleDateString()}
                     </span>
                   </div>
@@ -250,8 +251,8 @@ function CustomersContent() {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-[#999]">
-            Showing {(pagination.page - 1) * pagination.limit + 1}-
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+            {t("admin.common.showing")} {(pagination.page - 1) * pagination.limit + 1}-
+            {Math.min(pagination.page * pagination.limit, pagination.total)} {t("admin.common.of")}{" "}
             {pagination.total}
           </p>
           <div className="flex gap-1">
@@ -261,7 +262,7 @@ function CustomersContent() {
               onClick={() => updateParams({ page: String(page - 1) })}
               className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
-              Previous
+              {t("admin.common.previous")}
             </button>
             <button
               type="button"
@@ -269,7 +270,7 @@ function CustomersContent() {
               onClick={() => updateParams({ page: String(page + 1) })}
               className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
-              Next
+              {t("admin.common.next")}
             </button>
           </div>
         </div>

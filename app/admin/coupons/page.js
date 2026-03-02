@@ -3,17 +3,12 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
     cents / 100
   );
-
-const filterTabs = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "expired", label: "Expired" },
-];
 
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString("en-CA");
@@ -39,11 +34,12 @@ const statusStyles = {
 };
 
 export default function CouponsPage() {
+  const { t } = useTranslation();
   return (
     <Suspense
       fallback={
         <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-          Loading...
+          {t("admin.common.loading")}
         </div>
       }
     >
@@ -55,6 +51,7 @@ export default function CouponsPage() {
 function CouponsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
   const [coupons, setCoupons] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -68,6 +65,23 @@ function CouponsContent() {
   const [creating, setCreating] = useState(false);
 
   const page = parseInt(searchParams.get("page") || "1");
+
+  function getFilterTabs() {
+    return [
+      { value: "all", label: t("admin.coupons.all") },
+      { value: "active", label: t("admin.coupons.active") },
+      { value: "expired", label: t("admin.coupons.expired") },
+    ];
+  }
+
+  function statusLabel(status) {
+    const map = {
+      active: t("admin.coupons.active"),
+      expired: t("admin.coupons.expired"),
+      inactive: t("admin.coupons.inactive"),
+    };
+    return map[status] || status;
+  }
 
   const fetchCoupons = useCallback(async () => {
     setLoading(true);
@@ -143,21 +157,21 @@ function CouponsContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        showMsg(data.error || "Failed to create coupon", true);
+        showMsg(data.error || t("admin.coupons.createFailed"), true);
       } else {
         setShowForm(false);
-        showMsg("Coupon created!");
+        showMsg(t("admin.coupons.created"));
         fetchCoupons();
       }
     } catch {
-      showMsg("Network error", true);
+      showMsg(t("admin.common.networkError", "Network error"), true);
     } finally {
       setCreating(false);
     }
   }
 
   async function handleDelete(coupon) {
-    if (!confirm(`Delete coupon "${coupon.code}"? This cannot be undone.`))
+    if (!confirm(t("admin.coupons.deleteConfirm").replace("{code}", coupon.code)))
       return;
 
     try {
@@ -167,29 +181,29 @@ function CouponsContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        showMsg(data.error || "Failed to delete coupon", true);
+        showMsg(data.error || t("admin.coupons.deleteFailed"), true);
       } else if (data.deactivated) {
         showMsg(data.message);
         fetchCoupons();
       } else {
-        showMsg("Coupon deleted");
+        showMsg(t("admin.coupons.deleted"));
         fetchCoupons();
       }
     } catch {
-      showMsg("Network error", true);
+      showMsg(t("admin.common.networkError", "Network error"), true);
     }
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-black">Coupons</h1>
+        <h1 className="text-xl font-semibold text-black">{t("admin.coupons.title")}</h1>
         <button
           type="button"
           onClick={() => setShowForm(true)}
           className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
         >
-          + Create Coupon
+          {t("admin.coupons.create")}
         </button>
       </div>
 
@@ -208,9 +222,8 @@ function CouponsContent() {
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {/* Filter tabs */}
         <div className="flex flex-wrap gap-1">
-          {filterTabs.map((tab) => (
+          {getFilterTabs().map((tab) => (
             <button
               key={tab.value}
               type="button"
@@ -232,20 +245,19 @@ function CouponsContent() {
           ))}
         </div>
 
-        {/* Search */}
         <form onSubmit={handleSearch} className="flex gap-2">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search code or description..."
+            placeholder={t("admin.coupons.searchPlaceholder")}
             className="w-full sm:w-56 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button
             type="submit"
             className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
-            Search
+            {t("admin.common.search")}
           </button>
         </form>
       </div>
@@ -254,11 +266,11 @@ function CouponsContent() {
       <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            Loading...
+            {t("admin.common.loading")}
           </div>
         ) : coupons.length === 0 ? (
           <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-[#999]">
-            <p>No coupons found</p>
+            <p>{t("admin.coupons.noCoupons")}</p>
             {activeFilter !== "all" && (
               <button
                 type="button"
@@ -268,7 +280,7 @@ function CouponsContent() {
                 }}
                 className="text-xs text-black underline hover:no-underline"
               >
-                Clear filters
+                {t("admin.coupons.clearFilters")}
               </button>
             )}
           </div>
@@ -280,25 +292,25 @@ function CouponsContent() {
                 <thead>
                   <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Code
+                      {t("admin.coupons.code")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Type
+                      {t("admin.coupons.type")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Value
+                      {t("admin.coupons.value")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Min Amount
+                      {t("admin.coupons.minAmount")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Uses
+                      {t("admin.coupons.uses")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Valid Period
+                      {t("admin.coupons.validPeriod")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Status
+                      {t("admin.coupons.status")}
                     </th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -321,7 +333,7 @@ function CouponsContent() {
                                 : "bg-blue-100 text-blue-700"
                             }`}
                           >
-                            {coupon.type}
+                            {coupon.type === "percentage" ? t("admin.coupons.percentage") : t("admin.coupons.fixed")}
                           </span>
                         </td>
                         <td className="px-4 py-3 font-semibold text-black">
@@ -336,7 +348,7 @@ function CouponsContent() {
                           {coupon.usedCount}
                           {coupon.maxUses
                             ? ` / ${coupon.maxUses}`
-                            : " / unlimited"}
+                            : ` / ${t("admin.coupons.unlimited")}`}
                         </td>
                         <td className="px-4 py-3 text-xs text-[#999]">
                           {formatDate(coupon.validFrom)} -{" "}
@@ -348,7 +360,7 @@ function CouponsContent() {
                               statusStyles[status]
                             }`}
                           >
-                            {status}
+                            {statusLabel(status)}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -357,14 +369,14 @@ function CouponsContent() {
                               href={`/admin/coupons/${coupon.id}`}
                               className="text-xs font-medium text-black underline hover:no-underline"
                             >
-                              Edit
+                              {t("admin.coupons.edit")}
                             </Link>
                             <button
                               type="button"
                               onClick={() => handleDelete(coupon)}
                               className="text-xs font-medium text-red-500 hover:text-red-700"
                             >
-                              Delete
+                              {t("admin.coupons.delete")}
                             </button>
                           </div>
                         </td>
@@ -392,7 +404,7 @@ function CouponsContent() {
                         </p>
                         <p className="mt-0.5 text-xs text-[#999]">
                           {formatValue(coupon)} &middot;{" "}
-                          {coupon.type === "percentage" ? "%" : "fixed"}
+                          {coupon.type === "percentage" ? t("admin.coupons.percentage") : t("admin.coupons.fixed")}
                         </p>
                       </div>
                       <span
@@ -400,15 +412,16 @@ function CouponsContent() {
                           statusStyles[status]
                         }`}
                       >
-                        {status}
+                        {statusLabel(status)}
                       </span>
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[#999]">
                       <span>
                         {coupon.usedCount}
                         {coupon.maxUses
-                          ? ` / ${coupon.maxUses} uses`
-                          : " uses"}
+                          ? ` / ${coupon.maxUses}`
+                          : ""}{" "}
+                        {t("admin.coupons.uses").toLowerCase()}
                       </span>
                       <span>&middot;</span>
                       <span>
@@ -428,8 +441,8 @@ function CouponsContent() {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-[#999]">
-            Showing {(pagination.page - 1) * pagination.limit + 1}-
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+            {t("admin.common.showing")} {(pagination.page - 1) * pagination.limit + 1}-
+            {Math.min(pagination.page * pagination.limit, pagination.total)} {t("admin.common.of")}{" "}
             {pagination.total}
           </p>
           <div className="flex gap-1">
@@ -439,7 +452,7 @@ function CouponsContent() {
               onClick={() => updateParams({ page: String(page - 1) })}
               className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
-              Previous
+              {t("admin.common.previous")}
             </button>
             <button
               type="button"
@@ -447,7 +460,7 @@ function CouponsContent() {
               onClick={() => updateParams({ page: String(page + 1) })}
               className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
-              Next
+              {t("admin.common.next")}
             </button>
           </div>
         </div>
@@ -458,13 +471,13 @@ function CouponsContent() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[3px] bg-white p-8 shadow-xl">
             <h2 className="mb-6 text-lg font-semibold text-black">
-              Create Coupon
+              {t("admin.coupons.createTitle")}
             </h2>
 
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">
-                  Code *
+                  {t("admin.coupons.code")} *
                 </label>
                 <input
                   name="code"
@@ -477,27 +490,27 @@ function CouponsContent() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-[#999]">
-                    Type *
+                    {t("admin.coupons.type")} *
                   </label>
                   <select
                     name="type"
                     defaultValue="percentage"
                     className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   >
-                    <option value="percentage">Percentage</option>
-                    <option value="fixed">Fixed Amount</option>
+                    <option value="percentage">{t("admin.coupons.percentage")}</option>
+                    <option value="fixed">{t("admin.coupons.fixed")}</option>
                   </select>
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-[#999]">
-                    Value * (cents or % x 100)
+                    {t("admin.coupons.valueLabel")} *
                   </label>
                   <input
                     name="value"
                     type="number"
                     min="1"
                     required
-                    placeholder="e.g. 1000 = 10% or $10.00"
+                    placeholder={t("admin.coupons.valuePlaceholder")}
                     className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
                 </div>
@@ -506,25 +519,25 @@ function CouponsContent() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-[#999]">
-                    Min Order Amount (cents)
+                    {t("admin.coupons.minOrderCents")}
                   </label>
                   <input
                     name="minAmount"
                     type="number"
                     min="0"
-                    placeholder="Optional"
+                    placeholder={t("admin.coupons.optional")}
                     className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-[#999]">
-                    Max Uses
+                    {t("admin.coupons.maxUses")}
                   </label>
                   <input
                     name="maxUses"
                     type="number"
                     min="1"
-                    placeholder="Unlimited"
+                    placeholder={t("admin.coupons.unlimited")}
                     className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                   />
                 </div>
@@ -533,7 +546,7 @@ function CouponsContent() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-[#999]">
-                    Valid From *
+                    {t("admin.coupons.validFrom")} *
                   </label>
                   <input
                     name="validFrom"
@@ -544,7 +557,7 @@ function CouponsContent() {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-[#999]">
-                    Valid To *
+                    {t("admin.coupons.validTo")} *
                   </label>
                   <input
                     name="validTo"
@@ -557,12 +570,12 @@ function CouponsContent() {
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#999]">
-                  Description
+                  {t("admin.coupons.description")}
                 </label>
                 <textarea
                   name="description"
                   rows={2}
-                  placeholder="Optional internal note"
+                  placeholder={t("admin.coupons.optionalNote")}
                   className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 />
               </div>
@@ -573,14 +586,14 @@ function CouponsContent() {
                   disabled={creating}
                   className="flex-1 rounded-[3px] bg-black py-2.5 text-sm font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
                 >
-                  {creating ? "Creating..." : "Create Coupon"}
+                  {creating ? t("admin.coupons.creating") : t("admin.coupons.createTitle")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
                   className="flex-1 rounded-[3px] border border-[#e0e0e0] py-2.5 text-sm font-medium text-black hover:bg-[#fafafa]"
                 >
-                  Cancel
+                  {t("admin.coupons.cancel")}
                 </button>
               </div>
             </form>
