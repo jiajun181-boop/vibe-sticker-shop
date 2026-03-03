@@ -82,8 +82,18 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
   });
 
   // Build surcharges:
+  // - Foil: full coverage +30%, both sides +50% (multiplicative)
   // - Rounded corners: $0.03 × totalCards
   // - Multi-name: (names-1) × oneNamePrice + file fees - $5/name discount
+  const foilMultiplier = useMemo(() => {
+    if (!config.steps.foilOptions) return 1;
+    let m = 1;
+    if (foilCoverage === "full") m *= 1.30;
+    if (foilSides === "both") m *= 1.50;
+    return m;
+  }, [config.steps.foilOptions, foilCoverage, foilSides]);
+  const foilSurcharge = Math.round(quote.rawSubtotalCents * (foilMultiplier - 1));
+
   const roundedSurcharge =
     rounded && config.roundedSurchargePerCard
       ? config.roundedSurchargePerCard * totalCards
@@ -98,7 +108,7 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
     ? names * (config.multiName.discountPerName || 0)
     : 0;
 
-  const totalSurcharge = roundedSurcharge + multiNamePrintCost + multiNameFileFees - multiNameDiscount;
+  const totalSurcharge = foilSurcharge + roundedSurcharge + multiNamePrintCost + multiNameFileFees - multiNameDiscount;
   useEffect(() => {
     quote.addSurcharge(totalSurcharge);
   }, [totalSurcharge]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -215,6 +225,12 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
 
   // Extra rows for price breakdown
   const extraRows = [];
+  if (foilSurcharge > 0) {
+    const parts = [];
+    if (foilCoverage === "full") parts.push(t("bc.foil.coverage.full"));
+    if (foilSides === "both") parts.push(t("bc.foil.sides.both"));
+    extraRows.push({ label: parts.join(" + "), value: `+ ${formatCad(foilSurcharge)}` });
+  }
   if (roundedSurcharge > 0) {
     extraRows.push({ label: t("bc.addon.rounded"), value: `+ ${formatCad(roundedSurcharge)}` });
   }
