@@ -81,17 +81,32 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
     enabled: activeQty > 0,
   });
 
+  // Fetch foil surcharge rates from settings API (with fallbacks)
+  const [foilSettings, setFoilSettings] = useState({ foilFull: 1.30, foilBothSides: 1.50 });
+  useEffect(() => {
+    if (!config.steps.foilOptions) return;
+    fetch("/api/pricing/settings")
+      .then((r) => r.ok ? r.json() : {})
+      .then((data) => {
+        setFoilSettings({
+          foilFull: data["pricing.surcharge.foilFull"] ?? 1.30,
+          foilBothSides: data["pricing.surcharge.foilBothSides"] ?? 1.50,
+        });
+      })
+      .catch(() => {});
+  }, [config.steps.foilOptions]);
+
   // Build surcharges:
-  // - Foil: full coverage +30%, both sides +50% (multiplicative)
+  // - Foil: full coverage +30%, both sides +50% (multiplicative) — rates from settings
   // - Rounded corners: $0.03 × totalCards
   // - Multi-name: (names-1) × oneNamePrice + file fees - $5/name discount
   const foilMultiplier = useMemo(() => {
     if (!config.steps.foilOptions) return 1;
     let m = 1;
-    if (foilCoverage === "full") m *= 1.30;
-    if (foilSides === "both") m *= 1.50;
+    if (foilCoverage === "full") m *= foilSettings.foilFull;
+    if (foilSides === "both") m *= foilSettings.foilBothSides;
     return m;
-  }, [config.steps.foilOptions, foilCoverage, foilSides]);
+  }, [config.steps.foilOptions, foilCoverage, foilSides, foilSettings]);
   const foilSurcharge = Math.round(quote.rawSubtotalCents * (foilMultiplier - 1));
 
   const roundedSurcharge =

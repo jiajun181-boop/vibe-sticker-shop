@@ -183,7 +183,15 @@ function OrdersContent() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-black">Orders</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-black">Orders</h1>
+        <Link
+          href="/admin/orders/create"
+          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
+        >
+          + New Order 新建订单
+        </Link>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
