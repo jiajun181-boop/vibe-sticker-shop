@@ -236,34 +236,28 @@ export default function SignsCategoryClient({
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Made for Outdoors & Events
+              {t("sc.vp1.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Our Coroplast signs are weatherproof, UV resistant, and built
-              to withstand Canadian weather for 2-3 years. Foam boards are
-              lightweight and perfect for indoor events and presentations.
+              {t("sc.vp1.desc")}
             </p>
           </div>
 
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Same Day Production
+              {t("sc.vp2.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Need signs urgently? We offer same day production for most
-              Coroplast and foam board products. Order before 12pm for
-              same day GTA pickup or next day delivery.
+              {t("sc.vp2.desc")}
             </p>
           </div>
 
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Accessories Included
+              {t("sc.vp3.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Don&apos;t forget the hardware! Add H-Wire stakes, A-Frame stands,
-              or metal sign frames to your order. Everything ships together
-              so you&apos;re ready to install on arrival.
+              {t("sc.vp3.desc")}
             </p>
           </div>
         </div>

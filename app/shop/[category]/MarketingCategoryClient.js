@@ -13,62 +13,90 @@ const BASE = "/shop/marketing-business-print";
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
+/* ── Item slug → i18n key map ── */
+const ITEM_I18N = {
+  "business-cards": "mc.item.businessCards",
+  "flyers": "mc.item.flyers",
+  "brochures": "mc.item.brochures",
+  "postcards": "mc.item.postcards",
+  "posters": "mc.item.posters",
+  "booklets": "mc.item.booklets",
+  "letterhead": "mc.item.letterhead",
+  "notepads": "mc.item.notepads",
+  "stamps": "mc.item.stamps",
+  "calendars": "mc.item.calendars",
+  "certificates": "mc.item.certificates",
+  "envelopes": "mc.item.envelopes",
+  "menus": "mc.item.menus",
+  "table-tents": "mc.item.tableTents",
+  "shelf-displays": "mc.item.shelfDisplays",
+  "rack-cards": "mc.item.rackCards",
+  "door-hangers": "mc.item.doorHangers",
+  "tags": "mc.item.tags",
+  "ncr-forms": "mc.item.ncrForms",
+  "tickets-coupons": "mc.item.ticketsCoupons",
+  "greeting-invitation-cards": "mc.item.greetingCards",
+  "bookmarks": "mc.item.bookmarks",
+  "loyalty-cards": "mc.item.loyaltyCards",
+  "document-printing": "mc.item.documentPrinting",
+};
+
 /* ── Section definitions ── */
 const SECTIONS = [
   {
     key: "essentials",
-    title: "The Essentials",
-    subtitle: "Our most popular products \u2014 trusted by thousands of Toronto businesses.",
+    titleKey: "mc.section.essentials.title",
+    subtitleKey: "mc.section.essentials.subtitle",
     size: "large",
     items: [
-      { key: "business-cards", name: "Business Cards", href: `${BASE}/business-cards`, gradient: "from-amber-400 to-orange-400" },
-      { key: "flyers", name: "Flyers", href: `${BASE}/flyers`, gradient: "from-rose-400 to-pink-400" },
-      { key: "brochures", name: "Brochures", href: `${BASE}/brochures`, gradient: "from-violet-400 to-fuchsia-400" },
-      { key: "postcards", name: "Postcards", href: `${BASE}/postcards`, gradient: "from-sky-400 to-cyan-400" },
-      { key: "posters", name: "Posters", href: `${BASE}/posters`, gradient: "from-emerald-400 to-teal-400" },
-      { key: "booklets", name: "Booklets", href: `${BASE}/booklets`, gradient: "from-indigo-400 to-blue-400" },
+      { key: "business-cards", href: `${BASE}/business-cards`, gradient: "from-amber-400 to-orange-400" },
+      { key: "flyers", href: `${BASE}/flyers`, gradient: "from-rose-400 to-pink-400" },
+      { key: "brochures", href: `${BASE}/brochures`, gradient: "from-violet-400 to-fuchsia-400" },
+      { key: "postcards", href: `${BASE}/postcards`, gradient: "from-sky-400 to-cyan-400" },
+      { key: "posters", href: `${BASE}/posters`, gradient: "from-emerald-400 to-teal-400" },
+      { key: "booklets", href: `${BASE}/booklets`, gradient: "from-indigo-400 to-blue-400" },
     ],
   },
   {
     key: "corporate",
-    title: "Corporate & Office Stationery",
-    subtitle: "Polished materials for law firms, real estate, and corporate offices.",
+    titleKey: "mc.section.corporate.title",
+    subtitleKey: "mc.section.corporate.subtitle",
     size: "medium",
     items: [
-      { key: "letterhead", name: "Letterhead", href: `${BASE}/letterhead`, gradient: "from-slate-400 to-gray-400" },
-      { key: "notepads", name: "Notepads", href: `${BASE}/notepads`, gradient: "from-amber-400 to-yellow-400" },
-      { key: "stamps", name: "Custom Stamps", href: `${BASE}/stamps`, gradient: "from-red-400 to-rose-400" },
-      { key: "calendars", name: "Calendars", href: `${BASE}/calendars`, gradient: "from-teal-400 to-cyan-400" },
-      { key: "certificates", name: "Certificates", href: `${BASE}/certificates`, gradient: "from-orange-400 to-amber-400" },
-      { key: "envelopes", name: "Envelopes", href: `${BASE}/envelopes`, gradient: "from-blue-400 to-indigo-400" },
+      { key: "letterhead", href: `${BASE}/letterhead`, gradient: "from-slate-400 to-gray-400" },
+      { key: "notepads", href: `${BASE}/notepads`, gradient: "from-amber-400 to-yellow-400" },
+      { key: "stamps", href: `${BASE}/stamps`, gradient: "from-red-400 to-rose-400" },
+      { key: "calendars", href: `${BASE}/calendars`, gradient: "from-teal-400 to-cyan-400" },
+      { key: "certificates", href: `${BASE}/certificates`, gradient: "from-orange-400 to-amber-400" },
+      { key: "envelopes", href: `${BASE}/envelopes`, gradient: "from-blue-400 to-indigo-400" },
     ],
   },
   {
     key: "retail",
-    title: "Retail, Restaurant & Packaging",
-    subtitle: "Print materials for storefronts, restaurants, and e-commerce brands.",
+    titleKey: "mc.section.retail.title",
+    subtitleKey: "mc.section.retail.subtitle",
     size: "medium",
     items: [
-      { key: "menus", name: "Menus", href: `${BASE}/menus`, gradient: "from-orange-400 to-red-400" },
-      { key: "table-tents", name: "Table Tents", href: `${BASE}/table-tents`, gradient: "from-pink-400 to-fuchsia-400" },
-      { key: "shelf-displays", name: "Shelf Displays", href: `${BASE}/shelf-displays`, gradient: "from-emerald-400 to-green-400" },
-      { key: "rack-cards", name: "Rack Cards", href: `${BASE}/rack-cards`, gradient: "from-cyan-400 to-sky-400" },
-      { key: "door-hangers", name: "Door Hangers", href: `${BASE}/door-hangers`, gradient: "from-violet-400 to-purple-400" },
-      { key: "tags", name: "Hang Tags", href: `${BASE}/tags`, gradient: "from-amber-400 to-orange-400" },
+      { key: "menus", href: `${BASE}/menus`, gradient: "from-orange-400 to-red-400" },
+      { key: "table-tents", href: `${BASE}/table-tents`, gradient: "from-pink-400 to-fuchsia-400" },
+      { key: "shelf-displays", href: `${BASE}/shelf-displays`, gradient: "from-emerald-400 to-green-400" },
+      { key: "rack-cards", href: `${BASE}/rack-cards`, gradient: "from-cyan-400 to-sky-400" },
+      { key: "door-hangers", href: `${BASE}/door-hangers`, gradient: "from-violet-400 to-purple-400" },
+      { key: "tags", href: `${BASE}/tags`, gradient: "from-amber-400 to-orange-400" },
     ],
   },
   {
     key: "forms",
-    title: "Forms, Operations & Events",
-    subtitle: "Practical print for logistics, contractors, and event organizers.",
+    titleKey: "mc.section.forms.title",
+    subtitleKey: "mc.section.forms.subtitle",
     size: "medium",
     items: [
-      { key: "ncr-forms", name: "NCR Forms", href: `${BASE}/ncr-forms`, gradient: "from-slate-400 to-zinc-400" },
-      { key: "tickets-coupons", name: "Tickets & Coupons", href: `${BASE}/tickets-coupons`, gradient: "from-rose-400 to-pink-400" },
-      { key: "greeting-invitation-cards", name: "Greeting & Invitation Cards", href: `${BASE}/greeting-invitation-cards`, gradient: "from-fuchsia-400 to-pink-400" },
-      { key: "bookmarks", name: "Bookmarks", href: `${BASE}/bookmarks`, gradient: "from-indigo-400 to-violet-400" },
-      { key: "loyalty-cards", name: "Loyalty & Punch Cards", href: `${BASE}/loyalty-cards`, gradient: "from-emerald-400 to-teal-400" },
-      { key: "document-printing", name: "Document Printing", href: `${BASE}/document-printing`, gradient: "from-gray-400 to-slate-400" },
+      { key: "ncr-forms", href: `${BASE}/ncr-forms`, gradient: "from-slate-400 to-zinc-400" },
+      { key: "tickets-coupons", href: `${BASE}/tickets-coupons`, gradient: "from-rose-400 to-pink-400" },
+      { key: "greeting-invitation-cards", href: `${BASE}/greeting-invitation-cards`, gradient: "from-fuchsia-400 to-pink-400" },
+      { key: "bookmarks", href: `${BASE}/bookmarks`, gradient: "from-indigo-400 to-violet-400" },
+      { key: "loyalty-cards", href: `${BASE}/loyalty-cards`, gradient: "from-emerald-400 to-teal-400" },
+      { key: "document-printing", href: `${BASE}/document-printing`, gradient: "from-gray-400 to-slate-400" },
     ],
   },
 ];
@@ -76,6 +104,7 @@ const SECTIONS = [
 function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
   const [hovered, setHovered] = useState(false);
   const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
+  const name = t(ITEM_I18N[item.key] || item.key);
   return (
     <Link
       href={item.href}
@@ -87,7 +116,7 @@ function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
         {showUrl ? (
           <Image
             src={showUrl}
-            alt={item.name}
+            alt={name}
             fill
             className="object-cover transition-all duration-300 group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -96,14 +125,14 @@ function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
         ) : (
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
             <p className="px-4 text-center text-sm font-bold text-[#fff] drop-shadow-md">
-              {item.name}
+              {name}
             </p>
           </div>
         )}
       </div>
       <div className="flex flex-1 flex-col p-2.5 sm:p-3">
         <h3 className="text-sm font-semibold text-[var(--color-gray-900)] leading-tight">
-          {item.name}
+          {name}
         </h3>
         <div className="mt-1.5 flex items-center justify-between">
           {price > 0 ? (
@@ -134,12 +163,12 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: "Marketing & Business Print" },
+            { label: t("mc.breadcrumb") },
           ]}
         />
 
         <div className="mt-6">
-          <CategoryHero category="marketing-business-print" title="Marketing & Business Print" icon="📄" />
+          <CategoryHero category="marketing-business-print" title={t("mc.title")} icon="📄" />
         </div>
 
         {/* Sections */}
@@ -149,8 +178,8 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
 
           return (
             <section key={section.key} className="mt-8">
-              <h2 className="text-base font-semibold tracking-tight">{section.title}</h2>
-              <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">{section.subtitle}</p>
+              <h2 className="text-base font-semibold tracking-tight">{t(section.titleKey)}</h2>
+              <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">{t(section.subtitleKey)}</p>
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {visibleItems.map((item) => (
                   <ProductCard
@@ -186,26 +215,26 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Local Toronto Production
+              {t("mc.vp1.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Made in Scarborough. Same-day and next-day pickup available.
+              {t("mc.vp1.desc")}
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Premium Paper Stocks
+              {t("mc.vp2.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              14pt card stock, 100lb gloss, uncoated, linen, and specialty finishes.
+              {t("mc.vp2.desc")}
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              B2B & Wholesale Support
+              {t("mc.vp3.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Dedicated support for repeat orders, bulk pricing, and corporate accounts.
+              {t("mc.vp3.desc")}
             </p>
             <Link
               href="/quote"
