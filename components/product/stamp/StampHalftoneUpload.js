@@ -2,14 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { UploadButton } from "@/utils/uploadthing";
-import { applyHalftone, hexToRgb } from "@/lib/stamp/halftone";
+import { showErrorToast } from "@/components/Toast";
+import { applyHalftone } from "@/lib/stamp/halftone";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
-const INTENSITIES = [
-  { id: "light", labelKey: "stamp.halftone.light" },
-  { id: "medium", labelKey: "stamp.halftone.medium" },
-  { id: "heavy", labelKey: "stamp.halftone.heavy" },
-];
+const INTENSITIES = ["light", "medium", "heavy"];
 
 export default function StampHalftoneUpload({
   logoFile,
@@ -22,200 +19,141 @@ export default function StampHalftoneUpload({
   onLogoScaleChange,
   onHalftoneToggle,
   onHalftoneIntensityChange,
-  halftoneDataRef,
+  halftoneDataRef, // ref to store processed canvas for StampEditor
 }) {
   const { t } = useTranslation();
+  const imgRef = useRef(null);
   const [processing, setProcessing] = useState(false);
-  const previewCanvasRef = useRef(null);
-  const sourceImgRef = useRef(null);
 
-  // Process halftone when settings change
+  // Process halftone when image, intensity, or color changes
   const processHalftone = useCallback(() => {
-    const img = sourceImgRef.current;
-    if (!img || !halftoneEnabled) return;
-
-    setProcessing(true);
-    try {
-      const inkRgb = hexToRgb(color || "#111111");
-      const imgData = applyHalftone(img, {
-        intensity: halftoneIntensity || "medium",
-        inkRgb,
-        size: 300,
-        circularMask: false, // Let StampEditor handle masking
-      });
-
-      // Store processed data for StampEditor canvas
-      if (halftoneDataRef) {
-        const canvas = document.createElement("canvas");
-        canvas.width = 300;
-        canvas.height = 300;
-        const ctx = canvas.getContext("2d");
-        ctx.putImageData(imgData, 0, 0);
-        halftoneDataRef.current = canvas;
-      }
-
-      // Draw preview
-      const preview = previewCanvasRef.current;
-      if (preview) {
-        const dpr = window.devicePixelRatio || 1;
-        preview.width = 120 * dpr;
-        preview.height = 120 * dpr;
-        const ctx = preview.getContext("2d");
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, 120, 120);
-        // Draw scaled
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = 300;
-        tempCanvas.height = 300;
-        tempCanvas.getContext("2d").putImageData(imgData, 0, 0);
-        ctx.drawImage(tempCanvas, 0, 0, 120, 120);
-      }
-    } finally {
-      setProcessing(false);
-    }
-  }, [halftoneEnabled, halftoneIntensity, color, halftoneDataRef]);
-
-  // Load source image when logo changes
-  useEffect(() => {
-    if (!logoFile?.url) {
-      sourceImgRef.current = null;
+    if (!logoFile?.url || !halftoneEnabled) {
       if (halftoneDataRef) halftoneDataRef.current = null;
       return;
     }
+    setProcessing(true);
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
-      sourceImgRef.current = img;
-      if (halftoneEnabled) processHalftone();
+      imgRef.current = img;
+      const result = applyHalftone(img, { intensity: halftoneIntensity, color, circular: false });
+      if (halftoneDataRef) halftoneDataRef.current = result;
+      setProcessing(false);
     };
+    img.onerror = () => setProcessing(false);
     img.src = logoFile.url;
-  }, [logoFile?.url]);
+  }, [logoFile?.url, halftoneEnabled, halftoneIntensity, color, halftoneDataRef]);
 
-  // Re-process when halftone settings change
   useEffect(() => {
-    if (sourceImgRef.current && halftoneEnabled) {
-      processHalftone();
-    } else if (!halftoneEnabled && halftoneDataRef) {
-      halftoneDataRef.current = null;
-    }
-  }, [halftoneEnabled, halftoneIntensity, color, processHalftone]);
-
-  if (!logoFile) {
-    return (
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">
-          {t("stamp.image")}
-        </p>
-        <UploadButton
-          endpoint="artworkUploader"
-          onClientUploadComplete={(res) => {
-            const f = Array.isArray(res) ? res[0] : null;
-            if (f) onLogoUpload({ url: f.url, key: f.key, name: f.name });
-          }}
-          onUploadError={(e) => console.error("[stamp image]", e)}
-          appearance={{
-            button:
-              "!bg-[var(--color-gray-900)] !text-[#fff] !text-xs !rounded-full !px-4 !py-2 !font-semibold hover:!bg-black",
-            allowedContent: "!text-[10px] !text-[var(--color-gray-400)]",
-          }}
-        />
-      </div>
-    );
-  }
+    processHalftone();
+  }, [processHalftone]);
 
   return (
     <div>
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">
-        {t("stamp.image")}
+        {t("stamp.logoUpload")}
       </p>
-      <div className="rounded-xl border border-[var(--color-gray-200)] p-3 space-y-3">
-        {/* File info + remove */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-[var(--color-gray-900)] truncate max-w-[200px]">
-            {logoFile.name}
-          </span>
-          <button
-            type="button"
-            onClick={onLogoRemove}
-            className="text-xs font-semibold text-red-600 hover:text-red-800"
-          >
-            {t("stamp.removeLogo")}
-          </button>
-        </div>
 
-        {/* Halftone toggle */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-[var(--color-gray-700)]">
-            {t("stamp.halftone.effect")}
-          </span>
-          <button
-            type="button"
-            onClick={() => onHalftoneToggle(!halftoneEnabled)}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-              halftoneEnabled ? "bg-[var(--color-gray-900)]" : "bg-[var(--color-gray-300)]"
-            }`}
-          >
-            <span
-              className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
-                halftoneEnabled ? "translate-x-4.5" : "translate-x-0.5"
-              }`}
-            />
-          </button>
-        </div>
-
-        {/* Halftone intensity selector */}
-        {halftoneEnabled && (
-          <div className="space-y-2">
-            <div className="flex gap-1">
-              {INTENSITIES.map((int) => (
-                <button
-                  key={int.id}
-                  type="button"
-                  onClick={() => onHalftoneIntensityChange(int.id)}
-                  className={`flex-1 rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
-                    halftoneIntensity === int.id
-                      ? "bg-[var(--color-gray-900)] text-[#fff]"
-                      : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-200)]"
-                  }`}
-                >
-                  {t(int.labelKey)}
-                </button>
-              ))}
+      {logoFile ? (
+        <div className="space-y-3 rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3">
+          {/* File info */}
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
+              <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
             </div>
-
-            {/* Mini preview */}
-            {processing ? (
-              <div className="flex items-center justify-center h-[120px]">
-                <div className="animate-spin h-6 w-6 border-2 border-[var(--color-gray-400)] border-t-transparent rounded-full" />
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <canvas
-                  ref={previewCanvasRef}
-                  style={{ width: 120, height: 120 }}
-                  className="rounded-lg border border-[var(--color-gray-200)]"
-                />
-              </div>
-            )}
+            <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--color-gray-800)]">
+              {logoFile.name}
+            </span>
+            <button
+              type="button"
+              onClick={onLogoRemove}
+              className="rounded-full p-1 text-[var(--color-gray-400)] hover:bg-[var(--color-gray-200)] hover:text-red-500"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-        )}
 
-        {/* Scale slider */}
-        <div>
+          {/* Scale slider */}
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-medium text-[var(--color-gray-500)]">{t("stamp.imageScale")}</span>
+              <span className="text-[10px] text-[var(--color-gray-400)]">{logoScale}%</span>
+            </div>
+            <input
+              type="range"
+              min={10}
+              max={100}
+              value={logoScale}
+              onChange={(e) => onLogoScaleChange(Number(e.target.value))}
+              className="mt-1 w-full accent-gray-900"
+            />
+          </div>
+
+          {/* Halftone toggle */}
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-[var(--color-gray-500)]">{t("stamp.logoSize")}</span>
-            <span className="text-[10px] text-[var(--color-gray-500)]">{logoScale}%</span>
+            <span className="text-xs font-medium text-[var(--color-gray-700)]">{t("stamp.halftoneEffect")}</span>
+            <button
+              type="button"
+              onClick={() => onHalftoneToggle(!halftoneEnabled)}
+              className={`relative h-6 w-11 rounded-full transition-colors ${halftoneEnabled ? "bg-[var(--color-gray-900)]" : "bg-[var(--color-gray-300)]"}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${halftoneEnabled ? "translate-x-5" : ""}`} />
+            </button>
           </div>
-          <input
-            type="range"
-            min={10}
-            max={100}
-            value={logoScale}
-            onChange={(e) => onLogoScaleChange(Number(e.target.value))}
-            className="w-full accent-gray-900"
+
+          {/* Halftone intensity */}
+          {halftoneEnabled && (
+            <div>
+              <span className="text-[10px] font-medium text-[var(--color-gray-500)]">{t("stamp.halftoneIntensity")}</span>
+              <div className="mt-1 flex gap-2">
+                {INTENSITIES.map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => onHalftoneIntensityChange(level)}
+                    className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                      halftoneIntensity === level
+                        ? "bg-[var(--color-gray-900)] text-[#fff]"
+                        : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-200)]"
+                    }`}
+                  >
+                    {t(`stamp.halftone.${level}`)}
+                  </button>
+                ))}
+              </div>
+              {processing && (
+                <p className="mt-1 text-[10px] text-[var(--color-gray-400)]">{t("stamp.processing")}</p>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-xl border-2 border-dashed border-[var(--color-gray-300)] bg-white p-4 text-center transition-colors hover:border-[var(--color-gray-400)]">
+          <p className="mb-2 text-xs text-[var(--color-gray-500)]">{t("stamp.uploadHint")}</p>
+          <UploadButton
+            endpoint="artworkUploader"
+            onClientUploadComplete={(res) => {
+              const first = Array.isArray(res) ? res[0] : null;
+              if (!first) return;
+              onLogoUpload({
+                url: first.ufsUrl || first.url,
+                key: first.key,
+                name: first.name,
+                size: first.size,
+              });
+            }}
+            onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
+            appearance={{
+              button: "ut-ready:bg-gray-900 ut-ready:hover:bg-gray-800 ut-uploading:bg-gray-600 rounded-full px-5 py-2 text-xs font-semibold text-[#fff] transition-colors",
+              allowedContent: "hidden",
+            }}
           />
         </div>
-      </div>
+      )}
     </div>
   );
 }
