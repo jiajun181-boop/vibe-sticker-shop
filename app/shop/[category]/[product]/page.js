@@ -519,9 +519,12 @@ export default async function ProductPage({ params }) {
     if (dedupedProducts.length === 1) {
       redirect(`/shop/${dedupedProducts[0].category}/${dedupedProducts[0].slug}`);
     }
+    // If 0 products after dedup (e.g. parent slug is its own only product),
+    // fall through to render the product's configurator directly instead of
+    // redirecting back to the category page.
     if (dedupedProducts.length === 0) {
-      redirect(`/shop/${decodedCategory}`);
-    }
+      // Don't redirect — fall through to regular product/configurator rendering below
+    } else {
 
     // Use pre-computed minPrice for sub-product cards (write-time calculation).
     for (const p of dedupedProducts) {
@@ -555,6 +558,7 @@ export default async function ProductPage({ params }) {
         />
       </Suspense>
     );
+    } // end else (dedupedProducts.length > 0)
   }
 
   // ── Category configurator: check all configurator types via unified router ──
