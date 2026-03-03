@@ -167,10 +167,10 @@ const STICKERS_SEGMENTS = [
 
 const SIGNS_PRODUCT_SECTIONS = [
   {
-    key: "outdoor-realestate",
-    title: "Outdoor & Real Estate Signs",
-    description: "Coroplast yard signs, real estate signs, election signs, and accessories. Weatherproof for Canadian outdoors.",
-    productSlugs: ["yard-sign", "real-estate-sign", "election-signs", "open-house-signs", "a-frame-sign-stand", "h-stakes", "real-estate-frame"],
+    key: "outdoor-business-signs",
+    title: "Outdoor, Real Estate & Business Signs",
+    description: "Yard signs, real estate signs, directional signs, parking signs, and accessories. Weatherproof for Canadian outdoors.",
+    productSlugs: ["yard-sign", "real-estate-sign", "election-signs", "open-house-signs", "a-frame-sign-stand", "h-stakes", "real-estate-frame", "parking-signs", "parking-property-signs", "business-hours-signs", "construction-site-signs", "wayfinding-signs", "directional-signs", "ada-braille-signs"],
     noImageGradient: "from-sky-100 to-emerald-100",
     noImageIcon: "\uD83E\uDEA7",
   },
@@ -181,14 +181,6 @@ const SIGNS_PRODUCT_SECTIONS = [
     productSlugs: ["selfie-frame-board", "tri-fold-presentation-board", "graduation-checks", "giant-checks", "presentation-checks", "life-size-cutouts", "wedding-seating-charts", "seating-chart-boards", "welcome-sign-board", "welcome-sign-boards"],
     noImageGradient: "from-orange-100 to-amber-100",
     noImageIcon: "\uD83D\uDDBC\uFE0F",
-  },
-  {
-    key: "business-property",
-    title: "Business & Property Signs",
-    description: "Professional signage for commercial properties and facilities.",
-    productSlugs: ["parking-signs", "parking-property-signs", "business-hours-signs", "construction-site-signs", "wayfinding-signs", "directional-signs", "ada-braille-signs"],
-    noImageGradient: "from-slate-100 to-blue-100",
-    noImageIcon: "\uD83C\uDFE2",
   },
   {
     key: "boards-material",

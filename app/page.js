@@ -67,6 +67,7 @@ export default async function HomePage() {
     prisma.product.findMany({
       where: { isActive: true, slug: { in: FEATURED_SLUGS } },
       select: {
+        id: true,
         slug: true,
         name: true,
         category: true,
@@ -78,12 +79,41 @@ export default async function HomePage() {
     }),
   ]);
 
-  const featured = featuredProducts.map((p) => ({
-    ...p,
-    fromPrice: p.displayFromPrice || p.minPrice || p.basePrice || 0,
-    href: `/shop/${p.category}/${p.slug}`,
-    image: getProductImage(p, p.category),
-  }));
+  // Batch-fetch Asset system images (UploadThing uploads) for all featured products
+  const productIds = featuredProducts.map((p) => p.id);
+  const assetLinks = productIds.length > 0
+    ? await prisma.assetLink.findMany({
+        where: {
+          entityType: "product",
+          entityId: { in: productIds },
+          asset: { status: "published" },
+        },
+        include: { asset: { select: { originalUrl: true } } },
+        orderBy: { sortOrder: "asc" },
+      })
+    : [];
+
+  // Build map: productId → first asset URL
+  const assetUrlMap = {};
+  for (const link of assetLinks) {
+    if (!assetUrlMap[link.entityId] && link.asset?.originalUrl) {
+      assetUrlMap[link.entityId] = link.asset.originalUrl;
+    }
+  }
+
+  const featured = featuredProducts.map((p) => {
+    // Prepend asset URL if available so getProductImage finds it
+    const assetUrl = assetUrlMap[p.id];
+    const productWithAsset = assetUrl
+      ? { ...p, images: [{ url: assetUrl, alt: p.name }, ...(p.images || [])] }
+      : p;
+    return {
+      ...p,
+      fromPrice: p.displayFromPrice || p.minPrice || p.basePrice || 0,
+      href: `/shop/${p.category}/${p.slug}`,
+      image: getProductImage(productWithAsset, p.category),
+    };
+  });
 
   return (
     <HomeScrollWrapper>
