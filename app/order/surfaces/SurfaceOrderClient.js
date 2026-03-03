@@ -15,7 +15,6 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
-  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -445,18 +444,6 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
                 </div>
               )}
             </ConfigStep>
-
-            {/* Design template download */}
-            {widthIn > 0 && heightIn > 0 && (
-              <TemplateDownloadButton
-                slug={typeId}
-                width={widthIn}
-                height={heightIn}
-                product={t(`surface.type.${typeId}`)}
-                dpi={300}
-                t={t}
-              />
-            )}
 
             {/* Step 3: Material */}
             <ConfigStep number={stepNum++} title={t("surface.material")} subtitle={t("surface.materialSubtitle")}>

@@ -14,6 +14,65 @@ const formatCad = (cents) =>
 
 // ─── Sticker Sheet Configuration ───
 
+const SHAPES = [
+  { id: "circle", tag: "Circle" },
+  { id: "square", tag: "Square" },
+  { id: "rectangle", tag: "Rectangle" },
+  { id: "oval", tag: "Oval" },
+  { id: "custom", tag: "Custom" },
+];
+
+const STICKER_SIZES_BY_SHAPE = {
+  circle: [
+    { id: "1in", label: '1" × 1"', w: 1, h: 1 },
+    { id: "2in", label: '2" × 2"', w: 2, h: 2 },
+    { id: "3in", label: '3" × 3"', w: 3, h: 3 },
+    { id: "4in", label: '4" × 4"', w: 4, h: 4 },
+  ],
+  square: [
+    { id: "1in", label: '1" × 1"', w: 1, h: 1 },
+    { id: "2in", label: '2" × 2"', w: 2, h: 2 },
+    { id: "3in", label: '3" × 3"', w: 3, h: 3 },
+    { id: "4in", label: '4" × 4"', w: 4, h: 4 },
+  ],
+  rectangle: [
+    { id: "2x3.5", label: '2" × 3.5"', w: 2, h: 3.5 },
+    { id: "3x5", label: '3" × 5"', w: 3, h: 5 },
+    { id: "4x6", label: '4" × 6"', w: 4, h: 6 },
+  ],
+  oval: [
+    { id: "1.5x2", label: '1.5" × 2"', w: 1.5, h: 2 },
+    { id: "2x3", label: '2" × 3"', w: 2, h: 3 },
+    { id: "3x4", label: '3" × 4"', w: 3, h: 4 },
+  ],
+  custom: [],
+};
+
+const DEFAULT_STICKER_SIZE_IDX = {
+  circle: 1,    // 2"×2"
+  square: 1,    // 2"×2"
+  rectangle: 0, // 2"×3.5"
+  oval: 1,      // 2"×3"
+  custom: -1,
+};
+
+function ShapeIcon({ shapeId, className = "h-4 w-4" }) {
+  switch (shapeId) {
+    case "circle":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="9" /></svg>;
+    case "square":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="4" y="4" width="16" height="16" rx="1" /></svg>;
+    case "rectangle":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="2" y="6" width="20" height="12" rx="1" /></svg>;
+    case "oval":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><ellipse cx="12" cy="12" rx="10" ry="7" /></svg>;
+    case "custom":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>;
+    default:
+      return null;
+  }
+}
+
 const SHEET_SIZES = [
   { id: "letter", label: '8.5" × 11"', tag: "Letter", w: 8.5, h: 11 },
   { id: "tabloid", label: '11" × 17"', tag: "Tabloid", w: 11, h: 17 },
@@ -43,6 +102,10 @@ export default function StickerSheetOrderClient() {
   const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
 
+  const [shapeId, setShapeId] = useState("circle");
+  const [stickerSizeIdx, setStickerSizeIdx] = useState(DEFAULT_STICKER_SIZE_IDX["circle"]);
+  const [customW, setCustomW] = useState("");
+  const [customH, setCustomH] = useState("");
   const [sheetSizeId, setSheetSizeId] = useState("letter");
   const [materialId, setMaterialId] = useState("white-vinyl");
   const [cutStyleId, setCutStyleId] = useState("kiss-cut");
@@ -63,6 +126,40 @@ export default function StickerSheetOrderClient() {
     () => SHEET_SIZES.find((s) => s.id === sheetSizeId) || SHEET_SIZES[0],
     [sheetSizeId]
   );
+
+  const stickerSizes = useMemo(() => STICKER_SIZES_BY_SHAPE[shapeId] || [], [shapeId]);
+  const stickerSize = stickerSizes[stickerSizeIdx] || null;
+  const isCustomStickerSize = stickerSizeIdx === -1 || stickerSizes.length === 0;
+  const isSingleDim = shapeId === "circle" || shapeId === "square";
+
+  const stickerW = useMemo(() => {
+    if (!isCustomStickerSize && stickerSize) return stickerSize.w;
+    const raw = parseFloat(customW);
+    return raw > 0 ? raw : 0;
+  }, [isCustomStickerSize, stickerSize, customW]);
+
+  const stickerH = useMemo(() => {
+    if (!isCustomStickerSize && stickerSize) return stickerSize.h;
+    if (isSingleDim) {
+      const raw = parseFloat(customW);
+      return raw > 0 ? raw : 0;
+    }
+    const raw = parseFloat(customH);
+    return raw > 0 ? raw : 0;
+  }, [isCustomStickerSize, stickerSize, isSingleDim, customW, customH]);
+
+  const stickerSizeLabel = useMemo(() => {
+    if (!isCustomStickerSize && stickerSize) return stickerSize.label;
+    if (stickerW > 0 && stickerH > 0) return `${stickerW}" × ${stickerH}"`;
+    return "\u2014";
+  }, [isCustomStickerSize, stickerSize, stickerW, stickerH]);
+
+  function selectShape(id) {
+    setShapeId(id);
+    setStickerSizeIdx(DEFAULT_STICKER_SIZE_IDX[id] ?? 0);
+    setCustomW("");
+    setCustomH("");
+  }
 
   const activeQty = useMemo(() => {
     if (customQty !== "") {
@@ -131,10 +228,12 @@ export default function StickerSheetOrderClient() {
   function buildCartItem() {
     if (!quoteData || activeQty <= 0) return null;
 
+    const shape = SHAPES.find((s) => s.id === shapeId);
     const nameParts = [
       t("ss.title"),
+      shape?.tag || shapeId,
+      stickerSizeLabel,
       sheetSize.tag,
-      t(`ss.material.${materialId}`),
     ];
 
     return {
@@ -144,6 +243,10 @@ export default function StickerSheetOrderClient() {
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
       options: {
+        shape: shapeId,
+        stickerSize: stickerSizeLabel,
+        stickerWidth: stickerW,
+        stickerHeight: stickerH,
         sheetSize: sheetSizeId,
         sizeLabel: sheetSize.label,
         width: sheetSize.w,
@@ -216,6 +319,83 @@ export default function StickerSheetOrderClient() {
       <div className="lg:grid lg:grid-cols-5 lg:gap-10">
         {/* ── LEFT: Options ── */}
         <div className="space-y-8 lg:col-span-3">
+
+          {/* Shape */}
+          <Section label={t("ss.shape") || "Sticker Shape"}>
+            <div className="flex flex-wrap gap-2">
+              {SHAPES.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => selectShape(s.id)}
+                  className={`flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+                    shapeId === s.id
+                      ? "border-gray-900 bg-gray-900 text-[#fff]"
+                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"
+                  }`}
+                >
+                  <ShapeIcon shapeId={s.id} className={`h-3.5 w-3.5 ${shapeId === s.id ? "text-white" : "text-gray-500"}`} />
+                  {t(`ss.shape.${s.id}`) || s.tag}
+                </button>
+              ))}
+            </div>
+          </Section>
+
+          {/* Sticker Size */}
+          <Section label={t("ss.stickerSize") || "Sticker Size"}>
+            {stickerSizes.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {stickerSizes.map((s, i) => (
+                  <Chip key={s.id} active={!isCustomStickerSize && stickerSizeIdx === i} onClick={() => { setStickerSizeIdx(i); setCustomW(""); setCustomH(""); }}>
+                    {s.label}
+                  </Chip>
+                ))}
+                <Chip active={isCustomStickerSize} onClick={() => { setStickerSizeIdx(-1); setCustomW(""); setCustomH(""); }}>
+                  {t("ss.customSize") || "Custom"}
+                </Chip>
+              </div>
+            )}
+            {isCustomStickerSize && (
+              <div className="mt-3 flex items-center gap-2">
+                {isSingleDim ? (
+                  <>
+                    <label className="text-xs text-gray-500">
+                      {shapeId === "circle" ? (t("ss.diameter") || "Diameter") : (t("ss.sideLength") || "Side")}:
+                    </label>
+                    <input
+                      type="number" min="0.5" max="12" step="0.25"
+                      value={customW}
+                      onChange={(e) => setCustomW(e.target.value)}
+                      placeholder='e.g. 2'
+                      className="w-20 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                    />
+                    <span className="text-xs text-gray-400">in</span>
+                  </>
+                ) : (
+                  <>
+                    <label className="text-xs text-gray-500">{t("ss.width") || "W"}:</label>
+                    <input
+                      type="number" min="0.5" max="12" step="0.25"
+                      value={customW}
+                      onChange={(e) => setCustomW(e.target.value)}
+                      placeholder='2'
+                      className="w-20 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                    />
+                    <span className="text-xs text-gray-400">×</span>
+                    <label className="text-xs text-gray-500">{t("ss.height") || "H"}:</label>
+                    <input
+                      type="number" min="0.5" max="12" step="0.25"
+                      value={customH}
+                      onChange={(e) => setCustomH(e.target.value)}
+                      placeholder='3'
+                      className="w-20 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                    />
+                    <span className="text-xs text-gray-400">in</span>
+                  </>
+                )}
+              </div>
+            )}
+          </Section>
 
           {/* Sheet Size */}
           <Section label={t("ss.sheetSize")}>
@@ -357,6 +537,8 @@ export default function StickerSheetOrderClient() {
             <h2 className="text-base font-bold text-gray-900">{t("ss.summary")}</h2>
 
             <dl className="space-y-2 text-sm">
+              <Row label={t("ss.shape") || "Shape"} value={t(`ss.shape.${shapeId}`) || SHAPES.find((s) => s.id === shapeId)?.tag || shapeId} />
+              <Row label={t("ss.stickerSize") || "Sticker Size"} value={stickerSizeLabel} />
               <Row label={t("ss.sheetSize")} value={sheetSize.label} />
               <Row label={t("ss.material.label")} value={t(`ss.material.${materialId}`)} />
               <Row label={t("ss.cutStyle.label")} value={t(`ss.cutStyle.${cutStyleId}`)} />

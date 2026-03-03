@@ -17,7 +17,6 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
-  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -386,18 +385,6 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
                   </p>
                 </div>
               </ConfigStep>
-            )}
-
-            {/* Design template download (non-quote-only products) */}
-            {!isQuoteOnly && widthIn > 0 && heightIn > 0 && (
-              <TemplateDownloadButton
-                slug={typeId}
-                width={widthIn}
-                height={heightIn}
-                product={t(`vehicle.type.${typeId}`)}
-                dpi={300}
-                t={t}
-              />
             )}
 
             {/* Quantity */}

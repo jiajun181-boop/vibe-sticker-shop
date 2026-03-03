@@ -14,7 +14,6 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
-  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -345,18 +344,6 @@ export default function SignOrderClient({ defaultType, productImages }) {
                 </div>
               )}
             </ConfigStep>
-
-            {/* Design template download */}
-            {widthIn > 0 && heightIn > 0 && (
-              <TemplateDownloadButton
-                slug={typeId}
-                width={widthIn}
-                height={heightIn}
-                product={t(`sign.type.${typeId}`)}
-                dpi={300}
-                t={t}
-              />
-            )}
 
             {/* Step: Double-sided toggle (if applicable) */}
             {signType.doubleSided !== undefined && (

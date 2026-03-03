@@ -19,7 +19,6 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   LetterheadTemplateBuilder,
-  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -425,28 +424,6 @@ export default function MarketingPrintOrderClient({
                 </div>
               )}
             </ConfigStep>
-
-            {/* Design template download */}
-            {!["stamps", "envelopes", "calendars-wall", "calendars-desk", "certificates", "tabletop-displays", "presentation-folders"].includes(typeId) && widthIn > 0 && heightIn > 0 && (
-              <TemplateDownloadButton
-                slug={typeId}
-                width={typeId.startsWith("brochures-") || typeId === "greeting-cards" ? widthIn : widthIn}
-                height={typeId.startsWith("brochures-") || typeId === "greeting-cards" ? heightIn : heightIn}
-                product={printType.label}
-                dpi={300}
-                folds={
-                  typeId === "brochures-bi-fold" || typeId === "greeting-cards" ? 1
-                  : typeId === "brochures-tri-fold" || typeId === "brochures-z-fold" ? 2
-                  : 0
-                }
-                foldType={
-                  typeId === "brochures-tri-fold" ? "tri-fold"
-                  : typeId === "brochures-z-fold" ? "z-fold"
-                  : "bifold"
-                }
-                t={t}
-              />
-            )}
 
             {/* Step: Quantity — placed right after Size for easy price comparison */}
             <ConfigStep number={++step} title={t("marketingPrint.quantity", "Quantity")}>

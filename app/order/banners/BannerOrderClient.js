@@ -16,7 +16,6 @@ import {
   MobileBottomBar,
   ArtworkUpload,
   CustomDimensions,
-  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -351,18 +350,6 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                 />
               )}
             </ConfigStep>
-
-            {/* Design template download */}
-            {widthIn > 0 && heightIn > 0 && (
-              <TemplateDownloadButton
-                slug={typeId}
-                width={widthIn}
-                height={heightIn}
-                product={t(`banner.type.${typeId}`)}
-                dpi={150}
-                t={t}
-              />
-            )}
 
             {/* Step: Material */}
             {bannerType.materials.length > 1 && (

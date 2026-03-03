@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { trackUploadStarted } from "@/lib/analytics";
-import { ArtworkUpload, CustomDimensions, useConfiguratorCart, MaterialSwatchGrid, MobileBottomBar, TemplateDownloadButton } from "@/components/configurator";
+import { ArtworkUpload, CustomDimensions, useConfiguratorCart, MaterialSwatchGrid, MobileBottomBar } from "@/components/configurator";
 import {
   MIN_SIZE,
   calcPaperLabelPrice,
@@ -492,19 +492,6 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
             <p className="mt-2 text-[11px] text-gray-500">{t("stickerOrder.sheets.multiHint")}</p>
           </div>
         </>
-      )}
-
-      {/* Template Download */}
-      {widthIn > 0 && heightIn > 0 && (
-        <TemplateDownloadButton
-          width={widthIn}
-          height={heightIn}
-          bleed={0.125}
-          unit="in"
-          dpi={300}
-          product="Sticker Sheets"
-          slug="sticker-sheets"
-        />
       )}
 
       {/* White ink */}
