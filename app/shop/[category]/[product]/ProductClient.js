@@ -411,7 +411,17 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
 
   const primaryImage = getProductImage(product);
   const imageList = useMemo(() => {
-    if (Array.isArray(product.images) && product.images.length > 0) return product.images;
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      // Filter out legacy local paths (/products/*) and dynamic API placeholders
+      const real = product.images.filter((img) => {
+        const u = typeof img === "string" ? img : img?.url;
+        if (!u) return false;
+        if (u.startsWith("/products/")) return false;
+        if (u.startsWith("/api/product-image/")) return false;
+        return true;
+      });
+      if (real.length > 0) return real;
+    }
     return [{ url: primaryImage, alt: product.name || "Product", mimeType: isSvgImage(primaryImage) ? "image/svg+xml" : undefined }];
   }, [product.images, product.name, primaryImage]);
 
