@@ -1387,8 +1387,40 @@ export default function ProductDetailPage() {
                   <div>{t("admin.productEdit.frontendUses")}: {imageSourceMeta.resolvedSource}</div>
                 </div>
                 {(imageSourceMeta.resolvedSource === "legacy" || imageSourceMeta.hasMixedStorage) && (
-                  <p className="mt-2 text-[10px] text-[#8a6a00]">
-                    {t("admin.productEdit.legacyWarning")}
+                  <>
+                    <p className="mt-2 text-[10px] text-[#8a6a00]">
+                      {t("admin.productEdit.legacyWarning")}
+                    </p>
+                    {imageSourceMeta.legacyImageCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const broken = (product.images || []).filter(
+                            (img) => img.url && !img.url.startsWith("http")
+                          );
+                          if (!broken.length) {
+                            showMsg("No local/broken images found");
+                            return;
+                          }
+                          if (!confirm(`Delete ${broken.length} broken local image(s)? They point to files that no longer exist.`)) return;
+                          for (const img of broken) {
+                            try {
+                              await fetch(`/api/admin/products/${productId}/images?imageId=${img.id}`, { method: "DELETE" });
+                            } catch {}
+                          }
+                          fetchProduct();
+                          showMsg(`Deleted ${broken.length} broken image(s)`);
+                        }}
+                        className="mt-2 rounded bg-red-600 px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-red-700"
+                      >
+                        Delete all broken local images
+                      </button>
+                    )}
+                  </>
+                )}
+                {imageSourceMeta.resolvedSource !== "asset" && (
+                  <p className="mt-2 text-[10px] text-blue-600">
+                    Storefront shows an auto-generated placeholder (blue gradient). Upload a real image to replace it.
                   </p>
                 )}
               </div>
@@ -1433,7 +1465,21 @@ export default function ProductDetailPage() {
                   >
                     {/* Image thumbnail — draggable area */}
                     <div className="relative cursor-grab active:cursor-grabbing">
-                      <img src={img.url} alt={img.alt || product.name} className="h-28 w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                      <img
+                        src={img.url}
+                        alt={img.alt || product.name}
+                        className="h-28 w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          const wrap = e.currentTarget.parentElement;
+                          if (wrap && !wrap.querySelector(".broken-img-placeholder")) {
+                            const ph = document.createElement("div");
+                            ph.className = "broken-img-placeholder flex h-28 w-full flex-col items-center justify-center gap-1 bg-red-50 text-red-400";
+                            ph.innerHTML = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg><span class="text-[9px] font-medium">404 Broken</span><span class="max-w-full truncate px-2 text-[8px] text-red-300">${img.url.length > 40 ? "..." + img.url.slice(-37) : img.url}</span>`;
+                            wrap.prepend(ph);
+                          }
+                        }}
+                      />
                       {idx === 0 && (
                         <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-[#fff]">{t("admin.productEdit.cover")}</span>
                       )}
