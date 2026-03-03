@@ -9,6 +9,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import QuickAddButton from "@/components/product/QuickAddButton";
 import { useSearchParams } from "next/navigation";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
+import StampCardPreview from "@/components/product/stamp/StampCardPreview";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -348,11 +349,12 @@ function ListIcon({ className }) {
   );
 }
 
-function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel }) {
+function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel, parentSlug, idx = 0 }) {
+  const isStamp = parentSlug === "stamps";
   const image = product.images?.[0];
   const image2 = product.images?.[1];
-  const imageSrc = getProductImage(product, product.category);
-  const imageSrc2 = image2?.url || null;
+  const imageSrc = isStamp ? null : getProductImage(product, product.category);
+  const imageSrc2 = isStamp ? null : (image2?.url || null);
   const sizeCount = product.optionsConfig?.sizes?.length || 0;
   const tk = getTurnaround(product);
   const price = product.fromPrice || product.basePrice;
@@ -365,7 +367,9 @@ function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel }) {
     >
       <Link href={href} className="block">
       <div className="relative aspect-[4/3] bg-[var(--color-gray-100)]">
-        {imageSrc ? (
+        {isStamp ? (
+          <StampCardPreview index={idx} />
+        ) : imageSrc ? (
           <>
             <Image
               src={imageSrc}
@@ -431,9 +435,10 @@ function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel }) {
   );
 }
 
-function ProductCardList({ product, href, selectedSpec, t, viewOrderLabel }) {
+function ProductCardList({ product, href, selectedSpec, t, viewOrderLabel, parentSlug, idx = 0 }) {
+  const isStamp = parentSlug === "stamps";
   const image = product.images?.[0];
-  const imageSrc = getProductImage(product, product.category);
+  const imageSrc = isStamp ? null : getProductImage(product, product.category);
   const sizeCount = product.optionsConfig?.sizes?.length || 0;
   const tk = getTurnaround(product);
   const price = product.fromPrice || product.basePrice;
@@ -446,7 +451,9 @@ function ProductCardList({ product, href, selectedSpec, t, viewOrderLabel }) {
     >
       <Link href={href} className="flex min-w-0 flex-1 overflow-hidden">
       <div className="relative w-32 sm:w-40 shrink-0 bg-[var(--color-gray-100)]">
-        {imageSrc ? (
+        {isStamp ? (
+          <StampCardPreview index={idx} />
+        ) : imageSrc ? (
           <Image
             src={imageSrc}
             alt={image?.alt || product.name}
@@ -592,7 +599,7 @@ export default function SubProductLandingClient({
         {/* Product Cards */}
         {viewMode === "grid" ? (
           <div className="mt-6 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-            {products.map((product) => (
+            {products.map((product, idx) => (
               <ProductCardGrid
                 key={product.id}
                 product={product}
@@ -600,12 +607,14 @@ export default function SubProductLandingClient({
                 selectedSpec={selectedSpec}
                 t={t}
                 viewOrderLabel={viewOrderLabel}
+                parentSlug={parentSlug}
+                idx={idx}
               />
             ))}
           </div>
         ) : (
           <div className="mt-6 flex flex-col gap-3">
-            {products.map((product) => (
+            {products.map((product, idx) => (
               <ProductCardList
                 key={product.id}
                 product={product}
@@ -613,6 +622,8 @@ export default function SubProductLandingClient({
                 selectedSpec={selectedSpec}
                 t={t}
                 viewOrderLabel={viewOrderLabel}
+                parentSlug={parentSlug}
+                idx={idx}
               />
             ))}
           </div>
