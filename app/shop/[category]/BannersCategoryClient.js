@@ -16,27 +16,27 @@ const formatCad = (cents) =>
 
 /* ── Section definitions ── */
 const ITEM_I18N = {
-  "vinyl-banners": "bc.item.vinylBanners",
-  "mesh-banners": "bc.item.meshBanners",
-  "pole-banners": "bc.item.poleBanners",
-  "double-sided-banners": "bc.item.doubleSided",
-  "roll-up-banners": "bc.item.rollUp",
-  "x-banner-frame-print": "bc.item.xBanner",
-  "tabletop-x-banner": "bc.item.tabletopX",
-  "deluxe-tabletop-retractable-a3": "bc.item.tabletopRetractable",
-  "telescopic-backdrop": "bc.item.telescopic",
-  "popup-display-curved-8ft": "bc.item.popupDisplay",
-  "table-cloth": "bc.item.tableCloth",
-  "feather-flags": "bc.item.featherFlags",
-  "teardrop-flags": "bc.item.teardropFlags",
-  "outdoor-canopy-tent-10x10": "bc.item.canopyTent",
+  "vinyl-banners": "bd.item.vinylBanners",
+  "mesh-banners": "bd.item.meshBanners",
+  "pole-banners": "bd.item.poleBanners",
+  "double-sided-banners": "bd.item.doubleSided",
+  "roll-up-banners": "bd.item.rollUp",
+  "x-banner-frame-print": "bd.item.xBanner",
+  "tabletop-x-banner": "bd.item.tabletopX",
+  "deluxe-tabletop-retractable-a3": "bd.item.tabletopRetractable",
+  "telescopic-backdrop": "bd.item.telescopic",
+  "popup-display-curved-8ft": "bd.item.popupDisplay",
+  "table-cloth": "bd.item.tableCloth",
+  "feather-flags": "bd.item.featherFlags",
+  "teardrop-flags": "bd.item.teardropFlags",
+  "outdoor-canopy-tent-10x10": "bd.item.canopyTent",
 };
 
 const SECTIONS = [
   {
     key: "banners",
-    titleKey: "bc.section.banners.title",
-    subtitleKey: "bc.section.banners.subtitle",
+    titleKey: "bd.section.banners.title",
+    subtitleKey: "bd.section.banners.subtitle",
     size: "large",
     items: [
       { key: "vinyl-banners", href: `${BASE}/vinyl-banners`, gradient: "from-rose-400 to-pink-400" },
@@ -47,8 +47,8 @@ const SECTIONS = [
   },
   {
     key: "stands",
-    titleKey: "bc.section.stands.title",
-    subtitleKey: "bc.section.stands.subtitle",
+    titleKey: "bd.section.stands.title",
+    subtitleKey: "bd.section.stands.subtitle",
     size: "medium",
     items: [
       { key: "roll-up-banners", href: `${BASE}/roll-up-banners`, gradient: "from-emerald-400 to-teal-400" },
@@ -59,8 +59,8 @@ const SECTIONS = [
   },
   {
     key: "tradeshow",
-    titleKey: "bc.section.tradeshow.title",
-    subtitleKey: "bc.section.tradeshow.subtitle",
+    titleKey: "bd.section.tradeshow.title",
+    subtitleKey: "bd.section.tradeshow.subtitle",
     size: "medium",
     items: [
       { key: "telescopic-backdrop", href: `${BASE}/telescopic-backdrop`, gradient: "from-slate-400 to-gray-400" },
@@ -70,8 +70,8 @@ const SECTIONS = [
   },
   {
     key: "outdoor",
-    titleKey: "bc.section.outdoor.title",
-    subtitleKey: "bc.section.outdoor.subtitle",
+    titleKey: "bd.section.outdoor.title",
+    subtitleKey: "bd.section.outdoor.subtitle",
     size: "medium",
     items: [
       { key: "feather-flags", href: `${BASE}/feather-flags`, gradient: "from-orange-400 to-red-400" },
@@ -142,12 +142,12 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: t("bc.breadcrumb") },
+            { label: t("bd.breadcrumb") },
           ]}
         />
 
         <div className="mt-6">
-          <CategoryHero category="banners-displays" title={t("bc.title")} icon="🎪" />
+          <CategoryHero category="banners-displays" title={t("bd.title")} icon="🎪" />
         </div>
 
         {/* Sections */}
@@ -199,26 +199,26 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("bc.vp1.title")}
+              {t("bd.vp1.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("bc.vp1.desc")}
+              {t("bd.vp1.desc")}
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("bc.vp2.title")}
+              {t("bd.vp2.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("bc.vp2.desc")}
+              {t("bd.vp2.desc")}
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("bc.vp3.title")}
+              {t("bd.vp3.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("bc.vp3.desc")}
+              {t("bd.vp3.desc")}
             </p>
           </div>
         </div>
