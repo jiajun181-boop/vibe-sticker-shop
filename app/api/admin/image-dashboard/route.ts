@@ -19,14 +19,41 @@ export async function GET(request: Request) {
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
 
-  const mapped = products.map((p) => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    category: p.category || "other",
-    imageCount: p._count.images,
-    thumbnailUrl: p.images[0]?.url || null,
-  }));
+  // Also check Asset system (UploadThing uploads via AssetLink)
+  const productIds = products.map((p) => p.id);
+  const assetLinks = productIds.length > 0
+    ? await prisma.assetLink.findMany({
+        where: {
+          entityType: "product",
+          entityId: { in: productIds },
+          asset: { status: "published" },
+        },
+        select: { entityId: true, asset: { select: { originalUrl: true } } },
+        orderBy: { sortOrder: "asc" },
+      })
+    : [];
+
+  const assetUrlByProduct: Record<string, string> = {};
+  for (const link of assetLinks) {
+    if (!assetUrlByProduct[link.entityId] && link.asset?.originalUrl) {
+      assetUrlByProduct[link.entityId] = link.asset.originalUrl;
+    }
+  }
+
+  const mapped = products.map((p) => {
+    // Count real images: non-local ProductImage OR Asset system
+    const hasRealLegacy = p.images.some((img) => !img.url.startsWith("/products/"));
+    const hasAsset = !!assetUrlByProduct[p.id];
+    const hasImage = hasRealLegacy || hasAsset;
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      category: p.category || "other",
+      imageCount: hasImage ? Math.max(p._count.images, 1) : 0,
+      thumbnailUrl: assetUrlByProduct[p.id] || p.images[0]?.url || null,
+    };
+  });
 
   const total = mapped.length;
   const withImages = mapped.filter((p) => p.imageCount > 0).length;

@@ -37,7 +37,7 @@ function SignProductCard({ product, section, category }) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
       <Link href={href} className="block">
-        <div className="relative aspect-[3/4] overflow-hidden">
+        <div className="relative aspect-[4/5] overflow-hidden">
           {imageSrc ? (
             <Image
               src={imageSrc}
