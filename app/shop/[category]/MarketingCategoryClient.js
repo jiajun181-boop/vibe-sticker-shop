@@ -91,6 +91,7 @@ function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
             fill
             className="object-cover transition-all duration-300 group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            unoptimized={showUrl.endsWith(".svg") || showUrl.includes("/api/")}
           />
         ) : (
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>

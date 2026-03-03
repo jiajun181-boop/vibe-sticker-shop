@@ -191,7 +191,7 @@ export default function StickersCategoryClient({ products = [] }) {
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: t("categoryHero.desc.stickers-labels-decals") ? "Custom Stickers & Labels" : "Custom Stickers & Labels" },
+            { label: t("footer.stickersLabels") },
           ]}
         />
 
