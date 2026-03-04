@@ -2,22 +2,28 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(request, { params }) {
-  const { category, slug } = await params;
+  try {
+    const { category, slug } = await params;
 
-  const product = await prisma.product.findFirst({
-    where: {
-      slug: decodeURIComponent(slug),
-      category: decodeURIComponent(category),
-      isActive: true,
-    },
-    include: {
-      images: { orderBy: { sortOrder: "asc" } },
-    },
-  });
+    const product = await prisma.product.findFirst({
+      where: {
+        slug: decodeURIComponent(slug),
+        category: decodeURIComponent(category),
+        isActive: true,
+      },
+      include: {
+        images: { orderBy: { sortOrder: "asc" } },
+      },
+    });
 
-  if (!product) {
-    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(product);
+
+  } catch (err) {
+    console.error("[products/category/slug] GET error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  return NextResponse.json(product);
 }
