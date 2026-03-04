@@ -13,4 +13,3 @@ export { default as LetterheadTemplateBuilder } from "./LetterheadTemplateBuilde
 export { default as VolumePricingMatrix } from "./VolumePricingMatrix";
 export { default as MaterialSwatchGrid, MaterialSwatch, MATERIAL_META } from "./MaterialSwatchGrid";
 export { default as EmailQuotePopover } from "./EmailQuotePopover";
-export { default as TemplateDownloadButton } from "./TemplateDownloadButton";

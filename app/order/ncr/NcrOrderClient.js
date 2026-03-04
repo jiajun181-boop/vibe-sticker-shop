@@ -9,7 +9,6 @@ import {
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
-  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -225,16 +224,6 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                 ))}
               </div>
             </ConfigStep>
-
-            {/* Design template download */}
-            <TemplateDownloadButton
-              slug={formType.slug}
-              width={size.w}
-              height={size.h}
-              product={`${formType.label} NCR Forms`}
-              dpi={300}
-              t={t}
-            />
 
             {/* Print Color */}
             <ConfigStep number={++step} title="Print Color">

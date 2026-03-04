@@ -67,10 +67,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Look up the product
-    const product = await prisma.product.findUnique({
+    let product = await prisma.product.findUnique({
       where: { slug },
       include: { pricingPreset: true },
     });
+
+    // Fallback for known marketing-print slugs not yet seeded in DB
+    const FALLBACK_PRODUCTS: Record<string, { category: string; pricingUnit: string }> = {
+      brochures: { category: "marketing-business-print", pricingUnit: "piece" },
+    };
+
+    if ((!product || !product.isActive) && FALLBACK_PRODUCTS[slug]) {
+      const fb = FALLBACK_PRODUCTS[slug];
+      product = {
+        id: `fallback-${slug}`,
+        slug,
+        name: slug,
+        category: fb.category,
+        pricingUnit: fb.pricingUnit,
+        isActive: true,
+        pricingPreset: null,
+      } as any;
+    }
 
     if (!product || !product.isActive) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });

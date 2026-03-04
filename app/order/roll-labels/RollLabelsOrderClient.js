@@ -9,7 +9,6 @@ import {
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
-  TemplateDownloadButton,
 } from "@/components/configurator";
 import { useCartStore } from "@/lib/store";
 import {
@@ -303,18 +302,6 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
               </div>
             </ConfigStep>
 
-            {/* Template Download */}
-            {dim1 > 0 && (
-              <TemplateDownloadButton
-                width={dim1}
-                height={shape.inputs.includes("height") ? dim2 : dim1}
-                bleed={0.125}
-                unit="in"
-                dpi={300}
-                product="Roll Labels"
-                slug="roll-labels"
-              />
-            )}
 
             {/* STEP 4: Stock */}
             <ConfigStep number={4} title={t?.("rl.step.stock") || "Stock / Material"}>

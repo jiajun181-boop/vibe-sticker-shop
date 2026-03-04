@@ -9,7 +9,6 @@ import {
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
-  TemplateDownloadButton,
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
@@ -263,18 +262,6 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
                 ))}
               </div>
             </ConfigStep>
-
-            {/* Design template download */}
-            <TemplateDownloadButton
-              slug={binding.slug}
-              width={bindingId === "saddle-stitch" ? size.w * 2 : size.w}
-              height={size.h}
-              product={`${t(`booklet.binding.${bindingId}`)} Booklet — ${size.label}`}
-              dpi={300}
-              folds={bindingId === "saddle-stitch" ? 1 : 0}
-              foldType="bifold"
-              t={t}
-            />
 
             {/* Page Count */}
             <ConfigStep number={3} title={t("booklet.pageCount")}>

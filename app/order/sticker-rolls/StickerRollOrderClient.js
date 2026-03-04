@@ -75,6 +75,14 @@ const FINISHES = [
 
 const QUANTITIES = [250, 500, 1000, 2500, 5000];
 
+const WIND_DIRECTIONS = [
+  { id: "any", label: "Does Not Matter" },
+  { id: "top", label: "Top" },
+  { id: "right", label: "Right" },
+  { id: "bottom", label: "Bottom" },
+  { id: "left", label: "Left" },
+];
+
 // ─── Main Component ───
 
 export default function StickerRollOrderClient() {
@@ -85,6 +93,7 @@ export default function StickerRollOrderClient() {
   const [sizeIdx, setSizeIdx] = useState(DEFAULT_SIZE_IDX["circle"]);
   const [materialId, setMaterialId] = useState("white-bopp");
   const [finishId, setFinishId] = useState("gloss");
+  const [windId, setWindId] = useState("any");
   const [quantity, setQuantity] = useState(1000);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -192,6 +201,7 @@ export default function StickerRollOrderClient() {
         height: size.h,
         material: materialId,
         finish: finishId,
+        wind: windId,
         fileName: uploadedFile?.name || null,
       },
       forceNewLine: true,
@@ -324,6 +334,62 @@ export default function StickerRollOrderClient() {
             </div>
           </Section>
 
+          {/* Unwind Direction */}
+          <Section label={t("sr.wind") || "Unwind Direction"}>
+            <p className="mb-3 text-[11px] text-gray-400">
+              {t("sr.windHint") || "Select how stickers unwind from the roll. This affects how labels feed into your applicator."}
+            </p>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              {WIND_DIRECTIONS.map((wd) => (
+                <button
+                  key={wd.id}
+                  type="button"
+                  onClick={() => setWindId(wd.id)}
+                  className={`group flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-all ${
+                    windId === wd.id
+                      ? "border-gray-900 bg-gray-50 shadow-sm"
+                      : "border-gray-200 bg-white hover:border-gray-400"
+                  }`}
+                >
+                  <svg viewBox="0 0 48 48" className="h-10 w-10" fill="none">
+                    {/* Roll body */}
+                    <circle cx="24" cy="24" r="10" className={windId === wd.id ? "stroke-gray-900" : "stroke-gray-300"} strokeWidth="1.5" />
+                    <circle cx="24" cy="24" r="4" className={windId === wd.id ? "fill-gray-100 stroke-gray-900" : "fill-gray-50 stroke-gray-300"} strokeWidth="1" />
+                    {/* Label square */}
+                    <rect x="17" y="17" width="14" height="14" rx="1"
+                      className={windId === wd.id ? "fill-gray-100 stroke-gray-900" : "fill-gray-50 stroke-gray-400"}
+                      strokeWidth="1.5"
+                    />
+                    {/* Direction arrow */}
+                    {wd.id === "top" && (
+                      <path d="M24 14 L24 4 M24 4 L20 8 M24 4 L28 8" className={windId === wd.id ? "stroke-gray-900" : "stroke-gray-400"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    )}
+                    {wd.id === "bottom" && (
+                      <path d="M24 34 L24 44 M24 44 L20 40 M24 44 L28 40" className={windId === wd.id ? "stroke-gray-900" : "stroke-gray-400"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    )}
+                    {wd.id === "right" && (
+                      <path d="M34 24 L44 24 M44 24 L40 20 M44 24 L40 28" className={windId === wd.id ? "stroke-gray-900" : "stroke-gray-400"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    )}
+                    {wd.id === "left" && (
+                      <path d="M14 24 L4 24 M4 24 L8 20 M4 24 L8 28" className={windId === wd.id ? "stroke-gray-900" : "stroke-gray-400"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    )}
+                    {wd.id === "any" && (
+                      <>
+                        <path d="M24 14 L24 8 M24 8 L22 10 M24 8 L26 10" className={windId === wd.id ? "stroke-gray-900" : "stroke-gray-400"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M24 34 L24 40 M24 40 L22 38 M24 40 L26 38" className={windId === wd.id ? "stroke-gray-900" : "stroke-gray-400"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M34 24 L40 24 M40 24 L38 22 M40 24 L38 26" className={windId === wd.id ? "stroke-gray-900" : "stroke-gray-400"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M14 24 L8 24 M8 24 L10 22 M8 24 L10 26" className={windId === wd.id ? "stroke-gray-900" : "stroke-gray-400"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </>
+                    )}
+                  </svg>
+                  <span className={`text-[11px] font-semibold leading-tight text-center ${windId === wd.id ? "text-gray-900" : "text-gray-500"}`}>
+                    {t(`sr.wind.${wd.id}`) || wd.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </Section>
+
           {/* Quantity */}
           <Section label={t("sr.quantity")}>
             <div className="flex flex-wrap gap-2">
@@ -396,6 +462,7 @@ export default function StickerRollOrderClient() {
               <Row label={t("sr.size")} value={size.label} />
               <Row label={t("sr.material.label")} value={t(`sr.material.${materialId}`)} />
               <Row label={t("sr.finish.label")} value={t(`sr.finish.${finishId}`)} />
+              <Row label={t("sr.wind") || "Unwind"} value={t(`sr.wind.${windId}`) || WIND_DIRECTIONS.find((w) => w.id === windId)?.label || windId} />
               <Row label={t("sr.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
             </dl>
 
