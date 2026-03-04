@@ -9,13 +9,16 @@ import { getProductImage } from "@/lib/product-image";
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-// Complementary product rules: category -> suggested categories/slugs
+// Complementary product rules: category -> suggested categories
+// Only use the 7 actual DB categories
 const COMPLEMENT_RULES = {
-  "signs-rigid-boards": ["banners-displays"],
-  "banners-displays": ["signs-rigid-boards"],
-  "stickers-labels-decals": ["windows-walls-floors"],
-  "vehicle-graphics-fleet": ["stickers-labels-decals"],
-  "windows-walls-floors": ["vehicle-graphics-fleet"],
+  "marketing-business-print": ["stickers-labels-decals", "banners-displays"],
+  "signs-rigid-boards": ["banners-displays", "stickers-labels-decals"],
+  "banners-displays": ["signs-rigid-boards", "stickers-labels-decals"],
+  "stickers-labels-decals": ["marketing-business-print", "windows-walls-floors"],
+  "vehicle-graphics-fleet": ["stickers-labels-decals", "windows-walls-floors"],
+  "windows-walls-floors": ["vehicle-graphics-fleet", "signs-rigid-boards"],
+  "canvas-prints": ["signs-rigid-boards", "banners-displays"],
 };
 
 export default function CartUpsell() {
