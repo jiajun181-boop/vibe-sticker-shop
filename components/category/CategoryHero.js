@@ -38,12 +38,13 @@ function BoltIcon() {
   );
 }
 
-export default function CategoryHero({ category, title, icon }) {
+export default function CategoryHero({ category, title, icon, hideVolumeBanner }) {
   const { t } = useTranslation();
   const gradient = HERO_GRADIENTS[category] || "from-gray-700 via-gray-600 to-gray-500";
 
   return (
-    <section className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${gradient} px-6 py-8 sm:px-10 sm:py-10`}>
+    <section className="space-y-3">
+    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${gradient} px-6 py-8 sm:px-10 sm:py-10`}>
       {/* Decorative pattern */}
       <div className="pointer-events-none absolute inset-0 opacity-10">
         <svg className="h-full w-full" viewBox="0 0 800 400" fill="none">
@@ -85,6 +86,29 @@ export default function CategoryHero({ category, title, icon }) {
           </span>
         </div>
       </div>
+    </div>
+    {/* Volume discount banner */}
+    {!hideVolumeBanner && (
+      <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 sm:px-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-lg" aria-hidden="true">📦</span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-amber-900 truncate">
+              {t("category.volumeTitle")}
+            </p>
+            <p className="text-xs text-amber-700 truncate">
+              {t("category.volumeDesc")}
+            </p>
+          </div>
+        </div>
+        <a
+          href="/contact"
+          className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-amber-700 sm:px-4 sm:py-2"
+        >
+          {t("category.volumeCta")}
+        </a>
+      </div>
+    )}
     </section>
   );
 }

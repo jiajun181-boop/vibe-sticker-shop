@@ -14,14 +14,10 @@ function NewsletterForm({ t }) {
     if (!email.trim() || !email.includes("@")) return;
     setStatus("sending");
     try {
-      await fetch("/api/contact", {
+      await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: "Footer Subscriber",
-          email: email.trim(),
-          message: "Newsletter signup via footer",
-        }),
+        body: JSON.stringify({ email: email.trim(), source: "footer" }),
       });
     } catch {}
     setStatus("done");

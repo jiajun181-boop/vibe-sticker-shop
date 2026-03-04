@@ -6,6 +6,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast, showErrorToast } from "@/components/Toast";
+import ReferralSection from "@/components/account/ReferralSection";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -199,6 +200,9 @@ export default function AccountDashboard() {
           </div>
         )}
       </div>
+
+      {/* Referral Program */}
+      <ReferralSection t={t} />
     </div>
   );
 }

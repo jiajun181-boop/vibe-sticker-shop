@@ -56,19 +56,15 @@ export default function ExitIntentPopup() {
     if (!email.trim() || !email.includes("@")) return;
 
     try {
-      await fetch("/api/contact", {
+      await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: "Exit Popup Subscriber",
-          email: email.trim(),
-          message: "Newsletter signup via exit-intent popup — send FIRST10 code",
-        }),
+        body: JSON.stringify({ email: email.trim(), source: "exit-popup" }),
       });
     } catch {}
 
     setSubmitted(true);
-    setTimeout(dismiss, 3000);
+    setTimeout(dismiss, 8000); // Longer delay so user can copy the code
   }
 
   if (!show) return null;
@@ -102,6 +98,11 @@ export default function ExitIntentPopup() {
               </svg>
             </div>
             <p className="text-lg font-semibold text-[var(--color-gray-900)]">{t("exit.success")}</p>
+            <div className="mt-3 rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50 px-4 py-3">
+              <p className="text-xs text-emerald-600">{t("exit.codeLabel") || "Your discount code:"}</p>
+              <p className="mt-1 text-xl font-black tracking-wider text-emerald-700">WELCOME10</p>
+            </div>
+            <p className="mt-2 text-xs text-[var(--color-gray-400)]">{t("exit.codeHint") || "Use at checkout for 10% off your first order"}</p>
           </div>
         ) : (
           <>

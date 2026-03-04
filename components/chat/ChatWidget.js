@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -13,7 +14,17 @@ function timeAgo(date) {
   return `${days}d ago`;
 }
 
+function getSessionId() {
+  let id = localStorage.getItem("chat_session_id");
+  if (!id) {
+    id = "sess_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem("chat_session_id", id);
+  }
+  return id;
+}
+
 export default function ChatWidget() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -41,13 +52,18 @@ export default function ChatWidget() {
 
   // Fetch messages when conversation exists
   const fetchMessages = useCallback(async () => {
-    if (!conversationId) return;
+    const sessionId = getSessionId();
     try {
-      const res = await fetch(
-        `/api/messages?conversationId=${conversationId}&viewer=customer`
-      );
+      const url = conversationId
+        ? `/api/chat?conversationId=${conversationId}&sessionId=${sessionId}`
+        : `/api/chat?sessionId=${sessionId}`;
+      const res = await fetch(url);
       if (!res.ok) return;
       const data = await res.json();
+      if (data.conversation?.id && !conversationId) {
+        setConversationId(data.conversation.id);
+        localStorage.setItem("chat_conversation_id", data.conversation.id);
+      }
       setMessages(data.messages || []);
       if (!open) {
         const unreadStaff = (data.messages || []).filter(
@@ -95,12 +111,11 @@ export default function ChatWidget() {
       const body = {
         conversationId: conversationId || undefined,
         content: text,
-        senderType: "customer",
-        senderName: guestName || undefined,
-        customerEmail: guestEmail || undefined,
-        customerName: guestName || undefined,
+        sessionId: getSessionId(),
+        guestName: guestName || undefined,
+        guestEmail: guestEmail || undefined,
       };
-      const res = await fetch("/api/messages", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -154,7 +169,7 @@ export default function ChatWidget() {
                   d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
                 />
               </svg>
-              <span className="text-sm font-bold">Chat with Us</span>
+              <span className="text-sm font-bold">{t("chat.title", "Chat with Us")}</span>
             </div>
             <button
               type="button"
@@ -196,10 +211,10 @@ export default function ChatWidget() {
                   />
                 </svg>
                 <p className="mt-3 text-sm font-medium text-gray-400">
-                  Send us a message!
+                  {t("chat.empty", "Send us a message!")}
                 </p>
                 <p className="text-xs text-gray-300">
-                  We typically reply within a few minutes.
+                  {t("chat.replyTime", "We typically reply within a few minutes.")}
                 </p>
               </div>
             )}
@@ -238,13 +253,13 @@ export default function ChatWidget() {
               className="border-t border-gray-100 px-4 py-3 space-y-2 bg-gray-50"
             >
               <p className="text-xs font-medium text-gray-600">
-                Before we start, let us know who you are:
+                {t("chat.introPrompt", "Before we start, let us know who you are:")}
               </p>
               <input
                 type="text"
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
-                placeholder="Your name"
+                placeholder={t("chat.namePlaceholder", "Your name")}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
                 required
                 autoFocus
@@ -253,7 +268,7 @@ export default function ChatWidget() {
                 type="email"
                 value={guestEmail}
                 onChange={(e) => setGuestEmail(e.target.value)}
-                placeholder="Your email"
+                placeholder={t("chat.emailPlaceholder", "Your email")}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)]"
                 required
               />
@@ -261,7 +276,7 @@ export default function ChatWidget() {
                 type="submit"
                 className="w-full rounded-lg bg-[var(--color-brand)] px-4 py-2 text-sm font-bold text-[#fff] hover:bg-[var(--color-brand-dark)]"
               >
-                Start Chat
+                {t("chat.startChat", "Start Chat")}
               </button>
             </form>
           )}
@@ -279,7 +294,7 @@ export default function ChatWidget() {
                       handleSend();
                     }
                   }}
-                  placeholder="Type a message..."
+                  placeholder={t("chat.inputPlaceholder", "Type a message...")}
                   rows={1}
                   className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[var(--color-brand)] max-h-20"
                 />

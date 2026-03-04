@@ -3,11 +3,62 @@ import { prisma } from "@/lib/prisma";
 import { getProductImage } from "@/lib/product-image";
 
 /**
+ * Common typos and aliases for printing industry terms.
+ * Maps frequent misspellings/variants to correct search terms.
+ */
+const SEARCH_ALIASES: Record<string, string[]> = {
+  sticker: ["stiker", "stikcer", "stiker", "sticekr", "stciker"],
+  banner: ["baner", "bannor", "baner", "bannar"],
+  vinyl: ["vynil", "vinly", "vinyil"],
+  business: ["bussiness", "busines", "buisness"],
+  card: ["crad", "cadr"],
+  canvas: ["canvass", "canva", "canvs"],
+  vehicle: ["vehical", "vehicule", "vehcile"],
+  sign: ["sgin", "singn"],
+  label: ["lable", "labal", "laebl"],
+  decal: ["decle", "dekle", "decl"],
+  poster: ["postre", "postr"],
+  flyer: ["flier", "flyar", "fler"],
+  brochure: ["brocure", "broshure", "brochur"],
+  envelope: ["envelop", "envolope", "envlope"],
+  letterhead: ["leterhead", "letterhed"],
+  postcard: ["poscard", "postcard"],
+  foam: ["fome", "foem"],
+  acrylic: ["acryllic", "acrilic"],
+  magnetic: ["magnitic", "magnet"],
+  reflective: ["refelctive", "reflctive"],
+};
+
+/** Check if query matches any known typo and return the correct term */
+function expandTypos(query: string): string[] {
+  const lower = query.toLowerCase();
+  const terms = [lower];
+  for (const [correct, typos] of Object.entries(SEARCH_ALIASES)) {
+    if (typos.some((t) => lower.includes(t))) {
+      terms.push(lower.replace(new RegExp(typos.join("|"), "gi"), correct));
+    }
+  }
+  return [...new Set(terms)];
+}
+
+/** Popular searches shown when query is empty or very short */
+const POPULAR_SEARCHES = [
+  "Business Cards",
+  "Die-Cut Stickers",
+  "Vinyl Banners",
+  "Yard Signs",
+  "Roll Labels",
+  "Canvas Prints",
+  "Vehicle Wraps",
+  "Postcards",
+];
+
+/**
  * GET /api/search?q=sticker&limit=8
  *
- * Lightweight product search for instant suggestions.
- * Searches name, slug, description, and tags using case-insensitive LIKE.
- * Returns minimal product data for quick rendering.
+ * Product search with typo tolerance and popular searches.
+ * Searches name, slug, description using case-insensitive LIKE.
+ * Expands common misspellings for printing terms.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -15,20 +66,28 @@ export async function GET(request: NextRequest) {
     const q = (searchParams.get("q") || "").trim();
     const limit = Math.min(parseInt(searchParams.get("limit") || "8"), 20);
 
+    // Return popular searches when no query
     if (!q || q.length < 2) {
-      return NextResponse.json({ results: [] });
+      return NextResponse.json({
+        results: [],
+        popularSearches: POPULAR_SEARCHES,
+      });
     }
 
-    const pattern = `%${q}%`;
+    // Expand typos to get multiple search terms
+    const searchTerms = expandTypos(q);
+
+    // Build OR conditions for all expanded terms
+    const orConditions = searchTerms.flatMap((term) => [
+      { name: { contains: term, mode: "insensitive" as const } },
+      { slug: { contains: term, mode: "insensitive" as const } },
+      { description: { contains: term, mode: "insensitive" as const } },
+    ]);
 
     const products = await prisma.product.findMany({
       where: {
         isActive: true,
-        OR: [
-          { name: { contains: q, mode: "insensitive" } },
-          { slug: { contains: q, mode: "insensitive" } },
-          { description: { contains: q, mode: "insensitive" } },
-        ],
+        OR: orConditions,
       },
       select: {
         id: true,
@@ -46,7 +105,18 @@ export async function GET(request: NextRequest) {
       orderBy: { name: "asc" },
     });
 
-    const results = products.map((p) => ({
+    // Score results: exact name match > slug match > description match
+    const qLower = q.toLowerCase();
+    const scored = products.map((p) => {
+      let score = 0;
+      if (p.name.toLowerCase().includes(qLower)) score += 10;
+      if (p.name.toLowerCase().startsWith(qLower)) score += 5;
+      if (p.slug.includes(qLower)) score += 3;
+      return { ...p, _score: score };
+    });
+    scored.sort((a, b) => b._score - a._score);
+
+    const results = scored.map((p) => ({
       id: p.id,
       name: p.name,
       slug: p.slug,
@@ -56,7 +126,11 @@ export async function GET(request: NextRequest) {
       imageAlt: p.images[0]?.alt || p.name,
     }));
 
-    return NextResponse.json({ results, query: q });
+    return NextResponse.json({
+      results,
+      query: q,
+      corrected: searchTerms.length > 1 ? searchTerms[1] : undefined,
+    });
   } catch (err) {
     console.error("[Search] Error:", err);
     return NextResponse.json({ results: [], error: "Search failed" }, { status: 500 });

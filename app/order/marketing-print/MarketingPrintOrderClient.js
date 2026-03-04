@@ -8,9 +8,12 @@ import {
   getMarketingPrintType,
   FINISHING_LABELS,
 } from "@/lib/marketing-print-order-config";
+import dynamic from "next/dynamic";
 import BrochureFoldPreview from "@/components/brochure/BrochureFoldPreview";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+
+const StampEditor = dynamic(() => import("@/components/product/StampEditor"), { ssr: false });
 import {
   ConfigStep,
   ConfigHero,
@@ -68,6 +71,21 @@ export default function MarketingPrintOrderClient({
     }
     return init;
   });
+
+  // Stamp-specific state
+  const isStamp = typeId === "stamps";
+  const [stampText, setStampText] = useState("YOUR COMPANY\nAddress Line\nPhone Number");
+  const [stampFont, setStampFont] = useState("Helvetica");
+  const [stampColor, setStampColor] = useState("#111111");
+  const [stampConfig, setStampConfig] = useState({});
+  const stampShape = isStamp && selectedSize?.label?.includes("Round") ? "round" : "rect";
+
+  const handleStampChange = useCallback((patch) => {
+    if (patch.color !== undefined) setStampColor(patch.color);
+    if (patch.text !== undefined) setStampText(patch.text);
+    if (patch.font !== undefined) setStampFont(patch.font);
+    setStampConfig((prev) => ({ ...prev, ...patch }));
+  }, []);
 
   // Reset dependent state when type changes
   const handleTypeChange = useCallback((newTypeId) => {
@@ -162,9 +180,10 @@ export default function MarketingPrintOrderClient({
         ...(extraSizes.length > 0 ? { extraSizes: extraSizes.filter(s => s.w && s.h) } : {}),
         ...extrasForCart,
         ...(artworkMode === "template" && templateData ? { templateData } : {}),
+        ...(isStamp ? { stampText, stampFont, stampColor, stampShape, ...stampConfig } : {}),
       },
     };
-  }, [effectiveQty, typeId, printType, sizeLabel, quote.unitCents, widthIn, heightIn, paperId, sides, finishing, extrasState, extraSizes, artworkMode, templateData]);
+  }, [effectiveQty, typeId, printType, sizeLabel, quote.unitCents, widthIn, heightIn, paperId, sides, finishing, extrasState, extraSizes, artworkMode, templateData, isStamp, stampText, stampFont, stampColor, stampShape, stampConfig]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -211,9 +230,13 @@ export default function MarketingPrintOrderClient({
         });
       }
     }
+    if (isStamp) {
+      lines.push({ label: "Ink Color", value: stampColor === "#DC2626" ? "Red" : stampColor === "#2563EB" ? "Blue" : "Black" });
+      lines.push({ label: "Shape", value: stampShape === "round" ? "Round" : "Rectangle" });
+    }
     lines.push({ label: "Quantity", value: effectiveQty.toLocaleString() });
     return lines;
-  }, [hideTypeSelector, printType, sizeLabel, selectedPaper, paperId, paperSurchargePerUnit, hasPaperStep, hasSidesStep, sides, hasFinishingStep, finishing, extrasState, effectiveQty, extraSizes]);
+  }, [hideTypeSelector, printType, sizeLabel, selectedPaper, paperId, paperSurchargePerUnit, hasPaperStep, hasSidesStep, sides, hasFinishingStep, finishing, extrasState, effectiveQty, extraSizes, isStamp, stampColor, stampShape]);
 
   // Extra pricing rows for PricingSidebar
   const extraRows = useMemo(() => {
@@ -449,166 +472,200 @@ export default function MarketingPrintOrderClient({
               )}
             </ConfigStep>
 
-            {/* Step: Paper / Stock (hidden if single option) */}
-            {hasPaperStep && (
-              <ConfigStep number={++step} title={t("marketingPrint.paper", "Paper / Stock")}>
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                  {printType.papers.map((p) => {
-                    const isActive = paperId === p.id;
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setPaperId(p.id)}
-                        className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
-                          isActive
-                            ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                            : "border-gray-200 bg-white hover:border-gray-400"
-                        }`}
-                      >
-                        {isActive && (
-                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                            <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                          </span>
-                        )}
-                        <span className="text-sm font-bold text-gray-800">{p.label}</span>
-                        {p.surcharge > 0 && (
-                          <span className="text-xs font-medium text-emerald-600">{formatSurcharge(p.surcharge)}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </ConfigStep>
-            )}
+            {/* ── Stamp-specific: Design Your Stamp ── */}
+            {isStamp ? (
+              <>
+                <ConfigStep number={++step} title={t("stamp.text", "Stamp Text")}>
+                  <textarea
+                    rows={4}
+                    placeholder={t("stamp.textPlaceholder", "Enter your stamp text (one line per row)")}
+                    value={stampText}
+                    onChange={(e) => {
+                      setStampText(e.target.value);
+                      handleStampChange({ text: e.target.value });
+                    }}
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 resize-none"
+                  />
+                  <p className="mt-1 text-xs text-gray-400">{t("stamp.textHint", "Each line will be displayed separately on the stamp")}</p>
+                </ConfigStep>
 
-            {/* Step: Sides (hidden if single option) */}
-            {hasSidesStep && (
-              <ConfigStep number={++step} title={t("marketingPrint.sides", "Print Sides")}>
-                <div className="flex gap-2">
-                  {["single", "double"].map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setSides(s)}
-                      className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                        sides === s
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      {s === "single"
-                        ? t("marketingPrint.singleSided", "Single-Sided")
-                        : t("marketingPrint.doubleSided", "Double-Sided")}
-                    </button>
-                  ))}
-                </div>
-              </ConfigStep>
-            )}
+                <ConfigStep number={++step} title={t("stamp.design", "Design Your Stamp")}>
+                  <StampEditor
+                    shape={stampShape}
+                    widthIn={widthIn}
+                    heightIn={heightIn}
+                    diameterIn={stampShape === "round" ? widthIn : undefined}
+                    text={stampText}
+                    font={stampFont}
+                    color={stampColor}
+                    onChange={handleStampChange}
+                  />
+                </ConfigStep>
+              </>
+            ) : (
+              <>
+                {/* Step: Paper / Stock (hidden if single option) */}
+                {hasPaperStep && (
+                  <ConfigStep number={++step} title={t("marketingPrint.paper", "Paper / Stock")}>
+                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                      {printType.papers.map((p) => {
+                        const isActive = paperId === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setPaperId(p.id)}
+                            className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
+                              isActive
+                                ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
+                                : "border-gray-200 bg-white hover:border-gray-400"
+                            }`}
+                          >
+                            {isActive && (
+                              <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
+                                <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                              </span>
+                            )}
+                            <span className="text-sm font-bold text-gray-800">{p.label}</span>
+                            {p.surcharge > 0 && (
+                              <span className="text-xs font-medium text-emerald-600">{formatSurcharge(p.surcharge)}</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </ConfigStep>
+                )}
 
-            {/* Step: Finishing (hidden if only "none") */}
-            {hasFinishingStep && (
-              <ConfigStep number={++step} title={t("marketingPrint.finishing", "Finishing")}>
-                <div className="flex flex-wrap gap-2">
-                  {printType.finishings.map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      onClick={() => setFinishing(f)}
-                      className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                        finishing === f
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      {FINISHING_LABELS[f] || f}
-                    </button>
-                  ))}
-                </div>
-              </ConfigStep>
-            )}
+                {/* Step: Sides (hidden if single option) */}
+                {hasSidesStep && (
+                  <ConfigStep number={++step} title={t("marketingPrint.sides", "Print Sides")}>
+                    <div className="flex gap-2">
+                      {["single", "double"].map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setSides(s)}
+                          className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                            sides === s
+                              ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                          }`}
+                        >
+                          {s === "single"
+                            ? t("marketingPrint.singleSided", "Single-Sided")
+                            : t("marketingPrint.doubleSided", "Double-Sided")}
+                        </button>
+                      ))}
+                    </div>
+                  </ConfigStep>
+                )}
 
-            {/* Steps: Extras (dynamic from printType.extras) */}
-            {(printType.extras || []).map((ex) => (
-              <ConfigStep key={ex.key} number={++step} title={ex.label}>
-                <div className="flex flex-wrap gap-2">
-                  {ex.options.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() =>
-                        setExtrasState((prev) => ({ ...prev, [ex.key]: opt.id }))
-                      }
-                      className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                        extrasState[ex.key] === opt.id
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      {opt.label}
-                      {opt.surcharge > 0 && (
-                        <span className="ml-1.5 text-xs font-medium opacity-75">
-                          {formatSurcharge(opt.surcharge)}
-                        </span>
+                {/* Step: Finishing (hidden if only "none") */}
+                {hasFinishingStep && (
+                  <ConfigStep number={++step} title={t("marketingPrint.finishing", "Finishing")}>
+                    <div className="flex flex-wrap gap-2">
+                      {printType.finishings.map((f) => (
+                        <button
+                          key={f}
+                          type="button"
+                          onClick={() => setFinishing(f)}
+                          className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                            finishing === f
+                              ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                          }`}
+                        >
+                          {FINISHING_LABELS[f] || f}
+                        </button>
+                      ))}
+                    </div>
+                  </ConfigStep>
+                )}
+
+                {/* Steps: Extras (dynamic from printType.extras) */}
+                {(printType.extras || []).map((ex) => (
+                  <ConfigStep key={ex.key} number={++step} title={ex.label}>
+                    <div className="flex flex-wrap gap-2">
+                      {ex.options.map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() =>
+                            setExtrasState((prev) => ({ ...prev, [ex.key]: opt.id }))
+                          }
+                          className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                            extrasState[ex.key] === opt.id
+                              ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                          }`}
+                        >
+                          {opt.label}
+                          {opt.surcharge > 0 && (
+                            <span className="ml-1.5 text-xs font-medium opacity-75">
+                              {formatSurcharge(opt.surcharge)}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </ConfigStep>
+                ))}
+
+                {/* Step: Artwork */}
+                <ConfigStep number={++step} title={t("marketingPrint.artwork", "Artwork")} optional>
+                  {printType.templateBuilder ? (
+                    <>
+                      {/* Toggle: Upload vs Template */}
+                      <div className="mb-4 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setArtworkMode("upload")}
+                          className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                            artworkMode === "upload"
+                              ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                          }`}
+                        >
+                          {t("marketingPrint.uploadDesign", "Upload Your Design")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setArtworkMode("template")}
+                          className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
+                            artworkMode === "template"
+                              ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                          }`}
+                        >
+                          {t("marketingPrint.useTemplate", "Use Our Template")}
+                        </button>
+                      </div>
+                      {artworkMode === "upload" ? (
+                        <ArtworkUpload
+                          uploadedFile={uploadedFile}
+                          onUploaded={setUploadedFile}
+                          onRemove={() => setUploadedFile(null)}
+                          t={t}
+                        />
+                      ) : (
+                        <LetterheadTemplateBuilder
+                          onTemplateData={setTemplateData}
+                          t={t}
+                        />
                       )}
-                    </button>
-                  ))}
-                </div>
-              </ConfigStep>
-            ))}
-
-            {/* Step: Artwork */}
-            <ConfigStep number={++step} title={t("marketingPrint.artwork", "Artwork")} optional>
-              {printType.templateBuilder ? (
-                <>
-                  {/* Toggle: Upload vs Template */}
-                  <div className="mb-4 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setArtworkMode("upload")}
-                      className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                        artworkMode === "upload"
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      {t("marketingPrint.uploadDesign", "Upload Your Design")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setArtworkMode("template")}
-                      className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                        artworkMode === "template"
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      {t("marketingPrint.useTemplate", "Use Our Template")}
-                    </button>
-                  </div>
-                  {artworkMode === "upload" ? (
+                    </>
+                  ) : (
                     <ArtworkUpload
                       uploadedFile={uploadedFile}
                       onUploaded={setUploadedFile}
                       onRemove={() => setUploadedFile(null)}
                       t={t}
                     />
-                  ) : (
-                    <LetterheadTemplateBuilder
-                      onTemplateData={setTemplateData}
-                      t={t}
-                    />
                   )}
-                </>
-              ) : (
-                <ArtworkUpload
-                  uploadedFile={uploadedFile}
-                  onUploaded={setUploadedFile}
-                  onRemove={() => setUploadedFile(null)}
-                  t={t}
-                />
-              )}
-            </ConfigStep>
+                </ConfigStep>
+              </>
+            )}
           </div>
 
           {/* RIGHT COLUMN */}

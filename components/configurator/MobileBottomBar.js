@@ -123,11 +123,10 @@ export default function MobileBottomBar({
               </div>
             ) : hasQuote ? (
               <>
-                <p className="text-lg font-black text-gray-900">{formatCad(totalCents)} <span className="text-[10px] font-normal text-gray-400">before tax</span></p>
-                {/* Dual pricing or summary text */}
+                <p className="text-lg font-black text-gray-900">{formatCad(totalCents)} <span className="text-[10px] font-normal text-gray-400">{t?.("configurator.beforeTax") || "before tax"}</span></p>
                 {quantity > 1 ? (
-                  <p className="truncate text-[11px] text-gray-500">
-                    ({formatCad(Math.round(totalCents / quantity))}/each)
+                  <p className="truncate text-[11px] font-semibold text-emerald-600">
+                    {(t?.("configurator.thatsOnly") || "That's only {price} each").replace("{price}", formatCad(Math.round(totalCents / quantity)))}
                   </p>
                 ) : summaryText ? (
                   <p className="truncate text-[11px] text-gray-500">{summaryText}</p>

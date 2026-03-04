@@ -13,6 +13,7 @@ import { getStickerRichPageSlug } from "@/lib/sticker-page-content";
 import { getSignRichPageSlug } from "@/lib/sign-page-content";
 import { getProductImage } from "@/lib/product-image";
 import { SEO_NOINDEX_SLUGS } from "@/lib/seo-noindex-slugs";
+import { getAssociationsFor } from "@/lib/product-associations";
 import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
 import VariantProductPage from "./VariantProductPage";
@@ -759,18 +760,36 @@ export default async function ProductPage({ params }) {
     notFound();
   }
 
-  const relatedProducts = await prisma.product.findMany({
-    where: {
-      isActive: true,
-      category: product.category,
-      id: { not: product.id },
-    },
-    include: {
-      images: { take: 1, orderBy: { sortOrder: "asc" } },
-    },
-    take: 4,
-    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
-  });
+  // Cross-category "Frequently Bought Together" + same-category fallback
+  const associations = getAssociationsFor(product.slug, product.category);
+  const assocSlugs = associations.map((a) => a.slug);
+
+  const [crossCategoryProducts, sameCategoryProducts] = await Promise.all([
+    assocSlugs.length > 0
+      ? prisma.product.findMany({
+          where: { isActive: true, slug: { in: assocSlugs }, id: { not: product.id } },
+          include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+        })
+      : [],
+    prisma.product.findMany({
+      where: { isActive: true, category: product.category, id: { not: product.id } },
+      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+      take: 4,
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    }),
+  ]);
+
+  // Merge: cross-category first (up to 2), then same-category to fill 4 slots
+  const seenIds = new Set();
+  const relatedProducts = [];
+  for (const p of crossCategoryProducts) {
+    if (relatedProducts.length >= 2) break;
+    if (!seenIds.has(p.id)) { seenIds.add(p.id); relatedProducts.push(p); }
+  }
+  for (const p of sameCategoryProducts) {
+    if (relatedProducts.length >= 4) break;
+    if (!seenIds.has(p.id)) { seenIds.add(p.id); relatedProducts.push(p); }
+  }
 
   // Fetch asset-system images (falls back to legacy ProductImage)
   const assetImages = await getProductAssets(product.id);

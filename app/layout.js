@@ -25,6 +25,7 @@ const inter = Inter({
 import AuthInit from "@/components/AuthInit";
 import ScrollToTop from "@/components/ScrollToTop";
 import TawkToWidget from "@/components/TawkToWidget";
+import ChatWidget from "@/components/chat/ChatWidget";
 import HreflangTags from "@/components/HreflangTags";
 import PushNotificationPrompt from "@/components/PushNotificationPrompt";
 
@@ -87,6 +88,7 @@ export default async function RootLayout({ children }) {
 
         <AuthInit />
         <Analytics />
+        <ChatWidget />
         <TawkToWidget />
         <PushNotificationPrompt />
       </body>

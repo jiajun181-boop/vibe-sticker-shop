@@ -117,11 +117,10 @@ export default function Navbar({ catalogConfig }) {
   }, []);
 
   // Debounced instant search
+  const [searchCorrected, setSearchCorrected] = useState(null);
+  const [popularSearches, setPopularSearches] = useState([]);
+
   useEffect(() => {
-    if (searchQuery.trim().length < 2) {
-      setSearchResults([]);
-      return;
-    }
     setSearchLoading(true);
     const controller = new AbortController();
     const timer = setTimeout(() => {
@@ -131,6 +130,8 @@ export default function Navbar({ catalogConfig }) {
         .then((res) => res.json())
         .then((data) => {
           setSearchResults(data.results || []);
+          setSearchCorrected(data.corrected || null);
+          if (data.popularSearches) setPopularSearches(data.popularSearches);
           setSearchLoading(false);
         })
         .catch((err) => {
@@ -188,7 +189,35 @@ export default function Navbar({ catalogConfig }) {
   })();
   // Reusable search dropdown renderer
   const renderSearchDropdown = (refProp) => {
-    if (searchQuery.trim().length < 2) return null;
+    const hasQuery = searchQuery.trim().length >= 2;
+    // Show popular searches when focused but no query
+    if (!hasQuery && popularSearches.length > 0 && searchOpen) {
+      return (
+        <div
+          ref={refProp}
+          role="listbox"
+          aria-label={t("search.popular") || "Popular searches"}
+          className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg border border-[var(--color-gray-200)] bg-white shadow-lg overflow-hidden"
+        >
+          <p className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-400)]">{t("search.popular") || "Popular searches"}</p>
+          {popularSearches.map((term) => (
+            <button
+              key={term}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setSearchQuery(term)}
+              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-[var(--color-gray-600)] hover:bg-[var(--color-gray-50)]"
+            >
+              <svg className="h-3.5 w-3.5 text-[var(--color-gray-400)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+              </svg>
+              {term}
+            </button>
+          ))}
+        </div>
+      );
+    }
+    if (!hasQuery) return null;
     return (
       <div
         ref={refProp}
@@ -202,6 +231,17 @@ export default function Navbar({ catalogConfig }) {
           <div className="px-4 py-3 text-sm text-[var(--color-gray-400)]">{t("search.noResults")}</div>
         ) : (
           <>
+            {/* "Did you mean" correction */}
+            {searchCorrected && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setSearchQuery(searchCorrected)}
+                className="flex w-full items-center gap-2 border-b border-[var(--color-gray-100)] px-4 py-2 text-xs text-[var(--color-gray-500)] hover:bg-[var(--color-gray-50)]"
+              >
+                {t("search.didYouMean") || "Did you mean"}: <span className="font-semibold text-[var(--color-gray-800)]">{searchCorrected}</span>
+              </button>
+            )}
             {searchResults.map((item) => (
               <button
                 key={item.id}

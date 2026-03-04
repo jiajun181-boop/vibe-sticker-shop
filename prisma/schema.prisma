@@ -927,6 +927,7 @@ model Conversation {
   customerName  String?
   customerEmail String?
   userId        String?
+  sessionId     String?   // For guest chat identification (localStorage-based)
   status        String    @default("open") // "open" | "closed"
   lastMessageAt DateTime  @default(now())
   createdAt     DateTime  @default(now())
@@ -935,6 +936,7 @@ model Conversation {
   user          User?     @relation(fields: [userId], references: [id])
 
   @@index([userId])
+  @@index([sessionId])
   @@index([status])
   @@index([lastMessageAt])
 }
@@ -951,4 +953,13 @@ model Message {
 
   @@index([conversationId])
   @@index([isRead])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("footer") // "footer" | "exit-popup" | "checkout"
+  createdAt DateTime @default(now())
+
+  @@index([email])
 }
