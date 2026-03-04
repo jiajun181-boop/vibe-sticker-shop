@@ -72,9 +72,15 @@ export async function POST(req: NextRequest) {
       include: { pricingPreset: true },
     });
 
-    // Fallback for known marketing-print slugs not yet seeded in DB
+    // Fallback for marketing-print config IDs that don't match a DB slug exactly
     const FALLBACK_PRODUCTS: Record<string, { category: string; pricingUnit: string }> = {
-      brochures: { category: "marketing-business-print", pricingUnit: "piece" },
+      "business-cards": { category: "marketing-business-print", pricingUnit: "per_piece" },
+      "business-card-magnets": { category: "marketing-business-print", pricingUnit: "per_piece" },
+      letterheads: { category: "marketing-business-print", pricingUnit: "per_piece" },
+      envelopes: { category: "marketing-business-print", pricingUnit: "per_piece" },
+      stamps: { category: "marketing-business-print", pricingUnit: "per_piece" },
+      tags: { category: "marketing-business-print", pricingUnit: "per_piece" },
+      "table-tents": { category: "marketing-business-print", pricingUnit: "per_piece" },
     };
 
     if ((!product || !product.isActive) && FALLBACK_PRODUCTS[slug]) {
