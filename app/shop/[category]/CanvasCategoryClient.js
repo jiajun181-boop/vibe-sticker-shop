@@ -40,7 +40,7 @@ const ACCENT_I18N = {
 
 const SECTIONS = [
   {
-    key: "classic-framed",
+    key: "classic",
     titleKey: "cc.section.classic.title",
     subtitleKey: "cc.section.classic.subtitle",
     layout: "elegant-grid",
@@ -50,18 +50,6 @@ const SECTIONS = [
         href: `${BASE}/canvas-standard`,
         gradient: "from-stone-300 via-zinc-200 to-neutral-100",
         accent: "Classic",
-      },
-      {
-        key: "canvas-gallery-wrap",
-        href: `${BASE}/canvas-gallery-wrap`,
-        gradient: "from-amber-200 via-orange-100 to-stone-50",
-        accent: "Best Seller",
-      },
-      {
-        key: "canvas-framed",
-        href: `${BASE}/canvas-framed`,
-        gradient: "from-slate-300 via-zinc-200 to-stone-100",
-        accent: "Premium Frame",
       },
     ],
   },

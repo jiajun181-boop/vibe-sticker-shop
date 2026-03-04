@@ -4,35 +4,23 @@ import { useMemo, useState } from "react";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 
 const CATEGORY_ORDER = [
-  "marketing-prints",
-  "retail-promo",
-  "packaging",
+  "marketing-business-print",
   "banners-displays",
-  "display-stands",
-  "rigid-signs",
-  "large-format-graphics",
-  "vehicle-branding-advertising",
-  "window-glass-films",
-  "stickers-labels",
-  "safety-warning-decals",
-  "facility-asset-labels",
-  "fleet-compliance-id",
+  "canvas-prints",
+  "signs-rigid-boards",
+  "stickers-labels-decals",
+  "vehicle-graphics-fleet",
+  "windows-walls-floors",
 ];
 
 const CATEGORY_LABELS = {
-  "marketing-prints": "Marketing Prints",
-  "retail-promo": "Retail Promo",
-  packaging: "Packaging",
-  "banners-displays": "Banners Displays",
-  "display-stands": "Display Stands",
-  "rigid-signs": "Rigid Signs",
-  "large-format-graphics": "Large Format Graphics",
-  "vehicle-branding-advertising": "Vehicle Branding Advertising",
-  "window-glass-films": "Window Glass Films",
-  "stickers-labels": "Stickers Labels",
-  "safety-warning-decals": "Safety Warning Decals",
-  "facility-asset-labels": "Facility Asset Labels",
-  "fleet-compliance-id": "Fleet Compliance Id",
+  "marketing-business-print": "Marketing & Business Print",
+  "banners-displays": "Banners & Displays",
+  "canvas-prints": "Canvas Prints",
+  "signs-rigid-boards": "Signs & Display Boards",
+  "stickers-labels-decals": "Stickers, Labels & Decals",
+  "vehicle-graphics-fleet": "Vehicle Graphics & Fleet",
+  "windows-walls-floors": "Windows, Walls & Floors",
 };
 
 const CATEGORY_TO_SUBSERIES = Object.entries(SUB_PRODUCT_CONFIG).reduce((acc, [slug, cfg]) => {
@@ -52,7 +40,7 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
   const [error, setError] = useState(null);
 
   const isEdit = !!product;
-  const [category, setCategory] = useState(product?.category || "marketing-prints");
+  const [category, setCategory] = useState(product?.category || "marketing-business-print");
   const [subseries, setSubseries] = useState("");
 
   const subseriesOptions = useMemo(() => {

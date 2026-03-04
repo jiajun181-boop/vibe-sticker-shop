@@ -95,6 +95,28 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // ── Sync: if a matching Asset exists, create AssetLink too ──
+    const matchingAsset = await prisma.asset.findFirst({
+      where: { originalUrl: url, status: { not: "archived" } },
+      select: { id: true },
+    });
+    if (matchingAsset) {
+      const existingLink = await prisma.assetLink.findFirst({
+        where: { assetId: matchingAsset.id, entityType: "product", entityId: productId },
+      });
+      if (!existingLink) {
+        await prisma.assetLink.create({
+          data: {
+            assetId: matchingAsset.id,
+            entityType: "product",
+            entityId: productId,
+            purpose: "gallery",
+            sortOrder,
+          },
+        });
+      }
+    }
+
     await logActivity({
       action: "create",
       entity: "ProductImage",
@@ -165,6 +187,23 @@ export async function DELETE(request: NextRequest) {
     await prisma.productImage.delete({
       where: { id },
     });
+
+    // ── Sync: remove corresponding AssetLink if exists ──
+    if (image?.url && image.productId) {
+      const matchingLinks = await prisma.assetLink.findMany({
+        where: {
+          entityType: "product",
+          entityId: image.productId,
+          asset: { originalUrl: image.url },
+        },
+        select: { id: true },
+      });
+      if (matchingLinks.length > 0) {
+        await prisma.assetLink.deleteMany({
+          where: { id: { in: matchingLinks.map((l) => l.id) } },
+        });
+      }
+    }
 
     await logActivity({
       action: "delete",

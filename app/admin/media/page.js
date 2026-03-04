@@ -274,6 +274,7 @@ function MediaContent() {
   async function linkAssetToProduct(asset, productId) {
     if (!asset?.id || !productId) return;
 
+    // AssetLink POST automatically syncs to ProductImage (server-side)
     const linkRes = await fetch(`/api/admin/assets/${asset.id}/links`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -286,16 +287,6 @@ function MediaContent() {
     const linkData = await linkRes.json().catch(() => ({}));
     if (!linkRes.ok) {
       throw new Error(linkData?.error || "Failed to create asset link");
-    }
-
-    const imageRes = await fetch(`/api/admin/products/${productId}/images`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: asset.originalUrl, alt: asset.altText || null }),
-    });
-    const imageData = await imageRes.json().catch(() => ({}));
-    if (!imageRes.ok) {
-      throw new Error(imageData?.error || "Failed to add product image");
     }
   }
 

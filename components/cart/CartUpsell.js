@@ -11,11 +11,11 @@ const formatCad = (cents) =>
 
 // Complementary product rules: category -> suggested categories/slugs
 const COMPLEMENT_RULES = {
-  "rigid-signs": ["display-stands"],
-  "banners-displays": ["display-stands"],
-  "stickers-labels": ["facility-asset-labels"],
-  "vehicle-branding-advertising": ["facility-asset-labels"],
-  "display-stands": ["banners-displays", "rigid-signs"],
+  "signs-rigid-boards": ["banners-displays"],
+  "banners-displays": ["signs-rigid-boards"],
+  "stickers-labels-decals": ["windows-walls-floors"],
+  "vehicle-graphics-fleet": ["stickers-labels-decals"],
+  "windows-walls-floors": ["vehicle-graphics-fleet"],
 };
 
 export default function CartUpsell() {

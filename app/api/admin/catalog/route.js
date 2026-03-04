@@ -4,15 +4,21 @@ import { getCatalogConfig, CATALOG_DEFAULTS } from "@/lib/catalogConfig";
 import { requirePermission } from "@/lib/admin-auth";
 
 const MERGE_EDGES = [
-  { from: "stickers", to: "stickers-labels" },
-  { from: "signs", to: "rigid-signs" },
-  { from: "signs-boards", to: "rigid-signs" },
+  { from: "stickers", to: "stickers-labels-decals" },
+  { from: "stickers-labels", to: "stickers-labels-decals" },
+  { from: "signs", to: "signs-rigid-boards" },
+  { from: "signs-boards", to: "signs-rigid-boards" },
+  { from: "rigid-signs", to: "signs-rigid-boards" },
   { from: "banners", to: "banners-displays" },
-  { from: "marketing", to: "marketing-prints" },
-  { from: "displays", to: "display-stands" },
-  { from: "window-graphics", to: "large-format-graphics" },
-  { from: "fleet-compliance-id", to: "vehicle-branding-advertising" },
-  { from: "safety-warning-decals", to: "facility-asset-labels" },
+  { from: "marketing", to: "marketing-business-print" },
+  { from: "marketing-prints", to: "marketing-business-print" },
+  { from: "displays", to: "banners-displays" },
+  { from: "window-graphics", to: "windows-walls-floors" },
+  { from: "large-format-graphics", to: "windows-walls-floors" },
+  { from: "fleet-compliance-id", to: "vehicle-graphics-fleet" },
+  { from: "vehicle-branding-advertising", to: "vehicle-graphics-fleet" },
+  { from: "safety-warning-decals", to: "stickers-labels-decals" },
+  { from: "facility-asset-labels", to: "stickers-labels-decals" },
 ];
 
 export async function GET(request) {

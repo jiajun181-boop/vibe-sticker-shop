@@ -13,18 +13,13 @@ const TextOverlayModal = dynamic(() => import("@/components/admin/TextOverlayMod
 const CropModal = dynamic(() => import("@/components/admin/CropModal"), { ssr: false });
 
 const categories = [
-  { value: "fleet-compliance-id", label: "Fleet Compliance & ID" },
-  { value: "vehicle-branding-advertising", label: "Vehicle Branding" },
-  { value: "safety-warning-decals", label: "Safety & Warning" },
-  { value: "facility-asset-labels", label: "Facility & Assets" },
-  { value: "display-stands", label: "Display Stands" },
-  { value: "marketing-prints", label: "Marketing Prints" },
-  { value: "stickers-labels", label: "Stickers & Labels" },
-  { value: "rigid-signs", label: "Rigid Signs" },
+  { value: "marketing-business-print", label: "Marketing & Business Print" },
+  { value: "stickers-labels-decals", label: "Stickers, Labels & Decals" },
+  { value: "signs-rigid-boards", label: "Signs & Display Boards" },
   { value: "banners-displays", label: "Banners & Displays" },
-  { value: "large-format-graphics", label: "Large Format Graphics" },
-  { value: "retail-promo", label: "Retail Promo" },
-  { value: "packaging", label: "Packaging" },
+  { value: "canvas-prints", label: "Canvas Prints" },
+  { value: "windows-walls-floors", label: "Windows, Walls & Floors" },
+  { value: "vehicle-graphics-fleet", label: "Vehicle Graphics & Fleet" },
 ];
 
 const types = [

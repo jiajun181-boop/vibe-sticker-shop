@@ -59,6 +59,28 @@ export async function POST(
     },
   });
 
+  // ── Sync: if a matching Asset exists, create AssetLink too ──
+  const matchingAsset = await prisma.asset.findFirst({
+    where: { originalUrl: url, status: { not: "archived" } },
+    select: { id: true },
+  });
+  if (matchingAsset) {
+    const existingLink = await prisma.assetLink.findFirst({
+      where: { assetId: matchingAsset.id, entityType: "product", entityId: id },
+    });
+    if (!existingLink) {
+      await prisma.assetLink.create({
+        data: {
+          assetId: matchingAsset.id,
+          entityType: "product",
+          entityId: id,
+          purpose: "gallery",
+          sortOrder,
+        },
+      });
+    }
+  }
+
   return NextResponse.json(image, { status: 201 });
 }
 

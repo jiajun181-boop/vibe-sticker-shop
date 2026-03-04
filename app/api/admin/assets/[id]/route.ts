@@ -93,6 +93,50 @@ export async function PATCH(
       },
     });
 
+    // ── Sync changes to ProductImage ──
+    const productLinks = await prisma.assetLink.findMany({
+      where: { assetId: id, entityType: "product" },
+      select: { entityId: true },
+    });
+
+    if (productLinks.length > 0 && asset.originalUrl) {
+      const productIds = productLinks.map((l) => l.entityId);
+
+      // If altText changed, update ProductImage.alt
+      if (data.altText !== undefined) {
+        await prisma.productImage.updateMany({
+          where: { productId: { in: productIds }, url: asset.originalUrl },
+          data: { alt: (data.altText as string) || null },
+        });
+      }
+
+      // If status changed to archived, remove ProductImage
+      if (data.status === "archived") {
+        await prisma.productImage.deleteMany({
+          where: { productId: { in: productIds }, url: asset.originalUrl },
+        });
+      }
+
+      // If status changed back to published, re-create ProductImage
+      if (data.status === "published") {
+        for (const pid of productIds) {
+          const exists = await prisma.productImage.findFirst({
+            where: { productId: pid, url: asset.originalUrl },
+          });
+          if (!exists) {
+            await prisma.productImage.create({
+              data: {
+                productId: pid,
+                url: asset.originalUrl,
+                alt: asset.altText || null,
+                sortOrder: 99,
+              },
+            });
+          }
+        }
+      }
+    }
+
     await logActivity({
       action: "update",
       entity: "Asset",
@@ -147,6 +191,20 @@ export async function DELETE(
         console.warn("[Asset DELETE] UploadThing cleanup failed:", utErr);
       }
 
+      // ── Sync: remove ProductImage records for any linked products ──
+      const productLinks = await prisma.assetLink.findMany({
+        where: { assetId: id, entityType: "product" },
+        select: { entityId: true },
+      });
+      if (productLinks.length > 0 && asset.originalUrl) {
+        await prisma.productImage.deleteMany({
+          where: {
+            productId: { in: productLinks.map((l) => l.entityId) },
+            url: asset.originalUrl,
+          },
+        });
+      }
+
       // Delete from DB (cascade removes AssetLinks)
       await prisma.asset.delete({ where: { id } });
 
@@ -168,6 +226,22 @@ export async function DELETE(
         archivedAt: new Date(),
       },
     });
+
+    // ── Sync: remove ProductImage for archived asset ──
+    if (asset.originalUrl) {
+      const productLinks = await prisma.assetLink.findMany({
+        where: { assetId: id, entityType: "product" },
+        select: { entityId: true },
+      });
+      if (productLinks.length > 0) {
+        await prisma.productImage.deleteMany({
+          where: {
+            productId: { in: productLinks.map((l) => l.entityId) },
+            url: asset.originalUrl,
+          },
+        });
+      }
+    }
 
     await logActivity({
       action: "archive",

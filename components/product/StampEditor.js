@@ -376,7 +376,7 @@ export default function StampEditor({
       {/* Ink color presets */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.inkColor")}</p>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {INK_COLORS.map((c) => (
             <button
               key={c.id}
@@ -430,10 +430,7 @@ export default function StampEditor({
       {/* Template selector */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.templates")}</p>
-        <div
-          className="flex gap-1 mb-2 overflow-x-auto pb-1"
-          style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none" }}
-        >
+        <div className="flex flex-wrap gap-1 mb-2">
           {STAMP_TEMPLATE_CATEGORIES.map((cat) => (
             <button
               key={cat}
@@ -445,7 +442,7 @@ export default function StampEditor({
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {STAMP_TEMPLATES.filter((tmpl) => tmpl.cat === templateCat).map((tmpl) => (
             <button
               key={tmpl.id}

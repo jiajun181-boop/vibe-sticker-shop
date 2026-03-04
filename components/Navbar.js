@@ -41,6 +41,7 @@ export default function Navbar({ catalogConfig }) {
   const shopCloseTimerRef = useRef(null);
   const [shopMenuOpen, setShopMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileExpandedDept, setMobileExpandedDept] = useState(null);
   const safeDepartments = useMemo(() => departments || [], [departments]);
   const [activeShopDept, setActiveShopDept] = useState(safeDepartments[0]?.key || "");
 
@@ -599,26 +600,55 @@ export default function Navbar({ catalogConfig }) {
               {safeDepartments.map((dept) => {
                 const deptM = departmentMeta?.[dept.key];
                 const cats = dept.categories || [];
+                const primaryCat = cats[0];
+                const cMeta = primaryCat ? categoryMeta?.[primaryCat] : null;
+                const subGroups = cMeta?.subGroups || [];
+                const isExpanded = mobileExpandedDept === dept.key;
+                const icon = cMeta?.icon || "";
                 return (
                   <div key={dept.key} className="border-b border-[var(--color-gray-100)]">
-                    <p className="py-3 text-sm font-bold text-[var(--color-gray-800)]">
-                      {getTitle(deptM) || dept.key}
-                    </p>
-                    <div className="pb-2 space-y-0.5">
-                      {cats.map((catSlug) => {
-                        const cMeta = categoryMeta?.[catSlug];
-                        return (
-                          <Link
-                            key={catSlug}
-                            href={`/shop/${catSlug}`}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className="block pl-4 py-2 text-sm text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)] rounded-sm transition-colors"
+                    <div className="flex items-center">
+                      <Link
+                        href={primaryCat ? `/shop/${primaryCat}` : "/shop"}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex flex-1 items-center gap-2.5 py-3.5 text-sm font-bold text-[var(--color-gray-800)] hover:text-black transition-colors"
+                      >
+                        {icon && <span className="text-base">{icon}</span>}
+                        <span>{getTitle(deptM) || dept.key}</span>
+                      </Link>
+                      {subGroups.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setMobileExpandedDept(isExpanded ? null : dept.key)}
+                          className="p-3 text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)] transition-colors"
+                          aria-label={isExpanded ? "Collapse" : "Expand"}
+                        >
+                          <svg
+                            className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2.5}
                           >
-                            {getTitle(cMeta) || catSlug}
-                          </Link>
-                        );
-                      })}
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
+                    {isExpanded && subGroups.length > 0 && (
+                      <div className="pb-3 space-y-0.5">
+                        {subGroups.map((sg) => (
+                          <Link
+                            key={sg.slug}
+                            href={sg.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="block pl-9 py-2 text-sm text-[var(--color-gray-600)] hover:text-[var(--color-gray-900)] hover:bg-[var(--color-gray-50)] rounded-sm transition-colors"
+                          >
+                            {getSgTitle(sg)}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}

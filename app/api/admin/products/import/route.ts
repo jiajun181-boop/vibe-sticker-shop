@@ -4,10 +4,13 @@ import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
 
 const VALID_CATEGORIES = [
-  "fleet-compliance-id",
-  "vehicle-branding-advertising",
-  "safety-warning-decals",
-  "facility-asset-labels",
+  "marketing-business-print",
+  "stickers-labels-decals",
+  "signs-rigid-boards",
+  "banners-displays",
+  "canvas-prints",
+  "windows-walls-floors",
+  "vehicle-graphics-fleet",
 ];
 
 const VALID_TYPES = ["sticker", "label", "sign", "other"];

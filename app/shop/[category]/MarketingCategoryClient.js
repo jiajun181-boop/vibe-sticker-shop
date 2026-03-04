@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { isSvgImage } from "@/lib/product-image";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CategoryHero from "@/components/category/CategoryHero";
 import CategoryFaq from "@/components/category/CategoryFaq";
@@ -68,7 +69,7 @@ const SECTIONS = [
       { key: "stamps", href: `${BASE}/stamps`, gradient: "from-red-400 to-rose-400" },
       { key: "calendars", href: `${BASE}/calendars`, gradient: "from-teal-400 to-cyan-400" },
       { key: "certificates", href: `${BASE}/certificates`, gradient: "from-orange-400 to-amber-400" },
-      { key: "envelopes", href: `${BASE}/envelopes`, gradient: "from-blue-400 to-indigo-400" },
+      { key: "magnets-business-card", href: `${BASE}/magnets-business-card`, gradient: "from-blue-400 to-indigo-400" },
     ],
   },
   {
@@ -83,6 +84,8 @@ const SECTIONS = [
       { key: "rack-cards", href: `${BASE}/rack-cards`, gradient: "from-cyan-400 to-sky-400" },
       { key: "door-hangers", href: `${BASE}/door-hangers`, gradient: "from-violet-400 to-purple-400" },
       { key: "tags", href: `${BASE}/tags`, gradient: "from-amber-400 to-orange-400" },
+      { key: "tabletop-displays", href: `${BASE}/tabletop-displays`, gradient: "from-teal-400 to-emerald-400" },
+      { key: "inserts-packaging", href: `${BASE}/inserts-packaging`, gradient: "from-pink-400 to-rose-400" },
     ],
   },
   {
@@ -97,6 +100,7 @@ const SECTIONS = [
       { key: "bookmarks", href: `${BASE}/bookmarks`, gradient: "from-indigo-400 to-violet-400" },
       { key: "loyalty-cards", href: `${BASE}/loyalty-cards`, gradient: "from-emerald-400 to-teal-400" },
       { key: "document-printing", href: `${BASE}/document-printing`, gradient: "from-gray-400 to-slate-400" },
+      { key: "presentation-folders", href: `${BASE}/presentation-folders`, gradient: "from-slate-400 to-blue-400" },
     ],
   },
 ];
@@ -104,6 +108,7 @@ const SECTIONS = [
 function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
   const [hovered, setHovered] = useState(false);
   const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
+  const isSvg = showUrl && isSvgImage(showUrl);
   const name = t(ITEM_I18N[item.key] || item.key);
   return (
     <Link
@@ -114,14 +119,17 @@ function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-gray-100)]">
         {showUrl ? (
-          <Image
-            src={showUrl}
-            alt={name}
-            fill
-            className="object-cover transition-all duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            unoptimized={showUrl.endsWith(".svg") || showUrl.includes("/api/")}
-          />
+          isSvg ? (
+            <img src={showUrl} alt={name} className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105" />
+          ) : (
+            <Image
+              src={showUrl}
+              alt={name}
+              fill
+              className="object-cover transition-all duration-300 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
+            />
+          )
         ) : (
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
             <p className="px-4 text-center text-sm font-bold text-[#fff] drop-shadow-md">

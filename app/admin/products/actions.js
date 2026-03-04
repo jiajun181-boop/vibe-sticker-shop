@@ -7,7 +7,7 @@ import { slugify, validateSlug } from "@/lib/slugify";
 export async function createProduct(formData) {
   const name = formData.get("name");
   let slug = formData.get("slug");
-  const category = formData.get("category") || "fleet-compliance-id";
+  const category = formData.get("category") || "marketing-business-print";
   const type = formData.get("type") || "sticker";
   const description = formData.get("description") || null;
   const basePrice = Math.round(parseFloat(formData.get("basePrice")) * 100);
@@ -45,7 +45,7 @@ export async function updateProduct(formData) {
   const id = formData.get("id");
   const name = formData.get("name");
   let slug = formData.get("slug");
-  const category = formData.get("category") || "fleet-compliance-id";
+  const category = formData.get("category") || "marketing-business-print";
   const type = formData.get("type") || "sticker";
   const description = formData.get("description") || null;
   const basePrice = Math.round(parseFloat(formData.get("basePrice")) * 100);

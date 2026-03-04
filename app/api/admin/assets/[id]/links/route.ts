@@ -66,6 +66,23 @@ export async function POST(
       },
     });
 
+    // ── Sync to ProductImage so frontend can display it ──
+    if (entityType === "product" && asset.originalUrl) {
+      const existingPI = await prisma.productImage.findFirst({
+        where: { productId: entityId, url: asset.originalUrl },
+      });
+      if (!existingPI) {
+        await prisma.productImage.create({
+          data: {
+            productId: entityId,
+            url: asset.originalUrl,
+            alt: altOverride || asset.altText || null,
+            sortOrder: finalSortOrder,
+          },
+        });
+      }
+    }
+
     await logActivity({
       action: "link",
       entity: "AssetLink",
@@ -106,9 +123,24 @@ export async function DELETE(
       );
     }
 
-    const link = await prisma.assetLink.delete({
+    // Fetch link with asset URL before deleting
+    const link = await prisma.assetLink.findUnique({
       where: { id: linkId },
+      include: { asset: { select: { originalUrl: true } } },
     });
+
+    if (!link) {
+      return NextResponse.json({ error: "Link not found" }, { status: 404 });
+    }
+
+    await prisma.assetLink.delete({ where: { id: linkId } });
+
+    // ── Sync: remove corresponding ProductImage ──
+    if (link.entityType === "product" && link.asset.originalUrl) {
+      await prisma.productImage.deleteMany({
+        where: { productId: link.entityId, url: link.asset.originalUrl },
+      });
+    }
 
     await logActivity({
       action: "unlink",

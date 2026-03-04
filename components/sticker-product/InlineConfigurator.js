@@ -160,6 +160,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
   const [foilColor, setFoilColor] = useState("gold");
   const [printMode, setPrintMode] = useState("white_color");
   const [turnaroundId, setTurnaroundId] = useState("standard");
+  const [windId, setWindId] = useState("any");
 
   // --- Shape-dependent preset sizes ---
   const SQUARE_PRESETS = useMemo(() => [
@@ -285,6 +286,13 @@ export default function InlineConfigurator({ cuttingTypeId }) {
     enabled: widthIn > 0 && heightIn > 0 && activeQty > 0 && dimErrors.length === 0,
   });
 
+  // --- Wind direction surcharge (roll-labels only) ---
+  const windMultiplier = cutting.windDirections
+    ? (cutting.windDirections.find((w) => w.id === windId)?.surchargeMultiplier ?? 1.0)
+    : 1.0;
+  const adjustedSubtotalCents = Math.round((quote.subtotalCents || 0) * windMultiplier);
+  const adjustedUnitCents = Math.round((quote.unitCents || 0) * windMultiplier);
+
   const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
 
   // --- Cart ---
@@ -297,7 +305,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
       id: slug,
       name: `${t(`stickerOrder.type.${cuttingTypeId}`)} — ${sizeLabel}`,
       slug,
-      price: quote.unitCents,
+      price: adjustedUnitCents,
       quantity: activeQty,
       options: {
         cuttingType: cuttingTypeId,
@@ -311,11 +319,12 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         ...(isFoil && { foilColor }),
         ...(isWhiteInkMaterial && { printMode }),
         turnaround: turnaroundId,
+        windDirection: cutting.windDirections ? windId : undefined,
         fileName: uploadedFile?.name || null,
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.unitCents, activeQty, cuttingTypeId, widthIn, heightIn, isCustomSize, sizeIdx, shapePresets, slug, materialId, lamination, shapeId, uploadedFile, t, isFoil, foilColor, isWhiteInkMaterial, printMode, turnaroundId]);
+  }, [quote.quoteData, adjustedUnitCents, activeQty, cuttingTypeId, widthIn, heightIn, isCustomSize, sizeIdx, shapePresets, slug, materialId, lamination, shapeId, windId, uploadedFile, t, isFoil, foilColor, isWhiteInkMaterial, printMode, turnaroundId, cutting]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -350,9 +359,13 @@ export default function InlineConfigurator({ cuttingTypeId }) {
     }
     trackOptionChange({ slug, option: "shape", value: id, quantity: activeQty });
   }
+  function selectWind(id) {
+    setWindId(id);
+    trackOptionChange({ slug, option: "windDirection", value: id, quantity: activeQty });
+  }
 
   // Unit price display
-  const unitPriceLabel = quote.unitCents > 0 ? `${formatCad(quote.unitCents)}/ea` : null;
+  const unitPriceLabel = adjustedUnitCents > 0 ? `${formatCad(adjustedUnitCents)}/ea` : null;
 
   return (
     <div className="space-y-5">
@@ -570,6 +583,37 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         </div>
       )}
 
+      {/* Wind Direction (roll-labels only) */}
+      {cutting.windDirections && (
+        <div>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+            {t("stickerOrder.wind")}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {cutting.windDirections.map((w) => {
+              const isActive = windId === w.id;
+              return (
+                <button
+                  key={w.id}
+                  type="button"
+                  onClick={() => selectWind(w.id)}
+                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                    isActive
+                      ? "border-gray-900 bg-gray-900 text-[#fff]"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  {t(w.label)}
+                  {w.surchargeMultiplier > 1 && (
+                    <span className="ml-1 text-[10px] font-normal opacity-70">+10%</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Quantity */}
       <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
@@ -701,7 +745,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
           <div className="space-y-1.5">
             <div className="flex items-baseline justify-between text-xs text-gray-500">
               <span>Subtotal ({activeQty.toLocaleString()} pcs)</span>
-              <span className="font-medium text-gray-700">{formatCad(quote.subtotalCents)}</span>
+              <span className="font-medium text-gray-700">{formatCad(adjustedSubtotalCents)}</span>
             </div>
             {turnaroundId === "rush" && (
               <div className="flex items-baseline justify-between text-xs text-amber-600">
@@ -712,13 +756,14 @@ export default function InlineConfigurator({ cuttingTypeId }) {
             <hr className="border-gray-200" />
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-black text-gray-900">Total</span>
-              <span className="text-xl font-black text-gray-900">{formatCad(quote.subtotalCents)}</span>
+              <span className="text-xl font-black text-gray-900">{formatCad(adjustedSubtotalCents)}</span>
             </div>
             <p className="text-right text-[10px] text-gray-400">Before tax</p>
             {(() => {
               const hints = [];
               if (materialId !== cutting.materials[0].id) hints.push(t("configurator.priceIncludesMaterial"));
               if (laminationId !== "none") hints.push(t("configurator.priceIncludesFinishing"));
+              if (windMultiplier > 1) hints.push(t("stickerOrder.wind.surcharge"));
               if (hints.length === 0 && activeQty > 0) return null;
               return hints.length > 0 ? (
                 <p className="mt-1 text-xs text-gray-400">{hints.join(". ")}.</p>

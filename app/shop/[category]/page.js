@@ -156,7 +156,7 @@ const STICKERS_SEGMENTS = [
   {
     key: "custom-stickers",
     title: "Stickers & Labels",
-    slugs: ["die-cut-stickers", "kiss-cut-singles", "sticker-pages", "sticker-rolls"],
+    slugs: ["die-cut-stickers", "kiss-cut-stickers", "sticker-sheets", "kiss-cut-sticker-sheets", "roll-labels"],
   },
   {
     key: "vinyl-specialty",
@@ -490,7 +490,7 @@ export default async function CategoryPage({ params }) {
       "stamps": ["stamps-s510", "stamps-s520", "stamps-s827", "stamps-s542", "stamps-r512", "stamps-r524", "stamps-r532", "stamps-r552"],
       "calendars": ["calendars-wall", "calendars-wall-desk", "calendars-desk"],
       "certificates": ["certificates"],
-      "envelopes": ["envelopes"],
+      "magnets-business-card": ["magnets-business-card"],
       "menus": ["menus-laminated", "menus-takeout", "table-mat"],
       "table-tents": ["table-tents-4x6", "table-tent-cards", "table-display-cards"],
       "shelf-displays": ["shelf-talkers", "shelf-danglers", "shelf-wobblers"],
@@ -503,8 +503,9 @@ export default async function CategoryPage({ params }) {
       "bookmarks": ["bookmarks", "bookmarks-custom"],
       "loyalty-cards": ["loyalty-cards"],
       "document-printing": ["document-printing"],
-      "inserts-packaging": ["inserts-packaging"],
       "presentation-folders": ["presentation-folders"],
+      "inserts-packaging": ["inserts-packaging"],
+      "tabletop-displays": ["tabletop-displays"],
     };
 
     const marketingPrices = {};
@@ -637,7 +638,6 @@ export default async function CategoryPage({ params }) {
       "glass-waistline": ["glass-waistline"],
       "wall-graphics": ["wall-graphics"],
       "floor-graphics": ["floor-graphics"],
-      "decals": ["decals"],
     };
 
     const wwfPrices = {};
@@ -669,8 +669,6 @@ export default async function CategoryPage({ params }) {
   if (decoded === "canvas-prints") {
     const CANVAS_PRICE_MAP = {
       "canvas-standard": ["canvas-standard"],
-      "canvas-gallery-wrap": ["canvas-gallery-wrap"],
-      "canvas-framed": ["canvas-framed"],
       "canvas-panoramic": ["canvas-panoramic"],
       "canvas-split-2": ["canvas-split-2"],
       "canvas-split-3": ["canvas-split-3"],
@@ -753,9 +751,6 @@ export default async function CategoryPage({ params }) {
       "reflective-safety-stripes-kit": ["reflective-safety-stripes-kit"],
       "high-visibility-rear-chevron-kit": ["high-visibility-rear-chevron-kit"],
       "dangerous-goods-placards": ["dangerous-goods-placards"],
-      "fleet-vehicle-inspection-book": ["fleet-vehicle-inspection-book"],
-      "hours-of-service-log-holder": ["hours-of-service-log-holder"],
-      "ifta-cab-card-holder": ["ifta-cab-card-holder"],
     };
 
     const vehiclePrices = {};

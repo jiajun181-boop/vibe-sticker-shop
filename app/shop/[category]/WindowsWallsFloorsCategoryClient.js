@@ -66,12 +66,11 @@ const SECTIONS = [
     ],
   },
   {
-    key: "decals-banners",
-    titleKey: "wwf.section.decalsBanners.title",
-    subtitleKey: "wwf.section.decalsBanners.subtitle",
+    key: "related-banners",
+    titleKey: "wwf.section.relatedBanners.title",
+    subtitleKey: "wwf.section.relatedBanners.subtitle",
     size: "large",
     items: [
-      { key: "decals", href: `${BASE}/decals`, gradient: "from-rose-400 to-pink-400" },
       { key: "vinyl-banners", href: "/shop/banners-displays/vinyl-banners", gradient: "from-sky-400 to-blue-400" },
       { key: "telescopic-backdrop", href: "/shop/banners-displays/telescopic-backdrop", gradient: "from-violet-400 to-purple-400" },
     ],
