@@ -28,21 +28,38 @@ function normalizeTags(tags: unknown): string[] {
 async function attachImageSourceMeta<T extends { id: string; images?: unknown[] }>(
   product: T
 ) {
-  const [assetLinkCount, galleryAssetLinkCount] = await Promise.all([
-    prisma.assetLink.count({
-      where: { entityType: "product", entityId: product.id },
+  const [assetLinks, galleryAssetLinkCount] = await Promise.all([
+    prisma.assetLink.findMany({
+      where: { entityType: "product", entityId: product.id, asset: { status: "published" } },
+      include: { asset: true },
+      orderBy: { sortOrder: "asc" },
     }),
     prisma.assetLink.count({
       where: { entityType: "product", entityId: product.id, purpose: "gallery" },
     }),
   ]);
 
+  const assetLinkCount = assetLinks.length;
   const legacyImageCount = Array.isArray(product.images) ? product.images.length : 0;
   const resolvedSource =
     assetLinkCount > 0 ? "asset" : legacyImageCount > 0 ? "legacy" : "none";
 
+  // Merge asset-linked images into product.images so the admin UI can display and manage them
+  let mergedImages = product.images;
+  if (resolvedSource === "asset") {
+    mergedImages = assetLinks.map((link, idx) => ({
+      id: `asset:${link.id}`,
+      productId: product.id,
+      url: link.asset.originalUrl,
+      alt: link.altOverride || link.asset.altText || null,
+      sortOrder: idx,
+      _source: "asset" as const,
+    }));
+  }
+
   return {
     ...product,
+    images: mergedImages,
     imageSourceMeta: {
       assetLinkCount,
       galleryAssetLinkCount,

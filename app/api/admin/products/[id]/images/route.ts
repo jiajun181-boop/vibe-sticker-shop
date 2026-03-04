@@ -150,6 +150,52 @@ export async function DELETE(
     return NextResponse.json({ error: "imageId is required" }, { status: 400 });
   }
 
+  // ── Handle asset-linked images (id starts with "asset:") ──
+  if (imageId.startsWith("asset:")) {
+    const assetLinkId = imageId.slice("asset:".length);
+    const link = await prisma.assetLink.findFirst({
+      where: { id: assetLinkId, entityType: "product", entityId: id },
+      include: { asset: { select: { id: true, originalUrl: true } } },
+    });
+    if (!link) {
+      return NextResponse.json({ error: "Asset link not found for this product" }, { status: 404 });
+    }
+
+    // Delete the asset link
+    await prisma.assetLink.delete({ where: { id: assetLinkId } });
+
+    // Re-order remaining asset links
+    const remaining = await prisma.assetLink.findMany({
+      where: { entityType: "product", entityId: id },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true },
+    });
+    if (remaining.length > 0) {
+      await Promise.all(
+        remaining.map((l, idx) =>
+          prisma.assetLink.update({ where: { id: l.id }, data: { sortOrder: idx } })
+        )
+      );
+    }
+
+    // Try to clean up from UploadThing CDN
+    if (link.asset?.originalUrl) {
+      try {
+        const keyMatch = link.asset.originalUrl.match(/\/f\/([a-zA-Z0-9_-]+)/);
+        if (keyMatch) {
+          const { UTApi } = await import("uploadthing/server");
+          const utapi = new UTApi();
+          await utapi.deleteFiles([keyMatch[1]]);
+        }
+      } catch (utErr) {
+        console.warn("[Product Image DELETE] UploadThing cleanup failed:", utErr);
+      }
+    }
+
+    return NextResponse.json({ success: true });
+  }
+
+  // ── Handle legacy ProductImage deletion ──
   // Ensure this image belongs to the current product.
   const image = await prisma.productImage.findFirst({
     where: { id: imageId, productId: id },
