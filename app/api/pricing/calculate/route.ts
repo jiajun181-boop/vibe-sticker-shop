@@ -72,15 +72,57 @@ export async function POST(req: NextRequest) {
       include: { pricingPreset: true },
     });
 
-    // Fallback for marketing-print config IDs that don't match a DB slug exactly
+    // Fallback for configurator type IDs / defaultSlugs that don't match a DB slug
+    const MP = { category: "marketing-business-print", pricingUnit: "per_piece" };
+    const SG = { category: "signs-rigid-boards", pricingUnit: "per_sqft" };
     const FALLBACK_PRODUCTS: Record<string, { category: string; pricingUnit: string }> = {
-      "business-cards": { category: "marketing-business-print", pricingUnit: "per_piece" },
-      "business-card-magnets": { category: "marketing-business-print", pricingUnit: "per_piece" },
-      letterheads: { category: "marketing-business-print", pricingUnit: "per_piece" },
-      envelopes: { category: "marketing-business-print", pricingUnit: "per_piece" },
-      stamps: { category: "marketing-business-print", pricingUnit: "per_piece" },
-      tags: { category: "marketing-business-print", pricingUnit: "per_piece" },
-      "table-tents": { category: "marketing-business-print", pricingUnit: "per_piece" },
+      // ── Marketing & business print ──
+      "business-cards": MP,
+      "business-card-magnets": MP,
+      postcards: MP,
+      flyers: MP,
+      "brochures-bi-fold": MP,
+      "brochures-tri-fold": MP,
+      "brochures-z-fold": MP,
+      posters: MP,
+      "menus-laminated": MP,
+      "menus-takeout": MP,
+      "table-mat": MP,
+      "rack-cards": MP,
+      "door-hangers-standard": MP,
+      "door-hangers-perforated": MP,
+      "door-hangers-large": MP,
+      "greeting-cards": MP,
+      letterheads: MP,
+      envelopes: MP,
+      bookmarks: MP,
+      "calendars-wall": MP,
+      "calendars-desk": MP,
+      certificates: MP,
+      coupons: MP,
+      tickets: MP,
+      stamps: MP,
+      tags: MP,
+      notepads: MP,
+      "document-printing": MP,
+      "invitation-cards": MP,
+      "table-tents": MP,
+      "shelf-talkers": MP,
+      "shelf-danglers": MP,
+      "shelf-wobblers": MP,
+      "retail-tags": MP,
+      "loyalty-cards": MP,
+      "tabletop-displays": MP,
+      "inserts-packaging": MP,
+      "presentation-folders": MP,
+      // ── Signs & rigid boards (defaultSlug values) ──
+      "yard-sign": SG,
+      "foam-board-prints": SG,
+      "aluminum-signs": SG,
+      "pvc-sintra-signs": SG,
+      "a-frame-sandwich-board": SG,
+      "real-estate-sign": SG,
+      "photo-board": SG,
     };
 
     if ((!product || !product.isActive) && FALLBACK_PRODUCTS[slug]) {
