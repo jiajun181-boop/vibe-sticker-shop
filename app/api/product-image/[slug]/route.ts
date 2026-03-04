@@ -459,15 +459,21 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  const { slug } = await params;
-  const name = (request.nextUrl.searchParams.get("name") || "").slice(0, 120);
-  const category = (request.nextUrl.searchParams.get("category") || "").slice(0, 120);
-  const svg = makeSvg({ name, category, slug });
+  try {
+    const { slug } = await params;
+    const name = (request.nextUrl.searchParams.get("name") || "").slice(0, 120);
+    const category = (request.nextUrl.searchParams.get("category") || "").slice(0, 120);
+    const svg = makeSvg({ name, category, slug });
 
-  return new NextResponse(svg, {
-    headers: {
-      "Content-Type": "image/svg+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=86400",
-    },
-  });
+    return new NextResponse(svg, {
+      headers: {
+        "Content-Type": "image/svg+xml; charset=utf-8",
+        "Cache-Control": "public, max-age=86400",
+      },
+    });
+
+  } catch (err) {
+    console.error("[product-image] GET error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

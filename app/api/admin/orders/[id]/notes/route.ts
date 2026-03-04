@@ -6,33 +6,39 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requirePermission(request, "orders", "edit");
-  if (!auth.authenticated) return auth.response;
+  try {
+    const auth = await requirePermission(request, "orders", "edit");
+    if (!auth.authenticated) return auth.response;
 
-  const { id } = await params;
-  const { message, isInternal } = await request.json();
+    const { id } = await params;
+    const { message, isInternal } = await request.json();
 
-  if (!message || !message.trim()) {
-    return NextResponse.json(
-      { error: "Message is required" },
-      { status: 400 }
-    );
+    if (!message || !message.trim()) {
+      return NextResponse.json(
+        { error: "Message is required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify order exists
+    const order = await prisma.order.findUnique({ where: { id }, select: { id: true } });
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    const note = await prisma.orderNote.create({
+      data: {
+        orderId: id,
+        authorType: "staff",
+        isInternal: isInternal ?? true,
+        message: message.trim(),
+      },
+    });
+
+    return NextResponse.json(note);
+
+  } catch (err) {
+    console.error("[admin/orders/notes] POST error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  // Verify order exists
-  const order = await prisma.order.findUnique({ where: { id }, select: { id: true } });
-  if (!order) {
-    return NextResponse.json({ error: "Order not found" }, { status: 404 });
-  }
-
-  const note = await prisma.orderNote.create({
-    data: {
-      orderId: id,
-      authorType: "staff",
-      isInternal: isInternal ?? true,
-      message: message.trim(),
-    },
-  });
-
-  return NextResponse.json(note);
 }

@@ -6,6 +6,7 @@ import { checkoutLimiter, getClientIp } from "@/lib/rate-limit";
 import { getUserFromRequest } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildInvoiceConfirmationHtml } from "@/lib/email/templates/invoice-confirmation";
+import { checkAndReserveStock } from "@/lib/inventory";
 
 const MetaSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
 
@@ -197,6 +198,24 @@ export async function POST(req: NextRequest) {
     const shippingAmount = subtotalAmount >= 9900 ? 0 : 1500;
     const taxAmount = Math.round((subtotalAmount + shippingAmount) * 0.13);
     const totalAmount = subtotalAmount + shippingAmount + taxAmount;
+
+    // Atomic stock check + reservation (prevents overselling)
+    const stockResult = await checkAndReserveStock(
+      pricedItems.map(({ product, repriced }) => ({
+        productId: product!.id,
+        quantity: repriced.quantity,
+      }))
+    );
+    if (!stockResult.ok) {
+      const issue = stockResult.issues[0];
+      return NextResponse.json(
+        {
+          error: `${issue.productName} only has ${issue.available_quantity} available (requested ${issue.requested})`,
+          code: "INSUFFICIENT_STOCK",
+        },
+        { status: 409 }
+      );
+    }
 
     const created = await prisma.order.create({
       data: {

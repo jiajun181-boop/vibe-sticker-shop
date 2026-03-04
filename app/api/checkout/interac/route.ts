@@ -49,9 +49,9 @@ export async function POST(req: Request) {
     }
 
     const subtotal = items.reduce((sum, item) => sum + item.unitAmount * item.quantity, 0);
-    const taxAmount = Math.round(subtotal * 0.13);
     const shippingAmount = subtotal >= 9900 ? 0 : 1500;
-    const totalAmount = subtotal + taxAmount + shippingAmount;
+    const taxAmount = Math.round((subtotal + shippingAmount) * 0.13);
+    const totalAmount = subtotal + shippingAmount + taxAmount;
 
     // Get user if logged in
     const session = getSessionFromRequest(req as any);

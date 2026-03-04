@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { useCartStore } from "@/lib/store";
 
 export default function CancelPage() {
   const { t } = useTranslation();
+  const openCart = useCartStore((s) => s.openCart);
 
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)] flex items-center justify-center px-4 py-20">
@@ -23,17 +25,18 @@ export default function CancelPage() {
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link
-            href="/shop"
+          <button
+            type="button"
+            onClick={openCart}
             className="inline-flex items-center justify-center rounded-xl bg-[var(--color-gray-900)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-black"
           >
-            {t("cancel.continueShopping")}
-          </Link>
+            {t("cancel.backToCart")}
+          </button>
           <Link
-            href="/contact"
+            href="/shop"
             className="inline-flex items-center justify-center rounded-xl border border-[var(--color-gray-300)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)]"
           >
-            {t("cancel.needHelp")}
+            {t("cancel.continueShopping")}
           </Link>
         </div>
 
