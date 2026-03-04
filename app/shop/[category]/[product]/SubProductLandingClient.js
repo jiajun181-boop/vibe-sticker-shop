@@ -9,6 +9,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import QuickAddButton from "@/components/product/QuickAddButton";
 import { useSearchParams } from "next/navigation";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
+import StampCardPreview from "@/components/product/stamp/StampCardPreview";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -17,7 +18,7 @@ const formatCad = (cents) =>
 const safeText = (value, fallback) =>
   typeof value === "string" && value.trim() ? value : fallback;
 
-// Cross-sell recommendations: if viewing sub-group X, suggest Y
+// Cross-sell recommendations: if viewing sub-group X, suggest Y (must be valid SUB_PRODUCT_CONFIG keys)
 const CROSS_SELL_MAP = {
   // Banners & Displays
   "retractable-stands": ["vinyl-banners", "tabletop-displays"],
@@ -28,48 +29,60 @@ const CROSS_SELL_MAP = {
   "mesh-banners": ["vinyl-banners", "pole-banners"],
   "pole-banners": ["vinyl-banners", "flags-hardware"],
   "flags-hardware": ["vinyl-banners", "tents-outdoor"],
-  "a-frames-signs": ["vinyl-banners", "lawn-yard-signs"],
-  "lawn-yard-signs": ["a-frames-signs", "vinyl-banners"],
   "tents-outdoor": ["vinyl-banners", "flags-hardware"],
   "fabric-banners": ["backdrops-popups", "retractable-stands"],
-  "canvas-prints": ["retractable-stands", "fabric-banners"],
+  "trade-show-furniture": ["backdrops-popups", "tabletop-displays"],
+  // Canvas
+  "classic-canvas-prints": ["large-format-canvas", "canvas-collages"],
+  "large-format-canvas": ["classic-canvas-prints", "canvas-collages"],
+  "canvas-collages": ["classic-canvas-prints", "triptych-canvas-split"],
   // Marketing & Business Print
-  "business-cards": ["flyers", "postcards"],
-  "flyers": ["business-cards", "postcards"],
-  "postcards": ["flyers", "business-cards"],
-  "brochures": ["flyers", "booklets"],
-  "booklets": ["flyers", "brochures"],
-  "posters": ["flyers", "vinyl-banners"],
+  "business-cards": ["door-hangers", "greeting-invitation-cards"],
+  "brochures": ["booklets", "door-hangers"],
+  "booklets": ["brochures", "posters"],
+  "posters": ["booklets", "menus"],
   "letterhead": ["business-cards", "envelopes"],
   "envelopes": ["letterhead", "business-cards"],
-  "menus": ["table-tents", "rack-cards"],
+  "menus": ["table-tents", "shelf-displays"],
   "table-tents": ["menus", "shelf-displays"],
-  "rack-cards": ["flyers", "door-hangers"],
-  "door-hangers": ["flyers", "rack-cards"],
-  "greeting-invitation-cards": ["postcards", "envelopes"],
-  "bookmarks": ["business-cards", "postcards"],
+  "door-hangers": ["business-cards", "brochures"],
+  "greeting-invitation-cards": ["business-cards", "envelopes"],
+  "bookmarks": ["business-cards", "tags"],
   "notepads": ["letterhead", "business-cards"],
   "ncr-forms": ["notepads", "letterhead"],
-  "tickets-coupons": ["business-cards", "loyalty-cards"],
-  "loyalty-cards": ["business-cards", "rack-cards"],
+  "tickets-coupons": ["business-cards", "tags"],
   "stamps": ["notepads", "letterhead"],
   "calendars": ["notepads", "posters"],
-  "certificates": ["letterhead", "envelopes"],
-  "tags": ["business-cards", "loyalty-cards"],
-  "shelf-displays": ["table-tents", "rack-cards"],
-  "document-printing": ["ncr-forms", "notepads"],
-  // Stickers
-  "die-cut-stickers": ["sticker-pages", "sticker-rolls"],
-  "sticker-pages": ["die-cut-stickers", "sticker-rolls"],
-  "sticker-rolls": ["die-cut-stickers", "sticker-pages"],
-  "vinyl-lettering": ["vehicle-decals", "die-cut-stickers"],
+  "tags": ["business-cards", "bookmarks"],
+  "shelf-displays": ["table-tents", "menus"],
+  // Stickers & Labels
+  "die-cut-stickers": ["sticker-sheets", "roll-labels"],
+  "sticker-sheets": ["die-cut-stickers", "roll-labels"],
+  "kiss-cut-stickers": ["die-cut-stickers", "sticker-sheets"],
+  "kiss-cut-sticker-sheets": ["sticker-sheets", "die-cut-stickers"],
+  "roll-labels": ["die-cut-stickers", "sticker-sheets"],
   "safety-warning-decals": ["facility-asset-labels", "die-cut-stickers"],
-  "facility-asset-labels": ["safety-warning-decals", "sticker-rolls"],
+  "facility-asset-labels": ["safety-warning-decals", "roll-labels"],
+  // Windows, Walls & Floors
+  "wall-graphics": ["floor-graphics", "window-graphics"],
+  "floor-graphics": ["wall-graphics", "window-graphics"],
+  "window-graphics": ["wall-graphics", "static-clings"],
+  "decals": ["wall-graphics", "floor-graphics"],
+  "static-clings": ["window-graphics", "privacy-films"],
+  "adhesive-films": ["window-graphics", "static-clings"],
+  "one-way-vision": ["window-graphics", "privacy-films"],
+  "privacy-films": ["window-graphics", "one-way-vision"],
+  "window-lettering": ["window-graphics", "one-way-vision"],
   // Vehicles
   "vehicle-wraps": ["vehicle-decals", "door-panel-graphics"],
   "door-panel-graphics": ["vehicle-wraps", "magnetic-signs"],
-  "vehicle-decals": ["vehicle-wraps", "vinyl-lettering"],
+  "vehicle-decals": ["vehicle-wraps", "door-panel-graphics"],
   "magnetic-signs": ["vehicle-decals", "door-panel-graphics"],
+  "fleet-packages": ["vehicle-wraps", "dot-mc-numbers"],
+  "dot-mc-numbers": ["unit-weight-ids", "spec-labels"],
+  "unit-weight-ids": ["dot-mc-numbers", "spec-labels"],
+  "spec-labels": ["dot-mc-numbers", "inspection-compliance"],
+  "inspection-compliance": ["spec-labels", "fleet-packages"],
 };
 
 // Sub-product page content — description + FAQ per group
@@ -282,6 +295,169 @@ const SUB_PRODUCT_CONTENT = {
       { q: "How do I order custom warehouse labels?", a: "Upload your design or describe your requirements. We\u2019ll create a proof with correct sizing, colors, and codes. Minimum order is just 10 labels." },
     ],
   },
+  // ── Marketing (missing entries) ──
+  "ncr-forms": {
+    desc: "Carbonless copy forms in 2-part, 3-part, or 4-part sets. Perfect for invoices, work orders, receipts, and service records that need instant duplicates without carbon paper.",
+    features: ["2, 3, or 4-part NCR paper", "Full-color or black ink", "Numbered & perforated", "Padded or loose sets", "Half-letter to legal size"],
+  },
+  "letterhead": {
+    desc: "Professional printed letterhead on premium bond or linen paper. Every proposal, invoice, and letter looks more credible when it arrives on branded stationery.",
+    features: ["70lb or 80lb bond paper", "Full-color printing", "Matching envelopes available", "Standard 8.5\u2033\u00d711\u2033", "Custom watermarks available"],
+  },
+  "envelopes": {
+    desc: "Custom printed envelopes that make a first impression before the letter is even opened. Business, invitation, and catalog sizes on white or colored stock.",
+    features: ["#10 Business, A7, 6\u00d79, 9\u00d712 sizes", "Full-color or 1-color", "Peel & seal or gummed flap", "Window envelopes available", "Matching letterhead sets"],
+  },
+  "notepads": {
+    desc: "Custom branded notepads for your desk, front counter, or client giveaways. Printed on quality bond paper with chipboard backing and optional covers.",
+    features: ["50 or 100 sheets per pad", "Full-color header/footer", "Chipboard backing", "Personalized with your branding", "Multiple sizes available"],
+  },
+  "bookmarks": {
+    desc: "Thick, full-color bookmarks on 14pt or 16pt card stock. Perfect for library giveaways, bookstore promotions, church programs, and branded reading accessories.",
+    features: ["14pt or 16pt card stock", "UV gloss or matte lamination", "Standard 2\u2033\u00d76\u2033 or custom sizes", "Full-color double-sided", "Hole-punch & tassel option"],
+  },
+  "calendars": {
+    desc: "Custom wall and desk calendars featuring your branding, photos, and key dates. A 12-month marketing tool your customers keep on display all year.",
+    features: ["Wall & desk formats", "Full-color every page", "Spiral or saddle-stitch binding", "Custom start month", "Holiday & event marking"],
+  },
+  "stamps": {
+    desc: "Self-inking and pre-inked rubber stamps with your custom text, logo, or artwork. Choose from rectangular, round, and pocket sizes for office, notary, and creative use.",
+    features: ["Self-inking mechanism", "Thousands of impressions", "Replaceable ink pads", "Round & rectangular sizes", "Custom artwork & logos"],
+  },
+  "tags": {
+    desc: "Custom printed hang tags, product labels, and retail price tags. Thick card stock with optional string, hole punch, and special finishes for a premium brand look.",
+    features: ["14pt\u201318pt card stock", "Custom die-cut shapes", "String or elastic attachment", "Full-color with foil option", "Barcodes & pricing fields"],
+  },
+  "shelf-displays": {
+    desc: "Point-of-sale shelf talkers, wobblers, and danglers to grab attention right at the shelf. Printed on rigid stock with die-cut shapes and adhesive backing.",
+    features: ["Shelf talkers & wobblers", "Rigid PVC or card stock", "Die-cut custom shapes", "Double-sided printing", "Adhesive or clip mounting"],
+  },
+  "table-tents": {
+    desc: "Tabletop tent cards for restaurants, hotels, salons, and events. Self-standing cards that promote specials, menus, and announcements right where customers sit.",
+    features: ["4\u2033\u00d76\u2033 standard or custom sizes", "Self-standing design", "14pt card stock", "UV gloss or matte finish", "Double-sided printing"],
+  },
+  "tickets-coupons": {
+    desc: "Custom printed tickets, coupons, and loyalty punch cards. Numbered, perforated, and designed for events, promotions, and customer reward programs.",
+    features: ["Sequential numbering", "Perforated tear-off stubs", "Full-color printing", "Loyalty punch card format", "Event ticket sizes"],
+  },
+  // ── Stickers (missing entries) ──
+  "sticker-sheets": {
+    desc: "Multiple custom stickers on a single sheet \u2014 die-cut or kiss-cut layouts for branding kits, retail packs, and promotional giveaways.",
+    features: ["Multiple designs per sheet", "Kiss-cut or die-cut", "White, clear, or kraft vinyl", "Gloss or matte lamination", "Custom sheet sizes"],
+  },
+  "kiss-cut-sticker-sheets": {
+    desc: "Easy-peel stickers on a shared backing sheet. Each sticker is individually kiss-cut for effortless peeling while staying neatly organized on the sheet.",
+    features: ["Easy-peel individual stickers", "Shared backing sheet", "Multiple designs per sheet", "Indoor & outdoor vinyl", "Matte or gloss finish"],
+  },
+  "kiss-cut-stickers": {
+    desc: "Individual kiss-cut stickers with a backing border for easy peeling. Perfect for packaging inserts, event handouts, and brand promotions.",
+    features: ["Individual backing border", "Easy peel & stick", "White, clear, or holographic", "Gloss or matte lamination", "Weather-resistant options"],
+  },
+  "roll-labels": {
+    desc: "Custom labels on rolls for product packaging, bottles, jars, and shipping. Available in BOPP, paper, clear, kraft, and freezer-grade materials.",
+    features: ["BOPP, paper, clear, kraft", "Core sizes: 1\u2033 or 3\u2033", "Rolls of 250 to 10,000+", "White ink available", "Die-cut or rectangle"],
+  },
+  // ── Banners (missing entries) ──
+  "mesh-banners": {
+    desc: "Wind-resistant mesh banners with tiny perforations that let air pass through \u2014 ideal for fences, building wraps, and outdoor events in windy locations.",
+    features: ["9oz or 12oz mesh vinyl", "Wind-resistant perforations", "Hemmed edges & grommets", "Full-color digital print", "Custom sizes up to 50 feet"],
+  },
+  "pole-banners": {
+    desc: "Street-style pole banners for light poles, communities, and commercial districts. Single or double-sided with pole pockets and reinforced edges.",
+    features: ["Single or double-sided", "18oz blockout vinyl", "Pole pockets top & bottom", "Reinforced hemmed edges", "Hardware kits available"],
+  },
+  "fabric-banners": {
+    desc: "Lightweight dye-sublimation fabric banners with vibrant, wash-resistant colors. Wrinkle-free and portable \u2014 ideal for trade shows, hanging displays, and indoor events.",
+    features: ["Dye-sublimation printing", "Wrinkle-free polyester", "Machine washable", "Pole pockets & grommets", "Lightweight & portable"],
+  },
+  "trade-show-furniture": {
+    desc: "Branded table covers, runners, and portable furniture for trade shows, exhibitions, and corporate events. Turn any folding table into a branded display.",
+    features: ["6ft & 8ft table covers", "Full-color dye-sub print", "Wrinkle-resistant fabric", "Machine washable", "Matching runners available"],
+  },
+  // ── Canvas (missing entries) ──
+  "classic-canvas-prints": {
+    desc: "Gallery-wrapped canvas prints on premium cotton-poly blend. Stretched over solid wood frames and ready to hang \u2014 the timeless choice for photos, art, and d\u00e9cor.",
+    features: ["Premium cotton-poly canvas", "Solid wood stretcher bars", "Mirror, white, or color edges", "0.75\u2033 or 1.5\u2033 bar depth", "Ready to hang"],
+  },
+  "large-format-canvas": {
+    desc: "Oversized canvas prints up to 60\u2033\u00d796\u2033 for maximum visual impact. Perfect for feature walls, lobbies, and statement pieces.",
+    features: ["Up to 60\u2033 \u00d7 96\u2033", "Gallery-quality resolution", "Premium stretcher bars", "UV-resistant inks", "White glove delivery option"],
+  },
+  "canvas-collages": {
+    desc: "Multi-photo canvas collages \u2014 arrange your favourite memories into a single stunning wall piece with custom layouts.",
+    features: ["Custom photo arrangements", "Up to 30+ photos per canvas", "Multiple layout templates", "Gallery-wrapped edges", "Ready to hang"],
+  },
+  "triptych-canvas-split": {
+    desc: "One image split across 2\u20135 separate canvas panels for a dramatic gallery wall effect. Perfectly aligned with consistent spacing.",
+    features: ["2 to 5 panel splits", "Consistent panel spacing", "Gallery-wrapped edges", "Matching hardware included", "Custom panel sizes"],
+  },
+  "rolled-canvas-prints": {
+    desc: "Unframed canvas prints shipped rolled in a protective tube. Frame it yourself, use your own stretcher bars, or take it to a local framer.",
+    features: ["Unframed & rolled", "Premium cotton-poly blend", "Ships in protective tube", "Archival-quality inks", "Custom sizes available"],
+  },
+  // ── Windows, Walls & Floors (missing entries) ──
+  "wall-graphics": {
+    desc: "Custom wall murals, graphics, and branded accent walls for offices, retail spaces, restaurants, and event venues. Repositionable or permanent adhesive options.",
+    features: ["Repositionable or permanent", "Matte or gloss finish", "Full-wall murals available", "Textured wall compatible", "Custom die-cut shapes"],
+  },
+  "floor-graphics": {
+    desc: "Durable, slip-resistant floor decals for wayfinding, safety markings, branding, and promotional messaging. Anti-slip laminate meets UL 410 standards.",
+    features: ["Anti-slip UL 410 laminate", "Indoor & outdoor rated", "Aggressive floor adhesive", "Custom die-cut shapes", "Removable without residue"],
+  },
+  "window-graphics": {
+    desc: "Full window graphics, perforated films, and frosted designs for storefronts and buildings. Transform your glass into a branding and privacy solution.",
+    features: ["Full coverage or cut designs", "Perforated one-way vision", "Frosted privacy films", "UV protection options", "Professional installation available"],
+  },
+  "decals": {
+    desc: "Adhesive vinyl decals for windows, walls, vehicles, and equipment. Indoor or outdoor durability with easy application and clean removal.",
+    features: ["Indoor & outdoor vinyl", "Permanent or removable", "Full-color digital print", "Custom shapes & sizes", "Easy application"],
+  },
+  "static-clings": {
+    desc: "Removable window clings that stick using static charge \u2014 no adhesive needed. Easy to apply, reposition, and reuse seasonally.",
+    features: ["No adhesive needed", "Reusable & repositionable", "Clear or white vinyl", "Front or back adhesion", "Seasonal swap-friendly"],
+  },
+  "adhesive-films": {
+    desc: "Permanent adhesive window films including frosted, holographic, iridescent, and color options. Transform glass surfaces with decorative and functional films.",
+    features: ["Frosted, holographic, color", "Permanent adhesive", "UV filtering options", "Custom cut to size", "Interior or exterior mount"],
+  },
+  "one-way-vision": {
+    desc: "Perforated window graphics that display your branding outward while maintaining interior visibility. The privacy screen that doubles as advertising.",
+    features: ["50/50 or 60/40 perforation", "See-through from inside", "Full-color exterior print", "UV & weather resistant", "Custom sizes up to 50\u2033 wide"],
+  },
+  "privacy-films": {
+    desc: "Frosted privacy films for office glass, meeting rooms, storefronts, and residential windows. Diffuse light while blocking visibility for a professional look.",
+    features: ["Frosted or etched glass look", "Light-diffusing", "Permanent or removable", "Custom cut patterns", "Logo cut-outs available"],
+  },
+  "window-lettering": {
+    desc: "Custom cut vinyl lettering for storefronts, business hours, door signage, and vehicle identification. Durable outdoor vinyl in 30+ colors.",
+    features: ["Cut vinyl (no background)", "30+ color choices", "Gold, silver, chrome options", "Indoor & outdoor rated", "Easy DIY application"],
+  },
+  // ── Signs (missing entries) ──
+  "a-frames-signs": {
+    desc: "Sidewalk A-frame sandwich boards for restaurants, salons, retail, and open houses. Double-sided coroplast inserts with optional metal frame.",
+    features: ["Double-sided display", "6mm or 10mm coroplast", "Metal A-frame stand", "Panel-only or full kit", "Custom sizes available"],
+  },
+  // ── Vehicles (missing entries) ──
+  "fleet-packages": {
+    desc: "Bulk fleet graphic kits for uniform branding across multiple vehicles. Includes reflective safety markings, logos, and compliance decals.",
+    features: ["Consistent fleet branding", "Reflective safety markings", "Bulk pricing discounts", "Installation guides included", "DOT/CVOR compliant options"],
+  },
+  "dot-mc-numbers": {
+    desc: "USDOT, MC, CVOR, NSC, and TSSA number decals for commercial vehicles. Cut vinyl lettering that meets all federal and provincial regulations.",
+    features: ["USDOT & MC numbers", "CVOR & NSC compliant", "Cut vinyl lettering", "Reflective options available", "Easy DIY application"],
+  },
+  "unit-weight-ids": {
+    desc: "Fleet unit numbers, GVW/tare weight lettering, and equipment ID decals for trucks, trailers, and heavy equipment.",
+    features: ["Fleet unit numbering", "GVW & tare weight", "Equipment ID decals", "Cut vinyl or printed", "Reflective options"],
+  },
+  "spec-labels": {
+    desc: "Fuel type labels, tire pressure decals, and dangerous goods placards for commercial vehicles and equipment compliance.",
+    features: ["Fuel type identification", "Tire pressure & load specs", "TDG placards", "Durable outdoor vinyl", "Regulation-compliant formats"],
+  },
+  "inspection-compliance": {
+    desc: "Vehicle inspection stickers, maintenance tracking labels, and compliance kits for fleet management and regulatory requirements.",
+    features: ["Inspection date stickers", "Maintenance log labels", "Tamper-evident options", "Sequential numbering", "Weatherproof materials"],
+  },
 };
 
 function SubProductContent({ parentSlug }) {
@@ -348,11 +524,12 @@ function ListIcon({ className }) {
   );
 }
 
-function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel }) {
+function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel, parentSlug, idx = 0 }) {
+  const isStamp = parentSlug === "stamps";
   const image = product.images?.[0];
   const image2 = product.images?.[1];
-  const imageSrc = getProductImage(product, product.category);
-  const imageSrc2 = image2?.url || null;
+  const imageSrc = isStamp ? null : getProductImage(product, product.category);
+  const imageSrc2 = isStamp ? null : (image2?.url || null);
   const sizeCount = product.optionsConfig?.sizes?.length || 0;
   const tk = getTurnaround(product);
   const price = product.fromPrice || product.basePrice;
@@ -365,7 +542,9 @@ function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel }) {
     >
       <Link href={href} className="block">
       <div className="relative aspect-[4/3] bg-[var(--color-gray-100)]">
-        {imageSrc ? (
+        {isStamp ? (
+          <StampCardPreview index={idx} />
+        ) : imageSrc ? (
           <>
             <Image
               src={imageSrc}
@@ -431,9 +610,10 @@ function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel }) {
   );
 }
 
-function ProductCardList({ product, href, selectedSpec, t, viewOrderLabel }) {
+function ProductCardList({ product, href, selectedSpec, t, viewOrderLabel, parentSlug, idx = 0 }) {
+  const isStamp = parentSlug === "stamps";
   const image = product.images?.[0];
-  const imageSrc = getProductImage(product, product.category);
+  const imageSrc = isStamp ? null : getProductImage(product, product.category);
   const sizeCount = product.optionsConfig?.sizes?.length || 0;
   const tk = getTurnaround(product);
   const price = product.fromPrice || product.basePrice;
@@ -446,7 +626,9 @@ function ProductCardList({ product, href, selectedSpec, t, viewOrderLabel }) {
     >
       <Link href={href} className="flex min-w-0 flex-1 overflow-hidden">
       <div className="relative w-32 sm:w-40 shrink-0 bg-[var(--color-gray-100)]">
-        {imageSrc ? (
+        {isStamp ? (
+          <StampCardPreview index={idx} />
+        ) : imageSrc ? (
           <Image
             src={imageSrc}
             alt={image?.alt || product.name}
@@ -591,8 +773,8 @@ export default function SubProductLandingClient({
 
         {/* Product Cards */}
         {viewMode === "grid" ? (
-          <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-            {products.map((product) => (
+          <div className="mt-6 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+            {products.map((product, idx) => (
               <ProductCardGrid
                 key={product.id}
                 product={product}
@@ -600,12 +782,14 @@ export default function SubProductLandingClient({
                 selectedSpec={selectedSpec}
                 t={t}
                 viewOrderLabel={viewOrderLabel}
+                parentSlug={parentSlug}
+                idx={idx}
               />
             ))}
           </div>
         ) : (
           <div className="mt-6 flex flex-col gap-3">
-            {products.map((product) => (
+            {products.map((product, idx) => (
               <ProductCardList
                 key={product.id}
                 product={product}
@@ -613,6 +797,8 @@ export default function SubProductLandingClient({
                 selectedSpec={selectedSpec}
                 t={t}
                 viewOrderLabel={viewOrderLabel}
+                parentSlug={parentSlug}
+                idx={idx}
               />
             ))}
           </div>

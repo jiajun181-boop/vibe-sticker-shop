@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { STAMP_FONTS, preloadStampFonts } from "@/lib/stamp/fonts";
+import { useEffect, useRef, useState } from "react";
+import { STAMP_FONTS, preloadStampFonts, loadFont } from "@/lib/stamp/fonts";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function StampFontPicker({ selected, onSelect }) {
   const { t } = useTranslation();
+  const scrollRef = useRef(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -18,6 +19,7 @@ export default function StampFontPicker({ selected, onSelect }) {
         {t("stamp.font")}
       </p>
       <div
+        ref={scrollRef}
         className="flex gap-2 overflow-x-auto pb-2"
         style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none" }}
       >
@@ -25,19 +27,24 @@ export default function StampFontPicker({ selected, onSelect }) {
           <button
             key={f.family}
             type="button"
-            onClick={() => onSelect(f.family)}
-            style={{
-              fontFamily: `"${f.family}", ${f.category === "system" ? "sans-serif" : f.category}`,
-              opacity: ready || f.category === "system" ? 1 : 0.6,
+            onClick={() => {
+              loadFont(f.family);
+              onSelect(f.family);
             }}
-            className={`shrink-0 rounded-xl border-2 px-3 py-1.5 text-sm font-bold transition-all ${
+            className={`shrink-0 rounded-xl border-2 px-4 py-2.5 transition-all ${
               selected === f.family
-                ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
-                : "border-[var(--color-gray-200)] text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
+                ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff] shadow-sm"
+                : "border-[var(--color-gray-200)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-400)]"
             }`}
-            style-snap="start"
+            style={{
+              fontFamily: ready ? `"${f.family}", sans-serif` : "sans-serif",
+              scrollSnapAlign: "start",
+            }}
           >
-            {f.family}
+            <span className="block text-sm font-bold leading-tight">{f.family}</span>
+            <span className={`block text-[10px] ${selected === f.family ? "text-gray-300" : "text-[var(--color-gray-400)]"}`}>
+              {f.category}
+            </span>
           </button>
         ))}
       </div>

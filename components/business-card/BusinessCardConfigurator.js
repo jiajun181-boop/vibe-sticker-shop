@@ -51,6 +51,7 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
   const [customQty, setCustomQty] = useState("");
   const [names, setNames] = useState(1);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploadedFiles, setUploadedFiles] = useState({});
 
   const activeQty = useMemo(() => {
     if (customQty !== "") {
@@ -168,7 +169,11 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
         sizeLabel: config.size.label,
         width: config.size.w,
         height: config.size.h,
-        fileName: uploadedFile?.name || null,
+        fileName: sideId === "double"
+          ? (uploadedFiles.front?.name || uploadedFiles.back?.name
+            ? { front: uploadedFiles.front?.name || null, back: uploadedFiles.back?.name || null }
+            : uploadedFile?.name || null)
+          : uploadedFile?.name || null,
       },
       forceNewLine: true,
     };
@@ -187,6 +192,7 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
     totalCards,
     hasMultiName,
     uploadedFile,
+    uploadedFiles,
     t,
   ]);
 
@@ -480,11 +486,18 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
             )}
 
             {/* ARTWORK UPLOAD STEP */}
-            <ConfigStep number={++stepNum} title={t("bc.artwork")} subtitle="Upload now or send later — it's optional" optional>
+            <ConfigStep number={++stepNum} title={t("bc.artwork")} subtitle={sideId === "double" ? (t("bc.artworkHintDouble") || "Upload front & back files separately, or send later") : "Upload now or send later — it's optional"} optional>
               <ArtworkUpload
                 uploadedFile={uploadedFile}
                 onUploaded={setUploadedFile}
                 onRemove={() => setUploadedFile(null)}
+                fileSlots={sideId === "double" ? [
+                  { key: "front", label: t("bc.artwork.front") || "Front" },
+                  { key: "back", label: t("bc.artwork.back") || "Back" },
+                ] : undefined}
+                uploadedFiles={uploadedFiles}
+                onFileUploaded={(file, slotKey) => setUploadedFiles((prev) => ({ ...prev, [slotKey]: file }))}
+                onFileRemove={(slotKey) => setUploadedFiles((prev) => { const next = { ...prev }; delete next[slotKey]; return next; })}
                 t={t}
               />
             </ConfigStep>

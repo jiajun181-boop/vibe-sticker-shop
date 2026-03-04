@@ -1,42 +1,24 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { STAMP_BORDERS, drawBorderPreview } from "@/lib/stamp/borders";
+import { BORDER_LIST, drawBorder } from "@/lib/stamp/borders";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
-const PREVIEW_SIZE = 40;
-
-function BorderThumb({ borderId, color, isSelected, onClick }) {
-  const canvasRef = useRef(null);
-
+function MiniPreview({ borderId, color }) {
+  const ref = useRef(null);
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = PREVIEW_SIZE * dpr;
-    canvas.height = PREVIEW_SIZE * dpr;
-    const ctx = canvas.getContext("2d");
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    drawBorderPreview(ctx, borderId, PREVIEW_SIZE, color);
+    const c = ref.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    const s = 40;
+    c.width = s * 2;
+    c.height = s * 2;
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
+    ctx.clearRect(0, 0, s, s);
+    // Draw border in a mini circle
+    drawBorder(ctx, borderId, "round", s / 2, s / 2, s - 4, s - 4, s / 2 - 2, color);
   }, [borderId, color]);
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`shrink-0 rounded-lg border-2 p-0.5 transition-all ${
-        isSelected
-          ? "border-[var(--color-gray-900)] ring-2 ring-gray-300 scale-110"
-          : "border-[var(--color-gray-200)] hover:border-[var(--color-gray-400)]"
-      }`}
-    >
-      <canvas
-        ref={canvasRef}
-        style={{ width: PREVIEW_SIZE, height: PREVIEW_SIZE }}
-        className="rounded"
-      />
-    </button>
-  );
+  return <canvas ref={ref} className="h-10 w-10" />;
 }
 
 export default function StampBorderPicker({ selected, color, onSelect }) {
@@ -51,16 +33,23 @@ export default function StampBorderPicker({ selected, color, onSelect }) {
         className="flex gap-2 overflow-x-auto pb-2"
         style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none" }}
       >
-        {STAMP_BORDERS.map((b) => (
-          <div key={b.id} className="flex flex-col items-center gap-1 shrink-0">
-            <BorderThumb
-              borderId={b.id}
-              color={color || "#111111"}
-              isSelected={selected === b.id}
-              onClick={() => onSelect(b.id)}
-            />
-            <span className="text-[9px] text-[var(--color-gray-500)]">{t(b.labelKey)}</span>
-          </div>
+        {BORDER_LIST.map((b) => (
+          <button
+            key={b.id}
+            type="button"
+            onClick={() => onSelect(b.id)}
+            className={`flex shrink-0 flex-col items-center gap-1 rounded-xl border-2 px-3 py-2 transition-all ${
+              selected === b.id
+                ? "border-[var(--color-gray-900)] bg-[var(--color-gray-50)] shadow-sm"
+                : "border-[var(--color-gray-200)] bg-white hover:border-[var(--color-gray-400)]"
+            }`}
+            style={{ scrollSnapAlign: "start" }}
+          >
+            <MiniPreview borderId={b.id} color={color} />
+            <span className="text-[10px] font-medium text-[var(--color-gray-600)]">
+              {t(b.labelKey)}
+            </span>
+          </button>
         ))}
       </div>
     </div>

@@ -14,50 +14,66 @@ const BASE = "/shop/windows-walls-floors";
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
+/* ── Item slug → i18n key map ── */
+const ITEM_I18N = {
+  "one-way-vision": "wwf.item.oneWayVision",
+  "frosted-window-film": "wwf.item.frostedFilm",
+  "static-cling": "wwf.item.staticCling",
+  "transparent-color-film": "wwf.item.transparentColor",
+  "blockout-vinyl": "wwf.item.blockoutVinyl",
+  "opaque-window-graphics": "wwf.item.opaqueGraphics",
+  "glass-waistline": "wwf.item.glassWaistline",
+  "wall-graphics": "wwf.item.wallGraphics",
+  "floor-graphics": "wwf.item.floorGraphics",
+  "decals": "wwf.item.customDecals",
+  "vinyl-banners": "wwf.item.vinylBanners",
+  "telescopic-backdrop": "wwf.item.displayBackdrop",
+};
+
 /* ── Section definitions ── */
 const SECTIONS = [
   {
     key: "window",
-    title: "Window Graphics & Films",
-    subtitle: "Privacy films, one-way vision, frosted vinyl, and decorative window graphics.",
+    titleKey: "wwf.section.window.title",
+    subtitleKey: "wwf.section.window.subtitle",
     size: "large",
     items: [
-      { key: "one-way-vision", name: "One-Way Vision Film", href: `${BASE}/one-way-vision`, gradient: "from-sky-400 to-blue-400" },
-      { key: "frosted-window-film", name: "Frosted Window Film", href: `${BASE}/frosted-window-film`, gradient: "from-slate-300 to-blue-200" },
-      { key: "static-cling", name: "Static Cling Film", href: `${BASE}/static-cling`, gradient: "from-cyan-400 to-teal-400" },
-      { key: "transparent-color-film", name: "Transparent Color Film", href: `${BASE}/transparent-color-film`, gradient: "from-violet-400 to-fuchsia-400" },
-      { key: "blockout-vinyl", name: "Blockout Vinyl", href: `${BASE}/blockout-vinyl`, gradient: "from-gray-500 to-slate-600" },
-      { key: "opaque-window-graphics", name: "Opaque Window Graphics", href: `${BASE}/opaque-window-graphics`, gradient: "from-indigo-400 to-blue-400" },
-      { key: "glass-waistline", name: "Glass Waistline Strips", href: `${BASE}/glass-waistline`, gradient: "from-amber-300 to-orange-300" },
+      { key: "one-way-vision", href: `${BASE}/one-way-vision`, gradient: "from-sky-400 to-blue-400" },
+      { key: "frosted-window-film", href: `${BASE}/frosted-window-film`, gradient: "from-slate-300 to-blue-200" },
+      { key: "static-cling", href: `${BASE}/static-cling`, gradient: "from-cyan-400 to-teal-400" },
+      { key: "transparent-color-film", href: `${BASE}/transparent-color-film`, gradient: "from-violet-400 to-fuchsia-400" },
+      { key: "blockout-vinyl", href: `${BASE}/blockout-vinyl`, gradient: "from-gray-500 to-slate-600" },
+      { key: "opaque-window-graphics", href: `${BASE}/opaque-window-graphics`, gradient: "from-indigo-400 to-blue-400" },
+      { key: "glass-waistline", href: `${BASE}/glass-waistline`, gradient: "from-amber-300 to-orange-300" },
     ],
   },
   {
     key: "wall",
-    title: "Wall Graphics & Murals",
-    subtitle: "Custom wall decals, murals, and adhesive graphics for any surface.",
+    titleKey: "wwf.section.wall.title",
+    subtitleKey: "wwf.section.wall.subtitle",
     size: "large",
     items: [
-      { key: "wall-graphics", name: "Wall Graphics", href: `${BASE}/wall-graphics`, gradient: "from-emerald-400 to-teal-400" },
+      { key: "wall-graphics", href: `${BASE}/wall-graphics`, gradient: "from-emerald-400 to-teal-400" },
     ],
   },
   {
     key: "floor",
-    title: "Floor Graphics & Decals",
-    subtitle: "Anti-slip floor decals for retail, events, and wayfinding.",
+    titleKey: "wwf.section.floor.title",
+    subtitleKey: "wwf.section.floor.subtitle",
     size: "large",
     items: [
-      { key: "floor-graphics", name: "Floor Graphics", href: `${BASE}/floor-graphics`, gradient: "from-orange-400 to-red-400" },
+      { key: "floor-graphics", href: `${BASE}/floor-graphics`, gradient: "from-orange-400 to-red-400" },
     ],
   },
   {
     key: "decals-banners",
-    title: "Decals, Banners & Backdrops",
-    subtitle: "Vinyl decals, banners, and display backdrops for walls and events.",
+    titleKey: "wwf.section.decalsBanners.title",
+    subtitleKey: "wwf.section.decalsBanners.subtitle",
     size: "large",
     items: [
-      { key: "decals", name: "Custom Decals", href: `${BASE}/decals`, gradient: "from-rose-400 to-pink-400" },
-      { key: "vinyl-banners", name: "Vinyl Banners", href: "/shop/banners-displays/vinyl-banners", gradient: "from-sky-400 to-blue-400" },
-      { key: "telescopic-backdrop", name: "Display Backdrop", href: "/shop/banners-displays/telescopic-backdrop", gradient: "from-violet-400 to-purple-400" },
+      { key: "decals", href: `${BASE}/decals`, gradient: "from-rose-400 to-pink-400" },
+      { key: "vinyl-banners", href: "/shop/banners-displays/vinyl-banners", gradient: "from-sky-400 to-blue-400" },
+      { key: "telescopic-backdrop", href: "/shop/banners-displays/telescopic-backdrop", gradient: "from-violet-400 to-purple-400" },
     ],
   },
 ];
@@ -67,6 +83,7 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
   const [hovered, setHovered] = useState(false);
   const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
   const isSvg = showUrl && isSvgImage(showUrl);
+  const name = t(ITEM_I18N[item.key] || item.key);
   return (
     <Link
       href={item.href}
@@ -77,21 +94,21 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
       <div className={`relative overflow-hidden bg-[var(--color-gray-100)] ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
         {showUrl ? (
           isSvg ? (
-            <img src={showUrl} alt={item.name} className="h-full w-full object-cover transition-opacity duration-300" />
+            <img src={showUrl} alt={name} className="h-full w-full object-cover transition-opacity duration-300" />
           ) : (
-            <Image src={showUrl} alt={item.name} fill className="object-cover transition-opacity duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+            <Image src={showUrl} alt={name} fill className="object-cover transition-opacity duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
           )
         ) : (
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
             <p className="px-6 text-center text-lg font-bold text-[#fff] drop-shadow-md">
-              {item.name}
+              {name}
             </p>
           </div>
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-base" : "text-sm"}`}>
-          {item.name}
+          {name}
         </h3>
         <div className="mt-auto pt-3 flex items-center justify-between">
           {price > 0 ? (
@@ -122,12 +139,12 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfIm
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: "Windows, Walls & Floors" },
+            { label: t("wwf.breadcrumb") },
           ]}
         />
 
         <div className="mt-6">
-          <CategoryHero category="windows-walls-floors" title="Windows, Walls & Floors" icon="🪟" />
+          <CategoryHero category="windows-walls-floors" title={t("wwf.title")} icon="🪟" />
         </div>
 
         {/* Sections */}
@@ -137,8 +154,8 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfIm
 
           return (
             <section key={section.key} className="mt-12">
-              <h2 className="text-xl font-semibold tracking-tight">{section.title}</h2>
-              <p className="mt-1 text-sm text-[var(--color-gray-500)]">{section.subtitle}</p>
+              <h2 className="text-xl font-semibold tracking-tight">{t(section.titleKey)}</h2>
+              <p className="mt-1 text-sm text-[var(--color-gray-500)]">{t(section.subtitleKey)}</p>
               <div className={`mt-4 grid gap-4 ${
                 visibleItems.length <= 2
                   ? "grid-cols-1 sm:grid-cols-2"
@@ -179,26 +196,26 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfIm
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Professional Installation
+              {t("wwf.vp1.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              All films ship ready for professional or DIY installation. On-site installation available in the GTA.
+              {t("wwf.vp1.desc")}
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Indoor & Outdoor Rated
+              {t("wwf.vp2.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              UV-protective laminates extend lifespan to 3&ndash;5 years in direct sunlight. Rated for both indoor and outdoor use.
+              {t("wwf.vp2.desc")}
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Custom Sizes
+              {t("wwf.vp3.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Any size, any shape. Priced per square foot. Upload your dimensions and get an instant quote.
+              {t("wwf.vp3.desc")}
             </p>
             <Link
               href="/quote"

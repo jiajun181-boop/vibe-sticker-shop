@@ -15,51 +15,68 @@ const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 /* ── Section definitions ── */
+const ITEM_I18N = {
+  "vinyl-banners": "bd.item.vinylBanners",
+  "mesh-banners": "bd.item.meshBanners",
+  "pole-banners": "bd.item.poleBanners",
+  "double-sided-banners": "bd.item.doubleSided",
+  "roll-up-banners": "bd.item.rollUp",
+  "x-banner-frame-print": "bd.item.xBanner",
+  "tabletop-x-banner": "bd.item.tabletopX",
+  "deluxe-tabletop-retractable-a3": "bd.item.tabletopRetractable",
+  "telescopic-backdrop": "bd.item.telescopic",
+  "popup-display-curved-8ft": "bd.item.popupDisplay",
+  "table-cloth": "bd.item.tableCloth",
+  "feather-flags": "bd.item.featherFlags",
+  "teardrop-flags": "bd.item.teardropFlags",
+  "outdoor-canopy-tent-10x10": "bd.item.canopyTent",
+};
+
 const SECTIONS = [
   {
     key: "banners",
-    title: "Custom Banners",
-    subtitle: "Indoor & outdoor banners printed on heavy-duty vinyl and mesh.",
+    titleKey: "bd.section.banners.title",
+    subtitleKey: "bd.section.banners.subtitle",
     size: "large",
     items: [
-      { key: "vinyl-banners", name: "Vinyl Banners", href: `${BASE}/vinyl-banners`, gradient: "from-rose-400 to-pink-400" },
-      { key: "mesh-banners", name: "Mesh Banners", href: `${BASE}/mesh-banners`, gradient: "from-sky-400 to-cyan-400" },
-      { key: "pole-banners", name: "Pole Banners", href: `${BASE}/pole-banners`, gradient: "from-amber-400 to-orange-400" },
-      { key: "double-sided-banners", name: "Two-Sided Banners", href: `${BASE}/double-sided-banners`, gradient: "from-violet-400 to-fuchsia-400" },
+      { key: "vinyl-banners", href: `${BASE}/vinyl-banners`, gradient: "from-rose-400 to-pink-400" },
+      { key: "mesh-banners", href: `${BASE}/mesh-banners`, gradient: "from-sky-400 to-cyan-400" },
+      { key: "pole-banners", href: `${BASE}/pole-banners`, gradient: "from-amber-400 to-orange-400" },
+      { key: "double-sided-banners", href: `${BASE}/double-sided-banners`, gradient: "from-violet-400 to-fuchsia-400" },
     ],
   },
   {
     key: "stands",
-    title: "Banner Stands & Displays",
-    subtitle: "Portable retractable and X-banner stands for events and retail.",
+    titleKey: "bd.section.stands.title",
+    subtitleKey: "bd.section.stands.subtitle",
     size: "medium",
     items: [
-      { key: "roll-up-banners", name: "Roll-Up Banners", href: `${BASE}/roll-up-banners`, gradient: "from-emerald-400 to-teal-400" },
-      { key: "x-banner-frame-print", name: "X-Banner Stand", href: `${BASE}/x-banner-frame-print`, gradient: "from-indigo-400 to-blue-400" },
-      { key: "tabletop-x-banner", name: "Tabletop X-Banner", href: `${BASE}/tabletop-x-banner`, gradient: "from-pink-400 to-rose-400" },
-      { key: "deluxe-tabletop-retractable-a3", name: "Tabletop Retractable", href: `${BASE}/deluxe-tabletop-retractable-a3`, gradient: "from-amber-400 to-yellow-400" },
+      { key: "roll-up-banners", href: `${BASE}/roll-up-banners`, gradient: "from-emerald-400 to-teal-400" },
+      { key: "x-banner-frame-print", href: `${BASE}/x-banner-frame-print`, gradient: "from-indigo-400 to-blue-400" },
+      { key: "tabletop-x-banner", href: `${BASE}/tabletop-x-banner`, gradient: "from-pink-400 to-rose-400" },
+      { key: "deluxe-tabletop-retractable-a3", href: `${BASE}/deluxe-tabletop-retractable-a3`, gradient: "from-amber-400 to-yellow-400" },
     ],
   },
   {
     key: "tradeshow",
-    title: "Trade Show & Backdrops",
-    subtitle: "Large-format backdrops and displays for trade shows and events.",
+    titleKey: "bd.section.tradeshow.title",
+    subtitleKey: "bd.section.tradeshow.subtitle",
     size: "medium",
     items: [
-      { key: "telescopic-backdrop", name: "Telescopic Backdrop", href: `${BASE}/telescopic-backdrop`, gradient: "from-slate-400 to-gray-400" },
-      { key: "popup-display-curved-8ft", name: "Pop-Up Display 8ft", href: `${BASE}/popup-display-curved-8ft`, gradient: "from-blue-400 to-indigo-400" },
-      { key: "table-cloth", name: "Custom Table Cloth", href: `${BASE}/table-cloth`, gradient: "from-teal-400 to-cyan-400" },
+      { key: "telescopic-backdrop", href: `${BASE}/telescopic-backdrop`, gradient: "from-slate-400 to-gray-400" },
+      { key: "popup-display-curved-8ft", href: `${BASE}/popup-display-curved-8ft`, gradient: "from-blue-400 to-indigo-400" },
+      { key: "table-cloth", href: `${BASE}/table-cloth`, gradient: "from-teal-400 to-cyan-400" },
     ],
   },
   {
     key: "outdoor",
-    title: "Outdoor Flags & Tents",
-    subtitle: "Feather flags, teardrop flags, and canopy tents for outdoor events.",
+    titleKey: "bd.section.outdoor.title",
+    subtitleKey: "bd.section.outdoor.subtitle",
     size: "medium",
     items: [
-      { key: "feather-flags", name: "Feather Flags", href: `${BASE}/feather-flags`, gradient: "from-orange-400 to-red-400" },
-      { key: "teardrop-flags", name: "Teardrop Flags", href: `${BASE}/teardrop-flags`, gradient: "from-cyan-400 to-sky-400" },
-      { key: "outdoor-canopy-tent-10x10", name: "Canopy Tent 10×10", href: `${BASE}/outdoor-canopy-tent-10x10`, gradient: "from-emerald-400 to-green-400" },
+      { key: "feather-flags", href: `${BASE}/feather-flags`, gradient: "from-orange-400 to-red-400" },
+      { key: "teardrop-flags", href: `${BASE}/teardrop-flags`, gradient: "from-cyan-400 to-sky-400" },
+      { key: "outdoor-canopy-tent-10x10", href: `${BASE}/outdoor-canopy-tent-10x10`, gradient: "from-emerald-400 to-green-400" },
     ],
   },
 ];
@@ -69,6 +86,7 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
   const [hovered, setHovered] = useState(false);
   const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
   const isSvg = showUrl && isSvgImage(showUrl);
+  const name = t(ITEM_I18N[item.key] || item.key);
   return (
     <Link
       href={item.href}
@@ -79,21 +97,21 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
       <div className={`relative overflow-hidden bg-[var(--color-gray-100)] ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
         {showUrl ? (
           isSvg ? (
-            <img src={showUrl} alt={item.name} className="h-full w-full object-cover transition-opacity duration-300" />
+            <img src={showUrl} alt={name} className="h-full w-full object-cover transition-opacity duration-300" />
           ) : (
-            <Image src={showUrl} alt={item.name} fill className="object-cover transition-opacity duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+            <Image src={showUrl} alt={name} fill className="object-cover transition-opacity duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
           )
         ) : (
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
             <p className="px-6 text-center text-lg font-bold text-[#fff] drop-shadow-md">
-              {item.name}
+              {name}
             </p>
           </div>
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-base" : "text-sm"}`}>
-          {item.name}
+          {name}
         </h3>
         <div className="mt-auto pt-3 flex items-center justify-between">
           {price > 0 ? (
@@ -124,12 +142,12 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: "Banners & Displays" },
+            { label: t("bd.breadcrumb") },
           ]}
         />
 
         <div className="mt-6">
-          <CategoryHero category="banners-displays" title="Banners & Displays" icon="🎪" />
+          <CategoryHero category="banners-displays" title={t("bd.title")} icon="🎪" />
         </div>
 
         {/* Sections */}
@@ -139,8 +157,8 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
 
           return (
             <section key={section.key} className="mt-12">
-              <h2 className="text-xl font-semibold tracking-tight">{section.title}</h2>
-              <p className="mt-1 text-sm text-[var(--color-gray-500)]">{section.subtitle}</p>
+              <h2 className="text-xl font-semibold tracking-tight">{t(section.titleKey)}</h2>
+              <p className="mt-1 text-sm text-[var(--color-gray-500)]">{t(section.subtitleKey)}</p>
               <div className={`mt-4 grid gap-4 ${
                 section.size === "large"
                   ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
@@ -181,26 +199,26 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Heavy-Duty Materials
+              {t("bd.vp1.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              13oz scrim vinyl, mesh wind-through, and premium polyester fabrics. Built for Canadian weather.
+              {t("bd.vp1.desc")}
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Finishing Options
+              {t("bd.vp2.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Grommets, pole pockets, hemmed edges, and wind slits included. Hardware ships with every stand.
+              {t("bd.vp2.desc")}
             </p>
           </div>
           <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
             <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              Same Day Production
+              {t("bd.vp3.title")}
             </h3>
             <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              Rush production available on vinyl banners and roll-up stands. Order before 12pm for same day GTA pickup.
+              {t("bd.vp3.desc")}
             </p>
           </div>
         </div>

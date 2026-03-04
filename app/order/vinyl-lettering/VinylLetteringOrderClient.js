@@ -99,6 +99,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
   const [fontId, setFontId] = useState("arial");
   const [turnaroundId, setTurnaroundId] = useState("standard");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [showAllFonts, setShowAllFonts] = useState(false);
 
   // Logo mode dimensions
   const [logoWidth, setLogoWidth] = useState("6");
@@ -394,7 +395,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
           {type === "text" && (
             <Section label={t("vl.font.label")}>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {FONTS.map((font) => (
+                {(showAllFonts ? FONTS : FONTS.slice(0, 4)).map((font) => (
                   <button
                     key={font.id}
                     type="button"
@@ -410,6 +411,15 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
                   </button>
                 ))}
               </div>
+              {!showAllFonts && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllFonts(true)}
+                  className="mt-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  {t("vl.font.showMore") || `+ ${FONTS.length - 4} more fonts`}
+                </button>
+              )}
             </Section>
           )}
 

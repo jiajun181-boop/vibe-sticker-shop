@@ -360,7 +360,7 @@ export default function StampEditor({
             {t("stamp.sizeReference")}
           </button>
         </div>
-        <div className="relative mx-auto max-w-[280px] sm:max-w-[400px] lg:max-w-[600px]" style={{ aspectRatio: "1/1" }}>
+        <div className="relative mx-auto w-full max-w-[260px] sm:max-w-[400px] xl:max-w-[600px]" style={{ aspectRatio: "1/1" }}>
           <canvas
             ref={canvasRef}
             style={{ width: "100%", height: "100%" }}

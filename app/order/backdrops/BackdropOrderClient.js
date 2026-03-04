@@ -151,7 +151,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
     if (!quoteData || activeQty <= 0 || !size) return null;
     return {
       id: `backdrops-${typeId}-${size.id}`,
-      name: `${t("bd.title")} — ${t(`bd.type.${typeId}`)} ${size.label}`,
+      name: `${t("bk.title")} — ${t(`bd.type.${typeId}`)} ${size.label}`,
       slug: "backdrops",
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
@@ -174,7 +174,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
     if (!item) return;
     addItem(item);
     openCart();
-    showSuccessToast(t("bd.addedToCart"));
+    showSuccessToast(t("bk.addedToCart"));
   }
 
   async function handleBuyNow() {
@@ -216,18 +216,18 @@ export default function BackdropOrderClient({ productImages = [] }) {
       <Breadcrumbs
         items={[
           { label: t("nav.shop"), href: "/shop" },
-          { label: t("bd.breadcrumb"), href: "/shop/banners-displays" },
-          { label: t("bd.order") },
+          { label: t("bk.breadcrumb"), href: "/shop/banners-displays" },
+          { label: t("bk.order") },
         ]}
       />
 
       <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-        {t("bd.title")}
+        {t("bk.title")}
       </h1>
 
       {productImages.length > 0 && (
         <div className="mb-8">
-          <ImageGallery images={productImages} productName={t("bd.title")} />
+          <ImageGallery images={productImages} productName={t("bk.title")} />
         </div>
       )}
 
@@ -236,7 +236,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
         <div className="space-y-8 lg:col-span-3">
 
           {/* Type */}
-          <Section label={t("bd.type.label")}>
+          <Section label={t("bk.type.label")}>
             <div className="grid grid-cols-3 gap-3">
               {TYPES.map((tp) => (
                 <button
@@ -259,7 +259,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
           </Section>
 
           {/* Size */}
-          <Section label={t("bd.size")}>
+          <Section label={t("bk.size")}>
             <div className="flex flex-wrap gap-2">
               {availableSizes.map((s) => (
                 <Chip key={s.id} active={sizeId === s.id} onClick={() => setSizeId(s.id)}>
@@ -270,7 +270,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
           </Section>
 
           {/* Frame */}
-          <Section label={t("bd.frame.label")}>
+          <Section label={t("bk.frame.label")}>
             <div className="flex flex-wrap gap-2">
               {FRAMES.map((f) => (
                 <Chip key={f.id} active={frame === f.id} onClick={() => setFrame(f.id)}>
@@ -284,7 +284,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
           </Section>
 
           {/* Carrying Case */}
-          <Section label={t("bd.case.label")}>
+          <Section label={t("bk.case.label")}>
             <div className="flex flex-wrap gap-2">
               {CASES.map((c) => (
                 <Chip key={c.id} active={carryCase === c.id} onClick={() => setCarryCase(c.id)}>
@@ -298,7 +298,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
           </Section>
 
           {/* Quantity */}
-          <Section label={t("bd.quantity")}>
+          <Section label={t("bk.quantity")}>
             <div className="flex flex-wrap gap-2">
               {QUANTITIES.map((q) => (
                 <Chip
@@ -311,7 +311,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
               ))}
             </div>
             <div className="mt-3 flex items-center gap-2">
-              <label className="text-xs text-gray-500">{t("bd.customQty")}:</label>
+              <label className="text-xs text-gray-500">{t("bk.customQty")}:</label>
               <input
                 type="number"
                 min="1"
@@ -325,9 +325,9 @@ export default function BackdropOrderClient({ productImages = [] }) {
           </Section>
 
           {/* File Upload */}
-          <Section label={t("bd.artwork")} optional>
+          <Section label={t("bk.artwork")} optional>
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="mb-3 text-xs text-gray-600">{t("bd.uploadHint")}</p>
+              <p className="mb-3 text-xs text-gray-600">{t("bk.uploadHint")}</p>
               {uploadedFile ? (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-800">{uploadedFile.name}</span>
@@ -336,7 +336,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
                     onClick={() => setUploadedFile(null)}
                     className="text-xs text-red-500 hover:text-red-700"
                   >
-                    {t("bd.remove")}
+                    {t("bk.remove")}
                   </button>
                 </div>
               ) : (
@@ -362,14 +362,14 @@ export default function BackdropOrderClient({ productImages = [] }) {
         {/* ── RIGHT: Summary ── */}
         <aside className="hidden lg:col-span-2 lg:block">
           <div className="sticky top-24 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-base font-bold text-gray-900">{t("bd.summary")}</h2>
+            <h2 className="text-base font-bold text-gray-900">{t("bk.summary")}</h2>
 
             <dl className="space-y-2 text-sm">
-              <Row label={t("bd.type.label")} value={t(`bd.type.${typeId}`)} />
-              <Row label={t("bd.size")} value={size?.label || "\u2014"} />
-              <Row label={t("bd.frame.label")} value={t(`bd.frame.${frame}`)} />
-              <Row label={t("bd.case.label")} value={t(`bd.case.${carryCase}`)} />
-              <Row label={t("bd.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
+              <Row label={t("bk.type.label")} value={t(`bd.type.${typeId}`)} />
+              <Row label={t("bk.size")} value={size?.label || "\u2014"} />
+              <Row label={t("bk.frame.label")} value={t(`bd.frame.${frame}`)} />
+              <Row label={t("bk.case.label")} value={t(`bd.case.${carryCase}`)} />
+              <Row label={t("bk.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
             </dl>
 
             <hr className="border-gray-100" />
@@ -384,26 +384,26 @@ export default function BackdropOrderClient({ productImages = [] }) {
               <p className="text-xs text-red-500">{quoteError}</p>
             ) : quoteData ? (
               <dl className="space-y-2 text-sm">
-                <Row label={t("bd.basePrice")} value={formatCad(subtotalCents)} />
+                <Row label={t("bk.basePrice")} value={formatCad(subtotalCents)} />
                 {frameSurcharge > 0 && (
                   <Row label={t(`bd.frame.${frame}`)} value={`+ ${formatCad(frameSurcharge)}`} />
                 )}
                 {caseSurcharge > 0 && (
                   <Row label={t(`bd.case.${carryCase}`)} value={`+ ${formatCad(caseSurcharge)}`} />
                 )}
-                <Row label={t("bd.subtotal")} value={formatCad(adjustedSubtotal)} />
+                <Row label={t("bk.subtotal")} value={formatCad(adjustedSubtotal)} />
                 <div className="flex justify-between border-t border-gray-100 pt-2">
-                  <dt className="font-semibold text-gray-900">{t("bd.total")}</dt>
+                  <dt className="font-semibold text-gray-900">{t("bk.total")}</dt>
                   <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
                 </div>
                 <div className="pt-1">
                   <p className="text-[11px] text-gray-400">
-                    {formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("bd.each")}
+                    {formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("bk.each")}
                   </p>
                 </div>
               </dl>
             ) : (
-              <p className="text-xs text-gray-400">{t("bd.selectOptions")}</p>
+              <p className="text-xs text-gray-400">{t("bk.selectOptions")}</p>
             )}
 
             <div className="space-y-3">
@@ -417,7 +417,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
                     : "cursor-not-allowed bg-gray-200 text-gray-400"
                 }`}
               >
-                {t("bd.addToCart")}
+                {t("bk.addToCart")}
               </button>
               <button
                 type="button"
@@ -429,14 +429,14 @@ export default function BackdropOrderClient({ productImages = [] }) {
                     : "cursor-not-allowed border-gray-200 text-gray-400"
                 }`}
               >
-                {buyNowLoading ? t("bd.processing") : t("bd.buyNow")}
+                {buyNowLoading ? t("bk.processing") : t("bk.buyNow")}
               </button>
             </div>
 
             <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
-              <span>{t("bd.badge.events")}</span>
+              <span>{t("bk.badge.events")}</span>
               <span className="text-gray-300">|</span>
-              <span>{t("bd.badge.shipping")}</span>
+              <span>{t("bk.badge.shipping")}</span>
             </div>
           </div>
         </aside>
@@ -466,7 +466,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">{t("bd.selectOptions")}</p>
+              <p className="text-sm text-gray-400">{t("bk.selectOptions")}</p>
             )}
           </div>
           <button
@@ -479,7 +479,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
                 : "cursor-not-allowed bg-gray-200 text-gray-400"
             }`}
           >
-            {t("bd.addToCart")}
+            {t("bk.addToCart")}
           </button>
         </div>
       </div>

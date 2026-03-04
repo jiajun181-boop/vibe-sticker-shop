@@ -15,31 +15,50 @@ const formatCad = (cents) =>
     cents / 100
   );
 
+/* ── Item slug → i18n key map ── */
+const ITEM_I18N = {
+  "canvas-standard": "cc.item.standard",
+  "canvas-gallery-wrap": "cc.item.galleryWrap",
+  "canvas-framed": "cc.item.framed",
+  "canvas-split-2": "cc.item.split2",
+  "canvas-split-3": "cc.item.split3",
+  "canvas-split-5": "cc.item.split5",
+  "canvas-panoramic": "cc.item.panoramic",
+  "canvas-custom-oversize": "cc.item.oversize",
+};
+
+const ACCENT_I18N = {
+  "Classic": "cc.accent.classic",
+  "Best Seller": "cc.accent.bestSeller",
+  "Premium Frame": "cc.accent.premiumFrame",
+  "Diptych": "cc.accent.diptych",
+  "Triptych": "cc.accent.triptych",
+  "Large Statement": "cc.accent.largeStatement",
+  "Wide Format": "cc.accent.wideFormat",
+  "Quote Required": "cc.accent.quoteRequired",
+};
+
 const SECTIONS = [
   {
     key: "classic-framed",
-    title: "Classic & Framed Canvas",
-    subtitle:
-      "Timeless wall art formats for portraits, family photos, and interior decor projects.",
+    titleKey: "cc.section.classic.title",
+    subtitleKey: "cc.section.classic.subtitle",
     layout: "elegant-grid",
     items: [
       {
         key: "canvas-standard",
-        name: "Standard Canvas Prints",
         href: `${BASE}/canvas-standard`,
         gradient: "from-stone-300 via-zinc-200 to-neutral-100",
         accent: "Classic",
       },
       {
         key: "canvas-gallery-wrap",
-        name: "Gallery Wrap Canvas",
         href: `${BASE}/canvas-gallery-wrap`,
         gradient: "from-amber-200 via-orange-100 to-stone-50",
         accent: "Best Seller",
       },
       {
         key: "canvas-framed",
-        name: "Framed Canvas Prints (Floating Frame)",
         href: `${BASE}/canvas-framed`,
         gradient: "from-slate-300 via-zinc-200 to-stone-100",
         accent: "Premium Frame",
@@ -48,28 +67,24 @@ const SECTIONS = [
   },
   {
     key: "multi-panel",
-    title: "Multi-Panel Splits (Statement Pieces)",
-    subtitle:
-      "Create a dramatic focal point with split-panel sets for living rooms, offices, and hospitality spaces.",
+    titleKey: "cc.section.multiPanel.title",
+    subtitleKey: "cc.section.multiPanel.subtitle",
     layout: "statement-grid",
     items: [
       {
         key: "canvas-split-2",
-        name: "2-Panel Canvas Set (Diptych)",
         href: `${BASE}/canvas-split-2`,
         gradient: "from-emerald-200 via-teal-100 to-cyan-50",
         accent: "Diptych",
       },
       {
         key: "canvas-split-3",
-        name: "3-Panel Canvas Set (Triptych)",
         href: `${BASE}/canvas-split-3`,
         gradient: "from-violet-200 via-fuchsia-100 to-rose-50",
         accent: "Triptych",
       },
       {
         key: "canvas-split-5",
-        name: "5-Panel Canvas Set",
         href: `${BASE}/canvas-split-5`,
         gradient: "from-sky-200 via-indigo-100 to-blue-50",
         accent: "Large Statement",
@@ -78,21 +93,18 @@ const SECTIONS = [
   },
   {
     key: "panoramic-oversize",
-    title: "Panoramic & Large Format",
-    subtitle:
-      "Wide-format art for feature walls, commercial interiors, and oversized custom dimensions.",
+    titleKey: "cc.section.panoramic.title",
+    subtitleKey: "cc.section.panoramic.subtitle",
     layout: "wide-grid",
     items: [
       {
         key: "canvas-panoramic",
-        name: "Panoramic Canvas Prints",
         href: `${BASE}/canvas-panoramic`,
         gradient: "from-blue-200 via-cyan-100 to-sky-50",
         accent: "Wide Format",
       },
       {
         key: "canvas-custom-oversize",
-        name: "Oversize / Custom Dimensions",
         href: "/quote",
         gradient: "from-zinc-300 via-stone-200 to-neutral-100",
         accent: "Quote Required",
@@ -129,6 +141,8 @@ function CanvasCard({ item, price, variant = "standard", imageUrl, t }) {
   const isLarge = variant === "large";
   const isWide = variant === "wide";
   const isSvg = imageUrl && isSvgImage(imageUrl);
+  const name = t(ITEM_I18N[item.key] || item.key);
+  const accent = t(ACCENT_I18N[item.accent] || item.accent);
 
   return (
     <Link
@@ -141,17 +155,17 @@ function CanvasCard({ item, price, variant = "standard", imageUrl, t }) {
         {imageUrl ? (
           <>
             {isSvg ? (
-              <img src={imageUrl} alt={item.name} className="h-full w-full object-cover" />
+              <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
             ) : (
-              <Image src={imageUrl} alt={item.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" />
+              <Image src={imageUrl} alt={name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" />
             )}
             <div className="absolute left-3 top-3 flex items-center gap-2">
               <span className="rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)]">
-                {item.accent}
+                {accent}
               </span>
               {item.quoteOnly && (
                 <span className="rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-700)]">
-                  Quote-Only
+                  {t("cc.badge.quoteOnly")}
                 </span>
               )}
             </div>
@@ -163,11 +177,11 @@ function CanvasCard({ item, price, variant = "standard", imageUrl, t }) {
             <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
               <div className="flex items-center justify-between gap-2">
                 <span className="rounded-full border border-white/70 bg-white/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-700)]">
-                  {item.accent}
+                  {accent}
                 </span>
                 {item.quoteOnly && (
                   <span className="rounded-full border border-black/10 bg-black/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-700)]">
-                    Quote-Only
+                    {t("cc.badge.quoteOnly")}
                   </span>
                 )}
               </div>
@@ -203,7 +217,7 @@ function CanvasCard({ item, price, variant = "standard", imageUrl, t }) {
 
       <div className="flex flex-1 items-center justify-between gap-3 p-4">
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold leading-tight text-[var(--color-gray-900)] sm:text-base">{item.name}</h3>
+          <h3 className="text-sm font-semibold leading-tight text-[var(--color-gray-900)] sm:text-base">{name}</h3>
           <div className="mt-1">
             <PriceTag price={price} quoteOnly={item.quoteOnly} t={t} />
           </div>
@@ -275,20 +289,20 @@ export default function CanvasCategoryClient({ canvasPrices = {}, canvasImages =
         <Breadcrumbs
           items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: "Canvas Prints" },
+            { label: t("cc.breadcrumb") },
           ]}
         />
 
         <div className="mt-6">
-          <CategoryHero category="canvas-prints" title="Museum-Quality Canvas Prints" icon="🖼️" />
+          <CategoryHero category="canvas-prints" title={t("cc.title")} icon="🖼️" />
         </div>
 
         {SECTIONS.map((section, index) => (
           <section key={section.key} className={index === 0 ? "mt-10" : "mt-12"}>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{section.title}</h2>
-                <p className="mt-1 text-sm text-[var(--color-gray-500)]">{section.subtitle}</p>
+                <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{t(section.titleKey)}</h2>
+                <p className="mt-1 text-sm text-[var(--color-gray-500)]">{t(section.subtitleKey)}</p>
               </div>
             </div>
             <SectionGrid section={section} canvasPrices={canvasPrices} canvasImages={canvasImages} t={t} />
@@ -299,21 +313,21 @@ export default function CanvasCategoryClient({ canvasPrices = {}, canvasImages =
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Print on Demand Fulfillment</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">{t("cc.vp1.title")}</h3>
             <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              We help online sellers with drop-ship fulfillment — print, stretch, pack, and ship direct to your customers under your brand.
+              {t("cc.vp1.desc")}
             </p>
           </div>
           <div className="rounded-2xl border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Premium Quality, Every Piece</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">{t("cc.vp2.title")}</h3>
             <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              Epson professional printer with original ink and custom ICC profiles. Acid-free cotton canvas on kiln-dried pine stretcher bars.
+              {t("cc.vp2.desc")}
             </p>
           </div>
           <div className="rounded-2xl border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">Custom Sizes Available</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">{t("cc.vp3.title")}</h3>
             <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              Need a panoramic or non-standard size? Enter any dimension in the configurator or contact us for oversize projects.
+              {t("cc.vp3.desc")}
             </p>
             <Link
               href="/order/canvas-prints"

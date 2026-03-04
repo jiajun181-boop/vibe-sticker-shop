@@ -488,6 +488,31 @@ export default async function ProductPage({ params }) {
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     });
 
+    // Inject Asset system images (UploadThing uploads) so subcategory cards show real images
+    const subProductIds = subProducts.map((p) => p.id);
+    const subAssetLinks = subProductIds.length > 0
+      ? await prisma.assetLink.findMany({
+          where: {
+            entityType: "product",
+            entityId: { in: subProductIds },
+            asset: { status: "published" },
+          },
+          include: { asset: { select: { originalUrl: true } } },
+          orderBy: { sortOrder: "asc" },
+        })
+      : [];
+    const subAssetMap = {};
+    for (const link of subAssetLinks) {
+      if (!subAssetMap[link.entityId] && link.asset?.originalUrl) {
+        subAssetMap[link.entityId] = link.asset.originalUrl;
+      }
+    }
+    for (const p of subProducts) {
+      if (subAssetMap[p.id]) {
+        p.images = [{ url: subAssetMap[p.id], sortOrder: -1 }, ...(p.images || [])];
+      }
+    }
+
     // Merge same-spec-family products into one card (e.g. notepads + custom-notepads)
     const seen = new Map();
     for (const p of subProducts) {
