@@ -589,23 +589,47 @@ export default function InlineConfigurator({ cuttingTypeId }) {
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
             {t("stickerOrder.wind")}
           </h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-5 gap-2">
             {cutting.windDirections.map((w) => {
               const isActive = windId === w.id;
+              const isAny = w.id === "any";
+              // Rotation: top=0, right=90, bottom=180, left=270
+              const rotation = w.id === "top" ? 0 : w.id === "right" ? 90 : w.id === "bottom" ? 180 : w.id === "left" ? 270 : 0;
               return (
                 <button
                   key={w.id}
                   type="button"
                   onClick={() => selectWind(w.id)}
-                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
+                  className={`flex flex-col items-center gap-1 rounded-lg border-2 px-2 py-2.5 transition-all ${
                     isActive
                       ? "border-gray-900 bg-gray-900 text-[#fff]"
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
-                  {t(w.label)}
+                  {isAny ? (
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" className="shrink-0">
+                      <circle cx="18" cy="18" r="14" stroke={isActive ? "#fff" : "#9ca3af"} strokeWidth="1.5" strokeDasharray="3 3" />
+                      <text x="18" y="22" textAnchor="middle" fontSize="12" fontWeight="bold" fill={isActive ? "#fff" : "#6b7280"}>?</text>
+                    </svg>
+                  ) : (
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" className="shrink-0">
+                      {/* Roll core */}
+                      <circle cx="18" cy="18" r="6" stroke={isActive ? "#fff" : "#9ca3af"} strokeWidth="1.5" fill="none" />
+                      <circle cx="18" cy="18" r="2.5" fill={isActive ? "#fff" : "#d1d5db"} />
+                      {/* Outer roll */}
+                      <circle cx="18" cy="18" r="13" stroke={isActive ? "#fff" : "#6b7280"} strokeWidth="2" fill="none" />
+                      {/* Direction arrow */}
+                      <g transform={`rotate(${rotation} 18 18)`}>
+                        <line x1="18" y1="5" x2="18" y2="0" stroke={isActive ? "#fbbf24" : "#f59e0b"} strokeWidth="2" strokeLinecap="round" />
+                        <polygon points="18,0 15,5 21,5" fill={isActive ? "#fbbf24" : "#f59e0b"} />
+                        {/* R label */}
+                        <text x="18" y="12" textAnchor="middle" fontSize="7" fontWeight="bold" fill={isActive ? "#fff" : "#374151"}>R</text>
+                      </g>
+                    </svg>
+                  )}
+                  <span className="text-[10px] font-semibold leading-tight">{t(w.label)}</span>
                   {w.surchargeMultiplier > 1 && (
-                    <span className="ml-1 text-[10px] font-normal opacity-70">+10%</span>
+                    <span className={`text-[9px] font-medium ${isActive ? "text-yellow-300" : "text-amber-500"}`}>+10%</span>
                   )}
                 </button>
               );
