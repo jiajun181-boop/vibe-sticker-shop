@@ -75,29 +75,60 @@ export async function PATCH(
   // Set image as primary cover: expects { primaryImageId: "..." }
   if (body.primaryImageId) {
     const targetId = String(body.primaryImageId);
-    const currentImages = await prisma.productImage.findMany({
-      where: { productId: id },
-      orderBy: { sortOrder: "asc" },
-      select: { id: true, sortOrder: true },
-    });
-    const target = currentImages.find((img) => img.id === targetId);
-    if (!target) {
-      return NextResponse.json({ error: "Image not found on this product" }, { status: 404 });
+    const isAssetLinked = targetId.startsWith("asset:");
+
+    if (isAssetLinked) {
+      // Asset-linked images: reorder AssetLinks
+      const linkId = targetId.slice("asset:".length);
+      const currentLinks = await prisma.assetLink.findMany({
+        where: { entityType: "product", entityId: id },
+        orderBy: { sortOrder: "asc" },
+        select: { id: true },
+      });
+      const target = currentLinks.find((l) => l.id === linkId);
+      if (!target) {
+        return NextResponse.json({ error: "Image not found on this product" }, { status: 404 });
+      }
+
+      const reordered = [
+        linkId,
+        ...currentLinks.filter((l) => l.id !== linkId).map((l) => l.id),
+      ];
+
+      await prisma.$transaction(
+        reordered.map((lid, idx) =>
+          prisma.assetLink.update({
+            where: { id: lid },
+            data: { sortOrder: idx },
+          })
+        )
+      );
+    } else {
+      // Legacy ProductImage: reorder ProductImages
+      const currentImages = await prisma.productImage.findMany({
+        where: { productId: id },
+        orderBy: { sortOrder: "asc" },
+        select: { id: true, sortOrder: true },
+      });
+      const target = currentImages.find((img) => img.id === targetId);
+      if (!target) {
+        return NextResponse.json({ error: "Image not found on this product" }, { status: 404 });
+      }
+
+      const reordered = [
+        targetId,
+        ...currentImages.filter((img) => img.id !== targetId).map((img) => img.id),
+      ];
+
+      await prisma.$transaction(
+        reordered.map((imgId, idx) =>
+          prisma.productImage.update({
+            where: { id: imgId },
+            data: { sortOrder: idx },
+          })
+        )
+      );
     }
-
-    const reordered = [
-      targetId,
-      ...currentImages.filter((img) => img.id !== targetId).map((img) => img.id),
-    ];
-
-    await prisma.$transaction(
-      reordered.map((imgId, idx) =>
-        prisma.productImage.update({
-          where: { id: imgId },
-          data: { sortOrder: idx },
-        })
-      )
-    );
 
     await logActivity({
       action: "set_primary",
@@ -106,30 +137,45 @@ export async function PATCH(
       details: { productId: id, primaryImageId: targetId },
     });
 
-    const images = await prisma.productImage.findMany({
-      where: { productId: id },
-      orderBy: { sortOrder: "asc" },
-    });
-    return NextResponse.json(images);
+    return NextResponse.json({ success: true });
   }
 
   // Bulk reorder: expects { order: [{ id: "...", sortOrder: 0 }, ...] }
   if (body.order && Array.isArray(body.order)) {
-    await prisma.$transaction(
-      body.order.map((item: { id: string; sortOrder: number }) =>
+    const orderItems = body.order as { id: string; sortOrder: number }[];
+
+    // Separate asset-linked images (id starts with "asset:") from legacy ProductImage records
+    const assetItems = orderItems.filter((item) => item.id.startsWith("asset:"));
+    const legacyItems = orderItems.filter((item) => !item.id.startsWith("asset:"));
+
+    const ops: ReturnType<typeof prisma.productImage.update>[] = [];
+
+    // Legacy ProductImage reorder
+    for (const item of legacyItems) {
+      ops.push(
         prisma.productImage.update({
           where: { id: item.id, productId: id },
           data: { sortOrder: item.sortOrder },
         })
-      )
-    );
+      );
+    }
 
-    const images = await prisma.productImage.findMany({
-      where: { productId: id },
-      orderBy: { sortOrder: "asc" },
-    });
+    // Asset-linked image reorder
+    for (const item of assetItems) {
+      const linkId = item.id.slice("asset:".length);
+      ops.push(
+        prisma.assetLink.update({
+          where: { id: linkId },
+          data: { sortOrder: item.sortOrder },
+        }) as any
+      );
+    }
 
-    return NextResponse.json(images);
+    if (ops.length > 0) {
+      await prisma.$transaction(ops);
+    }
+
+    return NextResponse.json({ success: true });
   }
 
   return NextResponse.json({ error: "Invalid request" }, { status: 400 });
