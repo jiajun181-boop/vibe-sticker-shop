@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
-  ConfigStep,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
   ConfigHero,
   ConfigProductGallery,
   PricingSidebar,
@@ -171,6 +174,69 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
     successMessage: t("booklet.addedToCart"),
   });
 
+  // ─── Selection handlers with advanceStep ───
+  const handleBindingSelect = (id) => {
+    setBindingId(id);
+    advanceStep("step-binding");
+  };
+
+  const handleSizeSelect = (i) => {
+    setSizeIdx(i);
+    advanceStep("step-size");
+  };
+
+  const handlePageCountSelect = (p) => {
+    setPageCount(p);
+    advanceStep("step-pageCount");
+  };
+
+  const handleInteriorPaperSelect = (id) => {
+    setInteriorPaper(id);
+    advanceStep("step-interiorPaper");
+  };
+
+  const handleCoverPaperSelect = (id) => {
+    setCoverPaper(id);
+    advanceStep("step-coverPaper");
+  };
+
+  const handleCoverCoatingSelect = (id, disabled) => {
+    if (disabled) return;
+    setCoverCoating(id);
+    advanceStep("step-coverCoating");
+  };
+
+  const handleQuantitySelect = (q) => {
+    setQuantity(q);
+    setCustomQty("");
+    advanceStep("step-quantity");
+  };
+
+  // --- Accordion state ---
+  const [activeStepId, setActiveStepId] = useState(null);
+
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "binding",       vis: true },
+      { id: "size",          vis: true },
+      { id: "pageCount",     vis: true },
+      { id: "interiorPaper", vis: true },
+      { id: "coverPaper",    vis: true },
+      { id: "coverCoating",  vis: true },
+      { id: "quantity",      vis: true },
+      { id: "artwork",       vis: true },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, []);
+
+  const stepNumFn = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
   // ─── Summary & Extra Rows ───
   const summaryLines = [
     { label: t("booklet.binding.label"), value: t(`booklet.binding.${bindingId}`) },
@@ -212,195 +278,174 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* LEFT: Options */}
-          <div className="space-y-6 lg:col-span-2">
+          <div className="space-y-3 lg:col-span-2">
 
             {/* Binding Type */}
-            <ConfigStep number={1} title={t("booklet.binding.label")} subtitle={t("booklet.bindingSubtitle", "Choose your binding method")}>
-              <div className="grid grid-cols-3 gap-3">
+            <StepCard
+              stepNumber={stepNumFn("binding")}
+              title={t("booklet.binding.label")}
+              hint={t("booklet.bindingSubtitle", "Choose your binding method")}
+              summaryText={t(`booklet.binding.${bindingId}`)}
+              open={isStepOpen("binding")}
+              onToggle={() => toggleStep("binding")}
+              stepId="step-binding"
+            >
+              <OptionGrid columns={3} label={t("booklet.binding.label")}>
                 {BINDINGS.map((b) => (
-                  <button
+                  <OptionCard
                     key={b.id}
-                    type="button"
-                    onClick={() => setBindingId(b.id)}
-                    className={`group relative flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition-all duration-200 ${
-                      bindingId === b.id
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
-                    }`}
-                  >
-                    {bindingId === b.id && (
-                      <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                      </span>
-                    )}
-                    <BindingIcon type={b.icon} className="h-7 w-7" />
-                    <span className="text-sm font-bold">{t(`booklet.binding.${b.id}`)}</span>
-                    <span className={`text-[11px] leading-tight ${bindingId === b.id ? "text-gray-300" : "text-gray-400"}`}>
-                      {t(`booklet.bindingDesc.${b.id}`)}
-                    </span>
-                  </button>
+                    label={t(`booklet.binding.${b.id}`)}
+                    description={t(`booklet.bindingDesc.${b.id}`)}
+                    selected={bindingId === b.id}
+                    onSelect={() => handleBindingSelect(b.id)}
+                    icon={<BindingIcon type={b.icon} className="h-7 w-7" />}
+                  />
                 ))}
-              </div>
-            </ConfigStep>
+              </OptionGrid>
+            </StepCard>
 
             {/* Size */}
-            <ConfigStep number={2} title={t("booklet.size")}>
-              <div className="flex flex-wrap gap-2">
+            <StepCard
+              stepNumber={stepNumFn("size")}
+              title={t("booklet.size")}
+              summaryText={size.label}
+              open={isStepOpen("size")}
+              onToggle={() => toggleStep("size")}
+              stepId="step-size"
+            >
+              <OptionGrid columns={4} label={t("booklet.size")}>
                 {SIZES.map((s, i) => (
-                  <button
+                  <OptionCard
                     key={s.id}
-                    type="button"
-                    onClick={() => setSizeIdx(i)}
-                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                      sizeIdx === i
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    {s.label}
-                  </button>
+                    label={s.label}
+                    selected={sizeIdx === i}
+                    onSelect={() => handleSizeSelect(i)}
+                  />
                 ))}
-              </div>
-            </ConfigStep>
+              </OptionGrid>
+            </StepCard>
 
             {/* Page Count */}
-            <ConfigStep number={3} title={t("booklet.pageCount")}>
-              <div className="flex flex-wrap gap-2">
+            <StepCard
+              stepNumber={stepNumFn("pageCount")}
+              title={t("booklet.pageCount")}
+              summaryText={`${pageCount} pages`}
+              open={isStepOpen("pageCount")}
+              onToggle={() => toggleStep("pageCount")}
+              stepId="step-pageCount"
+            >
+              <OptionGrid columns={4} label={t("booklet.pageCount")}>
                 {pageCounts.map((p) => (
-                  <button
+                  <OptionCard
                     key={p}
-                    type="button"
-                    onClick={() => setPageCount(p)}
-                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                      pageCount === p
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    {p}
-                  </button>
+                    label={`${p}`}
+                    selected={pageCount === p}
+                    onSelect={() => handlePageCountSelect(p)}
+                  />
                 ))}
-              </div>
+              </OptionGrid>
               {binding.pageRule === "multiple-of-4" && (
                 <p className="mt-2 text-[11px] text-gray-400">{t("booklet.pageRuleSaddle")}</p>
               )}
-            </ConfigStep>
+            </StepCard>
 
             {/* Interior Paper */}
-            <ConfigStep number={4} title={t("booklet.interiorPaper")}>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                {INTERIOR_PAPERS.map((p) => {
-                  const isActive = interiorPaper === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setInteriorPaper(p.id)}
-                      className={`relative rounded-xl border-2 px-3 py-3 text-left transition-all duration-150 ${
-                        isActive
-                          ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                          : "border-gray-200 bg-white hover:border-gray-400"
-                      }`}
-                    >
-                      <span className="block text-sm font-bold text-gray-800">{p.label}</span>
-                      {isActive && (
-                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </ConfigStep>
+            <StepCard
+              stepNumber={stepNumFn("interiorPaper")}
+              title={t("booklet.interiorPaper")}
+              summaryText={INTERIOR_PAPERS.find((p) => p.id === interiorPaper)?.label || interiorPaper}
+              open={isStepOpen("interiorPaper")}
+              onToggle={() => toggleStep("interiorPaper")}
+              stepId="step-interiorPaper"
+            >
+              <OptionGrid columns={4} label={t("booklet.interiorPaper")}>
+                {INTERIOR_PAPERS.map((p) => (
+                  <OptionCard
+                    key={p.id}
+                    label={p.label}
+                    selected={interiorPaper === p.id}
+                    onSelect={() => handleInteriorPaperSelect(p.id)}
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
 
             {/* Cover Paper */}
-            <ConfigStep number={5} title={t("booklet.coverPaper")}>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+            <StepCard
+              stepNumber={stepNumFn("coverPaper")}
+              title={t("booklet.coverPaper")}
+              summaryText={isSelfCover ? t("booklet.cover.self-cover") : COVER_PAPERS.find((p) => p.id === coverPaper)?.label || coverPaper}
+              open={isStepOpen("coverPaper")}
+              onToggle={() => toggleStep("coverPaper")}
+              stepId="step-coverPaper"
+            >
+              <OptionGrid columns={4} label={t("booklet.coverPaper")}>
                 {COVER_PAPERS.map((p) => {
                   const displayLabel = p.label || t(`booklet.cover.${p.id}`);
-                  const surcharge = p.id === "14pt-c2s" ? "+$0.15" : null;
-                  const isActive = coverPaper === p.id;
+                  const surcharge = p.id === "14pt-c2s" ? "+$0.15/ea" : null;
                   return (
-                    <button
+                    <OptionCard
                       key={p.id}
-                      type="button"
-                      onClick={() => setCoverPaper(p.id)}
-                      className={`relative rounded-xl border-2 px-3 py-3 text-left transition-all duration-150 ${
-                        isActive
-                          ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                          : "border-gray-200 bg-white hover:border-gray-400"
-                      }`}
-                    >
-                      <span className="block text-sm font-bold text-gray-800">{displayLabel}</span>
-                      {surcharge && (
-                        <span className="mt-0.5 block text-[11px] font-bold text-amber-600">{surcharge}/ea</span>
-                      )}
-                      {isActive && (
-                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                        </span>
-                      )}
-                    </button>
+                      label={displayLabel}
+                      selected={coverPaper === p.id}
+                      onSelect={() => handleCoverPaperSelect(p.id)}
+                      badge={surcharge ? <span className="text-[11px] font-bold text-amber-600">{surcharge}</span> : null}
+                    />
                   );
                 })}
-              </div>
-            </ConfigStep>
+              </OptionGrid>
+            </StepCard>
 
             {/* Cover Coating */}
-            <ConfigStep number={6} title={t("booklet.coverCoating")}>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+            <StepCard
+              stepNumber={stepNumFn("coverCoating")}
+              title={t("booklet.coverCoating")}
+              summaryText={coverCoating !== "none" ? t(`booklet.coating.${coverCoating}`) : "None"}
+              open={isStepOpen("coverCoating")}
+              onToggle={() => toggleStep("coverCoating")}
+              stepId="step-coverCoating"
+            >
+              <OptionGrid columns={4} label={t("booklet.coverCoating")}>
                 {COVER_COATINGS.map((c) => {
                   const disabled = isSelfCover && c.id !== "none";
                   const displayLabel = t(`booklet.coating.${c.id}`);
-                  const surcharge = c.id === "gloss-lam" ? "+$0.08" : c.id === "matte-lam" ? "+$0.10" : c.id === "soft-touch" ? "+$0.18" : null;
-                  const isActive = coverCoating === c.id;
+                  const surcharge = c.id === "gloss-lam" ? "+$0.08/ea" : c.id === "matte-lam" ? "+$0.10/ea" : c.id === "soft-touch" ? "+$0.18/ea" : null;
                   return (
-                    <button
+                    <OptionCard
                       key={c.id}
-                      type="button"
-                      onClick={() => !disabled && setCoverCoating(c.id)}
-                      disabled={disabled}
-                      className={`relative rounded-xl border-2 px-3 py-3 text-left transition-all duration-150 ${
-                        disabled
-                          ? "cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300"
-                          : isActive
-                            ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                            : "border-gray-200 bg-white hover:border-gray-400"
-                      }`}
-                    >
-                      <span className={`block text-sm font-bold ${disabled ? "text-gray-300" : "text-gray-800"}`}>
-                        {displayLabel}
-                      </span>
-                      {surcharge && !disabled && (
-                        <span className="mt-0.5 block text-[11px] font-bold text-amber-600">{surcharge}/ea</span>
-                      )}
-                      {isActive && !disabled && (
-                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                        </span>
-                      )}
-                    </button>
+                      label={displayLabel}
+                      selected={coverCoating === c.id}
+                      onSelect={() => handleCoverCoatingSelect(c.id, disabled)}
+                      badge={surcharge && !disabled ? <span className="text-[11px] font-bold text-amber-600">{surcharge}</span> : null}
+                      className={disabled ? "opacity-40 cursor-not-allowed" : ""}
+                    />
                   );
                 })}
-              </div>
+              </OptionGrid>
               {isSelfCover && (
                 <p className="mt-2 text-[11px] text-gray-400">{t("booklet.selfCoverNoCoating")}</p>
               )}
-            </ConfigStep>
+            </StepCard>
 
             {/* Quantity */}
-            <ConfigStep number={7} title={t("booklet.quantity")}>
+            <StepCard
+              stepNumber={stepNumFn("quantity")}
+              title={t("booklet.quantity")}
+              summaryText={`${activeQty.toLocaleString()} pcs`}
+              open={isStepOpen("quantity")}
+              onToggle={() => toggleStep("quantity")}
+              stepId="step-quantity"
+            >
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                 {QUANTITIES.map((q) => (
                   <button
                     key={q}
                     type="button"
-                    onClick={() => { setQuantity(q); setCustomQty(""); }}
+                    onClick={() => handleQuantitySelect(q)}
                     className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
                       customQty === "" && quantity === q
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                        ? "border-teal-500 bg-teal-50 text-teal-700 shadow-md"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                     }`}
                   >
                     <span className="text-base font-black">{q.toLocaleString()}</span>
@@ -416,20 +461,28 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
                   value={customQty}
                   onChange={(e) => setCustomQty(e.target.value)}
                   placeholder="e.g. 75"
-                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 />
               </div>
-            </ConfigStep>
+            </StepCard>
 
             {/* File Upload */}
-            <ConfigStep number={8} title={t("booklet.artwork")} optional>
+            <StepCard
+              stepNumber={stepNumFn("artwork")}
+              title={t("booklet.artwork")}
+              summaryText={uploadedFile?.name || "Not uploaded yet"}
+              optional
+              open={isStepOpen("artwork")}
+              onToggle={() => toggleStep("artwork")}
+              stepId="step-artwork"
+            >
               <ArtworkUpload
                 uploadedFile={uploadedFile}
                 onUploaded={setUploadedFile}
                 onRemove={() => setUploadedFile(null)}
                 t={t}
               />
-            </ConfigStep>
+            </StepCard>
           </div>
 
           {/* RIGHT: Summary */}

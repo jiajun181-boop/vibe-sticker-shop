@@ -9,7 +9,10 @@ import WallContextPreview from "@/components/canvas/WallContextPreview";
 import QualityBadges from "@/components/canvas/QualityBadges";
 import ImageCropper from "@/components/canvas/ImageCropper";
 import {
-  ConfigStep,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
   ConfigHero,
   ConfigProductGallery,
   PricingSidebar,
@@ -248,6 +251,44 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
   const formatCad = (cents) =>
     new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
+  // --- Accordion state ---
+  const [activeStepId, setActiveStepId] = useState(null);
+
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "artwork",  vis: true },
+      { id: "imageCrop", vis: !!uploadedFile && widthIn > 0 && heightIn > 0 },
+      { id: "type",     vis: true },
+      { id: "size",     vis: true },
+      { id: "material", vis: true },
+      { id: "edge",     vis: !!canvasType.frameOptions || !!canvasType.edgeTreatments },
+      { id: "quantity", vis: true },
+      { id: "quality",  vis: true },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, [uploadedFile, widthIn, heightIn, canvasType]);
+
+  const stepNum = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  // --- Summary texts for StepCard ---
+  const edgeSummaryText = useMemo(() => {
+    if (canvasType.frameOptions) {
+      const frameOpt = canvasType.frameOptions.find((f) => f.id === frameColor);
+      return frameOpt?.label || frameColor;
+    }
+    if (canvasType.edgeTreatments) {
+      const edgeOpt = canvasType.edgeTreatments.find((e) => e.id === edgeTreatment);
+      return edgeOpt?.label || edgeTreatment;
+    }
+    return null;
+  }, [canvasType, frameColor, edgeTreatment]);
+
   // Preview slot with close-up / room toggle
   const previewSlot = useMemo(() => {
     const imgUrl = uploadedFile?.url || null;
@@ -325,8 +366,6 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
     );
   }, [canvasType, uploadedFile, widthIn, heightIn, edgeTreatment, frameColor, viewMode, t]);
 
-  let stepNum = 1;
-
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)]">
       <ConfigHero
@@ -343,14 +382,18 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-          <div className="space-y-6 lg:col-span-2">
+          <div className="space-y-3 lg:col-span-2">
 
-            {/* Step 1: Upload Artwork (optional) */}
-            <ConfigStep
-              number={stepNum++}
+            {/* Step: Upload Artwork (optional) */}
+            <StepCard
+              stepNumber={stepNum("artwork")}
               title={t("canvas.artwork")}
-              subtitle={t("canvas.artworkSubtitle")}
+              hint={t("canvas.artworkSubtitle")}
+              summaryText={uploadedFile?.name || "Not uploaded yet"}
               optional
+              open={isStepOpen("artwork")}
+              onToggle={() => toggleStep("artwork")}
+              stepId="step-artwork"
             >
               <ArtworkUpload
                 uploadedFile={uploadedFile}
@@ -358,303 +401,202 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
                 onRemove={() => setUploadedFile(null)}
                 t={t}
               />
-            </ConfigStep>
+            </StepCard>
 
             {/* Image Positioning (only shown when image uploaded) */}
             {uploadedFile && widthIn > 0 && heightIn > 0 && (
-              <ConfigStep number={stepNum++} title={t("canvas.imagePosition")} subtitle={t("canvas.imagePositionSub")} optional>
+              <StepCard
+                stepNumber={stepNum("imageCrop")}
+                title={t("canvas.imagePosition")}
+                hint={t("canvas.imagePositionSub")}
+                summaryText="Positioned"
+                optional
+                open={isStepOpen("imageCrop")}
+                onToggle={() => toggleStep("imageCrop")}
+                stepId="step-imageCrop"
+              >
                 <ImageCropper
                   imageUrl={uploadedFile.url}
                   aspectRatio={widthIn / heightIn}
                   onChange={setCropData}
                 />
-              </ConfigStep>
+              </StepCard>
             )}
 
-            {/* Step 2: Canvas Type */}
-            <ConfigStep
-              number={stepNum++}
+            {/* Step: Canvas Type */}
+            <StepCard
+              stepNumber={stepNum("type")}
               title={t("canvas.type.label")}
-              subtitle={t("canvas.type.subtitle")}
+              hint={t("canvas.type.subtitle")}
+              summaryText={t(`canvas.type.${typeId}`)}
+              open={isStepOpen("type")}
+              onToggle={() => toggleStep("type")}
+              stepId="step-type"
             >
               {Object.entries(TYPE_GROUPS).map(([groupKey, group]) => (
                 <div key={groupKey} className="mb-4 last:mb-0">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">
                     {t(`canvas.type.${groupKey}Group`)}
                   </p>
-                  <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+                  <OptionGrid columns={4}>
                     {group.ids.map((id) => {
                       const ct = CANVAS_TYPES.find((c) => c.id === id);
                       if (!ct) return null;
-                      const isActive = typeId === id;
                       return (
-                        <button
+                        <OptionCard
                           key={id}
-                          type="button"
-                          onClick={() => setTypeId(id)}
-                          className={`group relative flex flex-col items-center gap-1.5 rounded-2xl border-2 p-3.5 text-center transition-all duration-200 ${
-                            isActive
-                              ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
-                          }`}
-                        >
-                          {isActive && (
-                            <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
-                              <svg
-                                className="h-3.5 w-3.5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={3}
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M4.5 12.75l6 6 9-13.5"
-                                />
-                              </svg>
-                            </span>
-                          )}
-                          <span className="text-sm font-bold">
-                            {t(`canvas.type.${id}`)}
-                          </span>
-                          <span
-                            className={`text-[11px] leading-tight ${
-                              isActive ? "text-gray-300" : "text-gray-500"
-                            }`}
-                          >
-                            {t(`canvas.type.${id}.desc`)}
-                          </span>
-                        </button>
+                          label={t(`canvas.type.${id}`)}
+                          description={t(`canvas.type.${id}.desc`)}
+                          selected={typeId === id}
+                          onSelect={() => { setTypeId(id); advanceStep("step-type"); }}
+                        />
                       );
                     })}
-                  </div>
+                  </OptionGrid>
                 </div>
               ))}
-            </ConfigStep>
+            </StepCard>
 
-            {/* Step 3: Size */}
-            <ConfigStep
-              number={stepNum++}
+            {/* Step: Size */}
+            <StepCard
+              stepNumber={stepNum("size")}
               title={t("canvas.size")}
-              subtitle={t("canvas.sizeSubtitle")}
+              hint={t("canvas.sizeSubtitle")}
+              summaryText={sizeLabel}
+              open={isStepOpen("size")}
+              onToggle={() => toggleStep("size")}
+              stepId="step-size"
             >
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              <OptionGrid columns={4}>
                 {canvasType.sizes.map((s, i) => (
-                  <button
+                  <OptionCard
                     key={i}
-                    type="button"
-                    onClick={() => {
+                    label={s.label}
+                    selected={sizeIdx === i && !isCustomSize}
+                    onSelect={() => {
                       setSizeIdx(i);
                       setCustomW("");
                       setCustomH("");
+                      advanceStep("step-size");
                     }}
-                    className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
-                      sizeIdx === i
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    <span className="text-sm font-bold">{s.label}</span>
-                  </button>
+                  />
                 ))}
-                <button
-                  type="button"
-                  onClick={() => setSizeIdx(-1)}
-                  className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
-                    isCustomSize
-                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                      : "border-dashed border-gray-300 bg-white text-gray-500 hover:border-gray-500"
-                  }`}
-                >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
-                    />
-                  </svg>
-                  <span className="text-xs font-bold">{t("canvas.customSize")}</span>
-                </button>
-              </div>
-              {isCustomSize && (
-                <CustomDimensions
-                  customW={customW}
-                  customH={customH}
-                  onChangeW={setCustomW}
-                  onChangeH={setCustomH}
-                  unit={unit}
-                  onChangeUnit={setUnit}
-                  minLabel={`${canvasType.minIn}" × ${canvasType.minIn}"`}
-                  maxLabel={`${canvasType.maxW}" × ${canvasType.maxH}"`}
-                  dimErrors={dimErrors}
-                  t={t}
+                <OptionCard
+                  label={t("canvas.customSize")}
+                  selected={isCustomSize}
+                  onSelect={() => setSizeIdx(-1)}
+                  className={isCustomSize ? "" : "border-dashed"}
                 />
+              </OptionGrid>
+              {isCustomSize && (
+                <div className="mt-3">
+                  <CustomDimensions
+                    customW={customW}
+                    customH={customH}
+                    onChangeW={setCustomW}
+                    onChangeH={setCustomH}
+                    unit={unit}
+                    onChangeUnit={setUnit}
+                    minLabel={`${canvasType.minIn}" × ${canvasType.minIn}"`}
+                    maxLabel={`${canvasType.maxW}" × ${canvasType.maxH}"`}
+                    dimErrors={dimErrors}
+                    t={t}
+                  />
+                </div>
               )}
-            </ConfigStep>
+            </StepCard>
 
-            {/* Step 4: Material */}
-            <ConfigStep
-              number={stepNum++}
+            {/* Step: Material */}
+            <StepCard
+              stepNumber={stepNum("material")}
               title={t("canvas.material")}
-              subtitle={t("canvas.materialSubtitle")}
+              hint={t("canvas.materialSubtitle")}
+              summaryText={canvasType.materials.find((m) => m.id === materialId)?.label || materialId}
+              open={isStepOpen("material")}
+              onToggle={() => toggleStep("material")}
+              stepId="step-material"
             >
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                {canvasType.materials.map((mat) => {
-                  const isActive = materialId === mat.id;
-                  return (
-                    <button
-                      key={mat.id}
-                      type="button"
-                      onClick={() => setMaterialId(mat.id)}
-                      className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
-                        isActive
-                          ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                          : "border-gray-200 bg-white hover:border-gray-400"
-                      }`}
-                    >
-                      {isActive && (
-                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                          <svg
-                            className="h-3 w-3 text-[#fff]"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={3}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M4.5 12.75l6 6 9-13.5"
-                            />
-                          </svg>
-                        </span>
-                      )}
-                      <span className="text-sm font-bold text-gray-800">{mat.label}</span>
-                      {mat.desc && (
-                        <span className="text-[11px] text-gray-500">{mat.desc}</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </ConfigStep>
+              <OptionGrid columns={3}>
+                {canvasType.materials.map((mat) => (
+                  <OptionCard
+                    key={mat.id}
+                    label={mat.label}
+                    description={mat.desc}
+                    selected={materialId === mat.id}
+                    onSelect={() => { setMaterialId(mat.id); advanceStep("step-material"); }}
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
 
-            {/* Step 5: Edge Treatment / Frame */}
+            {/* Step: Edge Treatment / Frame */}
             {canvasType.frameOptions ? (
-              <ConfigStep
-                number={stepNum++}
+              <StepCard
+                stepNumber={stepNum("edge")}
                 title={t("canvas.frame")}
-                subtitle={t("canvas.frameSubtitle")}
+                hint={t("canvas.frameSubtitle")}
+                summaryText={edgeSummaryText}
+                open={isStepOpen("edge")}
+                onToggle={() => toggleStep("edge")}
+                stepId="step-edge"
               >
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
-                  {canvasType.frameOptions.map((opt) => {
-                    const isActive = frameColor === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => setFrameColor(opt.id)}
-                        className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
-                          isActive
-                            ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                            : "border-gray-200 bg-white hover:border-gray-400"
-                        }`}
-                      >
-                        {isActive && (
-                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                            <svg
-                              className="h-3 w-3 text-[#fff]"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={3}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M4.5 12.75l6 6 9-13.5"
-                              />
-                            </svg>
-                          </span>
-                        )}
-                        {/* Color swatch */}
+                <OptionGrid columns={4}>
+                  {canvasType.frameOptions.map((opt) => (
+                    <OptionCard
+                      key={opt.id}
+                      label={opt.label}
+                      selected={frameColor === opt.id}
+                      onSelect={() => { setFrameColor(opt.id); advanceStep("step-edge"); }}
+                      icon={
                         <span
                           className="h-6 w-6 rounded-full border border-gray-300"
                           style={{ backgroundColor: opt.hex || opt.id }}
                         />
-                        <span className="text-sm font-bold text-gray-800">{opt.label}</span>
-                        {opt.surcharge > 0 && (
-                          <span className="inline-flex w-fit rounded-xl bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                            +${(opt.surcharge / 100).toFixed(0)}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </ConfigStep>
+                      }
+                      badge={opt.surcharge > 0 ? (
+                        <span className="text-[9px] font-bold text-amber-600">
+                          +${(opt.surcharge / 100).toFixed(0)}
+                        </span>
+                      ) : null}
+                    />
+                  ))}
+                </OptionGrid>
+              </StepCard>
             ) : canvasType.edgeTreatments ? (
-              <ConfigStep
-                number={stepNum++}
+              <StepCard
+                stepNumber={stepNum("edge")}
                 title={t("canvas.edge")}
-                subtitle={t("canvas.edgeSubtitle")}
+                hint={t("canvas.edgeSubtitle")}
+                summaryText={edgeSummaryText}
+                open={isStepOpen("edge")}
+                onToggle={() => toggleStep("edge")}
+                stepId="step-edge"
               >
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                  {canvasType.edgeTreatments.map((opt) => {
-                    const isActive = edgeTreatment === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => setEdgeTreatment(opt.id)}
-                        className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
-                          isActive
-                            ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                            : "border-gray-200 bg-white hover:border-gray-400"
-                        }`}
-                      >
-                        {isActive && (
-                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                            <svg
-                              className="h-3 w-3 text-[#fff]"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={3}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M4.5 12.75l6 6 9-13.5"
-                              />
-                            </svg>
-                          </span>
-                        )}
-                        <span className="text-sm font-bold text-gray-800">{opt.label}</span>
-                        {opt.desc && (
-                          <span className="text-[11px] text-gray-500">{opt.desc}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </ConfigStep>
+                <OptionGrid columns={3}>
+                  {canvasType.edgeTreatments.map((opt) => (
+                    <OptionCard
+                      key={opt.id}
+                      label={opt.label}
+                      description={opt.desc}
+                      selected={edgeTreatment === opt.id}
+                      onSelect={() => { setEdgeTreatment(opt.id); advanceStep("step-edge"); }}
+                    />
+                  ))}
+                </OptionGrid>
+              </StepCard>
             ) : null}
 
-            {/* Step 6: Quantity */}
-            <ConfigStep
-              number={stepNum++}
+            {/* Step: Quantity */}
+            <StepCard
+              stepNumber={stepNum("quantity")}
               title={t("canvas.quantity")}
-              subtitle={t("canvas.quantitySubtitle")}
+              hint={t("canvas.quantitySubtitle")}
+              summaryText={`${activeQty.toLocaleString()} pcs`}
+              open={isStepOpen("quantity")}
+              onToggle={() => toggleStep("quantity")}
+              stepId="step-quantity"
             >
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+              <div className="flex flex-wrap gap-2">
                 {(canvasType.quantities || [1, 2, 3, 5, 10]).map((q) => {
                   const isActive = customQty === "" && quantity === q;
                   return (
@@ -664,14 +606,15 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
                       onClick={() => {
                         setQuantity(q);
                         setCustomQty("");
+                        advanceStep("step-quantity");
                       }}
-                      className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
+                      className={`flex-shrink-0 rounded-full border-2 px-4 py-2 text-sm font-bold transition-all duration-150 ${
                         isActive
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                          ? "border-teal-500 bg-teal-50 text-gray-900"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                       }`}
                     >
-                      <span className="text-base font-black">{q}</span>
+                      {q}
                     </button>
                   );
                 })}
@@ -687,19 +630,23 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
                   value={customQty}
                   onChange={(e) => setCustomQty(e.target.value)}
                   placeholder="e.g. 15"
-                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
                 />
               </div>
-            </ConfigStep>
+            </StepCard>
 
-            {/* Step 7: Quality Badges */}
-            <ConfigStep
-              number={stepNum++}
+            {/* Step: Quality Badges */}
+            <StepCard
+              stepNumber={stepNum("quality")}
               title={t("canvas.quality")}
-              subtitle={t("canvas.qualitySubtitle")}
+              hint={t("canvas.qualitySubtitle")}
+              summaryText="Premium quality"
+              open={isStepOpen("quality")}
+              onToggle={() => toggleStep("quality")}
+              stepId="step-quality"
             >
               <QualityBadges />
-            </ConfigStep>
+            </StepCard>
           </div>
 
           {isQuoteOnly ? (

@@ -10,7 +10,6 @@ import {
   getVehicleType,
 } from "@/lib/vehicle-order-config";
 import {
-  ConfigStep,
   ConfigHero,
   ConfigProductGallery,
   PricingSidebar,
@@ -19,7 +18,12 @@ import {
   CustomDimensions,
   useConfiguratorPrice,
   useConfiguratorCart,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
 } from "@/components/configurator";
+import QuantityScroller from "@/components/configurator/QuantityScroller";
 import VehiclePreview from "@/components/vehicle/VehiclePreview";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
@@ -172,6 +176,44 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
     router.push(`/quote?${params.toString()}`);
   }
 
+  // --- Accordion state ---
+  const [activeStepId, setActiveStepId] = useState(null);
+
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "type",        vis: true },
+      { id: "vehicleBody", vis: vehicleType.vehicleTypes.length > 0 },
+      { id: "material",    vis: true },
+      { id: "size",        vis: vehicleType.sizes.length > 0 },
+      { id: "textInput",   vis: !!vehicleType.hasTextInput },
+      { id: "quantity",    vis: true },
+      { id: "artwork",     vis: true },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, [vehicleType]);
+
+  const stepNumFn = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  // --- Summary texts ---
+  const typeSummary = t(`vehicle.type.${typeId}`);
+  const vehicleBodySummary = VEHICLE_TYPE_OPTIONS.find((v) => v.id === vehicleBodyId)?.label || vehicleBodyId || "—";
+  const materialSummary = vehicleType.materials.find((m) => m.id === materialId)?.label || materialId;
+  const sizeSummary = vehicleType.sizes.length > 0
+    ? (isCustomSize
+      ? (widthIn > 0 && heightIn > 0 ? `${widthIn.toFixed(1)}" × ${heightIn.toFixed(1)}"` : "Custom")
+      : vehicleType.sizes[sizeIdx]?.label || "—")
+    : "—";
+  const textInputSummary = textInput.trim() || "Not entered";
+  const quantitySummary = `${activeQty.toLocaleString()} pcs`;
+  const artworkSummary = uploadedFile?.name || "Not uploaded yet";
+
+  // --- Summary lines for PricingSidebar ---
   const summaryLines = [
     { label: t("vehicle.type.label"), value: t(`vehicle.type.${typeId}`) },
   ];
@@ -200,8 +242,6 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
   const formatCad = (cents) =>
     new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-  let stepNum = 1;
-
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)]">
       <ConfigHero
@@ -218,10 +258,18 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-          <div className="space-y-6 lg:col-span-2">
+          <div className="space-y-3 lg:col-span-2">
 
             {/* Step 1: Type (grouped) */}
-            <ConfigStep number={stepNum++} title={t("vehicle.type.label")} subtitle={t("vehicle.type.subtitle")}>
+            <StepCard
+              stepNumber={stepNumFn("type")}
+              title={t("vehicle.type.label")}
+              hint={t("vehicle.type.subtitle")}
+              summaryText={typeSummary}
+              open={isStepOpen("type")}
+              onToggle={() => toggleStep("type")}
+              stepId="step-type"
+            >
               <div className="space-y-5">
                 {VEHICLE_TYPE_GROUPS.map((grp) => {
                   const items = VEHICLE_TYPES.filter((vt) => vt.group === grp.id);
@@ -231,128 +279,111 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
                       <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">
                         {t(`vehicle.group.${grp.id}`, grp.label)}
                       </p>
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
                         {items.map((vt) => (
-                          <button
+                          <OptionCard
                             key={vt.id}
-                            type="button"
-                            onClick={() => setTypeId(vt.id)}
-                            className={`group relative flex flex-col items-center gap-1.5 rounded-2xl border-2 p-4 text-center transition-all duration-200 ${
-                              typeId === vt.id
-                                ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
-                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
-                            }`}
-                          >
-                            {typeId === vt.id && (
-                              <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
-                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                              </span>
-                            )}
-                            <span className="text-sm font-bold">{t(`vehicle.type.${vt.id}`)}</span>
-                            {vt.quoteOnly && (
-                              <span className={`text-[10px] font-bold ${typeId === vt.id ? "text-amber-300" : "text-amber-600"}`}>
-                                Quote only
-                              </span>
-                            )}
-                          </button>
+                            label={t(`vehicle.type.${vt.id}`)}
+                            selected={typeId === vt.id}
+                            onSelect={() => { setTypeId(vt.id); advanceStep("step-type"); }}
+                            badge={vt.quoteOnly ? (
+                              <span className="text-[10px] font-bold text-amber-600">Quote only</span>
+                            ) : null}
+                          />
                         ))}
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </ConfigStep>
+            </StepCard>
 
             {/* Step: Vehicle Type (if applicable) */}
             {vehicleType.vehicleTypes.length > 0 && (
-              <ConfigStep number={stepNum++} title={t("vehicle.vehicleBody")} subtitle={t("vehicle.vehicleBodySubtitle")}>
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+              <StepCard
+                stepNumber={stepNumFn("vehicleBody")}
+                title={t("vehicle.vehicleBody")}
+                hint={t("vehicle.vehicleBodySubtitle")}
+                summaryText={vehicleBodySummary}
+                open={isStepOpen("vehicleBody")}
+                onToggle={() => toggleStep("vehicleBody")}
+                stepId="step-vehicleBody"
+              >
+                <OptionGrid columns={3} label={t("vehicle.vehicleBody")}>
                   {vehicleType.vehicleTypes.map((vtId) => {
                     const opt = VEHICLE_TYPE_OPTIONS.find((v) => v.id === vtId);
-                    const isActive = vehicleBodyId === vtId;
                     return (
-                      <button
+                      <OptionCard
                         key={vtId}
-                        type="button"
-                        onClick={() => setVehicleBodyId(vtId)}
-                        className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
-                          isActive
-                            ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                        }`}
-                      >
-                        <span className="text-sm font-bold">{opt?.label || vtId}</span>
-                      </button>
+                        label={opt?.label || vtId}
+                        selected={vehicleBodyId === vtId}
+                        onSelect={() => { setVehicleBodyId(vtId); advanceStep("step-vehicleBody"); }}
+                      />
                     );
                   })}
-                </div>
-              </ConfigStep>
+                </OptionGrid>
+              </StepCard>
             )}
 
             {/* Step: Material */}
-            <ConfigStep number={stepNum++} title={t("vehicle.material")} subtitle={t("vehicle.materialSubtitle")}>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            <StepCard
+              stepNumber={stepNumFn("material")}
+              title={t("vehicle.material")}
+              hint={t("vehicle.materialSubtitle")}
+              summaryText={materialSummary}
+              open={isStepOpen("material")}
+              onToggle={() => toggleStep("material")}
+              stepId="step-material"
+            >
+              <OptionGrid columns={3} label={t("vehicle.material")}>
                 {vehicleType.materials.map((mat) => {
-                  const isActive = materialId === mat.id;
                   void mat.multiplier; // multiplier used in pricing only
                   return (
-                    <button
+                    <OptionCard
                       key={mat.id}
-                      type="button"
-                      onClick={() => setMaterialId(mat.id)}
-                      className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
-                        isActive
-                          ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                          : "border-gray-200 bg-white hover:border-gray-400"
-                      }`}
-                    >
-                      {isActive && (
-                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                        </span>
-                      )}
-                      <span className="text-sm font-bold text-gray-800">{mat.label}</span>
-                    </button>
+                      label={mat.label}
+                      selected={materialId === mat.id}
+                      onSelect={() => { setMaterialId(mat.id); advanceStep("step-material"); }}
+                    />
                   );
                 })}
-              </div>
-            </ConfigStep>
+              </OptionGrid>
+            </StepCard>
 
             {/* Step: Size (if applicable) */}
             {vehicleType.sizes.length > 0 && (
-              <ConfigStep number={stepNum++} title={t("vehicle.size")} subtitle={t("vehicle.sizeSubtitle")}>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              <StepCard
+                stepNumber={stepNumFn("size")}
+                title={t("vehicle.size")}
+                hint={t("vehicle.sizeSubtitle")}
+                summaryText={sizeSummary}
+                open={isStepOpen("size")}
+                onToggle={() => toggleStep("size")}
+                stepId="step-size"
+              >
+                <OptionGrid columns={4} label={t("vehicle.size")}>
                   {vehicleType.sizes.map((s, i) => (
-                    <button
+                    <OptionCard
                       key={i}
-                      type="button"
-                      onClick={() => { setSizeIdx(i); setCustomW(""); setCustomH(""); }}
-                      className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
-                        sizeIdx === i
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      <span className="text-sm font-bold">{s.label}</span>
-                    </button>
+                      label={s.label}
+                      selected={sizeIdx === i && !isCustomSize}
+                      onSelect={() => { setSizeIdx(i); setCustomW(""); setCustomH(""); advanceStep("step-size"); }}
+                    />
                   ))}
                   {vehicleType.hasDimensions && (
-                    <button
-                      type="button"
-                      onClick={() => setSizeIdx(-1)}
-                      className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
-                        isCustomSize
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-dashed border-gray-300 bg-white text-gray-500 hover:border-gray-500"
-                      }`}
-                    >
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-                      </svg>
-                      <span className="text-xs font-bold">{t("vehicle.customSize")}</span>
-                    </button>
+                    <OptionCard
+                      label={t("vehicle.customSize")}
+                      selected={isCustomSize}
+                      onSelect={() => setSizeIdx(-1)}
+                      className={isCustomSize ? "" : "border-dashed"}
+                      icon={
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                        </svg>
+                      }
+                    />
                   )}
-                </div>
+                </OptionGrid>
                 {isCustomSize && vehicleType.hasDimensions && (
                   <CustomDimensions
                     customW={customW} customH={customH}
@@ -363,12 +394,20 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
                     dimErrors={dimErrors} t={t}
                   />
                 )}
-              </ConfigStep>
+              </StepCard>
             )}
 
             {/* Step: Text Input (DOT/MC numbers, compliance) */}
             {vehicleType.hasTextInput && (
-              <ConfigStep number={stepNum++} title={t("vehicle.textInput")} subtitle={t("vehicle.textInputSubtitle")}>
+              <StepCard
+                stepNumber={stepNumFn("textInput")}
+                title={t("vehicle.textInput")}
+                hint={t("vehicle.textInputSubtitle")}
+                summaryText={textInputSummary}
+                open={isStepOpen("textInput")}
+                onToggle={() => toggleStep("textInput")}
+                stepId="step-textInput"
+              >
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
                   <label className="mb-1.5 block text-xs font-medium text-gray-500">
                     {t("vehicle.enterText")}
@@ -378,59 +417,54 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
                     placeholder={typeId === "dot-numbers" ? "e.g. USDOT 1234567" : "e.g. Company Name, Phone"}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
                   />
                   <p className="mt-1.5 text-[11px] text-gray-400">
                     {t("vehicle.textHint")}
                   </p>
                 </div>
-              </ConfigStep>
+              </StepCard>
             )}
 
             {/* Quantity */}
-            <ConfigStep number={stepNum++} title={t("vehicle.quantity")} subtitle={t("vehicle.quantitySubtitle")}>
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
-                {vehicleType.quantities.map((q) => {
-                  const isActive = customQty === "" && quantity === q;
-                  return (
-                    <button
-                      key={q}
-                      type="button"
-                      onClick={() => { setQuantity(q); setCustomQty(""); }}
-                      className={`flex-shrink-0 flex flex-col items-center gap-0.5 rounded-full border-2 px-2 py-3 transition-all duration-150 ${
-                        isActive
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      <span className="text-base font-black">{q}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-3 flex items-center gap-3">
-                <label className="text-xs font-medium text-gray-500">{t("vehicle.customQty")}:</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="999999"
-                  value={customQty}
-                  onChange={(e) => setCustomQty(e.target.value)}
-                  placeholder="e.g. 3"
-                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
-                />
-              </div>
-            </ConfigStep>
+            <StepCard
+              stepNumber={stepNumFn("quantity")}
+              title={t("vehicle.quantity")}
+              hint={t("vehicle.quantitySubtitle")}
+              summaryText={quantitySummary}
+              open={isStepOpen("quantity")}
+              onToggle={() => toggleStep("quantity")}
+              stepId="step-quantity"
+            >
+              <QuantityScroller
+                quantities={vehicleType.quantities}
+                selected={quantity}
+                onSelect={(q) => { setQuantity(q); setCustomQty(""); advanceStep("step-quantity"); }}
+                customQty={customQty}
+                onCustomChange={setCustomQty}
+                t={t}
+                placeholder="e.g. 3"
+              />
+            </StepCard>
 
             {/* Upload */}
-            <ConfigStep number={stepNum++} title={t("vehicle.artwork")} subtitle={t("vehicle.artworkSubtitle")} optional>
+            <StepCard
+              stepNumber={stepNumFn("artwork")}
+              title={t("vehicle.artwork")}
+              hint={t("vehicle.artworkSubtitle")}
+              summaryText={artworkSummary}
+              optional
+              open={isStepOpen("artwork")}
+              onToggle={() => toggleStep("artwork")}
+              stepId="step-artwork"
+            >
               <ArtworkUpload
                 uploadedFile={uploadedFile}
                 onUploaded={setUploadedFile}
                 onRemove={() => setUploadedFile(null)}
                 t={t}
               />
-            </ConfigStep>
+            </StepCard>
           </div>
 
           <PricingSidebar
