@@ -392,7 +392,15 @@ export default function InlineConfigurator({ cuttingTypeId }) {
 
   const stepNum = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
   const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
-  const scrollToNext = useStepScroll(stepIds);
+
+  // --- Accordion: only one step open at a time, default all collapsed ---
+  const [activeStepId, setActiveStepId] = useState(null);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => prev === "step-" + id ? null : "step-" + id);
+
+  // Quantity dropdown threshold: > 6 items → <select>, otherwise pill buttons
+  const useQtyDropdown = cutting.quantities.length > 6;
 
   // --- summaryText helpers ---
   const sizeSummary = isCustomSize
@@ -408,6 +416,8 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         hint={t("step.material.hint")}
         summaryText={t(`stickerOrder.mat.${materialId}`)}
         stepId="step-material"
+        open={isStepOpen("material")}
+        onToggle={() => toggleStep("material")}
       >
         {(() => {
           const groups = [];
@@ -436,7 +446,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
                 <MaterialSwatchGrid
                   materials={groupMats}
                   selectedId={materialId}
-                  onSelect={(id) => { selectMaterial(id); scrollToNext("step-material"); }}
+                  onSelect={(id) => { selectMaterial(id); advanceStep("step-material"); }}
                   columns={groupMats.length <= 3 ? 3 : 4}
                 />
               </div>
@@ -458,6 +468,8 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         summaryText={t(`stickerOrder.foil.${foilColor}`)}
         visible={isFoil}
         stepId="step-foil"
+        open={isStepOpen("foil")}
+        onToggle={() => toggleStep("foil")}
       >
         <OptionGrid columns={3} label={t("step.foilColor")}>
           {FOIL_SUB_OPTIONS.map((opt) => (
@@ -465,7 +477,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               key={opt.id}
               label={t(opt.label)}
               selected={foilColor === opt.id}
-              onSelect={() => { setFoilColor(opt.id); scrollToNext("step-foil"); }}
+              onSelect={() => { setFoilColor(opt.id); advanceStep("step-foil"); }}
             />
           ))}
         </OptionGrid>
@@ -479,6 +491,8 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         summaryText={cutting.shapes ? t(`stickerOrder.shape.${shapeId}`) : undefined}
         visible={!!cutting.shapes}
         stepId="step-shape"
+        open={isStepOpen("shape")}
+        onToggle={() => toggleStep("shape")}
       >
         <OptionGrid columns={3} label={t("step.shape")}>
           {cutting.shapes?.map((s) => (
@@ -486,7 +500,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               key={s.id}
               label={t(s.label)}
               selected={shapeId === s.id}
-              onSelect={() => { selectShape(s.id); scrollToNext("step-shape"); }}
+              onSelect={() => { selectShape(s.id); advanceStep("step-shape"); }}
               icon={<ShapeIcon shapeId={s.id} className={`h-4 w-4 ${shapeId === s.id ? "text-teal-600" : "text-gray-500"}`} />}
             />
           ))}
@@ -508,6 +522,8 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         hint={t("step.size.hint")}
         summaryText={sizeSummary}
         stepId="step-size"
+        open={isStepOpen("size")}
+        onToggle={() => toggleStep("size")}
       >
         <OptionGrid columns={3} label={t("step.size")}>
           {shapePresets.map((s, i) => (
@@ -515,7 +531,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               key={i}
               label={s.label}
               selected={!isCustomSize && sizeIdx === i}
-              onSelect={() => { selectSize(i); scrollToNext("step-size"); }}
+              onSelect={() => { selectSize(i); advanceStep("step-size"); }}
             />
           ))}
           {shapePresets.length > 0 && (
@@ -575,6 +591,8 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         summaryText={t(`stickerOrder.printMode.${printMode === "color_only" ? "colorOnly" : printMode === "white_only" ? "whiteOnly" : printMode === "color_white_color" ? "colorWhiteColor" : "whiteColor"}`)}
         visible={isWhiteInkMaterial && availablePrintModes.length > 0}
         stepId="step-printMode"
+        open={isStepOpen("printMode")}
+        onToggle={() => toggleStep("printMode")}
       >
         <OptionGrid columns={2} label={t("step.printMode")}>
           {availablePrintModes.map((mode) => (
@@ -582,7 +600,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               key={mode.id}
               label={t(mode.label)}
               selected={printMode === mode.id}
-              onSelect={() => { setPrintMode(mode.id); scrollToNext("step-printMode"); }}
+              onSelect={() => { setPrintMode(mode.id); advanceStep("step-printMode"); }}
             />
           ))}
         </OptionGrid>
@@ -596,6 +614,8 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         summaryText={t(`stickerOrder.wind.${windId}`)}
         visible={!!cutting.windDirections}
         stepId="step-wind"
+        open={isStepOpen("wind")}
+        onToggle={() => toggleStep("wind")}
       >
         {/* "Doesn't Matter" — full-width default */}
         {(() => {
@@ -608,7 +628,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               label={t(anyOpt.label)}
               description={t(anyOpt.desc)}
               selected={isActive}
-              onSelect={() => { selectWind("any"); scrollToNext("step-wind"); }}
+              onSelect={() => { selectWind("any"); advanceStep("step-wind"); }}
               icon={
                 <svg width="36" height="36" viewBox="0 0 36 36" fill="none" className="shrink-0">
                   <circle cx="18" cy="18" r="14" stroke={isActive ? "#14b8a6" : "#9ca3af"} strokeWidth="1.5" strokeDasharray="3 3" />
@@ -630,7 +650,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
                 key={w.id}
                 label={t(w.label)}
                 selected={isActive}
-                onSelect={() => { selectWind(w.id); scrollToNext("step-wind"); }}
+                onSelect={() => { selectWind(w.id); advanceStep("step-wind"); }}
                 badge={<span className="text-[9px] font-bold text-amber-600">+10%</span>}
                 icon={
                   <svg width="36" height="36" viewBox="0 0 36 36" fill="none" className="shrink-0">
@@ -651,33 +671,54 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         </OptionGrid>
       </StepCard>
 
-      {/* 7. Quantity — keep pill buttons (good UX), just wrap in StepCard */}
+      {/* 7. Quantity — dropdown for >6 items, pill buttons for ≤6 */}
       <StepCard
         stepNumber={stepNum("quantity")}
         title={t("step.quantity")}
         hint={t("step.quantity.hint")}
         summaryText={`${activeQty.toLocaleString()} pcs`}
         stepId="step-quantity"
+        open={isStepOpen("quantity")}
+        onToggle={() => toggleStep("quantity")}
       >
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
-          {cutting.quantities.map((q) => {
-            const isActive = customQty === "" && quantity === q;
-            return (
-              <button
-                key={q}
-                type="button"
-                onClick={() => { selectQuantity(q); scrollToNext("step-quantity"); }}
-                className={`flex-shrink-0 rounded-full border-2 px-4 py-2 text-xs font-bold transition-all ${
-                  isActive
-                    ? "border-teal-500 bg-teal-50 text-teal-700"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {q.toLocaleString()}
-              </button>
-            );
-          })}
-        </div>
+        {useQtyDropdown ? (
+          /* Dropdown for long quantity lists (>6 items) */
+          <select
+            value={customQty !== "" ? "custom" : quantity}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "custom") return;
+              selectQuantity(Number(val));
+              advanceStep("step-quantity");
+            }}
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/20"
+          >
+            {cutting.quantities.map((q) => (
+              <option key={q} value={q}>{q.toLocaleString()} pcs</option>
+            ))}
+          </select>
+        ) : (
+          /* Pill buttons for short lists (≤6 items) */
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
+            {cutting.quantities.map((q) => {
+              const isActive = customQty === "" && quantity === q;
+              return (
+                <button
+                  key={q}
+                  type="button"
+                  onClick={() => { selectQuantity(q); advanceStep("step-quantity"); }}
+                  className={`flex-shrink-0 rounded-full border-2 px-4 py-2 text-xs font-bold transition-all ${
+                    isActive
+                      ? "border-teal-500 bg-teal-50 text-teal-700"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  {q.toLocaleString()}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <div className="mt-2 flex items-center gap-2">
           <input
             type="number"
@@ -705,6 +746,8 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         summaryText={laminationId === "none" ? t("stickerOrder.lam.none.desc") : laminationId === "gloss" ? t("stickerOrder.lam.gloss.desc") : t("stickerOrder.lam.matte-lam.desc")}
         visible={!hideLamination && cutting.lamination?.length > 1}
         stepId="step-lamination"
+        open={isStepOpen("lamination")}
+        onToggle={() => toggleStep("lamination")}
       >
         <OptionGrid columns={3} label={t("step.lamination")}>
           {cutting.lamination?.map((lam) => (
@@ -713,7 +756,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               label={lam.id === "none" ? "No Lamination" : lam.id === "gloss" ? "Gloss" : "Matte"}
               description={t(`stickerOrder.lam.${lam.id}.desc`)}
               selected={laminationId === lam.id}
-              onSelect={() => { setLaminationId(lam.id); scrollToNext("step-lamination"); }}
+              onSelect={() => { setLaminationId(lam.id); advanceStep("step-lamination"); }}
             />
           ))}
         </OptionGrid>
@@ -731,6 +774,8 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         hint={t("step.turnaround.hint")}
         summaryText={t(`stickerOrder.turnaround.${turnaroundId}`)}
         stepId="step-turnaround"
+        open={isStepOpen("turnaround")}
+        onToggle={() => toggleStep("turnaround")}
       >
         <OptionGrid columns={2} label={t("step.turnaround")}>
           {TURNAROUND_OPTIONS.map((opt) => (
@@ -739,7 +784,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               label={t(opt.label)}
               description={t(opt.desc)}
               selected={turnaroundId === opt.id}
-              onSelect={() => { setTurnaroundId(opt.id); scrollToNext("step-turnaround"); }}
+              onSelect={() => { setTurnaroundId(opt.id); advanceStep("step-turnaround"); }}
               badge={opt.id === "rush" ? <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">+50%</span> : undefined}
             />
           ))}
@@ -754,6 +799,8 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         summaryText={uploadedFile?.name || t("step.notUploaded")}
         optional
         stepId="step-artwork"
+        open={isStepOpen("artwork")}
+        onToggle={() => toggleStep("artwork")}
       >
         <ArtworkUpload
           uploadedFile={uploadedFile}

@@ -4,6 +4,7 @@ import { useState, useRef, useId } from "react";
 
 /**
  * Collapsible step card — wraps each configurator step.
+ * Supports both controlled (open + onToggle) and uncontrolled (defaultOpen) modes.
  * CSS max-height transition for performance (no JS animation libs).
  */
 export default function StepCard({
@@ -13,15 +14,29 @@ export default function StepCard({
   summaryText,
   optional = false,
   visible = true,
-  defaultOpen = true,
+  defaultOpen = false,
+  open,
+  onToggle,
   stepId,
   children,
 }) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const contentId = useId();
   const contentRef = useRef(null);
 
   if (!visible) return null;
+
+  // Controlled mode: parent passes open + onToggle
+  const isControlled = open !== undefined;
+  const isOpen = isControlled ? open : internalOpen;
+
+  function handleToggle() {
+    if (isControlled) {
+      onToggle?.();
+    } else {
+      setInternalOpen((v) => !v);
+    }
+  }
 
   return (
     <div id={stepId} className="rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -30,17 +45,19 @@ export default function StepCard({
         type="button"
         aria-expanded={isOpen}
         aria-controls={contentId}
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={handleToggle}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            setIsOpen((v) => !v);
+            handleToggle();
           }
         }}
         className="flex w-full items-center gap-3 p-5 text-left focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded-xl"
       >
         {/* Step number circle */}
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-900 text-xs font-bold text-white">
+        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+          isOpen ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
+        }`}>
           {stepNumber}
         </span>
 
