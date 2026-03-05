@@ -15,7 +15,6 @@ import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const StampEditor = dynamic(() => import("@/components/product/StampEditor"), { ssr: false });
 import {
-  ConfigStep,
   ConfigHero,
   ConfigProductGallery,
   PricingSidebar,
@@ -24,6 +23,10 @@ import {
   LetterheadTemplateBuilder,
   useConfiguratorPrice,
   useConfiguratorCart,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
 } from "@/components/configurator";
 import QuantityScroller from "@/components/configurator/QuantityScroller";
 
@@ -198,7 +201,44 @@ export default function MarketingPrintOrderClient({
   const hasPaperStep = printType.papers.length > 1;
   const hasExtras = (printType.extras || []).length > 0;
 
-  // --- Summary lines ---
+  // --- Accordion state ---
+  const [activeStepId, setActiveStepId] = useState(null);
+
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "type",     vis: !hideTypeSelector },
+      { id: "size",     vis: true },
+      { id: "quantity", vis: true },
+    ];
+    if (isStamp) {
+      defs.push({ id: "stampText",   vis: true });
+      defs.push({ id: "stampDesign", vis: true });
+    } else {
+      if (hasPaperStep)     defs.push({ id: "paper",     vis: true });
+      if (hasSidesStep)     defs.push({ id: "sides",     vis: true });
+      if (hasFinishingStep) defs.push({ id: "finishing",  vis: true });
+      for (const ex of printType.extras || []) {
+        defs.push({ id: `extra-${ex.key}`, vis: true });
+      }
+      defs.push({ id: "artwork", vis: true });
+    }
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, [hideTypeSelector, isStamp, hasPaperStep, hasSidesStep, hasFinishingStep, printType.extras]);
+
+  const stepNum = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  // --- Summary texts ---
+  const paperSummary = selectedPaper?.label || paperId;
+  const sidesSummary = sides === "double" ? "Double-Sided" : "Single-Sided";
+  const finishingSummary = FINISHING_LABELS[finishing] || finishing;
+
+  // --- Summary lines for PricingSidebar ---
   const summaryLines = useMemo(() => {
     const lines = [];
     if (!hideTypeSelector) lines.push({ label: "Product", value: printType.label });
@@ -253,9 +293,6 @@ export default function MarketingPrintOrderClient({
     : t("marketingPrint.subtitle", "Business cards, flyers, postcards, brochures & more");
   const heroBreadcrumbLabel = hideTypeSelector ? printType.label : t("marketingPrint.order", "Order");
 
-  // Dynamic step numbering
-  let step = 0;
-
   // --- Render ---
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)]">
@@ -274,9 +311,9 @@ export default function MarketingPrintOrderClient({
         ]}
       />
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+        <div className="md:grid md:grid-cols-3 md:gap-6 lg:gap-8">
           {/* LEFT COLUMN */}
-          <div className="space-y-6 lg:col-span-2">
+          <div className="space-y-3 md:col-span-2">
 
             {/* Product Gallery — inside grid so sidebar starts beside it */}
             {productImages?.length > 0 && (
@@ -285,7 +322,14 @@ export default function MarketingPrintOrderClient({
 
             {/* Step: Print Type (hidden when direct-entry) */}
             {!hideTypeSelector && (
-              <ConfigStep number={++step} title={t("marketingPrint.type", "Product Type")}>
+              <StepCard
+                stepNumber={stepNum("type")}
+                title={t("marketingPrint.type", "Product Type")}
+                summaryText={printType.label}
+                open={isStepOpen("type")}
+                onToggle={() => toggleStep("type")}
+                stepId="step-type"
+              >
                 <div className="space-y-5">
                   {PRINT_TYPE_GROUPS.map((grp) => {
                     const items = PRINT_TYPES.filter((pt) => pt.group === grp.id);
@@ -297,58 +341,49 @@ export default function MarketingPrintOrderClient({
                         </p>
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
                           {items.map((pt) => (
-                            <button
+                            <OptionCard
                               key={pt.id}
-                              type="button"
-                              onClick={() => handleTypeChange(pt.id)}
-                              className={`rounded-xl border-2 px-3 py-2.5 text-sm font-bold transition-all duration-150 ${
-                                typeId === pt.id
-                                  ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                              }`}
-                            >
-                              {pt.label}
-                            </button>
+                              label={pt.label}
+                              selected={typeId === pt.id}
+                              onSelect={() => { handleTypeChange(pt.id); advanceStep("step-type"); }}
+                            />
                           ))}
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </ConfigStep>
+              </StepCard>
             )}
 
             {/* Step: Size */}
-            <ConfigStep number={++step} title={t("marketingPrint.size", "Size")}>
-              <div className="flex flex-wrap gap-2">
+            <StepCard
+              stepNumber={stepNum("size")}
+              title={t("marketingPrint.size", "Size")}
+              hint={t("step.size.hint")}
+              summaryText={sizeLabel || "Custom"}
+              open={isStepOpen("size")}
+              onToggle={() => toggleStep("size")}
+              stepId="step-size"
+            >
+              <OptionGrid columns={printType.sizes.length <= 4 ? printType.sizes.length + (printType.customSize ? 1 : 0) : 4} label={t("step.size")}>
                 {printType.sizes.map((s, idx) => (
-                  <button
+                  <OptionCard
                     key={idx}
-                    type="button"
-                    onClick={() => { setSizeIdx(idx); setIsCustomSize(false); }}
-                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                      sizeIdx === idx && !isCustomSize
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    {s.label}
-                  </button>
+                    label={s.label}
+                    selected={sizeIdx === idx && !isCustomSize}
+                    onSelect={() => { setSizeIdx(idx); setIsCustomSize(false); advanceStep("step-size"); }}
+                  />
                 ))}
                 {printType.customSize && (
-                  <button
-                    type="button"
-                    onClick={() => setIsCustomSize(true)}
-                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                      isCustomSize
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    Custom Size
-                  </button>
+                  <OptionCard
+                    label="Custom Size"
+                    selected={isCustomSize}
+                    onSelect={() => setIsCustomSize(true)}
+                    className={isCustomSize ? "" : "border-dashed"}
+                  />
                 )}
-              </div>
+              </OptionGrid>
 
               {/* Custom size inputs */}
               {isCustomSize && printType.customSize && (
@@ -363,11 +398,11 @@ export default function MarketingPrintOrderClient({
                       placeholder={`max ${printType.customSize.maxW}"`}
                       value={customW}
                       onChange={(e) => setCustomW(e.target.value)}
-                      className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                      className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
                     />
                     <span className="text-xs text-gray-400">in</span>
                   </div>
-                  <span className="text-gray-400">×</span>
+                  <span className="text-gray-400">&times;</span>
                   <div className="flex items-center gap-2">
                     <label className="text-xs font-medium text-gray-500">H:</label>
                     <input
@@ -378,11 +413,11 @@ export default function MarketingPrintOrderClient({
                       placeholder={`max ${printType.customSize.maxH}"`}
                       value={customH}
                       onChange={(e) => setCustomH(e.target.value)}
-                      className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                      className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
                     />
                     <span className="text-xs text-gray-400">in</span>
                   </div>
-                  <span className="text-xs text-gray-400">(max {printType.customSize.maxW}&quot; × {printType.customSize.maxH}&quot;)</span>
+                  <span className="text-xs text-gray-400">(max {printType.customSize.maxW}&quot; &times; {printType.customSize.maxH}&quot;)</span>
                 </div>
               )}
 
@@ -406,9 +441,9 @@ export default function MarketingPrintOrderClient({
                               next[i] = { ...next[i], w: e.target.value };
                               setExtraSizes(next);
                             }}
-                            className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                            className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
                           />
-                          <span className="text-gray-400">×</span>
+                          <span className="text-gray-400">&times;</span>
                           <input
                             type="number"
                             min={1}
@@ -421,7 +456,7 @@ export default function MarketingPrintOrderClient({
                               next[i] = { ...next[i], h: e.target.value };
                               setExtraSizes(next);
                             }}
-                            className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                            className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
                           />
                           <span className="text-xs text-gray-400">in</span>
                           <button
@@ -439,17 +474,25 @@ export default function MarketingPrintOrderClient({
                     <button
                       type="button"
                       onClick={() => setExtraSizes([...extraSizes, { w: "", h: "" }])}
-                      className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                      className="text-sm font-medium text-teal-600 hover:text-teal-800"
                     >
                       + Add More Sizes {extraSizes.length > 0 && `(${extraSizes.length}/${printType.moreSizes})`}
                     </button>
                   )}
                 </div>
               )}
-            </ConfigStep>
+            </StepCard>
 
-            {/* Step: Quantity — placed right after Size for easy price comparison */}
-            <ConfigStep number={++step} title={t("marketingPrint.quantity", "Quantity")}>
+            {/* Step: Quantity */}
+            <StepCard
+              stepNumber={stepNum("quantity")}
+              title={t("marketingPrint.quantity", "Quantity")}
+              hint={t("step.quantity.hint")}
+              summaryText={`${effectiveQty.toLocaleString()} pcs`}
+              open={isStepOpen("quantity")}
+              onToggle={() => toggleStep("quantity")}
+              stepId="step-quantity"
+            >
               {printType.quantityMode === "input" ? (
                 <input
                   type="number"
@@ -457,25 +500,32 @@ export default function MarketingPrintOrderClient({
                   placeholder="Enter quantity"
                   value={customQty}
                   onChange={(e) => setCustomQty(e.target.value)}
-                  className="w-40 rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                  className="w-40 rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
                 />
               ) : (
                 <QuantityScroller
                   quantities={printType.quantities}
                   selected={quantity}
-                  onSelect={setQuantity}
+                  onSelect={(q) => { setQuantity(q); setCustomQty(""); advanceStep("step-quantity"); }}
                   customQty={customQty}
                   onCustomChange={setCustomQty}
                   t={t}
                   placeholder="e.g. 200"
                 />
               )}
-            </ConfigStep>
+            </StepCard>
 
             {/* ── Stamp-specific: Design Your Stamp ── */}
             {isStamp ? (
               <>
-                <ConfigStep number={++step} title={t("stamp.text", "Stamp Text")}>
+                <StepCard
+                  stepNumber={stepNum("stampText")}
+                  title={t("stamp.text", "Stamp Text")}
+                  summaryText={stampText.split("\n")[0]}
+                  open={isStepOpen("stampText")}
+                  onToggle={() => toggleStep("stampText")}
+                  stepId="step-stampText"
+                >
                   <textarea
                     rows={4}
                     placeholder={t("stamp.textPlaceholder", "Enter your stamp text (one line per row)")}
@@ -484,12 +534,19 @@ export default function MarketingPrintOrderClient({
                       setStampText(e.target.value);
                       handleStampChange({ text: e.target.value });
                     }}
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 resize-none"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10 resize-none"
                   />
                   <p className="mt-1 text-xs text-gray-400">{t("stamp.textHint", "Each line will be displayed separately on the stamp")}</p>
-                </ConfigStep>
+                </StepCard>
 
-                <ConfigStep number={++step} title={t("stamp.design", "Design Your Stamp")}>
+                <StepCard
+                  stepNumber={stepNum("stampDesign")}
+                  title={t("stamp.design", "Design Your Stamp")}
+                  summaryText={`${stampShape === "round" ? "Round" : "Rectangle"}, ${stampColor === "#DC2626" ? "Red" : stampColor === "#2563EB" ? "Blue" : "Black"}`}
+                  open={isStepOpen("stampDesign")}
+                  onToggle={() => toggleStep("stampDesign")}
+                  stepId="step-stampDesign"
+                >
                   <StampEditor
                     shape={stampShape}
                     widthIn={widthIn}
@@ -500,146 +557,144 @@ export default function MarketingPrintOrderClient({
                     color={stampColor}
                     onChange={handleStampChange}
                   />
-                </ConfigStep>
+                </StepCard>
               </>
             ) : (
               <>
                 {/* Step: Paper / Stock (hidden if single option) */}
                 {hasPaperStep && (
-                  <ConfigStep number={++step} title={t("marketingPrint.paper", "Paper / Stock")}>
-                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                      {printType.papers.map((p) => {
-                        const isActive = paperId === p.id;
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onClick={() => setPaperId(p.id)}
-                            className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
-                              isActive
-                                ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                                : "border-gray-200 bg-white hover:border-gray-400"
-                            }`}
-                          >
-                            {isActive && (
-                              <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                                <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                              </span>
-                            )}
-                            <span className="text-sm font-bold text-gray-800">{p.label}</span>
-                            {p.surcharge > 0 && (
-                              <span className="text-xs font-medium text-emerald-600">{formatSurcharge(p.surcharge)}</span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </ConfigStep>
+                  <StepCard
+                    stepNumber={stepNum("paper")}
+                    title={t("marketingPrint.paper", "Paper / Stock")}
+                    summaryText={paperSummary}
+                    open={isStepOpen("paper")}
+                    onToggle={() => toggleStep("paper")}
+                    stepId="step-paper"
+                  >
+                    <OptionGrid columns={printType.papers.length <= 3 ? printType.papers.length : 3} label={t("marketingPrint.paper", "Paper / Stock")}>
+                      {printType.papers.map((p) => (
+                        <OptionCard
+                          key={p.id}
+                          label={p.label}
+                          selected={paperId === p.id}
+                          onSelect={() => { setPaperId(p.id); advanceStep("step-paper"); }}
+                          badge={p.surcharge > 0 ? (
+                            <span className="text-[9px] font-bold text-emerald-600">{formatSurcharge(p.surcharge)}</span>
+                          ) : null}
+                        />
+                      ))}
+                    </OptionGrid>
+                  </StepCard>
                 )}
 
                 {/* Step: Sides (hidden if single option) */}
                 {hasSidesStep && (
-                  <ConfigStep number={++step} title={t("marketingPrint.sides", "Print Sides")}>
-                    <div className="flex gap-2">
-                      {["single", "double"].map((s) => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => setSides(s)}
-                          className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                            sides === s
-                              ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                          }`}
-                        >
-                          {s === "single"
-                            ? t("marketingPrint.singleSided", "Single-Sided")
-                            : t("marketingPrint.doubleSided", "Double-Sided")}
-                        </button>
-                      ))}
-                    </div>
-                  </ConfigStep>
+                  <StepCard
+                    stepNumber={stepNum("sides")}
+                    title={t("marketingPrint.sides", "Print Sides")}
+                    summaryText={sidesSummary}
+                    open={isStepOpen("sides")}
+                    onToggle={() => toggleStep("sides")}
+                    stepId="step-sides"
+                  >
+                    <OptionGrid columns={2} label={t("marketingPrint.sides", "Print Sides")}>
+                      <OptionCard
+                        label={t("marketingPrint.singleSided", "Single-Sided")}
+                        selected={sides === "single"}
+                        onSelect={() => { setSides("single"); advanceStep("step-sides"); }}
+                      />
+                      <OptionCard
+                        label={t("marketingPrint.doubleSided", "Double-Sided")}
+                        selected={sides === "double"}
+                        onSelect={() => { setSides("double"); advanceStep("step-sides"); }}
+                      />
+                    </OptionGrid>
+                  </StepCard>
                 )}
 
                 {/* Step: Finishing (hidden if only "none") */}
                 {hasFinishingStep && (
-                  <ConfigStep number={++step} title={t("marketingPrint.finishing", "Finishing")}>
-                    <div className="flex flex-wrap gap-2">
+                  <StepCard
+                    stepNumber={stepNum("finishing")}
+                    title={t("marketingPrint.finishing", "Finishing")}
+                    summaryText={finishingSummary}
+                    open={isStepOpen("finishing")}
+                    onToggle={() => toggleStep("finishing")}
+                    stepId="step-finishing"
+                  >
+                    <OptionGrid columns={printType.finishings.length <= 4 ? printType.finishings.length : 4} label={t("marketingPrint.finishing", "Finishing")}>
                       {printType.finishings.map((f) => (
-                        <button
+                        <OptionCard
                           key={f}
-                          type="button"
-                          onClick={() => setFinishing(f)}
-                          className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                            finishing === f
-                              ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                          }`}
-                        >
-                          {FINISHING_LABELS[f] || f}
-                        </button>
+                          label={FINISHING_LABELS[f] || f}
+                          selected={finishing === f}
+                          onSelect={() => { setFinishing(f); advanceStep("step-finishing"); }}
+                        />
                       ))}
-                    </div>
-                  </ConfigStep>
+                    </OptionGrid>
+                  </StepCard>
                 )}
 
                 {/* Steps: Extras (dynamic from printType.extras) */}
-                {(printType.extras || []).map((ex) => (
-                  <ConfigStep key={ex.key} number={++step} title={ex.label}>
-                    <div className="flex flex-wrap gap-2">
-                      {ex.options.map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() =>
-                            setExtrasState((prev) => ({ ...prev, [ex.key]: opt.id }))
-                          }
-                          className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                            extrasState[ex.key] === opt.id
-                              ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                          }`}
-                        >
-                          {opt.label}
-                          {opt.surcharge > 0 && (
-                            <span className="ml-1.5 text-xs font-medium opacity-75">
-                              {formatSurcharge(opt.surcharge)}
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </ConfigStep>
-                ))}
+                {(printType.extras || []).map((ex) => {
+                  const selectedOpt = ex.options.find((o) => o.id === extrasState[ex.key]);
+                  return (
+                    <StepCard
+                      key={ex.key}
+                      stepNumber={stepNum(`extra-${ex.key}`)}
+                      title={ex.label}
+                      summaryText={selectedOpt?.label || "None"}
+                      open={isStepOpen(`extra-${ex.key}`)}
+                      onToggle={() => toggleStep(`extra-${ex.key}`)}
+                      stepId={`step-extra-${ex.key}`}
+                    >
+                      <OptionGrid columns={ex.options.length <= 4 ? ex.options.length : 4} label={ex.label}>
+                        {ex.options.map((opt) => (
+                          <OptionCard
+                            key={opt.id}
+                            label={opt.label}
+                            selected={extrasState[ex.key] === opt.id}
+                            onSelect={() => {
+                              setExtrasState((prev) => ({ ...prev, [ex.key]: opt.id }));
+                              advanceStep(`step-extra-${ex.key}`);
+                            }}
+                            badge={opt.surcharge > 0 ? (
+                              <span className="text-[9px] font-bold text-amber-600">{formatSurcharge(opt.surcharge)}</span>
+                            ) : null}
+                          />
+                        ))}
+                      </OptionGrid>
+                    </StepCard>
+                  );
+                })}
 
                 {/* Step: Artwork */}
-                <ConfigStep number={++step} title={t("marketingPrint.artwork", "Artwork")} optional>
+                <StepCard
+                  stepNumber={stepNum("artwork")}
+                  title={t("marketingPrint.artwork", "Artwork")}
+                  hint={t("step.artwork.hint")}
+                  summaryText={uploadedFile?.name || t("step.notUploaded")}
+                  optional
+                  open={isStepOpen("artwork")}
+                  onToggle={() => toggleStep("artwork")}
+                  stepId="step-artwork"
+                >
                   {printType.templateBuilder ? (
                     <>
                       {/* Toggle: Upload vs Template */}
-                      <div className="mb-4 flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setArtworkMode("upload")}
-                          className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                            artworkMode === "upload"
-                              ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                          }`}
-                        >
-                          {t("marketingPrint.uploadDesign", "Upload Your Design")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setArtworkMode("template")}
-                          className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                            artworkMode === "template"
-                              ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                          }`}
-                        >
-                          {t("marketingPrint.useTemplate", "Use Our Template")}
-                        </button>
+                      <div className="mb-4">
+                        <OptionGrid columns={2} label={t("marketingPrint.artwork", "Artwork")}>
+                          <OptionCard
+                            label={t("marketingPrint.uploadDesign", "Upload Your Design")}
+                            selected={artworkMode === "upload"}
+                            onSelect={() => setArtworkMode("upload")}
+                          />
+                          <OptionCard
+                            label={t("marketingPrint.useTemplate", "Use Our Template")}
+                            selected={artworkMode === "template"}
+                            onSelect={() => setArtworkMode("template")}
+                          />
+                        </OptionGrid>
                       </div>
                       {artworkMode === "upload" ? (
                         <ArtworkUpload
@@ -663,7 +718,7 @@ export default function MarketingPrintOrderClient({
                       t={t}
                     />
                   )}
-                </ConfigStep>
+                </StepCard>
               </>
             )}
           </div>

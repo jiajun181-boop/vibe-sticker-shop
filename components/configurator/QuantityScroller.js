@@ -60,8 +60,8 @@ export default function QuantityScroller({
               }}
               className={`flex-shrink-0 rounded-full border-2 px-4 py-2 text-sm font-bold transition-all duration-150 ${
                 isActive
-                  ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                  ? "border-teal-500 bg-teal-50 text-gray-900"
+                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
               }`}
             >
               {q.toLocaleString()}
@@ -87,7 +87,7 @@ export default function QuantityScroller({
               if (n > 0) onSelect?.(n);
             }}
             placeholder={placeholder}
-            className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+            className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
           />
         </div>
       )}
