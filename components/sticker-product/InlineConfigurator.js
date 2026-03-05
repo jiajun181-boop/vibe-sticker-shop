@@ -26,6 +26,11 @@ import {
   useConfiguratorCart,
   MaterialSwatchGrid,
   MobileBottomBar,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  InfoPopover,
+  useStepScroll,
 } from "@/components/configurator";
 
 const INCH_TO_CM = 2.54;
@@ -367,15 +372,44 @@ export default function InlineConfigurator({ cuttingTypeId }) {
   // Unit price display
   const unitPriceLabel = adjustedUnitCents > 0 ? `${formatCad(adjustedUnitCents)}/ea` : null;
 
+  // --- Dynamic step numbering: hidden steps don't count ---
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "material", vis: true },
+      { id: "foil", vis: isFoil },
+      { id: "shape", vis: !!cutting.shapes },
+      { id: "size", vis: true },
+      { id: "printMode", vis: isWhiteInkMaterial && availablePrintModes.length > 0 },
+      { id: "wind", vis: !!cutting.windDirections },
+      { id: "quantity", vis: true },
+      { id: "lamination", vis: !hideLamination && cutting.lamination?.length > 1 },
+      { id: "turnaround", vis: true },
+      { id: "artwork", vis: true },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, [isFoil, cutting, isWhiteInkMaterial, availablePrintModes.length, hideLamination]);
+
+  const stepNum = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const scrollToNext = useStepScroll(stepIds);
+
+  // --- summaryText helpers ---
+  const sizeSummary = isCustomSize
+    ? (customW && customH ? `${customW}" × ${customH}"` : customW ? `${customW}"` : "")
+    : shapePresets[sizeIdx]?.label || "";
+
   return (
-    <div className="space-y-5">
-      {/* Material */}
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Material
-        </h3>
+    <div className="space-y-4">
+      {/* 1. Material */}
+      <StepCard
+        stepNumber={stepNum("material")}
+        title={t("step.material")}
+        hint={t("step.material.hint")}
+        summaryText={t(`stickerOrder.mat.${materialId}`)}
+        stepId="step-material"
+      >
         {(() => {
-          // Group materials by their group field
           const groups = [];
           const seen = new Set();
           for (const mat of cutting.materials) {
@@ -402,124 +436,100 @@ export default function InlineConfigurator({ cuttingTypeId }) {
                 <MaterialSwatchGrid
                   materials={groupMats}
                   selectedId={materialId}
-                  onSelect={selectMaterial}
+                  onSelect={(id) => { selectMaterial(id); scrollToNext("step-material"); }}
                   columns={groupMats.length <= 3 ? 3 : 4}
                 />
               </div>
             );
           });
         })()}
-        {/* Static cling hint */}
         {isStaticCling && (
           <p className="mt-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-medium text-blue-700">
             {t("stickerOrder.staticClingHint")}
           </p>
         )}
-      </div>
+      </StepCard>
 
-      {/* Foil sub-options */}
-      {isFoil && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            {t("stickerOrder.foil.label")}
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {FOIL_SUB_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setFoilColor(opt.id)}
-                className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                  foilColor === opt.id
-                    ? "border-gray-900 bg-gray-900 text-[#fff]"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {t(opt.label)}
-              </button>
-            ))}
+      {/* 2. Foil Color */}
+      <StepCard
+        stepNumber={stepNum("foil")}
+        title={t("step.foilColor")}
+        hint={t("step.foilColor.hint")}
+        summaryText={t(`stickerOrder.foil.${foilColor}`)}
+        visible={isFoil}
+        stepId="step-foil"
+      >
+        <OptionGrid columns={3} label={t("step.foilColor")}>
+          {FOIL_SUB_OPTIONS.map((opt) => (
+            <OptionCard
+              key={opt.id}
+              label={t(opt.label)}
+              selected={foilColor === opt.id}
+              onSelect={() => { setFoilColor(opt.id); scrollToNext("step-foil"); }}
+            />
+          ))}
+        </OptionGrid>
+      </StepCard>
+
+      {/* 3. Shape */}
+      <StepCard
+        stepNumber={stepNum("shape")}
+        title={t("step.shape")}
+        hint={t("step.shape.hint")}
+        summaryText={cutting.shapes ? t(`stickerOrder.shape.${shapeId}`) : undefined}
+        visible={!!cutting.shapes}
+        stepId="step-shape"
+      >
+        <OptionGrid columns={3} label={t("step.shape")}>
+          {cutting.shapes?.map((s) => (
+            <OptionCard
+              key={s.id}
+              label={t(s.label)}
+              selected={shapeId === s.id}
+              onSelect={() => { selectShape(s.id); scrollToNext("step-shape"); }}
+              icon={<ShapeIcon shapeId={s.id} className={`h-4 w-4 ${shapeId === s.id ? "text-teal-600" : "text-gray-500"}`} />}
+            />
+          ))}
+        </OptionGrid>
+        {isCustomShape && (
+          <div className="mt-2 space-y-1">
+            <p className="flex items-center gap-1.5 text-xs text-amber-600">
+              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">+15%</span>
+              {t("stickerOrder.shape.customHint")}
+            </p>
           </div>
-        </div>
-      )}
+        )}
+      </StepCard>
 
-      {/* Shape */}
-      {cutting.shapes && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            {t("stickerOrder.shape")}
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {cutting.shapes.map((s) => {
-              const isActive = shapeId === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => selectShape(s.id)}
-                  className={`flex items-center gap-1.5 rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                    isActive
-                      ? "border-gray-900 bg-gray-900 text-[#fff]"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  <ShapeIcon shapeId={s.id} className={`h-3.5 w-3.5 ${isActive ? "text-white" : "text-gray-500"}`} />
-                  {t(s.label)}
-                </button>
-              );
-            })}
-          </div>
-          {isCustomShape && (
-            <div className="mt-2 space-y-1">
-              <p className="flex items-center gap-1.5 text-xs text-amber-600">
-                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">+15%</span>
-                {t("stickerOrder.shape.customHint")}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Size */}
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Size
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {shapePresets.map((s, i) => {
-            const isActive = !isCustomSize && sizeIdx === i;
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => selectSize(i)}
-                className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                  isActive
-                    ? "border-gray-900 bg-gray-900 text-[#fff]"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {s.label}
-              </button>
-            );
-          })}
+      {/* 4. Size */}
+      <StepCard
+        stepNumber={stepNum("size")}
+        title={t("step.size")}
+        hint={t("step.size.hint")}
+        summaryText={sizeSummary}
+        stepId="step-size"
+      >
+        <OptionGrid columns={3} label={t("step.size")}>
+          {shapePresets.map((s, i) => (
+            <OptionCard
+              key={i}
+              label={s.label}
+              selected={!isCustomSize && sizeIdx === i}
+              onSelect={() => { selectSize(i); scrollToNext("step-size"); }}
+            />
+          ))}
           {shapePresets.length > 0 && (
-            <button
-              type="button"
-              onClick={() => selectSize(-1)}
-              className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                isCustomSize
-                  ? "border-gray-900 bg-gray-900 text-[#fff]"
-                  : "border-dashed border-gray-300 text-gray-500 hover:border-gray-500"
-              }`}
-            >
-              Custom
-            </button>
+            <OptionCard
+              label={t("stickerOrder.custom")}
+              selected={isCustomSize}
+              onSelect={() => selectSize(-1)}
+              className={!isCustomSize ? "border-dashed" : ""}
+            />
           )}
-        </div>
+        </OptionGrid>
         {isCustomSize && (
-          <div className="mt-2">
+          <div className="mt-3">
             {isSingleDimShape ? (
-              /* Circle: Diameter, Square: Size — single input */
               <div className="flex items-center gap-2">
                 <label className="text-xs font-medium text-gray-500">
                   {shapeId === "circle" ? t("stickerOrder.shape.diameter") : t("stickerOrder.shape.sideLength")}
@@ -540,7 +550,6 @@ export default function InlineConfigurator({ cuttingTypeId }) {
                 )}
               </div>
             ) : (
-              /* Rectangle / Oval / Custom: Width × Height */
               <CustomDimensions
                 customW={customW}
                 customH={customH}
@@ -556,93 +565,100 @@ export default function InlineConfigurator({ cuttingTypeId }) {
             )}
           </div>
         )}
-      </div>
+      </StepCard>
 
-      {/* White Ink / Print Mode */}
-      {isWhiteInkMaterial && availablePrintModes.length > 0 && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            {t("stickerOrder.printMode.label")}
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {availablePrintModes.map((mode) => (
-              <button
-                key={mode.id}
-                type="button"
-                onClick={() => setPrintMode(mode.id)}
-                className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                  printMode === mode.id
-                    ? "border-gray-900 bg-gray-900 text-[#fff]"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {t(mode.label)}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* 5. Print Mode */}
+      <StepCard
+        stepNumber={stepNum("printMode")}
+        title={t("step.printMode")}
+        hint={t("step.printMode.hint")}
+        summaryText={t(`stickerOrder.printMode.${printMode === "color_only" ? "colorOnly" : printMode === "white_only" ? "whiteOnly" : printMode === "color_white_color" ? "colorWhiteColor" : "whiteColor"}`)}
+        visible={isWhiteInkMaterial && availablePrintModes.length > 0}
+        stepId="step-printMode"
+      >
+        <OptionGrid columns={2} label={t("step.printMode")}>
+          {availablePrintModes.map((mode) => (
+            <OptionCard
+              key={mode.id}
+              label={t(mode.label)}
+              selected={printMode === mode.id}
+              onSelect={() => { setPrintMode(mode.id); scrollToNext("step-printMode"); }}
+            />
+          ))}
+        </OptionGrid>
+      </StepCard>
 
-      {/* Wind Direction (roll-labels only) */}
-      {cutting.windDirections && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            {t("stickerOrder.wind")}
-          </h3>
-          <div className="grid grid-cols-5 gap-2">
-            {cutting.windDirections.map((w) => {
-              const isActive = windId === w.id;
-              const isAny = w.id === "any";
-              // Rotation: top=0, right=90, bottom=180, left=270
-              const rotation = w.id === "top" ? 0 : w.id === "right" ? 90 : w.id === "bottom" ? 180 : w.id === "left" ? 270 : 0;
-              return (
-                <button
-                  key={w.id}
-                  type="button"
-                  onClick={() => selectWind(w.id)}
-                  className={`flex flex-col items-center gap-1 rounded-lg border-2 px-2 py-2.5 transition-all ${
-                    isActive
-                      ? "border-gray-900 bg-gray-900 text-[#fff]"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  {isAny ? (
-                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" className="shrink-0">
-                      <circle cx="18" cy="18" r="14" stroke={isActive ? "#fff" : "#9ca3af"} strokeWidth="1.5" strokeDasharray="3 3" />
-                      <text x="18" y="22" textAnchor="middle" fontSize="12" fontWeight="bold" fill={isActive ? "#fff" : "#6b7280"}>?</text>
-                    </svg>
-                  ) : (
-                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" className="shrink-0">
-                      {/* Roll core */}
-                      <circle cx="18" cy="18" r="6" stroke={isActive ? "#fff" : "#9ca3af"} strokeWidth="1.5" fill="none" />
-                      <circle cx="18" cy="18" r="2.5" fill={isActive ? "#fff" : "#d1d5db"} />
-                      {/* Outer roll */}
-                      <circle cx="18" cy="18" r="13" stroke={isActive ? "#fff" : "#6b7280"} strokeWidth="2" fill="none" />
-                      {/* Direction arrow */}
-                      <g transform={`rotate(${rotation} 18 18)`}>
-                        <line x1="18" y1="5" x2="18" y2="0" stroke={isActive ? "#fbbf24" : "#f59e0b"} strokeWidth="2" strokeLinecap="round" />
-                        <polygon points="18,0 15,5 21,5" fill={isActive ? "#fbbf24" : "#f59e0b"} />
-                        {/* R label */}
-                        <text x="18" y="12" textAnchor="middle" fontSize="7" fontWeight="bold" fill={isActive ? "#fff" : "#374151"}>R</text>
-                      </g>
-                    </svg>
-                  )}
-                  <span className="text-[10px] font-semibold leading-tight">{t(w.label)}</span>
-                  {w.surchargeMultiplier > 1 && (
-                    <span className={`text-[9px] font-medium ${isActive ? "text-yellow-300" : "text-amber-500"}`}>+10%</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* 6. Wind Direction (roll-labels only) */}
+      <StepCard
+        stepNumber={stepNum("wind")}
+        title={<>{t("stickerOrder.wind")} <InfoPopover text={t("stickerOrder.wind.tooltipFee")} className="ml-1" /></>}
+        hint={t("stickerOrder.wind.hint")}
+        summaryText={t(`stickerOrder.wind.${windId}`)}
+        visible={!!cutting.windDirections}
+        stepId="step-wind"
+      >
+        {/* "Doesn't Matter" — full-width default */}
+        {(() => {
+          const anyOpt = cutting.windDirections?.find((w) => w.id === "any");
+          if (!anyOpt) return null;
+          const isActive = windId === "any";
+          return (
+            <OptionCard
+              fullWidth
+              label={t(anyOpt.label)}
+              description={t(anyOpt.desc)}
+              selected={isActive}
+              onSelect={() => { selectWind("any"); scrollToNext("step-wind"); }}
+              icon={
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" className="shrink-0">
+                  <circle cx="18" cy="18" r="14" stroke={isActive ? "#14b8a6" : "#9ca3af"} strokeWidth="1.5" strokeDasharray="3 3" />
+                  <text x="18" y="22" textAnchor="middle" fontSize="12" fontWeight="bold" fill={isActive ? "#14b8a6" : "#6b7280"}>?</text>
+                </svg>
+              }
+              className="mb-3"
+            />
+          );
+        })()}
 
-      {/* Quantity */}
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Quantity
-        </h3>
+        {/* 4 directional options — 2 cols mobile, 4 cols md+ */}
+        <OptionGrid columns={4} label={t("stickerOrder.wind")}>
+          {cutting.windDirections?.filter((w) => w.id !== "any").map((w) => {
+            const isActive = windId === w.id;
+            const rotation = w.id === "top" ? 0 : w.id === "right" ? 90 : w.id === "bottom" ? 180 : 270;
+            return (
+              <OptionCard
+                key={w.id}
+                label={t(w.label)}
+                selected={isActive}
+                onSelect={() => { selectWind(w.id); scrollToNext("step-wind"); }}
+                badge={<span className="text-[9px] font-bold text-amber-600">+10%</span>}
+                icon={
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" className="shrink-0">
+                    <circle cx="18" cy="18" r="6" stroke={isActive ? "#14b8a6" : "#9ca3af"} strokeWidth="1.5" fill="none" />
+                    <circle cx="18" cy="18" r="2.5" fill={isActive ? "#14b8a6" : "#d1d5db"} />
+                    <circle cx="18" cy="18" r="13" stroke={isActive ? "#14b8a6" : "#6b7280"} strokeWidth="2" fill="none" />
+                    <g transform={`rotate(${rotation} 18 18)`}>
+                      <line x1="18" y1="5" x2="18" y2="0" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
+                      <polygon points="18,0 15,5 21,5" fill="#f59e0b" />
+                      <text x="18" y="12" textAnchor="middle" fontSize="7" fontWeight="bold" fill={isActive ? "#14b8a6" : "#374151"}>R</text>
+                    </g>
+                  </svg>
+                }
+                className="flex-col items-center text-center"
+              />
+            );
+          })}
+        </OptionGrid>
+      </StepCard>
+
+      {/* 7. Quantity — keep pill buttons (good UX), just wrap in StepCard */}
+      <StepCard
+        stepNumber={stepNum("quantity")}
+        title={t("step.quantity")}
+        hint={t("step.quantity.hint")}
+        summaryText={`${activeQty.toLocaleString()} pcs`}
+        stepId="step-quantity"
+      >
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
           {cutting.quantities.map((q) => {
             const isActive = customQty === "" && quantity === q;
@@ -650,11 +666,11 @@ export default function InlineConfigurator({ cuttingTypeId }) {
               <button
                 key={q}
                 type="button"
-                onClick={() => selectQuantity(q)}
+                onClick={() => { selectQuantity(q); scrollToNext("step-quantity"); }}
                 className={`flex-shrink-0 rounded-full border-2 px-4 py-2 text-xs font-bold transition-all ${
                   isActive
-                    ? "border-gray-900 bg-gray-900 text-[#fff]"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    ? "border-teal-500 bg-teal-50 text-teal-700"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                 }`}
               >
                 {q.toLocaleString()}
@@ -679,73 +695,66 @@ export default function InlineConfigurator({ cuttingTypeId }) {
             <span className="text-xs font-medium text-gray-500">{unitPriceLabel}</span>
           )}
         </div>
-      </div>
+      </StepCard>
 
-      {/* Lamination */}
-      {!hideLamination && cutting.lamination && cutting.lamination.length > 1 && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            Lamination
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {cutting.lamination.map((lam) => (
-              <button
-                key={lam.id}
-                type="button"
-                onClick={() => setLaminationId(lam.id)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  laminationId === lam.id
-                    ? "border-[var(--color-gray-900)] bg-[var(--color-gray-900)] text-[#fff]"
-                    : "border-[var(--color-gray-300)] bg-white text-[var(--color-gray-700)] hover:border-[var(--color-gray-500)]"
-                }`}
-              >
-                {lam.id === "none" ? "No Lamination" : lam.id === "gloss" ? "Gloss Lamination" : "Matte Lamination"}
-              </button>
-            ))}
-          </div>
-          {showPaperWarning && (
-            <p className="mt-2 text-[11px] text-amber-600">
-              {t("stickerOrder.lamination.paperWarning")}
-            </p>
-          )}
-        </div>
-      )}
+      {/* 8. Lamination */}
+      <StepCard
+        stepNumber={stepNum("lamination")}
+        title={t("step.lamination")}
+        hint={t("step.lamination.hint")}
+        summaryText={laminationId === "none" ? t("stickerOrder.lam.none.desc") : laminationId === "gloss" ? t("stickerOrder.lam.gloss.desc") : t("stickerOrder.lam.matte-lam.desc")}
+        visible={!hideLamination && cutting.lamination?.length > 1}
+        stepId="step-lamination"
+      >
+        <OptionGrid columns={3} label={t("step.lamination")}>
+          {cutting.lamination?.map((lam) => (
+            <OptionCard
+              key={lam.id}
+              label={lam.id === "none" ? "No Lamination" : lam.id === "gloss" ? "Gloss" : "Matte"}
+              description={t(`stickerOrder.lam.${lam.id}.desc`)}
+              selected={laminationId === lam.id}
+              onSelect={() => { setLaminationId(lam.id); scrollToNext("step-lamination"); }}
+            />
+          ))}
+        </OptionGrid>
+        {showPaperWarning && (
+          <p className="mt-2 text-[11px] text-amber-600">
+            {t("stickerOrder.lamination.paperWarning")}
+          </p>
+        )}
+      </StepCard>
 
-      {/* Turnaround */}
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          {t("stickerOrder.turnaround.label")}
-        </h3>
-        <div className="flex gap-2">
-          {TURNAROUND_OPTIONS.map((opt) => {
-            const isActive = turnaroundId === opt.id;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setTurnaroundId(opt.id)}
-                className={`flex-1 rounded-lg border-2 px-3 py-2 text-center transition-all ${
-                  isActive
-                    ? "border-gray-900 bg-gray-900 text-[#fff]"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                <span className="block text-xs font-bold">{t(opt.label)}</span>
-                <span className={`block text-[10px] ${isActive ? "text-gray-300" : "text-gray-400"}`}>
-                  {t(opt.desc)}
-                  {opt.id === "rush" && <span className="ml-1 font-bold text-amber-400">{t("stickerOrder.turnaround.rushSurcharge")}</span>}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* 9. Turnaround */}
+      <StepCard
+        stepNumber={stepNum("turnaround")}
+        title={t("step.turnaround")}
+        hint={t("step.turnaround.hint")}
+        summaryText={t(`stickerOrder.turnaround.${turnaroundId}`)}
+        stepId="step-turnaround"
+      >
+        <OptionGrid columns={2} label={t("step.turnaround")}>
+          {TURNAROUND_OPTIONS.map((opt) => (
+            <OptionCard
+              key={opt.id}
+              label={t(opt.label)}
+              description={t(opt.desc)}
+              selected={turnaroundId === opt.id}
+              onSelect={() => { setTurnaroundId(opt.id); scrollToNext("step-turnaround"); }}
+              badge={opt.id === "rush" ? <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">+50%</span> : undefined}
+            />
+          ))}
+        </OptionGrid>
+      </StepCard>
 
-      {/* Upload Artwork */}
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Artwork <span className="font-normal normal-case text-gray-400">(optional)</span>
-        </h3>
+      {/* 10. Artwork */}
+      <StepCard
+        stepNumber={stepNum("artwork")}
+        title={t("step.artwork")}
+        hint={t("step.artwork.hint")}
+        summaryText={uploadedFile?.name || t("step.notUploaded")}
+        optional
+        stepId="step-artwork"
+      >
         <ArtworkUpload
           uploadedFile={uploadedFile}
           onUploaded={(file) => setUploadedFile(file)}
@@ -754,7 +763,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
           t={t}
         />
         <p className="mt-1.5 text-[10px] text-gray-400">{t("stickerOrder.uploadAfterCheckout")}</p>
-      </div>
+      </StepCard>
 
       {/* Price Summary */}
       <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
