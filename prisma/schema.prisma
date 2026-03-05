@@ -963,3 +963,33 @@ model NewsletterSubscriber {
 
   @@index([email])
 }
+
+// ── Price Change Log (改价日志) ──
+// Records every pricing change for audit, rollback, and accountability.
+
+model PriceChangeLog {
+  id           String   @id @default(cuid())
+  productId    String?
+  productSlug  String?
+  productName  String?
+  scope        String   @default("product") // "product" | "material" | "setting" | "preset"
+  field        String                        // e.g. "material.white_vinyl.costPerSqft", "optionsConfig.addons[0].surcharge"
+  labelBefore  String?                       // human-readable old value
+  labelAfter   String?                       // human-readable new value
+  valueBefore  Json?                         // old value (structured)
+  valueAfter   Json?                         // new value (structured)
+  driftPct     Float?                        // percentage change (for >20% warnings)
+  affectedCount Int     @default(1)          // how many products affected
+  operatorId   String?                       // AdminUser id
+  operatorName String?                       // AdminUser name for display
+  note         String?                       // operator's note
+  rolledBackAt DateTime?                     // set when this change is rolled back
+  rolledBackBy String?                       // who rolled it back
+  createdAt    DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([productSlug])
+  @@index([operatorId])
+  @@index([scope, createdAt])
+  @@index([createdAt])
+}

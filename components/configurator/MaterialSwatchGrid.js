@@ -321,7 +321,7 @@ function TexturePattern({ pattern, baseColor, uid, width = "100%", height = 56 }
 
 // ─── Individual Swatch Card ──────────────────────────────────────────────────
 
-export function MaterialSwatch({ material, selected, onSelect }) {
+export function MaterialSwatch({ material, selected, onSelect, recommended = false, detailRows }) {
   const { id, label, name, subtitle, image } = material;
   const displayName = label || name || id;
   const meta = MATERIAL_META[id];
@@ -378,6 +378,12 @@ export function MaterialSwatch({ material, selected, onSelect }) {
           <TexturePattern pattern={pattern} baseColor={baseColor} uid={safeUid} />
         )}
 
+        {/* Recommended badge */}
+        {recommended && (
+          <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-green-100 px-1.5 py-px text-[9px] font-bold text-green-700 shadow-sm">
+            {"\u2605"} Rec
+          </span>
+        )}
         {/* Selected checkmark badge */}
         {selected && (
           <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-[#fff] shadow-sm">
@@ -393,6 +399,16 @@ export function MaterialSwatch({ material, selected, onSelect }) {
         <span className="text-xs font-bold leading-tight text-gray-900">{displayName}</span>
         {displaySubtitle && (
           <span className="text-[11px] leading-tight text-gray-400">{displaySubtitle}</span>
+        )}
+        {detailRows && detailRows.length > 0 && (
+          <span className="mt-0.5 space-y-0.5">
+            {detailRows.map((row, i) => (
+              <span key={i} className="flex gap-1 text-[10px] text-gray-400">
+                <span className="font-semibold shrink-0">{row.label}:</span>
+                <span>{row.text}</span>
+              </span>
+            ))}
+          </span>
         )}
       </div>
 
@@ -456,6 +472,8 @@ export default function MaterialSwatchGrid({
   selectedId,
   onSelect,
   columns,
+  recommendedId,
+  getDetailRows,
 }) {
   // Resolve grid classes from static lookup (Tailwind-safe)
   const gridClasses = GRID_COL_CLASSES[columns] || GRID_COL_CLASSES[4];
@@ -486,6 +504,8 @@ export default function MaterialSwatchGrid({
             material={mat}
             selected={mat.id === selectedId}
             onSelect={onSelect}
+            recommended={!!recommendedId && mat.id === recommendedId}
+            detailRows={getDetailRows ? getDetailRows(mat.id) : undefined}
           />
         ))}
       </div>

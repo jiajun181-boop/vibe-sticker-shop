@@ -574,7 +574,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
           total: subtotal + tax,
           sqft: null,
           breakdown: null,
-          isEstimate: true,
+          isEstimate: false,
         };
       }
     }

@@ -33,6 +33,7 @@ const navGroups = [
     labelKey: "admin.navGroup.products",
     items: [
       { key: "admin.nav.catalogOps", href: "/admin/catalog-ops", icon: "catalog", sub: "Products & pricing" },
+      { key: "admin.nav.pricingDashboard", href: "/admin/pricing-dashboard", icon: "pricing", sub: "Quote ledger & formulas" },
       { key: "admin.nav.imageDashboard", href: "/admin/image-dashboard", icon: "image", sub: "Quick image upload" },
       { key: "admin.nav.materials", href: "/admin/materials", icon: "package", sub: "Materials & Pricing" },
       { key: "admin.nav.materialsHandbook", href: "/admin/materials-handbook", icon: "document", sub: "Material specs ref" },

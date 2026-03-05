@@ -113,5 +113,7 @@ export default function useConfiguratorPrice({
     totalCents,
     addSurcharge,
     retry,
+    // Quote Ledger: structured price breakdown for admin/debug
+    quoteLedger: quoteData?.quoteLedger || null,
   };
 }

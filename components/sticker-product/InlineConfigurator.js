@@ -14,6 +14,11 @@ import {
   PRINT_MODES,
   CUSTOM_SHAPE_SURCHARGE,
   MATERIAL_GROUP_LABELS,
+  RECOMMENDED,
+  MATERIAL_DETAILS,
+  LAMINATION_DETAILS,
+  PRINT_MODE_DETAILS,
+  TURNAROUND_DETAILS,
 } from "@/lib/sticker-order-config";
 import {
   trackOptionChange,
@@ -120,6 +125,116 @@ function ShapeIcon({ shapeId, className = "h-4 w-4" }) {
     default:
       return null;
   }
+}
+
+/** Summary row for the OrderSummaryCard */
+function SummaryRow({ label, value, isRecommended, priceKey, t }) {
+  const isBase = !priceKey || priceKey === "base" || priceKey === "minus15";
+  return (
+    <div className="flex items-center justify-between gap-2 text-xs">
+      <span className="text-gray-500">{label}</span>
+      <span className="flex items-center gap-1.5 font-medium text-gray-900">
+        {value}
+        {isRecommended ? (
+          <span className="rounded-full bg-green-100 px-1.5 py-px text-[9px] font-bold text-green-700">
+            {t("option.summary.recommended")}
+          </span>
+        ) : !isBase ? (
+          <span className="rounded-full bg-amber-100 px-1.5 py-px text-[9px] font-bold text-amber-700">
+            {t(`option.priceDiff.${priceKey}`)}
+          </span>
+        ) : null}
+      </span>
+    </div>
+  );
+}
+
+/** Confirmation card showing all selected options with recommended/premium badges */
+function OrderSummaryCard({ materialId, laminationId, printMode, turnaroundId, isWhiteInkMaterial, hideLamination, cutting, showPaperWarning, t }) {
+  const matDet = MATERIAL_DETAILS[materialId];
+  const lamDet = LAMINATION_DETAILS[laminationId];
+  const pmDet = PRINT_MODE_DETAILS[printMode];
+  const taDet = TURNAROUND_DETAILS[turnaroundId];
+
+  // Collect non-base price impacts
+  const impacts = [];
+  if (matDet && matDet.priceKey !== "base" && matDet.priceKey !== "minus15") {
+    impacts.push({ step: t("step.material"), diff: t(`option.priceDiff.${matDet.priceKey}`) });
+  }
+  if (!hideLamination && cutting.lamination?.length > 1 && lamDet && lamDet.priceKey !== "base") {
+    impacts.push({ step: t("step.lamination"), diff: t(`option.priceDiff.${lamDet.priceKey}`) });
+  }
+  if (isWhiteInkMaterial && pmDet && pmDet.priceKey !== "base") {
+    impacts.push({ step: t("step.printMode"), diff: t(`option.priceDiff.${pmDet.priceKey}`) });
+  }
+  if (taDet && taDet.priceKey !== "base") {
+    impacts.push({ step: t("step.turnaround"), diff: t(`option.priceDiff.${taDet.priceKey}`) });
+  }
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
+      <h3 className="text-sm font-bold text-gray-900">{t("option.summary.title")}</h3>
+
+      <SummaryRow
+        label={t("step.material")}
+        value={t(`stickerOrder.mat.${materialId}`)}
+        isRecommended={materialId === RECOMMENDED.material}
+        priceKey={matDet?.priceKey}
+        t={t}
+      />
+
+      {!hideLamination && cutting.lamination?.length > 1 && (
+        <SummaryRow
+          label={t("step.lamination")}
+          value={laminationId === "none" ? t("stickerOrder.lam.none.desc") : laminationId === "gloss" ? "Gloss" : "Matte"}
+          isRecommended={laminationId === RECOMMENDED.lamination}
+          priceKey={lamDet?.priceKey}
+          t={t}
+        />
+      )}
+
+      {isWhiteInkMaterial && (
+        <SummaryRow
+          label={t("step.printMode")}
+          value={t(`stickerOrder.printMode.${printMode === "color_only" ? "colorOnly" : printMode === "white_only" ? "whiteOnly" : printMode === "color_white_color" ? "colorWhiteColor" : "whiteColor"}`)}
+          isRecommended={printMode === RECOMMENDED.printMode}
+          priceKey={pmDet?.priceKey}
+          t={t}
+        />
+      )}
+
+      <SummaryRow
+        label={t("step.turnaround")}
+        value={t(`stickerOrder.turnaround.${turnaroundId}`)}
+        isRecommended={turnaroundId === RECOMMENDED.turnaround}
+        priceKey={taDet?.priceKey}
+        t={t}
+      />
+
+      {showPaperWarning && (
+        <p className="flex items-center gap-1 text-[10px] text-amber-600">
+          <span>{"\u26A0\uFE0F"}</span> {t("option.conflict.paperNoLam")}
+        </p>
+      )}
+
+      {/* Price impact sources */}
+      <div className="border-t border-gray-100 pt-2 mt-2">
+        <p className="text-[10px] font-semibold text-gray-500">{t("option.summary.priceImpact")}</p>
+        {impacts.length === 0 ? (
+          <p className="text-[10px] text-green-600">{t("option.summary.noSurcharge")}</p>
+        ) : (
+          <div className="mt-1 space-y-0.5">
+            {impacts.map((imp, i) => (
+              <p key={i} className="flex justify-between text-[10px]">
+                <span className="text-gray-500">{imp.step}</span>
+                <span className="font-bold text-amber-700">{imp.diff}</span>
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -448,6 +563,16 @@ export default function InlineConfigurator({ cuttingTypeId }) {
                   selectedId={materialId}
                   onSelect={(id) => { selectMaterial(id); advanceStep("step-material"); }}
                   columns={groupMats.length <= 3 ? 3 : 4}
+                  recommendedId={RECOMMENDED.material}
+                  getDetailRows={(matId) => {
+                    const det = MATERIAL_DETAILS[matId];
+                    if (!det) return undefined;
+                    return [
+                      { label: t("option.price"), text: t(`option.priceDiff.${det.priceKey}`) },
+                      { label: t("option.useCase"), text: t(`option.useCase.${det.useKey}`) },
+                      { label: t("option.durability"), text: t(`option.durability.${det.durKey}`) },
+                    ];
+                  }}
                 />
               </div>
             );
@@ -595,14 +720,23 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         onToggle={() => toggleStep("printMode")}
       >
         <OptionGrid columns={2} label={t("step.printMode")}>
-          {availablePrintModes.map((mode) => (
-            <OptionCard
-              key={mode.id}
-              label={t(mode.label)}
-              selected={printMode === mode.id}
-              onSelect={() => { setPrintMode(mode.id); advanceStep("step-printMode"); }}
-            />
-          ))}
+          {availablePrintModes.map((mode) => {
+            const det = PRINT_MODE_DETAILS[mode.id];
+            return (
+              <OptionCard
+                key={mode.id}
+                label={t(mode.label)}
+                description={t(`option.explain.pm.${mode.id}`)}
+                selected={printMode === mode.id}
+                onSelect={() => { setPrintMode(mode.id); advanceStep("step-printMode"); }}
+                recommended={mode.id === RECOMMENDED.printMode}
+                detailRows={det ? [
+                  { label: t("option.price"), text: t(`option.priceDiff.${det.priceKey}`) },
+                  { label: t("option.useCase"), text: t(`option.useCase.${det.useKey}`) },
+                ] : undefined}
+              />
+            );
+          })}
         </OptionGrid>
       </StepCard>
 
@@ -750,15 +884,24 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         onToggle={() => toggleStep("lamination")}
       >
         <OptionGrid columns={3} label={t("step.lamination")}>
-          {cutting.lamination?.map((lam) => (
-            <OptionCard
-              key={lam.id}
-              label={lam.id === "none" ? "No Lamination" : lam.id === "gloss" ? "Gloss" : "Matte"}
-              description={t(`stickerOrder.lam.${lam.id}.desc`)}
-              selected={laminationId === lam.id}
-              onSelect={() => { setLaminationId(lam.id); advanceStep("step-lamination"); }}
-            />
-          ))}
+          {cutting.lamination?.map((lam) => {
+            const det = LAMINATION_DETAILS[lam.id];
+            return (
+              <OptionCard
+                key={lam.id}
+                label={lam.id === "none" ? "No Lamination" : lam.id === "gloss" ? "Gloss" : "Matte"}
+                description={t(`option.explain.lam.${lam.id}`)}
+                selected={laminationId === lam.id}
+                onSelect={() => { setLaminationId(lam.id); advanceStep("step-lamination"); }}
+                recommended={lam.id === RECOMMENDED.lamination}
+                detailRows={det ? [
+                  { label: t("option.price"), text: t(`option.priceDiff.${det.priceKey}`) },
+                  { label: t("option.useCase"), text: t(`option.useCase.${det.useKey}`) },
+                  { label: t("option.durability"), text: t(`option.durability.${det.durKey}`) },
+                ] : undefined}
+              />
+            );
+          })}
         </OptionGrid>
         {showPaperWarning && (
           <p className="mt-2 text-[11px] text-amber-600">
@@ -778,16 +921,25 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         onToggle={() => toggleStep("turnaround")}
       >
         <OptionGrid columns={2} label={t("step.turnaround")}>
-          {TURNAROUND_OPTIONS.map((opt) => (
-            <OptionCard
-              key={opt.id}
-              label={t(opt.label)}
-              description={t(opt.desc)}
-              selected={turnaroundId === opt.id}
-              onSelect={() => { setTurnaroundId(opt.id); advanceStep("step-turnaround"); }}
-              badge={opt.id === "rush" ? <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">+50%</span> : undefined}
-            />
-          ))}
+          {TURNAROUND_OPTIONS.map((opt) => {
+            const det = TURNAROUND_DETAILS[opt.id];
+            return (
+              <OptionCard
+                key={opt.id}
+                label={t(opt.label)}
+                description={t(`option.explain.ta.${opt.id}`)}
+                selected={turnaroundId === opt.id}
+                onSelect={() => { setTurnaroundId(opt.id); advanceStep("step-turnaround"); }}
+                recommended={opt.id === RECOMMENDED.turnaround}
+                badge={opt.id === "rush" ? <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">+50%</span> : undefined}
+                detailRows={det ? [
+                  { label: t("option.price"), text: t(`option.priceDiff.${det.priceKey}`) },
+                  { label: t("option.useCase"), text: t(`option.useCase.${det.useKey}`) },
+                  { label: t("option.delivery"), text: t(`option.delivery.${det.deliveryKey}`) },
+                ] : undefined}
+              />
+            );
+          })}
         </OptionGrid>
       </StepCard>
 
@@ -811,6 +963,21 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         />
         <p className="mt-1.5 text-[10px] text-gray-400">{t("stickerOrder.uploadAfterCheckout")}</p>
       </StepCard>
+
+      {/* Order Summary Card — what you selected + why */}
+      {quote.quoteData && (
+        <OrderSummaryCard
+          materialId={materialId}
+          laminationId={laminationId}
+          printMode={printMode}
+          turnaroundId={turnaroundId}
+          isWhiteInkMaterial={isWhiteInkMaterial}
+          hideLamination={hideLamination}
+          cutting={cutting}
+          showPaperWarning={showPaperWarning}
+          t={t}
+        />
+      )}
 
       {/* Price Summary */}
       <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">

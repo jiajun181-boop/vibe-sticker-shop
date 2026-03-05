@@ -110,8 +110,12 @@ export default function StampEditor({
     const cx = CW / 2;
     const cy = CH / 2;
     const isRound = shape === "round";
-    const stampW = isRound ? (diameterIn || 1) * PPI : (widthIn || 1) * PPI;
-    const stampH = isRound ? (diameterIn || 1) * PPI : (heightIn || 1) * PPI;
+    // For rectangular stamps, ensure landscape orientation (wider than tall)
+    let rawW = (widthIn || 1);
+    let rawH = (heightIn || 1);
+    if (!isRound && rawH > rawW) { const tmp = rawW; rawW = rawH; rawH = tmp; }
+    const stampW = isRound ? (diameterIn || 1) * PPI : rawW * PPI;
+    const stampH = isRound ? (diameterIn || 1) * PPI : rawH * PPI;
     const radius = isRound ? stampW / 2 : 0;
 
     // ── 1. Draw stamp boundary ──
@@ -360,7 +364,7 @@ export default function StampEditor({
             {t("stamp.sizeReference")}
           </button>
         </div>
-        <div className="relative mx-auto w-full max-w-[260px] sm:max-w-[400px] xl:max-w-[600px]" style={{ aspectRatio: "1/1" }}>
+        <div className="relative mx-auto w-full max-w-[260px] sm:max-w-[360px] md:max-w-[450px] lg:max-w-[500px] xl:max-w-[600px]">
           <canvas
             ref={canvasRef}
             style={{ width: "100%", height: "100%" }}

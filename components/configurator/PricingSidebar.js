@@ -108,7 +108,7 @@ export default function PricingSidebar({
       : "w-full rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider cursor-not-allowed bg-gray-200 text-gray-400";
 
   return (
-    <aside className="hidden lg:block">
+    <aside className="hidden md:block">
       <div className="sticky top-24 space-y-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         {/* Preview area */}
         {previewSlot && (
