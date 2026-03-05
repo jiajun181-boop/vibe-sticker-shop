@@ -27,7 +27,7 @@ import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 const INCH_TO_CM = 2.54;
 
 export default function VehicleOrderClient({ defaultType, productImages }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const router = useRouter();
 
   // --- State ---
@@ -458,6 +458,10 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
             quoteOnly={isQuoteOnly}
             onRequestQuote={handleRequestQuote}
             productName={t(`vehicle.type.${typeId}`)}
+            categorySlug="vehicle-graphics-fleet"
+            locale={locale}
+            productSlug={vehicleType.defaultSlug}
+            onRetryPrice={quote.retry}
           />
         </div>
       </div>
@@ -495,6 +499,9 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
         summaryLines={summaryLines}
         unitCents={quote.unitCents}
         subtotalCents={quote.subtotalCents}
+        categorySlug="vehicle-graphics-fleet"
+        locale={locale}
+        onRetryPrice={quote.retry}
       />
     </main>
   );

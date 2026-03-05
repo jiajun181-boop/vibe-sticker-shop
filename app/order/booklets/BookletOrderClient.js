@@ -64,7 +64,7 @@ function BindingIcon({ type, className = "h-7 w-7" }) {
 // ─── Main Component ───
 
 export default function BookletOrderClient({ defaultBinding, productImages }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const [bindingId, setBindingId] = useState(defaultBinding || "saddle-stitch");
   const [sizeIdx, setSizeIdx] = useState(1); // letter
@@ -457,6 +457,10 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
             badges={[t("booklet.badge.fullColor"), t("booklet.badge.shipping"), t("booklet.badge.proof")]}
             t={t}
             productName={`${t(`booklet.binding.${bindingId}`)} Booklet`}
+            categorySlug="marketing-business-print"
+            locale={locale}
+            productSlug={binding.slug}
+            onRetryPrice={quote.retry}
           />
         </div>
       </div>
@@ -487,6 +491,9 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
         summaryLines={summaryLines}
         unitCents={quote.unitCents}
         subtotalCents={quote.subtotalCents}
+        categorySlug="marketing-business-print"
+        locale={locale}
+        onRetryPrice={quote.retry}
       />
     </main>
   );

@@ -29,7 +29,7 @@ const PURCHASE_TYPES = [
 ];
 
 export default function BannerOrderClient({ defaultType, productImages }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   // --- State ---
   const [typeId, setTypeId] = useState(defaultType || "vinyl-banner");
@@ -491,6 +491,10 @@ export default function BannerOrderClient({ defaultType, productImages }) {
             badges={[t("banner.badgeWeatherproof"), t("banner.badgeShipping")]}
             t={t}
             productName={t(`banner.type.${typeId}`)}
+            categorySlug="banners-displays"
+            locale={locale}
+            productSlug={bannerType.defaultSlug}
+            onRetryPrice={quote.retry}
           />
         </div>
       </div>
@@ -510,6 +514,9 @@ export default function BannerOrderClient({ defaultType, productImages }) {
         summaryLines={summaryLines}
         unitCents={quote.unitCents}
         subtotalCents={quote.subtotalCents}
+        categorySlug="banners-displays"
+        locale={locale}
+        onRetryPrice={quote.retry}
       />
     </main>
   );

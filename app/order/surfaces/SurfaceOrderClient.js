@@ -23,7 +23,7 @@ const INCH_TO_CM = 2.54;
 const APPLICATION_LABELS = { window: "Window", wall: "Wall", floor: "Floor" };
 
 export default function SurfaceOrderClient({ defaultType, productSlug, productImages }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   // --- State ---
   const [typeId, setTypeId] = useState(defaultType || "transparent-color");
@@ -651,6 +651,10 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
             badges={[t("surface.badgeDurable"), t("surface.badgeShipping")]}
             t={t}
             productName={t(`surface.type.${typeId}`)}
+            categorySlug="windows-walls-floors"
+            locale={locale}
+            productSlug={surfaceType.defaultSlug}
+            onRetryPrice={quote.retry}
           />
         </div>
       </div>
@@ -670,6 +674,9 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
         summaryLines={summaryLines}
         unitCents={quote.unitCents}
         subtotalCents={quote.subtotalCents}
+        categorySlug="windows-walls-floors"
+        locale={locale}
+        onRetryPrice={quote.retry}
       />
     </main>
   );

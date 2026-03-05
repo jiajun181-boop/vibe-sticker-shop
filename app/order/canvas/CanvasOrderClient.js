@@ -30,7 +30,7 @@ const TYPE_GROUPS = {
 };
 
 export default function CanvasOrderClient({ defaultType, productImages }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   // --- State ---
   const [typeId, setTypeId] = useState(defaultType || "standard");
@@ -749,6 +749,10 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
               badges={[t("canvas.badgeInk"), t("canvas.badgeShipping")]}
               t={t}
               productName={t(`canvas.type.${typeId}`)}
+              categorySlug="canvas-prints"
+              locale={locale}
+              productSlug={canvasType.defaultSlug}
+              onRetryPrice={quote.retry}
             />
           )}
         </div>
@@ -794,6 +798,9 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
           summaryLines={summaryLines}
           unitCents={quote.unitCents}
           subtotalCents={quote.subtotalCents}
+          categorySlug="canvas-prints"
+          locale={locale}
+          onRetryPrice={quote.retry}
         />
       )}
     </main>

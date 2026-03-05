@@ -11,6 +11,7 @@ import ProductDetailsTabs from "@/components/sticker-product/ProductDetailsTabs"
 import UseCaseGallery from "@/components/sticker-product/UseCaseGallery";
 import ComparisonTable from "@/components/sticker-product/ComparisonTable";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import GuaranteeInfo from "@/components/product/GuaranteeInfo";
 
 const WWF_CATEGORY = "windows-walls-floors";
 
@@ -119,6 +120,9 @@ export default function WwfProductPageClient({
           category={WWF_CATEGORY}
           title={t("productPage.compareWwf")}
         />
+
+        {/* Quality Guarantee */}
+        <GuaranteeInfo />
 
         {/* FAQ */}
         {faq && <FaqAccordion items={faq} />}

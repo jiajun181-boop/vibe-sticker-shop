@@ -38,7 +38,7 @@ export default function MarketingPrintOrderClient({
   hideTypeSelector = false,
   productImages,
 }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   // --- State ---
   const [typeId, setTypeId] = useState(defaultType || "business-cards");
@@ -719,6 +719,10 @@ export default function MarketingPrintOrderClient({
               ]}
               t={t}
               productName={printType.label}
+              categorySlug="marketing-business-print"
+              locale={locale}
+              productSlug={typeId}
+              onRetryPrice={quote.retry}
             />
           )}
         </div>
@@ -750,6 +754,9 @@ export default function MarketingPrintOrderClient({
         summaryLines={summaryLines}
         unitCents={quote.unitCents}
         subtotalCents={quote.subtotalCents}
+        categorySlug="marketing-business-print"
+        locale={locale}
+        onRetryPrice={quote.retry}
       />
     </main>
   );

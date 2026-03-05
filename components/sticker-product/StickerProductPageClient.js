@@ -11,6 +11,7 @@ import ProductDetailsTabs from "./ProductDetailsTabs";
 import UseCaseGallery from "./UseCaseGallery";
 import ComparisonTable from "./ComparisonTable";
 import FaqAccordion from "./FaqAccordion";
+import GuaranteeInfo from "@/components/product/GuaranteeInfo";
 
 const STICKER_CATEGORY = "stickers-labels-decals";
 
@@ -111,6 +112,9 @@ export default function StickerProductPageClient({
           currentTypeId={cuttingTypeId}
           category={STICKER_CATEGORY}
         />
+
+        {/* Quality Guarantee */}
+        <GuaranteeInfo />
 
         {/* FAQ */}
         {faq && <FaqAccordion items={faq} />}

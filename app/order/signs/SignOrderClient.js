@@ -76,7 +76,7 @@ const ACCESSORY_ICONS = {
 };
 
 export default function SignOrderClient({ defaultType, productImages }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   // --- State ---
   const [typeId, setTypeId] = useState(defaultType || "yard-sign");
@@ -473,6 +473,10 @@ export default function SignOrderClient({ defaultType, productImages }) {
             badges={[t("sign.badgeWeatherproof"), t("sign.badgeShipping")]}
             t={t}
             productName={t(`sign.type.${typeId}`)}
+            categorySlug="signs-rigid-boards"
+            locale={locale}
+            productSlug={signType.defaultSlug}
+            onRetryPrice={quote.retry}
           />
         </div>
       </div>
@@ -492,6 +496,9 @@ export default function SignOrderClient({ defaultType, productImages }) {
         summaryLines={summaryLines}
         unitCents={quote.unitCents}
         subtotalCents={quote.subtotalCents}
+        categorySlug="signs-rigid-boards"
+        locale={locale}
+        onRetryPrice={quote.retry}
       />
     </main>
   );

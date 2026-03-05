@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import EmailQuotePopover from "./EmailQuotePopover";
+import DeliveryEstimate from "./DeliveryEstimate";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -27,6 +28,8 @@ const formatCad = (cents) =>
  *  - summaryLines       — [{ label, value }] for email quote
  *  - unitCents          — unit price for email quote
  *  - subtotalCents      — subtotal for email quote
+ *  - categorySlug       — category for delivery estimate
+ *  - locale             — "en" or "zh" for delivery estimate
  */
 export default function MobileBottomBar({
   quoteLoading,
@@ -48,6 +51,8 @@ export default function MobileBottomBar({
   summaryLines,
   unitCents = 0,
   subtotalCents = 0,
+  categorySlug,
+  locale,
 }) {
   // ─── Add to Cart Animation ───
   const [atcState, setAtcState] = useState("idle");
@@ -184,6 +189,12 @@ export default function MobileBottomBar({
               quantity={quantity}
               t={t}
             />
+          </div>
+        )}
+        {/* Delivery estimate (mobile) */}
+        {categorySlug && hasQuote && !quoteOnly && (
+          <div className="mx-auto mt-2 max-w-lg">
+            <DeliveryEstimate categorySlug={categorySlug} t={t} locale={locale} />
           </div>
         )}
         {/* Trust signals */}

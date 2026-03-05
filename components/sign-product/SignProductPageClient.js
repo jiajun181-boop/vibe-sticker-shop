@@ -11,6 +11,7 @@ import ProductDetailsTabs from "@/components/sticker-product/ProductDetailsTabs"
 import UseCaseGallery from "@/components/sticker-product/UseCaseGallery";
 import ComparisonTable from "@/components/sticker-product/ComparisonTable";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import GuaranteeInfo from "@/components/product/GuaranteeInfo";
 
 const SIGN_CATEGORY = "signs-rigid-boards";
 
@@ -138,6 +139,9 @@ export default function SignProductPageClient({
           category={SIGN_CATEGORY}
           title={t("productPage.compareSignTypes")}
         />
+
+        {/* Quality Guarantee */}
+        <GuaranteeInfo />
 
         {/* FAQ */}
         {faq && <FaqAccordion items={faq} />}

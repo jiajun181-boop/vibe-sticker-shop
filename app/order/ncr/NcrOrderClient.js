@@ -22,7 +22,7 @@ const formatCad = (cents) =>
 // ─── Main Component ───
 
 export default function NcrOrderClient({ defaultType, productImages }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   // Form state
   const [formTypeId, setFormTypeId] = useState(defaultType || "2-copy");
@@ -413,6 +413,10 @@ export default function NcrOrderClient({ defaultType, productImages }) {
             badges={[t("ncr.badge.carbonless"), t("ncr.badge.shipping")]}
             t={t}
             productName={`${formType.label} NCR Forms`}
+            categorySlug="marketing-business-print"
+            locale={locale}
+            productSlug={formType.slug}
+            onRetryPrice={quote.retry}
           />
         </div>
       </div>
@@ -447,6 +451,9 @@ export default function NcrOrderClient({ defaultType, productImages }) {
         summaryLines={summaryLines}
         unitCents={quote.unitCents}
         subtotalCents={quote.subtotalCents}
+        categorySlug="marketing-business-print"
+        locale={locale}
+        onRetryPrice={quote.retry}
       />
     </main>
   );
