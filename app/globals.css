@@ -417,7 +417,23 @@ html {
   animation-duration: var(--marquee-duration-slow, 72s);
 }
 
-/* iOS safe area */
+/* ── Mobile bottom chrome — single source of truth ──────────── */
+:root {
+  --mobile-nav-h: 0px;   /* set by MobileBottomNav JS (content only, no safe-area) */
+  --mobile-cta-h: 0px;   /* set by MobileBottomBar JS on configurator pages      */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bottom-chrome: calc(var(--mobile-nav-h) + var(--mobile-cta-h) + var(--safe-bottom));
+}
+
+/* Page content auto-padding so nothing hides behind fixed bars */
+@media (max-width: 767px) {
+  #main-content { padding-bottom: var(--bottom-chrome); }
+  .fab-contact { bottom: calc(var(--bottom-chrome) + 68px); }   /* above chat FAB */
+  .fab-chat    { bottom: calc(var(--bottom-chrome) + 12px); }   /* just above bars */
+}
+
+/* iOS safe area — ONLY for elements that need their own internal safe padding
+   (e.g. drawers). Pages/content must NOT use this; use --bottom-chrome instead. */
 @supports (padding: env(safe-area-inset-bottom)) {
   .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 }

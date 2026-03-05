@@ -201,31 +201,33 @@ export default function MobileBottomNav({ catalogConfig }) {
   const [cartCount, setCartCount] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navRef = useRef(null);
+  const contentRef = useRef(null);
 
   useEffect(() => {
     setCartCount(storeCount);
   }, [storeCount]);
 
+  /* ── Publish --mobile-nav-h (content height only, excludes safe-area) ── */
   useEffect(() => {
     const root = document.documentElement;
-    const updateOffset = () => {
-      const h = Math.ceil(navRef.current?.offsetHeight || 72);
-      root.style.setProperty("--mobile-nav-offset", `${h}px`);
+    const update = () => {
+      const h = Math.ceil(contentRef.current?.offsetHeight || 56);
+      root.style.setProperty("--mobile-nav-h", `${h}px`);
     };
 
-    updateOffset();
-    window.addEventListener("resize", updateOffset);
+    update();
+    window.addEventListener("resize", update);
 
     let ro = null;
-    if (typeof ResizeObserver !== "undefined" && navRef.current) {
-      ro = new ResizeObserver(updateOffset);
-      ro.observe(navRef.current);
+    if (typeof ResizeObserver !== "undefined" && contentRef.current) {
+      ro = new ResizeObserver(update);
+      ro.observe(contentRef.current);
     }
 
     return () => {
-      window.removeEventListener("resize", updateOffset);
+      window.removeEventListener("resize", update);
       if (ro) ro.disconnect();
-      root.style.setProperty("--mobile-nav-offset", "72px");
+      root.style.setProperty("--mobile-nav-h", "0px");
     };
   }, []);
 
@@ -283,11 +285,10 @@ export default function MobileBottomNav({ catalogConfig }) {
         categoryMeta={categoryMeta}
       />
 
-      {/* Spacer so content isn't hidden behind the fixed nav */}
-      <div className="md:hidden" style={{ height: "var(--mobile-nav-offset, 72px)" }} />
+      {/* Spacer removed — #main-content uses padding-bottom: var(--bottom-chrome) */}
 
-      <nav ref={navRef} className="fixed bottom-0 left-0 right-0 z-[50] border-t border-[var(--color-gray-200)] bg-white md:hidden pb-safe">
-        <div className="flex items-center justify-around px-1 py-1.5">
+      <nav ref={navRef} className="fixed bottom-0 left-0 right-0 z-[50] border-t border-[var(--color-gray-200)] bg-white md:hidden">
+        <div ref={contentRef} className="flex items-center justify-around px-1 py-1.5">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = tab.href ? isActive(tab.href) : false;
@@ -335,6 +336,8 @@ export default function MobileBottomNav({ catalogConfig }) {
             );
           })}
         </div>
+        {/* Safe-area spacer — keeps home indicator from overlapping tabs */}
+        <div style={{ height: "var(--safe-bottom)" }} />
       </nav>
     </>
   );

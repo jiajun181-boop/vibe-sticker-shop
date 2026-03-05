@@ -54,6 +54,27 @@ export default function MobileBottomBar({
   categorySlug,
   locale,
 }) {
+  // ─── Publish --mobile-cta-h so page padding stays correct ───
+  const barRef = useRef(null);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const update = () => {
+      const h = Math.ceil(barRef.current?.offsetHeight || 0);
+      root.style.setProperty("--mobile-cta-h", `${h}px`);
+    };
+    update();
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined" && barRef.current) {
+      ro = new ResizeObserver(update);
+      ro.observe(barRef.current);
+    }
+    return () => {
+      if (ro) ro.disconnect();
+      root.style.setProperty("--mobile-cta-h", "0px");
+    };
+  }, []);
+
   // ─── Add to Cart Animation ───
   const [atcState, setAtcState] = useState("idle");
   const atcTimerRef = useRef(null);
@@ -104,8 +125,9 @@ export default function MobileBottomBar({
   return (
     <>
       <div
+        ref={barRef}
         className="fixed inset-x-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] md:hidden"
-        style={{ bottom: "calc(var(--mobile-nav-offset, 72px) + env(safe-area-inset-bottom))" }}
+        style={{ bottom: "calc(var(--mobile-nav-h, 0px) + var(--safe-bottom, 0px))" }}
       >
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
@@ -215,8 +237,7 @@ export default function MobileBottomBar({
           </span>
         </div>
       </div>
-      {/* Bottom spacing */}
-      <div className="lg:hidden" style={{ height: "calc(var(--mobile-nav-offset, 72px) + 96px)" }} />
+      {/* Spacer removed — #main-content uses padding-bottom: var(--bottom-chrome) */}
     </>
   );
 }
