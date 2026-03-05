@@ -124,6 +124,26 @@ export default async function HomePage() {
         {/* 1. Hero */}
         <DualEntryHero totalCount={totalCount} />
 
+        {/* 1b. Quick category strip — "What do you sell?" in 5 seconds */}
+        <div className="bg-white border-b border-gray-100 py-4 overflow-x-auto scrollbar-hide">
+          <div className="mx-auto flex items-center justify-start md:justify-center gap-3 px-4 sm:px-6 min-w-max md:min-w-0">
+            {CATEGORY_CARDS.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={cat.href}
+                className="flex flex-col items-center gap-1.5 rounded-xl px-3 py-2 text-center transition-colors hover:bg-gray-50 shrink-0"
+              >
+                <span className={`flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br ${cat.gradient} text-white text-lg`}>
+                  {(isZh ? cat.titleZh : cat.title).charAt(0)}
+                </span>
+                <span className="text-[11px] font-medium text-gray-600 leading-tight max-w-[72px]">
+                  {isZh ? cat.titleZh.split(" & ")[0].split("、")[0] : cat.title.split(" & ")[0].split(",")[0]}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* 2. Google Reviews — social proof right after hero */}
         <GoogleReviews />
 

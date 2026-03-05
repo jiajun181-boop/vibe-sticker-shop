@@ -202,7 +202,7 @@ export default function MarketingPrintOrderClient({
   const hasExtras = (printType.extras || []).length > 0;
 
   // --- Accordion state ---
-  const [activeStepId, setActiveStepId] = useState(null);
+  const [activeStepId, setActiveStepId] = useState(hideTypeSelector ? "step-size" : "step-type");
 
   const visibleSteps = useMemo(() => {
     const defs = [

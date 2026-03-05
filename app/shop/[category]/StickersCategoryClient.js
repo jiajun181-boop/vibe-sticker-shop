@@ -100,22 +100,23 @@ function ProductCard({ product, t }) {
           <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)] transition-colors line-clamp-2">
             {product.name}
           </h3>
+          {price > 0 ? (
+            <p className="mt-1 text-sm font-bold text-[var(--color-brand)]">
+              {t("product.from", { price: formatCad(price) })}
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-[var(--color-gray-400)]">
+              {t("configurator.requestQuote")}
+            </p>
+          )}
           {product.description && (
-            <p className="mt-1 text-[11px] text-[var(--color-gray-500)] line-clamp-2">
+            <p className="mt-1 text-[11px] text-[var(--color-gray-500)] line-clamp-1 sm:line-clamp-2">
               {product.description}
             </p>
           )}
         </Link>
         <div className="mt-3 flex items-center justify-between">
-          {price > 0 ? (
-            <span className="text-sm font-bold text-[var(--color-brand)]">
-              {t("product.from", { price: formatCad(price) })}
-            </span>
-          ) : (
-            <span className="text-xs text-[var(--color-gray-400)]">
-              {t("configurator.requestQuote")}
-            </span>
-          )}
+          <span /> {/* price moved above */}
           <Link
             href={href}
             className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white hover:bg-[var(--color-brand-dark)] transition-colors"

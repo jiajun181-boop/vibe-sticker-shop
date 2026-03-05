@@ -134,15 +134,20 @@ export default function MobileBottomBar({
             {quoteLoading ? (
               <div className="h-5 w-20 animate-pulse rounded bg-gray-200" />
             ) : quoteError ? (
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-medium text-red-600">
-                  {t?.("configurator.priceError") || "Unable to calculate price"}
-                </p>
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-red-600 truncate">
+                    {t?.("configurator.priceError") || "Unable to calculate price"}
+                  </p>
+                  <p className="text-[10px] text-gray-400 truncate">
+                    {t?.("configurator.priceErrorHelp") || "Call (647) 886-9288"}
+                  </p>
+                </div>
                 {onRetryPrice && (
                   <button
                     type="button"
                     onClick={onRetryPrice}
-                    className="shrink-0 rounded bg-red-600 px-2 py-1 text-[10px] font-bold text-white"
+                    className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white min-h-[40px] shadow-sm active:bg-red-700"
                   >
                     {t?.("configurator.retry") || "Retry"}
                   </button>

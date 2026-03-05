@@ -177,7 +177,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
   }
 
   // --- Accordion state ---
-  const [activeStepId, setActiveStepId] = useState(null);
+  const [activeStepId, setActiveStepId] = useState("step-type");
 
   const visibleSteps = useMemo(() => {
     const defs = [

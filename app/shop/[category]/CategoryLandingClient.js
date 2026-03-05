@@ -90,14 +90,14 @@ function ProductCard({ product, t, compact }) {
           <h3 className={`font-semibold text-[var(--color-gray-900)] leading-snug ${compact ? "text-xs" : "text-xs sm:text-sm"}`}>
             {product.name}
           </h3>
-          {!compact && product.description && (
-            <p className="mt-1 hidden sm:block text-[11px] text-[var(--color-gray-500)] line-clamp-2">
-              {product.description}
+          {(product.fromPrice || product.basePrice) > 0 && (
+            <p className={`font-bold text-[var(--color-brand)] ${compact ? "mt-1 text-xs" : "mt-1 text-sm"}`}>
+              {t("product.from", { price: formatCad(product.fromPrice || product.basePrice) })}
             </p>
           )}
-          {(product.fromPrice || product.basePrice) > 0 && (
-            <p className={`font-bold text-[var(--color-brand)] ${compact ? "mt-1 text-xs" : "mt-2 text-sm"}`}>
-              {t("product.from", { price: formatCad(product.fromPrice || product.basePrice) })}
+          {!compact && product.description && (
+            <p className="mt-1 text-[11px] text-[var(--color-gray-500)] line-clamp-1 sm:line-clamp-2">
+              {product.description}
             </p>
           )}
         </div>

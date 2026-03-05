@@ -156,7 +156,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
   }
 
   // Accordion state
-  const [activeStepId, setActiveStepId] = useState(null);
+  const [activeStepId, setActiveStepId] = useState("step-formType");
   const visibleSteps = useMemo(() => {
     const defs = [
       { id: "formType", vis: true },

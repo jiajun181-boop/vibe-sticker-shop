@@ -241,7 +241,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
     new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
   // --- Accordion state ---
-  const [activeStepId, setActiveStepId] = useState(null);
+  const [activeStepId, setActiveStepId] = useState("step-material");
   const visibleSteps = useMemo(() => {
     const defs = [
       { id: "material", vis: true },

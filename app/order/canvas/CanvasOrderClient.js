@@ -252,7 +252,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
     new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
   // --- Accordion state ---
-  const [activeStepId, setActiveStepId] = useState(null);
+  const [activeStepId, setActiveStepId] = useState("step-artwork");
 
   const visibleSteps = useMemo(() => {
     const defs = [

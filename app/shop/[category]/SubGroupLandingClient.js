@@ -165,7 +165,7 @@ function CardInner({ group, t, stickerConfig, ctaLabel }) {
           {group.title}
         </h3>
         {group.description && (
-          <p className="mt-0.5 hidden sm:block text-[10px] sm:text-[11px] leading-snug text-[var(--color-gray-500)] line-clamp-2">
+          <p className="mt-0.5 text-[10px] sm:text-[11px] leading-snug text-[var(--color-gray-500)] line-clamp-1 sm:line-clamp-2">
             {group.description}
           </p>
         )}

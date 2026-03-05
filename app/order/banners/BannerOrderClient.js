@@ -170,7 +170,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
   }
 
   // --- Accordion state ---
-  const [activeStepId, setActiveStepId] = useState(null);
+  const [activeStepId, setActiveStepId] = useState("step-type");
   const visibleSteps = useMemo(() => {
     const defs = [
       { id: "type", vis: true },

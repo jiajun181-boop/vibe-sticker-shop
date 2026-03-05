@@ -257,7 +257,7 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
     new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
   // --- Accordion state ---
-  const [activeStepId, setActiveStepId] = useState(null);
+  const [activeStepId, setActiveStepId] = useState("step-type");
   const visibleSteps = useMemo(() => {
     const defs = [
       { id: "type", vis: true },
