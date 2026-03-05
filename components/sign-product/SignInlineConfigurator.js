@@ -13,6 +13,10 @@ import {
   useConfiguratorPrice,
   useConfiguratorCart,
   MaterialSwatchGrid,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
 } from "@/components/configurator";
 
 const INCH_TO_CM = 2.54;
@@ -245,42 +249,78 @@ export default function SignInlineConfigurator({ signTypeId }) {
     "6mm-pvc": "Thick PVC, premium finish",
   };
 
-  return (
-    <div className="space-y-5">
-      {/* Purchase Type (A-Frame / Real Estate only) */}
-      {hasPurchaseTypes && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            {t("sign.purchaseType")}
-          </h3>
-          <div className="flex gap-2">
-            {signType.purchaseTypes.map((pt) => {
-              const isActive = purchaseType === pt.id;
-              return (
-                <button
-                  key={pt.id}
-                  type="button"
-                  onClick={() => setPurchaseType(pt.id)}
-                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                    isActive
-                      ? "border-gray-900 bg-gray-900 text-[#fff]"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  {t(`sign.${pt.id}`)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+  // --- Accordion state ---
+  const [activeStepId, setActiveStepId] = useState(null);
 
-      {/* Material, Size, Printing (hidden for frame-only) */}
-      {!isFrameOnly && (<>
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Material
-        </h3>
+  const hasDoubleSided = !isFrameOnly && signType.doubleSided !== undefined;
+  const hasAccessories = !isFrameOnly && signType.accessories.length > 0;
+
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "purchaseType", vis: hasPurchaseTypes },
+      { id: "material",     vis: !isFrameOnly },
+      { id: "size",         vis: !isFrameOnly },
+      { id: "printing",     vis: hasDoubleSided },
+      { id: "quantity",     vis: true },
+      { id: "accessories",  vis: hasAccessories },
+      { id: "artwork",      vis: !isFrameOnly },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, [hasPurchaseTypes, isFrameOnly, hasDoubleSided, hasAccessories]);
+
+  const stepNum = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  // --- Summary texts ---
+  const sizeSummary = isCustomSize
+    ? `${widthIn.toFixed(1)}" \u00d7 ${heightIn.toFixed(1)}"`
+    : signType.sizes[sizeIdx]?.label;
+  const materialSummary = signType.materials.find((m) => m.id === materialId)?.label || materialId;
+  const accessorySummary = accessories.length > 0
+    ? `${accessories.length} selected`
+    : "None";
+
+  return (
+    <div className="space-y-3">
+      {/* 1. Purchase Type (A-Frame / Real Estate only) */}
+      <StepCard
+        stepNumber={stepNum("purchaseType")}
+        title={t("step.purchaseType")}
+        hint={t("step.purchaseType.hint")}
+        summaryText={t(`sign.${purchaseType}`)}
+        visible={hasPurchaseTypes}
+        open={isStepOpen("purchaseType")}
+        onToggle={() => toggleStep("purchaseType")}
+        stepId="step-purchaseType"
+      >
+        <OptionGrid columns={signType.purchaseTypes?.length || 3} label={t("step.purchaseType")}>
+          {(signType.purchaseTypes || []).map((pt) => (
+            <OptionCard
+              key={pt.id}
+              label={t(`sign.${pt.id}`)}
+              selected={purchaseType === pt.id}
+              onSelect={() => { setPurchaseType(pt.id); advanceStep("step-purchaseType"); }}
+            />
+          ))}
+        </OptionGrid>
+      </StepCard>
+
+      {/* 2. Material (hidden for frame-only) */}
+      <StepCard
+        stepNumber={stepNum("material")}
+        title={t("step.material")}
+        hint={t("step.material.hint")}
+        summaryText={materialSummary}
+        visible={!isFrameOnly}
+        open={isStepOpen("material")}
+        onToggle={() => toggleStep("material")}
+        stepId="step-material"
+      >
         <MaterialSwatchGrid
           materials={signType.materials.map((mat) => ({
             id: mat.id,
@@ -288,46 +328,38 @@ export default function SignInlineConfigurator({ signTypeId }) {
             subtitle: MATERIAL_HINTS[mat.id] || undefined,
           }))}
           selectedId={materialId}
-          onSelect={selectMaterial}
+          onSelect={(id) => { selectMaterial(id); advanceStep("step-material"); }}
           columns={signType.materials.length <= 3 ? 3 : 4}
         />
-      </div>
+      </StepCard>
 
-      {/* Size */}
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Size
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {signType.sizes.map((s, i) => {
-            const isActive = sizeIdx === i;
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => selectSize(i)}
-                className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                  isActive
-                    ? "border-gray-900 bg-gray-900 text-[#fff]"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                }`}
-              >
-                {s.label}
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => selectSize(-1)}
-            className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-              isCustomSize
-                ? "border-gray-900 bg-gray-900 text-[#fff]"
-                : "border-dashed border-gray-300 text-gray-500 hover:border-gray-500"
-            }`}
-          >
-            Custom
-          </button>
-        </div>
+      {/* 3. Size */}
+      <StepCard
+        stepNumber={stepNum("size")}
+        title={t("step.size")}
+        hint={t("step.size.hint")}
+        summaryText={sizeSummary}
+        visible={!isFrameOnly}
+        open={isStepOpen("size")}
+        onToggle={() => toggleStep("size")}
+        stepId="step-size"
+      >
+        <OptionGrid columns={signType.sizes.length <= 4 ? signType.sizes.length : 4} label={t("step.size")}>
+          {signType.sizes.map((s, i) => (
+            <OptionCard
+              key={i}
+              label={s.label}
+              selected={sizeIdx === i}
+              onSelect={() => { selectSize(i); advanceStep("step-size"); }}
+            />
+          ))}
+          <OptionCard
+            label="Custom"
+            selected={isCustomSize}
+            onSelect={() => selectSize(-1)}
+            className={isCustomSize ? "" : "border-dashed"}
+          />
+        </OptionGrid>
         {isCustomSize && (
           <div className="mt-2">
             <CustomDimensions
@@ -344,47 +376,43 @@ export default function SignInlineConfigurator({ signTypeId }) {
             />
           </div>
         )}
-      </div>
+      </StepCard>
 
-      {/* Printing (single / double sided) */}
-      {signType.doubleSided !== undefined && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            Printing
-          </h3>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setDoubleSided(false)}
-              className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                !doubleSided
-                  ? "border-gray-900 bg-gray-900 text-[#fff]"
-                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-              }`}
-            >
-              Single-Sided
-            </button>
-            <button
-              type="button"
-              onClick={() => setDoubleSided(true)}
-              className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                doubleSided
-                  ? "border-gray-900 bg-gray-900 text-[#fff]"
-                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-              }`}
-            >
-              Double-Sided
-            </button>
-          </div>
-        </div>
-      )}
-      </>)}
+      {/* 4. Printing (single / double sided) */}
+      <StepCard
+        stepNumber={stepNum("printing")}
+        title={t("step.printing")}
+        hint={t("step.printing.hint")}
+        summaryText={doubleSided ? "Double-Sided" : "Single-Sided"}
+        visible={hasDoubleSided}
+        open={isStepOpen("printing")}
+        onToggle={() => toggleStep("printing")}
+        stepId="step-printing"
+      >
+        <OptionGrid columns={2} label={t("step.printing")}>
+          <OptionCard
+            label="Single-Sided"
+            selected={!doubleSided}
+            onSelect={() => { setDoubleSided(false); advanceStep("step-printing"); }}
+          />
+          <OptionCard
+            label="Double-Sided"
+            selected={doubleSided}
+            onSelect={() => { setDoubleSided(true); advanceStep("step-printing"); }}
+          />
+        </OptionGrid>
+      </StepCard>
 
-      {/* Quantity */}
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Quantity
-        </h3>
+      {/* 5. Quantity */}
+      <StepCard
+        stepNumber={stepNum("quantity")}
+        title={t("step.quantity")}
+        hint={t("step.quantity.hint")}
+        summaryText={`${activeQty.toLocaleString()} pcs`}
+        open={isStepOpen("quantity")}
+        onToggle={() => toggleStep("quantity")}
+        stepId="step-quantity"
+      >
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
           {signType.quantities.map((q) => {
             const isActive = customQty === "" && quantity === q;
@@ -392,11 +420,11 @@ export default function SignInlineConfigurator({ signTypeId }) {
               <button
                 key={q}
                 type="button"
-                onClick={() => selectQuantity(q)}
+                onClick={() => { selectQuantity(q); advanceStep("step-quantity"); }}
                 className={`flex-shrink-0 rounded-full border-2 px-3 py-2 text-xs font-bold transition-all ${
                   isActive
-                    ? "border-gray-900 bg-gray-900 text-[#fff]"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    ? "border-teal-500 bg-teal-50 text-gray-900"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                 }`}
               >
                 {q}
@@ -412,61 +440,72 @@ export default function SignInlineConfigurator({ signTypeId }) {
             value={customQty}
             onChange={(e) => setCustomQty(e.target.value)}
             placeholder="Custom qty"
-            className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/10"
+            className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/20"
           />
           {unitPriceLabel && (
             <span className="text-xs font-medium text-gray-500">{unitPriceLabel}</span>
           )}
         </div>
-      </div>
+      </StepCard>
 
-      {/* Accessories (hidden for frame-only; filter frame accessories for panel-only) */}
-      {!isFrameOnly && signType.accessories.length > 0 && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            Accessories
-          </h3>
-          <div className="space-y-2">
-            {signType.accessories
-              .filter((aId) => !isPanelOnly || aId !== frameAccessoryId)
-              .map((aId) => {
-              const acc = ACCESSORY_OPTIONS[aId];
-              if (!acc) return null;
-              const checked = accessories.includes(aId);
-              return (
-                <label key={aId} className="flex items-center gap-2 text-xs text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleAccessory(aId)}
-                    className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-                  />
-                  <span className="font-medium">{acc.label}</span>
-                  {acc.surcharge > 0 && (
-                    <span className="text-gray-400">+{formatCad(acc.surcharge)}/ea</span>
-                  )}
-                  {acc.surcharge === 0 && (
-                    <span className="text-emerald-600 text-[10px] font-bold">Included</span>
-                  )}
-                </label>
-              );
-            })}
-          </div>
+      {/* 6. Accessories (hidden for frame-only; filter frame accessories for panel-only) */}
+      <StepCard
+        stepNumber={stepNum("accessories")}
+        title={t("step.accessories")}
+        hint={t("step.accessories.hint")}
+        summaryText={accessorySummary}
+        visible={hasAccessories}
+        open={isStepOpen("accessories")}
+        onToggle={() => toggleStep("accessories")}
+        stepId="step-accessories"
+      >
+        <div className="space-y-2">
+          {signType.accessories
+            .filter((aId) => !isPanelOnly || aId !== frameAccessoryId)
+            .map((aId) => {
+            const acc = ACCESSORY_OPTIONS[aId];
+            if (!acc) return null;
+            const checked = accessories.includes(aId);
+            return (
+              <label key={aId} className="flex items-center gap-2 text-xs text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleAccessory(aId)}
+                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+                <span className="font-medium">{acc.label}</span>
+                {acc.surcharge > 0 && (
+                  <span className="text-gray-400">+{formatCad(acc.surcharge)}/ea</span>
+                )}
+                {acc.surcharge === 0 && (
+                  <span className="text-emerald-600 text-[10px] font-bold">Included</span>
+                )}
+              </label>
+            );
+          })}
         </div>
-      )}
+      </StepCard>
 
-      {/* Upload Artwork (hidden for frame-only) */}
-      {!isFrameOnly && <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Artwork <span className="font-normal normal-case text-gray-400">(optional)</span>
-        </h3>
+      {/* 7. Upload Artwork (hidden for frame-only) */}
+      <StepCard
+        stepNumber={stepNum("artwork")}
+        title={t("step.artwork")}
+        hint={t("step.artwork.hint")}
+        summaryText={uploadedFile?.name || t("step.notUploaded")}
+        optional
+        visible={!isFrameOnly}
+        open={isStepOpen("artwork")}
+        onToggle={() => toggleStep("artwork")}
+        stepId="step-artwork"
+      >
         <ArtworkUpload
           uploadedFile={uploadedFile}
           onUploaded={(file) => setUploadedFile(file)}
           onRemove={() => setUploadedFile(null)}
           t={t}
         />
-      </div>}
+      </StepCard>
 
       {/* Price Summary */}
       <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">

@@ -13,10 +13,13 @@ import {
   useConfiguratorPrice,
   useConfiguratorCart,
   MaterialSwatchGrid,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
 } from "@/components/configurator";
 
 const INCH_TO_CM = 2.54;
-const HST_RATE = 0.13;
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -99,8 +102,6 @@ export default function WwfInlineConfigurator({ wwfProductId }) {
     quoteError,
     unitCents,
     subtotalCents,
-    taxCents,
-    totalCents,
     addSurcharge,
   } = useConfiguratorPrice({
     slug: product.slug,
@@ -172,44 +173,74 @@ export default function WwfInlineConfigurator({ wwfProductId }) {
 
   const unitPriceLabel = unitCents > 0 ? `${formatCad(unitCents)}/ea` : null;
 
+  // --- Accordion state ---
+  const [activeStepId, setActiveStepId] = useState(null);
+
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "size",            vis: true },
+      { id: "cutType",         vis: hasMultipleCutTypes },
+      { id: "applicationSide", vis: isWindowProduct },
+      { id: "material",        vis: isMultiMaterial },
+      { id: "finishing",       vis: hasFinishings },
+      { id: "quantity",        vis: true },
+      { id: "artwork",         vis: true },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, [hasMultipleCutTypes, isWindowProduct, isMultiMaterial, hasFinishings]);
+
+  const stepNum = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  // --- Summary texts ---
+  const sizeSummary = isCustomSize
+    ? `${widthIn.toFixed(1)}" \u00d7 ${heightIn.toFixed(1)}"`
+    : product.sizes[sizeIdx]?.label || "Custom";
+  const cutTypeSummary = cutType === "rectangular" ? "Rectangular" : "Custom Shape";
+  const applicationSideSummary = applicationSide
+    ? WWF_APPLICATION_SIDES[applicationSide]?.label || applicationSide
+    : "";
+  const materialSummary = isMultiMaterial
+    ? product.materials.find((m) => m.id === materialId)?.label || materialId
+    : "";
+  const finishingSummary = finishing === "none"
+    ? "No Laminate"
+    : WWF_FINISHING_OPTIONS[finishing]?.label || finishing;
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       {/* 1. Size */}
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Size
-        </h3>
+      <StepCard
+        stepNumber={stepNum("size")}
+        title={t("step.size")}
+        hint={t("step.size.hint")}
+        summaryText={sizeSummary}
+        open={isStepOpen("size")}
+        onToggle={() => toggleStep("size")}
+        stepId="step-size"
+      >
         {!isCustomSizeOnly && (
-          <div className="flex flex-wrap gap-2">
-            {product.sizes.map((s, i) => {
-              const isActive = sizeIdx === i;
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => selectSize(i)}
-                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                    isActive
-                      ? "border-gray-900 bg-gray-900 text-[#fff]"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  {s.label}
-                </button>
-              );
-            })}
-            <button
-              type="button"
-              onClick={() => selectSize(-1)}
-              className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                isCustomSize
-                  ? "border-gray-900 bg-gray-900 text-[#fff]"
-                  : "border-dashed border-gray-300 text-gray-500 hover:border-gray-500"
-              }`}
-            >
-              Custom
-            </button>
-          </div>
+          <OptionGrid columns={product.sizes.length <= 4 ? product.sizes.length : 4} label={t("step.size")}>
+            {product.sizes.map((s, i) => (
+              <OptionCard
+                key={i}
+                label={s.label}
+                selected={sizeIdx === i}
+                onSelect={() => { selectSize(i); advanceStep("step-size"); }}
+              />
+            ))}
+            <OptionCard
+              label="Custom"
+              selected={isCustomSize}
+              onSelect={() => selectSize(-1)}
+              className={isCustomSize ? "" : "border-dashed"}
+            />
+          </OptionGrid>
         )}
         {(isCustomSize || isCustomSizeOnly) && (
           <div className={isCustomSizeOnly ? "" : "mt-2"}>
@@ -227,131 +258,118 @@ export default function WwfInlineConfigurator({ wwfProductId }) {
             />
           </div>
         )}
-      </div>
+      </StepCard>
 
       {/* 2. Cut Type (only if product supports multiple) */}
-      {hasMultipleCutTypes && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            Cut Type
-          </h3>
-          <div className="flex gap-2">
-            {product.cutTypes.map((ct) => {
-              const isActive = cutType === ct;
-              const label = ct === "rectangular" ? "Rectangular" : "Custom Shape";
-              return (
-                <button
-                  key={ct}
-                  type="button"
-                  onClick={() => setCutType(ct)}
-                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                    isActive
-                      ? "border-gray-900 bg-gray-900 text-[#fff]"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <StepCard
+        stepNumber={stepNum("cutType")}
+        title={t("step.cutType")}
+        hint={t("step.cutType.hint")}
+        summaryText={cutTypeSummary}
+        visible={hasMultipleCutTypes}
+        open={isStepOpen("cutType")}
+        onToggle={() => toggleStep("cutType")}
+        stepId="step-cutType"
+      >
+        <OptionGrid columns={2} label={t("step.cutType")}>
+          {product.cutTypes.map((ct) => (
+            <OptionCard
+              key={ct}
+              label={ct === "rectangular" ? "Rectangular" : "Custom Shape"}
+              selected={cutType === ct}
+              onSelect={() => { setCutType(ct); advanceStep("step-cutType"); }}
+            />
+          ))}
+        </OptionGrid>
+      </StepCard>
 
       {/* 3. Application Side (window products only) */}
-      {isWindowProduct && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            Application Side
-          </h3>
-          <div className="flex gap-2">
-            {Object.values(WWF_APPLICATION_SIDES).map((side) => {
-              const isActive = applicationSide === side.id;
-              return (
-                <button
-                  key={side.id}
-                  type="button"
-                  onClick={() => setApplicationSide(side.id)}
-                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                    isActive
-                      ? "border-gray-900 bg-gray-900 text-[#fff]"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  {side.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <StepCard
+        stepNumber={stepNum("applicationSide")}
+        title={t("step.applicationSide")}
+        hint={t("step.applicationSide.hint")}
+        summaryText={applicationSideSummary}
+        visible={isWindowProduct}
+        open={isStepOpen("applicationSide")}
+        onToggle={() => toggleStep("applicationSide")}
+        stepId="step-applicationSide"
+      >
+        <OptionGrid columns={2} label={t("step.applicationSide")}>
+          {Object.values(WWF_APPLICATION_SIDES).map((side) => (
+            <OptionCard
+              key={side.id}
+              label={side.label}
+              selected={applicationSide === side.id}
+              onSelect={() => { setApplicationSide(side.id); advanceStep("step-applicationSide"); }}
+            />
+          ))}
+        </OptionGrid>
+      </StepCard>
 
-      {/* 4. Material (only for Glass Waistline / multi-material products) */}
-      {isMultiMaterial && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            Material
-          </h3>
-          <MaterialSwatchGrid
-            materials={product.materials}
-            selectedId={materialId}
-            onSelect={setMaterialId}
-            columns={product.materials.length <= 3 ? 3 : 4}
-          />
-        </div>
-      )}
+      {/* 4. Material (only for multi-material products) */}
+      <StepCard
+        stepNumber={stepNum("material")}
+        title={t("step.material")}
+        hint={t("step.material.hint")}
+        summaryText={materialSummary}
+        visible={isMultiMaterial}
+        open={isStepOpen("material")}
+        onToggle={() => toggleStep("material")}
+        stepId="step-material"
+      >
+        <MaterialSwatchGrid
+          materials={product.materials}
+          selectedId={materialId}
+          onSelect={(id) => { setMaterialId(id); advanceStep("step-material"); }}
+          columns={product.materials.length <= 3 ? 3 : 4}
+        />
+      </StepCard>
 
       {/* 5. Finishing (if product has finishing options) */}
-      {hasFinishings && (
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-            Finishing
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setFinishing("none")}
-              className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                finishing === "none"
-                  ? "border-gray-900 bg-gray-900 text-[#fff]"
-                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-              }`}
-            >
-              No Laminate
-            </button>
-            {product.finishings.map((fId) => {
-              const opt = WWF_FINISHING_OPTIONS[fId];
-              if (!opt) return null;
-              const isActive = finishing === fId;
-              return (
-                <button
-                  key={fId}
-                  type="button"
-                  onClick={() => setFinishing(fId)}
-                  className={`rounded-lg border-2 px-3 py-2 text-xs font-bold transition-all ${
-                    isActive
-                      ? "border-gray-900 bg-gray-900 text-[#fff]"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  {opt.label}
-                  {opt.surcharge > 0 && (
-                    <span className={`ml-1 text-[9px] ${isActive ? "text-amber-300" : "text-amber-600"}`}>
-                      +{formatCad(opt.surcharge)}/ea
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <StepCard
+        stepNumber={stepNum("finishing")}
+        title={t("step.finishing")}
+        hint={t("step.finishing.hint")}
+        summaryText={finishingSummary}
+        visible={hasFinishings}
+        open={isStepOpen("finishing")}
+        onToggle={() => toggleStep("finishing")}
+        stepId="step-finishing"
+      >
+        <OptionGrid columns={product.finishings.length + 1 <= 4 ? product.finishings.length + 1 : 4} label={t("step.finishing")}>
+          <OptionCard
+            label="No Laminate"
+            selected={finishing === "none"}
+            onSelect={() => { setFinishing("none"); advanceStep("step-finishing"); }}
+          />
+          {product.finishings.map((fId) => {
+            const opt = WWF_FINISHING_OPTIONS[fId];
+            if (!opt) return null;
+            return (
+              <OptionCard
+                key={fId}
+                label={opt.label}
+                selected={finishing === fId}
+                onSelect={() => { setFinishing(fId); advanceStep("step-finishing"); }}
+                badge={opt.surcharge > 0 ? (
+                  <span className="text-[9px] font-bold text-amber-600">+{formatCad(opt.surcharge)}/ea</span>
+                ) : null}
+              />
+            );
+          })}
+        </OptionGrid>
+      </StepCard>
 
       {/* 6. Quantity */}
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Quantity
-        </h3>
+      <StepCard
+        stepNumber={stepNum("quantity")}
+        title={t("step.quantity")}
+        hint={t("step.quantity.hint")}
+        summaryText={`${activeQty.toLocaleString()} pcs`}
+        open={isStepOpen("quantity")}
+        onToggle={() => toggleStep("quantity")}
+        stepId="step-quantity"
+      >
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
           {product.quantities.map((q) => {
             const isActive = customQty === "" && quantity === q;
@@ -359,11 +377,11 @@ export default function WwfInlineConfigurator({ wwfProductId }) {
               <button
                 key={q}
                 type="button"
-                onClick={() => selectQuantity(q)}
+                onClick={() => { selectQuantity(q); advanceStep("step-quantity"); }}
                 className={`flex-shrink-0 rounded-full border-2 px-3 py-2 text-xs font-bold transition-all ${
                   isActive
-                    ? "border-gray-900 bg-gray-900 text-[#fff]"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                    ? "border-teal-500 bg-teal-50 text-gray-900"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                 }`}
               >
                 {q}
@@ -379,26 +397,32 @@ export default function WwfInlineConfigurator({ wwfProductId }) {
             value={customQty}
             onChange={(e) => setCustomQty(e.target.value)}
             placeholder="Custom qty"
-            className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/10"
+            className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/20"
           />
           {unitPriceLabel && (
             <span className="text-xs font-medium text-gray-500">{unitPriceLabel}</span>
           )}
         </div>
-      </div>
+      </StepCard>
 
       {/* 7. Artwork */}
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-          Artwork <span className="font-normal normal-case text-gray-400">(optional)</span>
-        </h3>
+      <StepCard
+        stepNumber={stepNum("artwork")}
+        title={t("step.artwork")}
+        hint={t("step.artwork.hint")}
+        summaryText={uploadedFile?.name || t("step.notUploaded")}
+        optional
+        open={isStepOpen("artwork")}
+        onToggle={() => toggleStep("artwork")}
+        stepId="step-artwork"
+      >
         <ArtworkUpload
           uploadedFile={uploadedFile}
           onUploaded={(file) => setUploadedFile(file)}
           onRemove={() => setUploadedFile(null)}
           t={t}
         />
-      </div>
+      </StepCard>
 
       {/* Price Summary */}
       <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
