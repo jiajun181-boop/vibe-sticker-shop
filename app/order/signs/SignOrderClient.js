@@ -7,7 +7,10 @@ import {
   getSignType,
 } from "@/lib/sign-order-config";
 import {
-  ConfigStep,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
   ConfigHero,
   ConfigProductGallery,
   PricingSidebar,
@@ -237,7 +240,34 @@ export default function SignOrderClient({ defaultType, productImages }) {
   const formatCad = (cents) =>
     new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
-  let stepNum = 1;
+  // --- Accordion state ---
+  const [activeStepId, setActiveStepId] = useState(null);
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "material", vis: true },
+      { id: "size", vis: true },
+      { id: "sides", vis: signType.doubleSided !== undefined },
+      { id: "accessories", vis: signType.accessories.length > 0 },
+      { id: "quantity", vis: true },
+      { id: "artwork", vis: true },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, [signType.doubleSided, signType.accessories.length]);
+  const stepNumFn = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  const materialSummary = signType.materials.find((m) => m.id === materialId)?.label || materialId;
+  const sizeTextSummary = isCustomSize
+    ? widthIn > 0 && heightIn > 0 ? `${widthIn.toFixed(1)}" × ${heightIn.toFixed(1)}"` : "—"
+    : signType.sizes[sizeIdx]?.label || "—";
+  const sidesSummary = doubleSided ? "Double-sided" : "Single-sided";
+  const accessoriesSummary = accessories.length > 0 ? accessories.map((a) => ACCESSORY_OPTIONS[a]?.label || a).join(", ") : "None";
+  const quantitySummary = `${activeQty.toLocaleString()} pcs`;
+  const artworkSummary = uploadedFile?.name || "Not uploaded yet";
 
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)]">
@@ -255,68 +285,61 @@ export default function SignOrderClient({ defaultType, productImages }) {
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-          <div className="space-y-6 lg:col-span-2">
+          <div className="space-y-3 lg:col-span-2">
 
-            {/* Step 1: Material */}
-            <ConfigStep number={stepNum++} title={t("sign.material")} subtitle={t("sign.materialSubtitle")}>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                {signType.materials.map((mat) => {
-                  const isActive = materialId === mat.id;
-                  return (
-                    <button
-                      key={mat.id}
-                      type="button"
-                      onClick={() => setMaterialId(mat.id)}
-                      className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
-                        isActive
-                          ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                          : "border-gray-200 bg-white hover:border-gray-400"
-                      }`}
-                    >
-                      {isActive && (
-                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                        </span>
-                      )}
-                      <span className="text-sm font-bold text-gray-800">{mat.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </ConfigStep>
-
-            {/* Step 3: Size */}
-            <ConfigStep number={stepNum++} title={t("sign.size")} subtitle={t("sign.sizeSubtitle")}>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                {signType.sizes.map((s, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => { setSizeIdx(i); setCustomW(""); setCustomH(""); }}
-                    className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
-                      sizeIdx === i
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    <span className="text-sm font-bold">{s.label}</span>
-                  </button>
+            {/* Step: Material */}
+            <StepCard
+              stepNumber={stepNumFn("material")}
+              title={t("sign.material")}
+              hint={t("sign.materialSubtitle")}
+              summaryText={materialSummary}
+              open={isStepOpen("material")}
+              onToggle={() => toggleStep("material")}
+              stepId="step-material"
+            >
+              <OptionGrid columns={3}>
+                {signType.materials.map((mat) => (
+                  <OptionCard
+                    key={mat.id}
+                    label={mat.label}
+                    selected={materialId === mat.id}
+                    onSelect={() => { setMaterialId(mat.id); advanceStep("step-material"); }}
+                  />
                 ))}
-                <button
-                  type="button"
-                  onClick={() => setSizeIdx(-1)}
-                  className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
-                    isCustomSize
-                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                      : "border-dashed border-gray-300 bg-white text-gray-500 hover:border-gray-500"
-                  }`}
-                >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-                  </svg>
-                  <span className="text-xs font-bold">{t("sign.customSize")}</span>
-                </button>
-              </div>
+              </OptionGrid>
+            </StepCard>
+
+            {/* Step: Size */}
+            <StepCard
+              stepNumber={stepNumFn("size")}
+              title={t("sign.size")}
+              hint={t("sign.sizeSubtitle")}
+              summaryText={sizeTextSummary}
+              open={isStepOpen("size")}
+              onToggle={() => toggleStep("size")}
+              stepId="step-size"
+            >
+              <OptionGrid columns={4}>
+                {signType.sizes.map((s, i) => (
+                  <OptionCard
+                    key={i}
+                    label={s.label}
+                    selected={sizeIdx === i}
+                    onSelect={() => { setSizeIdx(i); setCustomW(""); setCustomH(""); advanceStep("step-size"); }}
+                  />
+                ))}
+                <OptionCard
+                  label={t("sign.customSize")}
+                  selected={isCustomSize}
+                  onSelect={() => setSizeIdx(-1)}
+                  className="border-dashed"
+                  icon={
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                    </svg>
+                  }
+                />
+              </OptionGrid>
               {isCustomSize && (
                 <CustomDimensions
                   customW={customW} customH={customH}
@@ -337,77 +360,94 @@ export default function SignOrderClient({ defaultType, productImages }) {
                   <div>
                     <p className="text-sm font-semibold text-amber-800">Oversized Sign</p>
                     <p className="mt-0.5 text-xs text-amber-700">
-                      Signs larger than 48" may require special handling, additional shipping charges, and longer production times.
+                      Signs larger than 48&quot; may require special handling, additional shipping charges, and longer production times.
                       Contact us for bulk oversized orders.
                     </p>
                   </div>
                 </div>
               )}
-            </ConfigStep>
+            </StepCard>
 
             {/* Step: Double-sided toggle (if applicable) */}
-            {signType.doubleSided !== undefined && (
-              <ConfigStep number={stepNum++} title={t("sign.sides")} subtitle={t("sign.sidesSubtitle")}>
-                <div className="flex gap-3">
-                  {[false, true].map((ds) => (
-                    <button
-                      key={ds ? "double" : "single"}
-                      type="button"
-                      onClick={() => setDoubleSided(ds)}
-                      className={`flex-1 rounded-xl border-2 px-4 py-3 text-center font-bold transition-all ${
-                        doubleSided === ds
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      {ds ? t("sign.doubleSided") : t("sign.singleSided")}
-                    </button>
-                  ))}
-                </div>
-              </ConfigStep>
-            )}
+            <StepCard
+              stepNumber={stepNumFn("sides")}
+              title={t("sign.sides")}
+              hint={t("sign.sidesSubtitle")}
+              summaryText={sidesSummary}
+              visible={signType.doubleSided !== undefined}
+              open={isStepOpen("sides")}
+              onToggle={() => toggleStep("sides")}
+              stepId="step-sides"
+            >
+              <OptionGrid columns={2}>
+                {[false, true].map((ds) => (
+                  <OptionCard
+                    key={ds ? "double" : "single"}
+                    label={ds ? t("sign.doubleSided") : t("sign.singleSided")}
+                    selected={doubleSided === ds}
+                    onSelect={() => { setDoubleSided(ds); advanceStep("step-sides"); }}
+                    fullWidth
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
 
             {/* Step: Accessories (multi-select) */}
-            {signType.accessories.length > 0 && (
-              <ConfigStep number={stepNum++} title={t("sign.accessories")} subtitle={t("sign.accessoriesSubtitle")}>
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                  {signType.accessories.map((aId) => {
-                    const opt = ACCESSORY_OPTIONS[aId];
-                    const isActive = accessories.includes(aId);
-                    const icon = ACCESSORY_ICONS[aId];
-                    return (
-                      <button
-                        key={aId}
-                        type="button"
-                        onClick={() => toggleAccessory(aId)}
-                        className={`relative flex flex-col items-center gap-1.5 rounded-xl border-2 p-3.5 text-center transition-all duration-150 ${
-                          isActive
-                            ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                            : "border-gray-200 bg-white hover:border-gray-400"
-                        }`}
-                      >
-                        {isActive && (
-                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                            <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                          </span>
-                        )}
-                        {icon && <div className="mb-0.5">{icon}</div>}
-                        <span className="text-sm font-bold text-gray-800">{opt?.label || aId}</span>
-                        {opt?.surcharge > 0 && (
-                          <span className="text-[11px] text-gray-500">${(opt.surcharge / 100).toFixed(2)}/{t("sign.perUnit")}</span>
-                        )}
-                        {opt?.surcharge === 0 && (
-                          <span className="text-[11px] text-emerald-600">{t("sign.included")}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </ConfigStep>
-            )}
+            <StepCard
+              stepNumber={stepNumFn("accessories")}
+              title={t("sign.accessories")}
+              hint={t("sign.accessoriesSubtitle")}
+              summaryText={accessoriesSummary}
+              visible={signType.accessories.length > 0}
+              open={isStepOpen("accessories")}
+              onToggle={() => toggleStep("accessories")}
+              stepId="step-accessories"
+            >
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                {signType.accessories.map((aId) => {
+                  const opt = ACCESSORY_OPTIONS[aId];
+                  const isActive = accessories.includes(aId);
+                  const icon = ACCESSORY_ICONS[aId];
+                  return (
+                    <button
+                      key={aId}
+                      type="button"
+                      onClick={() => toggleAccessory(aId)}
+                      className={`relative flex flex-col items-center gap-1.5 rounded-xl border-2 p-3.5 text-center transition-all duration-150 ${
+                        isActive
+                          ? "border-teal-500 bg-teal-50 shadow-md ring-1 ring-teal-500/10"
+                          : "border-gray-200 bg-white hover:border-gray-400"
+                      }`}
+                    >
+                      {isActive && (
+                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-teal-500">
+                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                        </span>
+                      )}
+                      {icon && <div className="mb-0.5">{icon}</div>}
+                      <span className="text-sm font-bold text-gray-800">{opt?.label || aId}</span>
+                      {opt?.surcharge > 0 && (
+                        <span className="text-[11px] text-gray-500">${(opt.surcharge / 100).toFixed(2)}/{t("sign.perUnit")}</span>
+                      )}
+                      {opt?.surcharge === 0 && (
+                        <span className="text-[11px] text-emerald-600">{t("sign.included")}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </StepCard>
 
             {/* Quantity */}
-            <ConfigStep number={stepNum++} title={t("sign.quantity")} subtitle={t("sign.quantitySubtitle")}>
+            <StepCard
+              stepNumber={stepNumFn("quantity")}
+              title={t("sign.quantity")}
+              hint={t("sign.quantitySubtitle")}
+              summaryText={quantitySummary}
+              open={isStepOpen("quantity")}
+              onToggle={() => toggleStep("quantity")}
+              stepId="step-quantity"
+            >
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
                 {signType.quantities.map((q) => {
                   const isActive = customQty === "" && quantity === q;
@@ -415,10 +455,10 @@ export default function SignOrderClient({ defaultType, productImages }) {
                     <button
                       key={q}
                       type="button"
-                      onClick={() => { setQuantity(q); setCustomQty(""); }}
+                      onClick={() => { setQuantity(q); setCustomQty(""); advanceStep("step-quantity"); }}
                       className={`flex-shrink-0 flex flex-col items-center gap-0.5 rounded-full border-2 px-2 py-3 transition-all duration-150 ${
                         isActive
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
+                          ? "border-teal-500 bg-teal-50 text-gray-900 shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
@@ -440,20 +480,29 @@ export default function SignOrderClient({ defaultType, productImages }) {
                     setCustomQty(e.target.value);
                   }}
                   placeholder="e.g. 15"
-                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
                 />
               </div>
-            </ConfigStep>
+            </StepCard>
 
             {/* Upload */}
-            <ConfigStep number={stepNum++} title={t("sign.artwork")} subtitle={t("sign.artworkSubtitle")} optional>
+            <StepCard
+              stepNumber={stepNumFn("artwork")}
+              title={t("sign.artwork")}
+              hint={t("sign.artworkSubtitle")}
+              summaryText={artworkSummary}
+              optional
+              open={isStepOpen("artwork")}
+              onToggle={() => toggleStep("artwork")}
+              stepId="step-artwork"
+            >
               <ArtworkUpload
                 uploadedFile={uploadedFile}
                 onUploaded={setUploadedFile}
                 onRemove={() => setUploadedFile(null)}
                 t={t}
               />
-            </ConfigStep>
+            </StepCard>
           </div>
 
           <PricingSidebar

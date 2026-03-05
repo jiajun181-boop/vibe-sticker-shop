@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { generateContour, regenerateBleed } from "@/lib/contour/generate-contour";
 import { clipImageToContour } from "@/lib/contour/clip-to-contour";
-import ConfigStep from "./ConfigStep";
+import StepCard from "./StepCard";
 import ContourPreviewCanvas from "./ContourPreviewCanvas";
 import MockupPreview from "./MockupPreview";
 
@@ -160,10 +160,11 @@ export default function ProofPreview({
   const displayImageUrl = contourData?.processedImageUrl || uploadedFile?.url;
 
   return (
-    <ConfigStep
-      number={stepNumber}
+    <StepCard
+      stepNumber={stepNumber}
       title={t?.("configurator.proofPreview") || "Proof Preview"}
-      subtitle={t?.("configurator.proofSubtitle") || "Review your sticker proof before ordering"}
+      hint={t?.("configurator.proofSubtitle") || "Review your sticker proof before ordering"}
+      defaultOpen
     >
       {processing ? (
         /* ── Processing Indicator ── */
@@ -361,6 +362,6 @@ export default function ProofPreview({
           </button>
         </div>
       ) : null}
-    </ConfigStep>
+    </StepCard>
   );
 }

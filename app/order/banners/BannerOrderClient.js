@@ -9,7 +9,10 @@ import {
   getBannerType,
 } from "@/lib/banner-order-config";
 import {
-  ConfigStep,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
   ConfigHero,
   ConfigProductGallery,
   PricingSidebar,
@@ -166,6 +169,37 @@ export default function BannerOrderClient({ defaultType, productImages }) {
     );
   }
 
+  // --- Accordion state ---
+  const [activeStepId, setActiveStepId] = useState(null);
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "type", vis: true },
+      { id: "purchaseType", vis: isHardwareType },
+      { id: "size", vis: true },
+      { id: "material", vis: bannerType.materials.length > 1 },
+      { id: "finishing", vis: bannerType.finishings.length > 0 },
+      { id: "quantity", vis: true },
+      { id: "artwork", vis: true },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, [isHardwareType, bannerType.materials.length, bannerType.finishings.length]);
+  const stepNumFn = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  const typeSummary = t(`banner.type.${typeId}`);
+  const purchaseTypeSummary = t(PURCHASE_TYPES.find((p) => p.id === purchaseType)?.label || purchaseType);
+  const sizeSummary = isCustomSize
+    ? widthIn > 0 && heightIn > 0 ? `${widthIn.toFixed(1)}" × ${heightIn.toFixed(1)}"` : "—"
+    : bannerType.sizes[sizeIdx]?.label || "—";
+  const materialSummary = bannerType.materials.find((m) => m.id === materialId)?.label || materialId;
+  const finishingSummary = finishings.length > 0 ? finishings.map((f) => FINISHING_OPTIONS[f]?.label || f).join(", ") : "None";
+  const quantitySummary = `${activeQty.toLocaleString()} pcs`;
+  const artworkSummary = uploadedFile?.name || "Not uploaded yet";
+
   // Summary lines
   const summaryLines = [
     { label: t("banner.type.label"), value: t(`banner.type.${typeId}`) },
@@ -222,11 +256,18 @@ export default function BannerOrderClient({ defaultType, productImages }) {
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* LEFT COLUMN */}
-          <div className="space-y-6 lg:col-span-2">
-            {(() => { let stepNum = 0; return (<>
+          <div className="space-y-3 lg:col-span-2">
 
             {/* Step: Banner Type (grouped) */}
-            <ConfigStep number={++stepNum} title={t("banner.type.label")} subtitle={t("banner.type.subtitle")}>
+            <StepCard
+              stepNumber={stepNumFn("type")}
+              title={t("banner.type.label")}
+              hint={t("banner.type.subtitle")}
+              summaryText={typeSummary}
+              open={isStepOpen("type")}
+              onToggle={() => toggleStep("type")}
+              stepId="step-type"
+            >
               <div className="space-y-5">
                 {BANNER_TYPE_GROUPS.map((grp) => {
                   const groupItems = BANNER_TYPES.filter((bt) => bt.group === grp.id);
@@ -234,107 +275,90 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                   return (
                     <div key={grp.id}>
                       <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-gray-400">{t(`banner.group.${grp.id}`) || grp.label}</h3>
-                      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+                      <OptionGrid columns={4} label={grp.label}>
                         {groupItems.map((bt) => (
-                          <button
+                          <OptionCard
                             key={bt.id}
-                            type="button"
-                            onClick={() => setTypeId(bt.id)}
-                            className={`group relative flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition-all duration-200 ${
-                              typeId === bt.id
-                                ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
-                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
-                            }`}
-                          >
-                            {typeId === bt.id && (
-                              <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
-                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                              </span>
-                            )}
-                            <span className="text-sm font-bold">{t(`banner.type.${bt.id}`)}</span>
-                            {bt.includesHardware && (
-                              <span className={`text-[10px] font-bold ${typeId === bt.id ? "text-emerald-300" : "text-emerald-600"}`}>
+                            label={t(`banner.type.${bt.id}`)}
+                            selected={typeId === bt.id}
+                            onSelect={() => { setTypeId(bt.id); advanceStep("step-type"); }}
+                            badge={bt.includesHardware ? (
+                              <span className={`text-[10px] font-bold ${typeId === bt.id ? "text-teal-700" : "text-emerald-600"}`}>
                                 {t("banner.includesHardware")}
                               </span>
-                            )}
-                          </button>
+                            ) : undefined}
+                          />
                         ))}
-                      </div>
+                      </OptionGrid>
                     </div>
                   );
                 })}
               </div>
-            </ConfigStep>
+            </StepCard>
 
             {/* Step: Purchase Type (hardware products only) */}
-            {isHardwareType && (
-              <ConfigStep number={++stepNum} title={t("banner.purchaseType")} subtitle={t("banner.purchaseType.subtitle")}>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  {PURCHASE_TYPES.map((pt) => {
-                    const isActive = purchaseType === pt.id;
-                    return (
-                      <button
-                        key={pt.id}
-                        type="button"
-                        onClick={() => setPurchaseType(pt.id)}
-                        className={`relative flex flex-col gap-1 rounded-xl border-2 p-3 text-left transition-all duration-150 ${
-                          isActive
-                            ? "border-[var(--color-brand)] bg-[var(--color-brand-50,#f0fdfa)] shadow-md ring-1 ring-[var(--color-brand)]/20"
-                            : "border-gray-200 bg-white hover:border-gray-400"
-                        }`}
-                      >
-                        {isActive && (
-                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-brand)]">
-                            <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                          </span>
-                        )}
-                        <span className={`text-sm font-bold ${isActive ? "text-[var(--color-brand-dark,#0e7490)]" : "text-gray-800"}`}>{t(pt.label)}</span>
-                        {pt.multiplier < 1 && (
-                          <span className="text-[11px] font-semibold text-emerald-600">
-                            {t("banner.purchaseType.lessPercent", { pct: String(Math.round((1 - pt.multiplier) * 100)) })}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </ConfigStep>
-            )}
+            <StepCard
+              stepNumber={stepNumFn("purchaseType")}
+              title={t("banner.purchaseType")}
+              hint={t("banner.purchaseType.subtitle")}
+              summaryText={purchaseTypeSummary}
+              visible={isHardwareType}
+              open={isStepOpen("purchaseType")}
+              onToggle={() => toggleStep("purchaseType")}
+              stepId="step-purchaseType"
+            >
+              <OptionGrid columns={3} label={t("banner.purchaseType")}>
+                {PURCHASE_TYPES.map((pt) => {
+                  const isActive = purchaseType === pt.id;
+                  return (
+                    <OptionCard
+                      key={pt.id}
+                      label={t(pt.label)}
+                      selected={isActive}
+                      onSelect={() => { setPurchaseType(pt.id); advanceStep("step-purchaseType"); }}
+                      description={pt.multiplier < 1
+                        ? t("banner.purchaseType.lessPercent", { pct: String(Math.round((1 - pt.multiplier) * 100)) })
+                        : undefined
+                      }
+                    />
+                  );
+                })}
+              </OptionGrid>
+            </StepCard>
 
             {/* Step: Size */}
-            <ConfigStep number={++stepNum} title={t("banner.size")} subtitle={t("banner.sizeSubtitle")}>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            <StepCard
+              stepNumber={stepNumFn("size")}
+              title={t("banner.size")}
+              hint={t("banner.sizeSubtitle")}
+              summaryText={sizeSummary}
+              open={isStepOpen("size")}
+              onToggle={() => toggleStep("size")}
+              stepId="step-size"
+            >
+              <OptionGrid columns={4} label={t("banner.size")}>
                 {bannerType.sizes.map((s, i) => (
-                  <button
+                  <OptionCard
                     key={i}
-                    type="button"
-                    onClick={() => { setSizeIdx(i); setCustomW(""); setCustomH(""); }}
-                    className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
-                      sizeIdx === i
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    <span className="text-sm font-bold">{s.label}</span>
-                  </button>
+                    label={s.label}
+                    selected={sizeIdx === i}
+                    onSelect={() => { setSizeIdx(i); setCustomW(""); setCustomH(""); advanceStep("step-size"); }}
+                  />
                 ))}
                 {bannerType.hasDimensions && (
-                  <button
-                    type="button"
-                    onClick={() => setSizeIdx(-1)}
-                    className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all duration-150 ${
-                      isCustomSize
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-dashed border-gray-300 bg-white text-gray-500 hover:border-gray-500"
-                    }`}
-                  >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-                    </svg>
-                    <span className="text-xs font-bold">{t("banner.customSize")}</span>
-                  </button>
+                  <OptionCard
+                    label={t("banner.customSize")}
+                    selected={isCustomSize}
+                    onSelect={() => setSizeIdx(-1)}
+                    className="border-dashed"
+                    icon={
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                      </svg>
+                    }
+                  />
                 )}
-              </div>
+              </OptionGrid>
               {isCustomSize && (
                 <CustomDimensions
                   customW={customW}
@@ -349,78 +373,85 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                   t={t}
                 />
               )}
-            </ConfigStep>
+            </StepCard>
 
             {/* Step: Material */}
-            {bannerType.materials.length > 1 && (
-              <ConfigStep number={++stepNum} title={t("banner.material")} subtitle={t("banner.materialSubtitle")}>
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                  {bannerType.materials.map((mat) => {
-                    const isActive = materialId === mat.id;
-                    void mat.multiplier; // multiplier used in pricing only
-                    return (
-                      <button
-                        key={mat.id}
-                        type="button"
-                        onClick={() => setMaterialId(mat.id)}
-                        className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
-                          isActive
-                            ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                            : "border-gray-200 bg-white hover:border-gray-400"
-                        }`}
-                      >
-                        {isActive && (
-                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                            <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                          </span>
-                        )}
-                        <span className="text-sm font-bold text-gray-800">{mat.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </ConfigStep>
-            )}
+            <StepCard
+              stepNumber={stepNumFn("material")}
+              title={t("banner.material")}
+              hint={t("banner.materialSubtitle")}
+              summaryText={materialSummary}
+              visible={bannerType.materials.length > 1}
+              open={isStepOpen("material")}
+              onToggle={() => toggleStep("material")}
+              stepId="step-material"
+            >
+              <OptionGrid columns={3} label={t("banner.material")}>
+                {bannerType.materials.map((mat) => {
+                  const isActive = materialId === mat.id;
+                  void mat.multiplier; // multiplier used in pricing only
+                  return (
+                    <OptionCard
+                      key={mat.id}
+                      label={mat.label}
+                      selected={isActive}
+                      onSelect={() => { setMaterialId(mat.id); advanceStep("step-material"); }}
+                    />
+                  );
+                })}
+              </OptionGrid>
+            </StepCard>
 
             {/* Step: Finishing (multi-select) */}
-            {bannerType.finishings.length > 0 && (
-              <ConfigStep number={++stepNum} title={t("banner.finishing")} subtitle={t("banner.finishingSubtitle")}>
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                  {bannerType.finishings.map((fId) => {
-                    const opt = FINISHING_OPTIONS[fId];
-                    const isActive = finishings.includes(fId);
-                    return (
-                      <button
-                        key={fId}
-                        type="button"
-                        onClick={() => toggleFinishing(fId)}
-                        className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
-                          isActive
-                            ? "border-gray-900 bg-gray-50 shadow-md ring-1 ring-gray-900/5"
-                            : "border-gray-200 bg-white hover:border-gray-400"
-                        }`}
-                      >
-                        {isActive && (
-                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900">
-                            <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                          </span>
-                        )}
-                        <span className="text-sm font-bold text-gray-800">{opt?.label || fId}</span>
-                        {opt?.surcharge > 0 && (
-                          <span className="text-[11px] text-amber-600">+${(opt.surcharge / 100).toFixed(2)}/ea</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </ConfigStep>
-            )}
+            <StepCard
+              stepNumber={stepNumFn("finishing")}
+              title={t("banner.finishing")}
+              hint={t("banner.finishingSubtitle")}
+              summaryText={finishingSummary}
+              visible={bannerType.finishings.length > 0}
+              open={isStepOpen("finishing")}
+              onToggle={() => toggleStep("finishing")}
+              stepId="step-finishing"
+            >
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                {bannerType.finishings.map((fId) => {
+                  const opt = FINISHING_OPTIONS[fId];
+                  const isActive = finishings.includes(fId);
+                  return (
+                    <button
+                      key={fId}
+                      type="button"
+                      onClick={() => toggleFinishing(fId)}
+                      className={`relative flex flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-all duration-150 ${
+                        isActive
+                          ? "border-teal-500 bg-teal-50 shadow-md"
+                          : "border-gray-200 bg-white hover:border-gray-400"
+                      }`}
+                    >
+                      {isActive && (
+                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-teal-500">
+                          <svg className="h-3 w-3 text-[#fff]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                        </span>
+                      )}
+                      <span className="text-sm font-bold text-gray-800">{opt?.label || fId}</span>
+                      {opt?.surcharge > 0 && (
+                        <span className="text-[11px] text-amber-600">+${(opt.surcharge / 100).toFixed(2)}/ea</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </StepCard>
 
             {/* Step: Quantity */}
-            <ConfigStep
-              number={++stepNum}
+            <StepCard
+              stepNumber={stepNumFn("quantity")}
               title={t("banner.quantity")}
-              subtitle={t("banner.quantitySubtitle")}
+              hint={t("banner.quantitySubtitle")}
+              summaryText={quantitySummary}
+              open={isStepOpen("quantity")}
+              onToggle={() => toggleStep("quantity")}
+              stepId="step-quantity"
             >
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
                 {bannerType.quantities.map((q) => {
@@ -429,10 +460,10 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                     <button
                       key={q}
                       type="button"
-                      onClick={() => { setQuantity(q); setCustomQty(""); }}
+                      onClick={() => { setQuantity(q); setCustomQty(""); advanceStep("step-quantity"); }}
                       className={`flex-shrink-0 flex flex-col items-center gap-0.5 rounded-full border-2 px-2 py-3 transition-all duration-150 ${
                         isActive
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
+                          ? "border-teal-500 bg-teal-50 text-gray-900 shadow-md"
                           : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
@@ -450,17 +481,21 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                   value={customQty}
                   onChange={(e) => setCustomQty(e.target.value)}
                   placeholder="e.g. 15"
-                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
                 />
               </div>
-            </ConfigStep>
+            </StepCard>
 
             {/* Step: Upload Artwork */}
-            <ConfigStep
-              number={++stepNum}
+            <StepCard
+              stepNumber={stepNumFn("artwork")}
               title={t("banner.artwork")}
-              subtitle={t("banner.artworkSubtitle")}
+              hint={t("banner.artworkSubtitle")}
+              summaryText={artworkSummary}
               optional
+              open={isStepOpen("artwork")}
+              onToggle={() => toggleStep("artwork")}
+              stepId="step-artwork"
             >
               <ArtworkUpload
                 uploadedFile={uploadedFile}
@@ -468,9 +503,8 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                 onRemove={() => setUploadedFile(null)}
                 t={t}
               />
-            </ConfigStep>
+            </StepCard>
 
-            </>); })()}
           </div>
 
           {/* RIGHT COLUMN */}

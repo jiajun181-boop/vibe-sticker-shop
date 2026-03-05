@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
-  ConfigStep,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
   ConfigHero,
   ConfigProductGallery,
   PricingSidebar,
@@ -262,8 +265,38 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
     extraRows.push({ label: t("bc.multiName.fileFee"), value: `+ ${formatCad(multiNameFileFees)}` });
   }
 
-  // ── Step numbering ──
-  let stepNum = 0;
+  // ── Accordion state ──
+  const [activeStepId, setActiveStepId] = useState(null);
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "sides", vis: !!config.steps.sides },
+      { id: "finishing", vis: !!config.steps.finishing && !!config.finishingOptions },
+      { id: "foilCoverage", vis: !!config.steps.foilOptions },
+      { id: "foilSides", vis: !!config.steps.foilOptions },
+      { id: "layers", vis: !!config.steps.layers && !!config.layerOptions },
+      { id: "addons", vis: !!config.steps.addons },
+      { id: "quantity", vis: true },
+      { id: "names", vis: !!config.multiName?.enabled },
+      { id: "artwork", vis: true },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, [config]);
+  const stepNumFn = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  const sidesSummary = t(`bc.side.${sideId}`);
+  const finishingSummaryText = config.finishingOptions?.find((o) => o.id === finishingId) ? t(config.finishingOptions.find((o) => o.id === finishingId).label) : "—";
+  const foilCoverageSummary = t(`bc.foil.coverage.${foilCoverage}`);
+  const foilSidesSummary = t(`bc.foil.sides.${foilSides}`);
+  const layersSummary = t(`bc.layer.${layerId}`);
+  const addonsSummary = rounded ? t("bc.addon.rounded") : "None";
+  const quantitySummaryText = `${activeQty.toLocaleString()} cards`;
+  const namesSummary = names > 1 ? `${names} names` : "1 name";
+  const artworkSummary = uploadedFile?.name || "Not uploaded yet";
 
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)]">
@@ -281,7 +314,7 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* LEFT COLUMN — Steps */}
-          <div className="space-y-6 lg:col-span-2">
+          <div className="space-y-3 lg:col-span-2">
 
             {/* Product Gallery */}
             {productImages?.length > 0 && (
@@ -290,156 +323,197 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
 
             {/* SIDES STEP */}
             {config.steps.sides && (
-              <ConfigStep number={++stepNum} title={t("bc.sides")} subtitle="Single or double sided printing">
-                <div className="flex gap-3">
+              <StepCard
+                stepNumber={stepNumFn("sides")}
+                title={t("bc.sides")}
+                hint="Single or double sided printing"
+                summaryText={sidesSummary}
+                open={isStepOpen("sides")}
+                onToggle={() => toggleStep("sides")}
+                stepId="step-sides"
+              >
+                <OptionGrid columns={2} label={t("bc.sides")}>
                   {SIDES.map((s) => (
-                    <button
+                    <OptionCard
                       key={s.id}
-                      type="button"
-                      onClick={() => setSideId(s.id)}
-                      className={`flex-1 rounded-xl border-2 px-4 py-3 text-sm font-bold transition-all duration-150 ${
-                        sideId === s.id
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      {t(s.label)}
-                    </button>
+                      label={t(s.label)}
+                      selected={sideId === s.id}
+                      onSelect={() => {
+                        setSideId(s.id);
+                        advanceStep("step-sides");
+                      }}
+                    />
                   ))}
-                </div>
-              </ConfigStep>
+                </OptionGrid>
+              </StepCard>
             )}
 
             {/* FINISHING STEP (Classic only) */}
             {config.steps.finishing && config.finishingOptions && (
-              <ConfigStep number={++stepNum} title={t("bc.finishChoice")} subtitle="Choose your card finish">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <StepCard
+                stepNumber={stepNumFn("finishing")}
+                title={t("bc.finishChoice")}
+                hint="Choose your card finish"
+                summaryText={finishingSummaryText}
+                open={isStepOpen("finishing")}
+                onToggle={() => toggleStep("finishing")}
+                stepId="step-finishing"
+              >
+                <OptionGrid columns={4} label={t("bc.finishChoice")}>
                   {config.finishingOptions.map((opt) => (
-                    <button
+                    <OptionCard
                       key={opt.id}
-                      type="button"
-                      onClick={() => setFinishingId(opt.id)}
-                      className={`group relative flex flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
-                        finishingId === opt.id
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
-                      }`}
-                    >
-                      {finishingId === opt.id && (
-                        <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
-                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                          </svg>
-                        </span>
-                      )}
-                      <span className="text-sm font-bold">{t(opt.label)}</span>
-                    </button>
+                      label={t(opt.label)}
+                      selected={finishingId === opt.id}
+                      onSelect={() => {
+                        setFinishingId(opt.id);
+                        advanceStep("step-finishing");
+                      }}
+                    />
                   ))}
-                </div>
-              </ConfigStep>
+                </OptionGrid>
+              </StepCard>
             )}
 
-            {/* FOIL OPTIONS STEP (Gold Foil only) */}
+            {/* FOIL OPTIONS STEPS (Gold Foil only) */}
             {config.steps.foilOptions && (
               <>
-                <ConfigStep number={++stepNum} title={t("bc.foil.coverageLabel")} subtitle="How much foil coverage?">
-                  <div className="flex gap-3">
+                <StepCard
+                  stepNumber={stepNumFn("foilCoverage")}
+                  title={t("bc.foil.coverageLabel")}
+                  hint="How much foil coverage?"
+                  summaryText={foilCoverageSummary}
+                  open={isStepOpen("foilCoverage")}
+                  onToggle={() => toggleStep("foilCoverage")}
+                  stepId="step-foilCoverage"
+                >
+                  <OptionGrid columns={2} label={t("bc.foil.coverageLabel")}>
                     {config.foilCoverageOptions.map((opt) => (
-                      <button
+                      <OptionCard
                         key={opt.id}
-                        type="button"
-                        onClick={() => setFoilCoverage(opt.id)}
-                        className={`flex-1 rounded-xl border-2 px-4 py-3 text-sm font-bold transition-all duration-150 ${
-                          foilCoverage === opt.id
-                            ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                        }`}
-                      >
-                        {t(opt.label)}
-                      </button>
+                        label={t(opt.label)}
+                        selected={foilCoverage === opt.id}
+                        onSelect={() => {
+                          setFoilCoverage(opt.id);
+                          advanceStep("step-foilCoverage");
+                        }}
+                      />
                     ))}
-                  </div>
-                </ConfigStep>
+                  </OptionGrid>
+                </StepCard>
 
-                <ConfigStep number={++stepNum} title={t("bc.foil.sidesLabel")} subtitle="Foil on which sides?">
-                  <div className="flex gap-3">
+                <StepCard
+                  stepNumber={stepNumFn("foilSides")}
+                  title={t("bc.foil.sidesLabel")}
+                  hint="Foil on which sides?"
+                  summaryText={foilSidesSummary}
+                  open={isStepOpen("foilSides")}
+                  onToggle={() => toggleStep("foilSides")}
+                  stepId="step-foilSides"
+                >
+                  <OptionGrid columns={2} label={t("bc.foil.sidesLabel")}>
                     {config.foilSidesOptions.map((opt) => (
-                      <button
+                      <OptionCard
                         key={opt.id}
-                        type="button"
-                        onClick={() => setFoilSides(opt.id)}
-                        className={`flex-1 rounded-xl border-2 px-4 py-3 text-sm font-bold transition-all duration-150 ${
-                          foilSides === opt.id
-                            ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                        }`}
-                      >
-                        {t(opt.label)}
-                      </button>
+                        label={t(opt.label)}
+                        selected={foilSides === opt.id}
+                        onSelect={() => {
+                          setFoilSides(opt.id);
+                          advanceStep("step-foilSides");
+                        }}
+                      />
                     ))}
-                  </div>
-                </ConfigStep>
+                  </OptionGrid>
+                </StepCard>
               </>
             )}
 
             {/* LAYERS STEP (Thick only) */}
             {config.steps.layers && config.layerOptions && (
-              <ConfigStep number={++stepNum} title={t("bc.layers")} subtitle="Card thickness">
-                <div className="flex gap-3">
+              <StepCard
+                stepNumber={stepNumFn("layers")}
+                title={t("bc.layers")}
+                hint="Card thickness"
+                summaryText={layersSummary}
+                open={isStepOpen("layers")}
+                onToggle={() => toggleStep("layers")}
+                stepId="step-layers"
+              >
+                <OptionGrid columns={2} label={t("bc.layers")}>
                   {config.layerOptions.map((opt) => (
-                    <button
+                    <OptionCard
                       key={opt.id}
-                      type="button"
-                      onClick={() => setLayerId(opt.id)}
-                      className={`flex-1 rounded-xl border-2 px-4 py-3 text-sm font-bold transition-all duration-150 ${
-                        layerId === opt.id
-                          ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      {t(opt.label)}
-                    </button>
+                      label={t(opt.label)}
+                      selected={layerId === opt.id}
+                      onSelect={() => {
+                        setLayerId(opt.id);
+                        advanceStep("step-layers");
+                      }}
+                    />
                   ))}
-                </div>
-              </ConfigStep>
+                </OptionGrid>
+              </StepCard>
             )}
 
             {/* ADDONS STEP (Rounded Corners) */}
             {config.steps.addons && (
-              <ConfigStep number={++stepNum} title={t("bc.addons")} subtitle="Optional extras">
+              <StepCard
+                stepNumber={stepNumFn("addons")}
+                title={t("bc.addons")}
+                hint="Optional extras"
+                summaryText={addonsSummary}
+                open={isStepOpen("addons")}
+                onToggle={() => toggleStep("addons")}
+                stepId="step-addons"
+              >
                 <label className="flex items-center gap-3 cursor-pointer rounded-xl border-2 border-gray-200 bg-white p-4 transition-colors hover:border-gray-400">
                   <input
                     type="checkbox"
                     checked={rounded}
                     onChange={(e) => setRounded(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                   />
                   <span className="text-sm font-medium text-gray-700">{t("bc.addon.rounded")}</span>
                   <span className="ml-auto text-[11px] font-bold text-amber-600">+$0.03/ea</span>
                 </label>
-              </ConfigStep>
+              </StepCard>
             )}
 
             {/* QUANTITY STEP */}
-            <ConfigStep number={++stepNum} title={t("bc.quantity")} subtitle="More you order, more you save">
+            <StepCard
+              stepNumber={stepNumFn("quantity")}
+              title={t("bc.quantity")}
+              hint="More you order, more you save"
+              summaryText={quantitySummaryText}
+              open={isStepOpen("quantity")}
+              onToggle={() => toggleStep("quantity")}
+              stepId="step-quantity"
+            >
               <QuantityScroller
                 quantities={config.quantities}
                 selected={quantity}
-                onSelect={setQuantity}
+                onSelect={(q) => {
+                  setQuantity(q);
+                  advanceStep("step-quantity");
+                }}
                 customQty={customQty}
                 onCustomChange={setCustomQty}
                 t={t}
                 min={25}
                 placeholder="e.g. 300"
               />
-            </ConfigStep>
+            </StepCard>
 
             {/* MULTI-NAME STEP */}
             {config.multiName?.enabled && (
-              <ConfigStep
-                number={++stepNum}
+              <StepCard
+                stepNumber={stepNumFn("names")}
                 title={t("bc.names")}
-                subtitle={t("bc.namesHint")}
+                hint={t("bc.namesHint")}
+                summaryText={namesSummary}
+                open={isStepOpen("names")}
+                onToggle={() => toggleStep("names")}
+                stepId="step-names"
               >
                 <div className="flex items-center gap-4">
                   <div className="flex items-center rounded-xl border-2 border-gray-200 bg-white">
@@ -482,11 +556,20 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
                     </p>
                   </div>
                 )}
-              </ConfigStep>
+              </StepCard>
             )}
 
             {/* ARTWORK UPLOAD STEP */}
-            <ConfigStep number={++stepNum} title={t("bc.artwork")} subtitle={sideId === "double" ? (t("bc.artworkHintDouble") || "Upload front & back files separately, or send later") : "Upload now or send later — it's optional"} optional>
+            <StepCard
+              stepNumber={stepNumFn("artwork")}
+              title={t("bc.artwork")}
+              hint={sideId === "double" ? (t("bc.artworkHintDouble") || "Upload front & back files separately, or send later") : "Upload now or send later — it's optional"}
+              summaryText={artworkSummary}
+              optional
+              open={isStepOpen("artwork")}
+              onToggle={() => toggleStep("artwork")}
+              stepId="step-artwork"
+            >
               <ArtworkUpload
                 uploadedFile={uploadedFile}
                 onUploaded={setUploadedFile}
@@ -500,7 +583,7 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
                 onFileRemove={(slotKey) => setUploadedFiles((prev) => { const next = { ...prev }; delete next[slotKey]; return next; })}
                 t={t}
               />
-            </ConfigStep>
+            </StepCard>
           </div>
 
           {/* RIGHT COLUMN — Sticky Price Summary */}

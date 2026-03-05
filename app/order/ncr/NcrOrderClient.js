@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
-  ConfigStep,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
   ConfigHero,
   ConfigProductGallery,
   PricingSidebar,
@@ -152,7 +155,35 @@ export default function NcrOrderClient({ defaultType, productImages }) {
     extraRows.push({ label: "Full Color", value: `+ ${formatCad(colorSurcharge)}` });
   }
 
-  let step = 0;
+  // Accordion state
+  const [activeStepId, setActiveStepId] = useState(null);
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "formType", vis: true },
+      { id: "size", vis: true },
+      { id: "printColor", vis: true },
+      { id: "binding", vis: true },
+      { id: "quantity", vis: true },
+      { id: "numbering", vis: true },
+      { id: "artwork", vis: true },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, []);
+  const stepNumFn = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  // Summary texts
+  const formTypeSummary = `${formType.label} (${formType.colors})`;
+  const sizeSummary = size.label;
+  const printColorSummary = printColor === "color" ? "Full Color" : "Black";
+  const bindingSummary = binding === "loose" ? "Loose Sheets" : binding === "pad-25" ? "Padded (25/book)" : "Padded (50/book)";
+  const quantitySummary = `${quantity.toLocaleString()} pcs`;
+  const numberingSummary = numbering ? `#${numberStartInt}–${numberEnd}` : "None";
+  const artworkSummary = uploadedFile?.name || "Not uploaded yet";
 
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)]">
@@ -170,7 +201,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* LEFT: Options */}
-          <div className="space-y-6 lg:col-span-2">
+          <div className="space-y-3 lg:col-span-2">
 
             {/* Product Gallery */}
             {productImages?.length > 0 && (
@@ -178,131 +209,152 @@ export default function NcrOrderClient({ defaultType, productImages }) {
             )}
 
             {/* Form Type (Copy Count) */}
-            <ConfigStep number={++step} title={t("ncr.formType")} subtitle={t("ncr.formTypeSubtitle", "Select copy count")}>
-              <div className="grid grid-cols-3 gap-3">
+            <StepCard
+              stepNumber={stepNumFn("formType")}
+              title={t("ncr.formType")}
+              hint={t("ncr.formTypeSubtitle", "Select copy count")}
+              summaryText={formTypeSummary}
+              open={isStepOpen("formType")}
+              onToggle={() => toggleStep("formType")}
+              stepId="step-formType"
+            >
+              <OptionGrid columns={3} label={t("ncr.formType")}>
                 {FORM_TYPES.map((ft) => (
-                  <button
+                  <OptionCard
                     key={ft.id}
-                    type="button"
-                    onClick={() => setFormTypeId(ft.id)}
-                    className={`group relative flex flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
-                      formTypeId === ft.id
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 scale-[1.02]"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-md"
-                    }`}
-                  >
-                    {formTypeId === ft.id && (
-                      <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[#fff] shadow-sm">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                      </span>
-                    )}
-                    <span className="text-sm font-bold">{ft.label}</span>
-                    <span className={`text-[11px] leading-tight ${formTypeId === ft.id ? "text-gray-300" : "text-gray-400"}`}>
-                      {ft.colors}
-                    </span>
-                  </button>
+                    label={ft.label}
+                    description={ft.colors}
+                    selected={formTypeId === ft.id}
+                    onSelect={() => {
+                      setFormTypeId(ft.id);
+                      advanceStep("step-formType");
+                    }}
+                  />
                 ))}
-              </div>
-            </ConfigStep>
+              </OptionGrid>
+            </StepCard>
 
             {/* Size */}
-            <ConfigStep number={++step} title={t("ncr.size")}>
-              <div className="flex flex-wrap gap-2">
+            <StepCard
+              stepNumber={stepNumFn("size")}
+              title={t("ncr.size")}
+              summaryText={sizeSummary}
+              open={isStepOpen("size")}
+              onToggle={() => toggleStep("size")}
+              stepId="step-size"
+            >
+              <OptionGrid columns={3} label={t("ncr.size")}>
                 {SIZES.map((s, i) => (
-                  <button
+                  <OptionCard
                     key={s.id}
-                    type="button"
-                    onClick={() => setSizeIdx(i)}
-                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                      sizeIdx === i
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    {s.label}
-                  </button>
+                    label={s.label}
+                    selected={sizeIdx === i}
+                    onSelect={() => {
+                      setSizeIdx(i);
+                      advanceStep("step-size");
+                    }}
+                  />
                 ))}
-              </div>
-            </ConfigStep>
+              </OptionGrid>
+            </StepCard>
 
             {/* Print Color */}
-            <ConfigStep number={++step} title="Print Color">
-              <div className="flex flex-wrap gap-2">
+            <StepCard
+              stepNumber={stepNumFn("printColor")}
+              title="Print Color"
+              summaryText={printColorSummary}
+              open={isStepOpen("printColor")}
+              onToggle={() => toggleStep("printColor")}
+              stepId="step-printColor"
+            >
+              <OptionGrid columns={2} label="Print Color">
                 {[
                   { id: "black", label: "Black" },
                   { id: "color", label: "Full Color" },
                 ].map((c) => (
-                  <button
+                  <OptionCard
                     key={c.id}
-                    type="button"
-                    onClick={() => setPrintColor(c.id)}
-                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                      printColor === c.id
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    {c.label}
-                  </button>
+                    label={c.label}
+                    selected={printColor === c.id}
+                    onSelect={() => {
+                      setPrintColor(c.id);
+                      advanceStep("step-printColor");
+                    }}
+                  />
                 ))}
-              </div>
-            </ConfigStep>
+              </OptionGrid>
+            </StepCard>
 
             {/* Binding */}
-            <ConfigStep number={++step} title="Binding">
-              <div className="flex flex-wrap gap-2">
+            <StepCard
+              stepNumber={stepNumFn("binding")}
+              title="Binding"
+              summaryText={bindingSummary}
+              open={isStepOpen("binding")}
+              onToggle={() => toggleStep("binding")}
+              stepId="step-binding"
+            >
+              <OptionGrid columns={3} label="Binding">
                 {[
                   { id: "loose", label: "Loose Sheets" },
                   { id: "pad-25", label: "Padded (25/book)" },
                   ...(!is4Copy ? [{ id: "pad-50", label: "Padded (50/book)" }] : []),
                 ].map((b) => (
-                  <button
+                  <OptionCard
                     key={b.id}
-                    type="button"
-                    onClick={() => setBinding(b.id)}
-                    className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-150 ${
-                      binding === b.id
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    {b.label}
-                  </button>
+                    label={b.label}
+                    selected={binding === b.id}
+                    onSelect={() => {
+                      setBinding(b.id);
+                      advanceStep("step-binding");
+                    }}
+                  />
                 ))}
-              </div>
+              </OptionGrid>
               {is4Copy && (
                 <p className="mt-2 text-[11px] text-gray-400">4-copy forms can only be padded in books of 25.</p>
               )}
-            </ConfigStep>
+            </StepCard>
 
             {/* Quantity */}
-            <ConfigStep number={++step} title={t("ncr.quantity")}>
+            <StepCard
+              stepNumber={stepNumFn("quantity")}
+              title={t("ncr.quantity")}
+              summaryText={quantitySummary}
+              open={isStepOpen("quantity")}
+              onToggle={() => toggleStep("quantity")}
+              stepId="step-quantity"
+            >
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
                 {QUANTITIES.map((q) => (
-                  <button
+                  <OptionCard
                     key={q}
-                    type="button"
-                    onClick={() => setQuantity(q)}
-                    className={`flex flex-col items-center gap-0.5 rounded-xl border-2 px-2 py-3 transition-all duration-150 ${
-                      quantity === q
-                        ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    <span className="text-base font-black">{q.toLocaleString()}</span>
-                  </button>
+                    label={q.toLocaleString()}
+                    selected={quantity === q}
+                    onSelect={() => {
+                      setQuantity(q);
+                      advanceStep("step-quantity");
+                    }}
+                  />
                 ))}
               </div>
-            </ConfigStep>
+            </StepCard>
 
             {/* Numbering */}
-            <ConfigStep number={++step} title={t("ncr.numbering.label")}>
+            <StepCard
+              stepNumber={stepNumFn("numbering")}
+              title={t("ncr.numbering.label")}
+              summaryText={numberingSummary}
+              open={isStepOpen("numbering")}
+              onToggle={() => toggleStep("numbering")}
+              stepId="step-numbering"
+            >
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={numbering}
                   onChange={(e) => setNumbering(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                 />
                 <span className="text-sm text-gray-700">{t("ncr.numbering.addNumbering")}</span>
               </label>
@@ -323,7 +375,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                           const val = e.target.value;
                           if (val.length <= 6) setNumberStart(val);
                         }}
-                        className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                        className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
                       />
                     </div>
                     <span className="pt-5 text-gray-400">&rarr;</span>
@@ -340,7 +392,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                       </div>
                     </div>
                     <div className="pt-5">
-                      <span className="rounded-xl bg-gray-900 px-3 py-1 text-[11px] font-semibold text-[#fff]">
+                      <span className="rounded-xl bg-teal-600 px-3 py-1 text-[11px] font-semibold text-[#fff]">
                         {quantity.toLocaleString()} {t("ncr.numbering.forms")}
                       </span>
                     </div>
@@ -366,7 +418,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                             onClick={() => setNumberColor(c.id)}
                             className={`rounded-xl border-2 px-4 py-2 text-sm font-bold transition-all duration-150 ${
                               numberColor === c.id
-                                ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
+                                ? "border-teal-500 bg-teal-50 text-gray-900"
                                 : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                             }`}
                           >
@@ -382,17 +434,26 @@ export default function NcrOrderClient({ defaultType, productImages }) {
                   </p>
                 </div>
               )}
-            </ConfigStep>
+            </StepCard>
 
             {/* File Upload */}
-            <ConfigStep number={++step} title={t("ncr.artwork")} optional>
+            <StepCard
+              stepNumber={stepNumFn("artwork")}
+              title={t("ncr.artwork")}
+              hint=""
+              summaryText={artworkSummary}
+              optional
+              open={isStepOpen("artwork")}
+              onToggle={() => toggleStep("artwork")}
+              stepId="step-artwork"
+            >
               <ArtworkUpload
                 uploadedFile={uploadedFile}
                 onUploaded={setUploadedFile}
                 onRemove={() => setUploadedFile(null)}
                 t={t}
               />
-            </ConfigStep>
+            </StepCard>
           </div>
 
           {/* RIGHT: Summary sidebar */}

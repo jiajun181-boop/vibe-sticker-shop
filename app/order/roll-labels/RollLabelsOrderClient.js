@@ -3,7 +3,10 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
-  ConfigStep,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
   ConfigHero,
   ConfigProductGallery,
   PricingSidebar,
@@ -159,26 +162,43 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
     window.location.href = "/cart";
   }, [addToCart, buildCartItem]);
 
-  // ─── Radio helper ─────────────────────────────────────────────────────────
-  const RadioGroup = ({ options, value, onChange, cols = 3 }) => (
-    <div className={`grid gap-2 ${cols === 5 ? "grid-cols-5" : cols === 4 ? "grid-cols-4" : cols === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-      {options.map((opt) => (
-        <button
-          key={opt.id}
-          type="button"
-          onClick={() => onChange(opt.id)}
-          className={`rounded-lg border-2 px-3 py-2.5 text-center text-sm font-medium transition-all ${
-            value === opt.id
-              ? "border-[var(--color-brand)] bg-[var(--color-brand)]/5 text-[var(--color-brand)]"
-              : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-          }`}
-        >
-          {opt.icon && <span className="mr-1">{opt.icon}</span>}
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  );
+  // ─── Accordion state ───────────────────────────────────────────────────────
+  const [activeStepId, setActiveStepId] = useState(null);
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "type", vis: true },
+      { id: "shape", vis: true },
+      { id: "size", vis: true },
+      { id: "stock", vis: true },
+      { id: "quantity", vis: true },
+      { id: "ink", vis: inks.length > 1 },
+      { id: "finishing", vis: true },
+      { id: "wind", vis: true },
+      { id: "perRoll", vis: true },
+      { id: "options", vis: true },
+      { id: "turnaround", vis: true },
+      { id: "artwork", vis: true },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, [inks.length]);
+  const stepNumFn = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  const typeSummary = LABEL_TYPES.find((lt) => lt.id === typeId)?.label || typeId;
+  const shapeSummary = shape.label;
+  const sizeSummary = shape.inputs.includes("height") ? `${dim1}" × ${dim2}"` : shape.id === "circle" ? `${dim1}" dia` : `${dim1}"`;
+  const stockSummary = stocks.find((s) => s.id === stockId)?.label || stockId;
+  const quantitySummaryText = `${qty.toLocaleString()} labels`;
+  const inkSummary = inks.find((i) => i.id === inkId)?.label || inkId;
+  const finishingSummaryText = FINISHINGS.find((f) => f.id === finishId)?.label || finishId;
+  const windSummary = WIND_DIRECTIONS.find((w) => w.id === windId)?.label || windId;
+  const perRollSummary = labelsPerRoll === "custom" ? `${customPerRoll}/roll` : LABELS_PER_ROLL.find((l) => l.id === labelsPerRoll)?.label || labelsPerRoll;
+  const turnaroundSummary = turnaround.label;
+  const artworkSummary = uploadedFile?.name || "Not uploaded yet";
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
@@ -202,70 +222,88 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* LEFT COLUMN — Steps */}
-          <div className="space-y-6 lg:col-span-2">
+          <div className="space-y-3 lg:col-span-2">
 
             {/* STEP 1: Label Type */}
-            <ConfigStep number={1} title={t?.("rl.step.type") || "Label Type"}>
-              <div className="grid gap-3 sm:grid-cols-3">
+            <StepCard
+              stepNumber={stepNumFn("type")}
+              title={t?.("rl.step.type") || "Label Type"}
+              hint="Choose the label material technology"
+              summaryText={typeSummary}
+              open={isStepOpen("type")}
+              onToggle={() => toggleStep("type")}
+              stepId="step-type"
+            >
+              <OptionGrid columns={3}>
                 {LABEL_TYPES.map((lt) => (
-                  <button
+                  <OptionCard
                     key={lt.id}
-                    type="button"
-                    onClick={() => handleTypeChange(lt.id)}
-                    className={`rounded-xl border-2 p-4 text-left transition-all ${
-                      typeId === lt.id
-                        ? "border-[var(--color-brand)] bg-[var(--color-brand)]/5 shadow-sm"
-                        : "border-gray-200 bg-white hover:border-gray-300"
-                    }`}
-                  >
-                    <span className="text-sm font-bold text-gray-900">{lt.label}</span>
-                    <p className="mt-1 text-xs text-gray-500">{lt.desc}</p>
-                  </button>
+                    label={lt.label}
+                    description={lt.desc}
+                    selected={typeId === lt.id}
+                    onSelect={() => { handleTypeChange(lt.id); advanceStep("step-type"); }}
+                  />
                 ))}
-              </div>
-            </ConfigStep>
+              </OptionGrid>
+            </StepCard>
 
             {/* STEP 2: Shape */}
-            <ConfigStep number={2} title={t?.("rl.step.shape") || "Shape"}>
+            <StepCard
+              stepNumber={stepNumFn("shape")}
+              title={t?.("rl.step.shape") || "Shape"}
+              hint="Select the die-cut shape for your labels"
+              summaryText={shapeSummary}
+              open={isStepOpen("shape")}
+              onToggle={() => toggleStep("shape")}
+              stepId="step-shape"
+            >
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
                 {SHAPES.map((s) => (
                   <button
                     key={s.id}
                     type="button"
-                    onClick={() => setShapeId(s.id)}
+                    onClick={() => { setShapeId(s.id); advanceStep("step-shape"); }}
                     className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
                       shapeId === s.id
-                        ? "border-[var(--color-brand)] bg-[var(--color-brand)]/5 shadow-sm"
+                        ? "border-teal-500 bg-teal-50 shadow-sm"
                         : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
                     }`}
                   >
                     <svg viewBox="0 0 48 48" className="h-10 w-10" fill="none">
                       {s.id === "circle" && (
-                        <circle cx="24" cy="24" r="18" className={shapeId === s.id ? "stroke-[var(--color-brand)]" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" strokeDasharray={s.id === "custom" ? "4 3" : "none"} />
+                        <circle cx="24" cy="24" r="18" className={shapeId === s.id ? "stroke-teal-500" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" strokeDasharray={s.id === "custom" ? "4 3" : "none"} />
                       )}
                       {s.id === "oval" && (
-                        <ellipse cx="24" cy="24" rx="20" ry="14" className={shapeId === s.id ? "stroke-[var(--color-brand)]" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" />
+                        <ellipse cx="24" cy="24" rx="20" ry="14" className={shapeId === s.id ? "stroke-teal-500" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" />
                       )}
                       {s.id === "square" && (
-                        <rect x="7" y="7" width="34" height="34" rx="3" className={shapeId === s.id ? "stroke-[var(--color-brand)]" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" />
+                        <rect x="7" y="7" width="34" height="34" rx="3" className={shapeId === s.id ? "stroke-teal-500" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" />
                       )}
                       {s.id === "rectangle" && (
-                        <rect x="4" y="11" width="40" height="26" rx="3" className={shapeId === s.id ? "stroke-[var(--color-brand)]" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" />
+                        <rect x="4" y="11" width="40" height="26" rx="3" className={shapeId === s.id ? "stroke-teal-500" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" />
                       )}
                       {s.id === "custom" && (
-                        <path d="M24 4 L42 16 L38 38 L10 38 L6 16 Z" className={shapeId === s.id ? "stroke-[var(--color-brand)]" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" strokeDasharray="4 3" />
+                        <path d="M24 4 L42 16 L38 38 L10 38 L6 16 Z" className={shapeId === s.id ? "stroke-teal-500" : "stroke-gray-400 group-hover:stroke-gray-600"} strokeWidth="2.5" strokeDasharray="4 3" />
                       )}
                     </svg>
-                    <span className={`text-xs font-semibold ${shapeId === s.id ? "text-[var(--color-brand)]" : "text-gray-600"}`}>
+                    <span className={`text-xs font-semibold ${shapeId === s.id ? "text-teal-600" : "text-gray-600"}`}>
                       {s.label}
                     </span>
                   </button>
                 ))}
               </div>
-            </ConfigStep>
+            </StepCard>
 
             {/* STEP 3: Size */}
-            <ConfigStep number={3} title={t?.("rl.step.size") || "Size (inches)"}>
+            <StepCard
+              stepNumber={stepNumFn("size")}
+              title={t?.("rl.step.size") || "Size (inches)"}
+              hint="Enter dimensions for your labels"
+              summaryText={sizeSummary}
+              open={isStepOpen("size")}
+              onToggle={() => toggleStep("size")}
+              stepId="step-size"
+            >
               <div className="flex flex-wrap items-end gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-gray-600">
@@ -278,7 +316,7 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
                     step="0.25"
                     value={dim1}
                     onChange={(e) => setDim1(Math.max(0.5, Number(e.target.value)))}
-                    className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-brand)] focus:ring-1 focus:ring-[var(--color-brand)]"
+                    className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
                   />
                   <span className="ml-1 text-xs text-gray-400">in</span>
                 </div>
@@ -294,43 +332,63 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
                       step="0.25"
                       value={dim2}
                       onChange={(e) => setDim2(Math.max(0.5, Number(e.target.value)))}
-                      className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-brand)] focus:ring-1 focus:ring-[var(--color-brand)]"
+                      className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
                     />
                     <span className="ml-1 text-xs text-gray-400">in</span>
                   </div>
                 )}
               </div>
-            </ConfigStep>
-
+            </StepCard>
 
             {/* STEP 4: Stock */}
-            <ConfigStep number={4} title={t?.("rl.step.stock") || "Stock / Material"}>
-              <RadioGroup
-                options={stocks}
-                value={stockId}
-                onChange={(id) => {
-                  setStockId(id);
-                  // Reset ink when switching to/from clear (different ink options)
-                  const newInkKey = WHITE_INK_STOCKS.includes(id) ? `${typeId}_clear` : typeId;
-                  const newInks = INK_COLORS[newInkKey] || INK_COLORS[typeId] || [];
-                  const defInk = newInks.find((i) => i.default) || newInks[0];
-                  if (defInk) setInkId(defInk.id);
-                }}
-                cols={stocks.length <= 4 ? 2 : 3}
-              />
-            </ConfigStep>
+            <StepCard
+              stepNumber={stepNumFn("stock")}
+              title={t?.("rl.step.stock") || "Stock / Material"}
+              hint="Choose your label stock material"
+              summaryText={stockSummary}
+              open={isStepOpen("stock")}
+              onToggle={() => toggleStep("stock")}
+              stepId="step-stock"
+            >
+              <OptionGrid columns={stocks.length <= 4 ? 2 : 3}>
+                {stocks.map((st) => (
+                  <OptionCard
+                    key={st.id}
+                    label={st.label}
+                    selected={stockId === st.id}
+                    onSelect={() => {
+                      setStockId(st.id);
+                      // Reset ink when switching to/from clear (different ink options)
+                      const newInkKey = WHITE_INK_STOCKS.includes(st.id) ? `${typeId}_clear` : typeId;
+                      const newInks = INK_COLORS[newInkKey] || INK_COLORS[typeId] || [];
+                      const defInk = newInks.find((i) => i.default) || newInks[0];
+                      if (defInk) setInkId(defInk.id);
+                      advanceStep("step-stock");
+                    }}
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
 
             {/* STEP 5: Quantity */}
-            <ConfigStep number={5} title={t?.("rl.step.qty") || "Quantity"}>
+            <StepCard
+              stepNumber={stepNumFn("quantity")}
+              title={t?.("rl.step.qty") || "Quantity"}
+              hint="Select or enter your label quantity"
+              summaryText={quantitySummaryText}
+              open={isStepOpen("quantity")}
+              onToggle={() => toggleStep("quantity")}
+              stepId="step-quantity"
+            >
               <div className="flex flex-wrap gap-2">
                 {QUANTITIES.map((q) => (
                   <button
                     key={q}
                     type="button"
-                    onClick={() => setQty(q)}
+                    onClick={() => { setQty(q); advanceStep("step-quantity"); }}
                     className={`rounded-lg border-2 px-3 py-2 text-sm font-medium transition-all ${
                       qty === q
-                        ? "border-[var(--color-brand)] bg-[var(--color-brand)]/5 text-[var(--color-brand)]"
+                        ? "border-teal-500 bg-teal-50 text-gray-900"
                         : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                     }`}
                   >
@@ -338,22 +396,63 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
                   </button>
                 ))}
               </div>
-            </ConfigStep>
+            </StepCard>
 
             {/* STEP 6: Ink Colour */}
-            {inks.length > 1 && (
-              <ConfigStep number={6} title={t?.("rl.step.ink") || "Ink Colour"}>
-                <RadioGroup options={inks} value={inkId} onChange={setInkId} cols={2} />
-              </ConfigStep>
-            )}
+            <StepCard
+              stepNumber={stepNumFn("ink")}
+              title={t?.("rl.step.ink") || "Ink Colour"}
+              hint="Select ink colour mode"
+              summaryText={inkSummary}
+              visible={inks.length > 1}
+              open={isStepOpen("ink")}
+              onToggle={() => toggleStep("ink")}
+              stepId="step-ink"
+            >
+              <OptionGrid columns={2}>
+                {inks.map((ink) => (
+                  <OptionCard
+                    key={ink.id}
+                    label={ink.label}
+                    selected={inkId === ink.id}
+                    onSelect={() => { setInkId(ink.id); advanceStep("step-ink"); }}
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
 
             {/* STEP 7: Finishing */}
-            <ConfigStep number={inks.length > 1 ? 7 : 6} title={t?.("rl.step.finishing") || "Finishing"}>
-              <RadioGroup options={FINISHINGS} value={finishId} onChange={setFinishId} cols={2} />
-            </ConfigStep>
+            <StepCard
+              stepNumber={stepNumFn("finishing")}
+              title={t?.("rl.step.finishing") || "Finishing"}
+              hint="Choose the label surface finish"
+              summaryText={finishingSummaryText}
+              open={isStepOpen("finishing")}
+              onToggle={() => toggleStep("finishing")}
+              stepId="step-finishing"
+            >
+              <OptionGrid columns={2}>
+                {FINISHINGS.map((f) => (
+                  <OptionCard
+                    key={f.id}
+                    label={f.label}
+                    selected={finishId === f.id}
+                    onSelect={() => { setFinishId(f.id); advanceStep("step-finishing"); }}
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
 
             {/* STEP 8: Wind Direction */}
-            <ConfigStep number={inks.length > 1 ? 8 : 7} title={t?.("rl.step.wind") || "Unwind Direction"}>
+            <StepCard
+              stepNumber={stepNumFn("wind")}
+              title={t?.("rl.step.wind") || "Unwind Direction"}
+              hint="Select how labels unwind from the roll for your applicator"
+              summaryText={windSummary}
+              open={isStepOpen("wind")}
+              onToggle={() => toggleStep("wind")}
+              stepId="step-wind"
+            >
               <p className="mb-3 text-xs text-gray-500">
                 {t?.("rl.windHint") || "Select how labels unwind from the roll. This affects how labels feed into your applicator."}
               </p>
@@ -362,10 +461,10 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
                   <button
                     key={wd.id}
                     type="button"
-                    onClick={() => setWindId(wd.id)}
+                    onClick={() => { setWindId(wd.id); advanceStep("step-wind"); }}
                     className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-3 transition-all ${
                       windId === wd.id
-                        ? "border-[var(--color-brand)] bg-[var(--color-brand)]/5 shadow-sm"
+                        ? "border-teal-500 bg-teal-50 shadow-sm"
                         : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
                     }`}
                   >
@@ -375,44 +474,67 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
                       <ellipse cx="32" cy="32" rx="4" ry="26" className="fill-gray-100 stroke-gray-300" strokeWidth="1" />
                       {/* Label rectangle on the roll */}
                       <rect x="20" y="20" width="24" height="24" rx="2"
-                        className={windId === wd.id ? "fill-[var(--color-brand)]/15 stroke-[var(--color-brand)]" : "fill-gray-100 stroke-gray-400 group-hover:stroke-gray-600"}
+                        className={windId === wd.id ? "fill-teal-50 stroke-teal-500" : "fill-gray-100 stroke-gray-400 group-hover:stroke-gray-600"}
                         strokeWidth="1.5"
                       />
                       {/* "A" text in label */}
-                      <text x="32" y="36" textAnchor="middle" className={windId === wd.id ? "fill-[var(--color-brand)]" : "fill-gray-500"} fontSize="12" fontWeight="bold">A</text>
+                      <text x="32" y="36" textAnchor="middle" className={windId === wd.id ? "fill-teal-600" : "fill-gray-500"} fontSize="12" fontWeight="bold">A</text>
                       {/* Direction arrow */}
                       {wd.id === "top" && (
-                        <path d="M32 16 L32 4 M32 4 L27 9 M32 4 L37 9" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M32 16 L32 4 M32 4 L27 9 M32 4 L37 9" className={windId === wd.id ? "stroke-teal-500" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       )}
                       {wd.id === "bottom" && (
-                        <path d="M32 48 L32 60 M32 60 L27 55 M32 60 L37 55" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M32 48 L32 60 M32 60 L27 55 M32 60 L37 55" className={windId === wd.id ? "stroke-teal-500" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       )}
                       {wd.id === "right" && (
-                        <path d="M48 32 L60 32 M60 32 L55 27 M60 32 L55 37" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M48 32 L60 32 M60 32 L55 27 M60 32 L55 37" className={windId === wd.id ? "stroke-teal-500" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       )}
                       {wd.id === "left" && (
-                        <path d="M16 32 L4 32 M4 32 L9 27 M4 32 L9 37" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M16 32 L4 32 M4 32 L9 27 M4 32 L9 37" className={windId === wd.id ? "stroke-teal-500" : "stroke-gray-500"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       )}
                       {wd.id === "any" && (
                         <>
-                          <path d="M32 16 L32 10 M32 10 L29 13 M32 10 L35 13" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M32 48 L32 54 M32 54 L29 51 M32 54 L35 51" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M48 32 L54 32 M54 32 L51 29 M54 32 L51 35" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M16 32 L10 32 M10 32 L13 29 M10 32 L13 35" className={windId === wd.id ? "stroke-[var(--color-brand)]" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M32 16 L32 10 M32 10 L29 13 M32 10 L35 13" className={windId === wd.id ? "stroke-teal-500" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M32 48 L32 54 M32 54 L29 51 M32 54 L35 51" className={windId === wd.id ? "stroke-teal-500" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M48 32 L54 32 M54 32 L51 29 M54 32 L51 35" className={windId === wd.id ? "stroke-teal-500" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M16 32 L10 32 M10 32 L13 29 M10 32 L13 35" className={windId === wd.id ? "stroke-teal-500" : "stroke-gray-500"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                         </>
                       )}
                     </svg>
-                    <span className={`text-[11px] font-semibold leading-tight text-center ${windId === wd.id ? "text-[var(--color-brand)]" : "text-gray-600"}`}>
+                    <span className={`text-[11px] font-semibold leading-tight text-center ${windId === wd.id ? "text-teal-600" : "text-gray-600"}`}>
                       {wd.label}
                     </span>
                   </button>
                 ))}
               </div>
-            </ConfigStep>
+            </StepCard>
 
             {/* STEP 9: Labels Per Roll */}
-            <ConfigStep number={inks.length > 1 ? 9 : 8} title={t?.("rl.step.perRoll") || "Labels Per Roll"}>
-              <RadioGroup options={LABELS_PER_ROLL} value={labelsPerRoll} onChange={setLabelsPerRoll} cols={5} />
+            <StepCard
+              stepNumber={stepNumFn("perRoll")}
+              title={t?.("rl.step.perRoll") || "Labels Per Roll"}
+              hint="How many labels on each roll"
+              summaryText={perRollSummary}
+              open={isStepOpen("perRoll")}
+              onToggle={() => toggleStep("perRoll")}
+              stepId="step-perRoll"
+            >
+              <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5">
+                {LABELS_PER_ROLL.map((lpr) => (
+                  <button
+                    key={lpr.id}
+                    type="button"
+                    onClick={() => { setLabelsPerRoll(lpr.id); advanceStep("step-perRoll"); }}
+                    className={`rounded-lg border-2 px-3 py-2.5 text-center text-sm font-medium transition-all ${
+                      labelsPerRoll === lpr.id
+                        ? "border-teal-500 bg-teal-50 text-gray-900"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    {lpr.label}
+                  </button>
+                ))}
+              </div>
               {labelsPerRoll === "custom" && (
                 <div className="mt-3">
                   <label className="mb-1 block text-xs font-medium text-gray-600">
@@ -425,21 +547,29 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
                     step="1"
                     value={customPerRoll}
                     onChange={(e) => setCustomPerRoll(Math.max(1, Math.round(Number(e.target.value))))}
-                    className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-brand)] focus:ring-1 focus:ring-[var(--color-brand)]"
+                    className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
                   />
                 </div>
               )}
-            </ConfigStep>
+            </StepCard>
 
             {/* STEP 10: Perforation + Food Use */}
-            <ConfigStep number={inks.length > 1 ? 10 : 9} title={t?.("rl.step.options") || "Additional Options"}>
+            <StepCard
+              stepNumber={stepNumFn("options")}
+              title={t?.("rl.step.options") || "Additional Options"}
+              hint="Perforation and food-use certification"
+              summaryText={perforation ? "Perforation" : foodUse ? "Food use" : "None"}
+              open={isStepOpen("options")}
+              onToggle={() => toggleStep("options")}
+              stepId="step-options"
+            >
               <div className="space-y-3">
                 <label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 cursor-pointer hover:border-gray-300">
                   <input
                     type="checkbox"
                     checked={perforation}
                     onChange={(e) => setPerforation(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-[var(--color-brand)]"
+                    className="h-4 w-4 rounded border-gray-300 text-teal-600"
                   />
                   <span className="text-sm font-medium text-gray-700">{t?.("rl.perforation") || "Perforation between labels"}</span>
                 </label>
@@ -456,7 +586,7 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
                         onClick={() => setFoodUse(val)}
                         className={`rounded-lg border-2 px-6 py-2 text-sm font-medium transition-all ${
                           foodUse === val
-                            ? "border-[var(--color-brand)] bg-[var(--color-brand)]/5 text-[var(--color-brand)]"
+                            ? "border-teal-500 bg-teal-50 text-gray-900"
                             : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                         }`}
                       >
@@ -466,19 +596,27 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
                   </div>
                 </div>
               </div>
-            </ConfigStep>
+            </StepCard>
 
             {/* STEP 11: Turnaround */}
-            <ConfigStep number={inks.length > 1 ? 11 : 10} title={t?.("rl.step.turnaround") || "Turnaround"}>
+            <StepCard
+              stepNumber={stepNumFn("turnaround")}
+              title={t?.("rl.step.turnaround") || "Turnaround"}
+              hint="Production speed — rush options available"
+              summaryText={turnaroundSummary}
+              open={isStepOpen("turnaround")}
+              onToggle={() => toggleStep("turnaround")}
+              stepId="step-turnaround"
+            >
               <div className="space-y-2">
                 {TURNAROUNDS.map((ta) => (
                   <button
                     key={ta.id}
                     type="button"
-                    onClick={() => setTurnaroundId(ta.id)}
+                    onClick={() => { setTurnaroundId(ta.id); advanceStep("step-turnaround"); }}
                     className={`w-full rounded-lg border-2 px-4 py-3 text-left transition-all ${
                       turnaroundId === ta.id
-                        ? "border-[var(--color-brand)] bg-[var(--color-brand)]/5"
+                        ? "border-teal-500 bg-teal-50"
                         : "border-gray-200 bg-white hover:border-gray-300"
                     }`}
                   >
@@ -491,45 +629,51 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
                   </button>
                 ))}
               </div>
-            </ConfigStep>
+            </StepCard>
 
             {/* STEP 12: Artwork Upload */}
-            <ConfigStep number={inks.length > 1 ? 12 : 11} title={t?.("rl.step.artwork") || "Upload Artwork"}>
+            <StepCard
+              stepNumber={stepNumFn("artwork")}
+              title={t?.("rl.step.artwork") || "Upload Artwork"}
+              hint="Upload your print-ready file"
+              summaryText={artworkSummary}
+              open={isStepOpen("artwork")}
+              onToggle={() => toggleStep("artwork")}
+              stepId="step-artwork"
+            >
               <ArtworkUpload
                 uploadedFile={uploadedFile}
                 onFileChange={setUploadedFile}
                 hint={t?.("rl.uploadHint") || "Upload your print-ready file (PDF, AI, PNG, JPG). You can also send it later."}
               />
-            </ConfigStep>
+            </StepCard>
           </div>
 
           {/* RIGHT COLUMN — Pricing Sidebar */}
-          <div className="hidden lg:block">
-            <PricingSidebar
-              summaryLines={summaryLines}
-              quoteLoading={false}
-              quoteError={null}
-              unitCents={unitCents}
-              subtotalCents={subtotalCents}
-              taxCents={taxCents}
-              totalCents={totalCents}
-              quantity={qty}
-              canAddToCart={canAddToCart}
-              onAddToCart={handleAddToCart}
-              onBuyNow={handleBuyNow}
-              buyNowLoading={buyNowLoading}
-              extraRows={[
-                { label: t?.("rl.qty") || "Quantity", value: qty.toLocaleString() },
-              ]}
-              badges={[
-                t?.("rl.badge.fullColor") || "Full Colour CMYK",
-                t?.("rl.badge.shipping") || "Free Shipping $99+",
-                t?.("rl.badge.proof") || "Free Digital Proof",
-              ]}
-              t={t}
-              productName="Roll Labels"
-            />
-          </div>
+          <PricingSidebar
+            summaryLines={summaryLines}
+            quoteLoading={false}
+            quoteError={null}
+            unitCents={unitCents}
+            subtotalCents={subtotalCents}
+            taxCents={taxCents}
+            totalCents={totalCents}
+            quantity={qty}
+            canAddToCart={canAddToCart}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            buyNowLoading={buyNowLoading}
+            extraRows={[
+              { label: t?.("rl.qty") || "Quantity", value: qty.toLocaleString() },
+            ]}
+            badges={[
+              t?.("rl.badge.fullColor") || "Full Colour CMYK",
+              t?.("rl.badge.shipping") || "Free Shipping $99+",
+              t?.("rl.badge.proof") || "Free Digital Proof",
+            ]}
+            t={t}
+            productName="Roll Labels"
+          />
         </div>
       </div>
 
