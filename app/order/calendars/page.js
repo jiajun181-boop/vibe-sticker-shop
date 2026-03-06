@@ -28,7 +28,7 @@ export default async function CalendarOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="calendars" hideTypeSelector productImages={productImages} />
+      <MarketingPrintOrderClient defaultType="calendars-wall" hideTypeSelector productImages={productImages} />
     </Suspense>
   );
 }

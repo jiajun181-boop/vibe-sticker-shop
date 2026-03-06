@@ -408,12 +408,22 @@ export async function POST(req: Request) {
     const estimatedTax = Math.round(taxableAmount * 0.13);
     const estimatedTotal = afterDiscount + shippingCost + estimatedTax;
 
+    // Keys that can exceed Stripe's 500-char metadata value limit
+    const LARGE_META_KEYS = new Set([
+      "contourSvg", "bleedSvg", "templateData", "contourPoints", "bleedPoints",
+    ]);
+
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = pricedItems.map(
       (item) => {
         const meta = item.meta || {};
-        const stripeMeta: Record<string, string> = Object.fromEntries(
-          Object.entries(meta).map(([k, v]) => [k, String(v)])
-        );
+        // Strip large fields to prevent Stripe 500-char limit errors
+        const stripeMeta: Record<string, string> = {};
+        for (const [k, v] of Object.entries(meta)) {
+          if (LARGE_META_KEYS.has(k)) continue;
+          const s = String(v);
+          if (s.length > 490) continue; // Safety: skip any unexpectedly large value
+          stripeMeta[k] = s;
+        }
 
         return {
           price_data: {
@@ -499,16 +509,30 @@ export async function POST(req: Request) {
 
       metadata: {
         items: JSON.stringify(
-          pricedItems.map((item) => ({
-            productId: item.productId,
-            slug: item.slug,
-            name: item.name,
-            quantity: item.quantity,
-            unitAmount: item.unitAmount,
-            originalUnitAmount: item.originalUnitAmount,
-            priceDrift: item.priceDrift || 0,
-            meta: item.meta || null,
-          }))
+          pricedItems.map((item) => {
+            // Strip large fields from session metadata to stay under Stripe 8KB limit
+            let safeMeta: Record<string, string | number | boolean> | null = item.meta || null;
+            if (safeMeta && typeof safeMeta === "object") {
+              const cleaned: Record<string, string | number | boolean> = {};
+              for (const [k, v] of Object.entries(safeMeta)) {
+                if (LARGE_META_KEYS.has(k)) continue;
+                if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+                  cleaned[k] = v;
+                }
+              }
+              safeMeta = cleaned;
+            }
+            return {
+              productId: item.productId,
+              slug: item.slug,
+              name: item.name,
+              quantity: item.quantity,
+              unitAmount: item.unitAmount,
+              originalUnitAmount: item.originalUnitAmount,
+              priceDrift: item.priceDrift || 0,
+              meta: safeMeta,
+            };
+          })
         ),
         subtotalAmount: subtotal.toString(),
         discountAmount: discountAmount.toString(),

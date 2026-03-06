@@ -28,7 +28,7 @@ export default async function MenuOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="menus" hideTypeSelector productImages={productImages} />
+      <MarketingPrintOrderClient defaultType="menus-laminated" hideTypeSelector productImages={productImages} />
     </Suspense>
   );
 }

@@ -28,7 +28,7 @@ export default async function BrochureOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="brochures" hideTypeSelector productImages={productImages} />
+      <MarketingPrintOrderClient defaultType="brochures-bi-fold" hideTypeSelector productImages={productImages} />
     </Suspense>
   );
 }

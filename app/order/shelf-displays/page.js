@@ -28,7 +28,7 @@ export default async function ShelfDisplayOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="shelf-displays" hideTypeSelector productImages={productImages} />
+      <MarketingPrintOrderClient defaultType="shelf-talkers" hideTypeSelector productImages={productImages} />
     </Suspense>
   );
 }
