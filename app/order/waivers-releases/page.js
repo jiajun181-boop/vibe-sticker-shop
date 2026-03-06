@@ -28,7 +28,7 @@ export default async function WaiverOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="waivers-releases" hideTypeSelector productImages={productImages} />
+      <MarketingPrintOrderClient defaultType="document-printing" hideTypeSelector productImages={productImages} />
     </Suspense>
   );
 }

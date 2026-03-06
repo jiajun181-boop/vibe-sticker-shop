@@ -28,7 +28,7 @@ export default async function OrderFormPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="order-forms" hideTypeSelector productImages={productImages} />
+      <MarketingPrintOrderClient defaultType="document-printing" hideTypeSelector productImages={productImages} />
     </Suspense>
   );
 }

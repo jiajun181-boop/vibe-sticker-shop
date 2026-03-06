@@ -28,7 +28,7 @@ export default async function DoorHangerOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="door-hangers" hideTypeSelector productImages={productImages} />
+      <MarketingPrintOrderClient defaultType="door-hangers-standard" hideTypeSelector productImages={productImages} />
     </Suspense>
   );
 }
