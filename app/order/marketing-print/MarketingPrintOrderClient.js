@@ -271,8 +271,16 @@ export default function MarketingPrintOrderClient({
       }
     }
     if (isStamp) {
-      lines.push({ label: "Ink Color", value: stampColor === "#DC2626" ? "Red" : stampColor === "#2563EB" ? "Blue" : "Black" });
+      const colorName = stampColor === "#DC2626" ? "Red" : stampColor === "#2563EB" ? "Blue" : stampColor === "#16A34A" ? "Green" : "Black";
+      lines.push({ label: "Ink Color", value: colorName });
       lines.push({ label: "Shape", value: stampShape === "round" ? "Round" : "Rectangle" });
+      const previewText = stampText.split("\n")[0];
+      if (previewText.trim()) {
+        lines.push({ label: "Text", value: previewText.length > 20 ? previewText.slice(0, 20) + "…" : previewText });
+      }
+      if (stampFont !== "Helvetica") {
+        lines.push({ label: "Font", value: stampFont });
+      }
     }
     lines.push({ label: "Quantity", value: effectiveQty.toLocaleString() });
     return lines;
@@ -366,13 +374,18 @@ export default function MarketingPrintOrderClient({
               onToggle={() => toggleStep("size")}
               stepId="step-size"
             >
-              <OptionGrid columns={printType.sizes.length <= 4 ? printType.sizes.length + (printType.customSize ? 1 : 0) : 4} label={t("step.size")}>
+              <OptionGrid columns={isStamp ? 2 : (printType.sizes.length <= 4 ? printType.sizes.length + (printType.customSize ? 1 : 0) : 4)} label={t("step.size")}>
                 {printType.sizes.map((s, idx) => (
                   <OptionCard
                     key={idx}
                     label={s.label}
+                    description={s.desc || undefined}
+                    recommended={!!s.recommended}
                     selected={sizeIdx === idx && !isCustomSize}
                     onSelect={() => { setSizeIdx(idx); setIsCustomSize(false); advanceStep("step-size"); }}
+                    badge={s.useCase ? (
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[9px] font-medium text-gray-500">{s.useCase}</span>
+                    ) : undefined}
                   />
                 ))}
                 {printType.customSize && (
@@ -526,6 +539,19 @@ export default function MarketingPrintOrderClient({
                   onToggle={() => toggleStep("stampText")}
                   stepId="step-stampText"
                 >
+                  {/* Model-specific guidance */}
+                  {selectedSize && (
+                    <div className="mb-3 rounded-lg bg-blue-50 border border-blue-100 px-3 py-2">
+                      <p className="text-xs font-semibold text-blue-800">
+                        {selectedSize.label} — {selectedSize.desc?.split("—")[1]?.trim() || ""}
+                      </p>
+                      {selectedSize.useCase && (
+                        <p className="text-[10px] text-blue-600 mt-0.5">
+                          Best for: {selectedSize.useCase}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <textarea
                     rows={4}
                     placeholder={t("stamp.textPlaceholder", "Enter your stamp text (one line per row)")}
@@ -534,9 +560,14 @@ export default function MarketingPrintOrderClient({
                       setStampText(e.target.value);
                       handleStampChange({ text: e.target.value });
                     }}
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10 resize-none"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10 resize-none"
                   />
-                  <p className="mt-1 text-xs text-gray-400">{t("stamp.textHint", "Each line will be displayed separately on the stamp")}</p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <p className="text-xs text-gray-400">{t("stamp.textHint", "Each line will be displayed separately on the stamp")}</p>
+                    <span className="text-[10px] font-medium text-gray-400">
+                      {stampText.split("\n").filter(l => l.trim()).length} line{stampText.split("\n").filter(l => l.trim()).length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
                 </StepCard>
 
                 <StepCard
