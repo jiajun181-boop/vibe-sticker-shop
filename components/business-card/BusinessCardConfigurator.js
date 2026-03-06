@@ -331,6 +331,8 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
                 open={isStepOpen("sides")}
                 onToggle={() => toggleStep("sides")}
                 stepId="step-sides"
+                alwaysOpen
+                compact
               >
                 <OptionGrid columns={2} label={t("bc.sides")}>
                   {SIDES.map((s) => (
@@ -358,6 +360,8 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
                 open={isStepOpen("finishing")}
                 onToggle={() => toggleStep("finishing")}
                 stepId="step-finishing"
+                alwaysOpen
+                compact
               >
                 <OptionGrid columns={4} label={t("bc.finishChoice")}>
                   {config.finishingOptions.map((opt) => (
@@ -488,6 +492,8 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
+              compact
             >
               <QuantityScroller
                 quantities={config.quantities}

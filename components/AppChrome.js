@@ -18,9 +18,12 @@ export default function AppChrome({ children, catalogConfig, locale }) {
   const isQuoteRoute = pathname.startsWith("/quote");
   const isShopRoute = pathname.startsWith("/shop");
   const isProductDetailRoute = /^\/shop\/[^/]+\/[^/]+$/.test(pathname);
+  const isOrderRoute = pathname.startsWith("/order");
   // Keep desktop floating quote CTA only on high-intent product detail pages.
   // It looked like an unexplained "black box" on content/home pages.
   const showFloatingQuote = !isQuoteRoute && isProductDetailRoute;
+  // Hide FloatingContactButton on product/configurator pages — ChatWidget is the single entry
+  const showFloatingContact = !isOrderRoute && !isProductDetailRoute;
 
   // Design studio is a full-screen editor — no header/footer/nav
   if (isAdminRoute || isDesignRoute) {
@@ -42,7 +45,7 @@ export default function AppChrome({ children, catalogConfig, locale }) {
           {t("nav.getQuote")}
         </Link>
       )}
-      <FloatingContactButton />
+      {showFloatingContact && <FloatingContactButton />}
       <ExitIntentPopup />
       <MobileBottomNav catalogConfig={catalogConfig} />
       <Footer locale={locale} />

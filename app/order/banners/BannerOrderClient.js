@@ -459,6 +459,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
             >
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
                 {bannerType.quantities.map((q) => {

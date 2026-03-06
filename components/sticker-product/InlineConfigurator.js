@@ -533,6 +533,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         stepId="step-material"
         open={isStepOpen("material")}
         onToggle={() => toggleStep("material")}
+        alwaysOpen
       >
         {(() => {
           const groups = [];
@@ -618,6 +619,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         stepId="step-shape"
         open={isStepOpen("shape")}
         onToggle={() => toggleStep("shape")}
+        alwaysOpen
       >
         <OptionGrid columns={3} label={t("step.shape")}>
           {cutting.shapes?.map((s) => (
@@ -649,6 +651,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         stepId="step-size"
         open={isStepOpen("size")}
         onToggle={() => toggleStep("size")}
+        alwaysOpen
       >
         <OptionGrid columns={3} label={t("step.size")}>
           {shapePresets.map((s, i) => (
@@ -814,6 +817,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         stepId="step-quantity"
         open={isStepOpen("quantity")}
         onToggle={() => toggleStep("quantity")}
+        alwaysOpen
       >
         {useQtyDropdown ? (
           /* Dropdown for long quantity lists (>6 items) */
@@ -919,6 +923,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         stepId="step-turnaround"
         open={isStepOpen("turnaround")}
         onToggle={() => toggleStep("turnaround")}
+        alwaysOpen
       >
         <OptionGrid columns={2} label={t("step.turnaround")}>
           {TURNAROUND_OPTIONS.map((opt) => {

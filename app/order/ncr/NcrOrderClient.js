@@ -324,6 +324,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
             >
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
                 {QUANTITIES.map((q) => (

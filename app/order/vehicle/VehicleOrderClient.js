@@ -437,6 +437,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
             >
               <QuantityScroller
                 quantities={vehicleType.quantities}

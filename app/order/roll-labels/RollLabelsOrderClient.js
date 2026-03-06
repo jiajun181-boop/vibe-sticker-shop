@@ -258,6 +258,7 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
               open={isStepOpen("shape")}
               onToggle={() => toggleStep("shape")}
               stepId="step-shape"
+              alwaysOpen
             >
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
                 {SHAPES.map((s) => (
@@ -305,6 +306,7 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
               open={isStepOpen("size")}
               onToggle={() => toggleStep("size")}
               stepId="step-size"
+              alwaysOpen
             >
               <div className="flex flex-wrap items-end gap-4">
                 <div>
@@ -351,6 +353,7 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
               open={isStepOpen("stock")}
               onToggle={() => toggleStep("stock")}
               stepId="step-stock"
+              alwaysOpen
             >
               <OptionGrid columns={stocks.length <= 4 ? 2 : 3}>
                 {stocks.map((st) => (
@@ -381,6 +384,7 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
             >
               <div className="flex flex-wrap gap-2">
                 {QUANTITIES.map((q) => (
@@ -609,6 +613,7 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
               open={isStepOpen("turnaround")}
               onToggle={() => toggleStep("turnaround")}
               stepId="step-turnaround"
+              alwaysOpen
             >
               <div className="space-y-2">
                 {TURNAROUNDS.map((ta) => (

@@ -412,6 +412,7 @@ export default function SignInlineConfigurator({ signTypeId }) {
         open={isStepOpen("quantity")}
         onToggle={() => toggleStep("quantity")}
         stepId="step-quantity"
+        alwaysOpen
       >
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
           {signType.quantities.map((q) => {

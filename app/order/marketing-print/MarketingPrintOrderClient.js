@@ -365,6 +365,8 @@ export default function MarketingPrintOrderClient({
               open={isStepOpen("size")}
               onToggle={() => toggleStep("size")}
               stepId="step-size"
+              alwaysOpen
+              compact
             >
               <OptionGrid columns={printType.sizes.length <= 4 ? printType.sizes.length + (printType.customSize ? 1 : 0) : 4} label={t("step.size")}>
                 {printType.sizes.map((s, idx) => (
@@ -492,6 +494,8 @@ export default function MarketingPrintOrderClient({
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
+              compact
             >
               {printType.quantityMode === "input" ? (
                 <input
@@ -570,6 +574,8 @@ export default function MarketingPrintOrderClient({
                     open={isStepOpen("paper")}
                     onToggle={() => toggleStep("paper")}
                     stepId="step-paper"
+                    alwaysOpen
+                    compact
                   >
                     <OptionGrid columns={printType.papers.length <= 3 ? printType.papers.length : 3} label={t("marketingPrint.paper", "Paper / Stock")}>
                       {printType.papers.map((p) => (
@@ -596,6 +602,8 @@ export default function MarketingPrintOrderClient({
                     open={isStepOpen("sides")}
                     onToggle={() => toggleStep("sides")}
                     stepId="step-sides"
+                    alwaysOpen
+                    compact
                   >
                     <OptionGrid columns={2} label={t("marketingPrint.sides", "Print Sides")}>
                       <OptionCard

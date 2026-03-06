@@ -595,6 +595,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
             >
               <div className="flex flex-wrap gap-2">
                 {(canvasType.quantities || [1, 2, 3, 5, 10]).map((q) => {

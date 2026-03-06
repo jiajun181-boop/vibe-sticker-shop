@@ -435,6 +435,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
             >
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                 {QUANTITIES.map((q) => (
