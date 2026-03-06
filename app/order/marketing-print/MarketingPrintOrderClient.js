@@ -19,6 +19,8 @@ import {
   ConfigProductGallery,
   PricingSidebar,
   MobileBottomBar,
+  DeliveryEstimate,
+  EmailQuotePopover,
   ArtworkUpload,
   LetterheadTemplateBuilder,
   useConfiguratorPrice,
@@ -802,6 +804,21 @@ export default function MarketingPrintOrderClient({
         );
       })()}
 
+      {/* Inline mobile delivery + email quote (scrolls with page, not fixed) */}
+      {!!quote.quoteData && (
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden space-y-3">
+          <DeliveryEstimate categorySlug="marketing-business-print" t={t} locale={locale} />
+          <EmailQuotePopover
+            productName={printType.label}
+            summaryLines={summaryLines || []}
+            unitCents={quote.unitCents}
+            subtotalCents={quote.subtotalCents}
+            quantity={effectiveQty}
+            t={t}
+          />
+        </div>
+      )}
+
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
@@ -813,12 +830,6 @@ export default function MarketingPrintOrderClient({
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
-        productName={printType.label}
-        summaryLines={summaryLines}
-        unitCents={quote.unitCents}
-        subtotalCents={quote.subtotalCents}
-        categorySlug="marketing-business-print"
-        locale={locale}
         onRetryPrice={quote.retry}
       />
     </main>

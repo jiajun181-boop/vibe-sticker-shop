@@ -20,6 +20,7 @@ import BusinessCardPreview from "@/components/business-card/BusinessCardPreview"
 import { getBusinessCardConfig, computeMultiNameFileFees } from "@/lib/business-card-configs";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -35,7 +36,7 @@ const formatCad = (cents) =>
 
 export default function BusinessCardConfigurator({ slug, productImages = [] }) {
   const config = getBusinessCardConfig(slug);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   // ── State ──
   const [sideId, setSideId] = useState(config.defaultSideId || "double");
@@ -616,9 +617,18 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
             extraRows={extraRows}
             badges={[t("bc.badge.fullColor"), t("bc.badge.shipping"), t("bc.badge.proof")]}
             t={t}
+            categorySlug="marketing-business-print"
+            locale={locale}
           />
         </div>
       </div>
+
+      {/* Inline mobile delivery estimate */}
+      {!!quote.quoteData && (
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden">
+          <DeliveryEstimate categorySlug="marketing-business-print" t={t} locale={locale} />
+        </div>
+      )}
 
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
@@ -636,6 +646,8 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
+        categorySlug="marketing-business-print"
+        locale={locale}
       />
 
       {/* FAQ Section */}

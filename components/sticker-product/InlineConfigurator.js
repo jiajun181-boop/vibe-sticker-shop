@@ -37,6 +37,7 @@ import {
   InfoPopover,
   useStepScroll,
 } from "@/components/configurator";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 
 const INCH_TO_CM = 2.54;
 
@@ -241,7 +242,7 @@ function OrderSummaryCard({ materialId, laminationId, printMode, turnaroundId, i
  * Compact inline configurator for the rich sticker product page right column.
  */
 export default function InlineConfigurator({ cuttingTypeId }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const searchParams = useSearchParams();
   const cutting = useMemo(() => getCuttingType(cuttingTypeId), [cuttingTypeId]);
 
@@ -1065,6 +1066,13 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         <span>Free proof</span>
       </div>
 
+      {/* Inline mobile delivery estimate */}
+      {!!quote.quoteData && (
+        <div className="pb-4 md:hidden">
+          <DeliveryEstimate categorySlug="stickers-labels-decals" t={t} locale={locale} />
+        </div>
+      )}
+
       {/* Mobile bottom bar with live price */}
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
@@ -1077,6 +1085,9 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
+        categorySlug="stickers-labels-decals"
+        locale={locale}
+        onRetryPrice={quote.retry}
       />
     </div>
   );

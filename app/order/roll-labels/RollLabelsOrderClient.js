@@ -15,6 +15,7 @@ import {
 } from "@/components/configurator";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 import { useCartStore } from "@/lib/store";
 import {
   LABEL_TYPES,
@@ -680,6 +681,8 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
             ]}
             t={t}
             productName="Roll Labels"
+            categorySlug="stickers-labels-decals"
+            locale={locale}
           />
         </div>
       </div>
@@ -694,6 +697,13 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
           </div>
         );
       })()}
+
+      {/* Inline mobile delivery estimate */}
+      {subtotalCents > 0 && (
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden">
+          <DeliveryEstimate categorySlug="stickers-labels-decals" t={t} locale={locale} />
+        </div>
+      )}
 
       {/* Mobile Bottom Bar */}
       <MobileBottomBar
