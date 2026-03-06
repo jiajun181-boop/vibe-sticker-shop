@@ -75,6 +75,12 @@
   --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
   --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Mobile bottom chrome — single source of truth ── */
+  --mobile-nav-h: 0px;   /* set by MobileBottomNav JS (content only, no safe-area) */
+  --mobile-cta-h: 0px;   /* set by MobileBottomBar JS on configurator pages      */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bottom-chrome: calc(var(--mobile-nav-h) + var(--mobile-cta-h) + var(--safe-bottom));
 }
 
 @theme inline {
@@ -415,14 +421,6 @@ html {
 .popular-marquee-wrap:hover .popular-marquee,
 .popular-marquee-wrap:hover .popular-marquee-reverse {
   animation-duration: var(--marquee-duration-slow, 72s);
-}
-
-/* ── Mobile bottom chrome — single source of truth ──────────── */
-:root {
-  --mobile-nav-h: 0px;   /* set by MobileBottomNav JS (content only, no safe-area) */
-  --mobile-cta-h: 0px;   /* set by MobileBottomBar JS on configurator pages      */
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --bottom-chrome: calc(var(--mobile-nav-h) + var(--mobile-cta-h) + var(--safe-bottom));
 }
 
 /* Page content auto-padding so nothing hides behind fixed bars */
