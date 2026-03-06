@@ -151,7 +151,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
     if (!quoteData || activeQty <= 0 || !size) return null;
     return {
       id: `backdrops-${typeId}-${size.id}`,
-      name: `${t("bk.title")} — ${t(`bd.type.${typeId}`)} ${size.label}`,
+      name: `${t("bk.title")} — ${t(`bk.type.${typeId}`)} ${size.label}`,
       slug: "backdrops",
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
@@ -249,9 +249,9 @@ export default function BackdropOrderClient({ productImages = [] }) {
                       : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                   }`}
                 >
-                  <span className="text-sm font-semibold">{t(`bd.type.${tp.id}`)}</span>
+                  <span className="text-sm font-semibold">{t(`bk.type.${tp.id}`)}</span>
                   <span className={`text-[11px] leading-tight ${typeId === tp.id ? "text-gray-300" : "text-gray-400"}`}>
-                    {t(`bd.typeDesc.${tp.id}`)}
+                    {t(`bk.typeDesc.${tp.id}`)}
                   </span>
                 </button>
               ))}
@@ -274,7 +274,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
             <div className="flex flex-wrap gap-2">
               {FRAMES.map((f) => (
                 <Chip key={f.id} active={frame === f.id} onClick={() => setFrame(f.id)}>
-                  {t(`bd.frame.${f.id}`)}
+                  {t(`bk.frame.${f.id}`)}
                   {f.surcharge > 0 && (
                     <span className="ml-1 text-[11px] opacity-70">+{formatCad(f.surcharge)}/ea</span>
                   )}
@@ -288,7 +288,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
             <div className="flex flex-wrap gap-2">
               {CASES.map((c) => (
                 <Chip key={c.id} active={carryCase === c.id} onClick={() => setCarryCase(c.id)}>
-                  {t(`bd.case.${c.id}`)}
+                  {t(`bk.case.${c.id}`)}
                   {c.surcharge > 0 && (
                     <span className="ml-1 text-[11px] opacity-70">+{formatCad(c.surcharge)}/ea</span>
                   )}
@@ -365,10 +365,10 @@ export default function BackdropOrderClient({ productImages = [] }) {
             <h2 className="text-base font-bold text-gray-900">{t("bk.summary")}</h2>
 
             <dl className="space-y-2 text-sm">
-              <Row label={t("bk.type.label")} value={t(`bd.type.${typeId}`)} />
+              <Row label={t("bk.type.label")} value={t(`bk.type.${typeId}`)} />
               <Row label={t("bk.size")} value={size?.label || "\u2014"} />
-              <Row label={t("bk.frame.label")} value={t(`bd.frame.${frame}`)} />
-              <Row label={t("bk.case.label")} value={t(`bd.case.${carryCase}`)} />
+              <Row label={t("bk.frame.label")} value={t(`bk.frame.${frame}`)} />
+              <Row label={t("bk.case.label")} value={t(`bk.case.${carryCase}`)} />
               <Row label={t("bk.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
             </dl>
 
@@ -386,10 +386,10 @@ export default function BackdropOrderClient({ productImages = [] }) {
               <dl className="space-y-2 text-sm">
                 <Row label={t("bk.basePrice")} value={formatCad(subtotalCents)} />
                 {frameSurcharge > 0 && (
-                  <Row label={t(`bd.frame.${frame}`)} value={`+ ${formatCad(frameSurcharge)}`} />
+                  <Row label={t(`bk.frame.${frame}`)} value={`+ ${formatCad(frameSurcharge)}`} />
                 )}
                 {caseSurcharge > 0 && (
-                  <Row label={t(`bd.case.${carryCase}`)} value={`+ ${formatCad(caseSurcharge)}`} />
+                  <Row label={t(`bk.case.${carryCase}`)} value={`+ ${formatCad(caseSurcharge)}`} />
                 )}
                 <Row label={t("bk.subtotal")} value={formatCad(adjustedSubtotal)} />
                 <div className="flex justify-between border-t border-gray-100 pt-2">
@@ -462,7 +462,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
               <>
                 <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
                 <p className="truncate text-[11px] text-gray-500">
-                  {activeQty.toLocaleString()} × {t(`bd.type.${typeId}`)} {size?.label}
+                  {activeQty.toLocaleString()} × {t(`bk.type.${typeId}`)} {size?.label}
                 </p>
               </>
             ) : (
