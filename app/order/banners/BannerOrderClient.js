@@ -22,6 +22,7 @@ import {
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
+import { MATERIAL_META } from "@/components/configurator/MaterialSwatchGrid";
 
 const INCH_TO_CM = 2.54;
 
@@ -394,6 +395,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                     <OptionCard
                       key={mat.id}
                       label={mat.label}
+                      description={MATERIAL_META[mat.id]?.description}
                       selected={isActive}
                       onSelect={() => { setMaterialId(mat.id); advanceStep("step-material"); }}
                     />
@@ -434,6 +436,9 @@ export default function BannerOrderClient({ defaultType, productImages }) {
                         </span>
                       )}
                       <span className="text-sm font-bold text-gray-800">{opt?.label || fId}</span>
+                      {opt?.desc && (
+                        <span className={`text-[10px] ${isActive ? "text-teal-700" : "text-gray-400"}`}>{opt.desc}</span>
+                      )}
                       {opt?.surcharge > 0 && (
                         <span className="text-[11px] text-amber-600">+${(opt.surcharge / 100).toFixed(2)}/ea</span>
                       )}

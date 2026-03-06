@@ -6,6 +6,7 @@ import {
   ACCESSORY_OPTIONS,
   getSignType,
 } from "@/lib/sign-order-config";
+import { MATERIAL_META } from "@/components/configurator/MaterialSwatchGrid";
 import {
   StepCard,
   OptionCard,
@@ -302,6 +303,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
                   <OptionCard
                     key={mat.id}
                     label={mat.label}
+                    description={MATERIAL_META[mat.id]?.description}
                     selected={materialId === mat.id}
                     onSelect={() => { setMaterialId(mat.id); advanceStep("step-material"); }}
                   />
@@ -426,6 +428,9 @@ export default function SignOrderClient({ defaultType, productImages }) {
                       )}
                       {icon && <div className="mb-0.5">{icon}</div>}
                       <span className="text-sm font-bold text-gray-800">{opt?.label || aId}</span>
+                      {opt?.desc && (
+                        <span className={`text-[10px] ${isActive ? "text-teal-700" : "text-gray-400"}`}>{opt.desc}</span>
+                      )}
                       {opt?.surcharge > 0 && (
                         <span className="text-[11px] text-gray-500">${(opt.surcharge / 100).toFixed(2)}/{t("sign.perUnit")}</span>
                       )}

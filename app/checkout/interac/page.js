@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useCartStore } from "@/lib/store";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 export default function InteracCheckoutPage() {
+  const { t } = useTranslation();
   const cart = useCartStore((s) => s.cart);
   const getSubtotal = useCartStore((s) => s.getSubtotal);
   const getTax = useCartStore((s) => s.getTax);
@@ -55,19 +57,19 @@ export default function InteracCheckoutPage() {
   if (submitted) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <div className="mb-4 text-4xl font-semibold text-gray-900">Order Confirmed</div>
-        <h1 className="mb-2 text-2xl font-bold">Order Placed</h1>
+        <div className="mb-4 text-4xl font-semibold text-gray-900">{t("interac.orderConfirmed")}</div>
+        <h1 className="mb-2 text-2xl font-bold">{t("interac.orderPlaced")}</h1>
         <p className="mb-4 text-gray-600">
-          Order #{submitted.orderId?.slice(0, 8)} - {formatCad(submitted.totalAmount)}
+          {t("interac.orderRef").replace("{id}", submitted.orderId?.slice(0, 8)).replace("{amount}", formatCad(submitted.totalAmount))}
         </p>
         <p className="mb-6 text-gray-600">
-          We sent Interac e-Transfer instructions to your email. Your order will be processed after payment is received.
+          {t("interac.successMsg")}
         </p>
         <a
           href="/shop"
           className="inline-block rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-gray-800"
         >
-          Continue Shopping
+          {t("interac.continueShopping")}
         </a>
       </div>
     );
@@ -75,19 +77,19 @@ export default function InteracCheckoutPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
-      <h1 className="mb-6 text-2xl font-bold">Pay with Interac e-Transfer</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t("interac.title")}</h1>
 
       {cart.length === 0 ? (
         <div className="text-center">
-          <p className="mb-4 text-gray-600">Your cart is empty.</p>
+          <p className="mb-4 text-gray-600">{t("interac.cartEmpty")}</p>
           <a href="/shop" className="text-sm font-semibold text-gray-900 underline">
-            Browse Shop
+            {t("interac.browseShop")}
           </a>
         </div>
       ) : (
         <>
           <div className="mb-6 rounded-2xl border border-gray-200 p-4">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-gray-500">Order Summary</h2>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-gray-500">{t("interac.orderSummary")}</h2>
             {cart.map((item) => (
               <div key={item._cartId} className="flex justify-between border-b border-gray-100 py-2 text-sm">
                 <span>{item.name} x {item.quantity}</span>
@@ -95,15 +97,15 @@ export default function InteracCheckoutPage() {
               </div>
             ))}
             <div className="mt-3 space-y-1 text-sm">
-              <div className="flex justify-between"><span>Subtotal</span><span>{formatCad(getSubtotal())}</span></div>
-              <div className="flex justify-between"><span>Tax (HST 13%)</span><span>{formatCad(getTax())}</span></div>
-              <div className="flex justify-between text-base font-bold"><span>Total</span><span>{formatCad(getTotal())}</span></div>
+              <div className="flex justify-between"><span>{t("interac.subtotal")}</span><span>{formatCad(getSubtotal())}</span></div>
+              <div className="flex justify-between"><span>{t("interac.tax")}</span><span>{formatCad(getTax())}</span></div>
+              <div className="flex justify-between text-base font-bold"><span>{t("interac.total")}</span><span>{formatCad(getTotal())}</span></div>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium">Full Name</label>
+              <label className="mb-1 block text-sm font-medium">{t("interac.fullName")}</label>
               <input
                 type="text"
                 required
@@ -113,7 +115,7 @@ export default function InteracCheckoutPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Email Address</label>
+              <label className="mb-1 block text-sm font-medium">{t("interac.email")}</label>
               <input
                 type="email"
                 required
@@ -130,7 +132,7 @@ export default function InteracCheckoutPage() {
               disabled={loading}
               className="w-full rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-gray-800 disabled:opacity-50"
             >
-              {loading ? "Placing Order..." : "Place Order with Interac e-Transfer"}
+              {loading ? t("interac.placingOrder") : t("interac.placeOrder")}
             </button>
           </form>
 
@@ -140,7 +142,7 @@ export default function InteracCheckoutPage() {
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
               </svg>
-              Secure 256-bit SSL Checkout
+              {t("interac.sslBadge")}
             </div>
             <div className="flex items-center justify-center gap-3 text-[11px] font-bold tracking-wider text-gray-300">
               <span>VISA</span><span>MC</span><span>AMEX</span><span>INTERAC</span>
@@ -149,10 +151,10 @@ export default function InteracCheckoutPage() {
               <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
               </svg>
-              <span className="font-semibold">Quality Guarantee — Free reprints if we make an error</span>
+              <span className="font-semibold">{t("interac.qualityGuarantee")}</span>
             </div>
             <p className="text-center text-[11px] text-gray-400">
-              <a href="/returns" className="underline hover:text-gray-600">Refund &amp; Return Policy</a>
+              <a href="/returns" className="underline hover:text-gray-600">{t("interac.refundPolicy")}</a>
             </p>
           </div>
         </>

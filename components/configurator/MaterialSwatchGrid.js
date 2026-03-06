@@ -63,6 +63,36 @@ export const MATERIAL_META = {
   "matte-white-bopp": { pattern: "smooth-white", baseColor: "#f5f5f5", subtitle: "Matte White BOPP", description: "Non-glare product labels.", durability: "Outdoor 3-5 years", weight: "Light" },
   "silver-brushed-bopp": { pattern: "brushed", baseColor: "#c0c0c0", subtitle: "Silver Brushed BOPP", description: "Metallic finish labels.", durability: "Outdoor 2-3 years", weight: "Light" },
   "freezer-grade-bopp": { pattern: "smooth", baseColor: "#e0eaf0", subtitle: "Freezer Grade BOPP", description: "Cold-resistant adhesive.", durability: "Outdoor 3-5 years", weight: "Light" },
+  // ── Vehicle graphics materials ──
+  "cast-vinyl": { pattern: "smooth", baseColor: "#f0f0f0", subtitle: "Cast Vinyl", description: "Premium — conforms to curves without bubbling.", durability: "Outdoor 5yr+", weight: "Light" },
+  "avery-cast": { pattern: "smooth", baseColor: "#f0f0f0", subtitle: "Avery Cast Vinyl", description: "Premium — conforms to curves without bubbling.", durability: "Outdoor 5yr+", weight: "Light" },
+  "calendered": { pattern: "smooth", baseColor: "#e8e8e8", subtitle: "Calendered Vinyl", description: "Budget-friendly — best for flat surfaces.", durability: "Outdoor 1-3 years", weight: "Light" },
+  "magnetic-30mil": { pattern: "smooth", baseColor: "#d0d0d0", subtitle: "30mil Magnetic", description: "Removable magnetic signs for vehicles.", durability: "Outdoor 3-5 years", weight: "Heavy" },
+  // ── Sign materials (additional IDs) ──
+  "6mm-coroplast": { pattern: "fluted", baseColor: "#f5f3ef", subtitle: "6mm Corrugated Plastic", description: "Thicker, extra rigid for larger signs.", durability: "Outdoor 1-2 years", weight: "Light" },
+  "10mm-coroplast": { pattern: "fluted", baseColor: "#f0ede8", subtitle: "10mm Corrugated Plastic", description: "Heavy-duty corrugated for A-frames.", durability: "Outdoor 2-3 years", weight: "Medium" },
+  "3/16-foam": { pattern: "stipple", baseColor: "#ffffff", subtitle: '3/16" Foam Board', description: "Standard indoor displays.", durability: "Indoor only", weight: "Ultra-light" },
+  "1/2-foam": { pattern: "stipple", baseColor: "#fafafa", subtitle: '1/2" Foam Board', description: "Extra thick for sturdy presentations.", durability: "Indoor only", weight: "Light" },
+  "gatorboard": { pattern: "stipple", baseColor: "#f5f5f0", subtitle: "Gatorboard", description: "Foam-core board — warp-resistant, heavy-duty.", durability: "Indoor 5yr+", weight: "Medium" },
+  "aluminum-040": { pattern: "brushed", baseColor: "#d8dce2", subtitle: '.040" Aluminum', description: "Standard aluminum — rust-proof outdoor.", durability: "Outdoor 5yr+", weight: "Medium" },
+  "aluminum-063": { pattern: "brushed", baseColor: "#d0d4da", subtitle: '.063" Aluminum', description: "Thicker aluminum — extra durable.", durability: "Outdoor 5yr+", weight: "Heavy" },
+  "acm-dibond": { pattern: "brushed", baseColor: "#c8ccd2", subtitle: "Aluminum Composite", description: "Premium sandwich panel — rigid, lightweight.", durability: "Outdoor 10yr+", weight: "Medium" },
+  "3mm-pvc": { pattern: "smooth", baseColor: "#f8f8f8", subtitle: "3mm PVC / Sintra", description: "Versatile plastic for indoor/outdoor.", durability: "Outdoor 3-5 years", weight: "Light" },
+  "6mm-pvc": { pattern: "smooth", baseColor: "#f5f5f5", subtitle: "6mm PVC / Sintra", description: "Thicker PVC — extra rigid.", durability: "Outdoor 3-5 years", weight: "Medium" },
+  // ── Banner materials (additional IDs) ──
+  "15oz-blockout": { pattern: "woven", baseColor: "#f8f5f0", subtitle: "15oz Blockout Vinyl", description: "Opaque — blocks light completely.", durability: "Outdoor 3-5 years", weight: "Heavy" },
+  "9oz-mesh": { pattern: "mesh", baseColor: "#f2f0ed", subtitle: "9oz Mesh", description: "Wind-through for fences and buildings.", durability: "Outdoor 2 years", weight: "Light" },
+  "heavy-mesh": { pattern: "mesh", baseColor: "#eae8e5", subtitle: "Heavy Mesh", description: "Stronger mesh for large outdoor banners.", durability: "Outdoor 3 years", weight: "Medium" },
+  "fabric-banner": { pattern: "canvas", baseColor: "#faf5ee", subtitle: "Fabric Banner", description: "Wrinkle-free, premium indoor look.", durability: "Indoor", weight: "Light" },
+  "satin-fabric": { pattern: "canvas", baseColor: "#f5f0e8", subtitle: "Satin Fabric", description: "Smooth finish for trade shows.", durability: "Indoor", weight: "Light" },
+  "polyester-fabric": { pattern: "canvas", baseColor: "#f0ebe3", subtitle: "Polyester Fabric", description: "Durable fabric for events.", durability: "Indoor/Outdoor", weight: "Medium" },
+  "mesh-standard": { pattern: "mesh", baseColor: "#f2f0ed", subtitle: "Standard Mesh", description: "Wind-through for fences and buildings.", durability: "Outdoor 2 years", weight: "Light" },
+  "mesh-heavy": { pattern: "mesh", baseColor: "#eae8e5", subtitle: "Heavy-Duty Mesh", description: "Stronger mesh for large outdoor banners.", durability: "Outdoor 3 years", weight: "Medium" },
+  "polyester": { pattern: "canvas", baseColor: "#f0ebe3", subtitle: "Polyester Fabric", description: "Durable wrinkle-free fabric.", durability: "Indoor/Outdoor", weight: "Medium" },
+  "satin": { pattern: "canvas", baseColor: "#f5f0e8", subtitle: "Satin Fabric", description: "Smooth finish for trade shows.", durability: "Indoor", weight: "Light" },
+  "18oz-vinyl": { pattern: "woven", baseColor: "#f5f0ea", subtitle: "18oz Heavy Vinyl", description: "Extra-thick for outdoor durability.", durability: "Outdoor 5yr+", weight: "Heavy" },
+  "pet-grey-back": { pattern: "smooth", baseColor: "#e0e0e0", subtitle: "PET Grey Back", description: "Retractable banner media — smooth finish.", durability: "Indoor", weight: "Light" },
+  "premium-vinyl": { pattern: "smooth-white", baseColor: "#ffffff", subtitle: "Premium Vinyl", description: "High-quality banner vinyl.", durability: "Outdoor 3-5 years", weight: "Medium" },
 };
 
 // ─── SVG Texture Pattern Renderer ────────────────────────────────────────────

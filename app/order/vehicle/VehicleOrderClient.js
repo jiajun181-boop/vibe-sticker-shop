@@ -23,6 +23,7 @@ import {
   OptionGrid,
   useStepScroll,
 } from "@/components/configurator";
+import { MATERIAL_META } from "@/components/configurator/MaterialSwatchGrid";
 import QuantityScroller from "@/components/configurator/QuantityScroller";
 import VehiclePreview from "@/components/vehicle/VehiclePreview";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
@@ -342,6 +343,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
                     <OptionCard
                       key={mat.id}
                       label={mat.label}
+                      description={MATERIAL_META[mat.id]?.description}
                       selected={materialId === mat.id}
                       onSelect={() => { setMaterialId(mat.id); advanceStep("step-material"); }}
                     />
