@@ -401,6 +401,18 @@ export default function PricingSidebar({
           </a>
         )}
 
+        {/* Secure payment badges */}
+        <div className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400">
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+          {t?.("trust.secureCheckout") || "Secure Checkout"}
+          <span className="mx-1 text-gray-300">·</span>
+          <span className="font-bold tracking-wider text-gray-300">VISA</span>
+          <span className="font-bold tracking-wider text-gray-300">MC</span>
+          <span className="font-bold tracking-wider text-gray-300">AMEX</span>
+        </div>
+
         {/* Quality guarantee + refund link */}
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 space-y-1.5">
           <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700">
