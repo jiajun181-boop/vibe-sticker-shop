@@ -52,10 +52,10 @@ export default function StepCard({
             handleToggle();
           }
         }}
-        className="flex w-full items-center gap-3 p-5 text-left focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded-xl"
+        className="flex w-full items-center gap-3 px-4 py-3 sm:p-5 text-left focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded-xl"
       >
         {/* Step number circle */}
-        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+        <span className={`flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
           isOpen ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
         }`}>
           {stepNumber}
@@ -96,7 +96,7 @@ export default function StepCard({
           isOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="px-5 pb-5">
+        <div className="px-4 pb-3 sm:px-5 sm:pb-5">
           {children}
         </div>
       </div>

@@ -120,7 +120,7 @@ function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
       <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-gray-100)]">
         {showUrl ? (
           isSvg ? (
-            <img src={showUrl} alt={name} className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105" />
+            <img src={showUrl} alt={name} loading="lazy" className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105" />
           ) : (
             <Image
               src={showUrl}

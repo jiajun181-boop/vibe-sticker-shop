@@ -97,7 +97,7 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
       <div className={`relative overflow-hidden bg-[var(--color-gray-100)] ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
         {showUrl ? (
           isSvg ? (
-            <img src={showUrl} alt={name} className="h-full w-full object-cover transition-opacity duration-300" />
+            <img src={showUrl} alt={name} loading="lazy" className="h-full w-full object-cover transition-opacity duration-300" />
           ) : (
             <Image src={showUrl} alt={name} fill className="object-cover transition-opacity duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
           )

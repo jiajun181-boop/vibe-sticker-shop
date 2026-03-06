@@ -263,7 +263,7 @@ function ProductCard({ item, price, premium = false, cta = "View", imageUrl }) {
         {imageUrl ? (
           <>
             {isSvg ? (
-              <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+              <img src={imageUrl} alt={name} loading="lazy" className="h-full w-full object-cover" />
             ) : (
               <Image src={imageUrl} alt={name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
             )}

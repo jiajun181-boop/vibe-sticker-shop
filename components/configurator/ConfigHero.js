@@ -13,9 +13,9 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 export default function ConfigHero({ breadcrumbs, title, subtitle, badges = [] }) {
   return (
     <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-[#fff]">
-      <div className="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-6 sm:py-10 sm:px-6 lg:px-8">
         <Breadcrumbs items={breadcrumbs} dark />
-        <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+        <h1 className="mt-3 text-2xl font-black tracking-tight sm:mt-4 sm:text-4xl lg:text-5xl">
           {title}
         </h1>
         {subtitle && (

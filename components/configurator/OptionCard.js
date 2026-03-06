@@ -34,7 +34,7 @@ export default function OptionCard({
           onSelect();
         }
       }}
-      className={`relative flex items-center gap-2.5 rounded-lg border-2 px-3 py-2.5 text-left transition-all focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 ${
+      className={`relative flex items-center gap-2 rounded-lg border-2 px-2.5 py-2 sm:gap-2.5 sm:px-3 sm:py-2.5 text-left transition-all focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 ${
         disabled
           ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 opacity-50"
           : selected
