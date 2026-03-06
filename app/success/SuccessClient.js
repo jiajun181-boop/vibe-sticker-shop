@@ -270,13 +270,18 @@ export default function SuccessClient({ sessionId, statusToken }) {
         <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-4 mb-6">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("success.orderTimeline")}</h3>
           <div className="space-y-3">
-            {timelinePlan.map((step) => (
-              <div key={step.title} className="flex items-start justify-between gap-3 border-b border-[var(--color-gray-100)] pb-2 last:border-b-0 last:pb-0">
-                <div>
-                  <p className="text-sm font-semibold text-[var(--color-gray-900)]">{step.title}</p>
+            {timelinePlan.map((step, idx) => (
+              <div key={step.title} className="flex items-start gap-3 border-b border-[var(--color-gray-100)] pb-2 last:border-b-0 last:pb-0">
+                <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-gray-200)] text-[10px] font-bold text-[var(--color-gray-600)]">
+                  {idx + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-sm font-semibold text-[var(--color-gray-900)]">{step.title}</p>
+                    <p className="shrink-0 text-[11px] font-medium text-[var(--color-gray-500)]">{step.date}</p>
+                  </div>
                   <p className="text-xs text-[var(--color-gray-500)]">{step.desc}</p>
                 </div>
-                <p className="text-xs font-semibold text-[var(--color-gray-700)]">{step.date}</p>
               </div>
             ))}
           </div>

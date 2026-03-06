@@ -65,7 +65,7 @@ function ProductCard({ product, t }) {
   return (
     <article className="group overflow-hidden rounded-xl shadow-[var(--shadow-card)] bg-white transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1">
       <Link href={href} className="block">
-        <div className="relative aspect-square sm:aspect-[4/3] bg-[var(--color-gray-100)] overflow-hidden">
+        <div className="relative aspect-[4/3] bg-[var(--color-gray-100)] overflow-hidden">
           {imageSrc ? (
             isSvg ? (
               <img src={imageSrc} alt={product.name} className="h-full w-full object-cover" />
