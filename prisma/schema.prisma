@@ -296,6 +296,7 @@ model Order {
   files                 OrderFile[]
   timeline              OrderTimeline[]
   proofs                OrderProof[]
+  proofData             ProofData[]
   coupon                Coupon?          @relation(fields: [couponId], references: [id])
 
   @@index([status, paymentStatus])
@@ -401,6 +402,28 @@ model OrderProof {
 
   @@index([orderId])
   @@index([status])
+}
+
+// Server-side contour/proof data — saved before checkout, linked to order after payment
+model ProofData {
+  id                String    @id @default(cuid())
+  productSlug       String
+  originalFileUrl   String?   // Original uploaded artwork
+  originalFileKey   String?   // UploadThing storage key
+  processedImageUrl String?   // Background-removed / processed image
+  contourSvg        String?   @db.Text  // SVG cut path (production data)
+  bleedSvg          String?   @db.Text  // Bleed offset SVG path
+  bleedMm           Float?    // Bleed offset in mm
+  bgRemoved         Boolean   @default(false)
+  customerConfirmed Boolean   @default(false)
+  confirmedAt       DateTime?
+  orderId           String?
+  order             Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdAt         DateTime  @default(now())
+  expiresAt         DateTime  // Cleanup abandoned data after 48h
+
+  @@index([orderId])
+  @@index([expiresAt])
 }
 
 model Review {

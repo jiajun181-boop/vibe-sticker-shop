@@ -56,6 +56,7 @@ export default function DieCutStickerOrderClient() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [proofConfirmed, setProofConfirmed] = useState(false);
   const [contourData, setContourData] = useState(null);
+  const [proofDataId, setProofDataId] = useState(null);
 
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
@@ -131,6 +132,7 @@ export default function DieCutStickerOrderClient() {
         height: size.h,
         fileName: uploadedFile?.name || null,
         proofConfirmed: proofConfirmed || false,
+        proofDataId: proofDataId || null,
         contourSvg: contourData?.contourSvg || null,
         bleedMm: contourData?.bleedMm || null,
         processedImageUrl: contourData?.processedImageUrl || null,
@@ -279,6 +281,7 @@ export default function DieCutStickerOrderClient() {
                     setUploadedFile({ url: first.ufsUrl || first.url, key: first.key, name: first.name, size: first.size });
                     setProofConfirmed(false);
                     setContourData(null);
+                    setProofDataId(null);
                   }}
                   onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
                 />
@@ -297,11 +300,31 @@ export default function DieCutStickerOrderClient() {
               onConfirmProof={(data) => {
                 setContourData(data);
                 setProofConfirmed(true);
+                // Persist proof data server-side (non-blocking)
+                fetch("/api/proof", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    productSlug: "die-cut-stickers",
+                    originalFileUrl: uploadedFile?.url || null,
+                    originalFileKey: uploadedFile?.key || null,
+                    processedImageUrl: data.processedImageUrl || null,
+                    contourSvg: data.contourSvg || null,
+                    bleedSvg: data.bleedSvg || null,
+                    bleedMm: data.bleedMm || null,
+                    bgRemoved: data.bgRemoved || false,
+                    customerConfirmed: true,
+                  }),
+                })
+                  .then((r) => r.json())
+                  .then((res) => { if (res.id) setProofDataId(res.id); })
+                  .catch(() => {});
               }}
               onRejectProof={() => {
                 setUploadedFile(null);
                 setProofConfirmed(false);
                 setContourData(null);
+                setProofDataId(null);
               }}
               t={t}
             />

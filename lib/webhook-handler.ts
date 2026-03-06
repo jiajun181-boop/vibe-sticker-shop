@@ -166,6 +166,20 @@ export async function handleCheckoutCompleted(
       const proofImageUrl = meta?.processedImageUrl || meta?.artworkUrl || meta?.fileUrl;
       if (!proofImageUrl) continue;
 
+      // Link ProofData record to this order (if saved server-side before checkout)
+      const proofDataId = meta?.proofDataId;
+      if (proofDataId && typeof proofDataId === "string") {
+        try {
+          await tx.proofData.update({
+            where: { id: proofDataId },
+            data: { orderId: newOrder.id },
+          });
+        } catch {
+          // ProofData may not exist (old orders or direct buy) — non-fatal
+          console.log(`[Webhook] ProofData ${proofDataId} not found, skipping link`);
+        }
+      }
+
       await tx.orderProof.create({
         data: {
           orderId: newOrder.id,
@@ -174,7 +188,7 @@ export async function handleCheckoutCompleted(
           fileName: meta?.fileName ? `proof-${meta.fileName}` : "auto-proof.png",
           notes: meta?.designStudio
             ? "Customer-approved design from Design Studio"
-            : `Customer-confirmed proof — auto-generated contour with ${meta?.bleedMm || 3}mm bleed`,
+            : `Customer-confirmed proof — auto-generated contour with ${meta?.bleedMm || 3}mm bleed${proofDataId ? ` [proofData:${proofDataId}]` : ""}`,
           status: "approved",
           reviewedAt: new Date(),
           uploadedBy: "customer",

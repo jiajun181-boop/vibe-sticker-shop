@@ -105,6 +105,21 @@ export async function POST(req: Request) {
       },
     });
 
+    // Link ProofData records to this order (if saved before checkout)
+    for (const item of items) {
+      const proofDataId = item.meta?.proofDataId;
+      if (proofDataId && typeof proofDataId === "string") {
+        try {
+          await prisma.proofData.update({
+            where: { id: proofDataId },
+            data: { orderId: order.id },
+          });
+        } catch {
+          // ProofData may not exist — non-fatal
+        }
+      }
+    }
+
     // Send instructions email
     const html = buildInteracInstructionsHtml({
       orderId: order.id,
