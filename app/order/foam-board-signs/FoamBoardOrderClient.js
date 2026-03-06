@@ -93,6 +93,7 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [proofConfirmed, setProofConfirmed] = useState(false);
   const [contourData, setContourData] = useState(null);
+  const [proofDataId, setProofDataId] = useState(null);
 
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
@@ -194,6 +195,7 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
         mounting: mountingId,
         fileName: uploadedFile?.name || null,
         proofConfirmed: proofConfirmed || false,
+        proofDataId: proofDataId || null,
         contourSvg: contourData?.contourSvg || null,
         bleedMm: contourData?.bleedMm || null,
         processedImageUrl: contourData?.processedImageUrl || null,
@@ -369,7 +371,7 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
                   <span className="text-sm text-gray-800">{uploadedFile.name}</span>
                   <button
                     type="button"
-                    onClick={() => { setUploadedFile(null); setProofConfirmed(false); setContourData(null); }}
+                    onClick={() => { setUploadedFile(null); setProofConfirmed(false); setContourData(null); setProofDataId(null); }}
                     className="text-xs text-red-500 hover:text-red-700"
                   >
                     {t("fb.remove")}
@@ -389,6 +391,7 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
                     });
                     setProofConfirmed(false);
                     setContourData(null);
+                    setProofDataId(null);
                   }}
                   onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
                 />
@@ -407,11 +410,31 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
               onConfirmProof={(data) => {
                 setContourData(data);
                 setProofConfirmed(true);
+                // Persist proof data server-side (non-blocking)
+                fetch("/api/proof", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    productSlug: "foam-board-signs",
+                    originalFileUrl: uploadedFile?.url || null,
+                    originalFileKey: uploadedFile?.key || null,
+                    processedImageUrl: data.processedImageUrl || null,
+                    contourSvg: data.contourSvg || null,
+                    bleedSvg: data.bleedSvg || null,
+                    bleedMm: data.bleedMm || null,
+                    bgRemoved: data.bgRemoved || false,
+                    customerConfirmed: true,
+                  }),
+                })
+                  .then((r) => r.json())
+                  .then((res) => { if (res.id) setProofDataId(res.id); })
+                  .catch(() => {});
               }}
               onRejectProof={() => {
                 setUploadedFile(null);
                 setProofConfirmed(false);
                 setContourData(null);
+                setProofDataId(null);
               }}
               t={t}
             />
