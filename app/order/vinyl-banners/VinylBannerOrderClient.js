@@ -190,7 +190,7 @@ export default function VinylBannerOrderClient({ productImages = [] }) {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty]);
+  }, [size.w, size.h, activeQty, materialId]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);

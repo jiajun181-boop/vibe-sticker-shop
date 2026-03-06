@@ -35,7 +35,7 @@ const formatCad = (cents) =>
 
 export default function RollLabelsOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
-  const addToCart = useCartStore((s) => s.addToCart);
+  const addToCart = useCartStore((s) => s.addItem);
 
   // ─── State ────────────────────────────────────────────────────────────────
   const [typeId, setTypeId] = useState("bopp");
