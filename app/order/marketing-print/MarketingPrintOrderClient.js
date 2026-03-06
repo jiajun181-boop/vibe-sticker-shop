@@ -313,7 +313,7 @@ export default function MarketingPrintOrderClient({
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="md:grid md:grid-cols-3 md:gap-6 lg:gap-8">
           {/* LEFT COLUMN */}
-          <div className="space-y-3 md:col-span-2">
+          <div className="space-y-2 sm:space-y-3 md:col-span-2">
 
             {/* Product Gallery — inside grid so sidebar starts beside it */}
             {productImages?.length > 0 && (

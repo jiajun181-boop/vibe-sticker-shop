@@ -68,7 +68,7 @@ function ProductCard({ product, t }) {
         <div className="relative aspect-[4/3] bg-[var(--color-gray-100)] overflow-hidden">
           {imageSrc ? (
             isSvg ? (
-              <img src={imageSrc} alt={product.name} className="h-full w-full object-cover" />
+              <img src={imageSrc} alt={product.name} loading="lazy" className="h-full w-full object-cover" />
             ) : (
               <Image
                 src={imageSrc}
