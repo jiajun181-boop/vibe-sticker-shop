@@ -205,8 +205,9 @@ export default function StickersCategoryClient({ products = [] }) {
           />
         </div>
 
-        {/* Filter tabs */}
-        <div className="mt-8 flex flex-wrap gap-2">
+        {/* Filter tabs — sticky on scroll */}
+        <div className="sticky top-[calc(var(--promo-offset,0px)+var(--nav-offset,72px))] z-10 -mx-4 sm:-mx-6 mt-6 border-b border-[var(--color-gray-200)] bg-[var(--color-gray-50)]/95 px-4 sm:px-6 py-3 backdrop-blur-sm">
+        <div className="flex flex-wrap gap-2">
           {FILTER_TABS.map((tab) => {
             const count = filterCounts[tab.id] || 0;
             if (tab.id !== "all" && count === 0) return null;
@@ -229,6 +230,7 @@ export default function StickersCategoryClient({ products = [] }) {
               </button>
             );
           })}
+        </div>
         </div>
 
         {/* Product grid */}

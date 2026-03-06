@@ -1395,7 +1395,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
         {!embedded && (
           <Breadcrumbs items={[
             { label: t("product.shop"), href: "/shop" },
-            { label: product.category.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()), href: `/shop?category=${product.category}` },
+            { label: product.category.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()), href: `/shop/${product.category}` },
             { label: product.name }
           ]} />
         )}
