@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email/resend";
 import { buildInteracInstructionsHtml } from "@/lib/email/templates/interac-instructions";
 import { getSessionFromRequest } from "@/lib/auth";
+import { checkAndReserveStock } from "@/lib/inventory";
 
 const InteracSchema = z.object({
   items: z.array(z.object({
@@ -52,6 +53,21 @@ export async function POST(req: Request) {
     const shippingAmount = subtotal >= 9900 ? 0 : 1500;
     const taxAmount = Math.round((subtotal + shippingAmount) * 0.13);
     const totalAmount = subtotal + shippingAmount + taxAmount;
+
+    // Atomic stock check + reservation (prevents overselling)
+    const stockResult = await checkAndReserveStock(
+      items.map((item) => ({ productId: item.productId, quantity: item.quantity }))
+    );
+    if (!stockResult.ok) {
+      const issue = stockResult.issues[0];
+      return NextResponse.json(
+        {
+          error: `${issue.productName} only has ${issue.available_quantity} available (requested ${issue.requested})`,
+          code: "INSUFFICIENT_STOCK",
+        },
+        { status: 409 }
+      );
+    }
 
     // Get user if logged in
     const session = getSessionFromRequest(req as any);
