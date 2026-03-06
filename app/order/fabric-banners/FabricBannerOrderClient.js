@@ -136,7 +136,7 @@ export default function FabricBannerOrderClient({ productImages = [] }) {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty, sidesId]);
+  }, [size.w, size.h, activeQty, sidesId, materialId]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
