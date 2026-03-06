@@ -13,6 +13,8 @@ import {
   MobileBottomBar,
   ArtworkUpload,
 } from "@/components/configurator";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useCartStore } from "@/lib/store";
 import {
   LABEL_TYPES,
@@ -34,7 +36,7 @@ const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 export default function RollLabelsOrderClient({ productImages = [] }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const addToCart = useCartStore((s) => s.addItem);
 
   // ─── State ────────────────────────────────────────────────────────────────
@@ -677,6 +679,17 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
         </div>
       </div>
 
+      {/* FAQ Section */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs("roll-labels");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
+
       {/* Mobile Bottom Bar */}
       <MobileBottomBar
         quoteLoading={false}
@@ -695,6 +708,9 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
         summaryLines={summaryLines}
         unitCents={unitCents}
         subtotalCents={subtotalCents}
+        t={t}
+        categorySlug="stickers-labels-decals"
+        locale={locale}
       />
     </main>
   );
