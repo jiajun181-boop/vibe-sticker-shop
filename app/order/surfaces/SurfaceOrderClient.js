@@ -21,6 +21,8 @@ import {
   useConfiguratorPrice,
   useConfiguratorCart,
 } from "@/components/configurator";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
 const INCH_TO_CM = 2.54;
 const APPLICATION_LABELS = { window: "Window", wall: "Wall", floor: "Floor" };
@@ -676,6 +678,17 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
           />
         </div>
       </div>
+
+      {/* FAQ Section */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs(typeId);
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
 
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
