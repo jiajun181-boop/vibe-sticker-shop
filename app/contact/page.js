@@ -51,9 +51,9 @@ export default async function ContactPage() {
                   </svg>
                   <div>
                     <p className="font-semibold text-[var(--color-gray-900)]">{t("contact.info.phone")}</p>
-                    <a href="tel:+16477834728" className="hover:text-[var(--color-gray-900)]">647-783-4728 (English)</a>
+                    <a href="tel:+16477834728" className="text-[var(--color-brand)] underline decoration-[var(--color-brand)]/30 underline-offset-2 hover:decoration-[var(--color-brand)] font-medium">647-783-4728 (English)</a>
                     <br />
-                    <a href="tel:+16478869288" className="hover:text-[var(--color-gray-900)]">647-886-9288 (Chinese)</a>
+                    <a href="tel:+16478869288" className="text-[var(--color-brand)] underline decoration-[var(--color-brand)]/30 underline-offset-2 hover:decoration-[var(--color-brand)] font-medium">647-886-9288 (Chinese)</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -62,7 +62,7 @@ export default async function ContactPage() {
                   </svg>
                   <div>
                     <p className="font-semibold text-[var(--color-gray-900)]">{t("contact.info.email")}</p>
-                    <a href="mailto:info@lunarprint.ca" className="hover:text-[var(--color-gray-900)]">info@lunarprint.ca</a>
+                    <a href="mailto:info@lunarprint.ca" className="text-[var(--color-brand)] underline decoration-[var(--color-brand)]/30 underline-offset-2 hover:decoration-[var(--color-brand)] font-medium">info@lunarprint.ca</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
