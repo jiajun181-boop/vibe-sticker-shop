@@ -73,7 +73,14 @@ export default function AccountDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (authLoading) {
+  // Redirect non-logged-in users to login
+  useEffect(() => {
+    if (!authLoading && !user) {
+      window.location.href = "/login?redirect=/account";
+    }
+  }, [authLoading, user]);
+
+  if (authLoading || !user) {
     return (
       <div className="space-y-6">
         <div className="h-7 w-48 animate-pulse rounded bg-[var(--color-gray-100)]" />

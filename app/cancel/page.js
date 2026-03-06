@@ -40,9 +40,14 @@ export default function CancelPage() {
           </Link>
         </div>
 
-        <p className="mt-6 text-[11px] text-[var(--color-gray-400)]">
-          {t("cancel.contactInfo")}
-        </p>
+        <div className="mt-6 rounded-xl border border-[var(--color-gray-200)] bg-white px-4 py-3 text-[11px] text-[var(--color-gray-500)]">
+          <p className="font-medium">{t("cancel.needHelp")}</p>
+          <p className="mt-1">
+            <a href="mailto:info@lunarprint.ca" className="underline hover:text-[var(--color-gray-700)]">info@lunarprint.ca</a>
+            {" · "}
+            <a href="tel:+16477834728" className="underline hover:text-[var(--color-gray-700)]">647-783-4728</a>
+          </p>
+        </div>
       </div>
     </main>
   );
