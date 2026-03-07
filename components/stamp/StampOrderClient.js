@@ -2,8 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { STAMP_MODELS, STAMP_QUANTITIES } from "@/lib/stamp-order-config";
-import { INK_COLORS } from "@/lib/stampTemplates";
+import { STAMP_MODELS, STAMP_QUANTITIES, STAMP_PRESETS } from "@/lib/stamp-order-config";
 import dynamic from "next/dynamic";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
@@ -28,11 +27,23 @@ const StampEditor = dynamic(() => import("@/components/product/StampEditor"), { 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
+// Ink color is locked to black for now
+const INK_COLOR = "#111111";
+
 export default function StampOrderClient({ defaultSlug, productImages = [] }) {
   const { t, locale } = useTranslation();
 
+  // Resolve preset (personalized entry) or model slug
+  const preset = defaultSlug ? STAMP_PRESETS[defaultSlug] : null;
+
   // ── State ──
   const [modelIdx, setModelIdx] = useState(() => {
+    // 1. Check if defaultSlug is a preset with a defaultModel
+    if (preset) {
+      const idx = STAMP_MODELS.findIndex((m) => m.id === preset.defaultModel);
+      if (idx >= 0) return idx;
+    }
+    // 2. Check if defaultSlug is a model slug
     if (defaultSlug) {
       const idx = STAMP_MODELS.findIndex((m) => m.slug === defaultSlug);
       if (idx >= 0) return idx;
@@ -45,10 +56,11 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
   const heightIn = model.h;
   const shape = model.shape;
 
-  const [inkColor, setInkColor] = useState("#111111"); // black default
   const [quantity, setQuantity] = useState(1);
-  const [stampText, setStampText] = useState("YOUR COMPANY\nAddress Line\nPhone Number");
-  const [stampFont, setStampFont] = useState("Helvetica");
+  const [stampText, setStampText] = useState(
+    preset?.defaultText || "YOUR COMPANY\nAddress Line\nPhone Number"
+  );
+  const [stampFont, setStampFont] = useState(preset?.defaultFont || "Helvetica");
   const [stampConfig, setStampConfig] = useState({});
 
   const effectiveQty = quantity;
@@ -83,11 +95,11 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
         shape,
         stampText,
         stampFont,
-        stampColor: inkColor,
+        stampColor: INK_COLOR,
         ...stampConfig,
       },
     };
-  }, [effectiveQty, model, sizeLabel, quote.unitCents, widthIn, heightIn, shape, stampText, stampFont, inkColor, stampConfig]);
+  }, [effectiveQty, model, sizeLabel, quote.unitCents, widthIn, heightIn, shape, stampText, stampFont, stampConfig]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -100,14 +112,13 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
     setStampConfig((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  // ── Steps ──
+  // ── Steps (4 steps — no ink color) ──
   const [activeStepId, setActiveStepId] = useState(null);
   const visibleSteps = useMemo(() => {
     const defs = [
-      { id: "model",      vis: true },
-      { id: "inkColor",   vis: true },
-      { id: "quantity",   vis: true },
-      { id: "stampText",  vis: true },
+      { id: "model",       vis: true },
+      { id: "quantity",    vis: true },
+      { id: "stampText",   vis: true },
       { id: "stampDesign", vis: true },
     ];
     let n = 0;
@@ -120,16 +131,19 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
   const isStepOpen = (id) => activeStepId === "step-" + id;
   const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
 
-  // ── Ink color helpers ──
-  const inkColorName = inkColor === "#DC2626" ? "Red" : inkColor === "#2563EB" ? "Blue" : "Black";
-
   // ── Summary lines ──
   const summaryLines = useMemo(() => [
     { label: "Model", value: sizeLabel },
     { label: "Shape", value: shape === "round" ? "Round" : "Rectangle" },
-    { label: "Ink Color", value: inkColorName },
+    { label: "Ink", value: "Black" },
     { label: "Quantity", value: effectiveQty.toLocaleString() },
-  ], [sizeLabel, shape, inkColorName, effectiveQty]);
+  ], [sizeLabel, shape, effectiveQty]);
+
+  // ── Hero text ──
+  const heroTitle = preset ? preset.name : "Custom Self-Inking Stamps";
+  const heroSubtitle = preset
+    ? preset.description
+    : "Premium self-inking stamps with built-in ink pad and custom artwork";
 
   // ── Render ──
   return (
@@ -138,10 +152,11 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
         breadcrumbs={[
           { label: t("nav.shop"), href: "/shop" },
           { label: t("marketingPrint.breadcrumb", "Marketing & Print"), href: "/shop/marketing-business-print" },
-          { label: "Self-Inking Stamps" },
+          { label: "Stamps", href: "/shop/marketing-business-print/stamps" },
+          { label: heroTitle },
         ]}
-        title="Custom Self-Inking Stamps"
-        subtitle="Premium self-inking stamps with built-in ink pad and custom artwork"
+        title={heroTitle}
+        subtitle={heroSubtitle}
         badges={[
           "Built-in ink pad",
           t("marketingPrint.badgeShipping", "Fast shipping"),
@@ -157,6 +172,14 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
             {/* Product Gallery */}
             {productImages?.length > 0 && (
               <ConfigProductGallery images={productImages} inline />
+            )}
+
+            {/* Halftone hint for Custom Face Stamp */}
+            {preset?.halftoneHint && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                <p className="text-sm font-semibold text-amber-800">Upload your face photo in Step 4</p>
+                <p className="mt-0.5 text-xs text-amber-700">Use the halftone feature in the design editor to convert your photo into a stamp-ready image.</p>
+              </div>
             )}
 
             {/* Step 1: Model / Size */}
@@ -183,37 +206,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
               </OptionGrid>
             </StepCard>
 
-            {/* Step 2: Ink Color */}
-            <StepCard
-              stepNumber={stepNum("inkColor")}
-              title={t("stamp.inkColor", "Ink Color")}
-              hint="Select your stamp ink color"
-              summaryText={inkColorName}
-              open={isStepOpen("inkColor")}
-              onToggle={() => toggleStep("inkColor")}
-              stepId="step-inkColor"
-              alwaysOpen
-              compact
-            >
-              <OptionGrid columns={3} label={t("stamp.inkColor", "Ink Color")}>
-                {INK_COLORS.map((c) => (
-                  <OptionCard
-                    key={c.id}
-                    label={t(c.labelKey, c.id.charAt(0).toUpperCase() + c.id.slice(1))}
-                    selected={inkColor === c.hex}
-                    onSelect={() => { setInkColor(c.hex); advanceStep("step-inkColor"); }}
-                    badge={
-                      <span
-                        className="inline-block h-4 w-4 rounded-full border border-gray-200"
-                        style={{ backgroundColor: c.hex }}
-                      />
-                    }
-                  />
-                ))}
-              </OptionGrid>
-            </StepCard>
-
-            {/* Step 3: Quantity */}
+            {/* Step 2: Quantity */}
             <StepCard
               stepNumber={stepNum("quantity")}
               title={t("marketingPrint.quantity", "Quantity")}
@@ -233,7 +226,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
               />
             </StepCard>
 
-            {/* Step 4: Stamp Text */}
+            {/* Step 3: Stamp Text */}
             <StepCard
               stepNumber={stepNum("stampText")}
               title={t("stamp.text", "Stamp Text")}
@@ -255,11 +248,11 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
               <p className="mt-1 text-xs text-gray-400">{t("stamp.textHint", "Each line will be displayed separately on the stamp")}</p>
             </StepCard>
 
-            {/* Step 5: Design Your Stamp */}
+            {/* Step 4: Design Your Stamp */}
             <StepCard
               stepNumber={stepNum("stampDesign")}
               title={t("stamp.design", "Design Your Stamp")}
-              summaryText={`${shape === "round" ? "Round" : "Rectangle"}, ${inkColorName}`}
+              summaryText={shape === "round" ? "Round" : "Rectangle"}
               open={isStepOpen("stampDesign")}
               onToggle={() => toggleStep("stampDesign")}
               stepId="step-stampDesign"
@@ -271,7 +264,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
                 diameterIn={shape === "round" ? widthIn : undefined}
                 text={stampText}
                 font={stampFont}
-                color={inkColor}
+                color={INK_COLOR}
                 onChange={handleStampChange}
                 hideInkColor
               />
@@ -297,7 +290,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
               t("marketingPrint.badgeShipping", "Fast shipping"),
             ]}
             t={t}
-            productName="Self-Inking Stamps"
+            productName={heroTitle}
             categorySlug="marketing-business-print"
             locale={locale}
             productSlug="stamps"
@@ -311,7 +304,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
         <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden space-y-3">
           <DeliveryEstimate categorySlug="marketing-business-print" t={t} locale={locale} />
           <EmailQuotePopover
-            productName="Self-Inking Stamps"
+            productName={heroTitle}
             summaryLines={summaryLines || []}
             unitCents={quote.unitCents}
             subtotalCents={quote.subtotalCents}
