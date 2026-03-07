@@ -127,7 +127,7 @@ function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
               alt={name}
               fill
               className="object-cover transition-all duration-300 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           )
         ) : (
