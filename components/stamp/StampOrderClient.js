@@ -21,7 +21,49 @@ import {
 } from "@/components/configurator";
 import QuantityScroller from "@/components/configurator/QuantityScroller";
 
-const StampEditor = dynamic(() => import("@/components/product/StampEditor"), { ssr: false });
+function StampEditorSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse" aria-busy="true" aria-label="Loading stamp editor">
+      {/* Canvas preview skeleton */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="h-3 w-16 rounded bg-gray-200" />
+          <div className="h-4 w-20 rounded-full bg-gray-100" />
+        </div>
+        <div className="mx-auto aspect-square w-full max-w-[260px] sm:max-w-[360px] md:max-w-[450px] rounded-xl bg-gray-100 flex items-center justify-center">
+          <span className="text-xs text-gray-400">Loading stamp preview…</span>
+        </div>
+        <div className="mt-2 mx-auto h-2 w-32 rounded bg-gray-100" />
+      </div>
+      {/* Font picker skeleton */}
+      <div>
+        <div className="h-3 w-12 rounded bg-gray-200 mb-2" />
+        <div className="flex gap-2">
+          {[1, 2, 3, 4].map((i) => <div key={i} className="h-8 w-20 rounded-lg bg-gray-100" />)}
+        </div>
+      </div>
+      {/* Border picker skeleton */}
+      <div>
+        <div className="h-3 w-14 rounded bg-gray-200 mb-2" />
+        <div className="flex gap-2">
+          {[1, 2, 3].map((i) => <div key={i} className="h-10 w-10 rounded-full bg-gray-100" />)}
+        </div>
+      </div>
+      {/* Templates skeleton */}
+      <div>
+        <div className="h-3 w-20 rounded bg-gray-200 mb-2" />
+        <div className="grid grid-cols-3 gap-2">
+          {[1, 2, 3].map((i) => <div key={i} className="h-16 rounded-lg bg-gray-100" />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const StampEditor = dynamic(() => import("@/components/product/StampEditor"), {
+  ssr: false,
+  loading: () => <StampEditorSkeleton />,
+});
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
