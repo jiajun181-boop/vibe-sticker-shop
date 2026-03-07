@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getOrderPageImages } from "@/lib/order-page-images";
-import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
+import StampOrderClient from "@/components/stamp/StampOrderClient";
 
 export function generateMetadata() {
   return {
@@ -28,7 +28,7 @@ export default async function StampOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="stamps" hideTypeSelector productImages={productImages} />
+      <StampOrderClient productImages={productImages} />
     </Suspense>
   );
 }

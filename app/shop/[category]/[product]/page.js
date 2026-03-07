@@ -31,6 +31,7 @@ import VehicleOrderClient from "@/app/order/vehicle/VehicleOrderClient";
 import SurfaceOrderClient from "@/app/order/surfaces/SurfaceOrderClient";
 import CanvasOrderClient from "@/app/order/canvas/CanvasOrderClient";
 import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
+import StampOrderClient from "@/components/stamp/StampOrderClient";
 import VinylLetteringOrderClient from "@/app/order/vinyl-lettering/VinylLetteringOrderClient";
 import RollLabelsOrderClient from "@/app/order/roll-labels/RollLabelsOrderClient";
 import { ProductSchema, BreadcrumbSchema } from "@/components/JsonLd";
@@ -707,6 +708,7 @@ export default async function ProductPage({ params }) {
       vehicle: <VehicleOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
       canvas: <CanvasOrderClient defaultType={configurator.defaultValue} productImages={cfgImages} />,
       surfaces: <SurfaceOrderClient defaultType={configurator.defaultValue} productSlug={decodedSlug} productImages={cfgImages} />,
+      stamps: <StampOrderClient defaultSlug={configurator.defaultValue} productImages={cfgImages} />,
       "marketing-print": <MarketingPrintOrderClient defaultType={configurator.defaultValue} hideTypeSelector={true} productImages={cfgImages} />,
     };
     const cfgFaqItems = getConfiguratorFaqs(decodedSlug);

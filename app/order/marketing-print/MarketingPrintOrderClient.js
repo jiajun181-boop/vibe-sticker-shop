@@ -8,12 +8,10 @@ import {
   getMarketingPrintType,
   FINISHING_LABELS,
 } from "@/lib/marketing-print-order-config";
-import dynamic from "next/dynamic";
 import BrochureFoldPreview from "@/components/brochure/BrochureFoldPreview";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
-const StampEditor = dynamic(() => import("@/components/product/StampEditor"), { ssr: false });
 import {
   ConfigHero,
   ConfigProductGallery,
@@ -76,21 +74,6 @@ export default function MarketingPrintOrderClient({
     }
     return init;
   });
-
-  // Stamp-specific state
-  const isStamp = typeId === "stamps";
-  const [stampText, setStampText] = useState("YOUR COMPANY\nAddress Line\nPhone Number");
-  const [stampFont, setStampFont] = useState("Helvetica");
-  const [stampColor, setStampColor] = useState("#111111");
-  const [stampConfig, setStampConfig] = useState({});
-  const stampShape = isStamp && selectedSize?.label?.includes("Round") ? "round" : "rect";
-
-  const handleStampChange = useCallback((patch) => {
-    if (patch.color !== undefined) setStampColor(patch.color);
-    if (patch.text !== undefined) setStampText(patch.text);
-    if (patch.font !== undefined) setStampFont(patch.font);
-    setStampConfig((prev) => ({ ...prev, ...patch }));
-  }, []);
 
   // Reset dependent state when type changes
   const handleTypeChange = useCallback((newTypeId) => {
@@ -185,10 +168,9 @@ export default function MarketingPrintOrderClient({
         ...(extraSizes.length > 0 ? { extraSizes: extraSizes.filter(s => s.w && s.h) } : {}),
         ...extrasForCart,
         ...(artworkMode === "template" && templateData ? { templateData } : {}),
-        ...(isStamp ? { stampText, stampFont, stampColor, stampShape, ...stampConfig } : {}),
       },
     };
-  }, [effectiveQty, typeId, printType, sizeLabel, quote.unitCents, widthIn, heightIn, paperId, sides, finishing, extrasState, extraSizes, artworkMode, templateData, isStamp, stampText, stampFont, stampColor, stampShape, stampConfig]);
+  }, [effectiveQty, typeId, printType, sizeLabel, quote.unitCents, widthIn, heightIn, paperId, sides, finishing, extrasState, extraSizes, artworkMode, templateData]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -212,21 +194,16 @@ export default function MarketingPrintOrderClient({
       { id: "size",     vis: true },
       { id: "quantity", vis: true },
     ];
-    if (isStamp) {
-      defs.push({ id: "stampText",   vis: true });
-      defs.push({ id: "stampDesign", vis: true });
-    } else {
-      if (hasPaperStep)     defs.push({ id: "paper",     vis: true });
-      if (hasSidesStep)     defs.push({ id: "sides",     vis: true });
-      if (hasFinishingStep) defs.push({ id: "finishing",  vis: true });
-      for (const ex of printType.extras || []) {
-        defs.push({ id: `extra-${ex.key}`, vis: true });
-      }
-      defs.push({ id: "artwork", vis: true });
+    if (hasPaperStep)     defs.push({ id: "paper",     vis: true });
+    if (hasSidesStep)     defs.push({ id: "sides",     vis: true });
+    if (hasFinishingStep) defs.push({ id: "finishing",  vis: true });
+    for (const ex of printType.extras || []) {
+      defs.push({ id: `extra-${ex.key}`, vis: true });
     }
+    defs.push({ id: "artwork", vis: true });
     let n = 0;
     return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
-  }, [hideTypeSelector, isStamp, hasPaperStep, hasSidesStep, hasFinishingStep, printType.extras]);
+  }, [hideTypeSelector, hasPaperStep, hasSidesStep, hasFinishingStep, printType.extras]);
 
   const stepNum = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
   const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
@@ -272,13 +249,9 @@ export default function MarketingPrintOrderClient({
         });
       }
     }
-    if (isStamp) {
-      lines.push({ label: "Ink Color", value: stampColor === "#DC2626" ? "Red" : stampColor === "#2563EB" ? "Blue" : "Black" });
-      lines.push({ label: "Shape", value: stampShape === "round" ? "Round" : "Rectangle" });
-    }
     lines.push({ label: "Quantity", value: effectiveQty.toLocaleString() });
     return lines;
-  }, [hideTypeSelector, printType, sizeLabel, selectedPaper, paperId, paperSurchargePerUnit, hasPaperStep, hasSidesStep, sides, hasFinishingStep, finishing, extrasState, effectiveQty, extraSizes, isStamp, stampColor, stampShape]);
+  }, [hideTypeSelector, printType, sizeLabel, selectedPaper, paperId, paperSurchargePerUnit, hasPaperStep, hasSidesStep, sides, hasFinishingStep, finishing, extrasState, effectiveQty, extraSizes]);
 
   // Extra pricing rows for PricingSidebar
   const extraRows = useMemo(() => {
@@ -521,53 +494,7 @@ export default function MarketingPrintOrderClient({
               )}
             </StepCard>
 
-            {/* ── Stamp-specific: Design Your Stamp ── */}
-            {isStamp ? (
-              <>
-                <StepCard
-                  stepNumber={stepNum("stampText")}
-                  title={t("stamp.text", "Stamp Text")}
-                  summaryText={stampText.split("\n")[0]}
-                  open={isStepOpen("stampText")}
-                  onToggle={() => toggleStep("stampText")}
-                  stepId="step-stampText"
-                >
-                  <textarea
-                    rows={4}
-                    placeholder={t("stamp.textPlaceholder", "Enter your stamp text (one line per row)")}
-                    value={stampText}
-                    onChange={(e) => {
-                      setStampText(e.target.value);
-                      handleStampChange({ text: e.target.value });
-                    }}
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10 resize-none"
-                  />
-                  <p className="mt-1 text-xs text-gray-400">{t("stamp.textHint", "Each line will be displayed separately on the stamp")}</p>
-                </StepCard>
-
-                <StepCard
-                  stepNumber={stepNum("stampDesign")}
-                  title={t("stamp.design", "Design Your Stamp")}
-                  summaryText={`${stampShape === "round" ? "Round" : "Rectangle"}, ${stampColor === "#DC2626" ? "Red" : stampColor === "#2563EB" ? "Blue" : "Black"}`}
-                  open={isStepOpen("stampDesign")}
-                  onToggle={() => toggleStep("stampDesign")}
-                  stepId="step-stampDesign"
-                >
-                  <StampEditor
-                    shape={stampShape}
-                    widthIn={widthIn}
-                    heightIn={heightIn}
-                    diameterIn={stampShape === "round" ? widthIn : undefined}
-                    text={stampText}
-                    font={stampFont}
-                    color={stampColor}
-                    onChange={handleStampChange}
-                  />
-                </StepCard>
-              </>
-            ) : (
-              <>
-                {/* Step: Paper / Stock (hidden if single option) */}
+            {/* Step: Paper / Stock (hidden if single option) */}
                 {hasPaperStep && (
                   <StepCard
                     stepNumber={stepNum("paper")}
@@ -729,8 +656,6 @@ export default function MarketingPrintOrderClient({
                     />
                   )}
                 </StepCard>
-              </>
-            )}
           </div>
 
           {/* RIGHT COLUMN */}
