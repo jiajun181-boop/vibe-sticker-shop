@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { isSvgImage } from "@/lib/product-image";
 
 export default function ConfigProductGallery({ images, inline }) {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -30,7 +31,7 @@ export default function ConfigProductGallery({ images, inline }) {
   const main = images[activeIdx] || images[0];
 
   const inner = (
-    <div className="overflow-hidden rounded-2xl bg-gray-50">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
         {/* Main image */}
         <div className="relative aspect-[4/3] w-full sm:aspect-[16/9]">
           <Image
@@ -38,8 +39,9 @@ export default function ConfigProductGallery({ images, inline }) {
             alt={main.alt || main.altOverride || "Product image"}
             fill
             className="object-contain"
-            sizes="(max-width: 768px) 100vw, 1600px"
+            sizes="(max-width: 768px) 100vw, 800px"
             priority
+            unoptimized={isSvgImage(main.url)}
           />
         </div>
 
@@ -51,10 +53,10 @@ export default function ConfigProductGallery({ images, inline }) {
                 key={img.id || i}
                 type="button"
                 onClick={() => setActiveIdx(i)}
-                className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 transition ${
+                className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
                   i === activeIdx
-                    ? "border-indigo-600 ring-2 ring-indigo-600/30"
-                    : "border-gray-200 hover:border-gray-400"
+                    ? "border-gray-900 ring-2 ring-gray-200"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
               >
                 <Image
@@ -63,6 +65,7 @@ export default function ConfigProductGallery({ images, inline }) {
                   fill
                   className="object-cover"
                   sizes="64px"
+                  unoptimized={isSvgImage(img.url)}
                 />
               </button>
             ))}

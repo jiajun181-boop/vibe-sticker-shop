@@ -45,6 +45,7 @@ export default function StampEditor({
   font = "Helvetica",
   color = "#111111",
   onChange,
+  hideInkColor = false,
 }) {
   const { t } = useTranslation();
   const canvasRef = useRef(null);
@@ -310,7 +311,7 @@ export default function StampEditor({
     if (tmpl.border) setBorderId(tmpl.border);
     if (onChange) {
       onChange({
-        color: tmpl.color,
+        ...(hideInkColor ? {} : { color: tmpl.color }),
         text: tmpl.text,
         font: tmpl.font,
         curveAmount: tmpl.curve ?? curveAmount,
@@ -378,21 +379,23 @@ export default function StampEditor({
       <StampFontPicker selected={font} onSelect={handleFontSelect} />
 
       {/* Ink color presets */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.inkColor")}</p>
-        <div className="flex flex-wrap gap-2">
-          {INK_COLORS.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => handleColorSelect(c.hex)}
-              title={t(c.labelKey)}
-              className={`h-9 w-9 rounded-full border-2 transition-transform hover:scale-110 ${color === c.hex ? "border-[var(--color-gray-900)] ring-2 ring-gray-300 scale-110" : "border-[var(--color-gray-200)]"}`}
-              style={{ backgroundColor: c.hex }}
-            />
-          ))}
+      {!hideInkColor && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.inkColor")}</p>
+          <div className="flex flex-wrap gap-2">
+            {INK_COLORS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => handleColorSelect(c.hex)}
+                title={t(c.labelKey)}
+                className={`h-9 w-9 rounded-full border-2 transition-transform hover:scale-110 ${color === c.hex ? "border-[var(--color-gray-900)] ring-2 ring-gray-300 scale-110" : "border-[var(--color-gray-200)]"}`}
+                style={{ backgroundColor: c.hex }}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Border selector */}
       <StampBorderPicker selected={borderId} color={color} onSelect={handleBorderSelect} />

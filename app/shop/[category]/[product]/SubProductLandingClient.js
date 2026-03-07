@@ -9,7 +9,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import QuickAddButton from "@/components/product/QuickAddButton";
 import { useSearchParams } from "next/navigation";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
-import StampCardPreview from "@/components/product/stamp/StampCardPreview";
+import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -525,11 +525,10 @@ function ListIcon({ className }) {
 }
 
 function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel, parentSlug, idx = 0 }) {
-  const isStamp = parentSlug === "stamps";
   const image = product.images?.[0];
   const image2 = product.images?.[1];
-  const imageSrc = isStamp ? null : getProductImage(product, product.category);
-  const imageSrc2 = isStamp ? null : (image2?.url || null);
+  const imageSrc = getProductImage(product, product.category);
+  const imageSrc2 = image2?.url || null;
   const sizeCount = product.optionsConfig?.sizes?.length || 0;
   const tk = getTurnaround(product);
   const price = product.fromPrice || product.basePrice;
@@ -542,9 +541,7 @@ function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel, paren
     >
       <Link href={href} className="block">
       <div className="relative aspect-[4/3] bg-[var(--color-gray-100)]">
-        {isStamp ? (
-          <StampCardPreview index={idx} />
-        ) : imageSrc ? (
+        {imageSrc ? (
           <>
             <Image
               src={imageSrc}
@@ -611,9 +608,8 @@ function ProductCardGrid({ product, href, selectedSpec, t, viewOrderLabel, paren
 }
 
 function ProductCardList({ product, href, selectedSpec, t, viewOrderLabel, parentSlug, idx = 0 }) {
-  const isStamp = parentSlug === "stamps";
   const image = product.images?.[0];
-  const imageSrc = isStamp ? null : getProductImage(product, product.category);
+  const imageSrc = getProductImage(product, product.category);
   const sizeCount = product.optionsConfig?.sizes?.length || 0;
   const tk = getTurnaround(product);
   const price = product.fromPrice || product.basePrice;
@@ -626,9 +622,7 @@ function ProductCardList({ product, href, selectedSpec, t, viewOrderLabel, paren
     >
       <Link href={href} className="flex min-w-0 flex-1 overflow-hidden">
       <div className="relative w-32 sm:w-40 shrink-0 bg-[var(--color-gray-100)]">
-        {isStamp ? (
-          <StampCardPreview index={idx} />
-        ) : imageSrc ? (
+        {imageSrc ? (
           <Image
             src={imageSrc}
             alt={image?.alt || product.name}
@@ -771,38 +765,86 @@ export default function SubProductLandingClient({
           </div>
         </header>
 
-        {/* Product Cards */}
-        {viewMode === "grid" ? (
-          <div className="mt-6 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-            {products.map((product, idx) => (
-              <ProductCardGrid
-                key={product.id}
-                product={product}
-                href={`/shop/${product.category}/${product.slug}`}
-                selectedSpec={selectedSpec}
-                t={t}
-                viewOrderLabel={viewOrderLabel}
-                parentSlug={parentSlug}
-                idx={idx}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="mt-6 flex flex-col gap-3">
-            {products.map((product, idx) => (
-              <ProductCardList
-                key={product.id}
-                product={product}
-                href={`/shop/${product.category}/${product.slug}`}
-                selectedSpec={selectedSpec}
-                t={t}
-                viewOrderLabel={viewOrderLabel}
-                parentSlug={parentSlug}
-                idx={idx}
-              />
-            ))}
-          </div>
-        )}
+        {/* Product Cards — grouped or flat */}
+        {(() => {
+          const groups = SUB_PRODUCT_CONFIG[parentSlug]?.groups;
+          if (groups && groups.length > 0) {
+            // Grouped rendering (e.g. stamps: Office vs Personalized)
+            return groups.map((group) => {
+              const slugSet = new Set(group.slugs);
+              const groupProducts = products.filter((p) => slugSet.has(p.slug));
+              if (groupProducts.length === 0) return null;
+              return (
+                <div key={group.id} className="mt-8 first:mt-6">
+                  <h2 className="text-lg font-semibold tracking-tight text-[var(--color-gray-900)]">{group.label}</h2>
+                  {viewMode === "grid" ? (
+                    <div className="mt-3 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                      {groupProducts.map((product, idx) => (
+                        <ProductCardGrid
+                          key={product.id}
+                          product={product}
+                          href={`/shop/${product.category}/${product.slug}`}
+                          selectedSpec={selectedSpec}
+                          t={t}
+                          viewOrderLabel={viewOrderLabel}
+                          parentSlug={parentSlug}
+                          idx={idx}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-3 flex flex-col gap-3">
+                      {groupProducts.map((product, idx) => (
+                        <ProductCardList
+                          key={product.id}
+                          product={product}
+                          href={`/shop/${product.category}/${product.slug}`}
+                          selectedSpec={selectedSpec}
+                          t={t}
+                          viewOrderLabel={viewOrderLabel}
+                          parentSlug={parentSlug}
+                          idx={idx}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            });
+          }
+          // Flat rendering (default)
+          return viewMode === "grid" ? (
+            <div className="mt-6 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+              {products.map((product, idx) => (
+                <ProductCardGrid
+                  key={product.id}
+                  product={product}
+                  href={`/shop/${product.category}/${product.slug}`}
+                  selectedSpec={selectedSpec}
+                  t={t}
+                  viewOrderLabel={viewOrderLabel}
+                  parentSlug={parentSlug}
+                  idx={idx}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 flex flex-col gap-3">
+              {products.map((product, idx) => (
+                <ProductCardList
+                  key={product.id}
+                  product={product}
+                  href={`/shop/${product.category}/${product.slug}`}
+                  selectedSpec={selectedSpec}
+                  t={t}
+                  viewOrderLabel={viewOrderLabel}
+                  parentSlug={parentSlug}
+                  idx={idx}
+                />
+              ))}
+            </div>
+          );
+        })()}
 
         {products.length === 0 && (
           <p className="mt-8 text-center text-sm text-[var(--color-gray-500)]">

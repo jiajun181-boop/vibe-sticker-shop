@@ -1,16 +1,16 @@
 import { Suspense } from "react";
 import { getOrderPageImages } from "@/lib/order-page-images";
-import MarketingPrintOrderClient from "@/app/order/marketing-print/MarketingPrintOrderClient";
+import StampOrderClient from "@/components/stamp/StampOrderClient";
 
 export function generateMetadata() {
   return {
     title: "Custom Self-Inking Stamps — Order Online",
     description:
-      "Order custom self-inking stamps online. Rectangular and round models with built-in ink pad and custom artwork.",
+      "Order custom self-inking stamps online. Choose your model, enter text, design your stamp, and order.",
     openGraph: {
       title: "Custom Self-Inking Stamps — Order Online",
       description:
-        "Configure and order custom stamps. Choose model, ink color, and upload your design.",
+        "Configure and order custom stamps. Choose model, enter your text, and upload your logo.",
       url: "/order/stamps",
     },
     alternates: { canonical: "https://www.lunarprint.ca/order/stamps" },
@@ -28,7 +28,7 @@ export default async function StampOrderPage() {
         </div>
       }
     >
-      <MarketingPrintOrderClient defaultType="stamps" hideTypeSelector productImages={productImages} />
+      <StampOrderClient productImages={productImages} />
     </Suspense>
   );
 }
