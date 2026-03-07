@@ -18,7 +18,6 @@ import {
   StepCard,
   OptionCard,
   OptionGrid,
-  useStepScroll,
 } from "@/components/configurator";
 import QuantityScroller from "@/components/configurator/QuantityScroller";
 
@@ -114,24 +113,9 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
     setStampConfig((prev) => ({ ...prev, ...safePatch }));
   }, []);
 
-  // ── Steps (4 steps — no ink color) ──
-  const [activeStepId, setActiveStepId] = useState(null);
-  const visibleSteps = useMemo(() => {
-    const defs = [
-      { id: "model",       vis: true },
-      { id: "quantity",    vis: true },
-      { id: "stampText",   vis: true },
-      { id: "stampDesign", vis: true },
-    ];
-    let n = 0;
-    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
-  }, []);
-
-  const stepNum = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
-  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
-  const advanceStep = useStepScroll(stepIds, setActiveStepId);
-  const isStepOpen = (id) => activeStepId === "step-" + id;
-  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+  // ── Steps (all alwaysOpen — no collapsing) ──
+  const stepNums = { model: 1, quantity: 2, stampText: 3, stampDesign: 4 };
+  const stepNum = (id) => stepNums[id] || 0;
 
   // ── Summary lines ──
   const summaryLines = useMemo(() => [
@@ -166,7 +150,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
         ]}
       />
 
-      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
         <div className="md:grid md:grid-cols-3 md:gap-6 lg:gap-8">
           {/* LEFT COLUMN */}
           <div className="space-y-2 sm:space-y-3 md:col-span-2">
@@ -190,8 +174,6 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
               title="Stamp Model"
               hint="Choose your stamp size"
               summaryText={sizeLabel}
-              open={isStepOpen("model")}
-              onToggle={() => toggleStep("model")}
               stepId="step-model"
               alwaysOpen
               compact
@@ -202,7 +184,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
                     key={m.id}
                     label={m.label}
                     selected={modelIdx === idx}
-                    onSelect={() => { setModelIdx(idx); advanceStep("step-model"); }}
+                    onSelect={() => setModelIdx(idx)}
                   />
                 ))}
               </OptionGrid>
@@ -214,8 +196,6 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
               title={t("marketingPrint.quantity", "Quantity")}
               hint={t("step.quantity.hint")}
               summaryText={`${effectiveQty} pcs`}
-              open={isStepOpen("quantity")}
-              onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
               alwaysOpen
               compact
@@ -223,7 +203,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
               <QuantityScroller
                 quantities={STAMP_QUANTITIES}
                 selected={quantity}
-                onSelect={(q) => { setQuantity(q); advanceStep("step-quantity"); }}
+                onSelect={(q) => setQuantity(q)}
                 t={t}
               />
             </StepCard>
@@ -233,9 +213,8 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
               stepNumber={stepNum("stampText")}
               title={t("stamp.text", "Stamp Text")}
               summaryText={stampText.split("\n")[0]}
-              open={isStepOpen("stampText")}
-              onToggle={() => toggleStep("stampText")}
               stepId="step-stampText"
+              alwaysOpen
             >
               <textarea
                 rows={4}
@@ -255,9 +234,8 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
               stepNumber={stepNum("stampDesign")}
               title={t("stamp.design", "Design Your Stamp")}
               summaryText={shape === "round" ? "Round" : "Rectangle"}
-              open={isStepOpen("stampDesign")}
-              onToggle={() => toggleStep("stampDesign")}
               stepId="step-stampDesign"
+              alwaysOpen
             >
               <StampEditor
                 shape={shape}
