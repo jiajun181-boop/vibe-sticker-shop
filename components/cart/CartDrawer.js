@@ -9,7 +9,7 @@ import { PaymentBadges } from "@/components/TrustBadges";
 import { trackBeginCheckout } from "@/lib/analytics";
 import useFocusTrap from "@/lib/useFocusTrap";
 import CartUpsell from "@/components/cart/CartUpsell";
-import { getProductImage } from "@/lib/product-image";
+import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { isOversizedProduct } from "@/lib/pickup-hints";
 
 const SHIPPING_COST = SHIPPING_OPTIONS.find((o) => o.id === "local")?.price ?? 1500;
@@ -384,7 +384,7 @@ export default function CartDrawer() {
                     <article key={item._cartId} className="rounded border border-[var(--color-gray-200)] p-4 transition-all duration-200 hover:shadow-sm">
                       <div className="flex items-start gap-3">
                         <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-sm bg-[var(--color-gray-100)]">
-                          <Image src={imageSrc} alt={item.name} fill className="object-cover" sizes="56px" />
+                          <Image src={imageSrc} alt={item.name} fill className="object-cover" sizes="56px" unoptimized={isSvgImage(imageSrc)} />
                         </div>
 
                         <div className="min-w-0 flex-1">
