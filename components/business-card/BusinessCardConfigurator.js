@@ -312,10 +312,10 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
         badges={[t("bc.badge.fullColor"), t("bc.badge.shipping"), t("bc.badge.proof")]}
       />
 
-      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* LEFT COLUMN — Steps */}
-          <div className="space-y-3 lg:col-span-2">
+          <div className="space-y-2 sm:space-y-3 lg:col-span-2">
 
             {/* Product Gallery */}
             {productImages?.length > 0 && (

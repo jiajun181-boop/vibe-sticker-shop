@@ -312,7 +312,7 @@ export default function MarketingPrintOrderClient({
           t("marketingPrint.badgeProof", "Free digital proof"),
         ]}
       />
-      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
         <div className="md:grid md:grid-cols-3 md:gap-6 lg:gap-8">
           {/* LEFT COLUMN */}
           <div className="space-y-2 sm:space-y-3 md:col-span-2">
@@ -632,6 +632,7 @@ export default function MarketingPrintOrderClient({
                     onToggle={() => toggleStep("finishing")}
                     stepId="step-finishing"
                     alwaysOpen
+                    compact
                   >
                     <OptionGrid columns={printType.finishings.length <= 4 ? printType.finishings.length : 4} label={t("marketingPrint.finishing", "Finishing")}>
                       {printType.finishings.map((f) => (
@@ -658,6 +659,8 @@ export default function MarketingPrintOrderClient({
                       open={isStepOpen(`extra-${ex.key}`)}
                       onToggle={() => toggleStep(`extra-${ex.key}`)}
                       stepId={`step-extra-${ex.key}`}
+                      alwaysOpen
+                      compact
                     >
                       <OptionGrid columns={ex.options.length <= 4 ? ex.options.length : 4} label={ex.label}>
                         {ex.options.map((opt) => (
