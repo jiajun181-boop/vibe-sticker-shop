@@ -124,7 +124,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
     return {
       id: model.slug,
       slug: model.slug,
-      name: `Self-Inking Stamp — ${sizeLabel}`,
+      name: preset ? preset.name : `Self-Inking Stamp — ${sizeLabel}`,
       price: quote.unitCents || 0,
       quantity: effectiveQty,
       image: null,
@@ -144,7 +144,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
-    successMessage: "Self-Inking Stamp added to cart!",
+    successMessage: preset ? `${preset.name} added to cart!` : "Self-Inking Stamp added to cart!",
   });
 
   // ── Stamp editor callback ──
@@ -156,16 +156,21 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
   }, []);
 
   // ── Steps (all alwaysOpen — no collapsing) ──
-  const stepNums = { model: 1, quantity: 2, stampText: 3, stampDesign: 4 };
+  // When uploadFirst: Design(1) → Model(2) → Text(3) → Quantity(4)
+  // Default:          Model(1) → Quantity(2) → Text(3) → Design(4)
+  const stepNums = preset?.uploadFirst
+    ? { stampDesign: 1, model: 2, stampText: 3, quantity: 4 }
+    : { model: 1, quantity: 2, stampText: 3, stampDesign: 4 };
   const stepNum = (id) => stepNums[id] || 0;
 
   // ── Summary lines ──
   const summaryLines = useMemo(() => [
+    ...(preset ? [{ label: "Product", value: preset.name }] : []),
     { label: "Model", value: sizeLabel },
     { label: "Shape", value: shape === "round" ? "Round" : "Rectangle" },
     { label: "Ink", value: "Black" },
     { label: "Quantity", value: effectiveQty.toLocaleString() },
-  ], [sizeLabel, shape, effectiveQty]);
+  ], [sizeLabel, shape, effectiveQty, preset]);
 
   // ── Hero text ──
   const heroTitle = preset ? preset.name : "Custom Self-Inking Stamps";
@@ -186,7 +191,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
         title={heroTitle}
         subtitle={heroSubtitle}
         badges={[
-          "Built-in ink pad",
+          preset?.badge || "Built-in ink pad",
           t("marketingPrint.badgeShipping", "Fast shipping"),
           t("marketingPrint.badgeProof", "Free digital proof"),
         ]}
@@ -202,95 +207,192 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
               <ConfigProductGallery images={productImages} inline />
             )}
 
-            {/* Halftone hint for Custom Face Stamp */}
-            {preset?.halftoneHint && (
+            {/* Halftone hint for Custom Face Stamp (only when NOT uploadFirst — uploadFirst puts upload at top) */}
+            {preset?.halftoneHint && !preset?.uploadFirst && (
               <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                 <p className="text-sm font-semibold text-amber-800">Upload your face photo in Step 4</p>
                 <p className="mt-0.5 text-xs text-amber-700">Use the halftone feature in the design editor to convert your photo into a stamp-ready image.</p>
               </div>
             )}
 
-            {/* Step 1: Model / Size */}
-            <StepCard
-              stepNumber={stepNum("model")}
-              title="Stamp Model"
-              hint="Choose your stamp size"
-              summaryText={sizeLabel}
-              stepId="step-model"
-              alwaysOpen
-              compact
-            >
-              <OptionGrid columns={4} label="Stamp Model">
-                {STAMP_MODELS.map((m, idx) => (
-                  <OptionCard
-                    key={m.id}
-                    label={m.label}
-                    selected={modelIdx === idx}
-                    onSelect={() => setModelIdx(idx)}
+            {/* Preset tagline card */}
+            {preset?.tagline && (
+              <div className="rounded-xl border border-teal-200 bg-teal-50 px-4 py-3">
+                <p className="text-sm text-teal-900">{preset.tagline}</p>
+              </div>
+            )}
+
+            {/* Steps — reorder when uploadFirst */}
+            {preset?.uploadFirst ? (
+              <>
+                {/* Step 1: Design Your Stamp (upload-first) */}
+                <StepCard
+                  stepNumber={stepNum("stampDesign")}
+                  title={t("stamp.design", "Design Your Stamp")}
+                  summaryText={shape === "round" ? "Round" : "Rectangle"}
+                  stepId="step-stampDesign"
+                  alwaysOpen
+                >
+                  <StampEditor
+                    shape={shape}
+                    widthIn={widthIn}
+                    heightIn={heightIn}
+                    diameterIn={shape === "round" ? widthIn : undefined}
+                    text={stampText}
+                    font={stampFont}
+                    color={INK_COLOR}
+                    onChange={handleStampChange}
+                    hideInkColor
+                    uploadFirst
                   />
-                ))}
-              </OptionGrid>
-            </StepCard>
+                </StepCard>
 
-            {/* Step 2: Quantity */}
-            <StepCard
-              stepNumber={stepNum("quantity")}
-              title={t("marketingPrint.quantity", "Quantity")}
-              hint={t("step.quantity.hint")}
-              summaryText={`${effectiveQty} pcs`}
-              stepId="step-quantity"
-              alwaysOpen
-              compact
-            >
-              <QuantityScroller
-                quantities={STAMP_QUANTITIES}
-                selected={quantity}
-                onSelect={(q) => setQuantity(q)}
-                t={t}
-              />
-            </StepCard>
+                {/* Step 2: Model / Size */}
+                <StepCard
+                  stepNumber={stepNum("model")}
+                  title="Stamp Model"
+                  hint="Choose your stamp size"
+                  summaryText={sizeLabel}
+                  stepId="step-model"
+                  alwaysOpen
+                  compact
+                >
+                  <OptionGrid columns={4} label="Stamp Model">
+                    {STAMP_MODELS.map((m, idx) => (
+                      <OptionCard
+                        key={m.id}
+                        label={m.label}
+                        selected={modelIdx === idx}
+                        onSelect={() => setModelIdx(idx)}
+                      />
+                    ))}
+                  </OptionGrid>
+                </StepCard>
 
-            {/* Step 3: Stamp Text */}
-            <StepCard
-              stepNumber={stepNum("stampText")}
-              title={t("stamp.text", "Stamp Text")}
-              summaryText={stampText.split("\n")[0]}
-              stepId="step-stampText"
-              alwaysOpen
-            >
-              <textarea
-                rows={4}
-                placeholder={t("stamp.textPlaceholder", "Enter your stamp text (one line per row)")}
-                value={stampText}
-                onChange={(e) => {
-                  setStampText(e.target.value);
-                  handleStampChange({ text: e.target.value });
-                }}
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10 resize-none"
-              />
-              <p className="mt-1 text-xs text-gray-400">{t("stamp.textHint", "Each line will be displayed separately on the stamp")}</p>
-            </StepCard>
+                {/* Step 3: Stamp Text */}
+                <StepCard
+                  stepNumber={stepNum("stampText")}
+                  title={t("stamp.text", "Stamp Text")}
+                  summaryText={stampText.split("\n")[0]}
+                  stepId="step-stampText"
+                  alwaysOpen
+                >
+                  <textarea
+                    rows={4}
+                    placeholder={t("stamp.textPlaceholder", "Enter your stamp text (one line per row)")}
+                    value={stampText}
+                    onChange={(e) => {
+                      setStampText(e.target.value);
+                      handleStampChange({ text: e.target.value });
+                    }}
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10 resize-none"
+                  />
+                  <p className="mt-1 text-xs text-gray-400">{t("stamp.textHint", "Each line will be displayed separately on the stamp")}</p>
+                </StepCard>
 
-            {/* Step 4: Design Your Stamp */}
-            <StepCard
-              stepNumber={stepNum("stampDesign")}
-              title={t("stamp.design", "Design Your Stamp")}
-              summaryText={shape === "round" ? "Round" : "Rectangle"}
-              stepId="step-stampDesign"
-              alwaysOpen
-            >
-              <StampEditor
-                shape={shape}
-                widthIn={widthIn}
-                heightIn={heightIn}
-                diameterIn={shape === "round" ? widthIn : undefined}
-                text={stampText}
-                font={stampFont}
-                color={INK_COLOR}
-                onChange={handleStampChange}
-                hideInkColor
-              />
-            </StepCard>
+                {/* Step 4: Quantity */}
+                <StepCard
+                  stepNumber={stepNum("quantity")}
+                  title={t("marketingPrint.quantity", "Quantity")}
+                  hint={t("step.quantity.hint")}
+                  summaryText={`${effectiveQty} pcs`}
+                  stepId="step-quantity"
+                  alwaysOpen
+                  compact
+                >
+                  <QuantityScroller
+                    quantities={STAMP_QUANTITIES}
+                    selected={quantity}
+                    onSelect={(q) => setQuantity(q)}
+                    t={t}
+                  />
+                </StepCard>
+              </>
+            ) : (
+              <>
+                {/* Step 1: Model / Size */}
+                <StepCard
+                  stepNumber={stepNum("model")}
+                  title="Stamp Model"
+                  hint="Choose your stamp size"
+                  summaryText={sizeLabel}
+                  stepId="step-model"
+                  alwaysOpen
+                  compact
+                >
+                  <OptionGrid columns={4} label="Stamp Model">
+                    {STAMP_MODELS.map((m, idx) => (
+                      <OptionCard
+                        key={m.id}
+                        label={m.label}
+                        selected={modelIdx === idx}
+                        onSelect={() => setModelIdx(idx)}
+                      />
+                    ))}
+                  </OptionGrid>
+                </StepCard>
+
+                {/* Step 2: Quantity */}
+                <StepCard
+                  stepNumber={stepNum("quantity")}
+                  title={t("marketingPrint.quantity", "Quantity")}
+                  hint={t("step.quantity.hint")}
+                  summaryText={`${effectiveQty} pcs`}
+                  stepId="step-quantity"
+                  alwaysOpen
+                  compact
+                >
+                  <QuantityScroller
+                    quantities={STAMP_QUANTITIES}
+                    selected={quantity}
+                    onSelect={(q) => setQuantity(q)}
+                    t={t}
+                  />
+                </StepCard>
+
+                {/* Step 3: Stamp Text */}
+                <StepCard
+                  stepNumber={stepNum("stampText")}
+                  title={t("stamp.text", "Stamp Text")}
+                  summaryText={stampText.split("\n")[0]}
+                  stepId="step-stampText"
+                  alwaysOpen
+                >
+                  <textarea
+                    rows={4}
+                    placeholder={t("stamp.textPlaceholder", "Enter your stamp text (one line per row)")}
+                    value={stampText}
+                    onChange={(e) => {
+                      setStampText(e.target.value);
+                      handleStampChange({ text: e.target.value });
+                    }}
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10 resize-none"
+                  />
+                  <p className="mt-1 text-xs text-gray-400">{t("stamp.textHint", "Each line will be displayed separately on the stamp")}</p>
+                </StepCard>
+
+                {/* Step 4: Design Your Stamp */}
+                <StepCard
+                  stepNumber={stepNum("stampDesign")}
+                  title={t("stamp.design", "Design Your Stamp")}
+                  summaryText={shape === "round" ? "Round" : "Rectangle"}
+                  stepId="step-stampDesign"
+                  alwaysOpen
+                >
+                  <StampEditor
+                    shape={shape}
+                    widthIn={widthIn}
+                    heightIn={heightIn}
+                    diameterIn={shape === "round" ? widthIn : undefined}
+                    text={stampText}
+                    font={stampFont}
+                    color={INK_COLOR}
+                    onChange={handleStampChange}
+                    hideInkColor
+                  />
+                </StepCard>
+              </>
+            )}
           </div>
 
           {/* RIGHT COLUMN — Pricing Sidebar */}

@@ -46,6 +46,7 @@ export default function StampEditor({
   color = "#111111",
   onChange,
   hideInkColor = false,
+  uploadFirst = false,
 }) {
   const { t } = useTranslation();
   const canvasRef = useRef(null);
@@ -350,119 +351,141 @@ export default function StampEditor({
     notifyParent({ halftoneIntensity: intensity });
   }
 
+  // ── Shared sub-sections ──────────────────────────
+  const canvasPreview = (
+    <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-3">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("stamp.preview")}</p>
+        <button
+          type="button"
+          onClick={() => setShowRef((v) => !v)}
+          className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${showRef ? "bg-[var(--color-gray-900)] text-[#fff] border-[var(--color-gray-900)]" : "text-[var(--color-gray-500)] border-[var(--color-gray-300)] hover:border-[var(--color-gray-500)]"}`}
+        >
+          {t("stamp.sizeReference")}
+        </button>
+      </div>
+      <div className="relative mx-auto w-full max-w-[260px] sm:max-w-[360px] md:max-w-[450px] lg:max-w-[500px] xl:max-w-[600px]">
+        <canvas
+          ref={canvasRef}
+          style={{ width: "100%", height: "100%" }}
+          className="rounded-xl bg-white"
+        />
+      </div>
+      <p className="mt-2 text-center text-[10px] text-[var(--color-gray-400)]">{t("stamp.previewHint")}</p>
+    </div>
+  );
+
+  const uploadSection = (
+    <StampHalftoneUpload
+      logoFile={logoFile}
+      logoScale={logoScale}
+      halftoneEnabled={halftoneEnabled}
+      halftoneIntensity={halftoneIntensity}
+      color={color}
+      onLogoUpload={handleLogoUpload}
+      onLogoRemove={handleLogoRemove}
+      onLogoScaleChange={setLogoScale}
+      onHalftoneToggle={handleHalftoneToggle}
+      onHalftoneIntensityChange={handleHalftoneIntensityChange}
+      halftoneDataRef={halftoneCanvasRef}
+    />
+  );
+
+  const fontSection = <StampFontPicker selected={font} onSelect={handleFontSelect} />;
+
+  const inkColorSection = !hideInkColor && (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.inkColor")}</p>
+      <div className="flex flex-wrap gap-2">
+        {INK_COLORS.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => handleColorSelect(c.hex)}
+            title={t(c.labelKey)}
+            className={`h-9 w-9 rounded-full border-2 transition-transform hover:scale-110 ${color === c.hex ? "border-[var(--color-gray-900)] ring-2 ring-gray-300 scale-110" : "border-[var(--color-gray-200)]"}`}
+            style={{ backgroundColor: c.hex }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
+  const borderSection = <StampBorderPicker selected={borderId} color={color} onSelect={handleBorderSelect} />;
+
+  const curveSection = shape === "round" && (
+    <div>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("stamp.curveAmount")}</p>
+        <span className="text-xs text-[var(--color-gray-500)]">{curveAmount}%</span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={curveAmount}
+        onChange={(e) => handleCurveChange(Number(e.target.value))}
+        className="mt-1 w-full accent-gray-900"
+      />
+      <p className="text-[10px] text-[var(--color-gray-400)]">{t("stamp.curveHint")}</p>
+    </div>
+  );
+
+  const templateSection = (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.templates")}</p>
+      <div className="flex flex-wrap gap-1 mb-2">
+        {STAMP_TEMPLATE_CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => setTemplateCat(cat)}
+            className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${templateCat === cat ? "bg-[var(--color-gray-900)] text-[#fff]" : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-200)]"}`}
+          >
+            {t(`stamp.templateCat.${cat}`)}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {STAMP_TEMPLATES.filter((tmpl) => tmpl.cat === templateCat).map((tmpl) => (
+          <button
+            key={tmpl.id}
+            type="button"
+            onClick={() => handleTemplateSelect(tmpl)}
+            className="rounded-xl border border-[var(--color-gray-200)] px-2 py-2 text-left hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-50)] transition-colors"
+          >
+            <span className="block text-xs font-semibold text-[var(--color-gray-900)]">{tmpl.label}</span>
+            <span className="block mt-0.5 text-[10px] text-[var(--color-gray-500)] line-clamp-1">{tmpl.text.split("\n")[0]}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   // ── Render ────────────────────────────────────────
   return (
     <div className="space-y-4">
-      {/* Canvas preview */}
-      <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-3">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("stamp.preview")}</p>
-          <button
-            type="button"
-            onClick={() => setShowRef((v) => !v)}
-            className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${showRef ? "bg-[var(--color-gray-900)] text-[#fff] border-[var(--color-gray-900)]" : "text-[var(--color-gray-500)] border-[var(--color-gray-300)] hover:border-[var(--color-gray-500)]"}`}
-          >
-            {t("stamp.sizeReference")}
-          </button>
-        </div>
-        <div className="relative mx-auto w-full max-w-[260px] sm:max-w-[360px] md:max-w-[450px] lg:max-w-[500px] xl:max-w-[600px]">
-          <canvas
-            ref={canvasRef}
-            style={{ width: "100%", height: "100%" }}
-            className="rounded-xl bg-white"
-          />
-        </div>
-        <p className="mt-2 text-center text-[10px] text-[var(--color-gray-400)]">{t("stamp.previewHint")}</p>
-      </div>
-
-      {/* Font selector */}
-      <StampFontPicker selected={font} onSelect={handleFontSelect} />
-
-      {/* Ink color presets */}
-      {!hideInkColor && (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.inkColor")}</p>
-          <div className="flex flex-wrap gap-2">
-            {INK_COLORS.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => handleColorSelect(c.hex)}
-                title={t(c.labelKey)}
-                className={`h-9 w-9 rounded-full border-2 transition-transform hover:scale-110 ${color === c.hex ? "border-[var(--color-gray-900)] ring-2 ring-gray-300 scale-110" : "border-[var(--color-gray-200)]"}`}
-                style={{ backgroundColor: c.hex }}
-              />
-            ))}
-          </div>
-        </div>
+      {uploadFirst ? (
+        <>
+          {uploadSection}
+          {canvasPreview}
+          {fontSection}
+          {inkColorSection}
+          {borderSection}
+          {curveSection}
+          {templateSection}
+        </>
+      ) : (
+        <>
+          {canvasPreview}
+          {fontSection}
+          {inkColorSection}
+          {borderSection}
+          {curveSection}
+          {uploadSection}
+          {templateSection}
+        </>
       )}
-
-      {/* Border selector */}
-      <StampBorderPicker selected={borderId} color={color} onSelect={handleBorderSelect} />
-
-      {/* Curve slider (round stamps only) */}
-      {shape === "round" && (
-        <div>
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("stamp.curveAmount")}</p>
-            <span className="text-xs text-[var(--color-gray-500)]">{curveAmount}%</span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={curveAmount}
-            onChange={(e) => handleCurveChange(Number(e.target.value))}
-            className="mt-1 w-full accent-gray-900"
-          />
-          <p className="text-[10px] text-[var(--color-gray-400)]">{t("stamp.curveHint")}</p>
-        </div>
-      )}
-
-      {/* Image upload with halftone */}
-      <StampHalftoneUpload
-        logoFile={logoFile}
-        logoScale={logoScale}
-        halftoneEnabled={halftoneEnabled}
-        halftoneIntensity={halftoneIntensity}
-        color={color}
-        onLogoUpload={handleLogoUpload}
-        onLogoRemove={handleLogoRemove}
-        onLogoScaleChange={setLogoScale}
-        onHalftoneToggle={handleHalftoneToggle}
-        onHalftoneIntensityChange={handleHalftoneIntensityChange}
-        halftoneDataRef={halftoneCanvasRef}
-      />
-
-      {/* Template selector */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("stamp.templates")}</p>
-        <div className="flex flex-wrap gap-1 mb-2">
-          {STAMP_TEMPLATE_CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setTemplateCat(cat)}
-              className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${templateCat === cat ? "bg-[var(--color-gray-900)] text-[#fff]" : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)] hover:bg-[var(--color-gray-200)]"}`}
-            >
-              {t(`stamp.templateCat.${cat}`)}
-            </button>
-          ))}
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {STAMP_TEMPLATES.filter((tmpl) => tmpl.cat === templateCat).map((tmpl) => (
-            <button
-              key={tmpl.id}
-              type="button"
-              onClick={() => handleTemplateSelect(tmpl)}
-              className="rounded-xl border border-[var(--color-gray-200)] px-2 py-2 text-left hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-50)] transition-colors"
-            >
-              <span className="block text-xs font-semibold text-[var(--color-gray-900)]">{tmpl.label}</span>
-              <span className="block mt-0.5 text-[10px] text-[var(--color-gray-500)] line-clamp-1">{tmpl.text.split("\n")[0]}</span>
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
