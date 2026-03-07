@@ -578,6 +578,7 @@ export default function MarketingPrintOrderClient({
                     stepId="step-paper"
                     alwaysOpen
                     compact
+                    inline={printType.papers.length <= 2}
                   >
                     <OptionGrid columns={printType.papers.length <= 3 ? printType.papers.length : 3} label={t("marketingPrint.paper", "Paper / Stock")}>
                       {printType.papers.map((p) => (
@@ -606,6 +607,7 @@ export default function MarketingPrintOrderClient({
                     stepId="step-sides"
                     alwaysOpen
                     compact
+                    inline
                   >
                     <OptionGrid columns={2} label={t("marketingPrint.sides", "Print Sides")}>
                       <OptionCard
@@ -633,6 +635,7 @@ export default function MarketingPrintOrderClient({
                     stepId="step-finishing"
                     alwaysOpen
                     compact
+                    inline={printType.finishings.length <= 3}
                   >
                     <OptionGrid columns={printType.finishings.length <= 4 ? printType.finishings.length : 4} label={t("marketingPrint.finishing", "Finishing")}>
                       {printType.finishings.map((f) => (
@@ -661,6 +664,7 @@ export default function MarketingPrintOrderClient({
                       stepId={`step-extra-${ex.key}`}
                       alwaysOpen
                       compact
+                      inline={ex.options.length <= 3}
                     >
                       <OptionGrid columns={ex.options.length <= 4 ? ex.options.length : 4} label={ex.label}>
                         {ex.options.map((opt) => (

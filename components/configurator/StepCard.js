@@ -6,6 +6,11 @@ import { useState, useRef, useId } from "react";
  * Collapsible step card — wraps each configurator step.
  * Supports both controlled (open + onToggle) and uncontrolled (defaultOpen) modes.
  * CSS max-height transition for performance (no JS animation libs).
+ *
+ * Modes:
+ *  - compact + alwaysOpen           → label-above, no card shell
+ *  - compact + alwaysOpen + inline  → label-left, options-right, single row
+ *  - default                        → full card with header + collapsible body
  */
 export default function StepCard({
   stepNumber,
@@ -20,6 +25,7 @@ export default function StepCard({
   stepId,
   alwaysOpen = false,
   compact = false,
+  inline = false,
   children,
 }) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
@@ -41,11 +47,21 @@ export default function StepCard({
     }
   }
 
-  // Compact mode: no card wrapper, inline label + content, minimal vertical space
+  // Inline compact: label left, options right — single row for 2-3 option steps
+  if (compact && alwaysOpen && inline) {
+    return (
+      <div id={stepId} className="flex items-center gap-2 py-0.5">
+        <span className="text-xs font-bold text-gray-500 shrink-0 whitespace-nowrap">{title}</span>
+        <div className="min-w-0 flex-1">{children}</div>
+      </div>
+    );
+  }
+
+  // Compact mode: no card wrapper, label above + content below
   if (compact && alwaysOpen) {
     return (
-      <div id={stepId} className="py-1.5">
-        <div className="mb-1 flex items-center gap-1.5">
+      <div id={stepId} className="py-1">
+        <div className="mb-0.5 flex items-center gap-1.5">
           <span className="text-xs font-bold text-gray-500">{title}</span>
           {optional && <span className="text-[10px] text-gray-400">(Optional)</span>}
         </div>

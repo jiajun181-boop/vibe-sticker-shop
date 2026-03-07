@@ -334,6 +334,7 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
                 stepId="step-sides"
                 alwaysOpen
                 compact
+                inline
               >
                 <OptionGrid columns={2} label={t("bc.sides")}>
                   {SIDES.map((s) => (
@@ -363,8 +364,9 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
                 stepId="step-finishing"
                 alwaysOpen
                 compact
+                inline={config.finishingOptions.length <= 3}
               >
-                <OptionGrid columns={4} label={t("bc.finishChoice")}>
+                <OptionGrid columns={config.finishingOptions.length <= 3 ? config.finishingOptions.length : 4} label={t("bc.finishChoice")}>
                   {config.finishingOptions.map((opt) => (
                     <OptionCard
                       key={opt.id}
@@ -470,16 +472,19 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
                 open={isStepOpen("addons")}
                 onToggle={() => toggleStep("addons")}
                 stepId="step-addons"
+                alwaysOpen
+                compact
+                inline
               >
-                <label className="flex items-center gap-3 cursor-pointer rounded-xl border-2 border-gray-200 bg-white p-4 transition-colors hover:border-gray-400">
+                <label className="flex items-center gap-2 cursor-pointer rounded-lg border-2 border-gray-200 bg-white px-3 py-1.5 transition-colors hover:border-gray-400">
                   <input
                     type="checkbox"
                     checked={rounded}
                     onChange={(e) => setRounded(e.target.checked)}
                     className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                   />
-                  <span className="text-sm font-medium text-gray-700">{t("bc.addon.rounded")}</span>
-                  <span className="ml-auto text-[11px] font-bold text-amber-600">+$0.03/ea</span>
+                  <span className="text-xs font-medium text-gray-700">{t("bc.addon.rounded")}</span>
+                  <span className="ml-auto text-[10px] font-bold text-amber-600">+$0.03/ea</span>
                 </label>
               </StepCard>
             )}

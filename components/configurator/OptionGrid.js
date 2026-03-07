@@ -8,9 +8,9 @@ import { useCallback, useRef } from "react";
  * Static class map prevents Tailwind purge issues.
  */
 const COLS = {
-  2: "grid grid-cols-2 gap-2 sm:gap-2.5",
-  3: "grid grid-cols-2 gap-2 sm:gap-2.5 md:grid-cols-3",
-  4: "grid grid-cols-2 gap-2 sm:gap-2.5 md:grid-cols-4",
+  2: "grid grid-cols-2 gap-1.5 sm:gap-2.5",
+  3: "grid grid-cols-2 gap-1.5 sm:gap-2.5 md:grid-cols-3",
+  4: "grid grid-cols-2 gap-1.5 sm:gap-2.5 md:grid-cols-4",
 };
 
 export default function OptionGrid({ columns = 3, label, children }) {
