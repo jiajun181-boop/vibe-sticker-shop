@@ -311,7 +311,7 @@ export default function StampEditor({
     if (tmpl.border) setBorderId(tmpl.border);
     if (onChange) {
       onChange({
-        color: tmpl.color,
+        ...(hideInkColor ? {} : { color: tmpl.color }),
         text: tmpl.text,
         font: tmpl.font,
         curveAmount: tmpl.curve ?? curveAmount,

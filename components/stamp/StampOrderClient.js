@@ -109,7 +109,9 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
   // ── Stamp editor callback ──
   const handleStampChange = useCallback((patch) => {
     if (patch.font !== undefined) setStampFont(patch.font);
-    setStampConfig((prev) => ({ ...prev, ...patch }));
+    // Strip color from patch — ink is locked to black
+    const { color: _dropped, ...safePatch } = patch;
+    setStampConfig((prev) => ({ ...prev, ...safePatch }));
   }, []);
 
   // ── Steps (4 steps — no ink color) ──
