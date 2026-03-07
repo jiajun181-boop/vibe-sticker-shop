@@ -873,7 +873,7 @@ export default function ShopClient({
                 return (
                   <article key={product.id} className={`relative group overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white hover-lift-subtle ${viewMode === "list" ? "flex" : ""}`}>
                     <Link href={href} className={`relative block bg-[var(--color-gray-100)] ${viewMode === "list" ? "h-36 w-32 sm:h-44 sm:w-52 flex-shrink-0" : "aspect-[4/3]"}`}>
-                      <Image src={imageSrc} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1280px) 50vw, 25vw" unoptimized={isSvgImage(imageSrc)} />
+                      <Image src={imageSrc} alt={product.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw" unoptimized={isSvgImage(imageSrc)} />
                       {product.sortOrder != null && product.sortOrder <= 2 && (
                         <span className="absolute top-2 right-2 bg-amber-500 text-[#fff] text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-xl z-10">
                           {t("shop.popular")}
