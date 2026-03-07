@@ -20,6 +20,7 @@ import BusinessCardPreview from "@/components/business-card/BusinessCardPreview"
 import { getBusinessCardConfig, computeMultiNameFileFees } from "@/lib/business-card-configs";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -35,7 +36,7 @@ const formatCad = (cents) =>
 
 export default function BusinessCardConfigurator({ slug, productImages = [] }) {
   const config = getBusinessCardConfig(slug);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   // ── State ──
   const [sideId, setSideId] = useState(config.defaultSideId || "double");
@@ -311,10 +312,10 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
         badges={[t("bc.badge.fullColor"), t("bc.badge.shipping"), t("bc.badge.proof")]}
       />
 
-      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* LEFT COLUMN — Steps */}
-          <div className="space-y-3 lg:col-span-2">
+          <div className="space-y-2 sm:space-y-3 lg:col-span-2">
 
             {/* Product Gallery */}
             {productImages?.length > 0 && (
@@ -331,6 +332,9 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
                 open={isStepOpen("sides")}
                 onToggle={() => toggleStep("sides")}
                 stepId="step-sides"
+                alwaysOpen
+                compact
+                inline
               >
                 <OptionGrid columns={2} label={t("bc.sides")}>
                   {SIDES.map((s) => (
@@ -358,8 +362,11 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
                 open={isStepOpen("finishing")}
                 onToggle={() => toggleStep("finishing")}
                 stepId="step-finishing"
+                alwaysOpen
+                compact
+                inline={config.finishingOptions.length <= 3}
               >
-                <OptionGrid columns={4} label={t("bc.finishChoice")}>
+                <OptionGrid columns={config.finishingOptions.length <= 3 ? config.finishingOptions.length : 4} label={t("bc.finishChoice")}>
                   {config.finishingOptions.map((opt) => (
                     <OptionCard
                       key={opt.id}
@@ -465,16 +472,19 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
                 open={isStepOpen("addons")}
                 onToggle={() => toggleStep("addons")}
                 stepId="step-addons"
+                alwaysOpen
+                compact
+                inline
               >
-                <label className="flex items-center gap-3 cursor-pointer rounded-xl border-2 border-gray-200 bg-white p-4 transition-colors hover:border-gray-400">
+                <label className="flex items-center gap-2 cursor-pointer rounded-lg border-2 border-gray-200 bg-white px-3 py-1.5 transition-colors hover:border-gray-400">
                   <input
                     type="checkbox"
                     checked={rounded}
                     onChange={(e) => setRounded(e.target.checked)}
                     className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                   />
-                  <span className="text-sm font-medium text-gray-700">{t("bc.addon.rounded")}</span>
-                  <span className="ml-auto text-[11px] font-bold text-amber-600">+$0.03/ea</span>
+                  <span className="text-xs font-medium text-gray-700">{t("bc.addon.rounded")}</span>
+                  <span className="ml-auto text-[10px] font-bold text-amber-600">+$0.03/ea</span>
                 </label>
               </StepCard>
             )}
@@ -488,6 +498,8 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
+              compact
             >
               <QuantityScroller
                 quantities={config.quantities}
@@ -610,9 +622,20 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
             extraRows={extraRows}
             badges={[t("bc.badge.fullColor"), t("bc.badge.shipping"), t("bc.badge.proof")]}
             t={t}
+            categorySlug="marketing-business-print"
+            locale={locale}
+            productSlug={slug}
+            onRetryPrice={quote.retry}
           />
         </div>
       </div>
+
+      {/* Inline mobile delivery estimate */}
+      {!!quote.quoteData && (
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden">
+          <DeliveryEstimate categorySlug="marketing-business-print" t={t} locale={locale} />
+        </div>
+      )}
 
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
@@ -630,6 +653,9 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
+        categorySlug="marketing-business-print"
+        locale={locale}
+        onRetryPrice={quote.retry}
       />
 
       {/* FAQ Section */}

@@ -28,6 +28,7 @@ import QuantityScroller from "@/components/configurator/QuantityScroller";
 import VehiclePreview from "@/components/vehicle/VehiclePreview";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 
 const INCH_TO_CM = 2.54;
 
@@ -437,6 +438,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
             >
               <QuantityScroller
                 quantities={vehicleType.quantities}
@@ -511,6 +513,13 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
           </div>
         );
       })()}
+
+      {/* Inline mobile delivery estimate */}
+      {!!quote.quoteData && !isQuoteOnly && (
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden">
+          <DeliveryEstimate categorySlug="vehicle-graphics-fleet" t={t} locale={locale} />
+        </div>
+      )}
 
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}

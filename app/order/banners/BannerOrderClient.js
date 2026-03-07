@@ -24,6 +24,7 @@ import {
 } from "@/components/configurator";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 import { MATERIAL_META } from "@/components/configurator/MaterialSwatchGrid";
 
 const INCH_TO_CM = 2.54;
@@ -459,6 +460,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
             >
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
                 {bannerType.quantities.map((q) => {
@@ -550,6 +552,13 @@ export default function BannerOrderClient({ defaultType, productImages }) {
           </div>
         );
       })()}
+
+      {/* Inline mobile delivery estimate */}
+      {!!quote.quoteData && (
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden">
+          <DeliveryEstimate categorySlug="banners-displays" t={t} locale={locale} />
+        </div>
+      )}
 
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}

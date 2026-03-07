@@ -205,27 +205,8 @@ export default function MobileBottomBar({
             </>
           )}
         </div>
-        {/* Email quote (mobile) */}
-        {productName && unitCents > 0 && hasQuote && !quoteOnly && (
-          <div className="mx-auto mt-2 max-w-lg">
-            <EmailQuotePopover
-              productName={productName}
-              summaryLines={summaryLines || []}
-              unitCents={unitCents}
-              subtotalCents={subtotalCents}
-              quantity={quantity}
-              t={t}
-            />
-          </div>
-        )}
-        {/* Delivery estimate (mobile) */}
-        {categorySlug && hasQuote && !quoteOnly && (
-          <div className="mx-auto mt-2 max-w-lg">
-            <DeliveryEstimate categorySlug={categorySlug} t={t} locale={locale} />
-          </div>
-        )}
-        {/* Trust signals */}
-        <div className="mx-auto mt-2 flex max-w-lg items-center justify-center gap-3 text-[10px] text-gray-400">
+        {/* Trust signals — compact single line */}
+        <div className="mx-auto mt-1.5 flex max-w-lg items-center justify-center gap-3 text-[10px] text-gray-400">
           <span className="inline-flex items-center gap-0.5">
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
             {t?.("configurator.trustSecure") || "Secure"}

@@ -13,16 +13,16 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 export default function ConfigHero({ breadcrumbs, title, subtitle, badges = [] }) {
   return (
     <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-[#fff]">
-      <div className="mx-auto max-w-[1600px] px-4 py-6 sm:py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-4 sm:py-8 sm:px-6 lg:px-8 lg:py-10">
         <Breadcrumbs items={breadcrumbs} dark />
-        <h1 className="mt-3 text-2xl font-black tracking-tight sm:mt-4 sm:text-4xl lg:text-5xl">
+        <h1 className="mt-2 text-2xl font-black tracking-tight sm:mt-4 sm:text-4xl lg:text-5xl">
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-2 max-w-2xl text-sm text-gray-300 sm:text-base">{subtitle}</p>
+          <p className="mt-1 max-w-2xl text-sm text-gray-300 sm:mt-2 sm:text-base">{subtitle}</p>
         )}
         {badges.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-400 sm:gap-6 sm:text-sm">
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-400 sm:mt-4 sm:gap-6 sm:text-sm">
             {badges.map((b, i) => (
               <span key={i} className="flex items-center gap-1.5">
                 <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

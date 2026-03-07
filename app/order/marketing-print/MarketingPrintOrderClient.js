@@ -19,6 +19,8 @@ import {
   ConfigProductGallery,
   PricingSidebar,
   MobileBottomBar,
+  DeliveryEstimate,
+  EmailQuotePopover,
   ArtworkUpload,
   LetterheadTemplateBuilder,
   useConfiguratorPrice,
@@ -318,7 +320,7 @@ export default function MarketingPrintOrderClient({
           t("marketingPrint.badgeProof", "Free digital proof"),
         ]}
       />
-      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
         <div className="md:grid md:grid-cols-3 md:gap-6 lg:gap-8">
           {/* LEFT COLUMN */}
           <div className="space-y-2 sm:space-y-3 md:col-span-2">
@@ -373,6 +375,8 @@ export default function MarketingPrintOrderClient({
               open={isStepOpen("size")}
               onToggle={() => toggleStep("size")}
               stepId="step-size"
+              alwaysOpen
+              compact
             >
               <OptionGrid columns={isStamp ? 2 : (printType.sizes.length <= 4 ? printType.sizes.length + (printType.customSize ? 1 : 0) : 4)} label={t("step.size")}>
                 {printType.sizes.map((s, idx) => (
@@ -505,6 +509,8 @@ export default function MarketingPrintOrderClient({
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
+              compact
             >
               {printType.quantityMode === "input" ? (
                 <input
@@ -601,6 +607,9 @@ export default function MarketingPrintOrderClient({
                     open={isStepOpen("paper")}
                     onToggle={() => toggleStep("paper")}
                     stepId="step-paper"
+                    alwaysOpen
+                    compact
+                    inline={printType.papers.length <= 2}
                   >
                     <OptionGrid columns={printType.papers.length <= 3 ? printType.papers.length : 3} label={t("marketingPrint.paper", "Paper / Stock")}>
                       {printType.papers.map((p) => (
@@ -627,6 +636,9 @@ export default function MarketingPrintOrderClient({
                     open={isStepOpen("sides")}
                     onToggle={() => toggleStep("sides")}
                     stepId="step-sides"
+                    alwaysOpen
+                    compact
+                    inline
                   >
                     <OptionGrid columns={2} label={t("marketingPrint.sides", "Print Sides")}>
                       <OptionCard
@@ -652,6 +664,9 @@ export default function MarketingPrintOrderClient({
                     open={isStepOpen("finishing")}
                     onToggle={() => toggleStep("finishing")}
                     stepId="step-finishing"
+                    alwaysOpen
+                    compact
+                    inline={printType.finishings.length <= 3}
                   >
                     <OptionGrid columns={printType.finishings.length <= 4 ? printType.finishings.length : 4} label={t("marketingPrint.finishing", "Finishing")}>
                       {printType.finishings.map((f) => (
@@ -678,6 +693,9 @@ export default function MarketingPrintOrderClient({
                       open={isStepOpen(`extra-${ex.key}`)}
                       onToggle={() => toggleStep(`extra-${ex.key}`)}
                       stepId={`step-extra-${ex.key}`}
+                      alwaysOpen
+                      compact
+                      inline={ex.options.length <= 3}
                     >
                       <OptionGrid columns={ex.options.length <= 4 ? ex.options.length : 4} label={ex.label}>
                         {ex.options.map((opt) => (
@@ -825,6 +843,21 @@ export default function MarketingPrintOrderClient({
         );
       })()}
 
+      {/* Inline mobile delivery + email quote (scrolls with page, not fixed) */}
+      {!!quote.quoteData && (
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden space-y-3">
+          <DeliveryEstimate categorySlug="marketing-business-print" t={t} locale={locale} />
+          <EmailQuotePopover
+            productName={printType.label}
+            summaryLines={summaryLines || []}
+            unitCents={quote.unitCents}
+            subtotalCents={quote.subtotalCents}
+            quantity={effectiveQty}
+            t={t}
+          />
+        </div>
+      )}
+
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
         hasQuote={!!quote.quoteData}
@@ -836,12 +869,6 @@ export default function MarketingPrintOrderClient({
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
-        productName={printType.label}
-        summaryLines={summaryLines}
-        unitCents={quote.unitCents}
-        subtotalCents={quote.subtotalCents}
-        categorySlug="marketing-business-print"
-        locale={locale}
         onRetryPrice={quote.retry}
       />
     </main>

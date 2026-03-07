@@ -24,6 +24,7 @@ import {
 } from "@/components/configurator";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 
 const INCH_TO_CM = 2.54;
 
@@ -595,6 +596,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
             >
               <div className="flex flex-wrap gap-2">
                 {(canvasType.quantities || [1, 2, 3, 5, 10]).map((q) => {
@@ -715,6 +717,13 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
           </div>
         );
       })()}
+
+      {/* Inline mobile delivery estimate */}
+      {!!quote.quoteData && !isQuoteOnly && (
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden">
+          <DeliveryEstimate categorySlug="canvas-prints" t={t} locale={locale} />
+        </div>
+      )}
 
       {isQuoteOnly ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,.08)] lg:hidden">

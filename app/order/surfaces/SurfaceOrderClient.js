@@ -23,6 +23,7 @@ import {
 } from "@/components/configurator";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 
 const INCH_TO_CM = 2.54;
 const APPLICATION_LABELS = { window: "Window", wall: "Wall", floor: "Floor" };
@@ -600,6 +601,7 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
               open={isStepOpen("quantity")}
               onToggle={() => toggleStep("quantity")}
               stepId="step-quantity"
+              alwaysOpen
             >
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
                 {surfaceType.quantities.map((q) => {
@@ -689,6 +691,13 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
           </div>
         );
       })()}
+
+      {/* Inline mobile delivery estimate */}
+      {!!quote.quoteData && (
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden">
+          <DeliveryEstimate categorySlug="windows-walls-floors" t={t} locale={locale} />
+        </div>
+      )}
 
       <MobileBottomBar
         quoteLoading={quote.quoteLoading}
