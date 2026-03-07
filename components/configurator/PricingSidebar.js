@@ -388,8 +388,8 @@ export default function PricingSidebar({
           </span>
         </div>
 
-        {/* Design Online button */}
-        {productSlug && PRODUCT_PRINT_SPECS[productSlug] && (
+        {/* Design Online button — hidden for stamps (has built-in StampEditor) */}
+        {productSlug && PRODUCT_PRINT_SPECS[productSlug] && !productSlug.startsWith("stamps") && (
           <a
             href={`/design/${productSlug}`}
             className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-bold text-indigo-700 transition-all hover:border-indigo-400 hover:bg-indigo-100"
