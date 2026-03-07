@@ -631,6 +631,7 @@ export default function MarketingPrintOrderClient({
                     open={isStepOpen("finishing")}
                     onToggle={() => toggleStep("finishing")}
                     stepId="step-finishing"
+                    alwaysOpen
                   >
                     <OptionGrid columns={printType.finishings.length <= 4 ? printType.finishings.length : 4} label={t("marketingPrint.finishing", "Finishing")}>
                       {printType.finishings.map((f) => (

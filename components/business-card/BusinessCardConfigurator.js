@@ -619,6 +619,8 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
             t={t}
             categorySlug="marketing-business-print"
             locale={locale}
+            productSlug={slug}
+            onRetryPrice={quote.retry}
           />
         </div>
       </div>
@@ -648,6 +650,7 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
         t={t}
         categorySlug="marketing-business-print"
         locale={locale}
+        onRetryPrice={quote.retry}
       />
 
       {/* FAQ Section */}
