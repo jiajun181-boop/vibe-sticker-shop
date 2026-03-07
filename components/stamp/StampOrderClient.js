@@ -215,10 +215,22 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
               </div>
             )}
 
-            {/* Preset tagline card */}
+            {/* Preset tagline + CTA card */}
             {preset?.tagline && (
               <div className="rounded-xl border border-teal-200 bg-teal-50 px-4 py-3">
                 <p className="text-sm text-teal-900">{preset.tagline}</p>
+                {preset.ctaLabel && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = preset.uploadFirst ? "step-stampDesign" : "step-stampText";
+                      document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className="mt-2 inline-flex items-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-700 transition-colors"
+                  >
+                    {preset.ctaLabel} &darr;
+                  </button>
+                )}
               </div>
             )}
 
