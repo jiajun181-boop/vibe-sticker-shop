@@ -39,7 +39,7 @@ export default function ConfigProductGallery({ images, inline }) {
             alt={main.alt || main.altOverride || "Product image"}
             fill
             className="object-contain"
-            sizes="(max-width: 768px) 100vw, 1600px"
+            sizes="(max-width: 768px) 100vw, 800px"
             priority
             unoptimized={isSvgImage(main.url)}
           />
