@@ -18,6 +18,8 @@ Created: 2026-03-07
 | 邮件报价 | ✅ | EmailQuotePopover.js |
 | 文件上传 + DPI 检查 | ✅ | ArtworkUpload.js |
 | FAQ 系统 | ✅ 部分 | configurator-faqs.js (非所有产品有) |
+| Proof 审批系统 | ✅ 完整 | OrderProof model + /api/proof + /api/account/orders/[id]/proofs + 邮件通知 |
+| Proof 轮廓预览 | ✅ | ProofPreview.js (贴纸 contour + bleed) + ApprovalModal.js (Design Studio) |
 | SEO/Schema | ✅ | sitemap, robots, OG, Product/Breadcrumb schema |
 | i18n 双语 | ✅ | en/zh JSON + useTranslation |
 | 10 种配置器 | ✅ | configurator-router.js 分发 |
@@ -26,13 +28,12 @@ Created: 2026-03-07
 
 | 缺口 | 影响 | 修复方式 |
 |------|------|---------|
-| Posters 无 FAQ | 转化率 | 代码: configurator-faqs.js |
-| Flyers/Postcards FAQ 太少 (各 3 条) | 转化率 | 代码: 补到 5-6 条 |
-| Artwork 步骤是折叠式(需点击展开) | 手机体验 | 代码: 改为 alwaysOpen |
-| 28 个产品缺真实照片 | 信任感 | Jay 提供照片 |
+| ~~Posters 无 FAQ~~ | ~~转化率~~ | ✅ 已修 (55561f7): 5 条 FAQ 已加 |
+| ~~Flyers/Postcards FAQ 太少~~ | ~~转化率~~ | ✅ 已修 (55561f7): 各扩到 6 条 |
+| ~~Artwork 步骤是折叠式~~ | ~~手机体验~~ | ✅ 已修 (55561f7): hideTypeSelector 时 alwaysOpen |
+| 部分产品缺真实照片 | 信任感 | Jay 提供照片（系统已有 3 级 fallback: UploadThing → 本地 PNG → 动态 SVG） |
 | 分类页封面图是渐变色 | 品牌感 | Jay 提供设计/照片 |
 | 无案例展示 / recent projects | 社会证明 | Jay 提供项目照片 |
-| Proof 审批流只有说明页，无实际系统 | 生产闭环 | Phase 3 开发 |
 
 ## 3. 三套系统分析
 
@@ -46,11 +47,11 @@ Created: 2026-03-07
 - 步骤已 compact+alwaysOpen (Size/Qty/Paper/Sides/Finishing/Extras)
 - PricingPreset (名片) + paper_print template (其余)
 
-**缺口**:
-- Artwork 步骤需点击展开 → 改 alwaysOpen
-- Posters 无 FAQ
-- Flyers/Postcards FAQ 太少
-- 无 "常见用途" 提示卡片
+**缺口** (已修复 — 55561f7):
+- ~~Artwork 步骤需点击展开~~ → ✅ 已改 alwaysOpen
+- ~~Posters 无 FAQ~~ → ✅ 已补 5 条
+- ~~Flyers/Postcards FAQ 太少~~ → ✅ 各扩到 6 条
+- 无 "常见用途" 提示卡片 (待定)
 
 ### B. 个性化/上传型系统
 
@@ -63,9 +64,16 @@ Created: 2026-03-07
 - Halftone upload (stamps)
 
 **缺口**:
-- Proof/contour 预览流程不存在
-- 上传 → 确认 → 下单 → 后台 闭环不完整
 - Stamps 商品化刚开始 (step 1.1 done)
+
+**已有 Proof 系统** (完整，可生产):
+- OrderProof model + ProofStatus enum (pending/approved/rejected/revised)
+- 客户端: /account/orders/[id] 查看/审批 proof，多版本支持
+- 管理端: /api/admin/orders/[id]/proofs 上传 proof
+- 邮件通知: proof_ready 模板，自动发送
+- ProofPreview 组件 (贴纸轮廓预览 + bleed slider)
+- ApprovalModal (Design Studio 4 步审批流)
+- OrderTimeline 全程记录
 
 ### C. 大幅/标牌系统
 
@@ -110,14 +118,14 @@ Created: 2026-03-07
 ## 6. 代码修 vs Jay 提供
 
 ### 代码修 (Claude Code)
-1. Artwork 步骤改 alwaysOpen (MarketingPrintOrderClient)
-2. Posters FAQ 补充
-3. Flyers/Postcards FAQ 扩充
+1. ~~Artwork 步骤改 alwaysOpen~~ → ✅ done (55561f7)
+2. ~~Posters FAQ 补充~~ → ✅ done (55561f7)
+3. ~~Flyers/Postcards FAQ 扩充~~ → ✅ done (55561f7)
 4. Stamps 商品化后续
-5. Proof 预览系统开发
+5. Proof 系统前端优化 (系统已完整，可做 UX 打磨)
 
 ### Jay 提供
-1. 28 个产品的真实产品照片
+1. 缺真实照片的产品上传 UploadThing 照片（系统 fallback 正常工作）
 2. 分类页封面设计/照片
 3. 案例展示项目照片
 4. Vercel CRON_SECRET 环境变量
@@ -128,13 +136,13 @@ Created: 2026-03-07
 
 ### Month 1 — 标准印刷收口 + 印章商品化
 
-**Milestone 1: 标准印刷系统收口** (本周)
+**Milestone 1: 标准印刷系统收口** (本周) — ✅ batch 1 完成 (55561f7)
 - [x] 路线图 v1
-- [ ] Artwork 步骤 alwaysOpen
-- [ ] Posters FAQ (5 条)
-- [ ] Flyers FAQ 扩充 (3→6 条)
-- [ ] Postcards FAQ 扩充 (3→6 条)
-- [ ] Build 验证
+- [x] Artwork 步骤 alwaysOpen (hideTypeSelector 时)
+- [x] Posters FAQ (5 条)
+- [x] Flyers FAQ 扩充 (3→6 条)
+- [x] Postcards FAQ 扩充 (3→6 条)
+- [x] Build 验证
 
 **Milestone 2: 印章产品线商品化** (下周)
 - [ ] Stamps 入口页多宫格展示
@@ -144,10 +152,10 @@ Created: 2026-03-07
 
 ### Month 2 — 贴纸/Proof 闭环
 
-**Milestone 3: 贴纸生产闭环**
-- [ ] Contour/proof 预览组件
-- [ ] 上传 → 确认 → 下单流程
-- [ ] 后台订单视图增强
+**Milestone 3: 贴纸生产闭环 UX 打磨**
+- [ ] ProofPreview 组件接入更多贴纸配置器
+- [ ] 上传 → contour 预览 → 确认 → 下单 UX 优化
+- [ ] 后台 proof 管理视图增强（管理端已可上传/追踪）
 
 **Milestone 4: 信任感提升**
 - [ ] 产品真实照片替换 (需 Jay 提供)
