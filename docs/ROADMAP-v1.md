@@ -18,8 +18,8 @@ Created: 2026-03-07
 | 邮件报价 | ✅ | EmailQuotePopover.js |
 | 文件上传 + DPI 检查 | ✅ | ArtworkUpload.js |
 | FAQ 系统 | ✅ 部分 | configurator-faqs.js (非所有产品有) |
-| Proof 审批系统 | ✅ 完整 | OrderProof model + /api/proof + /api/account/orders/[id]/proofs + 邮件通知 |
-| Proof 轮廓预览 | ✅ | ProofPreview.js (贴纸 contour + bleed) + ApprovalModal.js (Design Studio) |
+| OrderProof 审批流 | ✅ 已有 | OrderProof model + /api/account/orders/[id]/proofs + 管理端上传 + 邮件通知 |
+| Contour/ProofData 持久化 | ✅ 已有，未全品类统一 | ProofData model + ProofPreview.js (贴纸用) + ApprovalModal.js (Design Studio 用)，尚未接入所有上传型配置器 |
 | SEO/Schema | ✅ | sitemap, robots, OG, Product/Breadcrumb schema |
 | i18n 双语 | ✅ | en/zh JSON + useTranslation |
 | 10 种配置器 | ✅ | configurator-router.js 分发 |
@@ -66,14 +66,9 @@ Created: 2026-03-07
 **缺口**:
 - Stamps 商品化刚开始 (step 1.1 done)
 
-**已有 Proof 系统** (完整，可生产):
-- OrderProof model + ProofStatus enum (pending/approved/rejected/revised)
-- 客户端: /account/orders/[id] 查看/审批 proof，多版本支持
-- 管理端: /api/admin/orders/[id]/proofs 上传 proof
-- 邮件通知: proof_ready 模板，自动发送
-- ProofPreview 组件 (贴纸轮廓预览 + bleed slider)
-- ApprovalModal (Design Studio 4 步审批流)
-- OrderTimeline 全程记录
+**Proof 系统现状** (双轨):
+- OrderProof 审批流：已有（model + 客户审批页 + 管理端上传 + 邮件通知 + Timeline）
+- Contour/ProofData 持久化：已有，但仅贴纸 ProofPreview + Design Studio ApprovalModal 使用，尚未统一接入所有上传型配置器
 
 ### C. 大幅/标牌系统
 
