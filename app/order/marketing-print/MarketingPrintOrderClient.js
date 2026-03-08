@@ -618,16 +618,17 @@ export default function MarketingPrintOrderClient({
                   );
                 })}
 
-                {/* Step: Artwork */}
+                {/* Step: Artwork — alwaysOpen for direct-entry products, accordion for type-selector */}
                 <StepCard
                   stepNumber={stepNum("artwork")}
                   title={t("marketingPrint.artwork", "Artwork")}
                   hint={t("step.artwork.hint")}
                   summaryText={uploadedFile?.name || t("step.notUploaded")}
                   optional
-                  open={isStepOpen("artwork")}
-                  onToggle={() => toggleStep("artwork")}
+                  open={hideTypeSelector ? undefined : isStepOpen("artwork")}
+                  onToggle={hideTypeSelector ? undefined : () => toggleStep("artwork")}
                   stepId="step-artwork"
+                  alwaysOpen={hideTypeSelector}
                 >
                   {printType.templateBuilder ? (
                     <>
