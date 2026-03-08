@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50")));
+    const limit = Math.min(500, Math.max(1, parseInt(searchParams.get("limit") || "50")));
     const category = searchParams.get("category");
     const search = searchParams.get("search");
     const active = searchParams.get("active");
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const [products, total] = await Promise.all([
+    const [products, total, activeMeta] = await Promise.all([
       prisma.product.findMany({
         where,
         include: {
@@ -43,6 +43,13 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       prisma.product.count({ where }),
+      prisma.product.findMany({
+        where: { isActive: true },
+        select: {
+          pricingPresetId: true,
+          pricingConfig: true,
+        },
+      }),
     ]);
 
     const productIds = products.map((p) => p.id);
@@ -92,8 +99,30 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    const stats = activeMeta.reduce(
+      (acc, product) => {
+        let isFixed = false;
+        try {
+          const cfg =
+            typeof product.pricingConfig === "string"
+              ? JSON.parse(product.pricingConfig)
+              : product.pricingConfig;
+          isFixed = !!(cfg?.fixedPrices && Object.keys(cfg.fixedPrices).length > 0);
+        } catch {
+          isFixed = false;
+        }
+
+        if (product.pricingPresetId) acc.withPreset += 1;
+        else if (isFixed) acc.outsourced += 1;
+        else acc.templateBased += 1;
+        return acc;
+      },
+      { totalActive: activeMeta.length, withPreset: 0, outsourced: 0, templateBased: 0 }
+    );
+
     return NextResponse.json({
       products: productsWithImageSource,
+      stats,
       pagination: {
         page,
         limit,

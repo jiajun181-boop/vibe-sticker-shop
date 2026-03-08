@@ -20,6 +20,10 @@ const ADMIN_PAGES = [
   { key: "admin.nav.users", href: "/admin/users" },
   { key: "admin.nav.activityLog", href: "/admin/logs" },
   { key: "admin.nav.settings", href: "/admin/settings" },
+  { key: "admin.nav.toolsHub", href: "/admin/tools" },
+  { key: "admin.nav.contour", href: "/admin/tools/contour" },
+  { key: "admin.nav.proof", href: "/admin/tools/proof" },
+  { key: "admin.nav.stampStudio", href: "/admin/tools/stamp-studio" },
 ];
 
 export default function CommandPalette() {

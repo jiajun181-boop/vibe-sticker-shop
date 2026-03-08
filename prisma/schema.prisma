@@ -297,6 +297,7 @@ model Order {
   timeline              OrderTimeline[]
   proofs                OrderProof[]
   proofData             ProofData[]
+  toolJobs              AdminToolJob[]
   coupon                Coupon?          @relation(fields: [couponId], references: [id])
 
   @@index([status, paymentStatus])
@@ -1014,5 +1015,29 @@ model PriceChangeLog {
   @@index([productSlug])
   @@index([operatorId])
   @@index([scope, createdAt])
+  @@index([createdAt])
+}
+
+model AdminToolJob {
+  id            String   @id @default(cuid())
+  toolType      String   // "contour" | "stamp-studio" | "proof"
+  status        String   @default("draft") // draft | processing | completed | failed
+  inputFileUrl  String?
+  inputFileKey  String?
+  inputData     Json?    // tool-specific: stamp config, contour params, etc.
+  outputFileUrl String?
+  outputFileKey String?
+  outputData    Json?    // tool-specific results: SVG paths, contour points, etc.
+  notes         String?
+  orderId       String?
+  order         Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  operatorId    String
+  operatorName  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([toolType])
+  @@index([operatorId])
+  @@index([orderId])
   @@index([createdAt])
 }

@@ -4,6 +4,7 @@ const ALLOWED_TYPES = [
   "image/png",
   "image/jpeg",
   "image/webp",
+  "image/svg+xml",
   "application/pdf",
 ];
 

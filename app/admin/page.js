@@ -21,47 +21,63 @@ const SITE_FEATURES = [
     title: "Auto Die-Cut Contour",
     desc: "Customer uploads artwork \u2192 auto background removal + marching squares contour tracing \u2192 generates die-cut outline with adjustable bleed. No manual tracing needed.",
     products: ["Die-Cut Stickers", "Kiss-Cut Stickers", "Decals", "Vinyl Lettering", "Vehicle Decals", "Die-Cut Business Cards", "Cake Toppers", "Foam Board Signs"],
+    href: "/admin/tools/contour",
   },
   {
     icon: "\uD83D\uDD0D",
     title: "On-the-Spot Proofing",
     desc: "Customers preview the final sticker with cut line overlay, bleed area, and actual dimensions before ordering. Tabs to see mockup on laptop, water bottle, phone case.",
     products: ["Die-Cut Stickers", "Kiss-Cut Stickers", "Foam Board Signs", "Vehicle Decals"],
+    href: "/admin/tools/proof",
   },
   {
     icon: "\uD83D\uDCCB",
     title: "Instant Quote Engine",
     desc: "Real-time pricing across all 60+ products. Supports area-tiered, quantity-tiered, and cost-plus pricing models. Debounced API calls with server-side repricing at checkout.",
+    href: "/admin/pricing-dashboard",
   },
   {
     icon: "\uD83D\uDE9A",
     title: "Smart Shipping",
     desc: "Free shipping over $99 CAD. Three options: pickup ($0), local delivery ($15), Canada-wide ($20). Automatic threshold detection and promo bar progress.",
+    href: "/admin/settings",
   },
   {
     icon: "\uD83C\uDF10",
     title: "Bilingual (EN/ZH)",
     desc: "Full English and Simplified Chinese support across entire site including configurators, checkout, emails, and admin. Language toggle in navbar.",
+    href: "/admin/content",
   },
   {
     icon: "\uD83D\uDCE7",
     title: "Order Lifecycle Automation",
     desc: "Stripe webhook \u2192 order creation \u2192 preflight review \u2192 auto-advance to production \u2192 proof emails \u2192 customer approval. Full audit trail via OrderTimeline.",
+    href: "/admin/orders",
   },
   {
     icon: "\uD83C\uDFF7\uFE0F",
     title: "Coupon & Partner Discounts",
     desc: "Promo code system with usage limits, date ranges, min amounts. B2B partner auto-discount via user tier. Rate-limited validation (10/min).",
+    href: "/admin/coupons",
   },
   {
     icon: "\uD83D\uDCC4",
     title: "Invoice Checkout",
     desc: "B2B customers can checkout with PO number and payment terms (Net 15/30/45) instead of credit card. Creates order with invoice_checkout tag.",
+    href: "/admin/b2b",
+  },
+  {
+    icon: "\uD83D\uDDA8\uFE0F",
+    title: "Stamp Studio",
+    desc: "Use the internal stamp editor for walk-ins, phone orders, and production previews. Save records and download generated stamp artwork internally.",
+    products: ["Address Stamps", "Office Stamps", "Custom Face Stamp", "Book Name Stamp"],
+    href: "/admin/tools/stamp-studio",
   },
   {
     icon: "\uD83D\uDDA8\uFE0F",
     title: "Production Board",
     desc: "Kanban-style production tracking: preflight \u2192 in production \u2192 ready to ship \u2192 shipped. Auto status transitions and staff assignment.",
+    href: "/admin/production/board",
   },
 ];
 
@@ -213,8 +229,8 @@ export default function AdminDashboard() {
           <p className="mt-0.5 text-[10px] text-[#999]">Unique capabilities that set us apart from competitors</p>
         </div>
         <div className="grid gap-px bg-[#e0e0e0] sm:grid-cols-2 lg:grid-cols-3">
-          {SITE_FEATURES.map((feat) => (
-            <div key={feat.title} className="bg-white p-5">
+          {SITE_FEATURES.map((feat) => {
+            const content = (
               <div className="flex items-start gap-3">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-[#f5f5f5] text-base">{feat.icon}</span>
                 <div className="min-w-0">
@@ -227,10 +243,22 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   )}
+                  {feat.href && (
+                    <p className="mt-2 text-[10px] font-semibold text-[#999] group-hover:text-black transition-colors">Open tool &rarr;</p>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+            return feat.href ? (
+              <Link key={feat.title} href={feat.href} className="group bg-white p-5 transition-colors hover:bg-[#fafafa]">
+                {content}
+              </Link>
+            ) : (
+              <div key={feat.title} className="bg-white p-5">
+                {content}
+              </div>
+            );
+          })}
         </div>
       </div>
 

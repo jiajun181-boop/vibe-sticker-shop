@@ -40,6 +40,15 @@ const navGroups = [
     ],
   },
   {
+    labelKey: "admin.navGroup.tools",
+    items: [
+      { key: "admin.nav.toolsHub", href: "/admin/tools", icon: "grid", sub: "All tools" },
+      { key: "admin.nav.contour", href: "/admin/tools/contour", icon: "image", sub: "Die-cut contour" },
+      { key: "admin.nav.proof", href: "/admin/tools/proof", icon: "shield", sub: "Proof manager" },
+      { key: "admin.nav.stampStudio", href: "/admin/tools/stamp-studio", icon: "printer", sub: "Stamp preview" },
+    ],
+  },
+  {
     labelKey: "admin.navGroup.fulfillment",
     items: [
       { key: "admin.nav.production", href: "/admin/production", icon: "printer" },
