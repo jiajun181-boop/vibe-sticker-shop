@@ -1,20 +1,17 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
-import { getProductImage, isSvgImage } from "@/lib/product-image";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CategoryHero from "@/components/category/CategoryHero";
 import CategoryFaq from "@/components/category/CategoryFaq";
-import QuickAddButton from "@/components/product/QuickAddButton";
+import ProductCard from "@/components/storefront/ProductCard";
+import ComparisonTable from "@/components/storefront/ComparisonTable";
+import UseCaseCards from "@/components/storefront/UseCaseCards";
+import ValueProps from "@/components/storefront/ValueProps";
 
 const BASE = "/shop/stickers-labels-decals";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 /* ── Core sticker products shown on main page (whitelist, in display order) ── */
 const CORE_STICKER_SLUGS = [
@@ -53,109 +50,92 @@ const RELATED = [
   { titleKey: "stickerCat.related.facility", title: "Facility & Asset Labels", titleZh: "设施资产标签", desc: "Asset tags, cable labels, bin labels", descZh: "资产标签、线缆标签、箱标", href: `${BASE}/facility-asset-labels` },
 ];
 
-/* ── Product Card ── */
-function ProductCard({ product, t }) {
-  const href = `/shop/${product.category}/${product.slug}`;
-  const imageSrc = getProductImage(product, product.category);
-  const isSvg = imageSrc && isSvgImage(imageSrc);
-  const price = product.fromPrice || product.basePrice || 0;
-  const turnaround = getTurnaround(product);
-  const tag = SLUG_TAG[product.slug];
+/* ── Comparison data ── */
+const COMPARISON_COLUMNS = [
+  {
+    key: "die-cut",
+    nameKey: "storefront.stickers.cmp.dieCut",
+    href: `${BASE}/die-cut-stickers`,
+    features: {
+      customShape: true,
+      easyPeel: true,
+      multiDesign: false,
+      bulkPackaging: false,
+      waterproof: true,
+      bestFor: "storefront.stickers.cmp.bestFor.dieCut",
+      minOrder: "storefront.stickers.cmp.min.dieCut",
+    },
+  },
+  {
+    key: "kiss-cut",
+    nameKey: "storefront.stickers.cmp.kissCut",
+    href: `${BASE}/kiss-cut-stickers`,
+    features: {
+      customShape: true,
+      easyPeel: true,
+      multiDesign: false,
+      bulkPackaging: false,
+      waterproof: true,
+      bestFor: "storefront.stickers.cmp.bestFor.kissCut",
+      minOrder: "storefront.stickers.cmp.min.kissCut",
+    },
+  },
+  {
+    key: "sheets",
+    nameKey: "storefront.stickers.cmp.sheets",
+    href: `${BASE}/sticker-sheets`,
+    features: {
+      customShape: true,
+      easyPeel: true,
+      multiDesign: true,
+      bulkPackaging: false,
+      waterproof: true,
+      bestFor: "storefront.stickers.cmp.bestFor.sheets",
+      minOrder: "storefront.stickers.cmp.min.sheets",
+    },
+  },
+  {
+    key: "roll-labels",
+    nameKey: "storefront.stickers.cmp.rollLabels",
+    href: `${BASE}/roll-labels`,
+    features: {
+      customShape: true,
+      easyPeel: true,
+      multiDesign: false,
+      bulkPackaging: true,
+      waterproof: true,
+      bestFor: "storefront.stickers.cmp.bestFor.rollLabels",
+      minOrder: "storefront.stickers.cmp.min.rollLabels",
+    },
+  },
+];
 
-  return (
-    <article className="group overflow-hidden rounded-xl shadow-[var(--shadow-card)] bg-white transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1">
-      <Link href={href} className="block">
-        <div className="relative aspect-[4/3] bg-[var(--color-gray-100)] overflow-hidden">
-          {imageSrc ? (
-            isSvg ? (
-              <img src={imageSrc} alt={product.name} loading="lazy" className="h-full w-full object-cover" />
-            ) : (
-              <Image
-                src={imageSrc}
-                alt={product.name}
-                fill
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw"
-              />
-            )
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-200 to-fuchsia-100">
-              <p className="px-4 text-center text-sm font-semibold text-gray-700 drop-shadow-sm">
-                {product.name}
-              </p>
-            </div>
-          )}
+const COMPARISON_FEATURES = [
+  { key: "customShape", labelKey: "storefront.stickers.cmp.feat.customShape" },
+  { key: "easyPeel", labelKey: "storefront.stickers.cmp.feat.easyPeel" },
+  { key: "multiDesign", labelKey: "storefront.stickers.cmp.feat.multiDesign" },
+  { key: "bulkPackaging", labelKey: "storefront.stickers.cmp.feat.bulkPackaging" },
+  { key: "waterproof", labelKey: "storefront.stickers.cmp.feat.waterproof" },
+  { key: "bestFor", labelKey: "storefront.stickers.cmp.feat.bestFor" },
+  { key: "minOrder", labelKey: "storefront.stickers.cmp.feat.minOrder" },
+];
 
-          {/* Turnaround badge — constrained inside image area */}
-          {turnaround && (
-            <span className={`absolute top-1.5 left-1.5 max-w-[calc(100%-12px)] truncate rounded-full px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold text-white ${turnaroundColor(turnaround)}`}>
-              {t(turnaroundI18nKey(turnaround))}
-            </span>
-          )}
-        </div>
-      </Link>
+/* ── Use cases ── */
+const USE_CASES = [
+  { key: "branding", icon: "🏷️", titleKey: "storefront.stickers.uc.branding.title", descKey: "storefront.stickers.uc.branding.desc", href: `${BASE}/die-cut-stickers` },
+  { key: "packaging", icon: "📦", titleKey: "storefront.stickers.uc.packaging.title", descKey: "storefront.stickers.uc.packaging.desc", href: `${BASE}/roll-labels` },
+  { key: "events", icon: "🎪", titleKey: "storefront.stickers.uc.events.title", descKey: "storefront.stickers.uc.events.desc", href: `${BASE}/kiss-cut-stickers` },
+  { key: "retail", icon: "🛍️", titleKey: "storefront.stickers.uc.retail.title", descKey: "storefront.stickers.uc.retail.desc", href: `${BASE}/sticker-sheets` },
+  { key: "vehicles", icon: "🚗", titleKey: "storefront.stickers.uc.vehicles.title", descKey: "storefront.stickers.uc.vehicles.desc", href: `${BASE}/vinyl-lettering` },
+  { key: "safety", icon: "⚠️", titleKey: "storefront.stickers.uc.safety.title", descKey: "storefront.stickers.uc.safety.desc", href: `${BASE}/safety-warning-decals` },
+];
 
-      <div className="p-4">
-        <Link href={href}>
-          <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)] transition-colors line-clamp-2">
-            {product.name}
-          </h3>
-          {price > 0 ? (
-            <p className="mt-1 text-sm font-bold text-[var(--color-brand)]">
-              {t("product.from", { price: formatCad(price) })}
-            </p>
-          ) : (
-            <p className="mt-1 text-xs text-[var(--color-gray-400)]">
-              {t("configurator.requestQuote")}
-            </p>
-          )}
-          {product.description && (
-            <p className="mt-1 text-[11px] text-[var(--color-gray-500)] line-clamp-1 sm:line-clamp-2">
-              {product.description}
-            </p>
-          )}
-        </Link>
-        <div className="mt-3 flex items-center justify-between">
-          <span /> {/* price moved above */}
-          <Link
-            href={href}
-            className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white hover:bg-[var(--color-brand-dark)] transition-colors"
-          >
-            {t("mp.landing.viewOrder")}
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-          </Link>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-/* ── Why Choose Us icons ── */
-function WaterproofIcon() {
-  return (
-    <svg className="h-5 w-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-    </svg>
-  );
-}
-
-function BoltIcon() {
-  return (
-    <svg className="h-5 w-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-    </svg>
-  );
-}
-
-function ShapeIcon() {
-  return (
-    <svg className="h-5 w-5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7.848 8.25l1.536.887M7.848 8.25a3 3 0 11-5.196-3 3 3 0 015.196 3zm1.536.887a2.165 2.165 0 011.083 1.839c.005.351.054.695.14 1.024M9.384 9.137l2.077 1.199M7.848 15.75l1.536-.887m-1.536.887a3 3 0 01-5.196 3 3 3 0 015.196-3zm1.536-.887a2.165 2.165 0 001.083-1.838c.005-.352.054-.695.14-1.025m-1.223 2.863l2.077-1.199m0-3.328a4.323 4.323 0 012.068-1.379l5.325-1.628a4.5 4.5 0 012.48-.044l.803.215-7.794 4.5m-2.882-1.664A4.331 4.331 0 0010.607 12m3.736 0l7.794 4.5-.802.215a4.5 4.5 0 01-2.48-.043l-5.326-1.629a4.324 4.324 0 01-2.068-1.379M14.343 12l-2.882 1.664" />
-    </svg>
-  );
-}
+/* ── Value props ── */
+const VALUE_PROPS = [
+  { icon: "💧", titleKey: "stickerCat.waterproof", descKey: "stickerCat.waterproofDesc" },
+  { icon: "⚡", titleKey: "stickerCat.fastTurnaround", descKey: "stickerCat.fastTurnaroundDesc" },
+  { icon: "✂️", titleKey: "stickerCat.anyShape", descKey: "stickerCat.anyShapeDesc", ctaKey: "configurator.requestQuote", ctaHref: "/quote" },
+];
 
 /* ── Main Component ── */
 export default function StickersCategoryClient({ products = [] }) {
@@ -233,10 +213,16 @@ export default function StickersCategoryClient({ products = [] }) {
         </div>
         </div>
 
-        {/* Product grid */}
+        {/* Product grid — unified ProductCard */}
         <div className="mt-6 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
           {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} t={t} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              showTurnaround={true}
+              showDescription={true}
+              ctaKey="mp.landing.viewOrder"
+            />
           ))}
         </div>
 
@@ -245,6 +231,20 @@ export default function StickersCategoryClient({ products = [] }) {
             <p className="text-sm text-[var(--color-gray-400)]">{t("shop.noProducts")}</p>
           </div>
         )}
+
+        {/* Comparison Table: Which sticker is right for you? */}
+        <ComparisonTable
+          title="storefront.comparison.title"
+          subtitle="storefront.comparison.subtitle"
+          columns={COMPARISON_COLUMNS}
+          features={COMPARISON_FEATURES}
+        />
+
+        {/* Popular Use Cases */}
+        <UseCaseCards
+          title="storefront.useCases.title"
+          cases={USE_CASES}
+        />
 
         {/* Related categories */}
         <section className="mt-12">
@@ -272,38 +272,10 @@ export default function StickersCategoryClient({ products = [] }) {
           </div>
         </section>
 
-        {/* Why Choose Us */}
+        {/* Why Choose Us — unified ValueProps */}
         <section className="mt-12">
           <h2 className="text-xl font-semibold tracking-tight">{t("stickerCat.whyChooseUs")}</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <WaterproofIcon />
-                <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">{t("stickerCat.waterproof")}</h3>
-              </div>
-              <p className="text-sm text-[var(--color-gray-700)]">{t("stickerCat.waterproofDesc")}</p>
-            </div>
-            <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <BoltIcon />
-                <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">{t("stickerCat.fastTurnaround")}</h3>
-              </div>
-              <p className="text-sm text-[var(--color-gray-700)]">{t("stickerCat.fastTurnaroundDesc")}</p>
-            </div>
-            <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <ShapeIcon />
-                <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">{t("stickerCat.anyShape")}</h3>
-              </div>
-              <p className="text-sm text-[var(--color-gray-700)]">{t("stickerCat.anyShapeDesc")}</p>
-              <Link
-                href="/quote"
-                className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
-              >
-                {t("configurator.requestQuote")}
-              </Link>
-            </div>
-          </div>
+          <ValueProps props={VALUE_PROPS} />
         </section>
 
         {/* FAQ */}

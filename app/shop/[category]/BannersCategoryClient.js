@@ -1,20 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CategoryHero from "@/components/category/CategoryHero";
 import CategoryFaq from "@/components/category/CategoryFaq";
-import { isSvgImage } from "@/lib/product-image";
+import ProductCard from "@/components/storefront/ProductCard";
+import ComparisonTable from "@/components/storefront/ComparisonTable";
+import UseCaseCards from "@/components/storefront/UseCaseCards";
+import ValueProps from "@/components/storefront/ValueProps";
 
 const BASE = "/shop/banners-displays";
 
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
-
-/* ── Section definitions ── */
+/* ── Item slug → i18n key map ── */
 const ITEM_I18N = {
   "vinyl-banners": "bd.item.vinylBanners",
   "mesh-banners": "bd.item.meshBanners",
@@ -81,57 +79,87 @@ const SECTIONS = [
   },
 ];
 
-function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
-  const isLarge = size === "large";
-  const [hovered, setHovered] = useState(false);
-  const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
-  const isSvg = showUrl && isSvgImage(showUrl);
-  const name = t(ITEM_I18N[item.key] || item.key);
-  return (
-    <Link
-      href={item.href}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className={`relative overflow-hidden bg-[var(--color-gray-100)] ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
-        {showUrl ? (
-          isSvg ? (
-            <img src={showUrl} alt={name} loading="lazy" className="h-full w-full object-cover transition-opacity duration-300" />
-          ) : (
-            <Image src={showUrl} alt={name} fill className="object-cover transition-opacity duration-300 group-hover:scale-105" sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw" />
-          )
-        ) : (
-          <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
-            <p className="px-6 text-center text-lg font-bold text-[#fff] drop-shadow-md">
-              {name}
-            </p>
-          </div>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-base" : "text-sm"}`}>
-          {name}
-        </h3>
-        <div className="mt-auto pt-3 flex items-center justify-between">
-          {price > 0 ? (
-            <span className="text-sm font-bold text-[var(--color-gray-900)]">
-              {t("shop.fromLabel")} {formatCad(price)}
-            </span>
-          ) : (
-            <span className="text-xs text-[var(--color-gray-400)]">{t("shop.getQuote")}</span>
-          )}
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3.5 py-1.5 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
-            {t("shop.configure")}
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
+/* ── Comparison (shared with Signs page — same data, signs+banners is one family) ── */
+const COMPARISON_COLUMNS = [
+  {
+    key: "coroplast",
+    nameKey: "storefront.signs.cmp.coroplast",
+    href: "/shop/signs-rigid-boards/coroplast-signs",
+    features: {
+      material: "storefront.signs.cmp.mat.coroplast",
+      indoor: true,
+      outdoor: true,
+      portable: true,
+      bestFor: "storefront.signs.cmp.bestFor.coroplast",
+      customSize: true,
+    },
+  },
+  {
+    key: "foamBoard",
+    nameKey: "storefront.signs.cmp.foamBoard",
+    href: "/shop/signs-rigid-boards/foam-board-prints",
+    features: {
+      material: "storefront.signs.cmp.mat.foam",
+      indoor: true,
+      outdoor: false,
+      portable: true,
+      bestFor: "storefront.signs.cmp.bestFor.foam",
+      customSize: true,
+    },
+  },
+  {
+    key: "vinylBanner",
+    nameKey: "storefront.signs.cmp.vinylBanner",
+    href: `${BASE}/vinyl-banners`,
+    features: {
+      material: "storefront.signs.cmp.mat.vinyl",
+      indoor: true,
+      outdoor: true,
+      portable: true,
+      bestFor: "storefront.signs.cmp.bestFor.vinyl",
+      customSize: true,
+    },
+  },
+  {
+    key: "rollUp",
+    nameKey: "storefront.signs.cmp.rollUp",
+    href: `${BASE}/roll-up-banners`,
+    features: {
+      material: "storefront.signs.cmp.mat.rollUp",
+      indoor: true,
+      outdoor: false,
+      portable: true,
+      bestFor: "storefront.signs.cmp.bestFor.rollUp",
+      customSize: false,
+    },
+  },
+];
+
+const COMPARISON_FEATURES = [
+  { key: "material", labelKey: "storefront.signs.cmp.feat.material" },
+  { key: "indoor", labelKey: "storefront.signs.cmp.feat.indoor" },
+  { key: "outdoor", labelKey: "storefront.signs.cmp.feat.outdoor" },
+  { key: "portable", labelKey: "storefront.signs.cmp.feat.portable" },
+  { key: "bestFor", labelKey: "storefront.signs.cmp.feat.bestFor" },
+  { key: "customSize", labelKey: "storefront.signs.cmp.feat.customSize" },
+];
+
+/* ── Use cases (same family as signs) ── */
+const USE_CASES = [
+  { key: "retail", icon: "🏪", titleKey: "storefront.signs.uc.retail.title", descKey: "storefront.signs.uc.retail.desc", href: `${BASE}/roll-up-banners` },
+  { key: "tradeshow", icon: "🎪", titleKey: "storefront.signs.uc.tradeshow.title", descKey: "storefront.signs.uc.tradeshow.desc", href: `${BASE}/telescopic-backdrop` },
+  { key: "events", icon: "💒", titleKey: "storefront.signs.uc.events.title", descKey: "storefront.signs.uc.events.desc", href: `${BASE}/vinyl-banners` },
+  { key: "construction", icon: "🚧", titleKey: "storefront.signs.uc.construction.title", descKey: "storefront.signs.uc.construction.desc", href: "/shop/signs-rigid-boards/construction-site-signs" },
+  { key: "community", icon: "🗳️", titleKey: "storefront.signs.uc.community.title", descKey: "storefront.signs.uc.community.desc", href: `${BASE}/vinyl-banners` },
+  { key: "realEstate", icon: "🏠", titleKey: "storefront.signs.uc.realEstate.title", descKey: "storefront.signs.uc.realEstate.desc", href: "/shop/signs-rigid-boards/real-estate-sign" },
+];
+
+/* ── Value props ── */
+const VALUE_PROPS = [
+  { icon: "🌧️", titleKey: "bd.vp1.title", descKey: "bd.vp1.desc" },
+  { icon: "⚡", titleKey: "bd.vp2.title", descKey: "bd.vp2.desc" },
+  { icon: "📐", titleKey: "bd.vp3.title", descKey: "bd.vp3.desc" },
+];
 
 export default function BannersCategoryClient({ bannerPrices = {}, bannerImages = {}, bannerImages2 = {} }) {
   const { t } = useTranslation();
@@ -150,7 +178,7 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
           <CategoryHero category="banners-displays" title={t("bd.title")} icon="🎪" />
         </div>
 
-        {/* Sections */}
+        {/* Sections — using unified ProductCard */}
         {SECTIONS.map((section) => {
           const visibleItems = section.items.filter((item) => item.key in bannerPrices);
           if (visibleItems.length === 0) return null;
@@ -164,21 +192,45 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
                   ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
                   : "grid-cols-2 sm:grid-cols-3"
               }`}>
-                {visibleItems.map((item) => (
-                  <ProductCard
-                    key={item.key}
-                    item={item}
-                    price={bannerPrices[item.key] || 0}
-                    size={section.size}
-                    imageUrl={bannerImages[item.key]}
-                    hoverImageUrl={bannerImages2[item.key]}
-                    t={t}
-                  />
-                ))}
+                {visibleItems.map((item) => {
+                  const name = t(ITEM_I18N[item.key] || item.key);
+                  const product = {
+                    slug: item.key,
+                    name,
+                    category: "banners-displays",
+                    fromPrice: bannerPrices[item.key] || 0,
+                  };
+                  return (
+                    <ProductCard
+                      key={item.key}
+                      product={product}
+                      href={item.href}
+                      imageSrc={bannerImages[item.key]}
+                      hoverImageSrc={bannerImages2[item.key]}
+                      showTurnaround={false}
+                      aspect={section.size === "large" ? "aspect-[3/2]" : "aspect-[4/3]"}
+                      gradientFallback={item.gradient}
+                    />
+                  );
+                })}
               </div>
             </section>
           );
         })}
+
+        {/* Comparison Table: Signs vs Banners — which is right? */}
+        <ComparisonTable
+          title="storefront.comparison.title"
+          subtitle="storefront.comparison.subtitle"
+          columns={COMPARISON_COLUMNS}
+          features={COMPARISON_FEATURES}
+        />
+
+        {/* Popular Use Cases */}
+        <UseCaseCards
+          title="storefront.useCases.title"
+          cases={USE_CASES}
+        />
 
         <CategoryFaq category="banners-displays" />
 
@@ -195,33 +247,8 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
           </Link>
         </div>
 
-        {/* Value Props */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("bd.vp1.title")}
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("bd.vp1.desc")}
-            </p>
-          </div>
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("bd.vp2.title")}
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("bd.vp2.desc")}
-            </p>
-          </div>
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("bd.vp3.title")}
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("bd.vp3.desc")}
-            </p>
-          </div>
-        </div>
+        {/* Value Props — unified */}
+        <ValueProps props={VALUE_PROPS} />
       </div>
     </main>
   );

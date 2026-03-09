@@ -1,20 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
-import { getProductImage, isSvgImage } from "@/lib/product-image";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CategoryHero from "@/components/category/CategoryHero";
 import CategoryFaq from "@/components/category/CategoryFaq";
-import QuickAddButton from "@/components/product/QuickAddButton";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
+import ProductCard from "@/components/storefront/ProductCard";
+import ComparisonTable from "@/components/storefront/ComparisonTable";
+import UseCaseCards from "@/components/storefront/UseCaseCards";
+import ValueProps from "@/components/storefront/ValueProps";
 
 // Badge config per product slug
 const PRODUCT_BADGES = {
@@ -25,81 +20,87 @@ const PRODUCT_BADGES = {
 // Products that use "Add to Cart" instead of "Configure"
 const SIMPLE_ADD_SLUGS = new Set(["h-stakes", "real-estate-frame"]);
 
-function SignProductCard({ product, section, category }) {
-  const { t } = useTranslation();
-  const imageSrc = getProductImage(product, category);
-  const price = product.fromPrice || product.basePrice;
-  const tk = getTurnaround(product);
-  const badge = PRODUCT_BADGES[product.slug];
-  const isSimpleAdd = SIMPLE_ADD_SLUGS.has(product.slug);
-  const href = `/shop/${category}/${product.slug}`;
+/* ── Comparison data ── */
+const COMPARISON_COLUMNS = [
+  {
+    key: "coroplast",
+    nameKey: "storefront.signs.cmp.coroplast",
+    href: "/shop/signs-rigid-boards/coroplast-signs",
+    features: {
+      material: "storefront.signs.cmp.mat.coroplast",
+      indoor: true,
+      outdoor: true,
+      portable: true,
+      bestFor: "storefront.signs.cmp.bestFor.coroplast",
+      customSize: true,
+    },
+  },
+  {
+    key: "foamBoard",
+    nameKey: "storefront.signs.cmp.foamBoard",
+    href: "/shop/signs-rigid-boards/foam-board-prints",
+    features: {
+      material: "storefront.signs.cmp.mat.foam",
+      indoor: true,
+      outdoor: false,
+      portable: true,
+      bestFor: "storefront.signs.cmp.bestFor.foam",
+      customSize: true,
+    },
+  },
+  {
+    key: "vinylBanner",
+    nameKey: "storefront.signs.cmp.vinylBanner",
+    href: "/shop/banners-displays/vinyl-banners",
+    features: {
+      material: "storefront.signs.cmp.mat.vinyl",
+      indoor: true,
+      outdoor: true,
+      portable: true,
+      bestFor: "storefront.signs.cmp.bestFor.vinyl",
+      customSize: true,
+    },
+  },
+  {
+    key: "rollUp",
+    nameKey: "storefront.signs.cmp.rollUp",
+    href: "/shop/banners-displays/roll-up-banners",
+    features: {
+      material: "storefront.signs.cmp.mat.rollUp",
+      indoor: true,
+      outdoor: false,
+      portable: true,
+      bestFor: "storefront.signs.cmp.bestFor.rollUp",
+      customSize: false,
+    },
+  },
+];
 
-  return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
-      <Link href={href} className="block">
-        <div className="relative aspect-[4/5] overflow-hidden">
-          {imageSrc ? (
-            <Image
-              src={imageSrc}
-              alt={product.images?.[0]?.alt || product.name}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              unoptimized={isSvgImage(imageSrc)}
-            />
-          ) : (
-            <div className={`flex h-full w-full flex-col items-center justify-center bg-gradient-to-br ${section.noImageGradient}`}>
-              <span className="text-4xl">{section.noImageIcon}</span>
-              <p className="mt-2 px-3 text-center text-sm font-semibold text-[#fff] drop-shadow-sm">
-                {product.name}
-              </p>
-            </div>
-          )}
-          {/* Badge overlay */}
-          {badge && (
-            <span className={`absolute top-2 left-2 max-w-[calc(100%-16px)] truncate rounded-full px-2.5 py-1 text-[10px] font-bold ${badge.color}`}>
-              {t(badge.labelKey)}
-            </span>
-          )}
-        </div>
-      </Link>
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <span className={`inline-block w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold mb-1.5 ${turnaroundColor(tk)}`}>
-          {t(turnaroundI18nKey(tk))}
-        </span>
-        <h3 className="text-sm font-semibold text-[var(--color-gray-900)] leading-snug">
-          {product.name}
-        </h3>
-        {product.description && (
-          <p className="mt-1 text-[11px] text-[var(--color-gray-500)] line-clamp-2">
-            {product.description}
-          </p>
-        )}
-        <div className="mt-auto pt-3">
-          {price > 0 && (
-            <p className="text-sm font-bold text-[var(--color-gray-900)] mb-2">
-              {t("shop.fromLabel")} {formatCad(price)}
-            </p>
-          )}
-          <div className="flex items-center gap-2">
-            {isSimpleAdd ? (
-              <QuickAddButton product={product} />
-            ) : null}
-            <Link
-              href={href}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-gray-900)] px-3.5 py-2 text-[10px] font-semibold text-[#fff] transition-colors hover:bg-black"
-            >
-              {isSimpleAdd ? t("shop.addToCart") : t("shop.configure")}
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-              </svg>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
+const COMPARISON_FEATURES = [
+  { key: "material", labelKey: "storefront.signs.cmp.feat.material" },
+  { key: "indoor", labelKey: "storefront.signs.cmp.feat.indoor" },
+  { key: "outdoor", labelKey: "storefront.signs.cmp.feat.outdoor" },
+  { key: "portable", labelKey: "storefront.signs.cmp.feat.portable" },
+  { key: "bestFor", labelKey: "storefront.signs.cmp.feat.bestFor" },
+  { key: "customSize", labelKey: "storefront.signs.cmp.feat.customSize" },
+];
+
+/* ── Use cases ── */
+const USE_CASES = [
+  { key: "realEstate", icon: "🏠", titleKey: "storefront.signs.uc.realEstate.title", descKey: "storefront.signs.uc.realEstate.desc", href: "/shop/signs-rigid-boards/real-estate-sign" },
+  { key: "events", icon: "💒", titleKey: "storefront.signs.uc.events.title", descKey: "storefront.signs.uc.events.desc", href: "/shop/signs-rigid-boards/selfie-frame-board" },
+  { key: "retail", icon: "🏪", titleKey: "storefront.signs.uc.retail.title", descKey: "storefront.signs.uc.retail.desc", href: "/shop/banners-displays/roll-up-banners" },
+  { key: "construction", icon: "🚧", titleKey: "storefront.signs.uc.construction.title", descKey: "storefront.signs.uc.construction.desc", href: "/shop/signs-rigid-boards/construction-site-signs" },
+  { key: "tradeshow", icon: "🎪", titleKey: "storefront.signs.uc.tradeshow.title", descKey: "storefront.signs.uc.tradeshow.desc", href: "/shop/banners-displays/telescopic-backdrop" },
+  { key: "community", icon: "🗳️", titleKey: "storefront.signs.uc.community.title", descKey: "storefront.signs.uc.community.desc", href: "/shop/signs-rigid-boards/election-signs" },
+];
+
+/* ── Value props ── */
+const VALUE_PROPS = [
+  { icon: "🌧️", titleKey: "sc.vp1.title", descKey: "sc.vp1.desc" },
+  { icon: "⚡", titleKey: "sc.vp2.title", descKey: "sc.vp2.desc" },
+  { icon: "📐", titleKey: "sc.vp3.title", descKey: "sc.vp3.desc" },
+];
 
 export default function SignsCategoryClient({
   category,
@@ -175,7 +176,7 @@ export default function SignsCategoryClient({
           </div>
         </div>
 
-        {/* Sections */}
+        {/* Sections — using unified ProductCard */}
         {sections.map((section) => (
           <section
             key={section.key}
@@ -194,14 +195,24 @@ export default function SignsCategoryClient({
             </div>
 
             <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-              {section.products.map((product) => (
-                <SignProductCard
-                  key={product.id}
-                  product={product}
-                  section={section}
-                  category={category}
-                />
-              ))}
+              {section.products.map((product) => {
+                const badgeCfg = PRODUCT_BADGES[product.slug];
+                const badge = badgeCfg ? { label: t(badgeCfg.labelKey), color: badgeCfg.color } : undefined;
+                const isSimpleAdd = SIMPLE_ADD_SLUGS.has(product.slug);
+
+                return (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    badge={badge}
+                    showTurnaround={true}
+                    showDescription={true}
+                    aspect="aspect-[4/5]"
+                    ctaKey={isSimpleAdd ? "shop.addToCart" : "shop.configure"}
+                    gradientFallback={section.noImageGradient || "from-gray-200 to-gray-300"}
+                  />
+                );
+              })}
             </div>
 
             {/* Divider between sections (except last) */}
@@ -216,6 +227,20 @@ export default function SignsCategoryClient({
             {t("shop.noProducts")}
           </p>
         )}
+
+        {/* Comparison Table: Signs vs Banners — which is right for you? */}
+        <ComparisonTable
+          title="storefront.comparison.title"
+          subtitle="storefront.comparison.subtitle"
+          columns={COMPARISON_COLUMNS}
+          features={COMPARISON_FEATURES}
+        />
+
+        {/* Popular Use Cases */}
+        <UseCaseCards
+          title="storefront.useCases.title"
+          cases={USE_CASES}
+        />
 
         <CategoryFaq category="signs-rigid-boards" />
 
@@ -232,35 +257,8 @@ export default function SignsCategoryClient({
           </Link>
         </div>
 
-        {/* Info Footer — signs-specific */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("sc.vp1.title")}
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("sc.vp1.desc")}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("sc.vp2.title")}
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("sc.vp2.desc")}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("sc.vp3.title")}
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("sc.vp3.desc")}
-            </p>
-          </div>
-        </div>
+        {/* Value Props — unified */}
+        <ValueProps props={VALUE_PROPS} />
       </div>
     </main>
   );

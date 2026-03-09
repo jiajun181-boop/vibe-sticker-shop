@@ -1,18 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { isSvgImage } from "@/lib/product-image";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CategoryHero from "@/components/category/CategoryHero";
 import CategoryFaq from "@/components/category/CategoryFaq";
+import ProductCard from "@/components/storefront/ProductCard";
+import ComparisonTable from "@/components/storefront/ComparisonTable";
+import UseCaseCards from "@/components/storefront/UseCaseCards";
+import ValueProps from "@/components/storefront/ValueProps";
 
 const BASE = "/shop/marketing-business-print";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 /* ── Item slug → i18n key map ── */
 const ITEM_I18N = {
@@ -105,62 +103,82 @@ const SECTIONS = [
   },
 ];
 
-function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
-  const [hovered, setHovered] = useState(false);
-  const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
-  const isSvg = showUrl && isSvgImage(showUrl);
-  const name = t(ITEM_I18N[item.key] || item.key);
-  return (
-    <Link
-      href={item.href}
-      className="group flex flex-col overflow-hidden rounded-xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-gray-100)]">
-        {showUrl ? (
-          isSvg ? (
-            <img src={showUrl} alt={name} loading="lazy" className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105" />
-          ) : (
-            <Image
-              src={showUrl}
-              alt={name}
-              fill
-              className="object-cover transition-all duration-300 group-hover:scale-105"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            />
-          )
-        ) : (
-          <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
-            <p className="px-4 text-center text-sm font-bold text-[#fff] drop-shadow-md">
-              {name}
-            </p>
-          </div>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
-        <h3 className="text-sm font-semibold text-[var(--color-gray-900)] leading-tight">
-          {name}
-        </h3>
-        <div className="mt-1.5 flex items-center justify-between">
-          {price > 0 ? (
-            <span className="text-xs font-bold text-[var(--color-gray-900)]">
-              {t("shop.fromLabel")} {formatCad(price)}
-            </span>
-          ) : (
-            <span className="text-[11px] text-[var(--color-gray-400)]">{t("shop.getQuote")}</span>
-          )}
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
-            {t("shop.configure")}
-            <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
+/* ── Comparison data ── */
+const COMPARISON_COLUMNS = [
+  {
+    key: "cards",
+    nameKey: "storefront.marketing.cmp.businessCards",
+    href: `${BASE}/business-cards`,
+    features: {
+      paperStock: "storefront.marketing.cmp.paper.cards",
+      doubleSided: true,
+      foldOptions: "storefront.marketing.cmp.folds.none",
+      bestFor: "storefront.marketing.cmp.bestFor.cards",
+      turnaround: "storefront.marketing.cmp.turn.cards",
+    },
+  },
+  {
+    key: "flyers",
+    nameKey: "storefront.marketing.cmp.flyers",
+    href: `${BASE}/flyers`,
+    features: {
+      paperStock: "storefront.marketing.cmp.paper.flyers",
+      doubleSided: true,
+      foldOptions: "storefront.marketing.cmp.folds.none",
+      bestFor: "storefront.marketing.cmp.bestFor.flyers",
+      turnaround: "storefront.marketing.cmp.turn.flyers",
+    },
+  },
+  {
+    key: "brochures",
+    nameKey: "storefront.marketing.cmp.brochures",
+    href: `${BASE}/brochures`,
+    features: {
+      paperStock: "storefront.marketing.cmp.paper.brochures",
+      doubleSided: true,
+      foldOptions: "storefront.marketing.cmp.folds.brochure",
+      bestFor: "storefront.marketing.cmp.bestFor.brochures",
+      turnaround: "storefront.marketing.cmp.turn.brochures",
+    },
+  },
+  {
+    key: "postcards",
+    nameKey: "storefront.marketing.cmp.postcards",
+    href: `${BASE}/postcards`,
+    features: {
+      paperStock: "storefront.marketing.cmp.paper.postcards",
+      doubleSided: true,
+      foldOptions: "storefront.marketing.cmp.folds.none",
+      bestFor: "storefront.marketing.cmp.bestFor.postcards",
+      turnaround: "storefront.marketing.cmp.turn.postcards",
+    },
+  },
+];
+
+const COMPARISON_FEATURES = [
+  { key: "paperStock", labelKey: "storefront.marketing.cmp.feat.paperStock" },
+  { key: "doubleSided", labelKey: "storefront.marketing.cmp.feat.doubleSided" },
+  { key: "foldOptions", labelKey: "storefront.marketing.cmp.feat.foldOptions" },
+  { key: "bestFor", labelKey: "storefront.marketing.cmp.feat.bestFor" },
+  { key: "turnaround", labelKey: "storefront.marketing.cmp.feat.turnaround" },
+];
+
+/* ── Use cases ── */
+const USE_CASES = [
+  { key: "newBiz", icon: "🏢", titleKey: "storefront.marketing.uc.newBiz.title", descKey: "storefront.marketing.uc.newBiz.desc", href: `${BASE}/business-cards` },
+  { key: "directMail", icon: "📬", titleKey: "storefront.marketing.uc.directMail.title", descKey: "storefront.marketing.uc.directMail.desc", href: `${BASE}/postcards` },
+  { key: "restaurant", icon: "🍽️", titleKey: "storefront.marketing.uc.restaurant.title", descKey: "storefront.marketing.uc.restaurant.desc", href: `${BASE}/menus` },
+  { key: "tradeshow", icon: "🎪", titleKey: "storefront.marketing.uc.tradeshow.title", descKey: "storefront.marketing.uc.tradeshow.desc", href: `${BASE}/brochures` },
+  { key: "retail", icon: "🛍️", titleKey: "storefront.marketing.uc.retail.title", descKey: "storefront.marketing.uc.retail.desc", href: `${BASE}/shelf-displays` },
+  { key: "corporate", icon: "💼", titleKey: "storefront.marketing.uc.corporate.title", descKey: "storefront.marketing.uc.corporate.desc", href: `${BASE}/letterhead` },
+];
+
+/* ── Value props ── */
+const VALUE_PROPS = [
+  { icon: "🎨", titleKey: "mc.vp1.title", descKey: "mc.vp1.desc" },
+  { icon: "📦", titleKey: "mc.vp2.title", descKey: "mc.vp2.desc" },
+  { icon: "💬", titleKey: "mc.vp3.title", descKey: "mc.vp3.desc", ctaKey: "shop.contactUs", ctaHref: "/quote" },
+];
 
 export default function MarketingCategoryClient({ marketingPrices = {}, marketingImages = {}, marketingImages2 = {} }) {
   const { t } = useTranslation();
@@ -179,7 +197,7 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
           <CategoryHero category="marketing-business-print" title={t("mc.title")} icon="📄" />
         </div>
 
-        {/* Sections */}
+        {/* Sections — using unified ProductCard */}
         {SECTIONS.map((section) => {
           const visibleItems = section.items.filter((item) => item.key in marketingPrices);
           if (visibleItems.length === 0) return null;
@@ -189,20 +207,44 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
               <h2 className="text-base font-semibold tracking-tight">{t(section.titleKey)}</h2>
               <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">{t(section.subtitleKey)}</p>
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {visibleItems.map((item) => (
-                  <ProductCard
-                    key={item.key}
-                    item={item}
-                    price={marketingPrices[item.key] || 0}
-                    imageUrl={marketingImages[item.key]}
-                    hoverImageUrl={marketingImages2[item.key]}
-                    t={t}
-                  />
-                ))}
+                {visibleItems.map((item) => {
+                  const name = t(ITEM_I18N[item.key] || item.key);
+                  const product = {
+                    slug: item.key,
+                    name,
+                    category: "marketing-business-print",
+                    fromPrice: marketingPrices[item.key] || 0,
+                  };
+                  return (
+                    <ProductCard
+                      key={item.key}
+                      product={product}
+                      href={item.href}
+                      imageSrc={marketingImages[item.key]}
+                      hoverImageSrc={marketingImages2[item.key]}
+                      showTurnaround={false}
+                      gradientFallback={item.gradient}
+                    />
+                  );
+                })}
               </div>
             </section>
           );
         })}
+
+        {/* Comparison Table: Which product is right for you? */}
+        <ComparisonTable
+          title="storefront.comparison.title"
+          subtitle="storefront.comparison.subtitle"
+          columns={COMPARISON_COLUMNS}
+          features={COMPARISON_FEATURES}
+        />
+
+        {/* Popular Use Cases */}
+        <UseCaseCards
+          title="storefront.useCases.title"
+          cases={USE_CASES}
+        />
 
         <CategoryFaq category="marketing-business-print" />
 
@@ -219,39 +261,10 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
           </Link>
         </div>
 
-        {/* Section 5 — Value Props */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("mc.vp1.title")}
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("mc.vp1.desc")}
-            </p>
-          </div>
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("mc.vp2.title")}
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("mc.vp2.desc")}
-            </p>
-          </div>
-          <div className="rounded-2xl shadow-[var(--shadow-card)] bg-white p-5">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-600)]">
-              {t("mc.vp3.title")}
-            </h3>
-            <p className="mt-3 text-sm text-[var(--color-gray-700)]">
-              {t("mc.vp3.desc")}
-            </p>
-            <Link
-              href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
-            >
-              {t("shop.contactUs")}
-            </Link>
-          </div>
-        </div>
+        {/* Value Props — unified */}
+        <section className="mt-8">
+          <ValueProps props={VALUE_PROPS} />
+        </section>
       </div>
     </main>
   );
