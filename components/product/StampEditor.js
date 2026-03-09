@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { STAMP_TEMPLATES, STAMP_TEMPLATE_CATEGORIES, INK_COLORS } from "@/lib/stampTemplates";
 import { drawBorder } from "@/lib/stamp/borders";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -36,7 +36,7 @@ function fitFontSize(ctx, lines, fontFamily, maxW, maxH) {
 }
 
 // ── Component ──────────────────────────────────────────
-export default function StampEditor({
+const StampEditor = forwardRef(function StampEditor({
   shape = "rect",
   widthIn,
   heightIn,
@@ -47,11 +47,24 @@ export default function StampEditor({
   onChange,
   hideInkColor = false,
   uploadFirst = false,
-}) {
+}, ref) {
   const { t } = useTranslation();
   const canvasRef = useRef(null);
   const logoImgRef = useRef(null);
   const halftoneCanvasRef = useRef(null); // Processed halftone canvas
+
+  // Expose exportPng via ref — returns a PNG Blob from the canvas
+  useImperativeHandle(ref, () => ({
+    exportPng: () =>
+      new Promise((resolve) => {
+        const canvas = canvasRef.current;
+        if (!canvas) { resolve(null); return; }
+        canvas.toBlob(
+          (blob) => resolve(blob),
+          "image/png",
+        );
+      }),
+  }), []);
 
   // Internal state
   const [curveAmount, setCurveAmount] = useState(50);
@@ -488,4 +501,6 @@ export default function StampEditor({
       )}
     </div>
   );
-}
+});
+
+export default StampEditor;

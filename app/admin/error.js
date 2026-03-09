@@ -3,9 +3,12 @@
 export default function AdminError({ error, reset }) {
   return (
     <div className="flex h-64 flex-col items-center justify-center gap-4">
-      <p className="text-sm text-red-600">
-        {error?.message || "Something went wrong loading the admin panel."}
-      </p>
+      <p className="text-sm text-red-600">Something went wrong loading the admin panel.</p>
+      {process.env.NODE_ENV === "development" && error?.message && (
+        <p className="max-w-md rounded-lg bg-gray-100 px-3 py-2 text-xs text-gray-500 break-words">
+          {error.message}
+        </p>
+      )}
       <div className="flex gap-3">
         <button
           type="button"

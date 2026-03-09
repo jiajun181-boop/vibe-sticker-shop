@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useCartStore } from "@/lib/store";
-import { showErrorToast, showSuccessToast } from "@/components/Toast";
+import { showErrorToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageGallery from "@/components/product/ImageGallery";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import { useConfiguratorCart } from "@/components/configurator";
 
 const DEBOUNCE_MS = 300;
 
@@ -82,7 +82,6 @@ const TURNAROUND_OPTIONS = [
 
 export default function VinylLetteringOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
-  const { addItem, openCart } = useCartStore();
 
   // Type: "text" (lettering) or "logo" (logo & shape decal)
   const [type, setType] = useState("text");
@@ -99,6 +98,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
   const [fontId, setFontId] = useState("arial");
   const [turnaroundId, setTurnaroundId] = useState("standard");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
   const [showAllFonts, setShowAllFonts] = useState(false);
 
   // Logo mode dimensions
@@ -108,7 +108,6 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
   const [quoteError, setQuoteError] = useState(null);
-  const [buyNowLoading, setBuyNowLoading] = useState(false);
 
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
@@ -137,6 +136,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
   // Reset color if not available for current material
   useEffect(() => {
     if (material === "reflective" && !REFLECTIVE_COLORS.includes(color)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setColor("white");
     }
   }, [material, color]);
@@ -209,7 +209,8 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
 
   // ─── Cart ───
 
-  function buildCartItem() {
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+  const buildCartItem = useCallback(() => {
     if (!quoteData || activeQty <= 0) return null;
     const isLogo = type === "logo";
     const textSnippet = letteringText.trim().slice(0, 40);
@@ -225,65 +226,31 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
       options: {
         type,
         ...(isLogo
-          ? { widthIn: parsedLogoW, heightIn: parsedLogoH, logoMode }
-          : { letterHeight: heightId, letterHeightLabel: letterHeight.label, letteringText: letteringText.trim() || null, font: fontId }),
-        ...(!(isLogo && logoMode === "printed") && { color }),
+          ? { widthIn: parsedLogoW, heightIn: parsedLogoH, logoMode, sizeLabel: `${parsedLogoW}" × ${parsedLogoH}"` }
+          : { letterHeight: heightId, letterHeightLabel: letterHeight.label, letteringText: letteringText.trim() || null, font: fontId, sizeLabel: letterHeight.label }),
+        ...(!(isLogo && logoMode === "printed") && { vinylColor: color, color }),
         material,
+        materialLabel: t(`vl.material.${material}`),
         application,
         turnaround: turnaroundId,
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
       forceNewLine: true,
     };
-  }
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+  }, [quoteData, activeQty, adjustedSubtotal, type, logoMode, parsedLogoW, parsedLogoH, letteringText, letterHeight, heightId, fontId, color, material, application, turnaroundId, uploadedFile, t]);
 
-  function handleAddToCart() {
-    const item = buildCartItem();
-    if (!item) return;
-    addItem(item);
-    openCart();
-    showSuccessToast(t("vl.addedToCart"));
-  }
-
-  async function handleBuyNow() {
-    const item = buildCartItem();
-    if (!item || buyNowLoading) return;
-    setBuyNowLoading(true);
-    try {
-      const meta = {};
-      for (const [k, v] of Object.entries(item.options)) {
-        if (v == null) continue;
-        meta[k] = typeof v === "object" ? JSON.stringify(v) : v;
-      }
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: [{
-            productId: String(item.id),
-            slug: String(item.slug),
-            name: item.name,
-            unitAmount: item.price,
-            quantity: item.quantity,
-            meta,
-          }],
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "Checkout failed");
-      window.location.href = data.url;
-    } catch (e) {
-      showErrorToast(e instanceof Error ? e.message : "Checkout failed");
-    } finally {
-      setBuyNowLoading(false);
-    }
-  }
+  const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
+    buildCartItem,
+    successMessage: t("vl.addedToCart"),
+  });
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Load only the selected Google Font on demand (not all 8 at once) */}
       {selectedFont.googleFamily && (
-        // eslint-disable-next-line @next/next/no-page-custom-font
         <link
           key={selectedFont.id}
           rel="stylesheet"
@@ -636,9 +603,36 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
                       name: first.name,
                       size: first.size,
                     });
+                    setArtworkIntent(null);
                   }}
                   onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
                 />
+              )}
+              {!uploadedFile && (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setArtworkIntent(artworkIntent === "upload-later" ? null : "upload-later")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      artworkIntent === "upload-later"
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
+                    }`}
+                  >
+                    I&apos;ll Upload Later
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setArtworkIntent(artworkIntent === "design-help" ? null : "design-help")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      artworkIntent === "design-help"
+                        ? "border-indigo-600 bg-indigo-600 text-white"
+                        : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400"
+                    }`}
+                  >
+                    Design Help (+$45)
+                  </button>
+                </div>
               )}
             </div>
           </Section>
@@ -731,7 +725,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={handleAddToCart}
+                onClick={() => handleAddToCart({ artworkIntent })}
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart
@@ -743,7 +737,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
               </button>
               <button
                 type="button"
-                onClick={handleBuyNow}
+                onClick={() => handleBuyNow({ artworkIntent })}
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading
@@ -871,7 +865,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
           </div>
           <button
             type="button"
-            onClick={handleAddToCart}
+            onClick={() => handleAddToCart({ artworkIntent })}
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart

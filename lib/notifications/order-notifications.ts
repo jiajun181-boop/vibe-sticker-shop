@@ -4,13 +4,17 @@ import { buildProductionStartedHtml } from "@/lib/email/templates/production-sta
 import { buildProofReadyHtml } from "@/lib/email/templates/proof-ready";
 import { buildQualityPassedHtml } from "@/lib/email/templates/quality-passed";
 import { buildReadyToShipHtml } from "@/lib/email/templates/ready-to-ship";
+import { buildOrderCanceledHtml } from "@/lib/email/templates/order-canceled";
+import { buildOrderShippedHtml } from "@/lib/email/templates/order-shipped";
 import { sendPushToUser } from "@/lib/push/web-push";
 
 type NotificationType =
   | "production_started"
   | "proof_ready"
   | "quality_passed"
-  | "ready_to_ship";
+  | "ready_to_ship"
+  | "order_shipped"
+  | "order_canceled";
 
 interface OrderForNotification {
   id: string;
@@ -41,6 +45,18 @@ const builders: Record<
   ready_to_ship: (order) => ({
     subject: `Your order is ready to ship — #${order.id.slice(0, 8)}`,
     html: buildReadyToShipHtml(order),
+  }),
+  order_shipped: (order, extra) => ({
+    subject: `Your order has shipped — #${order.id.slice(0, 8)}`,
+    html: buildOrderShippedHtml(order, {
+      trackingNumber: extra?.trackingNumber as string,
+      carrier: extra?.carrier as string,
+      estimatedDelivery: extra?.estimatedDelivery as string,
+    }),
+  }),
+  order_canceled: (order, extra) => ({
+    subject: `Order canceled — #${order.id.slice(0, 8)}`,
+    html: buildOrderCanceledHtml(order, (extra?.reason as string) || null),
   }),
 };
 
@@ -76,6 +92,8 @@ export async function sendOrderNotification(
         proof_ready: { title: "Proof Ready", body: `Review your proof for order #${orderId.slice(0, 8)}` },
         quality_passed: { title: "QC Passed", body: `Order #${orderId.slice(0, 8)} passed quality check` },
         ready_to_ship: { title: "Ready to Ship", body: `Order #${orderId.slice(0, 8)} is packed and ready` },
+        order_shipped: { title: "Order Shipped", body: `Order #${orderId.slice(0, 8)} is on its way!` },
+        order_canceled: { title: "Order Canceled", body: `Order #${orderId.slice(0, 8)} has been canceled` },
       };
       const msg = pushMessages[type];
       if (msg) {

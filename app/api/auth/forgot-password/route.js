@@ -38,7 +38,7 @@ export async function POST(request) {
       const resetUrl = `${SITE_URL}/reset-password?token=${token}`;
       sendEmail({
         to: normalizedEmail,
-        subject: "Reset your password — Vibe Sticker Shop",
+        subject: "Reset your password — La Lunar Printing",
         html: buildPasswordResetHtml({ name: user.name || "there", resetUrl }),
         template: "password-reset",
       }).catch(() => {});

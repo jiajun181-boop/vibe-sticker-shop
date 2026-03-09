@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useCartStore } from "@/lib/store";
-import { showErrorToast, showSuccessToast } from "@/components/Toast";
+import { showErrorToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageGallery from "@/components/product/ImageGallery";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import { useConfiguratorCart } from "@/components/configurator";
 
 const DEBOUNCE_MS = 300;
 
@@ -58,7 +58,6 @@ const QUANTITIES = [1, 2, 5];
 
 export default function BackdropOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
-  const { addItem, openCart } = useCartStore();
 
   const [typeId, setTypeId] = useState("step-repeat");
   const [sizeId, setSizeId] = useState("8x6");
@@ -67,11 +66,11 @@ export default function BackdropOrderClient({ productImages = [] }) {
   const [quantity, setQuantity] = useState(1);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
 
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
   const [quoteError, setQuoteError] = useState(null);
-  const [buyNowLoading, setBuyNowLoading] = useState(false);
 
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
@@ -82,6 +81,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
   // Reset size when type changes
   useEffect(() => {
     const defaults = { "step-repeat": "8x6", popup: "8x8", "tension-fabric": "8x8" };
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- derived reset on type change
     setSizeId(defaults[typeId] || SIZES_BY_TYPE[typeId]?.[0]?.id || "8x8");
   }, [typeId]);
 
@@ -127,7 +127,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
         setQuoteError(err.message);
       })
       .finally(() => setQuoteLoading(false));
-  }, [size?.w, size?.h, activeQty]);
+  }, [size, activeQty]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -145,9 +145,15 @@ export default function BackdropOrderClient({ productImages = [] }) {
 
   const canAddToCart = quoteData && !quoteLoading && activeQty > 0;
 
+  const disabledReason = !canAddToCart
+    ? quoteLoading ? "Calculating price..."
+    : !quoteData ? "Select your options for pricing"
+    : "Complete all options to continue"
+    : null;
+
   // ─── Cart ───
 
-  function buildCartItem() {
+  const buildCartItem = useCallback(() => {
     if (!quoteData || activeQty <= 0 || !size) return null;
     return {
       id: `backdrops-${typeId}-${size.id}`,
@@ -164,52 +170,17 @@ export default function BackdropOrderClient({ productImages = [] }) {
         frame,
         carryCase,
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
       forceNewLine: true,
     };
-  }
+  }, [quoteData, activeQty, adjustedSubtotal, size, typeId, frame, carryCase, uploadedFile, t]);
 
-  function handleAddToCart() {
-    const item = buildCartItem();
-    if (!item) return;
-    addItem(item);
-    openCart();
-    showSuccessToast(t("bk.addedToCart"));
-  }
-
-  async function handleBuyNow() {
-    const item = buildCartItem();
-    if (!item || buyNowLoading) return;
-    setBuyNowLoading(true);
-    try {
-      const meta = {};
-      for (const [k, v] of Object.entries(item.options)) {
-        if (v == null) continue;
-        meta[k] = typeof v === "object" ? JSON.stringify(v) : v;
-      }
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: [{
-            productId: String(item.id),
-            slug: String(item.slug),
-            name: item.name,
-            unitAmount: item.price,
-            quantity: item.quantity,
-            meta,
-          }],
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "Checkout failed");
-      window.location.href = data.url;
-    } catch (e) {
-      showErrorToast(e instanceof Error ? e.message : "Checkout failed");
-    } finally {
-      setBuyNowLoading(false);
-    }
-  }
+  const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
+    buildCartItem,
+    successMessage: t("bk.addedToCart"),
+  });
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -351,9 +322,36 @@ export default function BackdropOrderClient({ productImages = [] }) {
                       name: first.name,
                       size: first.size,
                     });
+                    setArtworkIntent(null);
                   }}
                   onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
                 />
+              )}
+              {!uploadedFile && (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setArtworkIntent(artworkIntent === "upload-later" ? null : "upload-later")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      artworkIntent === "upload-later"
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
+                    }`}
+                  >
+                    I&apos;ll Upload Later
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setArtworkIntent(artworkIntent === "design-help" ? null : "design-help")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      artworkIntent === "design-help"
+                        ? "border-indigo-600 bg-indigo-600 text-white"
+                        : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400"
+                    }`}
+                  >
+                    Design Help (+$45)
+                  </button>
+                </div>
               )}
             </div>
           </Section>
@@ -406,10 +404,14 @@ export default function BackdropOrderClient({ productImages = [] }) {
               <p className="text-xs text-gray-400">{t("bk.selectOptions")}</p>
             )}
 
+            {disabledReason && (
+              <p className="text-center text-xs text-amber-600">{disabledReason}</p>
+            )}
+
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={handleAddToCart}
+                onClick={() => handleAddToCart({ artworkIntent })}
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart
@@ -421,7 +423,7 @@ export default function BackdropOrderClient({ productImages = [] }) {
               </button>
               <button
                 type="button"
-                onClick={handleBuyNow}
+                onClick={() => handleBuyNow({ artworkIntent })}
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading
@@ -466,12 +468,12 @@ export default function BackdropOrderClient({ productImages = [] }) {
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">{t("bk.selectOptions")}</p>
+              <p className="text-sm text-gray-400">{disabledReason || t("bk.selectOptions")}</p>
             )}
           </div>
           <button
             type="button"
-            onClick={handleAddToCart}
+            onClick={() => handleAddToCart({ artworkIntent })}
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart

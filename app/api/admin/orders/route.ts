@@ -19,10 +19,16 @@ export async function GET(request: NextRequest) {
     const rawOrder = searchParams.get("order") || "desc";
     const order = rawOrder === "asc" ? "asc" : "desc";
 
+    const production = searchParams.get("production");
+
     const where: Record<string, unknown> = {};
 
     if (status && status !== "all") {
       where.status = status;
+    }
+
+    if (production && production !== "all") {
+      where.productionStatus = production;
     }
 
     if (search) {
@@ -30,6 +36,7 @@ export async function GET(request: NextRequest) {
         { customerEmail: { contains: search, mode: "insensitive" } },
         { id: { contains: search } },
         { customerName: { contains: search, mode: "insensitive" } },
+        { customerPhone: { contains: search } },
       ];
     }
 
@@ -38,6 +45,15 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           _count: { select: { items: true, notes: true } },
+          items: {
+            take: 1,
+            orderBy: { totalPrice: "desc" },
+            select: {
+              productName: true,
+              material: true,
+              meta: true,
+            },
+          },
         },
         orderBy: { [sort]: order },
         skip: (page - 1) * limit,

@@ -19,3 +19,4 @@ export { default as OptionCard } from "./OptionCard";
 export { default as OptionGrid } from "./OptionGrid";
 export { default as InfoPopover } from "./InfoPopover";
 export { default as useStepScroll } from "./useStepScroll";
+export { default as WhiteInkStep, needsWhiteInk } from "./WhiteInkStep";

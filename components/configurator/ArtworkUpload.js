@@ -266,30 +266,34 @@ export default function ArtworkUpload({
       {selectedOption === "upload" && (
         isMulti ? (
           <div className="ml-8 space-y-3">
+            <p className="text-xs text-gray-400">{t?.("configurator.fileRequirements") || 'Accepts PDF, AI, EPS, PSD, JPG, PNG (300 DPI, CMYK preferred). Include 1/8" bleed.'}</p>
             {fileSlots.map((slot) => {
               const file = uploadedFiles?.[slot.key];
               return (
                 <div key={slot.key} className="rounded-2xl border-2 border-dashed border-gray-300 bg-white p-4 transition-colors hover:border-gray-400">
                   <p className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">{slot.label}</p>
                   {file ? (
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
-                        <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
+                          <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0 flex-1 text-left">
+                          <p className="truncate text-sm font-semibold text-gray-800">{file.name}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onFileRemove?.(slot.key)}
+                          className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-500"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       </div>
-                      <div className="min-w-0 flex-1 text-left">
-                        <p className="truncate text-sm font-semibold text-gray-800">{file.name}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => onFileRemove?.(slot.key)}
-                        className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-500"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
+                      <FileInfoCard file={file} t={t} />
                     </div>
                   ) : (
                     <div className="text-center">

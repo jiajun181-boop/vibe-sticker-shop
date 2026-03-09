@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
+import { sendOrderNotification } from "@/lib/notifications/order-notifications";
 
 /**
  * POST /api/admin/orders/[id]/ship
@@ -30,11 +31,24 @@ export async function POST(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Update order production status
+    // Update order production status + advance all production jobs to "shipped"
     const updated = await prisma.order.update({
       where: { id },
       data: { productionStatus: "shipped" },
     });
+
+    // Advance all non-shipped jobs for this order to "shipped"
+    try {
+      await prisma.productionJob.updateMany({
+        where: {
+          orderItem: { orderId: id },
+          status: { notIn: ["shipped"] },
+        },
+        data: { status: "shipped", completedAt: new Date() },
+      });
+    } catch (jobErr) {
+      console.error("[Ship] Failed to update production jobs:", jobErr);
+    }
 
     // Timeline event
     await prisma.orderTimeline.create({
@@ -58,20 +72,12 @@ export async function POST(
       details: { trackingNumber, carrier },
     });
 
-    // Send shipped email
-    try {
-      const { sendEmail } = await import("@/lib/email/resend");
-      const { buildOrderShippedHtml } = await import("@/lib/email/templates/order-shipped");
-      await sendEmail({
-        to: order.customerEmail,
-        subject: `Your Order Has Shipped! — #${id.slice(0, 8)}`,
-        html: buildOrderShippedHtml(order, { trackingNumber, carrier, estimatedDelivery }),
-        template: "order-shipped",
-        orderId: id,
-      });
-    } catch (emailErr) {
-      console.error("[Ship] Email send failed:", emailErr);
-    }
+    // Send shipped email + push notification via unified notification system
+    sendOrderNotification(id, "order_shipped", {
+      trackingNumber,
+      carrier,
+      estimatedDelivery,
+    }).catch((emailErr) => console.error("[Ship] Notification failed:", emailErr));
 
     // Send SMS notification (non-blocking)
     try {

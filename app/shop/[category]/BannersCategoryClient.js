@@ -32,12 +32,47 @@ const ITEM_I18N = {
   "outdoor-canopy-tent-10x10": "bd.item.canopyTent",
 };
 
+/* ── Taglines (i18n keys) ── */
+const TAGLINE_KEYS = {
+  "vinyl-banners": "bd.tagline.vinylBanners",
+  "mesh-banners": "bd.tagline.meshBanners",
+  "pole-banners": "bd.tagline.poleBanners",
+  "double-sided-banners": "bd.tagline.doubleSided",
+  "roll-up-banners": "bd.tagline.rollUp",
+  "x-banner-frame-print": "bd.tagline.xBanner",
+  "tabletop-x-banner": "bd.tagline.tabletopX",
+  "deluxe-tabletop-retractable-a3": "bd.tagline.tabletopRetractable",
+  "telescopic-backdrop": "bd.tagline.telescopic",
+  "popup-display-curved-8ft": "bd.tagline.popupDisplay",
+  "table-cloth": "bd.tagline.tableCloth",
+  "feather-flags": "bd.tagline.featherFlags",
+  "teardrop-flags": "bd.tagline.teardropFlags",
+  "outdoor-canopy-tent-10x10": "bd.tagline.canopyTent",
+};
+
+/* ── Compare cues (i18n keys) ── */
+const CUES = {
+  "vinyl-banners": ["cue.outdoor", "cue.durable"],
+  "mesh-banners": ["cue.windProof", "cue.outdoor"],
+  "pole-banners": ["cue.doubleSided", "cue.outdoor"],
+  "double-sided-banners": ["cue.doubleSided"],
+  "roll-up-banners": ["cue.portable", "cue.standIncl"],
+  "x-banner-frame-print": ["cue.portable", "cue.standIncl"],
+  "tabletop-x-banner": ["cue.tabletop", "cue.portable"],
+  "deluxe-tabletop-retractable-a3": ["cue.tabletop", "cue.portable"],
+  "telescopic-backdrop": ["cue.portable", "cue.event"],
+  "popup-display-curved-8ft": ["cue.portable", "cue.event"],
+  "table-cloth": ["cue.event", "cue.fitted"],
+  "feather-flags": ["cue.outdoor", "cue.poleKit"],
+  "teardrop-flags": ["cue.outdoor", "cue.poleKit"],
+  "outdoor-canopy-tent-10x10": ["cue.outdoor", "cue.event"],
+};
+
 const SECTIONS = [
   {
-    key: "banners",
+    key: "vinyl-outdoor",
     titleKey: "bd.section.banners.title",
     subtitleKey: "bd.section.banners.subtitle",
-    size: "large",
     items: [
       { key: "vinyl-banners", href: `${BASE}/vinyl-banners`, gradient: "from-rose-400 to-pink-400" },
       { key: "mesh-banners", href: `${BASE}/mesh-banners`, gradient: "from-sky-400 to-cyan-400" },
@@ -49,7 +84,6 @@ const SECTIONS = [
     key: "stands",
     titleKey: "bd.section.stands.title",
     subtitleKey: "bd.section.stands.subtitle",
-    size: "medium",
     items: [
       { key: "roll-up-banners", href: `${BASE}/roll-up-banners`, gradient: "from-emerald-400 to-teal-400" },
       { key: "x-banner-frame-print", href: `${BASE}/x-banner-frame-print`, gradient: "from-indigo-400 to-blue-400" },
@@ -61,7 +95,6 @@ const SECTIONS = [
     key: "tradeshow",
     titleKey: "bd.section.tradeshow.title",
     subtitleKey: "bd.section.tradeshow.subtitle",
-    size: "medium",
     items: [
       { key: "telescopic-backdrop", href: `${BASE}/telescopic-backdrop`, gradient: "from-slate-400 to-gray-400" },
       { key: "popup-display-curved-8ft", href: `${BASE}/popup-display-curved-8ft`, gradient: "from-blue-400 to-indigo-400" },
@@ -69,10 +102,9 @@ const SECTIONS = [
     ],
   },
   {
-    key: "outdoor",
+    key: "flags-outdoor",
     titleKey: "bd.section.outdoor.title",
     subtitleKey: "bd.section.outdoor.subtitle",
-    size: "medium",
     items: [
       { key: "feather-flags", href: `${BASE}/feather-flags`, gradient: "from-orange-400 to-red-400" },
       { key: "teardrop-flags", href: `${BASE}/teardrop-flags`, gradient: "from-cyan-400 to-sky-400" },
@@ -81,12 +113,14 @@ const SECTIONS = [
   },
 ];
 
-function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
-  const isLarge = size === "large";
+function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
   const [hovered, setHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
   const isSvg = showUrl && isSvgImage(showUrl);
   const name = t(ITEM_I18N[item.key] || item.key);
+  const tagline = TAGLINE_KEYS[item.key] ? t(TAGLINE_KEYS[item.key]) : "";
+  const cues = CUES[item.key] || [];
   return (
     <Link
       href={item.href}
@@ -94,12 +128,12 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className={`relative overflow-hidden bg-[var(--color-gray-100)] ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
-        {showUrl ? (
+      <div className="relative overflow-hidden bg-[var(--color-gray-100)] aspect-[4/3]">
+        {showUrl && !imgError ? (
           isSvg ? (
-            <img src={showUrl} alt={name} loading="lazy" className="h-full w-full object-cover transition-opacity duration-300" />
+            <img src={showUrl} alt={name} loading="lazy" onError={() => setImgError(true)} className="h-full w-full object-cover transition-opacity duration-300" />
           ) : (
-            <Image src={showUrl} alt={name} fill className="object-cover transition-opacity duration-300 group-hover:scale-105" sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw" />
+            <Image src={showUrl} alt={name} fill onError={() => setImgError(true)} className="object-cover transition-opacity duration-300 group-hover:scale-105" sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw" />
           )
         ) : (
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
@@ -109,10 +143,24 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
           </div>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-base" : "text-sm"}`}>
+      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
+        <h3 className="text-sm font-semibold text-[var(--color-gray-900)]">
           {name}
         </h3>
+        {tagline && (
+          <p className="mt-0.5 text-[11px] leading-tight text-gray-500 line-clamp-2">
+            {tagline}
+          </p>
+        )}
+        {cues.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {cues.map((c) => (
+              <span key={c} className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-600">
+                {t(c)}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="mt-auto pt-3 flex items-center justify-between">
           {price > 0 ? (
             <span className="text-sm font-bold text-[var(--color-gray-900)]">
@@ -121,7 +169,7 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
           ) : (
             <span className="text-xs text-[var(--color-gray-400)]">{t("shop.getQuote")}</span>
           )}
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3.5 py-1.5 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[9px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
             {t("shop.configure")}
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -133,8 +181,15 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
   );
 }
 
+/* ── Related categories ── */
+const BD_RELATED = [
+  { title: "Signs & Display Boards", titleZh: "标牌和展示板", desc: "Coroplast, foam board, acrylic & aluminum", descZh: "瓦楞板、泡沫板、亚克力和铝板", href: "/shop/signs-rigid-boards" },
+  { title: "Vehicle Graphics", titleZh: "车辆图形", desc: "Wraps, magnets, decals & fleet branding", descZh: "车贴、磁性贴、贴花和车队品牌", href: "/shop/vehicle-graphics-fleet" },
+  { title: "Window, Wall & Floor", titleZh: "窗墙地面", desc: "Window clings, wall murals & floor graphics", descZh: "窗贴、墙面壁画和地面图形", href: "/shop/windows-walls-floors" },
+];
+
 export default function BannersCategoryClient({ bannerPrices = {}, bannerImages = {}, bannerImages2 = {} }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   return (
     <main className="bg-gradient-to-b from-rose-50 to-white pb-20 pt-10 text-[var(--color-gray-900)]">
@@ -159,17 +214,12 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
             <section key={section.key} className="mt-12">
               <h2 className="text-xl font-semibold tracking-tight">{t(section.titleKey)}</h2>
               <p className="mt-1 text-sm text-[var(--color-gray-500)]">{t(section.subtitleKey)}</p>
-              <div className={`mt-4 grid gap-4 ${
-                section.size === "large"
-                  ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-                  : "grid-cols-2 sm:grid-cols-3"
-              }`}>
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
                 {visibleItems.map((item) => (
                   <ProductCard
                     key={item.key}
                     item={item}
                     price={bannerPrices[item.key] || 0}
-                    size={section.size}
                     imageUrl={bannerImages[item.key]}
                     hoverImageUrl={bannerImages2[item.key]}
                     t={t}
@@ -180,7 +230,39 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
           );
         })}
 
+        {SECTIONS.every((section) => section.items.every((item) => !(item.key in bannerPrices))) && (
+          <p className="mt-12 text-center text-sm text-[var(--color-gray-500)]">
+            {t("shop.noProducts")}
+          </p>
+        )}
+
         <CategoryFaq category="banners-displays" />
+
+        {/* Related categories */}
+        <section className="mt-12">
+          <h2 className="text-xl font-semibold tracking-tight">{t("bd.related")}</h2>
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-3">
+            {BD_RELATED.map((cat) => (
+              <Link
+                key={cat.href}
+                href={cat.href}
+                className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-5 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
+              >
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
+                    {locale === "zh" ? cat.titleZh : cat.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-[var(--color-gray-500)] truncate">
+                    {locale === "zh" ? cat.descZh : cat.desc}
+                  </p>
+                </div>
+                <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {/* Back to shop */}
         <div className="mt-12 text-center">

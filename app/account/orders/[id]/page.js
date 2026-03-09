@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useCartStore } from "@/lib/store";
+import { getActionLabel } from "@/lib/timeline-labels";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -250,6 +251,23 @@ export default function OrderDetailPage() {
         </div>
       )}
 
+      {/* Track Shipment CTA */}
+      {(order.productionStatus === "shipped" || order.productionStatus === "completed") && (
+        <Link
+          href={`/track-order?order=${order.id}`}
+          className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 transition-colors hover:bg-emerald-100"
+        >
+          <div className="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600"><rect width="16" height="13" x="6" y="4" rx="2"/><path d="m22 7-7.1 3.78c-.57.3-1.23.3-1.8 0L6 7"/><path d="M2 8v11a2 2 0 0 0 2 2h16"/></svg>
+            <div>
+              <p className="text-sm font-semibold text-emerald-800">Your order has shipped</p>
+              <p className="text-[11px] text-emerald-600">View tracking details and delivery status</p>
+            </div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="m9 18 6-6-6-6"/></svg>
+        </Link>
+      )}
+
       {/* Items */}
       <div className="rounded-xl border border-[var(--color-gray-200)]">
         <div className="border-b border-[var(--color-gray-200)] px-4 py-3">
@@ -450,7 +468,7 @@ export default function OrderDetailPage() {
               <div key={event.id} className="flex gap-3">
                 <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[var(--color-gray-400)]" />
                 <div>
-                  <p className="text-sm text-[var(--color-gray-900)]">{event.action}</p>
+                  <p className="text-sm text-[var(--color-gray-900)]">{getActionLabel(event.action)}</p>
                   <p className="text-xs text-[var(--color-gray-500)]">
                     {new Date(event.createdAt).toLocaleDateString("en-CA", {
                       month: "short",

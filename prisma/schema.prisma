@@ -271,6 +271,11 @@ model Order {
   totalAmount           Int              @default(0)
   currency              String           @default("cad")
 
+  // Cost tracking (ERP)
+  materialCost          Int              @default(0)  // total material cost cents
+  laborCost             Int              @default(0)  // total labor cost cents
+  shippingCost          Int              @default(0)  // actual shipping cost to us
+
   // Status
   status                OrderStatus      @default(pending)
   paymentStatus         PaymentStatus    @default(unpaid)
@@ -324,6 +329,8 @@ model OrderItem {
   finishing   String?
   meta        Json?
   specsJson   Json?
+  materialCostCents Int   @default(0)  // material cost for this item
+  laborMinutes      Int   @default(0)  // labor time in minutes
   fileKey     String?
   fileUrl     String?
   fileName    String?
@@ -1040,4 +1047,169 @@ model AdminToolJob {
   @@index([operatorId])
   @@index([orderId])
   @@index([createdAt])
+}
+
+// ══════════════════════════════════════════════════════
+// ── ERP Modules: Finance, Shipping, CRM, Notifications
+// ══════════════════════════════════════════════════════
+
+// ── Financial Module ──
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  overdue
+  void
+}
+
+enum ExpenseCategory {
+  material
+  labor
+  shipping
+  equipment
+  rent
+  utilities
+  software
+  marketing
+  other
+}
+
+model Supplier {
+  id          String    @id @default(cuid())
+  name        String
+  contactName String?
+  email       String?
+  phone       String?
+  website     String?
+  address     String?
+  notes       String?
+  isActive    Boolean   @default(true)
+  expenses    Expense[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive])
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  category    ExpenseCategory
+  description String
+  amountCents Int
+  currency    String          @default("cad")
+  date        DateTime        @default(now())
+  orderId     String?
+  supplierId  String?
+  supplier    Supplier?       @relation(fields: [supplierId], references: [id])
+  receiptUrl  String?
+  notes       String?
+  isRecurring Boolean         @default(false)
+  recurringDay Int?           // Day of month for recurring expenses
+  createdBy   String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([category, date])
+  @@index([orderId])
+  @@index([supplierId])
+  @@index([date])
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  orderId       String?
+  userId        String?
+  customerEmail String
+  customerName  String?
+  companyName   String?
+  subtotalCents Int
+  taxCents      Int
+  totalCents    Int
+  currency      String        @default("cad")
+  status        InvoiceStatus @default(draft)
+  terms         String        @default("net_30")
+  issuedAt      DateTime?
+  dueAt         DateTime?
+  paidAt        DateTime?
+  notes         String?
+  lineItems     Json?
+  createdBy     String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status])
+  @@index([userId])
+  @@index([dueAt])
+  @@index([invoiceNumber])
+  @@index([createdAt])
+}
+
+// ── Shipping Management ──
+
+enum ShipmentStatus {
+  pending
+  label_created
+  picked_up
+  in_transit
+  delivered
+  returned
+  exception
+}
+
+model Shipment {
+  id             String         @id @default(cuid())
+  orderId        String
+  carrier        String         @default("canada_post")
+  trackingNumber String?
+  labelUrl       String?
+  status         ShipmentStatus @default(pending)
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  weight         Float?
+  dimensions     String?
+  shippingCost   Int?
+  notes          String?
+  createdBy      String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+  @@index([trackingNumber])
+  @@index([createdAt])
+}
+
+// ── Notification Center ──
+
+model Notification {
+  id            String   @id @default(cuid())
+  type          String
+  title         String
+  message       String
+  link          String?
+  severity      String   @default("info")
+  isRead        Boolean  @default(false)
+  recipientRole String?
+  recipientId   String?
+  entityType    String?
+  entityId      String?
+  createdAt     DateTime @default(now())
+
+  @@index([recipientId, isRead, createdAt])
+  @@index([recipientRole, isRead, createdAt])
+  @@index([createdAt])
+}
+
+// ── CRM Enhancement ──
+
+model CustomerNote {
+  id         String   @id @default(cuid())
+  userId     String
+  authorName String
+  content    String
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
 }

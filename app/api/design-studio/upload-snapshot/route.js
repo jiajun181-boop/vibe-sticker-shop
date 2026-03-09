@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { createRateLimiter, getClientIp } from "@/lib/rate-limit";
+
+const uploadLimiter = createRateLimiter({ windowMs: 60_000, max: 10 }); // 10 per minute
 
 const ALLOWED_TYPES = [
   "image/png",
@@ -10,6 +13,12 @@ const ALLOWED_TYPES = [
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const { success } = uploadLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json({ error: "Too many uploads. Please try again later." }, { status: 429 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file");
 

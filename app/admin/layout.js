@@ -7,6 +7,7 @@ import { Inter } from "next/font/google";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getAllowedNavHrefs, ROLE_LABELS } from "@/lib/admin-permissions";
 import CommandPalette from "@/components/admin/CommandPalette";
+import NotificationBell from "@/components/admin/NotificationBell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,6 +20,7 @@ const navGroups = [
     labelKey: "admin.navGroup.overview",
     items: [
       { key: "admin.nav.dashboard", href: "/admin", icon: "grid" },
+      { key: "admin.nav.workstation", href: "/admin/workstation", icon: "grid", sub: "Daily mission control" },
     ],
   },
   {
@@ -53,6 +55,7 @@ const navGroups = [
     items: [
       { key: "admin.nav.production", href: "/admin/production", icon: "printer" },
       { key: "admin.nav.factories", href: "/admin/factories", icon: "factory" },
+      { key: "admin.nav.shipping", href: "/admin/shipping", icon: "package", sub: "Shipment tracking" },
       { key: "admin.nav.qc", href: "/admin/qc", icon: "shield", sub: "Quality checks" },
       { key: "admin.nav.inventory", href: "/admin/inventory", icon: "package", sub: "Stock levels" },
     ],
@@ -61,6 +64,7 @@ const navGroups = [
     labelKey: "admin.navGroup.insights",
     items: [
       { key: "admin.nav.analytics", href: "/admin/analytics", icon: "chart" },
+      { key: "admin.nav.finance", href: "/admin/finance", icon: "pricing", sub: "Revenue & expenses" },
       { key: "admin.nav.funnel", href: "/admin/funnel", icon: "funnel", sub: "Conversion tracking" },
       { key: "admin.nav.salesReport", href: "/admin/reports/sales", icon: "report" },
       { key: "admin.nav.productionReport", href: "/admin/reports/production", icon: "report" },
@@ -71,6 +75,7 @@ const navGroups = [
     items: [
       { key: "admin.nav.content", href: "/admin/content", icon: "document", sub: "Pages & banners" },
       { key: "admin.nav.coupons", href: "/admin/coupons", icon: "ticket" },
+      { key: "admin.nav.reviews", href: "/admin/reviews", icon: "chat", sub: "Customer reviews" },
       { key: "admin.nav.marketingCalendar", href: "/admin/marketing-calendar", icon: "calendar" },
     ],
   },
@@ -412,6 +417,7 @@ export default function AdminLayout({ children }) {
               {t("admin.search.hint")}
               <kbd className="rounded-[2px] border border-[#e0e0e0] px-1 py-0.5 text-[10px] font-mono">Ctrl/Cmd+K</kbd>
             </button>
+            <NotificationBell />
             {hydrated && (
               <button
                 type="button"

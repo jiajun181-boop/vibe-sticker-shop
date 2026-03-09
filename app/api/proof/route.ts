@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { createRateLimiter, getClientIp } from "@/lib/rate-limit";
 
 const SaveContourSchema = z.object({
   productSlug: z.string().min(1),
@@ -14,12 +15,20 @@ const SaveContourSchema = z.object({
   customerConfirmed: z.boolean().optional(),
 });
 
+const proofLimiter = createRateLimiter({ windowMs: 60_000, max: 10 }); // 10 per minute
+
 /**
  * POST /api/proof — Save contour/proof data server-side before checkout.
  * Returns { id } which the client includes in cart metadata as proofDataId.
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const { success } = proofLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+
     const body = await request.json();
     const data = SaveContourSchema.parse(body);
 

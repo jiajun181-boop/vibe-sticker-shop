@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useCartStore } from "@/lib/store";
-import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { useConfiguratorCart } from "@/components/configurator";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { ProofPreview } from "@/components/configurator";
+import saveProofData from "@/lib/proof/saveProofData";
+import WhiteInkStep, { needsWhiteInk } from "@/components/configurator/WhiteInkStep";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
@@ -20,7 +21,7 @@ const formatCad = (cents) =>
 const MATERIALS = [
   { id: "white-vinyl", desc: "dc.mat.whiteVinylDesc" },
   { id: "clear-vinyl", desc: "dc.mat.clearVinylDesc" },
-  { id: "holographic", desc: "dc.mat.holographicDesc" },
+  { id: "holographic-vinyl", desc: "dc.mat.holographicDesc" },
   { id: "kraft", desc: "dc.mat.kraftDesc" },
 ];
 
@@ -46,7 +47,7 @@ const DEFAULT_SIZE_IDX = 1; // 3"×3"
 
 export default function DieCutStickerOrderClient() {
   const { t } = useTranslation();
-  const { addItem, openCart } = useCartStore();
+  // useConfiguratorCart provides unified Add to Cart + Buy Now handlers
 
   const [materialId, setMaterialId] = useState("white-vinyl");
   const [sizeIdx, setSizeIdx] = useState(DEFAULT_SIZE_IDX);
@@ -57,11 +58,13 @@ export default function DieCutStickerOrderClient() {
   const [proofConfirmed, setProofConfirmed] = useState(false);
   const [contourData, setContourData] = useState(null);
   const [proofDataId, setProofDataId] = useState(null);
+  const [whiteInk, setWhiteInk] = useState({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null });
+  const [artworkIntent, setArtworkIntent] = useState(null);
 
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
   const [quoteError, setQuoteError] = useState(null);
-  const [buyNowLoading, setBuyNowLoading] = useState(false);
+  // buyNowLoading provided by useConfiguratorCart hook below
 
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
@@ -111,9 +114,20 @@ export default function DieCutStickerOrderClient() {
   const totalCents = subtotalCents + finishSurcharge;
 
   const requiresProof = uploadedFile != null;
-  const canAddToCart = quoteData && !quoteLoading && activeQty > 0 && (!requiresProof || proofConfirmed);
+  // White ink enabled on transparent material → URL must be ready before checkout
+  const whiteInkReady = !needsWhiteInk(materialId) || !proofConfirmed || !whiteInk.enabled || whiteInk.whiteInkUrl != null;
+  const hasArtworkOrIntent = !!uploadedFile || !!artworkIntent;
+  const canAddToCart = quoteData && !quoteLoading && activeQty > 0 && hasArtworkOrIntent && (!requiresProof || proofConfirmed) && whiteInkReady;
+  const disabledReason = !canAddToCart
+    ? quoteLoading ? "Calculating price..."
+    : !quoteData ? "Select your options for pricing"
+    : !hasArtworkOrIntent ? "Upload artwork or select an option below"
+    : requiresProof && !proofConfirmed ? "Confirm your proof to continue"
+    : !whiteInkReady ? "White ink layer is being generated..."
+    : "Complete all options to continue"
+    : null;
 
-  function buildCartItem() {
+  const buildCartItem = useCallback(() => {
     if (!quoteData || activeQty <= 0) return null;
     return {
       id: "die-cut-stickers",
@@ -131,50 +145,29 @@ export default function DieCutStickerOrderClient() {
         width: size.w,
         height: size.h,
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
         proofConfirmed: proofConfirmed || false,
         proofDataId: proofDataId || null,
         contourSvg: contourData?.contourSvg || null,
         bleedMm: contourData?.bleedMm || null,
         processedImageUrl: contourData?.processedImageUrl || null,
+        whiteInkEnabled: needsWhiteInk(materialId) && proofConfirmed && whiteInk.enabled,
+        whiteInkMode: needsWhiteInk(materialId) && proofConfirmed && whiteInk.enabled ? (whiteInk.mode || "auto") : null,
+        whiteInkUrl: needsWhiteInk(materialId) && proofConfirmed && whiteInk.enabled ? (whiteInk.whiteInkUrl || null) : null,
+        whiteInkKey: needsWhiteInk(materialId) && proofConfirmed && whiteInk.enabled ? (whiteInk.whiteInkKey || null) : null,
+        whiteInkWidth: needsWhiteInk(materialId) && proofConfirmed && whiteInk.enabled ? (whiteInk.whiteInkWidth || null) : null,
+        whiteInkHeight: needsWhiteInk(materialId) && proofConfirmed && whiteInk.enabled ? (whiteInk.whiteInkHeight || null) : null,
+        artworkIntent: artworkIntent || null,
       },
       forceNewLine: true,
     };
-  }
+  }, [quoteData, activeQty, t, size, totalCents, materialId, finishId, uploadedFile, proofConfirmed, proofDataId, contourData, whiteInk, artworkIntent]);
 
-  function handleAddToCart() {
-    const item = buildCartItem();
-    if (!item) return;
-    addItem(item);
-    openCart();
-    showSuccessToast(t("dc.addedToCart"));
-  }
-
-  async function handleBuyNow() {
-    const item = buildCartItem();
-    if (!item || buyNowLoading) return;
-    setBuyNowLoading(true);
-    try {
-      const meta = {};
-      for (const [k, v] of Object.entries(item.options)) {
-        if (v == null) continue;
-        meta[k] = typeof v === "object" ? JSON.stringify(v) : v;
-      }
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: [{ productId: String(item.id), slug: String(item.slug), name: item.name, unitAmount: item.price, quantity: item.quantity, meta }],
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "Checkout failed");
-      window.location.href = data.url;
-    } catch (e) {
-      showErrorToast(e instanceof Error ? e.message : "Checkout failed");
-    } finally {
-      setBuyNowLoading(false);
-    }
-  }
+  const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
+    buildCartItem,
+    successMessage: t("dc.addedToCart"),
+  });
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -197,7 +190,7 @@ export default function DieCutStickerOrderClient() {
                 <button
                   key={mat.id}
                   type="button"
-                  onClick={() => setMaterialId(mat.id)}
+                  onClick={() => { setMaterialId(mat.id); setWhiteInk({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null }); }}
                   className={`relative rounded-xl border-2 px-3 py-3 text-left transition-all ${
                     materialId === mat.id
                       ? "border-gray-900 bg-gray-50 shadow-sm"
@@ -214,6 +207,21 @@ export default function DieCutStickerOrderClient() {
                 </button>
               ))}
             </div>
+            {/* Transparent material explanation */}
+            {needsWhiteInk(materialId) && (
+              <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+                <p className="text-sm font-semibold text-blue-800">
+                  {materialId === "clear-vinyl" ? "Clear vinyl" : materialId === "holographic-vinyl" ? "Holographic vinyl" : "This material"} is transparent
+                </p>
+                <p className="mt-1 text-xs text-blue-700">
+                  Without a white ink layer, colors will appear translucent on the sticker.
+                  After uploading your artwork and confirming the proof, you can choose how to add a white base:
+                  <strong> Automatic</strong> (full white under your design),
+                  <strong> Match Design</strong> (white follows your artwork edges), or
+                  <strong> Upload Your Own</strong> white layer.
+                </p>
+              </div>
+            )}
           </Section>
 
           {/* Size */}
@@ -268,23 +276,53 @@ export default function DieCutStickerOrderClient() {
               {uploadedFile ? (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-800">{uploadedFile.name}</span>
-                  <button type="button" onClick={() => { setUploadedFile(null); setProofConfirmed(false); setContourData(null); }} className="text-xs text-red-500 hover:text-red-700">
+                  <button type="button" onClick={() => { setUploadedFile(null); setProofConfirmed(false); setContourData(null); setWhiteInk({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null }); }} className="text-xs text-red-500 hover:text-red-700">
                     {t("dc.remove")}
                   </button>
                 </div>
               ) : (
-                <UploadButton
-                  endpoint="artworkUploader"
-                  onClientUploadComplete={(res) => {
-                    const first = Array.isArray(res) ? res[0] : null;
-                    if (!first) return;
-                    setUploadedFile({ url: first.ufsUrl || first.url, key: first.key, name: first.name, size: first.size });
-                    setProofConfirmed(false);
-                    setContourData(null);
-                    setProofDataId(null);
-                  }}
-                  onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
-                />
+                <>
+                  <UploadButton
+                    endpoint="artworkUploader"
+                    onClientUploadComplete={(res) => {
+                      const first = Array.isArray(res) ? res[0] : null;
+                      if (!first) return;
+                      setUploadedFile({ url: first.ufsUrl || first.url, key: first.key, name: first.name, size: first.size });
+                      setProofConfirmed(false);
+                      setContourData(null);
+                      setProofDataId(null);
+                      setArtworkIntent(null); // Clear intent since artwork was provided
+                    }}
+                    onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
+                  />
+                  {/* Artwork intent — shown when no file uploaded */}
+                  {!uploadedFile && (
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setArtworkIntent(artworkIntent === "upload-later" ? null : "upload-later")}
+                        className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                          artworkIntent === "upload-later"
+                            ? "border-gray-900 bg-gray-900 text-white"
+                            : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
+                        }`}
+                      >
+                        {t("configurator.uploadLater") || "I'll Upload Later"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setArtworkIntent(artworkIntent === "design-help" ? null : "design-help")}
+                        className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                          artworkIntent === "design-help"
+                            ? "border-indigo-600 bg-indigo-600 text-white"
+                            : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400"
+                        }`}
+                      >
+                        {t("configurator.designHelpOption") || "Design Help (+$45)"}
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </Section>
@@ -300,33 +338,27 @@ export default function DieCutStickerOrderClient() {
               onConfirmProof={(data) => {
                 setContourData(data);
                 setProofConfirmed(true);
-                // Persist proof data server-side (non-blocking)
-                fetch("/api/proof", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    productSlug: "die-cut-stickers",
-                    originalFileUrl: uploadedFile?.url || null,
-                    originalFileKey: uploadedFile?.key || null,
-                    processedImageUrl: data.processedImageUrl || null,
-                    contourSvg: data.contourSvg || null,
-                    bleedSvg: data.bleedSvg || null,
-                    bleedMm: data.bleedMm || null,
-                    bgRemoved: data.bgRemoved || false,
-                    customerConfirmed: true,
-                  }),
-                })
-                  .then((r) => r.json())
-                  .then((res) => { if (res.id) setProofDataId(res.id); })
-                  .catch(() => {});
+                saveProofData({ productSlug: "die-cut-stickers", uploadedFile, contourData: data })
+                  .then((id) => { if (id) setProofDataId(id); });
               }}
               onRejectProof={() => {
                 setUploadedFile(null);
                 setProofConfirmed(false);
                 setContourData(null);
                 setProofDataId(null);
+                setWhiteInk({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null });
               }}
               t={t}
+            />
+          )}
+
+          {/* White Ink — shown after proof is confirmed, only for transparent materials */}
+          {uploadedFile && proofConfirmed && (
+            <WhiteInkStep
+              key={materialId}
+              materialId={materialId}
+              artworkUrl={contourData?.processedImageUrl || uploadedFile?.url}
+              onChange={setWhiteInk}
             />
           )}
         </div>
@@ -340,6 +372,9 @@ export default function DieCutStickerOrderClient() {
               <Row label={t("dc.material")} value={t(`dc.mat.${materialId}`)} />
               <Row label={t("dc.size")} value={size.tag} />
               <Row label={t("dc.finish")} value={t(`dc.finish.${finishId}`)} />
+              {needsWhiteInk(materialId) && whiteInk.enabled && (
+                <Row label="White Ink" value={whiteInk.mode === "auto" ? "Automatic" : whiteInk.mode === "follow" ? "Match Design" : "Custom Upload"} />
+              )}
               <Row label={t("dc.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
             </dl>
 
@@ -367,10 +402,14 @@ export default function DieCutStickerOrderClient() {
               <p className="text-xs text-gray-400">{t("dc.selectOptions")}</p>
             )}
 
+            {disabledReason && (
+              <p className="text-center text-xs text-amber-600">{disabledReason}</p>
+            )}
+
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={handleAddToCart}
+                onClick={() => handleAddToCart({ intakeMode: "upload-optional", artworkIntent })}
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"
@@ -380,7 +419,7 @@ export default function DieCutStickerOrderClient() {
               </button>
               <button
                 type="button"
-                onClick={handleBuyNow}
+                onClick={() => handleBuyNow({ intakeMode: "upload-optional", artworkIntent })}
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"
@@ -413,12 +452,12 @@ export default function DieCutStickerOrderClient() {
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">{t("dc.selectOptions")}</p>
+              <p className="text-sm text-gray-400">{disabledReason || t("dc.selectOptions")}</p>
             )}
           </div>
           <button
             type="button"
-            onClick={handleAddToCart}
+            onClick={() => handleAddToCart({ intakeMode: "upload-optional", artworkIntent })}
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"
@@ -428,7 +467,7 @@ export default function DieCutStickerOrderClient() {
           </button>
           <button
             type="button"
-            onClick={handleBuyNow}
+            onClick={() => handleBuyNow({ intakeMode: "upload-optional", artworkIntent })}
             disabled={!canAddToCart || buyNowLoading}
             className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"

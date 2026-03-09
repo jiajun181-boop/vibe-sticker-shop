@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
     const [
       todayOrders,
       yesterdayOrders,
@@ -30,11 +32,21 @@ export async function GET(request: NextRequest) {
       prevMonthRevenue,
       totalOrders,
       recentOrders,
+      // Pipeline counts
+      pipelinePreflight,
+      pipelineProduction,
+      pipelineReady,
+      pipelineShippedToday,
+      // Needs-attention count
+      needsAttention,
+      // Rush + overdue jobs
+      rushJobCount,
+      overdueJobCount,
       ...dailyCounts
     ] = await Promise.all([
       prisma.order.count({ where: { createdAt: { gte: startOfToday } } }),
       prisma.order.count({ where: { createdAt: { gte: startOfYesterday, lt: startOfToday } } }),
-      prisma.order.count({ where: { status: "pending" } }),
+      prisma.order.count({ where: { status: "paid", productionStatus: "not_started" } }),
       prisma.order.aggregate({
         where: { createdAt: { gte: startOfMonth }, paymentStatus: "paid" },
         _sum: { totalAmount: true },
@@ -51,11 +63,37 @@ export async function GET(request: NextRequest) {
           id: true,
           status: true,
           paymentStatus: true,
+          productionStatus: true,
           totalAmount: true,
           createdAt: true,
           customerName: true,
+          customerEmail: true,
+          tags: true,
           _count: { select: { items: true } },
         },
+      }),
+      // Pipeline
+      prisma.order.count({ where: { productionStatus: "preflight" } }),
+      prisma.order.count({ where: { productionStatus: "in_production" } }),
+      prisma.order.count({ where: { productionStatus: "ready_to_ship" } }),
+      prisma.order.count({ where: { productionStatus: "shipped", updatedAt: { gte: startOfToday, lt: endOfToday } } }),
+      // Needs attention (on_hold + missing artwork + rush)
+      prisma.order.count({
+        where: {
+          OR: [
+            { productionStatus: "on_hold" },
+            { tags: { hasSome: ["missing-artwork", "rush", "exception"] } },
+          ],
+          status: { notIn: ["canceled", "refunded"] },
+          isArchived: false,
+        },
+      }),
+      // Rush + overdue production jobs
+      prisma.productionJob.count({
+        where: { priority: "urgent", status: { notIn: ["finished", "shipped"] } },
+      }),
+      prisma.productionJob.count({
+        where: { dueAt: { lt: now }, status: { notIn: ["finished", "shipped"] } },
       }),
       ...dayBounds.map(({ start, end }) =>
         prisma.order.count({ where: { createdAt: { gte: start, lt: end } } })
@@ -71,6 +109,15 @@ export async function GET(request: NextRequest) {
       totalOrders,
       recentOrders,
       dailyOrders: dailyCounts,
+      pipeline: {
+        preflight: pipelinePreflight,
+        in_production: pipelineProduction,
+        ready_to_ship: pipelineReady,
+        shipped_today: pipelineShippedToday,
+      },
+      needsAttention,
+      rushJobs: rushJobCount,
+      overdueJobs: overdueJobCount,
     });
 
   } catch (err) {

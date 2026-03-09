@@ -146,8 +146,13 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE() {
-  const response = NextResponse.json({ success: true });
-  response.cookies.delete("admin_session");
-  response.cookies.delete("admin_auth");
-  return response;
+  try {
+    const response = NextResponse.json({ success: true });
+    response.cookies.delete("admin_session");
+    response.cookies.delete("admin_auth");
+    return response;
+  } catch (err) {
+    console.error("[Admin Logout] Error:", err);
+    return NextResponse.json({ error: "Logout failed" }, { status: 500 });
+  }
 }

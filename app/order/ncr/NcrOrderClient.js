@@ -46,6 +46,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
 
   // File upload
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
 
   const formType = useMemo(() => FORM_TYPES.find((f) => f.id === formTypeId) || FORM_TYPES[0], [formTypeId]);
   const size = SIZES[sizeIdx];
@@ -91,6 +92,12 @@ export default function NcrOrderClient({ defaultType, productImages }) {
 
   const canAddToCart = quote.quoteData && !quote.quoteLoading && quantity > 0 && (!numbering || !numberingOverflow);
 
+  const disabledReason = !canAddToCart
+    ? quote.quoteLoading ? "Calculating price..."
+    : !quote.quoteData ? "Select your options for pricing"
+    : "Complete all options to continue"
+    : null;
+
   // ─── Cart ───
   const buildCartItem = useCallback(() => {
     if (!quote.quoteData || quantity <= 0) return null;
@@ -112,6 +119,7 @@ export default function NcrOrderClient({ defaultType, productImages }) {
       quantity,
       options: {
         formType: formTypeId,
+        formTypeLabel: formType.label,
         parts: formType.parts,
         colors: formType.colors,
         sizeId: size.id,
@@ -119,10 +127,14 @@ export default function NcrOrderClient({ defaultType, productImages }) {
         width: size.w,
         height: size.h,
         printColor,
+        printColorLabel: printColor === "color" ? "Full Color" : "Black",
         binding,
+        bindingLabel: binding === "loose" ? "Loose Sheets" : binding === "pad-25" ? "Padded (25/book)" : "Padded (50/book)",
         numbering,
-        ...(numbering ? { numberStart: numberStartInt, numberEnd, numberColor } : {}),
+        ...(numbering ? { numberStart: numberStartInt, numberEnd, numberColor, numberPosition: "top-right" } : {}),
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
       forceNewLine: true,
     };
@@ -480,6 +492,11 @@ export default function NcrOrderClient({ defaultType, productImages }) {
             locale={locale}
             productSlug={formType.slug}
             onRetryPrice={quote.retry}
+            disabledReason={disabledReason}
+            artworkMode="upload-optional"
+            hasArtwork={!!uploadedFile}
+            artworkIntent={artworkIntent}
+            onArtworkIntentChange={setArtworkIntent}
           />
         </div>
       </div>
@@ -524,6 +541,11 @@ export default function NcrOrderClient({ defaultType, productImages }) {
         categorySlug="marketing-business-print"
         locale={locale}
         onRetryPrice={quote.retry}
+        disabledReason={disabledReason}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
       />
     </main>
   );

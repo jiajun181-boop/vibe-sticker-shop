@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getServerT } from "@/lib/i18n/server";
 import TrackOrderClient from "./TrackOrderClient";
 
@@ -23,7 +24,7 @@ export default async function TrackOrderPage() {
             {t("track.subtitle")}
           </p>
         </header>
-        <TrackOrderClient />
+        <Suspense><TrackOrderClient /></Suspense>
       </div>
     </main>
   );

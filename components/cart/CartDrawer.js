@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useCartStore, FREE_SHIPPING_THRESHOLD, SHIPPING_OPTIONS } from "@/lib/store";
+import { useCartStore, FREE_SHIPPING_THRESHOLD } from "@/lib/store";
 import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import Image from "next/image";
@@ -12,8 +12,7 @@ import CartUpsell from "@/components/cart/CartUpsell";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { isOversizedProduct } from "@/lib/pickup-hints";
 
-const SHIPPING_COST = SHIPPING_OPTIONS.find((o) => o.id === "local")?.price ?? 1500;
-const HST_RATE = 0.13;
+import { HST_RATE, SHIPPING_COST } from "@/lib/order-config";
 const CHECKOUT_COOLDOWN_MS = 8000;
 
 const formatCad = (cents) =>
@@ -43,25 +42,7 @@ function parseSizeRows(meta) {
     .filter(Boolean);
 }
 
-function normalizeMeta(meta) {
-  const input = meta && typeof meta === "object" ? meta : {};
-  const out = {};
-
-  for (const [k, v] of Object.entries(input)) {
-    if (v == null) continue;
-    if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
-      out[k] = v;
-      continue;
-    }
-    try {
-      out[k] = JSON.stringify(v);
-    } catch {
-      out[k] = String(v);
-    }
-  }
-
-  return out;
-}
+import { normalizeCheckoutMeta as normalizeMeta } from "@/lib/product-helpers";
 
 function getDeliveryWindow() {
   const d = new Date();
@@ -77,6 +58,87 @@ function getDeliveryWindow() {
   const start = addBusinessDays(d, 2).toLocaleDateString("en-CA", { month: "short", day: "numeric" });
   const end = addBusinessDays(d, 4).toLocaleDateString("en-CA", { month: "short", day: "numeric" });
   return `${start} - ${end}`;
+}
+
+// Keys that are internal/technical and should never be shown to the customer.
+const HIDDEN_META_KEYS = new Set([
+  "intakeMode",
+  "artworkIntent",
+  "rushProduction",
+  "designHelp",
+  "designHelpFee",
+  "category",
+  "sizeRows",
+  "sizeMode",
+  "fileName",
+  "slug",
+  "productType",
+  "turnaround",
+  "sizeLabel",        // already shown in product name
+  "width",            // shown via sizeRows or product name
+  "height",
+  "windDirection",
+]);
+
+// Human-readable labels for common option keys.
+const META_LABELS = {
+  material: "Material",
+  materialName: "Material",
+  cuttingType: "Cut",
+  lamination: "Lamination",
+  shape: "Shape",
+  foilColor: "Foil",
+  printMode: "Print",
+  sides: "Sides",
+  finishing: "Finishing",
+  paperType: "Paper",
+  coating: "Coating",
+  quantity: "Qty",
+  size: "Size",
+};
+
+/**
+ * Build an array of human-friendly {label,value} pairs from rawMeta,
+ * plus special badges for rush, design help, and artwork intent.
+ */
+function buildDisplayMeta(rawMeta, t) {
+  const tags = [];      // [{label, value, color?}]
+  const options = [];   // [{label, value}]
+
+  if (!rawMeta || typeof rawMeta !== "object") return { tags, options };
+
+  // --- Special badges ---
+  if (rawMeta.rushProduction === true || rawMeta.rushProduction === "true") {
+    tags.push({ label: t("cart.rushProduction"), color: "amber" });
+  }
+  if (rawMeta.designHelp === true || rawMeta.designHelp === "true") {
+    tags.push({ label: t("cart.designHelp"), color: "indigo" });
+  } else if (rawMeta.artworkIntent === "upload-later") {
+    tags.push({ label: t("cart.artworkUploadLater"), color: "gray" });
+  } else if (rawMeta.artworkIntent === "design-help") {
+    tags.push({ label: t("cart.artworkDesignHelp"), color: "indigo" });
+  }
+
+  // --- Regular options ---
+  for (const [key, val] of Object.entries(rawMeta)) {
+    if (HIDDEN_META_KEYS.has(key)) continue;
+    if (val == null || val === "" || val === "null" || val === "none" || val === "undefined") continue;
+    // Skip booleans that are just flags (already handled above or irrelevant)
+    if (val === true || val === "true" || val === false || val === "false") continue;
+    // Skip numeric-only values that don't mean much on their own
+    if (typeof val === "number") continue;
+
+    // Prefer materialName over material if both exist
+    if (key === "material" && rawMeta.materialName) continue;
+
+    const label = META_LABELS[key] || key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
+    const display = typeof val === "string" ? val : String(val);
+    // Skip JSON blobs
+    if (display.startsWith("[") || display.startsWith("{")) continue;
+    options.push({ label, value: display });
+  }
+
+  return { tags, options };
 }
 
 export default function CartDrawer() {
@@ -380,6 +442,8 @@ export default function CartDrawer() {
                   const sizeRows = parseSizeRows(rawMeta);
                   const isMultiSize = (rawMeta.sizeMode === "multi" || rawMeta.sizeMode === '"multi"') && sizeRows.length > 0;
 
+                  const { tags: itemTags, options: itemOptions } = buildDisplayMeta(rawMeta, t);
+
                   return (
                     <article key={item._cartId} className="rounded border border-[var(--color-gray-200)] p-4 transition-all duration-200 hover:shadow-sm">
                       <div className="flex items-start gap-3">
@@ -397,6 +461,31 @@ export default function CartDrawer() {
                                     <p key={`${item._cartId}-size-${idx}`}>
                                       #{idx + 1}: {row.width}&quot; x {row.height}&quot; x {row.quantity}
                                     </p>
+                                  ))}
+                                </div>
+                              )}
+                              {/* Product options (material, lamination, etc.) */}
+                              {itemOptions.length > 0 && (
+                                <p className="mt-1 text-[11px] text-[var(--color-gray-500)] leading-relaxed">
+                                  {itemOptions.map((o) => o.value).join(" · ")}
+                                </p>
+                              )}
+                              {/* Rush / design-help / artwork badges */}
+                              {itemTags.length > 0 && (
+                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                  {itemTags.map((tag) => (
+                                    <span
+                                      key={tag.label}
+                                      className={`inline-block rounded-sm px-1.5 py-0.5 text-[10px] font-semibold leading-tight ${
+                                        tag.color === "amber"
+                                          ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                          : tag.color === "indigo"
+                                          ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                                          : "bg-[var(--color-gray-100)] text-[var(--color-gray-600)] border border-[var(--color-gray-200)]"
+                                      }`}
+                                    >
+                                      {tag.label}
+                                    </span>
                                   ))}
                                 </div>
                               )}

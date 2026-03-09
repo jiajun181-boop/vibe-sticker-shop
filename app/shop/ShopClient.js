@@ -113,7 +113,7 @@ function ParentCard({ catSlug, meta, count, t }) {
       tabIndex={0}
       onClick={() => router.push(`/shop/${catSlug}`)}
       onKeyDown={(e) => { if (e.key === "Enter") router.push(`/shop/${catSlug}`); }}
-      className="col-span-2 md:col-span-3 lg:col-span-4 cursor-pointer rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 transition-all duration-200 hover:shadow-lg hover:border-[var(--color-gray-300)]"
+      className="group col-span-2 md:col-span-3 lg:col-span-4 cursor-pointer rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 hover-lift-subtle hover:border-[var(--color-gray-300)]"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -126,7 +126,7 @@ function ParentCard({ catSlug, meta, count, t }) {
           </div>
         </div>
         <span
-          className="flex-none rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors"
+          className="flex-none rounded-xl border border-[var(--color-gray-300)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-600)] transition-colors group-hover:border-[var(--color-ink-black)] group-hover:text-[var(--color-ink-black)]"
         >
           {safeText(t("mp.landing.browse"), "Browse")}
         </span>
@@ -257,6 +257,11 @@ export default function ShopClient({
   const searchInputRef = useRef(null);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [expandedDepts, setExpandedDepts] = useState(() => new Set(departments.map((d) => d.key)));
+  const [catalogTab, setCatalogTab] = useState(() => {
+    if (initialView === "all") return "products";
+    if (searchParams?.get("material")) return "material";
+    return "category";
+  });
 
   useEffect(() => {
     if (window.innerWidth < 1024 && viewMode === "grid") setViewMode("list");
@@ -324,11 +329,6 @@ export default function ShopClient({
   }, []);
 
   const isFiltering = !!(query.trim() || tag || useCase);
-  const [catalogTab, setCatalogTab] = useState(() => {
-    if (initialView === "all") return "products";
-    if (searchParams?.get("material")) return "material";
-    return "category";
-  });
   const showProducts = catalogTab === "products" || isFiltering;
   const isMaterialCatalog = catalogTab === "material";
 
@@ -626,28 +626,40 @@ export default function ShopClient({
         </header>
 
         <section className="mb-5 rounded-2xl border border-[var(--color-gray-200)] bg-white p-3 sm:mb-6 sm:p-4">
-          <div className="mb-2 flex items-center justify-between">
+          <div className="mb-3 flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-gray-500)]">
               {safeText(t("shop.hotPicks"), "Hot Picks")}
             </p>
             <button
               type="button"
               onClick={switchToAllProducts}
-              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]"
+              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)] transition-colors"
             >
               {safeText(t("shop.browseAllBtn"), "Browse All")}
             </button>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {hotPicks.map((p) => (
-              <Link
-                key={p.id}
-                href={`/shop/${p.category}/${p.slug}`}
-                className="flex-none rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-2 text-xs font-semibold text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-400)] hover:bg-white hover:text-[var(--color-gray-900)]"
-              >
-                {p.name}
-              </Link>
-            ))}
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+            {hotPicks.map((p) => {
+              const img = getProductImage(p);
+              const fromCents = p.fromPrice || p.basePrice;
+              return (
+                <Link
+                  key={p.id}
+                  href={`/shop/${p.category}/${p.slug}`}
+                  className="group/hp flex-none w-36 sm:w-40 rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] overflow-hidden transition-all hover:border-[var(--color-gray-400)] hover:shadow-md"
+                >
+                  <div className="relative aspect-[4/3] bg-[var(--color-gray-100)]">
+                    <Image src={img} alt={p.name} fill className="object-cover transition-transform duration-300 group-hover/hp:scale-105" sizes="160px" unoptimized={isSvgImage(img)} />
+                  </div>
+                  <div className="p-2.5">
+                    <p className="text-xs font-semibold text-[var(--color-gray-900)] leading-tight line-clamp-2">{p.name}</p>
+                    {fromCents > 0 && (
+                      <p className="mt-1 text-[11px] font-semibold text-[var(--color-gray-500)]">{t("shop.priceFrom", { price: formatCad(fromCents) })}</p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
 

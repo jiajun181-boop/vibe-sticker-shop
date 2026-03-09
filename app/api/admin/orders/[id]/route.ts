@@ -3,15 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
 import { sendOrderNotification } from "@/lib/notifications/order-notifications";
-
-// Must match Prisma OrderStatus enum: draft, pending, paid, canceled, refunded
-const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
-  draft: ["pending", "paid", "canceled"],
-  pending: ["paid", "canceled"],
-  paid: ["canceled", "refunded"],
-  canceled: [],
-  refunded: [],
-};
+import { VALID_STATUS_TRANSITIONS } from "@/lib/order-config";
 
 export async function GET(
   request: NextRequest,
@@ -26,11 +18,28 @@ export async function GET(
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
-        items: true,
+        items: {
+          include: {
+            productionJob: {
+              select: { id: true, status: true, priority: true, factoryId: true, assignedTo: true, dueAt: true, startedAt: true, completedAt: true },
+            },
+          },
+        },
         notes: { orderBy: { createdAt: "desc" } },
         files: true,
         timeline: { orderBy: { createdAt: "desc" } },
         coupon: true,
+        proofData: true,
+        toolJobs: { orderBy: { createdAt: "desc" } },
+        user: {
+          select: {
+            id: true,
+            addresses: {
+              where: { isDefaultShipping: true },
+              take: 1,
+            },
+          },
+        },
       },
     });
 
@@ -38,7 +47,9 @@ export async function GET(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    return NextResponse.json(order);
+    // Flatten default shipping address onto order for admin display
+    const shippingAddress = order.user?.addresses?.[0] || null;
+    return NextResponse.json({ ...order, shippingAddress });
   } catch (error) {
     console.error("[Order GET] Error:", error);
     return NextResponse.json(
@@ -105,16 +116,25 @@ export async function PATCH(
     const order = await prisma.order.update({
       where: { id },
       data,
-      include: { items: true, notes: { orderBy: { createdAt: "desc" } } },
+      include: {
+        items: true,
+        notes: { orderBy: { createdAt: "desc" } },
+        files: true,
+        timeline: { orderBy: { createdAt: "desc" } },
+        coupon: true,
+        proofData: true,
+        toolJobs: { orderBy: { createdAt: "desc" } },
+      },
     });
 
     // Create timeline event for the update
+    const actorEmail = auth.user?.email || "admin";
     await prisma.orderTimeline.create({
       data: {
         orderId: id,
-        action: "status_updated",
+        action: data.status ? "status_updated" : data.productionStatus ? "production_status_updated" : "order_updated",
         details: JSON.stringify(data),
-        actor: "admin",
+        actor: actorEmail,
       },
     });
 
@@ -123,19 +143,34 @@ export async function PATCH(
       action: "order_updated",
       entity: "order",
       entityId: id,
-      actor: "admin",
+      actor: actorEmail,
       details: data as Record<string, unknown>,
     });
 
+    // When order is canceled, cancel all production jobs + notify customer
+    if (data.status === "canceled") {
+      prisma.productionJob.updateMany({
+        where: {
+          orderItem: { orderId: id },
+          status: { notIn: ["shipped"] },
+        },
+        data: { status: "on_hold" },
+      }).catch((err) => console.error("[Order PATCH] Failed to hold production jobs:", err));
+
+      sendOrderNotification(id, "order_canceled", {
+        reason: (data.cancelReason as string) || undefined,
+      }).catch(() => {});
+    }
+
     // Trigger order status notification emails (non-blocking)
     if (data.productionStatus) {
-      const statusMap: Record<string, string> = {
-        in_production: "production_started",
-        ready_to_ship: "ready_to_ship",
+      const statusMap = {
+        in_production: "production_started" as const,
+        ready_to_ship: "ready_to_ship" as const,
       };
-      const notifType = statusMap[data.productionStatus as string];
+      const notifType = statusMap[data.productionStatus as keyof typeof statusMap];
       if (notifType) {
-        sendOrderNotification(id, notifType as any).catch(() => {});
+        sendOrderNotification(id, notifType).catch(() => {});
       }
     }
 

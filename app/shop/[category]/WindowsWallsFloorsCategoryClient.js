@@ -30,13 +30,44 @@ const ITEM_I18N = {
   "telescopic-backdrop": "wwf.item.displayBackdrop",
 };
 
+/* ── Taglines (i18n keys) ── */
+const TAGLINE_KEYS = {
+  "one-way-vision": "wwf.tagline.oneWayVision",
+  "frosted-window-film": "wwf.tagline.frostedFilm",
+  "static-cling": "wwf.tagline.staticCling",
+  "transparent-color-film": "wwf.tagline.transparentColor",
+  "blockout-vinyl": "wwf.tagline.blockoutVinyl",
+  "opaque-window-graphics": "wwf.tagline.opaqueGraphics",
+  "glass-waistline": "wwf.tagline.glassWaistline",
+  "wall-graphics": "wwf.tagline.wallGraphics",
+  "floor-graphics": "wwf.tagline.floorGraphics",
+  "decals": "wwf.tagline.customDecals",
+  "vinyl-banners": "wwf.tagline.vinylBanners",
+  "telescopic-backdrop": "wwf.tagline.telescopicBackdrop",
+};
+
+/* ── Compare cues (i18n keys) ── */
+const CUES = {
+  "one-way-vision": ["cue.privacy", "cue.outdoor"],
+  "frosted-window-film": ["cue.privacy", "cue.decorative"],
+  "static-cling": ["cue.noAdhesive", "cue.removable"],
+  "transparent-color-film": ["cue.decorative"],
+  "blockout-vinyl": ["cue.opaque", "cue.privacy"],
+  "opaque-window-graphics": ["cue.fullColor", "cue.outdoor"],
+  "glass-waistline": ["cue.safety"],
+  "wall-graphics": ["cue.indoor", "cue.fullColor"],
+  "floor-graphics": ["cue.antiSlip", "cue.indoor"],
+  "decals": ["cue.outdoor", "cue.customShape"],
+  "vinyl-banners": ["cue.outdoor", "cue.durable"],
+  "telescopic-backdrop": ["cue.portable", "cue.event"],
+};
+
 /* ── Section definitions ── */
 const SECTIONS = [
   {
-    key: "window",
+    key: "window-decals-films",
     titleKey: "wwf.section.window.title",
     subtitleKey: "wwf.section.window.subtitle",
-    size: "large",
     items: [
       { key: "one-way-vision", href: `${BASE}/one-way-vision`, gradient: "from-sky-400 to-blue-400" },
       { key: "frosted-window-film", href: `${BASE}/frosted-window-film`, gradient: "from-slate-300 to-blue-200" },
@@ -51,7 +82,6 @@ const SECTIONS = [
     key: "wall",
     titleKey: "wwf.section.wall.title",
     subtitleKey: "wwf.section.wall.subtitle",
-    size: "large",
     items: [
       { key: "wall-graphics", href: `${BASE}/wall-graphics`, gradient: "from-emerald-400 to-teal-400" },
     ],
@@ -60,16 +90,22 @@ const SECTIONS = [
     key: "floor",
     titleKey: "wwf.section.floor.title",
     subtitleKey: "wwf.section.floor.subtitle",
-    size: "large",
     items: [
       { key: "floor-graphics", href: `${BASE}/floor-graphics`, gradient: "from-orange-400 to-red-400" },
+    ],
+  },
+  {
+    key: "custom-decals",
+    titleKey: "wwf.section.customDecals.title",
+    subtitleKey: "wwf.section.customDecals.subtitle",
+    items: [
+      { key: "decals", href: `${BASE}/decals`, gradient: "from-rose-400 to-pink-400" },
     ],
   },
   {
     key: "related-banners",
     titleKey: "wwf.section.relatedBanners.title",
     subtitleKey: "wwf.section.relatedBanners.subtitle",
-    size: "large",
     items: [
       { key: "vinyl-banners", href: "/shop/banners-displays/vinyl-banners", gradient: "from-sky-400 to-blue-400" },
       { key: "telescopic-backdrop", href: "/shop/banners-displays/telescopic-backdrop", gradient: "from-violet-400 to-purple-400" },
@@ -77,12 +113,21 @@ const SECTIONS = [
   },
 ];
 
-function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
-  const isLarge = size === "large";
+/* ── Related categories ── */
+const WWF_RELATED = [
+  { title: "Signs & Display Boards", titleZh: "标牌和展示板", desc: "Coroplast, foam board, acrylic & aluminum", descZh: "瓦楞板、泡沫板、亚克力和铝板", href: "/shop/signs-rigid-boards" },
+  { title: "Banners & Displays", titleZh: "横幅和展示", desc: "Vinyl banners, retractable stands & flags", descZh: "乙烯基横幅、伸缩展架和旗帜", href: "/shop/banners-displays" },
+  { title: "Vehicle Graphics", titleZh: "车辆图形", desc: "Wraps, magnets, decals & fleet branding", descZh: "车贴、磁性贴、贴花和车队品牌", href: "/shop/vehicle-graphics-fleet" },
+];
+
+function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
   const [hovered, setHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
   const isSvg = showUrl && isSvgImage(showUrl);
   const name = t(ITEM_I18N[item.key] || item.key);
+  const tagline = TAGLINE_KEYS[item.key] ? t(TAGLINE_KEYS[item.key]) : "";
+  const cues = CUES[item.key] || [];
   return (
     <Link
       href={item.href}
@@ -90,12 +135,12 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className={`relative overflow-hidden bg-[var(--color-gray-100)] ${isLarge ? "aspect-[3/2]" : "aspect-[4/3]"}`}>
-        {showUrl ? (
+      <div className="relative overflow-hidden bg-[var(--color-gray-100)] aspect-[4/3]">
+        {showUrl && !imgError ? (
           isSvg ? (
-            <img src={showUrl} alt={name} loading="lazy" className="h-full w-full object-cover transition-opacity duration-300" />
+            <img src={showUrl} alt={name} loading="lazy" onError={() => setImgError(true)} className="h-full w-full object-cover transition-opacity duration-300" />
           ) : (
-            <Image src={showUrl} alt={name} fill className="object-cover transition-opacity duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+            <Image src={showUrl} alt={name} fill onError={() => setImgError(true)} className="object-cover transition-opacity duration-300 group-hover:scale-105" sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw" />
           )
         ) : (
           <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
@@ -105,11 +150,25 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
           </div>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className={`font-semibold text-[var(--color-gray-900)] ${isLarge ? "text-base" : "text-sm"}`}>
+      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
+        <h3 className="text-sm font-semibold text-[var(--color-gray-900)]">
           {name}
         </h3>
-        <div className="mt-auto pt-3 flex items-center justify-between">
+        {tagline && (
+          <p className="mt-0.5 text-[11px] leading-tight text-gray-500 line-clamp-2">
+            {tagline}
+          </p>
+        )}
+        {cues.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {cues.map((c) => (
+              <span key={c} className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-600">
+                {t(c)}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="mt-auto pt-2 flex items-center justify-between">
           {price > 0 ? (
             <span className="text-sm font-bold text-[var(--color-gray-900)]">
               {t("shop.fromLabel")} {formatCad(price)}
@@ -117,7 +176,7 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
           ) : (
             <span className="text-xs text-[var(--color-gray-400)]">{t("shop.getQuote")}</span>
           )}
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3.5 py-1.5 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[9px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
             {t("shop.configure")}
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -130,7 +189,7 @@ function ProductCard({ item, price, size, imageUrl, hoverImageUrl, t }) {
 }
 
 export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfImages = {}, wwfImages2 = {} }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   return (
     <main className="bg-gradient-to-b from-blue-50 to-white pb-20 pt-10 text-[var(--color-gray-900)]">
@@ -155,17 +214,12 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfIm
             <section key={section.key} className="mt-12">
               <h2 className="text-xl font-semibold tracking-tight">{t(section.titleKey)}</h2>
               <p className="mt-1 text-sm text-[var(--color-gray-500)]">{t(section.subtitleKey)}</p>
-              <div className={`mt-4 grid gap-4 ${
-                visibleItems.length <= 2
-                  ? "grid-cols-1 sm:grid-cols-2"
-                  : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-              }`}>
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
                 {visibleItems.map((item) => (
                   <ProductCard
                     key={item.key}
                     item={item}
                     price={wwfPrices[item.key] || 0}
-                    size={section.size}
                     imageUrl={wwfImages[item.key]}
                     hoverImageUrl={wwfImages2[item.key]}
                     t={t}
@@ -176,7 +230,39 @@ export default function WindowsWallsFloorsCategoryClient({ wwfPrices = {}, wwfIm
           );
         })}
 
+        {SECTIONS.every((section) => section.items.every((item) => !(item.key in wwfPrices))) && (
+          <p className="mt-12 text-center text-sm text-[var(--color-gray-500)]">
+            {t("shop.noProducts")}
+          </p>
+        )}
+
         <CategoryFaq category="windows-walls-floors" />
+
+        {/* Related categories */}
+        <section className="mt-12">
+          <h2 className="text-xl font-semibold tracking-tight">{t("wwf.related")}</h2>
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-3">
+            {WWF_RELATED.map((cat) => (
+              <Link
+                key={cat.href}
+                href={cat.href}
+                className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-5 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
+              >
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
+                    {locale === "zh" ? cat.titleZh : cat.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-[var(--color-gray-500)] truncate">
+                    {locale === "zh" ? cat.descZh : cat.desc}
+                  </p>
+                </div>
+                <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {/* Back to shop */}
         <div className="mt-12 text-center">

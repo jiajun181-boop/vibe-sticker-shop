@@ -6,6 +6,8 @@ import { sendEmail } from "./email/resend";
 import { buildOrderConfirmationHtml } from "./email/templates/order-confirmation";
 import { decrementStock } from "./inventory";
 import { sendOrderSms } from "./notifications/sms-notifications";
+import { applyAutoTags } from "./auto-tag";
+import { syncOrderProductionStatus } from "./production-sync";
 
 function toNumberOrNull(v: unknown) {
   if (typeof v === "number" && Number.isFinite(v)) return v;
@@ -215,6 +217,16 @@ export async function handleCheckoutCompleted(
       }
     }
 
+    // Create timeline entry
+    await tx.orderTimeline.create({
+      data: {
+        orderId: newOrder.id,
+        action: "order_created",
+        details: `Paid via Stripe (${session.payment_intent})`,
+        actor: "system",
+      },
+    });
+
     // Create system note
     await tx.orderNote.create({
       data: {
@@ -277,10 +289,10 @@ export async function handleCheckoutCompleted(
 
   // 7b. Decrement inventory for tracked products
   try {
-    const stockItems = items.map((item: any) => ({
-      productId: item.productId || "",
-      quantity: item.quantity || 1,
-    })).filter((item: any) => item.productId);
+    const stockItems = items.map((item: Record<string, unknown>) => ({
+      productId: (item.productId as string) || "",
+      quantity: (item.quantity as number) || 1,
+    })).filter((si: { productId: string }) => si.productId);
     if (stockItems.length > 0) {
       await decrementStock(stockItems);
     }
@@ -295,11 +307,19 @@ export async function handleCheckoutCompleted(
     });
 
     for (const item of orderItems) {
+      // Detect rush from item metadata
+      const itemMeta = item.meta && typeof item.meta === "object" ? item.meta as Record<string, unknown> : {};
+      const isRush = itemMeta.rushProduction === true || itemMeta.rushProduction === "true";
+      // Calculate due date: rush = 24h, standard = 3 business days
+      const dueAt = new Date();
+      dueAt.setDate(dueAt.getDate() + (isRush ? 1 : 3));
+
       const newJob = await prisma.productionJob.create({
         data: {
           orderItemId: item.id,
           status: "queued",
-          priority: "normal",
+          priority: isRush ? "urgent" : "normal",
+          dueAt,
         },
       });
 
@@ -307,10 +327,16 @@ export async function handleCheckoutCompleted(
       await applyAssignmentRules(newJob.id);
     }
 
+    // Sync order productionStatus after all jobs + assignments are created
+    await syncOrderProductionStatus(order.id);
+
   } catch (jobError) {
     // Don't fail the webhook if job creation fails
     console.error(`[Webhook] Failed to create production jobs:`, jobError);
   }
+
+  // 8b. Auto-tag order based on items, materials, quantities (non-blocking)
+  applyAutoTags(order.id, prisma).catch(() => {});
 
   // 9. Send order confirmation email (non-blocking)
   try {

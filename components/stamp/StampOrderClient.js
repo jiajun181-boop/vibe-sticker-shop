@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { STAMP_MODELS, STAMP_QUANTITIES, STAMP_PRESETS } from "@/lib/stamp-order-config";
 import dynamic from "next/dynamic";
@@ -71,11 +71,36 @@ const formatCad = (cents) =>
 // Ink color is locked to black for now
 const INK_COLOR = "#111111";
 
+/**
+ * Upload a stamp preview PNG via the design-studio snapshot endpoint.
+ * Returns { url, key } or null on failure. Non-blocking safe.
+ */
+async function uploadStampSnapshot(blob) {
+  try {
+    const formData = new FormData();
+    formData.append("file", blob, "stamp-preview.png");
+    const res = await fetch("/api/design-studio/upload-snapshot", {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.url && data.key ? data : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function StampOrderClient({ defaultSlug, productImages = [] }) {
   const { t, locale } = useTranslation();
 
   // Resolve preset (personalized entry) or model slug
   const preset = defaultSlug ? STAMP_PRESETS[defaultSlug] : null;
+
+  // Ref to StampEditor for PNG export
+  const stampEditorRef = useRef(null);
+  // Snapshot upload cache: avoids re-upload for same design
+  const snapshotCacheRef = useRef({ hash: null, result: null });
 
   // ── State ──
   const [modelIdx, setModelIdx] = useState(() => {
@@ -116,20 +141,59 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
     enabled: effectiveQty > 0,
   });
 
-  const canAddToCart = quote.quoteData && !quote.quoteLoading && effectiveQty > 0;
+  const [preparing, setPreparing] = useState(false);
+  const canAddToCart = quote.quoteData && !quote.quoteLoading && effectiveQty > 0 && !preparing;
 
-  // ── Cart ──
-  const buildCartItem = useCallback(() => {
+  // ── Cart (async — generates snapshot before adding) ──
+  const buildCartItem = useCallback(async () => {
     if (effectiveQty <= 0) return null;
+
+    // Build a simple hash of the design state for cache invalidation
+    const designHash = JSON.stringify({
+      text: stampText, font: stampFont, model: model.id,
+      border: stampConfig.border, curveAmount: stampConfig.curveAmount,
+      halftoneEnabled: stampConfig.halftoneEnabled,
+      halftoneIntensity: stampConfig.halftoneIntensity,
+      logoUrl: stampConfig.logoFile?.url || null,
+    });
+
+    // Try to generate + upload preview snapshot (non-blocking on failure)
+    let stampPreviewUrl = null;
+    let stampPreviewKey = null;
+    const cached = snapshotCacheRef.current;
+    if (cached.hash === designHash && cached.result) {
+      stampPreviewUrl = cached.result.url;
+      stampPreviewKey = cached.result.key;
+    } else if (stampEditorRef.current?.exportPng) {
+      setPreparing(true);
+      try {
+        const blob = await stampEditorRef.current.exportPng();
+        if (blob) {
+          const uploaded = await uploadStampSnapshot(blob);
+          if (uploaded) {
+            stampPreviewUrl = uploaded.url;
+            stampPreviewKey = uploaded.key;
+            snapshotCacheRef.current = { hash: designHash, result: uploaded };
+          }
+        }
+      } catch {
+        // Snapshot upload failed — proceed without it
+      } finally {
+        setPreparing(false);
+      }
+    }
+
     return {
       id: model.slug,
       slug: model.slug,
       name: preset ? preset.name : `Self-Inking Stamp — ${sizeLabel}`,
       price: quote.unitCents || 0,
       quantity: effectiveQty,
-      image: null,
+      image: stampPreviewUrl || null,
       options: {
-        model: model.id,
+        stampModel: model.id,
+        stampModelLabel: model.label,
+        stampPreset: preset ? defaultSlug : null,
         width: widthIn,
         height: heightIn,
         sizeLabel,
@@ -137,10 +201,19 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
         stampText,
         stampFont,
         stampColor: INK_COLOR,
-        ...stampConfig,
+        stampUploadFirst: preset?.uploadFirst || false,
+        stampBorder: stampConfig.border || "none",
+        stampTemplate: stampConfig.template || null,
+        stampCurveAmount: stampConfig.curveAmount ?? null,
+        stampLogoUrl: stampConfig.logoFile?.url || null,
+        stampLogoKey: stampConfig.logoFile?.key || null,
+        stampHalftoneEnabled: stampConfig.halftoneEnabled || false,
+        stampHalftoneIntensity: stampConfig.halftoneIntensity || null,
+        stampPreviewUrl: stampPreviewUrl || null,
+        stampPreviewKey: stampPreviewKey || null,
       },
     };
-  }, [effectiveQty, model, sizeLabel, quote.unitCents, widthIn, heightIn, shape, stampText, stampFont, stampConfig]);
+  }, [effectiveQty, model, sizeLabel, quote.unitCents, widthIn, heightIn, shape, stampText, stampFont, stampConfig, preset, defaultSlug]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -151,6 +224,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
   const handleStampChange = useCallback((patch) => {
     if (patch.font !== undefined) setStampFont(patch.font);
     // Strip color from patch — ink is locked to black
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { color: _dropped, ...safePatch } = patch;
     setStampConfig((prev) => ({ ...prev, ...safePatch }));
   }, []);
@@ -164,13 +238,27 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
   const stepNum = (id) => stepNums[id] || 0;
 
   // ── Summary lines ──
-  const summaryLines = useMemo(() => [
-    ...(preset ? [{ label: "Product", value: preset.name }] : []),
-    { label: "Model", value: sizeLabel },
-    { label: "Shape", value: shape === "round" ? "Round" : "Rectangle" },
-    { label: "Ink", value: "Black" },
-    { label: "Quantity", value: effectiveQty.toLocaleString() },
-  ], [sizeLabel, shape, effectiveQty, preset]);
+  const summaryLines = useMemo(() => {
+    const textPreview = stampText.trim()
+      ? stampText.trim().slice(0, 20) + (stampText.trim().length > 20 ? "…" : "")
+      : "—";
+    const previewUrl = snapshotCacheRef.current?.result?.url || null;
+
+    return [
+      ...(preset ? [{ label: "Product", value: preset.name }] : []),
+      { label: "Model", value: `${model.id} (${sizeLabel})` },
+      { label: "Size", value: `${widthIn}" × ${heightIn}"` },
+      { label: "Quantity", value: effectiveQty.toLocaleString() },
+      { label: "Text", value: textPreview },
+      { label: "Font", value: stampFont },
+      { label: "Ink", value: "Black" },
+      ...(stampConfig.border && stampConfig.border !== "none" ? [{ label: "Border", value: stampConfig.border }] : []),
+      ...(stampConfig.template ? [{ label: "Template", value: stampConfig.template }] : []),
+      ...(stampConfig.logoFile?.url ? [{ label: "Logo", value: "Uploaded" }] : []),
+      ...(stampConfig.halftoneEnabled ? [{ label: "Halftone", value: stampConfig.halftoneIntensity || "On" }] : []),
+      { label: "Artwork", value: previewUrl ? "Preview ready" : "Preview not generated yet" },
+    ];
+  }, [sizeLabel, model.id, widthIn, heightIn, effectiveQty, preset, stampConfig, stampText, stampFont]);
 
   // ── Hero text ──
   const heroTitle = preset ? preset.name : "Custom Self-Inking Stamps";
@@ -246,6 +334,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
                   alwaysOpen
                 >
                   <StampEditor
+                    ref={stampEditorRef}
                     shape={shape}
                     widthIn={widthIn}
                     heightIn={heightIn}
@@ -392,6 +481,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
                   alwaysOpen
                 >
                   <StampEditor
+                    ref={stampEditorRef}
                     shape={shape}
                     widthIn={widthIn}
                     heightIn={heightIn}
@@ -431,6 +521,8 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
             locale={locale}
             productSlug="stamps"
             onRetryPrice={quote.retry}
+            artworkMode="editor-built-in"
+            hasArtwork
           />
         </div>
       </div>
@@ -461,7 +553,15 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
+        productName={heroTitle}
+        summaryLines={summaryLines}
+        unitCents={quote.unitCents}
+        subtotalCents={quote.subtotalCents}
+        categorySlug="marketing-business-print"
+        locale={locale}
         onRetryPrice={quote.retry}
+        artworkMode="editor-built-in"
+        hasArtwork
       />
 
       {/* FAQ Section */}

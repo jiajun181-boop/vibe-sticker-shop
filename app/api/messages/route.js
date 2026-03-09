@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAdminSession } from "@/lib/admin-auth";
 
 export async function GET(request) {
   try {
+    const session = await getAdminSession(request);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const conversationId = searchParams.get("conversationId");
     if (!conversationId) {
@@ -15,10 +21,8 @@ export async function GET(request) {
     });
 
     // Mark customer messages as read (for staff viewing)
-    // Mark staff messages as read (for customer viewing)
-    const markType = searchParams.get("viewer") === "customer" ? "staff" : "customer";
     await prisma.message.updateMany({
-      where: { conversationId, senderType: markType, isRead: false },
+      where: { conversationId, senderType: "customer", isRead: false },
       data: { isRead: true },
     });
 
@@ -31,6 +35,11 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const session = await getAdminSession(request);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { conversationId, content, senderType, senderName, customerEmail, customerName } = body;
 

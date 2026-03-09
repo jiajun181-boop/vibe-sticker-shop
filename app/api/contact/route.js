@@ -30,7 +30,7 @@ export async function POST(req) {
     // Send confirmation to customer
     sendEmail({
       to: email,
-      subject: "We received your message — Vibe Sticker Shop",
+      subject: "We received your message — La Lunar Printing",
       html: buildContactReceivedHtml({ name, message }),
       template: "contact-received",
     }).catch((err) => console.error("[Contact] Customer email failed:", err));

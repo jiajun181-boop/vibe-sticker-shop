@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
 
     const factory = searchParams.get("factory");
     const priority = searchParams.get("priority");
+    const operator = searchParams.get("operator");
     const dateRange = searchParams.get("dateRange") || "all";
 
     // Build where clause
@@ -28,6 +29,10 @@ export async function GET(request: NextRequest) {
 
     if (priority) {
       where.priority = priority;
+    }
+
+    if (operator) {
+      where.assignedTo = operator;
     }
 
     if (dateRange !== "all") {
@@ -77,14 +82,24 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Collect distinct operators for the filter dropdown
+    const operatorSet = new Set<string>();
+    for (const job of jobs) {
+      if (job.assignedTo) operatorSet.add(job.assignedTo);
+    }
+
     // Format jobs
     const formatted = jobs.map((job) => ({
       id: job.id,
+      status: job.status,
       productName: job.orderItem.productName,
       customerEmail: job.orderItem.order.customerEmail,
+      customerName: job.orderItem.order.customerName,
       priority: job.priority,
       factoryName: job.factory?.name ?? null,
       factoryId: job.factoryId ?? null,
+      assignedTo: job.assignedTo ?? null,
+      dueAt: job.dueAt ?? null,
       createdAt: job.createdAt,
       orderId: job.orderItem.order.id,
       quantity: job.orderItem.quantity,
@@ -118,7 +133,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(columns);
+    return NextResponse.json({ columns, operators: [...operatorSet].sort() });
   } catch (error) {
     console.error("[Production Board GET] Error:", error);
     return NextResponse.json(

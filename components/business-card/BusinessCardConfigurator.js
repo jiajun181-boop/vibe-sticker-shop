@@ -56,6 +56,7 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
   const [names, setNames] = useState(1);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState({});
+  const [artworkIntent, setArtworkIntent] = useState(null);
 
   const activeQty = useMemo(() => {
     if (customQty !== "") {
@@ -134,6 +135,10 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
   }, [totalSurcharge]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0;
+  const isDoubleSided = sideId === "double";
+  const hasFrontFile = !!uploadedFiles.front || !!uploadedFile;
+  const hasBackFile = !!uploadedFiles.back;
+  const missingBackFile = isDoubleSided && hasFrontFile && !hasBackFile;
 
   // ── Cart ──
   const buildCartItem = useCallback(() => {
@@ -163,6 +168,7 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
       options: {
         cardType: config.id,
         sides: sideId,
+        doubleSided: sideId === "double",
         ...(config.steps.finishing && { finishing: finishingId }),
         ...(config.steps.foilOptions && { foilCoverage, foilSides }),
         ...(config.steps.layers && { layer: layerId }),
@@ -173,11 +179,19 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
         sizeLabel: config.size.label,
         width: config.size.w,
         height: config.size.h,
-        fileName: sideId === "double"
-          ? (uploadedFiles.front?.name || uploadedFiles.back?.name
-            ? { front: uploadedFiles.front?.name || null, back: uploadedFiles.back?.name || null }
-            : uploadedFile?.name || null)
+        // For double-sided: flatten to separate front/back keys so they survive
+        // Stripe's primitive-only metadata serialization
+        fileName: sideId === "double" && (uploadedFiles.front?.name || uploadedFiles.back?.name)
+          ? (uploadedFiles.front?.name || uploadedFiles.back?.name || null)
           : uploadedFile?.name || null,
+        artworkUrl: sideId === "double" && (uploadedFiles.front?.url || uploadedFiles.back?.url)
+          ? (uploadedFiles.front?.url || null)
+          : uploadedFile?.url || null,
+        artworkKey: sideId === "double" && (uploadedFiles.front?.key || uploadedFiles.back?.key)
+          ? (uploadedFiles.front?.key || null)
+          : uploadedFile?.key || null,
+        ...(sideId === "double" && uploadedFiles.front?.url && { frontArtworkUrl: uploadedFiles.front.url, frontArtworkKey: uploadedFiles.front.key || null, frontFileName: uploadedFiles.front.name || null }),
+        ...(sideId === "double" && uploadedFiles.back?.url && { backArtworkUrl: uploadedFiles.back.url, backArtworkKey: uploadedFiles.back.key || null, backFileName: uploadedFiles.back.name || null }),
       },
       forceNewLine: true,
     };
@@ -582,6 +596,15 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
               onToggle={() => toggleStep("artwork")}
               stepId="step-artwork"
             >
+              {sideId === "double" && (
+                <div className={`mb-3 rounded-lg border px-4 py-3 ${missingBackFile ? "border-orange-300 bg-orange-50" : "border-amber-200 bg-amber-50"}`}>
+                  <p className={`text-xs font-medium ${missingBackFile ? "text-orange-800" : "text-amber-800"}`}>
+                    {missingBackFile
+                      ? (t("bc.missingBackFile") || "Front uploaded — back file still needed for double-sided printing. Upload now or choose 'Upload Later' below.")
+                      : (t("bc.artworkDoubleHint") || "Double-sided: please upload separate files for front and back. Use the two upload slots below.")}
+                  </p>
+                </div>
+              )}
               <ArtworkUpload
                 uploadedFile={uploadedFile}
                 onUploaded={setUploadedFile}
@@ -626,6 +649,10 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
             locale={locale}
             productSlug={slug}
             onRetryPrice={quote.retry}
+            artworkMode="upload-optional"
+            hasArtwork={!!uploadedFile || !!uploadedFiles.front || !!uploadedFiles.back}
+            artworkIntent={artworkIntent}
+            onArtworkIntentChange={setArtworkIntent}
           />
         </div>
       </div>
@@ -656,6 +683,10 @@ export default function BusinessCardConfigurator({ slug, productImages = [] }) {
         categorySlug="marketing-business-print"
         locale={locale}
         onRetryPrice={quote.retry}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile || !!uploadedFiles.front || !!uploadedFiles.back}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
       />
 
       {/* FAQ Section */}

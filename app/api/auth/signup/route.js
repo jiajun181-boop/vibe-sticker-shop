@@ -73,7 +73,7 @@ export async function POST(request) {
     const verifyUrl = `${SITE_URL}/verify-email?token=${emailVerifyToken}`;
     sendEmail({
       to: normalizedEmail,
-      subject: "Verify your email — Vibe Sticker Shop",
+      subject: "Verify your email — La Lunar Printing",
       html: buildVerifyEmailHtml({ name: name.trim(), verifyUrl }),
       template: "verify-email",
     }).catch(() => {});

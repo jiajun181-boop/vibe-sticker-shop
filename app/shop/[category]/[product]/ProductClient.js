@@ -1390,7 +1390,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
   const Wrapper = embedded ? "section" : "main";
 
   return (
-    <Wrapper className={embedded ? "text-[var(--color-gray-800)]" : "bg-[radial-gradient(circle_at_top,_var(--color-gray-50),_var(--color-gray-100)_45%,_var(--color-gray-50))] pb-20 pt-10 text-[var(--color-gray-800)]"}>
+    <Wrapper className={embedded ? "text-[var(--color-gray-800)]" : "bg-[radial-gradient(circle_at_top,_var(--color-gray-50),_var(--color-gray-100)_45%,_var(--color-gray-50))] pb-[calc(var(--mobile-cta-h,5rem)+1rem)] md:pb-20 pt-10 text-[var(--color-gray-800)]"}>
       <div className={embedded ? "mx-auto max-w-6xl space-y-6 xl:space-y-10 px-4 sm:px-6" : "mx-auto max-w-[1440px] space-y-6 xl:space-y-8 px-4 sm:px-6"}>
         {!embedded && (
           <Breadcrumbs items={[
@@ -1438,6 +1438,22 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 {t("trust.madeToOrder")}
               </span>
+              {product.basePrice > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-gray-100)] px-2.5 py-1 text-xs font-semibold text-[var(--color-gray-700)]">
+                  {t("product.from", { price: formatCad(product.basePrice) })}
+                </span>
+              )}
+              {!hideMaterials && materials.length > 1 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-gray-100)] px-2.5 py-1 text-xs font-semibold text-[var(--color-gray-700)]">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" /></svg>
+                  {t("product.spec.materialCount", { count: materials.length })}
+                </span>
+              )}
+              {sizeOptions.length > 1 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-gray-100)] px-2.5 py-1 text-xs font-semibold text-[var(--color-gray-700)]">
+                  {t("product.spec.sizeCount", { count: sizeOptions.length })}
+                </span>
+              )}
             </div>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--color-gray-600)]">{product.description || t("product.defaultDescription")}</p>
           </header>
@@ -1487,7 +1503,7 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                 </div>
               </div>
             ) : specs.length > 0 ? (
-              <div className="hidden xl:block rounded-3xl border border-[var(--color-gray-200)] bg-white/95 p-4 shadow-sm sm:p-5">
+              <div className="rounded-3xl border border-[var(--color-gray-200)] bg-white/95 p-4 shadow-sm sm:p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)]">{t("product.specifications")}</h3>
                 <div className="mt-3 divide-y divide-[var(--color-gray-100)]">
                   {specs.map(([k, v]) => (
@@ -1529,6 +1545,22 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     {t("trust.madeToOrder")}
                   </span>
+                  {product.basePrice > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-gray-100)] px-2.5 py-1 text-xs font-semibold text-[var(--color-gray-700)]">
+                      {t("product.from", { price: formatCad(product.basePrice) })}
+                    </span>
+                  )}
+                  {!hideMaterials && materials.length > 1 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-gray-100)] px-2.5 py-1 text-xs font-semibold text-[var(--color-gray-700)]">
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" /></svg>
+                      {t("product.spec.materialCount", { count: materials.length })}
+                    </span>
+                  )}
+                  {sizeOptions.length > 1 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-gray-100)] px-2.5 py-1 text-xs font-semibold text-[var(--color-gray-700)]">
+                      {t("product.spec.sizeCount", { count: sizeOptions.length })}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--color-gray-900)]">{product.description || t("product.defaultDescription")}</p>
               </header>

@@ -4,6 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { buildContourSvg } from "@/lib/contour/svg-path";
+import { preflightOrder, detectProductFamily, buildSpecsSummary } from "@/lib/preflight";
+import { hasArtworkUrl, getArtworkStatus } from "@/lib/artwork-detection";
+import { getActionLabel } from "@/lib/timeline-labels";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -31,6 +35,7 @@ const statusColors = {
   refunded: "bg-purple-100 text-purple-700",
 };
 
+/* eslint-disable @typescript-eslint/no-unused-vars -- used in status badge rendering */
 const paymentColors = {
   unpaid: "bg-red-100 text-red-700",
   paid: "bg-green-100 text-green-800",
@@ -49,6 +54,7 @@ const productionColors = {
   on_hold: "bg-yellow-100 text-yellow-800",
   canceled: "bg-red-100 text-red-700",
 };
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 const priorityLabelKeys = ["admin.orderDetail.priorityNormal", "admin.orderDetail.priorityHigh", "admin.orderDetail.priorityUrgent"];
 const priorityColors = [
@@ -102,6 +108,7 @@ export default function OrderDetailPage() {
   const [isInternalNote, setIsInternalNote] = useState(true);
   const [addingNote, setAddingNote] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageIsError, setMessageIsError] = useState(false);
   const [timeline, setTimeline] = useState([]);
 
   // Editable status fields
@@ -159,6 +166,12 @@ export default function OrderDetailPage() {
     fetchTimeline();
   }, [id, fetchTimeline]);
 
+  function showMsg(text, isError = false) {
+    setMessage(text);
+    setMessageIsError(isError);
+    setTimeout(() => setMessage(""), isError ? 5000 : 3000);
+  }
+
   async function handleStatusUpdate() {
     setSaving(true);
     setMessage("");
@@ -171,12 +184,13 @@ export default function OrderDetailPage() {
       const data = await res.json();
       if (res.ok) {
         setOrder(data);
-        setMessage(t("admin.orderDetail.statusUpdated"));
+        showMsg(t("admin.orderDetail.statusUpdated"));
         fetchTimeline();
-        setTimeout(() => setMessage(""), 3000);
+      } else {
+        showMsg(data.error || t("admin.orderDetail.updateFailed"), true);
       }
     } catch {
-      setMessage(t("admin.orderDetail.updateFailed"));
+      showMsg(t("admin.orderDetail.updateFailed"), true);
     } finally {
       setSaving(false);
     }
@@ -198,9 +212,11 @@ export default function OrderDetailPage() {
           notes: [note, ...(prev.notes || [])],
         }));
         setNoteText("");
+      } else {
+        showMsg("Failed to add note", true);
       }
     } catch {
-      console.error("Failed to add note");
+      showMsg("Failed to add note", true);
     } finally {
       setAddingNote(false);
     }
@@ -213,13 +229,15 @@ export default function OrderDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(fieldData),
       });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         setOrder(data);
         fetchTimeline();
+      } else {
+        showMsg(data.error || "Failed to update field", true);
       }
     } catch {
-      console.error("Failed to update field");
+      showMsg("Failed to update field", true);
     }
   }
 
@@ -311,6 +329,12 @@ export default function OrderDetailPage() {
           </span>
         </div>
 
+        {/* Production Issues — full list of what's blocking each item */}
+        <ProductionIssuesCard order={order} />
+
+        {/* Next Action Banner */}
+        <NextActionBanner order={order} />
+
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Left column - main info */}
           <div className="space-y-6 lg:col-span-2">
@@ -321,31 +345,147 @@ export default function OrderDetailPage() {
                 <InfoField label={t("admin.orderDetail.name")} value={order.customerName || "\u2014"} />
                 <InfoField label={t("admin.orderDetail.phone")} value={order.customerPhone || "\u2014"} />
               </div>
+              {order.shippingAddress && (
+                <div className="mt-3 rounded-[3px] border border-[#e0e0e0] px-3 py-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[#999] mb-1">Shipping Address</p>
+                  <p className="text-xs text-black leading-relaxed">
+                    {order.shippingAddress.name && <>{order.shippingAddress.name}<br /></>}
+                    {order.shippingAddress.company && <>{order.shippingAddress.company}<br /></>}
+                    {order.shippingAddress.line1}
+                    {order.shippingAddress.line2 && <>, {order.shippingAddress.line2}</>}
+                    <br />
+                    {order.shippingAddress.city}{order.shippingAddress.state ? `, ${order.shippingAddress.state}` : ""} {order.shippingAddress.postalCode}
+                    <br />
+                    {order.shippingAddress.country}
+                  </p>
+                </div>
+              )}
             </Section>
+
+            {/* Customer Summary — plain-language overview for CS reps */}
+            <CustomerSummarySection order={order} />
 
             {/* Order items */}
             <Section title={`${t("admin.orderDetail.items")} (${order.items?.length || 0})`}>
               {order.items && order.items.length > 0 ? (
                 <div className="divide-y divide-[#e0e0e0]">
-                  {order.items.map((item) => (
+                  {order.items.map((item) => {
+                    const family = detectProductFamily(item);
+                    const specs = buildSpecsSummary(item);
+                    const meta = item.meta && typeof item.meta === "object" ? item.meta : {};
+
+                    // --- Per-item readiness evaluation (shared utility) ---
+                    const hasRealUrl = hasArtworkUrl(item);
+                    const artStatus = getArtworkStatus(item);
+                    const hasFileNameOnly = artStatus === "file-name-only";
+                    const isDesignHelp = artStatus === "design-help";
+                    const isUploadLater = artStatus === "upload-later";
+                    // Artwork states: green = real URL, amber = fileName-only / upload-later / design-help, red = completely missing
+                    const artworkGreen = hasRealUrl;
+                    const artworkAmber = !hasRealUrl && (hasFileNameOnly || isUploadLater || isDesignHelp);
+                    const artworkRed = artStatus === "missing";
+                    const hasMaterial = !!(item.material || meta.material || meta.stock || meta.labelType);
+                    const hasDimensions = !!(item.widthIn && item.heightIn) || !!meta.sizeLabel || parseSizeRows(item).length > 0;
+                    const needsMaterial = ["sticker", "label", "banner", "sign"].includes(family);
+                    const materialBlocked = needsMaterial && !hasMaterial;
+                    const isBlocked = artworkRed || materialBlocked || (!hasDimensions && family !== "stamp");
+                    const hasWarning = !isBlocked && (artworkAmber
+                      || ((meta.whiteInkMode && meta.whiteInkMode !== "none") && !meta.whiteInkUrl));
+                    // readiness: green = good to go, amber = needs attention, red = blocked
+                    const readinessDot = isBlocked ? "bg-red-500" : hasWarning ? "bg-amber-400" : "bg-green-500";
+                    const readinessTitle = isBlocked ? "Blocked — missing required info" : hasWarning ? "Needs attention before production" : "Ready for production";
+
+                    // --- Extract key production specs for prominent display ---
+                    const materialLabel = item.material || meta.material || meta.stock || meta.labelType || null;
+                    const finishLabel = item.finishing || meta.finishing || meta.finish || meta.finishName || null;
+                    const sizeLabel = item.widthIn && item.heightIn
+                      ? `${item.widthIn}" x ${item.heightIn}"`
+                      : meta.sizeLabel || null;
+                    const fmtSpec = (s) => s ? s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "";
+
+                    // Remaining specs (exclude Qty, Size, Material, Finishing/Finish since we show them prominently)
+                    const prominentLabels = new Set(["Qty", "Size", "Material", "Paper", "Finishing", "Finish"]);
+                    const extraSpecs = specs.filter((s) => !prominentLabels.has(s.label));
+
+                    return (
                     <div key={item.id} className="py-3 first:pt-0 last:pb-0">
                       <div className="flex items-start justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-black">
-                            {item.productName}
-                          </p>
-                          <p className="text-xs text-[#999]">
-                            {item.productType} &middot; {t("admin.orderDetail.qty")}: {item.quantity}
-                          </p>
-                          {/* Specs */}
-                          <div className="mt-1 flex flex-wrap gap-2 text-xs text-[#999]">
-                            {item.widthIn && item.heightIn && (
-                              <span>
-                                {item.widthIn}&quot; x {item.heightIn}&quot;
-                              </span>
+                        <div className="min-w-0 flex-1">
+                          {/* Row 1: readiness dot + product name + family badge */}
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${readinessDot}`} title={readinessTitle} />
+                            <p className="text-sm font-medium text-black">
+                              {item.productName}
+                            </p>
+                            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold text-gray-500">
+                              {FAMILY_LABELS[family] || family}
+                            </span>
+                          </div>
+
+                          {/* Row 2: key production specs — qty, material, size, finish — prominent */}
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[#555]">
+                            <span className="font-semibold">{item.quantity}x</span>
+                            {sizeLabel && (
+                              <>
+                                <span className="text-[#bbb]">/</span>
+                                <span>{sizeLabel}</span>
+                              </>
                             )}
-                            {item.material && <span>{item.material}</span>}
-                            {item.finishing && <span>{item.finishing}</span>}
+                            {materialLabel && (
+                              <>
+                                <span className="text-[#bbb]">/</span>
+                                <span className="font-medium">{fmtSpec(materialLabel)}</span>
+                              </>
+                            )}
+                            {finishLabel && finishLabel !== "none" && (
+                              <>
+                                <span className="text-[#bbb]">/</span>
+                                <span>{fmtSpec(finishLabel)}</span>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Row 3: remaining specs from buildSpecsSummary */}
+                          {extraSpecs.length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                              {extraSpecs.map((s, i) => (
+                                <span key={i} className="text-[10px] text-[#777]">
+                                  <span className="font-medium text-[#555]">{s.label}:</span> {s.value}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Row 4: Artwork status — always visible, not just when present */}
+                          <div className="mt-1.5 flex flex-wrap gap-1.5">
+                            {/* Artwork intake status — 5 states: uploaded & linked, fileName-only warning, upload-later, design-help, missing */}
+                            {artworkGreen ? (
+                              <span className="rounded bg-green-50 px-1.5 py-0.5 text-[9px] font-medium text-green-700">Artwork: Uploaded &amp; Linked</span>
+                            ) : hasFileNameOnly ? (
+                              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">Artwork: File Name Only — URL Missing</span>
+                            ) : isUploadLater ? (
+                              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">Artwork: Upload Pending</span>
+                            ) : isDesignHelp ? (
+                              <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700">Artwork: Design Help ($45)</span>
+                            ) : (
+                              <span className="rounded bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-700">Artwork: Missing</span>
+                            )}
+                            {/* Other production status indicators */}
+                            {meta.contourSvg && <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-medium text-blue-700">Contour</span>}
+                            {meta.contourAppliedAt && <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-medium text-blue-700">Contour Applied</span>}
+                            {meta.proofConfirmed && <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-medium text-emerald-700">Proof OK</span>}
+                            {(meta.whiteInkMode && meta.whiteInkMode !== "none") && <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium ${meta.whiteInkUrl ? "bg-purple-50 text-purple-700" : "bg-yellow-50 text-yellow-700"}`}>{meta.whiteInkUrl ? "White Ink Ready" : "White Ink Pending"}</span>}
+                            {meta.stampPreviewUrl && <span className="rounded bg-green-50 px-1.5 py-0.5 text-[9px] font-medium text-green-700">Stamp Preview</span>}
+                            {(meta.sides === "double" || meta.doubleSided) && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium text-amber-700">2-Sided</span>}
+                            {meta.foilCoverage && <span className="rounded bg-yellow-50 px-1.5 py-0.5 text-[9px] font-medium text-yellow-800">Foil</span>}
+                            {(meta.turnaround === "rush" || meta.turnaround === "express" || meta.turnaround === "same-day") && <span className="rounded bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-700">RUSH</span>}
+                            {meta.numbering && <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[9px] font-medium text-indigo-700">Numbered</span>}
+                            {(meta.foodUse === true || meta.foodUse === "yes") && <span className="rounded bg-lime-50 px-1.5 py-0.5 text-[9px] font-medium text-lime-700">Food Safe</span>}
+                            {meta.lamination && <span className="rounded bg-cyan-50 px-1.5 py-0.5 text-[9px] font-medium text-cyan-700">Laminated</span>}
+                            {(meta.fold && meta.fold !== "none") && <span className="rounded bg-orange-50 px-1.5 py-0.5 text-[9px] font-medium text-orange-700">Fold: {meta.fold}</span>}
+                            {(meta.coating && meta.coating !== "none") && <span className="rounded bg-teal-50 px-1.5 py-0.5 text-[9px] font-medium text-teal-700">Coated</span>}
+                            {meta.processedImageUrl && <span className="rounded bg-violet-50 px-1.5 py-0.5 text-[9px] font-medium text-violet-700">BG Removed</span>}
+                            {meta.vehicleType && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-medium text-slate-700">{meta.vehicleType}</span>}
                           </div>
                           {parseSizeRows(item).length > 0 && (
                             <div className="mt-1 space-y-0.5 text-[11px] text-[#999]">
@@ -357,17 +497,43 @@ export default function OrderDetailPage() {
                             </div>
                           )}
                         </div>
-                        <div className="text-right">
+                        <div className="text-right shrink-0">
                           <p className="text-sm font-semibold text-black">
                             {formatCad(item.totalPrice)}
                           </p>
                           <p className="text-xs text-[#999]">
                             {formatCad(item.unitPrice)} {t("admin.orderDetail.each")}
                           </p>
+                          {/* Production job status */}
+                          {item.productionJob && (
+                            <div className="mt-1.5 flex flex-col items-end gap-0.5">
+                              <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+                                item.productionJob.status === "shipped" || item.productionJob.status === "finished" ? "bg-green-100 text-green-700" :
+                                item.productionJob.status === "printing" || item.productionJob.status === "quality_check" ? "bg-indigo-100 text-indigo-700" :
+                                item.productionJob.status === "assigned" ? "bg-blue-100 text-blue-700" :
+                                item.productionJob.status === "on_hold" ? "bg-red-100 text-red-700" :
+                                "bg-gray-100 text-gray-600"
+                              }`}>
+                                {item.productionJob.status.replace(/_/g, " ")}
+                              </span>
+                              {item.productionJob.priority === "urgent" && (
+                                <span className="rounded bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-700">URGENT</span>
+                              )}
+                              {item.productionJob.dueAt && (
+                                <span className={`text-[9px] ${new Date(item.productionJob.dueAt) < new Date() ? "font-bold text-red-600" : "text-[#999]"}`}>
+                                  Due: {new Date(item.productionJob.dueAt).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+                                </span>
+                              )}
+                              {item.productionJob.assignedTo && (
+                                <span className="text-[9px] text-[#999]">{item.productionJob.assignedTo}</span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-sm text-[#999]">{t("admin.orderDetail.noItems")}</p>
@@ -495,7 +661,7 @@ export default function OrderDetailPage() {
                         />
                         <div>
                           <p className="text-sm font-medium text-black">
-                            {event.action.replace(/_/g, " ")}
+                            {getActionLabel(event.action)}
                           </p>
                           {event.details && (
                             <p className="mt-0.5 text-xs text-[#999] break-all">
@@ -547,7 +713,7 @@ export default function OrderDetailPage() {
                 />
 
                 {message && (
-                  <p className="text-xs font-medium text-green-600">{message}</p>
+                  <p className={`text-xs font-medium ${messageIsError ? "text-red-600" : "text-green-600"}`}>{message}</p>
                 )}
 
                 <button
@@ -689,44 +855,85 @@ export default function OrderDetailPage() {
             {order.files && order.files.length > 0 && (
               <Section title={`${t("admin.orderDetail.files")} (${order.files.length})`}>
                 <div className="space-y-2">
-                  {order.files.map((file) => (
-                    <div key={file.id} className="rounded-[3px] border border-[#e0e0e0] px-3 py-2">
-                      <div className="flex items-center justify-between">
-                        <a
-                          href={file.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-black underline hover:no-underline"
-                        >
-                          {file.fileName || "File"}
-                          {file.mimeType && (
-                            <span className="ml-2 text-[#999]">{file.mimeType}</span>
+                  {order.files.map((file) => {
+                    const sizeBytes = file.sizeBytes ? Number(file.sizeBytes) : 0;
+                    const sizeStr = sizeBytes > 0
+                      ? sizeBytes < 1024 * 1024
+                        ? `${(sizeBytes / 1024).toFixed(0)} KB`
+                        : `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`
+                      : null;
+                    const dimStr = file.widthPx && file.heightPx ? `${file.widthPx}×${file.heightPx}px` : null;
+                    const dpiOk = file.dpi ? file.dpi >= 150 : null;
+                    return (
+                      <div key={file.id} className="rounded-[3px] border border-[#e0e0e0] px-3 py-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <a
+                            href={file.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="min-w-0 truncate text-xs text-black underline hover:no-underline"
+                          >
+                            {file.fileName || "File"}
+                          </a>
+                          <span className={`shrink-0 rounded-[2px] px-2 py-0.5 text-[10px] font-semibold ${
+                            file.preflightStatus === "approved" ? "bg-green-100 text-green-700" :
+                            file.preflightStatus === "rejected" ? "bg-red-100 text-red-700" :
+                            "bg-[#f5f5f5] text-[#666]"
+                          }`}>
+                            {file.preflightStatus || "pending"}
+                          </span>
+                        </div>
+                        {/* File metadata row */}
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-[#999]">
+                          {file.mimeType && <span>{file.mimeType}</span>}
+                          {sizeStr && <span>{sizeStr}</span>}
+                          {dimStr && <span>{dimStr}</span>}
+                          {file.dpi != null && (
+                            <span className={dpiOk ? "text-green-600" : "text-amber-600"}>
+                              {file.dpi} DPI
+                            </span>
                           )}
-                        </a>
-                        <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-semibold ${
-                          file.preflightStatus === "approved" ? "bg-green-100 text-green-700" :
-                          file.preflightStatus === "rejected" ? "bg-red-100 text-red-700" :
-                          "bg-[#f5f5f5] text-[#666]"
-                        }`}>
-                          {file.preflightStatus || "pending"}
-                        </span>
+                          {file.colorMode && file.colorMode !== "unknown" && (
+                            <span className={file.colorMode === "cmyk" ? "text-green-600" : "text-amber-600"}>
+                              {file.colorMode.toUpperCase()}
+                            </span>
+                          )}
+                          {file.hasBleed === true && <span className="text-green-600">Bleed ✓</span>}
+                          {file.hasBleed === false && <span className="text-amber-600">No bleed</span>}
+                        </div>
+                        {file.preflightStatus === "pending" && (
+                          <PreflightActions orderId={id} fileId={file.id} fileName={file.fileName} onUpdate={() => {
+                            fetch(`/api/admin/orders/${id}`).then(r => r.json()).then(data => {
+                              if (!data.error) { setOrder(data); fetchTimeline(); }
+                            });
+                          }} />
+                        )}
                       </div>
-                      {file.preflightStatus === "pending" && (
-                        <PreflightActions orderId={id} fileId={file.id} fileName={file.fileName} onUpdate={() => {
-                          // Refresh order
-                          fetch(`/api/admin/orders/${id}`).then(r => r.json()).then(data => {
-                            if (!data.error) { setOrder(data); fetchTimeline(); }
-                          });
-                        }} />
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </Section>
             )}
 
             {/* Proof Management */}
             <ProofSection orderId={id} />
+
+            {/* Contour / Proof Data (from customer configurator) */}
+            {order.proofData && order.proofData.length > 0 && (
+              <ContourDataSection proofData={order.proofData} toolJobs={order.toolJobs} />
+            )}
+
+            {/* Stamp Production Data (from order item meta) */}
+            <StampProductionSection order={order} />
+
+            {/* Production Readiness — at-a-glance indicator */}
+            <ProductionReadinessSection order={order} />
+
+            {/* Production Files — all layers for one-click download */}
+            <ProductionFilesSection order={order} />
+
+            {/* Preflight Checks */}
+            <PreflightSection order={order} />
 
             {/* Actions: Ship & Refund */}
             <OrderActions
@@ -758,7 +965,7 @@ function PrintInvoice({ order }) {
       {/* Invoice Header */}
       <div className="flex items-start justify-between border-b border-[#d0d0d0] pb-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Vibe Sticker Shop</h1>
+          <h1 className="text-2xl font-bold">La Lunar Printing Inc.</h1>
           <p className="text-[#999] mt-1">{t("admin.orderDetail.invoice")}</p>
         </div>
         <div className="text-right">
@@ -864,7 +1071,7 @@ function PrintInvoice({ order }) {
       {/* Footer */}
       <div className="mt-10 border-t border-[#e0e0e0] pt-4 text-center text-xs text-[#999]">
         <p>{t("admin.orderDetail.thankYou")}</p>
-        <p className="mt-1">Vibe Sticker Shop</p>
+        <p className="mt-1">La Lunar Printing Inc.</p>
       </div>
     </div>
   );
@@ -912,6 +1119,7 @@ function SelectField({ label, value, onChange, options, hint }) {
 }
 
 /* ========== Preflight Review Actions ========== */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
   const { t } = useTranslation();
   const [acting, setActing] = useState(false);
@@ -1095,6 +1303,7 @@ function ProofSection({ orderId }) {
                     rel="noopener noreferrer"
                     className="mt-2 block"
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- admin page, dynamic external URLs */}
                     <img
                       src={proof.imageUrl}
                       alt={proof.fileName || `Proof v${proof.version}`}
@@ -1119,6 +1328,952 @@ function ProofSection({ orderId }) {
         )}
       </div>
     </Section>
+  );
+}
+
+/* ========== Contour Data Section ========== */
+function ContourDataSection({ proofData, toolJobs }) {
+  const contourJobs = (toolJobs || []).filter((j) => j.toolType === "contour");
+
+  if ((!proofData || proofData.length === 0) && contourJobs.length === 0) return null;
+
+  function downloadContourSvg(pd) {
+    if (!pd.contourSvg) return;
+    // Load the processed (or original) image to get real dimensions
+    const imgUrl = pd.processedImageUrl || pd.originalFileUrl;
+    if (!imgUrl) {
+      // Fallback: download raw contourSvg path as-is with a generic viewBox
+      downloadRawSvgPath(pd.contourSvg, pd.bleedSvg, `contour-${pd.id.slice(0, 8)}.svg`);
+      return;
+    }
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const svg = buildContourSvg({
+        cutPath: pd.contourSvg,
+        bleedPath: pd.bleedSvg || "",
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      });
+      triggerDownload(svg, `contour-${pd.id.slice(0, 8)}.svg`);
+    };
+    img.onerror = () => {
+      // Image failed to load — fall back to raw path
+      downloadRawSvgPath(pd.contourSvg, pd.bleedSvg, `contour-${pd.id.slice(0, 8)}.svg`);
+    };
+    img.src = imgUrl;
+  }
+
+  function downloadRawSvgPath(cutPath, bleedPath, filename) {
+    let paths = `<path d="${cutPath}" fill="none" stroke="#ff0000" stroke-width="1.5"/>`;
+    if (bleedPath) {
+      paths = `<path d="${bleedPath}" fill="none" stroke="#ff000040" stroke-width="1" stroke-dasharray="4 2"/>\n  ${paths}`;
+    }
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg">\n  ${paths}\n</svg>`;
+    triggerDownload(svg, filename);
+  }
+
+  function triggerDownload(svgContent, filename) {
+    const blob = new Blob([svgContent], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <Section title={`Contour / Proof Data (${(proofData || []).length})`}>
+      <div className="space-y-3">
+        {(proofData || []).map((pd) => (
+          <div key={pd.id} className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-black">{pd.productSlug}</span>
+              <span className="text-[10px] text-[#999]">{new Date(pd.createdAt).toLocaleString()}</span>
+            </div>
+
+            {/* Images row */}
+            <div className="flex gap-2">
+              {pd.originalFileUrl && (
+                <a href={pd.originalFileUrl} target="_blank" rel="noopener noreferrer" className="block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={pd.originalFileUrl} alt="Original" className="h-20 w-20 rounded border border-[#e0e0e0] object-cover" />
+                  <span className="block text-[9px] text-[#999] mt-0.5">Original</span>
+                </a>
+              )}
+              {pd.processedImageUrl && (
+                <a href={pd.processedImageUrl} target="_blank" rel="noopener noreferrer" className="block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={pd.processedImageUrl} alt="Processed" className="h-20 w-20 rounded border border-[#e0e0e0] object-cover bg-[#f0f0f0]" />
+                  <span className="block text-[9px] text-[#999] mt-0.5">Processed</span>
+                </a>
+              )}
+            </div>
+
+            {/* Metadata chips */}
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              {pd.bleedMm != null && (
+                <span className="rounded bg-[#f5f5f5] px-2 py-0.5 text-[#666]">Bleed: {pd.bleedMm}mm</span>
+              )}
+              <span className={`rounded px-2 py-0.5 ${pd.bgRemoved ? "bg-blue-50 text-blue-700" : "bg-[#f5f5f5] text-[#666]"}`}>
+                BG Removed: {pd.bgRemoved ? "Yes" : "No"}
+              </span>
+              <span className={`rounded px-2 py-0.5 ${pd.customerConfirmed ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}`}>
+                {pd.customerConfirmed ? "Customer Confirmed" : "Not Confirmed"}
+              </span>
+            </div>
+
+            {/* Download contour SVG — uses real image dimensions + buildContourSvg */}
+            {pd.contourSvg && (
+              <button
+                type="button"
+                onClick={() => downloadContourSvg(pd)}
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1 text-[10px] font-semibold text-black hover:bg-[#fafafa]"
+              >
+                Download Contour SVG
+              </button>
+            )}
+          </div>
+        ))}
+
+        {/* Contour Tool Jobs */}
+        {contourJobs.length > 0 && (
+          <div className="border-t border-[#e0e0e0] pt-2 mt-2">
+            <p className="text-[10px] font-semibold uppercase text-[#999] mb-1">Contour Jobs ({contourJobs.length})</p>
+            {contourJobs.map((job) => (
+              <div key={job.id} className="rounded-[3px] border border-[#f0f0f0] p-2 mb-1 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-[#666]">{job.id.slice(0, 8)}</span>
+                  <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-semibold ${
+                    job.status === "completed" ? "bg-green-100 text-green-700" :
+                    job.status === "failed" ? "bg-red-100 text-red-700" :
+                    "bg-[#f5f5f5] text-[#666]"
+                  }`}>{job.status}</span>
+                  <span className="text-[10px] text-[#999]">{new Date(job.createdAt).toLocaleString()}</span>
+                </div>
+                {job.operatorName && (
+                  <p className="text-[10px] text-[#666]">Operator: <span className="font-medium text-black">{job.operatorName}</span></p>
+                )}
+                {job.notes && (
+                  <p className="text-[10px] text-[#666]">{job.notes}</p>
+                )}
+                {job.outputFileUrl && (
+                  <a href={job.outputFileUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-black underline hover:no-underline">
+                    Download output file
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Section>
+  );
+}
+
+/* ========== Stamp Production Section ========== */
+function StampProductionSection({ order }) {
+  // Find stamp items — broad matching: name contains "stamp", or stamp-specific metadata present
+  const stampItems = (order.items || []).filter((item) => {
+    if (item.productName && item.productName.toLowerCase().includes("stamp")) return true;
+    const meta = item.meta && typeof item.meta === "object" ? item.meta : {};
+    const specs = item.specsJson && typeof item.specsJson === "object" ? item.specsJson : {};
+    const merged = { ...specs, ...meta };
+    return merged.stampModel || merged.stampText || merged.editorText ||
+      merged.stampPreviewUrl || merged.stampLogoUrl;
+  });
+
+  // Find stamp-related tool jobs (stamp-studio or any toolType containing "stamp")
+  const stampJobs = (order.toolJobs || []).filter((j) =>
+    j.toolType === "stamp-studio" || (j.toolType && j.toolType.toLowerCase().includes("stamp"))
+  );
+
+  if (stampItems.length === 0 && stampJobs.length === 0) return null;
+
+  return (
+    <Section title={`Stamp Production (${stampItems.length} item${stampItems.length !== 1 ? "s" : ""})`}>
+      <div className="space-y-3">
+        {stampItems.map((item) => {
+          const meta = {
+            ...(item.specsJson && typeof item.specsJson === "object" ? item.specsJson : {}),
+            ...(item.meta && typeof item.meta === "object" ? item.meta : {}),
+          };
+          return (
+            <div key={item.id} className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
+              <p className="text-xs font-semibold text-black">{item.productName}</p>
+
+              {/* Preview image */}
+              {meta.stampPreviewUrl && (
+                <a href={meta.stampPreviewUrl} target="_blank" rel="noopener noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={meta.stampPreviewUrl}
+                    alt="Stamp preview"
+                    className="h-28 w-28 rounded border border-[#e0e0e0] object-contain bg-white"
+                  />
+                </a>
+              )}
+
+              {/* Stamp text */}
+              {(meta.stampText || meta.editorText) && (
+                <div className="rounded bg-[#fafafa] px-3 py-2">
+                  <p className="text-[10px] font-semibold uppercase text-[#999] mb-1">Stamp Text</p>
+                  <pre className="text-xs text-black whitespace-pre-wrap font-mono">{meta.stampText || meta.editorText}</pre>
+                </div>
+              )}
+
+              {/* Metadata grid */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+                {meta.stampModel && <MetaRow label="Model" value={meta.stampModelLabel || meta.stampModel} />}
+                {meta.shape && <MetaRow label="Shape" value={meta.shape} />}
+                {meta.stampFont && <MetaRow label="Font" value={meta.stampFont} />}
+                {meta.stampColor && <MetaRow label="Ink Color" value={meta.stampColor} />}
+                {meta.stampBorder && meta.stampBorder !== "none" && <MetaRow label="Border" value={meta.stampBorder} />}
+                {meta.stampTemplate && <MetaRow label="Template" value={meta.stampTemplate} />}
+                {meta.stampCurveAmount != null && <MetaRow label="Curve" value={`${meta.stampCurveAmount}%`} />}
+                {meta.stampHalftoneEnabled && <MetaRow label="Halftone" value={meta.stampHalftoneIntensity || "enabled"} />}
+                {meta.stampPreset && <MetaRow label="Preset" value={meta.stampPreset} />}
+              </div>
+
+              {/* Logo link */}
+              {meta.stampLogoUrl && (
+                <a href={meta.stampLogoUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-black underline hover:no-underline">
+                  View uploaded logo
+                </a>
+              )}
+
+              {/* Open Stamp Studio */}
+              <Link
+                href="/admin/tools/stamp-studio"
+                className="inline-block rounded-[3px] border border-[#d0d0d0] px-3 py-1 text-[10px] font-semibold text-black hover:bg-[#fafafa]"
+              >
+                Open Stamp Studio
+              </Link>
+            </div>
+          );
+        })}
+
+        {/* Tool Jobs */}
+        {stampJobs.length > 0 && (
+          <div className="border-t border-[#e0e0e0] pt-2 mt-2">
+            <p className="text-[10px] font-semibold uppercase text-[#999] mb-1">Stamp Studio Jobs ({stampJobs.length})</p>
+            {stampJobs.map((job) => (
+              <div key={job.id} className="flex items-center justify-between py-1">
+                <span className="text-[10px] text-[#666]">{job.id.slice(0, 8)}</span>
+                <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-semibold ${
+                  job.status === "completed" ? "bg-green-100 text-green-700" :
+                  job.status === "failed" ? "bg-red-100 text-red-700" :
+                  "bg-[#f5f5f5] text-[#666]"
+                }`}>{job.status}</span>
+                <span className="text-[10px] text-[#999]">{new Date(job.createdAt).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Section>
+  );
+}
+
+/* ========== Customer Summary Section ========== */
+const FAMILY_LABELS = {
+  "sticker": "Sticker", "label": "Label", "stamp": "Stamp", "canvas": "Canvas",
+  "banner": "Banner / Flag", "sign": "Sign / Display", "booklet": "Booklet",
+  "ncr": "NCR Form", "business-card": "Business Card", "vehicle": "Vehicle Graphics",
+  "standard-print": "Print", "other": "Custom",
+};
+
+function CustomerSummarySection({ order }) {
+  const items = order.items || [];
+  if (items.length === 0) return null;
+
+  return (
+    <Section title="Order Summary (Plain Language)">
+      <div className="space-y-3">
+        {items.map((item) => {
+          const meta = {
+            ...(item.specsJson && typeof item.specsJson === "object" ? item.specsJson : {}),
+            ...(item.meta && typeof item.meta === "object" ? item.meta : {}),
+          };
+          const family = detectProductFamily(item);
+          const specs = buildSpecsSummary(item);
+
+          // Handle business card front/back artwork (flattened keys or legacy object format)
+          const rawArtUrl = meta.artworkUrl || meta.fileUrl || meta.stampPreviewUrl || item.fileUrl || null;
+          const hasFrontBack = (meta.frontArtworkUrl || meta.backArtworkUrl)
+            || (rawArtUrl && typeof rawArtUrl === "object" && (rawArtUrl.front || rawArtUrl.back));
+          const frontUrl = meta.frontArtworkUrl || (rawArtUrl && typeof rawArtUrl === "object" ? rawArtUrl.front : null);
+          const backUrl = meta.backArtworkUrl || (rawArtUrl && typeof rawArtUrl === "object" ? rawArtUrl.back : null);
+          const artworkUrl = hasFrontBack ? null : rawArtUrl;
+          const hasFileNameOnly = !!(meta.fileName && !artworkUrl && !hasFrontBack);
+
+          return (
+            <div key={item.id} className="rounded-[3px] bg-[#fafafa] px-3 py-2.5">
+              {/* Header: product name + family badge + copy */}
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-black">
+                  {item.quantity}× {item.productName}
+                </p>
+                <span className="rounded bg-gray-200 px-1.5 py-0.5 text-[9px] font-medium text-gray-600">
+                  {FAMILY_LABELS[family] || family}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const text = `${item.quantity}× ${item.productName}\n${specs.filter(s => s.label !== "Qty").map(s => `${s.label}: ${s.value}`).join("\n")}`;
+                    navigator.clipboard.writeText(text).catch(() => {});
+                  }}
+                  className="ml-auto rounded px-1.5 py-0.5 text-[9px] font-medium text-[#999] hover:bg-gray-200 hover:text-black"
+                  title="Copy specs to clipboard"
+                >
+                  Copy
+                </button>
+              </div>
+
+              {/* Specs grid — from buildSpecsSummary */}
+              {specs.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-[#666]">
+                  {specs.filter(s => s.label !== "Qty").map((s, i) => (
+                    <span key={i}><span className="text-[#999]">{s.label}:</span> <span className="font-medium text-black">{s.value}</span></span>
+                  ))}
+                </div>
+              )}
+
+              {/* File status row */}
+              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-[#666]">
+                <span>
+                  Artwork: {hasFrontBack
+                    ? <>
+                        {frontUrl && <a href={frontUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-green-700 underline hover:text-green-900 mr-1">Front</a>}
+                        {backUrl && <a href={backUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-green-700 underline hover:text-green-900">Back</a>}
+                        {!frontUrl && !backUrl && <span className="font-semibold text-red-600">Not uploaded</span>}
+                      </>
+                    : artworkUrl
+                    ? <a href={artworkUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-green-700 underline hover:text-green-900">View file</a>
+                    : hasFileNameOnly
+                      ? <span className="font-semibold text-amber-600">{typeof meta.fileName === "object" ? "Files pending" : meta.fileName} — URL missing</span>
+                      : <span className="font-semibold text-red-600">Not uploaded</span>}
+                </span>
+                {/* Design help / artwork intent */}
+                {(meta.designHelp === true || meta.designHelp === "true" || meta.artworkIntent === "design-help") && (
+                  <span>Design Help: <span className="font-semibold text-indigo-700">$45 — prepare artwork</span></span>
+                )}
+                {meta.artworkIntent === "upload-later" && !meta.designHelp && meta.artworkIntent !== "design-help" && (
+                  <span>Artwork Intent: <span className="font-semibold text-amber-600">Will upload later</span></span>
+                )}
+                {/* Show proof status only for families that use proofs */}
+                {(family === "sticker" || family === "label" || meta.proofConfirmed !== undefined) && (
+                  <span>
+                    Proof: {meta.proofConfirmed === true || meta.customerConfirmed === true
+                      ? <span className="font-semibold text-green-700">Confirmed</span>
+                      : <span className="font-semibold text-yellow-700">Not confirmed</span>}
+                  </span>
+                )}
+                {/* White ink — only for families that support it */}
+                {(family === "sticker" || family === "label") && (
+                  <span>
+                    White Ink: {meta.whiteInkEnabled || (meta.whiteInkMode && meta.whiteInkMode !== "none")
+                      ? <span className="font-semibold text-black">
+                          {meta.whiteInkMode === "auto" ? "Automatic" : meta.whiteInkMode === "follow" ? "Match Design" : meta.whiteInkMode === "custom" ? "Custom Upload" : "Yes"}
+                          {meta.whiteInkUrl ? "" : " ⚠ file pending"}
+                        </span>
+                      : <span className="text-[#999]">No</span>}
+                  </span>
+                )}
+                {/* Double-sided indicator for print family */}
+                {(meta.sides === "double" || meta.sides === "2" || meta.doubleSided) && !hasFrontBack && (
+                  <span>
+                    Back File: {meta.backArtworkUrl
+                      ? <span className="font-semibold text-green-700">Uploaded</span>
+                      : <span className="font-semibold text-amber-600">Not separate — check PDF</span>}
+                  </span>
+                )}
+                {/* Finishing status */}
+                {(item.finishing || meta.finishing) && (item.finishing || meta.finishing) !== "none" && (
+                  <span>Finishing: <span className="font-semibold text-black">{item.finishing || meta.finishing}</span></span>
+                )}
+                {/* Coating */}
+                {meta.coating && meta.coating !== "none" && (
+                  <span>Coating: <span className="font-semibold text-black">{meta.coating}</span></span>
+                )}
+                {/* Lamination */}
+                {meta.lamination && (
+                  <span>Lamination: <span className="font-semibold text-black">{meta.lamination}</span></span>
+                )}
+                {/* Turnaround */}
+                {meta.turnaround && meta.turnaround !== "standard" && (
+                  <span>Turnaround: <span className={`font-semibold ${meta.turnaround === "rush" || meta.turnaround === "express" || meta.turnaround === "same-day" ? "text-red-600" : "text-black"}`}>{meta.turnaround}</span></span>
+                )}
+                {/* Fold for brochures etc. */}
+                {meta.fold && meta.fold !== "none" && (
+                  <span>Fold: <span className="font-semibold text-black">{meta.fold}</span></span>
+                )}
+                {/* Numbering */}
+                {meta.numbering && (
+                  <span>Numbering: <span className="font-semibold text-black">{meta.numberStart ? `#${meta.numberStart}–${meta.numberEnd || "..."}` : "Yes (start # TBD)"}</span></span>
+                )}
+                {/* Vehicle specifics */}
+                {meta.vehicleBody && (
+                  <span>Vehicle: <span className="font-semibold text-black">{meta.vehicleBody}</span></span>
+                )}
+                {meta.vehicleType && (
+                  <span>Type: <span className="font-semibold text-black">{meta.vehicleType}</span></span>
+                )}
+                {/* Contour status */}
+                {meta.contourAppliedAt && (
+                  <span>Contour: <span className="font-semibold text-green-700">Applied {new Date(meta.contourAppliedAt).toLocaleDateString()}</span></span>
+                )}
+              </div>
+
+              {/* Size rows if present */}
+              {parseSizeRows(item).length > 0 && (
+                <div className="mt-1 text-[10px] text-[#999]">
+                  {parseSizeRows(item).map((row, idx) => (
+                    <span key={idx} className="mr-2">
+                      Size #{idx + 1}: {row.width}&quot; × {row.height}&quot; × {row.quantity} pcs
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Total paid */}
+        <div className="flex items-center justify-between border-t border-[#e0e0e0] pt-2">
+          <span className="text-xs font-medium text-[#666]">Total Paid</span>
+          <span className="text-sm font-semibold text-black">{formatCad(order.totalAmount)} CAD</span>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+/* ========== Production Readiness Section ========== */
+function ProductionReadinessSection({ order }) {
+  const items = order.items || [];
+  if (items.length === 0) return null;
+
+  // Evaluate readiness per item — checks vary by product family
+  const itemChecks = items.map((item) => {
+    const meta = {
+      ...(item.specsJson && typeof item.specsJson === "object" ? item.specsJson : {}),
+      ...(item.meta && typeof item.meta === "object" ? item.meta : {}),
+    };
+    const family = detectProductFamily(item);
+    const checks = [];
+
+    // Universal: artwork uploaded — use shared utility with merged meta
+    const itemWithMergedMeta = { ...item, meta };
+    const hasRealArtUrl = hasArtworkUrl(itemWithMergedMeta);
+    const artStatusHere = getArtworkStatus(itemWithMergedMeta);
+    const hasFileNameOnlyHere = artStatusHere === "file-name-only";
+    const isDesignHelpHere = artStatusHere === "design-help";
+    const isUploadLaterHere = artStatusHere === "upload-later";
+    // Artwork is truly "uploaded" only with a real URL; fileName-only / intent states are warnings, not blockers
+    const artworkUploaded = hasRealArtUrl;
+    const artworkIsWarning = !hasRealArtUrl && (hasFileNameOnlyHere || isUploadLaterHere || isDesignHelpHere);
+    checks.push({
+      label: hasRealArtUrl ? "Artwork uploaded" : hasFileNameOnlyHere ? "Artwork: file name only — URL missing" : isDesignHelpHere ? "Artwork: design help requested" : isUploadLaterHere ? "Artwork: upload pending" : "Artwork uploaded",
+      ok: artworkUploaded,
+      blocker: !artworkIsWarning, // warning states are not blockers, truly missing IS a blocker
+    });
+
+    // Universal: dimensions (except stamps which are model-based)
+    if (family !== "stamp") {
+      const hasDimensions = !!(item.widthIn && item.heightIn) || parseSizeRows(item).length > 0;
+      checks.push({ label: "Dimensions specified", ok: hasDimensions, blocker: true });
+    }
+
+    // Material — required for physical products
+    const hasMaterial = !!(item.material || meta.material || meta.stock || meta.labelType);
+    if (["sticker", "label", "banner", "sign"].includes(family)) {
+      checks.push({ label: "Material selected", ok: hasMaterial, blocker: true });
+    }
+
+    // Proof — only for contour-based products (stickers, die-cut labels)
+    if (family === "sticker" || (family === "label" && (meta.contourSvg || meta.bleedMm))) {
+      const proofConfirmed = meta.proofConfirmed === true || meta.customerConfirmed === true;
+      checks.push({ label: "Proof confirmed", ok: proofConfirmed, blocker: false });
+    }
+
+    // White ink — only for sticker/label with transparent material
+    const whiteInkEnabled = !!(meta.whiteInkEnabled || (meta.whiteInkMode && meta.whiteInkMode !== "none"));
+    if (whiteInkEnabled) {
+      checks.push({ label: "White ink file ready", ok: !!meta.whiteInkUrl, blocker: false });
+    }
+
+    // Double-sided: flag if only one file
+    const isTwoSided = meta.sides === "double" || meta.sides === "2" || meta.sides === 2 || meta.doubleSided === true;
+    if (isTwoSided) {
+      const hasBackFile = !!(meta.backArtworkUrl || meta.backFileUrl);
+      checks.push({ label: "Back side artwork", ok: hasBackFile, blocker: false,
+        note: !hasBackFile ? "Check if both sides are in one PDF" : null });
+    }
+
+    // Stamp: needs preview
+    if (family === "stamp") {
+      checks.push({ label: "Stamp preview generated", ok: !!meta.stampPreviewUrl, blocker: true });
+      checks.push({ label: "Stamp model specified", ok: !!meta.stampModel, blocker: true });
+    }
+
+    // Canvas: crop data
+    if (family === "canvas") {
+      checks.push({ label: "Crop data set", ok: !!(meta.cropData || meta.cropX), blocker: false,
+        note: !(meta.cropData || meta.cropX) ? "Will use artwork as-is" : null });
+    }
+
+    // Booklet: page count
+    if (family === "booklet") {
+      checks.push({ label: "Page count specified", ok: !!meta.pageCount, blocker: true });
+      checks.push({ label: "Binding type selected", ok: !!meta.binding, blocker: true });
+    }
+
+    // NCR: parts/form type
+    if (family === "ncr") {
+      checks.push({ label: "Form type / parts specified", ok: !!(meta.formType || meta.parts), blocker: true });
+      if (meta.numbering) {
+        checks.push({ label: "Numbering start # set", ok: !!meta.numberStart, blocker: true });
+      }
+    }
+
+    // Business card: foil needs foil press, multi-name needs files
+    if (family === "business-card") {
+      if (meta.foilCoverage) {
+        checks.push({ label: "Foil job (needs foil press)", ok: true, blocker: false,
+          note: `${meta.foilCoverage} coverage${meta.foilSides === "both" ? ", both sides" : ""}` });
+      }
+      if (meta.names && meta.names > 1) {
+        const fileCount = typeof meta.fileName === "object" && meta.fileName
+          ? Object.values(meta.fileName).filter(Boolean).length : meta.fileName ? 1 : 0;
+        checks.push({ label: `Artwork for ${meta.names} name variations`, ok: fileCount >= meta.names, blocker: false,
+          note: fileCount < meta.names ? `Only ${fileCount} file(s) — may need follow-up` : null });
+      }
+    }
+
+    // (Roll labels food-safe + banner finishing checks moved to family-specific blocks below)
+
+    // Standard print: paper/stock + finishing + fold
+    if (family === "standard-print") {
+      const hasPaper = !!(item.material || meta.material || meta.stock);
+      checks.push({ label: "Paper/stock selected", ok: hasPaper, blocker: false,
+        note: !hasPaper ? "No paper stock specified — may default to standard" : null });
+      const hasCoating = !!(meta.coating && meta.coating !== "none");
+      if (hasCoating) {
+        checks.push({ label: "Coating specified", ok: true, blocker: false,
+          note: `Coating: ${meta.coating}` });
+      }
+      const hasFold = !!(meta.fold && meta.fold !== "none");
+      if (hasFold) {
+        checks.push({ label: "Fold type specified", ok: true, blocker: false,
+          note: `Fold: ${meta.fold}` });
+      }
+      if (meta.numbering) {
+        checks.push({ label: "Numbering start # set", ok: !!meta.numberStart, blocker: false,
+          note: !meta.numberStart ? "Numbering enabled but no starting number" : `Starting: #${meta.numberStart}` });
+      }
+    }
+
+    // Vehicle graphics: type required; body required only for wraps/door/fleet (not DOT/compliance/unit)
+    if (family === "vehicle") {
+      checks.push({ label: "Vehicle type specified", ok: !!meta.vehicleType, blocker: true });
+      const typeId = (meta.vehicleType || "").toLowerCase();
+      const noBodyNeeded = typeId.includes("dot") || typeId.includes("compliance") || typeId.includes("unit");
+      if (!noBodyNeeded) {
+        checks.push({ label: "Vehicle body selected", ok: !!meta.vehicleBody, blocker: true });
+        const hasLam = !!(meta.lamination || meta.laminate);
+        checks.push({ label: "Lamination selected", ok: hasLam, blocker: false,
+          note: !hasLam ? "Recommend lamination for vehicle graphics durability" : null });
+      }
+      // DOT/compliance needs text content
+      if (typeId.includes("dot") || typeId.includes("compliance")) {
+        checks.push({ label: "Text content provided", ok: !!meta.text, blocker: true });
+      }
+      // Artwork type: design vs text-only
+      if (meta.artworkUrl || meta.fileUrl || item.fileUrl) {
+        checks.push({ label: "Design artwork provided", ok: true, blocker: false });
+      }
+      if (meta.color) {
+        checks.push({ label: "Color specified", ok: true, blocker: false, note: meta.color });
+      }
+    }
+
+    // Sign/display: material + dimensions + mounting + finishing
+    if (family === "sign") {
+      const hasMat = !!(item.material || meta.material);
+      checks.push({ label: "Substrate material specified", ok: hasMat, blocker: true });
+      const hasDims = !!((item.widthIn && item.heightIn) || (meta.width && meta.height));
+      checks.push({ label: "Dimensions specified", ok: hasDims, blocker: true });
+      if (meta.mounting) {
+        checks.push({ label: "Mounting type specified", ok: true, blocker: false, note: meta.mounting });
+      }
+      if (meta.hardware) {
+        checks.push({ label: "Hardware included", ok: true, blocker: false, note: meta.hardware });
+      }
+      const hasLam = !!(meta.lamination || meta.laminate);
+      if (hasLam) {
+        checks.push({ label: "Lamination", ok: true, blocker: false, note: meta.lamination || meta.laminate });
+      }
+      if (meta.thickness) {
+        checks.push({ label: "Thickness specified", ok: true, blocker: false, note: meta.thickness });
+      }
+      if (meta.reflective) {
+        checks.push({ label: "Reflective material", ok: true, blocker: false, note: "Reflective — check artwork visibility" });
+      }
+      // Yard signs need hardware
+      const itemName = (item.productName || "").toLowerCase();
+      if (itemName.includes("yard") || itemName.includes("lawn")) {
+        checks.push({ label: "Hardware (H-stakes/frames)", ok: !!meta.hardware, blocker: false,
+          note: !meta.hardware ? "Confirm if customer needs stakes/frames" : null });
+      }
+      // A-frame: frame specification
+      if (itemName.includes("a-frame")) {
+        checks.push({ label: "Frame specification", ok: !!meta.frame, blocker: false,
+          note: !meta.frame ? "Check if graphic-only or with frame" : meta.frame });
+      }
+      // Window: adhesive type
+      if (itemName.includes("window") || itemName.includes("perforated")) {
+        checks.push({ label: "Adhesive type", ok: !!(meta.adhesive || meta.adhesiveSide), blocker: false,
+          note: !(meta.adhesive || meta.adhesiveSide) ? "Confirm static-cling/front/back adhesive" : null });
+      }
+      // Vinyl lettering: text content
+      if (itemName.includes("vinyl lettering") || itemName.includes("cut vinyl")) {
+        checks.push({ label: "Lettering text provided", ok: !!(meta.letteringText || meta.text), blocker: true });
+      }
+      // Retractable/display: tier info
+      if (itemName.includes("retractable") || itemName.includes("tabletop")) {
+        checks.push({ label: "Stand tier/type specified", ok: !!(meta.tier || meta.orderType), blocker: false,
+          note: !(meta.tier || meta.orderType) ? "Check if graphic-only or with stand" : null });
+      }
+    }
+
+    // Banner: deep finishing checks
+    if (family === "banner") {
+      const hasGrom = !!meta.grommetSpacing;
+      const hasPP = !!meta.polePocketPos;
+      const hasHem = !!meta.hemming;
+      const hasAnyFinishing = hasGrom || hasPP || hasHem || !!(item.finishing || meta.finishing);
+      checks.push({ label: "Finishing specified", ok: hasAnyFinishing, blocker: false,
+        note: !hasAnyFinishing ? "No grommets/hemming/pockets — confirm with customer" : null });
+      if (hasGrom) checks.push({ label: "Grommet spacing", ok: true, blocker: false, note: meta.grommetSpacing });
+      if (hasPP) checks.push({ label: "Pole pocket", ok: true, blocker: false, note: `${meta.polePocketPos} ${meta.polePocketSize || ""}`.trim() });
+      const hasMat = !!(item.material || meta.material);
+      checks.push({ label: "Material specified", ok: hasMat, blocker: true });
+    }
+
+    // Sticker/label: transparent material awareness
+    if (family === "sticker" || family === "label") {
+      const effMat = item.material || meta.material || "";
+      const clearMats = ["clear-vinyl", "frosted-vinyl", "holographic-vinyl", "clear-static-cling", "frosted-static-cling", "clear-bopp"];
+      if (effMat && clearMats.includes(effMat)) {
+        checks.push({ label: "Transparent material", ok: true, blocker: false,
+          note: "Print on clear — verify artwork has no unintended transparent areas" });
+      }
+      // Floor graphic needs anti-slip
+      const itemName2 = (item.productName || "").toLowerCase();
+      if (itemName2.includes("floor") || meta.application === "floor") {
+        checks.push({ label: "Anti-slip lamination", ok: !!meta.floorLamination, blocker: false,
+          note: !meta.floorLamination ? "Floor graphic needs anti-slip lamination for safety" : null });
+      }
+      // Food-safe compliance
+      if (meta.foodUse === true || meta.foodUse === "yes") {
+        checks.push({ label: "Food-safe compliance", ok: false, blocker: false,
+          note: "Verify ink and adhesive are food-contact compliant" });
+      }
+    }
+
+    const allGood = checks.every((c) => c.ok);
+    const hasBlocker = checks.some((c) => c.blocker && !c.ok);
+
+    return {
+      id: item.id,
+      name: item.productName || "Item",
+      family,
+      checks,
+      allGood,
+      hasBlocker,
+    };
+  });
+
+  // Overall status
+  const allReady = itemChecks.every((c) => c.allGood);
+  const hasBlockers = itemChecks.some((c) => c.hasBlocker);
+  const overallColor = allReady ? "bg-green-100 text-green-800" : hasBlockers ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-800";
+  const overallLabel = allReady ? "Ready for Production" : hasBlockers ? "Blocked — Missing Required Info" : "Needs Attention";
+  const overallDot = allReady ? "bg-green-500" : hasBlockers ? "bg-red-500" : "bg-yellow-500";
+
+  return (
+    <Section title="Production Readiness">
+      <div className="space-y-3">
+        {/* Overall indicator */}
+        <div className={`flex items-center gap-2 rounded-[3px] px-3 py-2 ${overallColor}`}>
+          <span className={`inline-block h-2.5 w-2.5 rounded-full ${overallDot}`} />
+          <span className="text-xs font-semibold">{overallLabel}</span>
+        </div>
+
+        {/* Per-item checklist */}
+        {itemChecks.map((check) => (
+          <div key={check.id} className="rounded-[3px] border border-[#e0e0e0] px-3 py-2">
+            <div className="flex items-center gap-2 mb-1.5">
+              <p className="text-[10px] font-semibold text-black">{check.name}</p>
+              <span className="rounded bg-gray-100 px-1 py-0.5 text-[8px] font-medium text-gray-500">
+                {FAMILY_LABELS[check.family] || check.family}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+              {check.checks.map((c, i) => (
+                <div key={i}>
+                  <CheckItem label={c.label} ok={c.ok} />
+                  {c.note && !c.ok && (
+                    <p className="ml-3 text-[9px] text-amber-600">{c.note}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function CheckItem({ label, ok }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${ok ? "bg-green-500" : "bg-red-400"}`} />
+      <span className={ok ? "text-[#666]" : "font-medium text-red-600"}>{label}</span>
+    </div>
+  );
+}
+
+/* ========== Production Files Section ========== */
+function ProductionFilesSection({ order }) {
+  const items = order.items || [];
+  const proofData = order.proofData || [];
+
+  // Collect all downloadable production files
+  const files = [];
+
+  for (const item of items) {
+    const meta = { ...(item.specsJson || {}), ...(item.meta || {}) };
+    const label = item.productName || "Item";
+    const family = detectProductFamily(item);
+    const isTwoSided = meta.sides === "double" || meta.sides === "2" || meta.sides === 2 || meta.doubleSided === true;
+
+    // Color artwork — with double-sided note if applicable
+    if (item.fileUrl) {
+      const artLabel = isTwoSided
+        ? `${label} — Artwork (double-sided — check for front+back pages)`
+        : `${label} — Color Artwork`;
+      files.push({ label: artLabel, url: item.fileUrl, type: "color" });
+    }
+
+    // Fallback: artworkUrl in meta if not in item.fileUrl
+    // Business cards: check both flat keys (frontArtworkUrl/backArtworkUrl) and legacy objects
+    if (!item.fileUrl) {
+      if (meta.frontArtworkUrl || meta.backArtworkUrl) {
+        if (meta.frontArtworkUrl) files.push({ label: `${label} — Front Artwork`, url: meta.frontArtworkUrl, type: "color" });
+        if (meta.backArtworkUrl) files.push({ label: `${label} — Back Artwork`, url: meta.backArtworkUrl, type: "color" });
+      } else if (meta.artworkUrl) {
+        if (typeof meta.artworkUrl === "object" && meta.artworkUrl !== null) {
+          if (meta.artworkUrl.front) files.push({ label: `${label} — Front Artwork`, url: meta.artworkUrl.front, type: "color" });
+          if (meta.artworkUrl.back) files.push({ label: `${label} — Back Artwork`, url: meta.artworkUrl.back, type: "color" });
+        } else {
+          files.push({ label: `${label} — Artwork`, url: meta.artworkUrl, type: "color" });
+        }
+      }
+    }
+
+    // Processed image (bg removed)
+    if (meta.processedImageUrl) {
+      files.push({ label: `${label} — Processed (BG Removed)`, url: meta.processedImageUrl, type: "processed" });
+    }
+
+    // White ink layer (server-persisted file if available)
+    if (meta.whiteInkEnabled) {
+      const modeLabel = meta.whiteInkMode === "auto" ? "Automatic" : meta.whiteInkMode === "follow" ? "Match Design" : "Custom Upload";
+      files.push({
+        label: `${label} — White Ink Layer (${modeLabel})`,
+        url: meta.whiteInkUrl || null,
+        type: "white-ink",
+      });
+    }
+
+    // Stamp preview
+    if (meta.stampPreviewUrl) {
+      files.push({ label: `${label} — Stamp Preview`, url: meta.stampPreviewUrl, type: "preview" });
+    }
+
+    // Stamp logo
+    if (meta.stampLogoUrl) {
+      files.push({ label: `${label} — Stamp Logo`, url: meta.stampLogoUrl, type: "logo" });
+    }
+
+    // Contour SVG from contour tool (applied to item meta)
+    if (meta.contourSvg) {
+      files.push({ label: `${label} — Contour SVG (Die-Cut Path)`, url: meta.contourSvg, type: "contour" });
+    }
+    if (meta.contourSvgKey && !meta.contourSvg) {
+      files.push({ label: `${label} — Contour SVG Key: ${meta.contourSvgKey}`, url: null, type: "info" });
+    }
+
+    // Canvas: crop data note (not a downloadable file, but production needs to know)
+    if (family === "canvas" && (meta.cropData || meta.cropX)) {
+      files.push({
+        label: `${label} — Crop Data (saved in order)`,
+        url: null,
+        type: "info",
+      });
+    }
+
+    // Template data for letterhead etc.
+    if (meta.templateData) {
+      files.push({
+        label: `${label} — Template Builder Data (saved in order)`,
+        url: null,
+        type: "info",
+      });
+    }
+
+    // Vehicle: if there's a quote/reference image
+    if (meta.quoteImageUrl) {
+      files.push({ label: `${label} — Quote Reference Image`, url: meta.quoteImageUrl, type: "original" });
+    }
+  }
+
+  // Proof data files
+  for (const pd of proofData) {
+    if (pd.originalFileUrl) {
+      files.push({ label: `Proof ${pd.productSlug} — Original`, url: pd.originalFileUrl, type: "original" });
+    }
+    if (pd.processedImageUrl) {
+      files.push({ label: `Proof ${pd.productSlug} — Processed`, url: pd.processedImageUrl, type: "processed" });
+    }
+  }
+
+  // Order-level files
+  for (const f of (order.files || [])) {
+    files.push({ label: f.fileName || "File", url: f.fileUrl, type: "file" });
+  }
+
+  if (files.length === 0) return null;
+
+  const downloadableFiles = files.filter((f) => f.url);
+
+  return (
+    <Section title={`Production Files (${downloadableFiles.length})`}>
+      <div className="space-y-1.5">
+        {files.map((f, i) => (
+          <div key={i} className="flex items-center justify-between py-1">
+            <div className="flex items-center gap-2">
+              <span className={`inline-block h-2 w-2 rounded-full ${
+                f.type === "color" ? "bg-blue-400" :
+                f.type === "processed" ? "bg-purple-400" :
+                f.type === "white-ink" ? "bg-yellow-400" :
+                f.type === "preview" ? "bg-green-400" :
+                f.type === "logo" ? "bg-pink-400" :
+                f.type === "original" ? "bg-indigo-400" :
+                f.type === "contour" ? "bg-red-400" :
+                "bg-gray-300"
+              }`} />
+              <span className="text-[10px] text-black">{f.label}</span>
+            </div>
+            {f.url ? (
+              <a
+                href={f.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="rounded-[3px] border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-semibold text-black hover:bg-[#fafafa]"
+              >
+                Download
+              </a>
+            ) : (
+              <span className="text-[10px] text-[#999]">Info only</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* One-click download all */}
+      {downloadableFiles.length > 1 && (
+        <button
+          type="button"
+          onClick={() => {
+            // Download all files in sequence (browser manages multiple downloads)
+            for (const f of downloadableFiles) {
+              const a = document.createElement("a");
+              a.href = f.url;
+              a.target = "_blank";
+              a.rel = "noopener noreferrer";
+              a.download = "";
+              a.click();
+            }
+          }}
+          className="mt-3 w-full rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-[10px] font-semibold text-black hover:bg-[#fafafa]"
+        >
+          Open All Files ({downloadableFiles.length})
+        </button>
+      )}
+    </Section>
+  );
+}
+
+/* ========== Preflight Section ========== */
+function PreflightSection({ order }) {
+  const items = order.items || [];
+  if (items.length === 0) return null;
+
+  const results = preflightOrder(items);
+  if (results.length === 0) {
+    return (
+      <Section title="Preflight">
+        <p className="text-[10px] text-green-700 bg-green-50 rounded px-2 py-1">All items passed preflight checks</p>
+      </Section>
+    );
+  }
+
+  const levelColors = {
+    error: "bg-red-100 text-red-700",
+    warning: "bg-yellow-50 text-yellow-700",
+    info: "bg-blue-50 text-blue-700",
+  };
+
+  const allIssues = results.flatMap((r) => r.issues);
+  const errorCount = allIssues.filter((i) => i.level === "error").length;
+  const warningCount = allIssues.filter((i) => i.level === "warning").length;
+  const infoCount = allIssues.filter((i) => i.level === "info").length;
+  const severitySummary = [
+    errorCount > 0 && `${errorCount} blocker${errorCount !== 1 ? "s" : ""}`,
+    warningCount > 0 && `${warningCount} warning${warningCount !== 1 ? "s" : ""}`,
+    infoCount > 0 && `${infoCount} info`,
+  ].filter(Boolean).join(", ");
+
+  return (
+    <Section title={`Preflight (${severitySummary})`}>
+      <div className="space-y-2">
+        {results.map((r, i) => (
+          <div key={i} className="space-y-1">
+            <p className="text-[10px] font-semibold text-black">{r.productName}</p>
+            {r.issues.map((issue, j) => (
+              <div key={j} className={`rounded px-2 py-1 text-[10px] ${levelColors[issue.level] || "bg-[#f5f5f5] text-[#666]"}`}>
+                <span className="font-semibold uppercase">{issue.level}</span>: {issue.message}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function MetaRow({ label, value }) {
+  return (
+    <>
+      <span className="text-[#999]">{label}</span>
+      <span className="text-black font-medium">{value}</span>
+    </>
   );
 }
 
@@ -1328,7 +2483,358 @@ function OrderActions({ order, onUpdate }) {
         {!canShip && !canRefund && (
           <p className="text-xs text-gray-600 text-center py-2">{t("admin.orderDetail.noActions")}</p>
         )}
+
+        {/* Duplicate order */}
+        <button
+          type="button"
+          onClick={async () => {
+            if (!confirm("Create a new draft order with the same items?")) return;
+            setActing(true);
+            setActionMsg("");
+            try {
+              const res = await fetch(`/api/admin/orders/${order.id}/duplicate`, { method: "POST" });
+              const data = await res.json();
+              if (res.ok) {
+                setActionMsg(`Draft created: #${data.id.slice(0, 8)}`);
+                window.open(`/admin/orders/${data.id}`, "_blank");
+              } else {
+                setActionMsg(data.error || "Failed to duplicate");
+              }
+            } catch {
+              setActionMsg("Failed to duplicate order");
+            } finally {
+              setActing(false);
+            }
+          }}
+          disabled={acting}
+          className="w-full rounded-lg border border-gray-300 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        >
+          Duplicate as Draft
+        </button>
       </div>
     </Section>
+  );
+}
+
+/* ── Next Action Banner — tells staff what to do right now ── */
+function NextActionBanner({ order }) {
+  const items = order.items || [];
+  if (!items.length) return null;
+
+  let action = null;
+  let severity = "info";
+  let toolLink = null;
+
+  if (order.productionStatus === "on_hold") {
+    action = "This order is ON HOLD — review and resolve before continuing.";
+    severity = "blocker";
+  } else if (order.productionStatus === "shipped" || order.productionStatus === "completed") {
+    return null;
+  }
+
+  if (!action) {
+    // Collect all issues, prioritize blockers first, then warnings
+    const issues = [];
+    for (const item of items) {
+      const meta = item.meta && typeof item.meta === "object" ? item.meta : {};
+      const family = detectProductFamily(item);
+      // Real URL = actual uploaded file; fileName alone is not proof of upload
+      const hasArt = hasArtworkUrl(item);
+      const artStatusBanner = getArtworkStatus(item);
+      const hasFileNameOnlyBanner = artStatusBanner === "file-name-only";
+
+      // Rush order — always surface prominently
+      if (meta.turnaround === "rush" || meta.turnaround === "express" || meta.turnaround === "same-day") {
+        issues.push({ text: `RUSH ORDER (${meta.turnaround}) — prioritize immediately.`, sev: "blocker", tool: null });
+      }
+
+      // Missing artwork — fileName-only is a distinct warning state
+      if (hasFileNameOnlyBanner && !hasArt) {
+        issues.push({ text: `"${item.productName}" has a file name but no artwork URL — upload may have failed. Re-upload needed.`, sev: "warning", tool: null });
+      } else if (!hasArt && family === "stamp") {
+        issues.push({ text: "Stamp order needs a preview image. Open Stamp Studio to create one.", sev: "blocker", tool: { label: "Open Stamp Studio", href: `/admin/tools/stamp-studio?orderId=${order.id}` } });
+      } else if (!hasArt && meta.artworkIntent === "upload-later") {
+        issues.push({ text: `Customer chose "upload later" for "${item.productName}" — follow up to collect artwork.`, sev: "warning", tool: null });
+      } else if (!hasArt && (meta.artworkIntent === "design-help" || meta.designHelp === true || meta.designHelp === "true")) {
+        issues.push({ text: `Design help requested ($45) for "${item.productName}" — prepare artwork for customer.`, sev: "warning", tool: null });
+      } else if (!hasArt) {
+        issues.push({ text: `Missing artwork for "${item.productName}" — contact customer or request file upload.`, sev: "blocker", tool: null });
+      }
+
+      // Sticker/label needs contour
+      if ((family === "sticker" || family === "label") && !meta.contourSvg && !meta.bleedMm) {
+        issues.push({ text: `"${item.productName}" needs a die-cut contour.`, sev: "warning", tool: { label: "Open Contour Tool", href: `/admin/tools/contour?orderId=${order.id}` } });
+      }
+
+      // White ink pending
+      const whiteInkOn = !!(meta.whiteInkEnabled || (meta.whiteInkMode && meta.whiteInkMode !== "none"));
+      if (whiteInkOn && !meta.whiteInkUrl) {
+        issues.push({ text: "White ink enabled but white layer file not ready — hold for processing.", sev: "warning", tool: null });
+      }
+
+      // Vehicle: missing type or body
+      if (family === "vehicle" && !meta.vehicleType) {
+        issues.push({ text: "Vehicle order missing graphic type — confirm with customer.", sev: "warning", tool: null });
+      }
+      if (family === "vehicle" && meta.vehicleType) {
+        const typeId = (meta.vehicleType || "").toLowerCase();
+        const needsBody = typeId.includes("wrap") || typeId.includes("door") || typeId.includes("fleet");
+        if (needsBody && !meta.vehicleBody) {
+          issues.push({ text: "Vehicle wrap/door graphic missing vehicle body type — confirm make/model.", sev: "warning", tool: null });
+        }
+        const isDot = typeId.includes("dot") || typeId.includes("compliance");
+        if (isDot && !meta.text) {
+          issues.push({ text: "DOT/compliance order missing text content (USDOT number, company info).", sev: "blocker", tool: null });
+        }
+        if (!isDot && !meta.lamination && !meta.laminate) {
+          issues.push({ text: "Vehicle exterior graphic without lamination — recommend adding for durability.", sev: "warning", tool: null });
+        }
+      }
+
+      // Booklet
+      if (family === "booklet" && !meta.pageCount) {
+        issues.push({ text: "Booklet missing page count — cannot estimate paper or binding.", sev: "blocker", tool: null });
+      }
+
+      // NCR
+      if (family === "ncr" && !meta.formType && !meta.parts) {
+        issues.push({ text: "NCR form missing copy count (2-part, 3-part, etc.).", sev: "blocker", tool: null });
+      }
+
+      // Business card multi-name
+      if (family === "business-card" && meta.names && meta.names > 1) {
+        const fileCount = typeof meta.fileName === "object" && meta.fileName
+          ? Object.values(meta.fileName).filter(Boolean).length : meta.fileName ? 1 : 0;
+        if (fileCount < meta.names) {
+          issues.push({ text: `Business card: ${meta.names} name variations but only ${fileCount} file(s). Follow up for remaining artwork.`, sev: "warning", tool: null });
+        }
+      }
+
+      // Double-sided missing back file
+      const isTwoSided = meta.sides === "double" || meta.sides === "2" || meta.sides === 2 || meta.doubleSided === true;
+      if (isTwoSided && hasArt && !meta.backArtworkUrl && !meta.backFileUrl) {
+        issues.push({ text: `"${item.productName}" is double-sided but only one file uploaded — check if front+back are in one PDF, or follow up.`, sev: "warning", tool: null });
+      }
+
+      // Sign/banner missing material
+      if ((family === "sign" || family === "banner") && !item.material && !meta.material) {
+        issues.push({ text: `"${item.productName}" missing material/substrate — cannot start production.`, sev: "blocker", tool: null });
+      }
+
+      // Sign/banner missing dimensions
+      if ((family === "sign" || family === "banner") && !item.widthIn && !item.heightIn && !meta.width && !meta.height) {
+        issues.push({ text: `"${item.productName}" missing dimensions — confirm size with customer.`, sev: "blocker", tool: null });
+      }
+
+      // Numbering without start number
+      if (meta.numbering && !meta.numberStart) {
+        issues.push({ text: `"${item.productName}" has numbering but no starting number.`, sev: "warning", tool: null });
+      }
+
+      // Banner without finishing details
+      if (family === "banner" && !meta.grommetSpacing && !meta.polePocketPos && !meta.hemming && !(item.finishing || meta.finishing)) {
+        issues.push({ text: `"${item.productName}" banner has no finishing (grommets/hemming/pockets) — confirm before printing.`, sev: "warning", tool: null });
+      }
+
+      // Floor graphic without anti-slip
+      const pName = (item.productName || "").toLowerCase();
+      if ((pName.includes("floor") || meta.application === "floor") && !meta.floorLamination) {
+        issues.push({ text: `"${item.productName}" floor graphic needs anti-slip lamination for safety.`, sev: "warning", tool: null });
+      }
+
+      // Vinyl lettering without text
+      if ((pName.includes("vinyl lettering") || pName.includes("cut vinyl")) && !meta.letteringText && !meta.text) {
+        issues.push({ text: `"${item.productName}" vinyl lettering missing text content — cannot produce.`, sev: "blocker", tool: null });
+      }
+
+      // Food-safe label on transparent — double compliance
+      const effMat = item.material || meta.material || "";
+      const clearMats = ["clear-vinyl", "frosted-vinyl", "holographic-vinyl", "clear-static-cling", "frosted-static-cling", "clear-bopp"];
+      if ((meta.foodUse === true || meta.foodUse === "yes") && effMat && clearMats.includes(effMat)) {
+        issues.push({ text: `Food-safe label on transparent material — verify both ink and adhesive are food-contact rated.`, sev: "warning", tool: null });
+      }
+    }
+
+    // Pick the highest severity issue
+    const blocker = issues.find((i) => i.sev === "blocker");
+    const warning = issues.find((i) => i.sev === "warning");
+    const chosen = blocker || warning;
+    if (chosen) {
+      action = chosen.text;
+      severity = chosen.sev === "blocker" ? "blocker" : "warning";
+      toolLink = chosen.tool;
+      // If multiple issues, append count
+      if (issues.length > 1) {
+        action += ` (+${issues.length - 1} more issue${issues.length - 1 > 1 ? "s" : ""})`;
+      }
+    }
+  }
+
+  if (!action) {
+    if (order.status === "paid" && order.productionStatus === "not_started") {
+      action = "Order paid — move to preflight to begin production.";
+      severity = "info";
+    } else if (order.productionStatus === "preflight") {
+      action = "In preflight — verify files, dimensions, material. Then move to production.";
+      severity = "info";
+    } else if (order.productionStatus === "in_production") {
+      action = "In production. Mark as ready to ship when complete.";
+      severity = "info";
+    } else if (order.productionStatus === "ready_to_ship") {
+      action = "Ready to ship — enter tracking and mark shipped.";
+      severity = "info";
+    }
+  }
+
+  if (!action) return null;
+
+  const colors = {
+    blocker: "border-red-300 bg-red-50 text-red-800",
+    warning: "border-amber-300 bg-amber-50 text-amber-800",
+    info: "border-blue-200 bg-blue-50 text-blue-800",
+  };
+
+  return (
+    <div className={`flex items-center justify-between gap-3 rounded-[3px] border px-4 py-3 ${colors[severity] || colors.info}`}>
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-sm font-bold shrink-0">
+          {severity === "blocker" ? "!!" : severity === "warning" ? "!" : ">"}
+        </span>
+        <p className="text-xs font-medium">{action}</p>
+      </div>
+      {toolLink && (
+        <Link
+          href={toolLink.href}
+          className="shrink-0 rounded-[3px] bg-black px-3 py-1.5 text-[10px] font-bold text-white hover:bg-gray-800"
+        >
+          {toolLink.label}
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/* ── Production Issues — full list of blocking/warning issues per item ── */
+function getBlockingIssues(order) {
+  const items = order?.items || [];
+  if (!items.length) return [];
+
+  const issues = [];
+
+  for (const item of items) {
+    const meta = item.meta && typeof item.meta === "object" ? item.meta : {};
+    const family = detectProductFamily(item);
+    const name = item.productName || "Unnamed item";
+    const artStatus = getArtworkStatus(item);
+    const hasArt = hasArtworkUrl(item);
+    const hasDims = !!(item.widthIn && item.heightIn) || !!meta.sizeLabel || parseSizeRows(item).length > 0;
+
+    // (a) Missing artwork — no URL and not design-help / upload-later
+    if (!hasArt && artStatus === "missing") {
+      issues.push({ severity: "red", message: "Missing artwork — no file uploaded", itemName: name });
+    }
+    if (!hasArt && artStatus === "file-name-only") {
+      issues.push({ severity: "red", message: "File name present but upload failed — re-upload needed", itemName: name });
+    }
+
+    // (b) Upload-later flagged
+    if (artStatus === "upload-later") {
+      issues.push({ severity: "amber", message: "Customer chose \"upload later\" — follow up to collect artwork", itemName: name });
+    }
+
+    // (c) Design-help requested
+    if (artStatus === "design-help") {
+      issues.push({ severity: "amber", message: "Design help requested — prepare artwork for customer", itemName: name });
+    }
+
+    // (d) Missing dimensions for products that need them
+    const needsDims = ["sticker", "label", "banner", "sign", "vehicle", "decal"].includes(family);
+    if (needsDims && !hasDims) {
+      issues.push({ severity: "red", message: "Missing dimensions (width/height) — cannot produce", itemName: name });
+    }
+
+    // (e) Rush production flagged
+    if (meta.turnaround === "rush" || meta.turnaround === "express" || meta.turnaround === "same-day") {
+      issues.push({ severity: "amber", message: `Rush production (${meta.turnaround}) — prioritize`, itemName: name });
+    }
+
+    // (f) White ink pending
+    const whiteInkOn = !!(meta.whiteInkEnabled || (meta.whiteInkMode && meta.whiteInkMode !== "none"));
+    if (whiteInkOn && !meta.whiteInkUrl) {
+      issues.push({ severity: "amber", message: "White ink enabled but white layer file not ready", itemName: name });
+    }
+
+    // (g) Double-sided but only one file
+    const isTwoSided = meta.sides === "double" || meta.sides === "2" || meta.sides === 2 || meta.doubleSided === true;
+    if (isTwoSided && hasArt && !meta.backArtworkUrl && !meta.backFileUrl) {
+      issues.push({ severity: "amber", message: "Double-sided but only front file uploaded — verify or follow up", itemName: name });
+    }
+
+    // Material missing for products that need it
+    const needsMaterial = ["sticker", "label", "banner", "sign"].includes(family);
+    if (needsMaterial && !item.material && !meta.material && !meta.stock && !meta.labelType) {
+      issues.push({ severity: "red", message: "Missing material/substrate — cannot start production", itemName: name });
+    }
+  }
+
+  return issues;
+}
+
+function ProductionIssuesCard({ order }) {
+  const issues = getBlockingIssues(order);
+
+  // Don't show for completed/shipped orders
+  if (order.productionStatus === "shipped" || order.productionStatus === "completed") {
+    return null;
+  }
+
+  const redCount = issues.filter((i) => i.severity === "red").length;
+  const amberCount = issues.filter((i) => i.severity === "amber").length;
+  const hasRed = redCount > 0;
+  const hasAmber = amberCount > 0;
+
+  // Border and background color based on worst severity
+  const borderClass = hasRed
+    ? "border-red-300 bg-red-50"
+    : hasAmber
+      ? "border-amber-300 bg-amber-50"
+      : "border-green-300 bg-green-50";
+
+  const headerText = hasRed
+    ? `${redCount} blocking issue${redCount > 1 ? "s" : ""}${amberCount ? `, ${amberCount} warning${amberCount > 1 ? "s" : ""}` : ""}`
+    : hasAmber
+      ? `${amberCount} warning${amberCount > 1 ? "s" : ""}`
+      : "All items ready for production";
+
+  const headerColor = hasRed ? "text-red-800" : hasAmber ? "text-amber-800" : "text-green-800";
+
+  const dotColor = { red: "bg-red-500", amber: "bg-amber-400", green: "bg-green-500" };
+
+  return (
+    <div className={`rounded-[3px] border ${borderClass} px-4 py-3`}>
+      <div className="flex items-center gap-2 mb-1">
+        <span className={`inline-block h-2 w-2 rounded-full ${hasRed ? "bg-red-500" : hasAmber ? "bg-amber-400" : "bg-green-500"}`} />
+        <span className={`text-xs font-bold uppercase tracking-wider ${headerColor}`}>
+          Production Issues
+        </span>
+        <span className={`text-[10px] ${headerColor}`}>— {headerText}</span>
+      </div>
+
+      {issues.length > 0 ? (
+        <ul className="mt-1.5 space-y-1">
+          {issues.map((issue, idx) => (
+            <li key={idx} className="flex items-start gap-2 text-xs text-black leading-relaxed">
+              <span className={`mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full ${dotColor[issue.severity]}`} />
+              <span>
+                <span className="font-semibold">{issue.itemName}:</span>{" "}
+                {issue.message}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-0.5 text-xs text-green-700">No blocking issues or warnings detected.</p>
+      )}
+    </div>
   );
 }

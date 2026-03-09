@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
@@ -44,13 +45,37 @@ function formatCad(cents) {
   return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 }
 
+const CARRIER_URLS = {
+  "Canada Post": (n) => `https://www.canadapost-postescanada.ca/track-reperage/en#/search?searchFor=${n}`,
+  "UPS": (n) => `https://www.ups.com/track?tracknum=${n}`,
+  "Purolator": (n) => `https://www.purolator.com/en/shipping/tracker?pin=${n}`,
+  "FedEx": (n) => `https://www.fedex.com/fedextrack/?trknbr=${n}`,
+};
+
+function getTrackingUrl(carrier, trackingNumber) {
+  if (!trackingNumber) return null;
+  const builder = CARRIER_URLS[carrier];
+  return builder ? builder(trackingNumber) : null;
+}
+
+import { getActionLabel } from "@/lib/timeline-labels";
+
 export default function TrackOrderClient() {
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
   const [orderRef, setOrderRef] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [order, setOrder] = useState(null);
+
+  // Auto-fill order ID from URL param (e.g., /track-order?order=abc123)
+  useEffect(() => {
+    const urlOrder = searchParams.get("order");
+    if (urlOrder && !orderRef) {
+      setOrderRef(urlOrder);
+    }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const STEPS = [
     t("track.stepPlaced"),
@@ -155,6 +180,40 @@ export default function TrackOrderClient() {
             </div>
           )}
 
+          {/* Tracking Info */}
+          {order.tracking?.trackingNumber && (
+            <div className="rounded-xl border border-purple-200 bg-purple-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-purple-600 mb-2">{t("track.shipmentInfo")}</p>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-[var(--color-gray-600)]">{order.tracking.carrier || "Carrier"}:</span>
+                {(() => {
+                  const url = getTrackingUrl(order.tracking.carrier, order.tracking.trackingNumber);
+                  return url ? (
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="font-mono font-semibold text-purple-700 underline hover:text-purple-900">
+                      {order.tracking.trackingNumber}
+                    </a>
+                  ) : (
+                    <span className="font-mono font-semibold text-purple-700">{order.tracking.trackingNumber}</span>
+                  );
+                })()}
+              </div>
+              {order.tracking.estimatedDelivery && (
+                <p className="mt-1 text-xs text-purple-600">
+                  {t("track.estimatedDelivery")}: {new Date(order.tracking.estimatedDelivery).toLocaleDateString("en-CA", { month: "long", day: "numeric", year: "numeric" })}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Estimated Completion */}
+          {order.estimatedCompletion && order.productionStatus !== "shipped" && order.productionStatus !== "completed" && (
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <p className="text-xs text-blue-600">
+                {t("track.estimatedCompletion")}: <span className="font-semibold">{new Date(order.estimatedCompletion).toLocaleDateString("en-CA", { month: "long", day: "numeric", year: "numeric" })}</span>
+              </p>
+            </div>
+          )}
+
           {/* Items */}
           {order.items && order.items.length > 0 && (
             <div className="border-t border-[var(--color-gray-100)] pt-4">
@@ -167,9 +226,28 @@ export default function TrackOrderClient() {
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between mt-3 pt-3 border-t border-[var(--color-gray-100)] text-sm font-bold">
-                <span>{t("track.total")}</span>
-                <span>{formatCad(order.totalAmount)}</span>
+              {/* Breakdown */}
+              <div className="mt-3 pt-3 border-t border-[var(--color-gray-100)] space-y-1 text-sm">
+                {(order.shippingAmount != null || order.taxAmount != null) && (
+                  <>
+                    <div className="flex justify-between text-[var(--color-gray-500)]">
+                      <span>{t("track.subtotal")}</span>
+                      <span>{formatCad(order.totalAmount - (order.shippingAmount || 0) - (order.taxAmount || 0))}</span>
+                    </div>
+                    <div className="flex justify-between text-[var(--color-gray-500)]">
+                      <span>{t("track.shipping")}</span>
+                      <span>{order.shippingAmount === 0 ? t("track.free") : formatCad(order.shippingAmount || 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-[var(--color-gray-500)]">
+                      <span>{t("track.tax")}</span>
+                      <span>{formatCad(order.taxAmount || 0)}</span>
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between pt-2 border-t border-[var(--color-gray-100)] font-bold">
+                  <span>{t("track.total")}</span>
+                  <span>{formatCad(order.totalAmount)}</span>
+                </div>
               </div>
             </div>
           )}
@@ -187,7 +265,7 @@ export default function TrackOrderClient() {
                   <div key={event.id} className="flex items-start gap-2">
                     <span className="mt-1 h-2 w-2 rounded-full bg-[var(--color-gray-400)]" />
                     <div>
-                      <p className="text-sm text-[var(--color-gray-800)]">{event.action}</p>
+                      <p className="text-sm text-[var(--color-gray-800)]">{getActionLabel(event.action)}</p>
                       <p className="text-[11px] text-[var(--color-gray-500)]">
                         {new Date(event.createdAt).toLocaleDateString("en-CA", {
                           month: "short",

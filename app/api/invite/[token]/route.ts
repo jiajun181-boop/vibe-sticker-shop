@@ -10,30 +10,35 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
-  const { token } = await params;
+  try {
+    const { token } = await params;
 
-  const invite = await prisma.partnerInvite.findUnique({ where: { token } });
+    const invite = await prisma.partnerInvite.findUnique({ where: { token } });
 
-  if (!invite) {
-    return NextResponse.json({ valid: false, error: "Invite not found" }, { status: 404 });
-  }
-  if (invite.acceptedAt) {
-    return NextResponse.json({ valid: false, error: "This invite has already been used" }, { status: 410 });
-  }
-  if (invite.expiresAt < new Date()) {
-    return NextResponse.json({ valid: false, error: "This invite has expired" }, { status: 410 });
-  }
+    if (!invite) {
+      return NextResponse.json({ valid: false, error: "Invite not found" }, { status: 404 });
+    }
+    if (invite.acceptedAt) {
+      return NextResponse.json({ valid: false, error: "This invite has already been used" }, { status: 410 });
+    }
+    if (invite.expiresAt < new Date()) {
+      return NextResponse.json({ valid: false, error: "This invite has expired" }, { status: 410 });
+    }
 
-  return NextResponse.json({
-    valid: true,
-    invite: {
-      email: invite.email,
-      companyName: invite.companyName,
-      tier: invite.tier,
-      discount: invite.discount,
-      expiresAt: invite.expiresAt,
-    },
-  });
+    return NextResponse.json({
+      valid: true,
+      invite: {
+        email: invite.email,
+        companyName: invite.companyName,
+        tier: invite.tier,
+        discount: invite.discount,
+        expiresAt: invite.expiresAt,
+      },
+    });
+  } catch (err) {
+    console.error("[Invite] GET error:", err);
+    return NextResponse.json({ error: "Failed to validate invite" }, { status: 500 });
+  }
 }
 
 /** POST — accept invite and create B2B account */
@@ -41,6 +46,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  try {
   const { token } = await params;
   const body = await request.json();
   const { name, password, companyName, companyRole, phone } = body;
@@ -182,4 +188,8 @@ export async function POST(
   });
 
   return setSessionCookie(response, user.id, user.email);
+  } catch (err) {
+    console.error("[Invite] POST error:", err);
+    return NextResponse.json({ error: "Failed to accept invite" }, { status: 500 });
+  }
 }

@@ -9,7 +9,7 @@ import { getProductImage, isSvgImage } from "@/lib/product-image";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CategoryHero from "@/components/category/CategoryHero";
 import CategoryFaq from "@/components/category/CategoryFaq";
-import QuickAddButton from "@/components/product/QuickAddButton";
+
 
 const BASE = "/shop/stickers-labels-decals";
 
@@ -27,6 +27,26 @@ const CORE_STICKER_SLUGS = [
 ];
 const CORE_SET = new Set(CORE_STICKER_SLUGS);
 const CORE_ORDER = new Map(CORE_STICKER_SLUGS.map((s, i) => [s, i]));
+
+/* ── Taglines (i18n keys) ── */
+const TAGLINE_KEYS = {
+  "die-cut-stickers": "stickerCat.tagline.dieCut",
+  "kiss-cut-stickers": "stickerCat.tagline.kissCut",
+  "sticker-sheets": "stickerCat.tagline.sheets",
+  "kiss-cut-sticker-sheets": "stickerCat.tagline.kissCutSheets",
+  "roll-labels": "stickerCat.tagline.rollLabels",
+  "vinyl-lettering": "stickerCat.tagline.vinylLettering",
+};
+
+/* ── Compare cues (i18n keys) ── */
+const CUES = {
+  "die-cut-stickers": ["cue.customShape", "cue.waterproof"],
+  "kiss-cut-stickers": ["cue.easyPeel", "cue.waterproof"],
+  "sticker-sheets": ["cue.customShape", "cue.waterproof"],
+  "kiss-cut-sticker-sheets": ["cue.easyPeel"],
+  "roll-labels": ["cue.highVolume", "cue.waterproof"],
+  "vinyl-lettering": ["cue.noBg", "cue.outdoor"],
+};
 
 /* ── Slug → filter tag mapping (core products only) ── */
 const SLUG_TAG = {
@@ -55,25 +75,27 @@ const RELATED = [
 
 /* ── Product Card ── */
 function ProductCard({ product, t }) {
+  const [imgError, setImgError] = useState(false);
   const href = `/shop/${product.category}/${product.slug}`;
   const imageSrc = getProductImage(product, product.category);
   const isSvg = imageSrc && isSvgImage(imageSrc);
   const price = product.fromPrice || product.basePrice || 0;
   const turnaround = getTurnaround(product);
-  const tag = SLUG_TAG[product.slug];
-
+  const tagline = TAGLINE_KEYS[product.slug] ? t(TAGLINE_KEYS[product.slug]) : "";
+  const cues = CUES[product.slug] || [];
   return (
     <article className="group overflow-hidden rounded-xl shadow-[var(--shadow-card)] bg-white transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1">
       <Link href={href} className="block">
         <div className="relative aspect-[4/3] bg-[var(--color-gray-100)] overflow-hidden">
-          {imageSrc ? (
+          {imageSrc && !imgError ? (
             isSvg ? (
-              <img src={imageSrc} alt={product.name} loading="lazy" className="h-full w-full object-cover" />
+              <img src={imageSrc} alt={product.name} loading="lazy" onError={() => setImgError(true)} className="h-full w-full object-cover" />
             ) : (
               <Image
                 src={imageSrc}
                 alt={product.name}
                 fill
+                onError={() => setImgError(true)}
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw"
               />
@@ -95,11 +117,25 @@ function ProductCard({ product, t }) {
         </div>
       </Link>
 
-      <div className="p-4">
+      <div className="p-2.5 sm:p-3">
         <Link href={href}>
           <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)] transition-colors line-clamp-2">
             {product.name}
           </h3>
+          {tagline && (
+            <p className="mt-0.5 text-[11px] leading-tight text-[var(--color-gray-500)] line-clamp-2">
+              {tagline}
+            </p>
+          )}
+          {cues.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {cues.map((c) => (
+                <span key={c} className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-600">
+                  {t(c)}
+                </span>
+              ))}
+            </div>
+          )}
           {price > 0 ? (
             <p className="mt-1 text-sm font-bold text-[var(--color-brand)]">
               {t("product.from", { price: formatCad(price) })}
@@ -115,13 +151,12 @@ function ProductCard({ product, t }) {
             </p>
           )}
         </Link>
-        <div className="mt-3 flex items-center justify-between">
-          <span /> {/* price moved above */}
+        <div className="mt-2 flex items-center justify-end">
           <Link
             href={href}
-            className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white hover:bg-[var(--color-brand-dark)] transition-colors"
+            className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider text-white hover:bg-[var(--color-brand-dark)] transition-colors"
           >
-            {t("mp.landing.viewOrder")}
+            {t("shop.configure")}
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
@@ -234,7 +269,7 @@ export default function StickersCategoryClient({ products = [] }) {
         </div>
 
         {/* Product grid */}
-        <div className="mt-6 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-6 grid gap-2.5 sm:gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} t={t} />
           ))}

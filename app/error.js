@@ -17,7 +17,7 @@ export default function ErrorPage({ error, reset }) {
         </div>
         <h1 className="text-2xl font-semibold">{t("error.generic.title")}</h1>
         <p className="mt-3 text-sm text-[var(--color-gray-600)]">{t("error.generic.message")}</p>
-        {error?.message && (
+        {process.env.NODE_ENV === "development" && error?.message && (
           <p className="mt-3 rounded-lg bg-[var(--color-gray-100)] px-3 py-2 text-left text-xs text-[var(--color-gray-500)] break-words">
             {error.message}
           </p>

@@ -51,7 +51,7 @@ export async function POST(
         orderId: id,
         action,
         details: details ?? null,
-        actor: "admin",
+        actor: auth.user?.email || "admin",
       },
     });
 

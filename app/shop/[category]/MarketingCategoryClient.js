@@ -14,6 +14,70 @@ const BASE = "/shop/marketing-business-print";
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
+/* ── Compare cues (i18n keys) ── */
+const CUES = {
+  "business-cards": ["cue.premium", "cue.sameDay"],
+  "flyers": ["cue.sameDay", "cue.fullColor"],
+  "brochures": ["cue.foldable", "cue.fullColor"],
+  "postcards": ["cue.directMail", "cue.thick"],
+  "posters": ["cue.fullColor", "cue.indoor"],
+  "booklets": ["cue.multiPage", "cue.fullColor"],
+  "letterhead": ["cue.premium"],
+  "envelopes": ["cue.premium"],
+  "stamps": ["cue.sameDay"],
+  "ncr-forms": ["cue.carbonless", "cue.numbered"],
+  "door-hangers": ["cue.dieCut", "cue.directMail"],
+  "rack-cards": ["cue.displayReady"],
+  "menus": ["cue.durable", "cue.fullColor"],
+  "table-tents": ["cue.selfStanding", "cue.displayReady"],
+  "greeting-invitation-cards": ["cue.premium", "cue.foldable"],
+  "tickets-coupons": ["cue.numbered"],
+  "calendars": ["cue.fullColor"],
+  "notepads": ["cue.tearOff"],
+  "presentation-folders": ["cue.premium"],
+  "bookmarks": ["cue.fullColor", "cue.thick"],
+  "loyalty-cards": ["cue.thick"],
+  "shelf-displays": ["cue.selfStanding", "cue.displayReady"],
+  "certificates": ["cue.premium"],
+  "tags": ["cue.dieCut"],
+  "magnets-business-card": ["cue.magnetic"],
+  "tabletop-displays": ["cue.selfStanding"],
+  "inserts-packaging": ["cue.fullColor"],
+  "document-printing": ["cue.sameDay"],
+};
+
+/* ── Taglines (i18n keys) ── */
+const TAGLINE_KEYS = {
+  "business-cards": "mc.tagline.businessCards",
+  "flyers": "mc.tagline.flyers",
+  "brochures": "mc.tagline.brochures",
+  "postcards": "mc.tagline.postcards",
+  "posters": "mc.tagline.posters",
+  "booklets": "mc.tagline.booklets",
+  "letterhead": "mc.tagline.letterhead",
+  "envelopes": "mc.tagline.envelopes",
+  "stamps": "mc.tagline.stamps",
+  "ncr-forms": "mc.tagline.ncrForms",
+  "door-hangers": "mc.tagline.doorHangers",
+  "rack-cards": "mc.tagline.rackCards",
+  "menus": "mc.tagline.menus",
+  "table-tents": "mc.tagline.tableTents",
+  "greeting-invitation-cards": "mc.tagline.greetingCards",
+  "tickets-coupons": "mc.tagline.ticketsCoupons",
+  "calendars": "mc.tagline.calendars",
+  "notepads": "mc.tagline.notepads",
+  "presentation-folders": "mc.tagline.presentationFolders",
+  "bookmarks": "mc.tagline.bookmarks",
+  "loyalty-cards": "mc.tagline.loyaltyCards",
+  "shelf-displays": "mc.tagline.shelfDisplays",
+  "certificates": "mc.tagline.certificates",
+  "tags": "mc.tagline.tags",
+  "magnets-business-card": "mc.tagline.magnetsBizCard",
+  "tabletop-displays": "mc.tagline.tabletopDisplays",
+  "inserts-packaging": "mc.tagline.insertsPackaging",
+  "document-printing": "mc.tagline.documentPrinting",
+};
+
 /* ── Item slug → i18n key map ── */
 const ITEM_I18N = {
   "business-cards": "mc.item.businessCards",
@@ -107,25 +171,28 @@ const SECTIONS = [
 
 function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
   const [hovered, setHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const showUrl = hovered && hoverImageUrl ? hoverImageUrl : imageUrl;
   const isSvg = showUrl && isSvgImage(showUrl);
   const name = t(ITEM_I18N[item.key] || item.key);
+  const cues = CUES[item.key] || [];
   return (
     <Link
       href={item.href}
-      className="group flex flex-col overflow-hidden rounded-xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-gray-100)]">
-        {showUrl ? (
+        {showUrl && !imgError ? (
           isSvg ? (
-            <img src={showUrl} alt={name} loading="lazy" className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105" />
+            <img src={showUrl} alt={name} loading="lazy" onError={() => setImgError(true)} className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105" />
           ) : (
             <Image
               src={showUrl}
               alt={name}
               fill
+              onError={() => setImgError(true)}
               className="object-cover transition-all duration-300 group-hover:scale-105"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
@@ -142,7 +209,21 @@ function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
         <h3 className="text-sm font-semibold text-[var(--color-gray-900)] leading-tight">
           {name}
         </h3>
-        <div className="mt-1.5 flex items-center justify-between">
+        {TAGLINE_KEYS[item.key] && (
+          <p className="mt-0.5 text-[11px] leading-tight text-[var(--color-gray-500)] line-clamp-2">
+            {t(TAGLINE_KEYS[item.key])}
+          </p>
+        )}
+        {cues.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {cues.map((c) => (
+              <span key={c} className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-600">
+                {t(c)}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="mt-auto pt-2 flex items-center justify-between">
           {price > 0 ? (
             <span className="text-xs font-bold text-[var(--color-gray-900)]">
               {t("shop.fromLabel")} {formatCad(price)}
@@ -150,9 +231,9 @@ function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
           ) : (
             <span className="text-[11px] text-[var(--color-gray-400)]">{t("shop.getQuote")}</span>
           )}
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[9px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
             {t("shop.configure")}
-            <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
           </span>
@@ -162,8 +243,15 @@ function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
   );
 }
 
+/* ── Related categories ── */
+const MC_RELATED = [
+  { title: "Stickers & Labels", titleZh: "贴纸和标签", desc: "Die-cut, kiss-cut, roll labels & vinyl", descZh: "模切、半刀、卷标和乙烯基", href: "/shop/stickers-labels-decals" },
+  { title: "Signs & Display Boards", titleZh: "标牌和展示板", desc: "Coroplast, foam board, acrylic & aluminum", descZh: "瓦楞板、泡沫板、亚克力和铝板", href: "/shop/signs-rigid-boards" },
+  { title: "Banners & Displays", titleZh: "横幅和展示", desc: "Vinyl banners, roll-ups, flags & backdrops", descZh: "乙烯基横幅、易拉宝、旗帜和背景墙", href: "/shop/banners-displays" },
+];
+
 export default function MarketingCategoryClient({ marketingPrices = {}, marketingImages = {}, marketingImages2 = {} }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   return (
     <main className="bg-gradient-to-b from-amber-50 to-white pb-20 pt-10 text-[var(--color-gray-900)]">
@@ -188,7 +276,7 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
             <section key={section.key} className="mt-8">
               <h2 className="text-base font-semibold tracking-tight">{t(section.titleKey)}</h2>
               <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">{t(section.subtitleKey)}</p>
-              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {visibleItems.map((item) => (
                   <ProductCard
                     key={item.key}
@@ -204,7 +292,39 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
           );
         })}
 
+        {SECTIONS.every((section) => section.items.every((item) => !(item.key in marketingPrices))) && (
+          <p className="mt-12 text-center text-sm text-[var(--color-gray-500)]">
+            {t("shop.noProducts")}
+          </p>
+        )}
+
         <CategoryFaq category="marketing-business-print" />
+
+        {/* Related categories */}
+        <section className="mt-12">
+          <h2 className="text-xl font-semibold tracking-tight">{t("mc.related")}</h2>
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-3">
+            {MC_RELATED.map((cat) => (
+              <Link
+                key={cat.href}
+                href={cat.href}
+                className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-5 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
+              >
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
+                    {locale === "zh" ? cat.titleZh : cat.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-[var(--color-gray-500)] truncate">
+                    {locale === "zh" ? cat.descZh : cat.desc}
+                  </p>
+                </div>
+                <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {/* Back to shop */}
         <div className="mt-12 text-center">

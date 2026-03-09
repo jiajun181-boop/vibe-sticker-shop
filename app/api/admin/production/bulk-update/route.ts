@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
+import { syncOrderProductionStatus } from "@/lib/production-sync";
 
 export async function POST(request: NextRequest) {
   const auth = await requirePermission(request, "production", "edit");
@@ -72,6 +73,18 @@ export async function POST(request: NextRequest) {
 
       return updateResult;
     });
+
+    // Sync parent order statuses for affected jobs (fire-and-forget)
+    if (updates.status) {
+      const affectedJobs = await prisma.productionJob.findMany({
+        where: { id: { in: jobIds } },
+        select: { orderItem: { select: { orderId: true } } },
+      });
+      const orderIds = [...new Set(affectedJobs.map((j) => j.orderItem.orderId))] as string[];
+      for (const oid of orderIds) {
+        syncOrderProductionStatus(oid).catch(() => {});
+      }
+    }
 
     // Fire-and-forget activity log
     logActivity({

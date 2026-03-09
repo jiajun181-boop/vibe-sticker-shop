@@ -6,6 +6,7 @@ import { sendEmail } from "@/lib/email/resend";
 import { buildInteracInstructionsHtml } from "@/lib/email/templates/interac-instructions";
 import { getSessionFromRequest } from "@/lib/auth";
 import { checkAndReserveStock } from "@/lib/inventory";
+import { HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "@/lib/order-config";
 
 const InteracSchema = z.object({
   items: z.array(z.object({
@@ -29,11 +30,11 @@ export async function POST(req: Request) {
 
     const { items, email, name } = result.data;
 
-    // Verify all products exist and are active, enforce minimum price
+    // Verify all products exist and are active, enforce minimum price + drift check
     for (const item of items) {
       const product = await prisma.product.findFirst({
         where: { id: item.productId, isActive: true },
-        select: { id: true, name: true },
+        select: { id: true, name: true, basePrice: true },
       });
       if (!product) {
         return NextResponse.json(
@@ -47,11 +48,19 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
+      // Price drift guard: reject if client price is <50% of base price (possible tampering)
+      if (product.basePrice && product.basePrice > 0 && item.unitAmount < product.basePrice * 0.5) {
+        console.warn(`[Interac] Price drift rejected: ${item.name} — client ${item.unitAmount}¢ vs base ${product.basePrice}¢`);
+        return NextResponse.json(
+          { error: `Price error for ${product.name}. Please refresh and try again.` },
+          { status: 400 }
+        );
+      }
     }
 
     const subtotal = items.reduce((sum, item) => sum + item.unitAmount * item.quantity, 0);
-    const shippingAmount = subtotal >= 9900 ? 0 : 1500;
-    const taxAmount = Math.round((subtotal + shippingAmount) * 0.13);
+    const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+    const taxAmount = Math.round((subtotal + shippingAmount) * HST_RATE);
     const totalAmount = subtotal + shippingAmount + taxAmount;
 
     // Atomic stock check + reservation (prevents overselling)
@@ -100,6 +109,13 @@ export async function POST(req: Request) {
             authorType: "system",
             isInternal: true,
             message: "Order created via Interac e-Transfer — awaiting payment",
+          },
+        },
+        timeline: {
+          create: {
+            action: "order_created",
+            details: "Interac e-Transfer — awaiting payment",
+            actor: "customer",
           },
         },
       },

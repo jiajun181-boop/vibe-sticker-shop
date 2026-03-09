@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const DEFAULTS = {
-  "store.name": "Vibe Sticker Shop",
+  "store.name": "La Lunar Printing Inc.",
   "store.email": "",
   "store.phone": "",
   "store.address": "",

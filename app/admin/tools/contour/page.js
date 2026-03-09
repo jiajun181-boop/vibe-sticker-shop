@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { uploadDesignSnapshot } from "@/lib/design-studio/upload-snapshot";
 
@@ -18,7 +19,30 @@ async function blobFromUrl(url) {
   return res.blob();
 }
 
+// Status: idle → processing → ready / failed
+const STATUS_STYLES = {
+  idle: "bg-gray-100 text-gray-600",
+  processing: "bg-yellow-100 text-yellow-700",
+  ready: "bg-green-100 text-green-700",
+  failed: "bg-red-100 text-red-700",
+};
+const STATUS_LABELS = {
+  idle: "Idle — upload artwork to start",
+  processing: "Processing...",
+  ready: "Ready — contour generated",
+  failed: "Failed — see error below",
+};
+
 export default function ContourToolPage() {
+  return (
+    <Suspense fallback={<div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading...</div>}>
+      <ContourToolContent />
+    </Suspense>
+  );
+}
+
+function ContourToolContent() {
+  const searchParams = useSearchParams();
   const [imageUrl, setImageUrl] = useState(null);
   const [imageName, setImageName] = useState("");
   const [sourceFile, setSourceFile] = useState(null);
@@ -26,7 +50,7 @@ export default function ContourToolPage() {
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState("");
   const [bleedMm, setBleedMm] = useState(3);
-  const [orderId, setOrderId] = useState("");
+  const [orderId, setOrderId] = useState(searchParams.get("orderId") || "");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
@@ -34,7 +58,19 @@ export default function ContourToolPage() {
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [applyingToOrder, setApplyingToOrder] = useState(false);
+  const [applyMsg, setApplyMsg] = useState("");
+  const [errorDetail, setErrorDetail] = useState("");
   const fileInputRef = useRef(null);
+
+  // --- Item selector state ---
+  const [orderItems, setOrderItems] = useState([]);
+  const [selectedItemId, setSelectedItemId] = useState("");
+  const [fetchingOrder, setFetchingOrder] = useState(false);
+  const [orderError, setOrderError] = useState("");
+
+  // Derived status
+  const status = processing ? "processing" : errorDetail ? "failed" : contourResult ? "ready" : "idle";
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -54,11 +90,74 @@ export default function ContourToolPage() {
     fetchJobs();
   }, [fetchJobs]);
 
+  // --- Fetch order items when orderId changes ---
+  useEffect(() => {
+    if (!orderId || orderId.length < 6) {
+      setOrderItems([]);
+      setSelectedItemId("");
+      setOrderError("");
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setFetchingOrder(true);
+      setOrderError("");
+      try {
+        const res = await fetch(`/api/admin/orders/${orderId}`);
+        if (!res.ok) {
+          setOrderError("Order not found");
+          setOrderItems([]);
+          setSelectedItemId("");
+          return;
+        }
+        const data = await res.json();
+        const items = data.items || [];
+        setOrderItems(items);
+        if (items.length === 0) {
+          setOrderError("Order has no items");
+          setSelectedItemId("");
+          return;
+        }
+        // Auto-select: prefer sticker/label/decal item, else first
+        const stickerItem = items.find((it) => {
+          const n = (it.productName || "").toLowerCase();
+          return n.includes("sticker") || n.includes("label") || n.includes("decal") || n.includes("die-cut") || n.includes("kiss-cut");
+        });
+        setSelectedItemId((stickerItem || items[0]).id);
+      } catch {
+        setOrderError("Failed to fetch order");
+        setOrderItems([]);
+        setSelectedItemId("");
+      } finally {
+        setFetchingOrder(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [orderId]);
+
+  // Auto-load artwork from selected order item
+  useEffect(() => {
+    if (!selectedItemId || !orderItems.length) return;
+    const item = orderItems.find((it) => it.id === selectedItemId);
+    if (!item) return;
+    const meta = item.meta && typeof item.meta === "object" ? item.meta : {};
+    const artUrl = meta.artworkUrl || meta.fileUrl || item.fileUrl;
+    if (!artUrl || artUrl === imageUrl) return;
+    // Load the artwork into the tool and auto-process
+    setImageUrl(artUrl);
+    setImageName(meta.fileName || item.productName || "artwork");
+    setSourceFile(null);
+    setContourResult(null);
+    setErrorDetail("");
+    processContour(artUrl);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedItemId]);
+
   function resetPreviewState(objectUrl, fileName, file) {
     setImageName(fileName);
     setSourceFile(file);
     setImageUrl(objectUrl);
     setContourResult(null);
+    setErrorDetail("");
   }
 
   function handleFile(file) {
@@ -71,6 +170,7 @@ export default function ContourToolPage() {
   async function processContour(url) {
     setProcessing(true);
     setProgress("Loading contour library...");
+    setErrorDetail("");
 
     try {
       const { generateContour } = await import("@/lib/contour/generate-contour");
@@ -83,7 +183,9 @@ export default function ContourToolPage() {
       setProgress("");
     } catch (err) {
       console.error("Contour error:", err);
-      setProgress(`Error: ${err instanceof Error ? err.message : "Failed to trace contour"}`);
+      const msg = err instanceof Error ? err.message : "Failed to trace contour";
+      setProgress("");
+      setErrorDetail(msg);
     } finally {
       setProcessing(false);
     }
@@ -209,6 +311,75 @@ export default function ContourToolPage() {
     }
   }
 
+  async function handleApplyToOrder() {
+    if (!orderId || !selectedItemId) return;
+    const targetItem = orderItems.find((it) => it.id === selectedItemId);
+    if (!targetItem) return;
+
+    setApplyingToOrder(true);
+    setApplyMsg("");
+    try {
+      // Build contour SVG and upload
+      const svgBlob = await buildSvgBlob();
+      if (!svgBlob) throw new Error("Failed to build SVG");
+      const uploaded = await uploadDesignSnapshot(svgBlob, `contour-${Date.now()}.svg`);
+
+      // Merge contour data into item meta
+      const metaPatch = {
+        contourSvg: uploaded.url,
+        contourSvgKey: uploaded.key,
+        bleedMm,
+        contourAppliedAt: new Date().toISOString(),
+      };
+      if (contourResult.processedImageUrl) {
+        const processedBlob = await blobFromUrl(contourResult.processedImageUrl);
+        const processedAsset = await uploadDesignSnapshot(processedBlob, `processed-${Date.now()}.png`);
+        metaPatch.processedImageUrl = processedAsset.url;
+        metaPatch.processedImageKey = processedAsset.key;
+      }
+
+      const patchRes = await fetch(`/api/admin/orders/${orderId}/items`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: targetItem.id, meta: metaPatch }),
+      });
+      if (!patchRes.ok) {
+        const err = await patchRes.json().catch(() => null);
+        throw new Error(err?.error || "Failed to update item");
+      }
+
+      setApplyMsg(`Applied to "${targetItem.productName}"`);
+      setTimeout(() => setApplyMsg(""), 5000);
+    } catch (err) {
+      setApplyMsg(`Error: ${err instanceof Error ? err.message : "Failed"}`);
+    } finally {
+      setApplyingToOrder(false);
+    }
+  }
+
+  // --- Reuse a previous job ---
+  function handleReuseJob(job) {
+    // Load input image from the saved job URL
+    if (job.inputFileUrl) {
+      setImageUrl(job.inputFileUrl);
+      setImageName(job.inputData?.fileName || "artwork");
+      setSourceFile(null); // Can't reconstruct File from URL; save will re-upload from URL if needed
+      setContourResult(null);
+      setErrorDetail("");
+    }
+    if (job.inputData?.bleedMm != null) {
+      setBleedMm(job.inputData.bleedMm);
+    }
+    if (job.orderId) {
+      setOrderId(job.orderId);
+    }
+    if (job.notes) {
+      setNotes(job.notes);
+    }
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function onDrop(event) {
     event.preventDefault();
     setDragOver(false);
@@ -216,26 +387,82 @@ export default function ContourToolPage() {
     if (file) handleFile(file);
   }
 
+  const selectedItem = orderItems.find((it) => it.id === selectedItemId);
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-black">Contour Tool</h1>
-        <p className="mt-1 text-sm text-[#666]">
-          Generate, save, and download production contour files for internal orders and prepress work.
-        </p>
+      {/* Header + Status */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-black">Contour Tool</h1>
+          <p className="mt-1 text-sm text-[#666]">
+            Generate, save, and download production contour files for stickers, labels, and die-cuts.
+          </p>
+        </div>
+        <div className={`inline-flex items-center gap-2 rounded-[3px] px-3 py-1.5 text-xs font-bold ${STATUS_STYLES[status]}`}>
+          <span className={`inline-block h-2 w-2 rounded-full ${status === "processing" ? "animate-pulse bg-yellow-500" : status === "ready" ? "bg-green-500" : status === "failed" ? "bg-red-500" : "bg-gray-400"}`} />
+          {STATUS_LABELS[status]}
+        </div>
       </div>
 
-      <div className="max-w-xs">
-        <label className="mb-1 block text-[11px] font-medium text-[#666]">Order # (optional)</label>
-        <input
-          type="text"
-          value={orderId}
-          onChange={(e) => setOrderId(e.target.value)}
-          placeholder="e.g. existing order id"
-          className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-        />
+      {/* Config row: Order + Item selector */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div>
+          <label className="mb-1 block text-[11px] font-medium text-[#666]">Order # (optional)</label>
+          <input
+            type="text"
+            value={orderId}
+            onChange={(e) => setOrderId(e.target.value)}
+            placeholder="Paste order ID to link"
+            className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+          />
+          {fetchingOrder && <p className="mt-0.5 text-[10px] text-[#999]">Loading order...</p>}
+          {orderError && <p className="mt-0.5 text-[10px] text-red-600">{orderError}</p>}
+        </div>
+        <div>
+          <label className="mb-1 block text-[11px] font-medium text-[#666]">
+            Target Item {orderItems.length > 0 && <span className="text-[#999]">({orderItems.length} items)</span>}
+          </label>
+          {orderItems.length > 0 ? (
+            <select
+              value={selectedItemId}
+              onChange={(e) => setSelectedItemId(e.target.value)}
+              className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+            >
+              {orderItems.map((item) => {
+                const n = (item.productName || "").toLowerCase();
+                const isRecommended = n.includes("sticker") || n.includes("label") || n.includes("decal") || n.includes("die-cut") || n.includes("kiss-cut");
+                return (
+                  <option key={item.id} value={item.id}>
+                    {item.productName} ({item.quantity}x){isRecommended ? " — recommended" : ""}
+                  </option>
+                );
+              })}
+            </select>
+          ) : (
+            <div className="rounded-[3px] border border-dashed border-[#d0d0d0] px-3 py-2 text-sm text-[#999]">
+              {orderId ? "Enter a valid order ID" : "Enter order # to select item"}
+            </div>
+          )}
+        </div>
+        <div>
+          <label className="mb-1 block text-[11px] font-medium text-[#666]">Bleed Offset</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0"
+              max="6"
+              step="0.5"
+              value={bleedMm}
+              onChange={(e) => handleBleedChange(parseFloat(e.target.value))}
+              className="flex-1"
+            />
+            <span className="w-14 text-right text-sm font-semibold tabular-nums text-black">{bleedMm}mm</span>
+          </div>
+        </div>
       </div>
 
+      {/* Upload + Result panels */}
       <div className="grid gap-4 lg:grid-cols-2">
         <div
           onDragOver={(e) => {
@@ -259,7 +486,7 @@ export default function ContourToolPage() {
           {imageUrl ? (
             <div className="relative w-full p-4">
               <img src={imageUrl} alt="Uploaded artwork" className="mx-auto max-h-[280px] object-contain" />
-              <p className="mt-2 text-center text-xs text-[#999]">{imageName} - click to replace</p>
+              <p className="mt-2 text-center text-xs text-[#999]">{imageName} — click to replace</p>
             </div>
           ) : (
             <>
@@ -309,35 +536,37 @@ export default function ContourToolPage() {
                 </span>
               </div>
             </div>
+          ) : errorDetail ? (
+            <div className="text-center">
+              <p className="text-sm font-medium text-red-600">Contour generation failed</p>
+              <p className="mt-1 text-xs text-red-500">{errorDetail}</p>
+              <button
+                type="button"
+                onClick={() => imageUrl && processContour(imageUrl)}
+                className="mt-3 rounded-[3px] border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
+              >
+                Retry
+              </button>
+            </div>
           ) : (
-            <p className="text-sm text-[#999]">Upload an image to generate contour</p>
+            <div className="text-center">
+              <p className="text-sm text-[#999]">Upload an image to generate contour</p>
+              <p className="mt-1 text-xs text-[#bbb]">Or click &quot;Reuse&quot; on a recent job below</p>
+            </div>
           )}
         </div>
       </div>
 
+      {/* Notes + Actions — only shown when we have a result */}
       {contourResult ? (
         <>
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-[#666]">Bleed:</label>
-            <input
-              type="range"
-              min="0"
-              max="6"
-              step="0.5"
-              value={bleedMm}
-              onChange={(e) => handleBleedChange(parseFloat(e.target.value))}
-              className="max-w-xs flex-1"
-            />
-            <span className="w-12 text-sm font-semibold tabular-nums text-black">{bleedMm}mm</span>
-          </div>
-
           <div>
-            <label className="mb-1 block text-[11px] font-medium text-[#666]">Notes</label>
+            <label className="mb-1 block text-[11px] font-medium text-[#666]">Production Notes</label>
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Production notes..."
+              placeholder="Customer name, special bleed requirements, manual adjustments needed..."
               className="w-full resize-none rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
             />
           </div>
@@ -362,29 +591,51 @@ export default function ContourToolPage() {
             <button
               type="button"
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || !sourceFile}
               className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#222] disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save to Records"}
             </button>
+            {orderId && selectedItemId && selectedItem && (
+              <button
+                type="button"
+                onClick={handleApplyToOrder}
+                disabled={applyingToOrder}
+                className="inline-flex items-center justify-center gap-2 rounded-[3px] border-2 border-blue-600 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100 disabled:opacity-50"
+                title={`Will write contour data to: ${selectedItem.productName}`}
+              >
+                {applyingToOrder
+                  ? "Applying..."
+                  : `Apply to: ${selectedItem.productName.length > 25 ? selectedItem.productName.slice(0, 25) + "..." : selectedItem.productName}`}
+              </button>
+            )}
             {saveMsg ? (
               <span className={`text-xs font-medium ${saveMsg.startsWith("Error") ? "text-red-600" : "text-green-600"}`}>
                 {saveMsg}
+              </span>
+            ) : null}
+            {applyMsg ? (
+              <span className={`text-xs font-medium ${applyMsg.startsWith("Error") ? "text-red-600" : "text-blue-600"}`}>
+                {applyMsg}
               </span>
             ) : null}
           </div>
         </>
       ) : null}
 
+      {/* Recent Contour Jobs */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="border-b border-[#e0e0e0] px-5 py-3">
           <h2 className="text-sm font-bold text-black">Recent Contour Jobs</h2>
-          <p className="mt-0.5 text-[10px] text-[#999]">Saved jobs keep both the input file and generated contour output.</p>
+          <p className="mt-0.5 text-[10px] text-[#999]">Click &quot;Reuse&quot; to load a previous job back into the tool.</p>
         </div>
         {loadingJobs ? (
           <div className="px-5 py-8 text-center text-sm text-[#999]">Loading...</div>
         ) : jobs.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-[#999]">No contour jobs yet</div>
+          <div className="px-5 py-8 text-center">
+            <p className="text-sm text-[#999]">No contour jobs yet</p>
+            <p className="mt-1 text-xs text-[#bbb]">Upload artwork above and save your first contour to start building your job history.</p>
+          </div>
         ) : (
           <div className="divide-y divide-[#e0e0e0]">
             {jobs.map((job) => (
@@ -398,8 +649,16 @@ export default function ContourToolPage() {
                     {job.inputData?.bleedMm != null ? <span> · Bleed: {job.inputData.bleedMm}mm</span> : null}
                     {job.orderId ? <span> · Order: {job.orderId.slice(0, 8)}...</span> : null}
                   </p>
+                  {job.notes ? <p className="mt-0.5 truncate text-xs text-[#777]">{job.notes}</p> : null}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={() => handleReuseJob(job)}
+                    className="rounded-[3px] border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
+                  >
+                    Reuse
+                  </button>
                   {job.inputFileUrl ? (
                     <a
                       href={job.inputFileUrl}
@@ -459,6 +718,7 @@ export default function ContourToolPage() {
         )}
       </div>
 
+      {/* Preview Modal */}
       {previewUrl ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70" onClick={() => setPreviewUrl(null)}>
           <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>

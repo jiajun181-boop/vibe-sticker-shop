@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/auth";
+import { createRateLimiter, getClientIp } from "@/lib/rate-limit";
+
+const reviewLimiter = createRateLimiter({ windowMs: 60 * 60 * 1000, max: 5 }); // 5 per hour
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const { success } = reviewLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json({ error: "Too many reviews submitted. Please try again later." }, { status: 429 });
+    }
+
     const session = getSessionFromRequest(request);
     const body = await request.json();
 
@@ -28,6 +37,20 @@ export async function POST(request: NextRequest) {
     if (!reviewBody || typeof reviewBody !== "string" || reviewBody.trim().length < 10) {
       return NextResponse.json(
         { error: "Review body must be at least 10 characters" },
+        { status: 400 }
+      );
+    }
+
+    if (reviewBody.length > 5000) {
+      return NextResponse.json(
+        { error: "Review body must be under 5000 characters" },
+        { status: 400 }
+      );
+    }
+
+    if (title && typeof title === "string" && title.length > 200) {
+      return NextResponse.json(
+        { error: "Review title must be under 200 characters" },
         { status: 400 }
       );
     }

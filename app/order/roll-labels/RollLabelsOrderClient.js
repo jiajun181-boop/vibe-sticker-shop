@@ -12,11 +12,11 @@ import {
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
+  useConfiguratorCart,
 } from "@/components/configurator";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
-import { useCartStore } from "@/lib/store";
 import {
   LABEL_TYPES,
   SHAPES,
@@ -38,8 +38,6 @@ const formatCad = (cents) =>
 
 export default function RollLabelsOrderClient({ productImages = [] }) {
   const { t, locale } = useTranslation();
-  const addToCart = useCartStore((s) => s.addItem);
-
   // ─── State ────────────────────────────────────────────────────────────────
   const [typeId, setTypeId] = useState("bopp");
   const [shapeId, setShapeId] = useState("circle");
@@ -56,7 +54,7 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
   const [foodUse, setFoodUse] = useState(false);
   const [turnaroundId, setTurnaroundId] = useState("standard");
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [buyNowLoading, setBuyNowLoading] = useState(false);
+  const [artworkIntent, setArtworkIntent] = useState(null);
 
   // ─── Derived ──────────────────────────────────────────────────────────────
   const shape = SHAPES.find((s) => s.id === shapeId) || SHAPES[0];
@@ -95,6 +93,11 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
   const totalCents = subtotalCents + taxCents;
   const unitCents = quote?.unitCents || 0;
   const canAddToCart = subtotalCents > 0 && dim1 > 0;
+
+  const disabledReason = !canAddToCart
+    ? dim1 <= 0 ? "Select your options for pricing"
+    : "Complete all options to continue"
+    : null;
 
   // ─── Summary Lines ────────────────────────────────────────────────────────
   const summaryLines = useMemo(() => {
@@ -141,6 +144,9 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
         labelType: typeId,
         shape: shapeId,
         size: sizeStr,
+        width: dim1,
+        height: shape.inputs.includes("height") ? dim2 : dim1,
+        coreSize: "3-inch",
         stock: stockId,
         ink: inkId,
         finishing: finishId,
@@ -149,21 +155,18 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
         perforation,
         foodUse,
         turnaround: turnaroundId,
+        fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
-      artworkUrl: uploadedFile?.url || null,
       forceNewLine: true,
     };
   }, [typeId, shapeId, dim1, dim2, qty, stockId, inkId, finishId, windId, labelsPerRoll, customPerRoll, perforation, foodUse, turnaroundId, subtotalCents, uploadedFile, shape]);
 
-  const handleAddToCart = useCallback(() => {
-    addToCart(buildCartItem());
-  }, [addToCart, buildCartItem]);
-
-  const handleBuyNow = useCallback(async () => {
-    setBuyNowLoading(true);
-    addToCart(buildCartItem());
-    window.location.href = "/cart";
-  }, [addToCart, buildCartItem]);
+  const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
+    buildCartItem,
+    successMessage: t?.("rl.addedToCart") || "Roll labels added to cart!",
+  });
 
   // ─── Accordion state ───────────────────────────────────────────────────────
   const [activeStepId, setActiveStepId] = useState("step-type");
@@ -683,6 +686,11 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
             productName="Roll Labels"
             categorySlug="stickers-labels-decals"
             locale={locale}
+            disabledReason={disabledReason}
+            artworkMode="upload-optional"
+            hasArtwork={!!uploadedFile}
+            artworkIntent={artworkIntent}
+            onArtworkIntentChange={setArtworkIntent}
           />
         </div>
       </div>
@@ -726,6 +734,11 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
         t={t}
         categorySlug="stickers-labels-decals"
         locale={locale}
+        disabledReason={disabledReason}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
       />
     </main>
   );
