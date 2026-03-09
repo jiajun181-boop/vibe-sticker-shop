@@ -11,6 +11,7 @@ const STATUS_FILTERS = [
   { value: "approved", labelKey: "admin.tools.proof.filterApproved" },
   { value: "rejected", labelKey: "admin.tools.proof.filterRejected" },
   { value: "revised", labelKey: "admin.tools.proof.filterRevised" },
+  { value: "standalone", labelKey: "admin.tools.proof.filterStandalone" },
 ];
 
 const STATUS_COLORS = {
@@ -18,148 +19,161 @@ const STATUS_COLORS = {
   approved: "bg-green-100 text-green-700",
   rejected: "bg-red-100 text-red-700",
   revised: "bg-blue-100 text-blue-700",
+  standalone: "bg-purple-100 text-purple-700",
+  completed: "bg-green-100 text-green-700",
 };
 
-function isPdf(jobOrProof) {
-  const type = jobOrProof?.outputData?.fileType || jobOrProof?.fileName || "";
-  return String(type).toLowerCase().includes("pdf");
+function isPdf(item) {
+  const f = item?.fileName || item?.outputData?.fileType || "";
+  return String(f).toLowerCase().includes("pdf");
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+// ─── Normalize both data sources into unified proof items ─────────────────
+
+function normalizeOrderProof(p) {
+  return {
+    id: p.id,
+    source: "order",
+    imageUrl: p.imageUrl,
+    fileName: p.fileName,
+    status: p.status,
+    customerName: p.order?.customerName || null,
+    customerEmail: p.order?.customerEmail || null,
+    orderId: p.orderId,
+    version: p.version,
+    notes: p.notes,
+    customerComment: p.customerComment,
+    uploadedBy: p.uploadedBy,
+    createdAt: p.createdAt,
+    description: null,
+    pdf: isPdf(p),
+  };
+}
+
+function normalizeStandaloneJob(j) {
+  return {
+    id: j.id,
+    source: "standalone",
+    imageUrl: j.outputFileUrl,
+    fileName: j.outputData?.fileName || null,
+    status: "standalone",
+    customerName: j.inputData?.customerName || null,
+    customerEmail: j.inputData?.customerEmail || null,
+    orderId: null,
+    version: null,
+    notes: j.notes,
+    customerComment: null,
+    uploadedBy: j.operatorName,
+    createdAt: j.createdAt,
+    description: j.inputData?.description || null,
+    pdf: isPdf(j),
+  };
 }
 
 export default function ProofManagerPage() {
   const { t } = useTranslation();
-  const [proofs, setProofs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState("all");
-  const [preview, setPreview] = useState(null);
-  const [standaloneModal, setStandaloneModal] = useState(false);
-  const [standaloneData, setStandaloneData] = useState({
-    customerName: "",
-    customerEmail: "",
-    description: "",
-    notes: "",
-    file: null,
-  });
-  const [standaloneSaving, setStandaloneSaving] = useState(false);
+  const [orderProofs, setOrderProofs] = useState([]);
   const [standaloneJobs, setStandaloneJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [detailItem, setDetailItem] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
+
+  // ── Modals ──
   const [orderProofModal, setOrderProofModal] = useState(false);
   const [orderProofData, setOrderProofData] = useState({ orderId: "", notes: "", file: null });
   const [orderProofSaving, setOrderProofSaving] = useState(false);
-  const [updatingProofId, setUpdatingProofId] = useState(null);
+  const [standaloneModal, setStandaloneModal] = useState(false);
+  const [standaloneData, setStandaloneData] = useState({ customerName: "", customerEmail: "", description: "", notes: "", file: null });
+  const [standaloneSaving, setStandaloneSaving] = useState(false);
 
-  const fetchProofs = useCallback(async () => {
-    setLoading(true);
+  // ── Fetch ──
+  const fetchOrderProofs = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ limit: "50" });
-      if (status !== "all") params.set("status", status);
-      const res = await fetch(`/api/admin/proofs?${params}`);
+      const res = await fetch("/api/admin/proofs?limit=100");
       if (res.ok) {
         const data = await res.json();
-        setProofs(data.proofs || []);
+        setOrderProofs((data.proofs || []).map(normalizeOrderProof));
       }
-    } catch {
-      // Ignore admin proof listing errors for now.
-    } finally {
-      setLoading(false);
-    }
-  }, [status]);
+    } catch { /* ignore */ }
+  }, []);
 
   const fetchStandaloneJobs = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/tools/jobs?toolType=proof&limit=10");
+      const res = await fetch("/api/admin/tools/jobs?toolType=proof&limit=50");
       if (res.ok) {
         const data = await res.json();
-        setStandaloneJobs(data.jobs || []);
+        setStandaloneJobs((data.jobs || []).map(normalizeStandaloneJob));
       }
-    } catch {
-      // Ignore fetch errors.
-    }
+    } catch { /* ignore */ }
   }, []);
 
   useEffect(() => {
-    fetchProofs();
-  }, [fetchProofs]);
+    Promise.all([fetchOrderProofs(), fetchStandaloneJobs()]).finally(() => setLoading(false));
+  }, [fetchOrderProofs, fetchStandaloneJobs]);
 
-  useEffect(() => {
-    fetchStandaloneJobs();
-  }, [fetchStandaloneJobs]);
+  // ── Unified + filtered list ──
+  const allProofs = [...orderProofs, ...standaloneJobs].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
 
-  async function handleStandaloneSave() {
-    if (!standaloneData.file) return;
+  const filteredProofs = statusFilter === "all"
+    ? allProofs
+    : allProofs.filter((p) => p.status === statusFilter);
 
-    setStandaloneSaving(true);
+  // ── Counts for filter badges ──
+  const counts = {};
+  for (const p of allProofs) counts[p.status] = (counts[p.status] || 0) + 1;
+
+  // ── Actions ──
+  async function handleUpdateStatus(item, newStatus) {
+    if (item.source !== "order") return;
+    setUpdatingId(item.id);
     try {
-      const uploaded = await uploadDesignSnapshot(
-        standaloneData.file,
-        standaloneData.file.name || `proof-${Date.now()}`
-      );
-
-      const res = await fetch("/api/admin/tools/jobs", {
-        method: "POST",
+      const res = await fetch(`/api/admin/proofs/${item.id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          toolType: "proof",
-          inputData: {
-            customerName: standaloneData.customerName || null,
-            customerEmail: standaloneData.customerEmail || null,
-            description: standaloneData.description || null,
-            originalFileName: standaloneData.file.name || null,
-          },
-          outputFileUrl: uploaded.url,
-          outputFileKey: uploaded.key,
-          outputData: {
-            fileName: standaloneData.file.name || null,
-            fileType: standaloneData.file.type || null,
-          },
-          notes: standaloneData.notes || null,
-          status: "completed",
-        }),
+        body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) throw new Error("Failed to save standalone proof");
-
-      setStandaloneModal(false);
-      setStandaloneData({
-        customerName: "",
-        customerEmail: "",
-        description: "",
-        notes: "",
-        file: null,
-      });
-      fetchStandaloneJobs();
+      if (!res.ok) throw new Error("Failed to update");
+      await fetchOrderProofs();
+      if (detailItem?.id === item.id) {
+        setDetailItem((prev) => prev ? { ...prev, status: newStatus } : null);
+      }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to save");
+      alert(err instanceof Error ? err.message : "Failed to update");
     } finally {
-      setStandaloneSaving(false);
+      setUpdatingId(null);
     }
   }
 
   async function handleOrderProofSave() {
     if (!orderProofData.file || !orderProofData.orderId.trim()) return;
-
     setOrderProofSaving(true);
     try {
-      const uploaded = await uploadDesignSnapshot(
-        orderProofData.file,
-        orderProofData.file.name || `proof-${Date.now()}`
-      );
-
+      const uploaded = await uploadDesignSnapshot(orderProofData.file, orderProofData.file.name || `proof-${Date.now()}`);
       const res = await fetch(`/api/admin/orders/${orderProofData.orderId.trim()}/proofs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageUrl: uploaded.url,
-          fileName: orderProofData.file.name || null,
-          notes: orderProofData.notes || null,
-        }),
+        body: JSON.stringify({ imageUrl: uploaded.url, fileName: orderProofData.file.name || null, notes: orderProofData.notes || null }),
       });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        throw new Error(err?.error || "Failed to upload proof");
-      }
-
+      if (!res.ok) { const err = await res.json().catch(() => null); throw new Error(err?.error || "Failed to upload proof"); }
       setOrderProofModal(false);
       setOrderProofData({ orderId: "", notes: "", file: null });
-      fetchProofs();
+      setLoading(true);
+      await fetchOrderProofs();
+      setLoading(false);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to upload proof");
     } finally {
@@ -167,359 +181,352 @@ export default function ProofManagerPage() {
     }
   }
 
-  async function handleUpdateProofStatus(proofId, newStatus) {
-    setUpdatingProofId(proofId);
+  async function handleStandaloneSave() {
+    if (!standaloneData.file) return;
+    setStandaloneSaving(true);
     try {
-      const res = await fetch(`/api/admin/proofs/${proofId}`, {
-        method: "PATCH",
+      const uploaded = await uploadDesignSnapshot(standaloneData.file, standaloneData.file.name || `proof-${Date.now()}`);
+      const res = await fetch("/api/admin/tools/jobs", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({
+          toolType: "proof",
+          inputData: { customerName: standaloneData.customerName || null, customerEmail: standaloneData.customerEmail || null, description: standaloneData.description || null, originalFileName: standaloneData.file.name || null },
+          outputFileUrl: uploaded.url, outputFileKey: uploaded.key,
+          outputData: { fileName: standaloneData.file.name || null, fileType: standaloneData.file.type || null },
+          notes: standaloneData.notes || null, status: "completed",
+        }),
       });
-      if (!res.ok) throw new Error("Failed to update proof status");
-      fetchProofs();
+      if (!res.ok) throw new Error("Failed to save standalone proof");
+      setStandaloneModal(false);
+      setStandaloneData({ customerName: "", customerEmail: "", description: "", notes: "", file: null });
+      setLoading(true);
+      await fetchStandaloneJobs();
+      setLoading(false);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to update");
+      alert(err instanceof Error ? err.message : "Failed to save");
     } finally {
-      setUpdatingProofId(null);
+      setStandaloneSaving(false);
     }
   }
 
+  // ── Render ──
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-5">
+      {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold text-black">{t("admin.tools.proof.title")}</h1>
           <p className="mt-1 text-sm text-[#666]">{t("admin.tools.proof.subtitle")}</p>
         </div>
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setOrderProofModal(true)}
-            className="inline-flex items-center gap-2 rounded-[3px] bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#222]"
-          >
+          <button type="button" onClick={() => setOrderProofModal(true)} className="inline-flex items-center gap-1.5 rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]">
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
             {t("admin.tools.proof.uploadOrderProof")}
           </button>
-          <button
-            type="button"
-            onClick={() => setStandaloneModal(true)}
-            className="inline-flex items-center gap-2 rounded-[3px] border border-[#e0e0e0] px-4 py-2.5 text-sm font-semibold text-[#666] transition-colors hover:border-black hover:text-black"
-          >
+          <button type="button" onClick={() => setStandaloneModal(true)} className="inline-flex items-center gap-1.5 rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-semibold text-[#666] hover:border-black hover:text-black">
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
             {t("admin.tools.proof.standaloneProof")}
           </button>
         </div>
       </div>
 
+      {/* Status Filter Tabs */}
       <div className="flex gap-1.5 overflow-x-auto">
-        {STATUS_FILTERS.map((filter) => (
-          <button
-            key={filter.value}
-            type="button"
-            onClick={() => setStatus(filter.value)}
-            className={`shrink-0 rounded-[3px] px-3 py-1.5 text-xs font-semibold transition-colors ${
-              status === filter.value
-                ? "bg-black text-white"
-                : "border border-[#e0e0e0] bg-white text-[#666] hover:border-black"
-            }`}
-          >
-            {t(filter.labelKey)}
-          </button>
-        ))}
+        {STATUS_FILTERS.map((f) => {
+          const c = f.value === "all" ? allProofs.length : (counts[f.value] || 0);
+          return (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setStatusFilter(f.value)}
+              className={`shrink-0 rounded-[3px] px-3 py-1.5 text-xs font-semibold transition-colors ${
+                statusFilter === f.value ? "bg-black text-white" : "border border-[#e0e0e0] bg-white text-[#666] hover:border-black"
+              }`}
+            >
+              {t(f.labelKey)} {c > 0 ? `(${c})` : ""}
+            </button>
+          );
+        })}
       </div>
 
+      {/* Unified Proof List */}
       {loading ? (
-        <div className="py-12 text-center text-sm text-[#999]">{t("admin.tools.proof.loadingProofs")}</div>
-      ) : proofs.length === 0 ? (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-[3px] bg-[#f0f0f0]" />)}
+        </div>
+      ) : filteredProofs.length === 0 ? (
         <div className="py-12 text-center text-sm text-[#999]">{t("admin.tools.proof.noProofs")}</div>
       ) : (
-        <div className="space-y-3">
-          {proofs.map((proof) => (
-            <div key={proof.id} className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setPreview({ url: proof.imageUrl, fileName: proof.fileName })}
-                    className="h-16 w-16 shrink-0 overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] transition-opacity hover:opacity-80"
-                  >
-                    <img src={proof.imageUrl} alt="Proof" className="h-full w-full object-cover" />
-                  </button>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-black">{t("admin.tools.proof.proofVersion").replace("{version}", proof.version)}</p>
-                      <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${STATUS_COLORS[proof.status] || "bg-gray-100 text-gray-700"}`}>
-                        {proof.status}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-[#999]">
-                      {proof.order?.customerEmail || "-"} · {new Date(proof.createdAt).toLocaleDateString()}
-                      {proof.uploadedBy ? <span> · by {proof.uploadedBy}</span> : null}
-                    </p>
-                    {proof.notes ? <p className="mt-1 text-xs text-[#777]">{proof.notes}</p> : null}
-                    {proof.customerComment ? <p className="mt-1 text-xs italic text-[#555]">"{proof.customerComment}"</p> : null}
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {(proof.status === "pending" || proof.status === "revised") && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateProofStatus(proof.id, "approved")}
-                        disabled={updatingProofId === proof.id}
-                        className="inline-flex items-center gap-1 rounded-[3px] bg-green-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
-                      >
-                        {t("admin.tools.proof.approve")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateProofStatus(proof.id, "rejected")}
-                        disabled={updatingProofId === proof.id}
-                        className="inline-flex items-center gap-1 rounded-[3px] bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
-                      >
-                        {t("admin.tools.proof.reject")}
-                      </button>
-                    </>
-                  )}
-                  <Link
-                    href={`/admin/orders/${proof.orderId}`}
-                    className="inline-flex items-center gap-1 rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-                  >
-                    {t("admin.tools.viewOrder")}
-                  </Link>
-                  <a
-                    href={proof.imageUrl}
-                    download
-                    className="inline-flex items-center gap-1 rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-                  >
-                    {t("admin.tools.download")}
-                  </a>
-                </div>
-              </div>
-            </div>
+        <div className="space-y-2">
+          {filteredProofs.map((item) => (
+            <ProofRow
+              key={`${item.source}-${item.id}`}
+              item={item}
+              t={t}
+              updatingId={updatingId}
+              onDetail={setDetailItem}
+              onApprove={(it) => handleUpdateStatus(it, "approved")}
+              onReject={(it) => handleUpdateStatus(it, "rejected")}
+            />
           ))}
         </div>
       )}
 
-      {standaloneJobs.length > 0 ? (
-        <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
-          <div className="border-b border-[#e0e0e0] px-5 py-3">
-            <h2 className="text-sm font-bold text-black">{t("admin.tools.proof.standaloneRecords")}</h2>
-            <p className="text-[10px] text-[#999]">{t("admin.tools.proof.standaloneRecordsSub")}</p>
-          </div>
-          <div className="divide-y divide-[#e0e0e0]">
-            {standaloneJobs.map((job) => (
-              <div key={job.id} className="flex flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-black">
-                    {job.inputData?.customerName || job.inputData?.customerEmail || "Unnamed"} {job.operatorName ? `· ${job.operatorName}` : ""}
-                  </p>
-                  <p className="text-xs text-[#999]">
-                    {new Date(job.createdAt).toLocaleDateString()}
-                    {job.inputData?.description ? <span> · {job.inputData.description}</span> : null}
-                  </p>
-                  {job.notes ? <p className="mt-0.5 truncate text-xs text-[#777]">{job.notes}</p> : null}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {job.outputFileUrl ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setPreview({
-                            url: job.outputFileUrl,
-                            fileName: job.outputData?.fileName || null,
-                            pdf: isPdf(job),
-                          })
-                        }
-                        className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-                      >
-                        {t("admin.tools.preview")}
-                      </button>
-                      <a
-                        href={job.outputFileUrl}
-                        download={job.outputData?.fileName || undefined}
-                        className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-                      >
-                        {t("admin.tools.download")}
-                      </a>
-                    </>
-                  ) : null}
-                  <span className="rounded-[2px] bg-green-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-green-700">
-                    {job.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Detail Modal */}
+      {detailItem ? (
+        <ProofDetailModal
+          item={detailItem}
+          t={t}
+          updatingId={updatingId}
+          onClose={() => setDetailItem(null)}
+          onApprove={(it) => handleUpdateStatus(it, "approved")}
+          onReject={(it) => handleUpdateStatus(it, "rejected")}
+        />
       ) : null}
 
-      {preview ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70" onClick={() => setPreview(null)}>
-          <div className="relative max-h-[90vh] max-w-[90vw] rounded-[3px] bg-white p-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              onClick={() => setPreview(null)}
-              className="absolute -right-3 -top-3 rounded-full bg-white p-1.5 shadow-lg hover:bg-[#f5f5f5]"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            {preview.pdf ? (
-              <iframe src={preview.url} title="Proof preview" className="h-[80vh] w-[80vw] rounded-[3px]" />
-            ) : (
-              <img src={preview.url} alt="Proof preview" className="max-h-[85vh] max-w-[85vw] rounded-[3px]" />
-            )}
-          </div>
-        </div>
-      ) : null}
-
-      {/* ── Upload Order Proof Modal ──────────────────────────────────── */}
+      {/* Upload Order Proof Modal */}
       {orderProofModal ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={(e) => {
-          if (e.target === e.currentTarget) setOrderProofModal(false);
-        }}>
-          <div className="mx-4 w-full max-w-md rounded-[3px] bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-sm font-bold text-black">{t("admin.tools.proof.orderProofModalTitle")}</h3>
-            <p className="mb-4 text-xs text-[#999]">{t("admin.tools.proof.orderProofModalSub")}</p>
-
-            <div className="space-y-3">
-              <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.orderIdLabel")}</label>
-                <input
-                  type="text"
-                  value={orderProofData.orderId}
-                  onChange={(e) => setOrderProofData((prev) => ({ ...prev, orderId: e.target.value }))}
-                  placeholder={t("admin.tools.proof.orderIdPlaceholder")}
-                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.proofFileLabel")}</label>
-                <input
-                  type="file"
-                  accept="image/*,.pdf,application/pdf"
-                  onChange={(e) => setOrderProofData((prev) => ({ ...prev, file: e.target.files?.[0] || null }))}
-                  className="block w-full text-sm text-[#666] file:mr-3 file:rounded-[3px] file:border-0 file:bg-black file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white"
-                />
-                {orderProofData.file ? (
-                  <p className="mt-1 text-[10px] text-[#999]">{orderProofData.file.name}</p>
-                ) : null}
-              </div>
-              <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.notesLabel")}</label>
-                <textarea
-                  rows={2}
-                  value={orderProofData.notes}
-                  onChange={(e) => setOrderProofData((prev) => ({ ...prev, notes: e.target.value }))}
-                  placeholder={t("admin.tools.proof.notesPlaceholder")}
-                  className="w-full resize-none rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-                />
-              </div>
-            </div>
-
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={handleOrderProofSave}
-                disabled={orderProofSaving || !orderProofData.file || !orderProofData.orderId.trim()}
-                className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
-              >
-                {orderProofSaving ? t("admin.tools.proof.uploading") : t("admin.tools.proof.uploadProof")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setOrderProofModal(false)}
-                className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]"
-              >
-                {t("admin.tools.cancel")}
-              </button>
-            </div>
+        <ModalOverlay onClose={() => setOrderProofModal(false)}>
+          <h3 className="mb-4 text-sm font-bold text-black">{t("admin.tools.proof.orderProofModalTitle")}</h3>
+          <p className="mb-4 text-xs text-[#999]">{t("admin.tools.proof.orderProofModalSub")}</p>
+          <div className="space-y-3">
+            <Field label={t("admin.tools.proof.orderIdLabel")} required>
+              <input type="text" value={orderProofData.orderId} onChange={(e) => setOrderProofData((prev) => ({ ...prev, orderId: e.target.value }))} placeholder={t("admin.tools.proof.orderIdPlaceholder")} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
+            </Field>
+            <Field label={t("admin.tools.proof.proofFileLabel")} required>
+              <input type="file" accept="image/*,.pdf,application/pdf" onChange={(e) => setOrderProofData((prev) => ({ ...prev, file: e.target.files?.[0] || null }))} className="block w-full text-sm text-[#666] file:mr-3 file:rounded-[3px] file:border-0 file:bg-black file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white" />
+              {orderProofData.file ? <p className="mt-1 text-[10px] text-[#999]">{orderProofData.file.name}</p> : null}
+            </Field>
+            <Field label={t("admin.tools.notesLabel")}>
+              <textarea rows={2} value={orderProofData.notes} onChange={(e) => setOrderProofData((prev) => ({ ...prev, notes: e.target.value }))} placeholder={t("admin.tools.proof.notesPlaceholder")} className="w-full resize-none rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
+            </Field>
           </div>
-        </div>
+          <div className="mt-4 flex gap-2">
+            <button type="button" onClick={handleOrderProofSave} disabled={orderProofSaving || !orderProofData.file || !orderProofData.orderId.trim()} className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50">
+              {orderProofSaving ? t("admin.tools.proof.uploading") : t("admin.tools.proof.uploadProof")}
+            </button>
+            <button type="button" onClick={() => setOrderProofModal(false)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]">{t("admin.tools.cancel")}</button>
+          </div>
+        </ModalOverlay>
       ) : null}
 
+      {/* Standalone Proof Modal */}
       {standaloneModal ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={(e) => {
-          if (e.target === e.currentTarget) setStandaloneModal(false);
-        }}>
-          <div className="mx-4 w-full max-w-md rounded-[3px] bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-sm font-bold text-black">{t("admin.tools.proof.standaloneModalTitle")}</h3>
-            <p className="mb-4 text-xs text-[#999]">{t("admin.tools.proof.standaloneModalSub")}</p>
+        <ModalOverlay onClose={() => setStandaloneModal(false)}>
+          <h3 className="mb-4 text-sm font-bold text-black">{t("admin.tools.proof.standaloneModalTitle")}</h3>
+          <p className="mb-4 text-xs text-[#999]">{t("admin.tools.proof.standaloneModalSub")}</p>
+          <div className="space-y-3">
+            <Field label={t("admin.tools.proof.customerName")}>
+              <input type="text" value={standaloneData.customerName} onChange={(e) => setStandaloneData((prev) => ({ ...prev, customerName: e.target.value }))} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
+            </Field>
+            <Field label={t("admin.tools.proof.customerEmail")}>
+              <input type="email" value={standaloneData.customerEmail} onChange={(e) => setStandaloneData((prev) => ({ ...prev, customerEmail: e.target.value }))} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
+            </Field>
+            <Field label={t("admin.tools.proof.description")}>
+              <input type="text" value={standaloneData.description} onChange={(e) => setStandaloneData((prev) => ({ ...prev, description: e.target.value }))} placeholder={t("admin.tools.proof.descPlaceholder")} className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
+            </Field>
+            <Field label={t("admin.tools.proof.proofFileLabel")} required>
+              <input type="file" accept="image/*,.pdf,application/pdf" onChange={(e) => setStandaloneData((prev) => ({ ...prev, file: e.target.files?.[0] || null }))} className="block w-full text-sm text-[#666] file:mr-3 file:rounded-[3px] file:border-0 file:bg-black file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white" />
+              {standaloneData.file ? <p className="mt-1 text-[10px] text-[#999]">{standaloneData.file.name}</p> : null}
+            </Field>
+            <Field label={t("admin.tools.notesLabel")}>
+              <textarea rows={2} value={standaloneData.notes} onChange={(e) => setStandaloneData((prev) => ({ ...prev, notes: e.target.value }))} className="w-full resize-none rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black" />
+            </Field>
+          </div>
+          <div className="mt-4 flex gap-2">
+            <button type="button" onClick={handleStandaloneSave} disabled={standaloneSaving || !standaloneData.file} className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50">
+              {standaloneSaving ? t("admin.tools.saving") : t("admin.tools.proof.createRecord")}
+            </button>
+            <button type="button" onClick={() => setStandaloneModal(false)} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]">{t("admin.tools.cancel")}</button>
+          </div>
+        </ModalOverlay>
+      ) : null}
+    </div>
+  );
+}
 
-            <div className="space-y-3">
-              <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.customerName")}</label>
-                <input
-                  type="text"
-                  value={standaloneData.customerName}
-                  onChange={(e) => setStandaloneData((prev) => ({ ...prev, customerName: e.target.value }))}
-                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.customerEmail")}</label>
-                <input
-                  type="email"
-                  value={standaloneData.customerEmail}
-                  onChange={(e) => setStandaloneData((prev) => ({ ...prev, customerEmail: e.target.value }))}
-                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.description")}</label>
-                <input
-                  type="text"
-                  value={standaloneData.description}
-                  onChange={(e) => setStandaloneData((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder={t("admin.tools.proof.descPlaceholder")}
-                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.proofFileLabel")}</label>
-                <input
-                  type="file"
-                  accept="image/*,.pdf,application/pdf"
-                  onChange={(e) => setStandaloneData((prev) => ({ ...prev, file: e.target.files?.[0] || null }))}
-                  className="block w-full text-sm text-[#666] file:mr-3 file:rounded-[3px] file:border-0 file:bg-black file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white"
-                />
-                {standaloneData.file ? (
-                  <p className="mt-1 text-[10px] text-[#999]">{standaloneData.file.name}</p>
-                ) : null}
-              </div>
-              <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.notesLabel")}</label>
-                <textarea
-                  rows={2}
-                  value={standaloneData.notes}
-                  onChange={(e) => setStandaloneData((prev) => ({ ...prev, notes: e.target.value }))}
-                  className="w-full resize-none rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-                />
-              </div>
+// ─── Proof Row ────────────────────────────────────────────────────────────────
+
+function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
+  const isActionable = item.source === "order" && (item.status === "pending" || item.status === "revised");
+  const colors = STATUS_COLORS[item.status] || "bg-gray-100 text-gray-700";
+  const customerLabel = item.customerName || item.customerEmail || "—";
+
+  return (
+    <div className={`flex flex-col gap-3 rounded-[3px] border bg-white p-3 sm:flex-row sm:items-center ${isActionable ? "border-yellow-300" : "border-[#e0e0e0]"}`}>
+      {/* Thumbnail — click opens detail */}
+      <button type="button" onClick={() => onDetail(item)} className="h-14 w-14 shrink-0 overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] transition-opacity hover:opacity-80">
+        {item.imageUrl ? (
+          <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-[10px] text-[#ccc]">—</div>
+        )}
+      </button>
+
+      {/* Info */}
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          {item.source === "order" ? (
+            <span className="text-sm font-semibold text-[#111]">{t("admin.tools.proof.proofVersion").replace("{version}", item.version)}</span>
+          ) : (
+            <span className="text-sm font-semibold text-[#111]">{t("admin.tools.proof.standaloneLabel")}</span>
+          )}
+          <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${colors}`}>{item.status}</span>
+          {item.source === "order" && (
+            <span className="text-[10px] text-[#999]">#{item.orderId?.slice(-8)}</span>
+          )}
+        </div>
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-[#999]">
+          <span>{customerLabel}</span>
+          <span>·</span>
+          <span>{timeAgo(item.createdAt)}</span>
+          {item.uploadedBy ? <><span>·</span><span>{item.uploadedBy}</span></> : null}
+          {item.description ? <><span>·</span><span className="truncate max-w-[200px]">{item.description}</span></> : null}
+        </div>
+        {item.customerComment ? <p className="mt-1 truncate text-xs italic text-[#555]">&ldquo;{item.customerComment}&rdquo;</p> : null}
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+        {isActionable && (
+          <>
+            <button type="button" onClick={() => onApprove(item)} disabled={updatingId === item.id} className="rounded-[3px] bg-green-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-green-700 disabled:opacity-50">
+              {t("admin.tools.proof.approve")}
+            </button>
+            <button type="button" onClick={() => onReject(item)} disabled={updatingId === item.id} className="rounded-[3px] bg-red-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+              {t("admin.tools.proof.reject")}
+            </button>
+          </>
+        )}
+        <button type="button" onClick={() => onDetail(item)} className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-[11px] font-medium text-[#666] hover:border-black hover:text-black">
+          {t("admin.tools.proof.openProof")}
+        </button>
+        {item.orderId && (
+          <Link href={`/admin/orders/${item.orderId}`} className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-[11px] font-medium text-[#666] hover:border-black hover:text-black">
+            {t("admin.tools.viewOrder")}
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Proof Detail Modal ───────────────────────────────────────────────────────
+
+function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject }) {
+  const isActionable = item.source === "order" && (item.status === "pending" || item.status === "revised");
+  const colors = STATUS_COLORS[item.status] || "bg-gray-100 text-gray-700";
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div className="mx-4 flex w-full max-w-3xl flex-col rounded-[3px] bg-white shadow-xl" style={{ maxHeight: "90vh" }} onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[#e0e0e0] px-5 py-4">
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-bold text-black">{t("admin.tools.proof.detailTitle")}</h3>
+            <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${colors}`}>{item.status}</span>
+          </div>
+          <button type="button" onClick={onClose} className="text-[#999] hover:text-black">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-5">
+          <div className="grid gap-5 lg:grid-cols-[1fr,280px]">
+            {/* Preview */}
+            <div className="min-h-[200px] rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-2">
+              {item.pdf ? (
+                <iframe src={item.imageUrl} title="Proof" className="h-[60vh] w-full rounded-[3px]" />
+              ) : item.imageUrl ? (
+                <img src={item.imageUrl} alt="Proof" className="mx-auto max-h-[60vh] rounded-[3px] object-contain" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-[#999]">—</div>
+              )}
             </div>
 
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={handleStandaloneSave}
-                disabled={standaloneSaving || !standaloneData.file}
-                className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
-              >
-                {standaloneSaving ? t("admin.tools.saving") : t("admin.tools.proof.createRecord")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setStandaloneModal(false)}
-                className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]"
-              >
-                {t("admin.tools.cancel")}
-              </button>
+            {/* Sidebar */}
+            <div className="space-y-4">
+              {/* Actions */}
+              {isActionable && (
+                <div className="space-y-2">
+                  <button type="button" onClick={() => onApprove(item)} disabled={updatingId === item.id} className="w-full rounded-[3px] bg-green-600 py-2.5 text-xs font-bold text-white hover:bg-green-700 disabled:opacity-50">
+                    {t("admin.tools.proof.approve")}
+                  </button>
+                  <button type="button" onClick={() => onReject(item)} disabled={updatingId === item.id} className="w-full rounded-[3px] bg-red-600 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50">
+                    {t("admin.tools.proof.reject")}
+                  </button>
+                </div>
+              )}
+
+              {/* Metadata */}
+              <div className="space-y-3 text-sm">
+                <MetaRow label={t("admin.tools.proof.sourceLabel")} value={item.source === "order" ? `Order #${item.orderId?.slice(-8) || "—"}` : t("admin.tools.proof.standaloneLabel")} />
+                {item.version != null && <MetaRow label={t("admin.tools.proof.versionLabel")} value={`v${item.version}`} />}
+                <MetaRow label={t("admin.tools.proof.customerLabel")} value={item.customerName || item.customerEmail || "—"} />
+                {item.customerEmail && item.customerName && <MetaRow label={t("admin.tools.proof.customerEmail")} value={item.customerEmail} />}
+                <MetaRow label={t("admin.tools.proof.uploadedByLabel")} value={item.uploadedBy || "—"} />
+                <MetaRow label={t("admin.tools.contour.created")} value={item.createdAt ? new Date(item.createdAt).toLocaleString() : "—"} />
+                {item.notes && <MetaRow label={t("admin.tools.notesLabel")} value={item.notes} />}
+                {item.description && <MetaRow label={t("admin.tools.proof.description")} value={item.description} />}
+              </div>
+
+              {/* Customer comment */}
+              {item.customerComment && (
+                <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
+                  <p className="text-[11px] font-medium text-[#666]">{t("admin.tools.proof.customerFeedback")}</p>
+                  <p className="mt-1 text-sm italic text-[#333]">&ldquo;{item.customerComment}&rdquo;</p>
+                </div>
+              )}
+
+              {/* Links */}
+              <div className="flex flex-col gap-2">
+                {item.imageUrl && (
+                  <a href={item.imageUrl} download={item.fileName || undefined} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-center text-xs font-medium text-[#666] hover:border-black hover:text-black">
+                    {t("admin.tools.download")}
+                  </a>
+                )}
+                {item.orderId && (
+                  <Link href={`/admin/orders/${item.orderId}`} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-center text-xs font-medium text-[#666] hover:border-black hover:text-black">
+                    {t("admin.tools.viewOrder")}
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      ) : null}
+      </div>
+    </div>
+  );
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function MetaRow({ label, value }) {
+  return (
+    <div>
+      <p className="text-[11px] font-medium text-[#666]">{label}</p>
+      <p className="text-[#111]">{value}</p>
+    </div>
+  );
+}
+
+function Field({ label, required, children }) {
+  return (
+    <div>
+      <label className="mb-1 block text-[11px] font-medium text-[#666]">{label}{required ? " *" : ""}</label>
+      {children}
+    </div>
+  );
+}
+
+function ModalOverlay({ onClose, children }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="mx-4 w-full max-w-md rounded-[3px] bg-white p-6 shadow-xl">
+        {children}
+      </div>
     </div>
   );
 }

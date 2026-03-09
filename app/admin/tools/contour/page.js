@@ -13,6 +13,17 @@ function formatJobTime(dateString) {
   })}`;
 }
 
+function timeAgo(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
 async function blobFromUrl(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch generated file");
@@ -203,7 +214,7 @@ export default function ContourToolPage() {
         throw new Error(err?.error || "Failed to save contour record");
       }
 
-      setSaveMsg("Saved to records");
+      setSaveMsg(t("admin.tools.savedMsg"));
       fetchJobs();
       setTimeout(() => setSaveMsg(""), 3000);
     } catch (err) {
@@ -406,6 +417,7 @@ export default function ContourToolPage() {
         </>
       ) : null}
 
+      {/* ── Recent Jobs ──────────────────────────────────────────────── */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="border-b border-[#e0e0e0] px-5 py-3">
           <h2 className="text-sm font-bold text-black">{t("admin.tools.contour.recentTitle")}</h2>
@@ -418,92 +430,21 @@ export default function ContourToolPage() {
         ) : (
           <div className="divide-y divide-[#e0e0e0]">
             {jobs.map((job) => (
-              <div key={job.id} className="flex flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-black">
-                    {job.inputData?.fileName || "artwork"} {job.operatorName ? `· ${job.operatorName}` : ""}
-                  </p>
-                  <p className="text-xs text-[#999]">
-                    {formatJobTime(job.createdAt)}
-                    {job.inputData?.bleedMm != null ? <span> · Bleed: {job.inputData.bleedMm}mm</span> : null}
-                    {job.orderId ? <span> · Order: {job.orderId.slice(0, 8)}...</span> : null}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                  {job.inputFileUrl ? (
-                    <a
-                      href={job.inputFileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-                    >
-                      {t("admin.tools.contour.inputBtn")}
-                    </a>
-                  ) : null}
-                  {job.outputData?.processedFileUrl ? (
-                    <button
-                      type="button"
-                      onClick={() => setPreviewUrl(job.outputData.processedFileUrl)}
-                      className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-                    >
-                      {t("admin.tools.preview")}
-                    </button>
-                  ) : null}
-                  {job.outputData?.svgFileUrl ? (
-                    <a
-                      href={job.outputData.svgFileUrl}
-                      download
-                      className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-                    >
-                      {t("admin.tools.contour.svgBtn")}
-                    </a>
-                  ) : null}
-                  {job.outputData?.processedFileUrl ? (
-                    <a
-                      href={job.outputData.processedFileUrl}
-                      download
-                      className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-                    >
-                      {t("admin.tools.contour.pngBtn")}
-                    </a>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => setDetailJob(job)}
-                    className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-                  >
-                    {t("admin.tools.contour.detail")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleReopen(job)}
-                    disabled={reopening}
-                    className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black disabled:opacity-50"
-                  >
-                    {t("admin.tools.reopen")}
-                  </button>
-                  {job.orderId ? (
-                    <Link
-                      href={`/admin/orders/${job.orderId}`}
-                      className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-                    >
-                      {t("admin.tools.viewOrder")}
-                    </Link>
-                  ) : null}
-                  <span
-                    className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                      job.status === "completed" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {job.status}
-                  </span>
-                </div>
-              </div>
+              <ContourJobRow
+                key={job.id}
+                job={job}
+                t={t}
+                onPreview={setPreviewUrl}
+                onDetail={setDetailJob}
+                onReopen={handleReopen}
+                reopening={reopening}
+              />
             ))}
           </div>
         )}
       </div>
 
+      {/* ── Preview Lightbox ─────────────────────────────────────── */}
       {previewUrl ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70" onClick={() => setPreviewUrl(null)}>
           <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
@@ -521,104 +462,201 @@ export default function ContourToolPage() {
         </div>
       ) : null}
 
-      {/* ── Detail Modal ─────────────────────────────────────────────────── */}
+      {/* ── Detail Modal ─────────────────────────────────────────── */}
       {detailJob ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={() => setDetailJob(null)}>
-          <div
-            className="mx-4 w-full max-w-2xl rounded-[3px] bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+        <ContourDetailModal
+          job={detailJob}
+          t={t}
+          onClose={() => setDetailJob(null)}
+          onReopen={handleReopen}
+          reopening={reopening}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+// ─── Contour Job Row ──────────────────────────────────────────────────────────
+
+function ContourJobRow({ job, t, onPreview, onDetail, onReopen, reopening }) {
+  const data = job.inputData || {};
+  const output = job.outputData || {};
+  const thumbUrl = output.processedFileUrl || job.inputFileUrl;
+  const dims = data.imageWidth && data.imageHeight ? `${data.imageWidth}×${data.imageHeight}px` : null;
+
+  return (
+    <div className="flex flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Thumbnail */}
+      <button type="button" onClick={() => onDetail(job)} className="h-12 w-12 shrink-0 overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] transition-opacity hover:opacity-80">
+        {thumbUrl ? (
+          <img src={thumbUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-[10px] text-[#ccc]">—</div>
+        )}
+      </button>
+
+      {/* Info */}
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold text-black truncate">{data.fileName || "artwork"}</span>
+          {data.bleedMm != null && (
+            <span className="rounded-[2px] bg-[#f0f0f0] px-1.5 py-0.5 text-[10px] font-medium text-[#666]">{data.bleedMm}mm bleed</span>
+          )}
+          {dims && (
+            <span className="rounded-[2px] bg-[#f0f0f0] px-1.5 py-0.5 text-[10px] font-medium text-[#666]">{dims}</span>
+          )}
+          {output.bgRemoved && (
+            <span className="rounded-[2px] bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-700">BG removed</span>
+          )}
+          <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+            job.status === "completed" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+          }`}>
+            {job.status}
+          </span>
+        </div>
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-[#999]">
+          <span>{timeAgo(job.createdAt)}</span>
+          {job.operatorName && <><span>·</span><span>{job.operatorName}</span></>}
+          {job.orderId && <><span>·</span><span>Order: #{job.orderId.slice(0, 8)}</span></>}
+        </div>
+        {job.notes && <p className="mt-0.5 truncate text-xs text-[#777]">{job.notes}</p>}
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+        {output.processedFileUrl && (
+          <button
+            type="button"
+            onClick={() => onPreview(output.processedFileUrl)}
+            className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
           >
-            <div className="flex items-center justify-between border-b border-[#e0e0e0] px-5 py-4">
-              <h3 className="text-sm font-bold text-black">{t("admin.tools.contour.detailTitle")}</h3>
-              <button type="button" onClick={() => setDetailJob(null)} className="text-[#999] hover:text-black">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            {t("admin.tools.preview")}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onDetail(job)}
+          className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
+        >
+          {t("admin.tools.contour.detail")}
+        </button>
+        <button
+          type="button"
+          onClick={() => onReopen(job)}
+          disabled={reopening}
+          className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black disabled:opacity-50"
+        >
+          {t("admin.tools.reopen")}
+        </button>
+        {job.orderId && (
+          <Link
+            href={`/admin/orders/${job.orderId}`}
+            className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
+          >
+            {t("admin.tools.viewOrder")}
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Contour Detail Modal ─────────────────────────────────────────────────────
+
+function ContourDetailModal({ job, t, onClose, onReopen, reopening }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div
+        className="mx-4 w-full max-w-2xl rounded-[3px] bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-[#e0e0e0] px-5 py-4">
+          <h3 className="text-sm font-bold text-black">{t("admin.tools.contour.detailTitle")}</h3>
+          <button type="button" onClick={onClose} className="text-[#999] hover:text-black">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="max-h-[70vh] overflow-y-auto p-5 space-y-4">
+          {/* Images side by side */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            {job.inputFileUrl ? (
+              <div>
+                <p className="mb-1 text-[11px] font-medium text-[#666]">{t("admin.tools.contour.sourceImage")}</p>
+                <img src={job.inputFileUrl} alt="Source" className="w-full rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] object-contain" style={{ maxHeight: 240 }} />
+              </div>
+            ) : null}
+            {job.outputData?.processedFileUrl ? (
+              <div>
+                <p className="mb-1 text-[11px] font-medium text-[#666]">{t("admin.tools.contour.processedOutput")}</p>
+                <img src={job.outputData.processedFileUrl} alt="Processed" className="w-full rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] object-contain" style={{ maxHeight: 240 }} />
+              </div>
+            ) : null}
+          </div>
+          {/* Metadata */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <MetaCell label={t("admin.tools.contour.fileName")} value={job.inputData?.fileName || "—"} />
+            <MetaCell label={t("admin.tools.contour.bleedLine")} value={`${job.inputData?.bleedMm ?? "—"}mm`} />
+            <MetaCell label={t("admin.tools.contour.imageSize")} value={`${job.inputData?.imageWidth || "—"} × ${job.inputData?.imageHeight || "—"}px`} />
+            <MetaCell label={t("admin.tools.contour.operator")} value={job.operatorName || "—"} />
+            <MetaCell label={t("admin.tools.contour.created")} value={formatJobTime(job.createdAt)} />
+            {job.outputData?.bgRemoved && (
+              <MetaCell label={t("admin.tools.contour.bgRemoved")} value="Yes" />
+            )}
+            {job.orderId ? (
+              <MetaCell label={t("admin.tools.contour.order")} value={
+                <Link href={`/admin/orders/${job.orderId}`} className="text-[#4f46e5] hover:underline">
+                  #{job.orderId.slice(-8)}
+                </Link>
+              } />
+            ) : null}
+          </div>
+          {job.notes ? (
+            <div>
+              <p className="text-[11px] font-medium text-[#666]">{t("admin.tools.notesLabel")}</p>
+              <p className="text-sm text-[#111]">{job.notes}</p>
             </div>
-            <div className="max-h-[70vh] overflow-y-auto p-5 space-y-4">
-              {/* Images side by side */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                {detailJob.inputFileUrl ? (
-                  <div>
-                    <p className="mb-1 text-[11px] font-medium text-[#666]">{t("admin.tools.contour.sourceImage")}</p>
-                    <img src={detailJob.inputFileUrl} alt="Source" className="w-full rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] object-contain" style={{ maxHeight: 240 }} />
-                  </div>
-                ) : null}
-                {detailJob.outputData?.processedFileUrl ? (
-                  <div>
-                    <p className="mb-1 text-[11px] font-medium text-[#666]">{t("admin.tools.contour.processedOutput")}</p>
-                    <img src={detailJob.outputData.processedFileUrl} alt="Processed" className="w-full rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] object-contain" style={{ maxHeight: 240 }} />
-                  </div>
-                ) : null}
-              </div>
-              {/* Metadata */}
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-[11px] font-medium text-[#666]">{t("admin.tools.contour.fileName")}</p>
-                  <p className="text-[#111]">{detailJob.inputData?.fileName || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-medium text-[#666]">{t("admin.tools.contour.bleedLine")}</p>
-                  <p className="text-[#111]">{detailJob.inputData?.bleedMm ?? "—"}mm</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-medium text-[#666]">{t("admin.tools.contour.imageSize")}</p>
-                  <p className="text-[#111]">{detailJob.inputData?.imageWidth || "—"} x {detailJob.inputData?.imageHeight || "—"}px</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-medium text-[#666]">{t("admin.tools.contour.operator")}</p>
-                  <p className="text-[#111]">{detailJob.operatorName || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-medium text-[#666]">{t("admin.tools.contour.created")}</p>
-                  <p className="text-[#111]">{formatJobTime(detailJob.createdAt)}</p>
-                </div>
-                {detailJob.orderId ? (
-                  <div>
-                    <p className="text-[11px] font-medium text-[#666]">{t("admin.tools.contour.order")}</p>
-                    <Link href={`/admin/orders/${detailJob.orderId}`} className="text-[#4f46e5] hover:underline">
-                      #{detailJob.orderId.slice(-8)}
-                    </Link>
-                  </div>
-                ) : null}
-              </div>
-              {detailJob.notes ? (
-                <div>
-                  <p className="text-[11px] font-medium text-[#666]">{t("admin.tools.notesLabel")}</p>
-                  <p className="text-sm text-[#111]">{detailJob.notes}</p>
-                </div>
-              ) : null}
-              {/* Actions */}
-              <div className="flex flex-wrap gap-2 border-t border-[#e0e0e0] pt-4">
-                <button
-                  type="button"
-                  onClick={() => handleReopen(detailJob)}
-                  disabled={reopening}
-                  className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
-                >
-                  {reopening ? t("admin.tools.contour.loadingReopen") : t("admin.tools.contour.reopenEdit")}
-                </button>
-                {detailJob.outputData?.svgFileUrl ? (
-                  <a href={detailJob.outputData.svgFileUrl} download className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black">
-                    {t("admin.tools.downloadSvg")}
-                  </a>
-                ) : null}
-                {detailJob.outputData?.processedFileUrl ? (
-                  <a href={detailJob.outputData.processedFileUrl} download className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black">
-                    {t("admin.tools.downloadPng")}
-                  </a>
-                ) : null}
-                {detailJob.inputFileUrl ? (
-                  <a href={detailJob.inputFileUrl} download className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black">
-                    {t("admin.tools.contour.downloadSource")}
-                  </a>
-                ) : null}
-              </div>
-            </div>
+          ) : null}
+          {/* Actions */}
+          <div className="flex flex-wrap gap-2 border-t border-[#e0e0e0] pt-4">
+            <button
+              type="button"
+              onClick={() => onReopen(job)}
+              disabled={reopening}
+              className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+            >
+              {reopening ? t("admin.tools.contour.loadingReopen") : t("admin.tools.contour.reopenEdit")}
+            </button>
+            {job.outputData?.svgFileUrl ? (
+              <a href={job.outputData.svgFileUrl} download className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black">
+                {t("admin.tools.downloadSvg")}
+              </a>
+            ) : null}
+            {job.outputData?.processedFileUrl ? (
+              <a href={job.outputData.processedFileUrl} download className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black">
+                {t("admin.tools.downloadPng")}
+              </a>
+            ) : null}
+            {job.inputFileUrl ? (
+              <a href={job.inputFileUrl} download className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black">
+                {t("admin.tools.contour.downloadSource")}
+              </a>
+            ) : null}
           </div>
         </div>
-      ) : null}
+      </div>
+    </div>
+  );
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function MetaCell({ label, value }) {
+  return (
+    <div>
+      <p className="text-[11px] font-medium text-[#666]">{label}</p>
+      <p className="text-[#111]">{value}</p>
     </div>
   );
 }

@@ -133,6 +133,16 @@ function fmtMoney(cents) {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
+// ─── Context-aware action label for needs-attention orders ───────────────────
+
+function orderActionLabel(order, t) {
+  if (order.status === "pending") return t("admin.workstation.actionReview");
+  if (order.paymentStatus === "unpaid") return t("admin.workstation.actionCheckPayment");
+  if (order.productionStatus === "preflight") return t("admin.workstation.actionPreflight");
+  if (order.status === "paid" && order.productionStatus === "not_started") return t("admin.workstation.actionStartProd");
+  return t("admin.workstation.actionOpen");
+}
+
 // ─── Quick Action Button ─────────────────────────────────────────────────────
 
 function QuickAction({ href, icon, label, sub }) {
@@ -164,6 +174,7 @@ const I = {
   production: <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 0 3.75-1.5M17.25 7.5l3.75 1.5" /></svg>,
   refresh: <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg>,
   download: <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>,
+  arrowRight: <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -248,12 +259,11 @@ export default function WorkstationPage() {
         ) : (
           <div className="space-y-2">
             {needsAttention.map((o) => (
-              <Link
+              <div
                 key={o.id}
-                href={`/admin/orders/${o.id}`}
                 className="flex flex-col gap-2 rounded-[3px] border border-[#ececec] p-3 transition-colors hover:border-[#ccc] hover:bg-[#fafafa] sm:flex-row sm:items-center sm:justify-between"
               >
-                <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <Link href={`/admin/orders/${o.id}`} className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
                   <PriorityBadge priority={o.priority} />
                   <StatusBadge status={o.status} />
                   {o.productionStatus && o.productionStatus !== "not_started" && (
@@ -266,13 +276,20 @@ export default function WorkstationPage() {
                   <span className="hidden text-xs text-[#666] truncate sm:inline">
                     {o.customerName || o.customerEmail}
                   </span>
+                </Link>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-[#999]">{o._count?.items || 0} item{(o._count?.items || 0) !== 1 ? "s" : ""}</span>
+                  <span className="text-xs font-medium text-[#111]">{fmtMoney(o.totalAmount)}</span>
+                  <span className="text-xs text-[#999]">{timeAgo(o.createdAt)}</span>
+                  <Link
+                    href={`/admin/orders/${o.id}`}
+                    className="ml-1 inline-flex items-center gap-1 rounded-[3px] bg-black px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#222]"
+                  >
+                    {orderActionLabel(o, t)}
+                    {I.arrowRight}
+                  </Link>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-[#999] shrink-0">
-                  <span>{o._count?.items || 0} item{(o._count?.items || 0) !== 1 ? "s" : ""}</span>
-                  <span className="font-medium text-[#111]">{fmtMoney(o.totalAmount)}</span>
-                  <span>{timeAgo(o.createdAt)}</span>
-                </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}
@@ -292,9 +309,8 @@ export default function WorkstationPage() {
           ) : (
             <div className="space-y-2">
               {pendingProofs.map((p) => (
-                <Link
+                <div
                   key={p.id}
-                  href={`/admin/orders/${p.orderId}`}
                   className="flex items-center justify-between rounded-[3px] border border-[#ececec] p-3 transition-colors hover:border-[#ccc] hover:bg-[#fafafa]"
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -304,11 +320,18 @@ export default function WorkstationPage() {
                       <p className="text-[11px] text-[#999] truncate">{p.order?.customerName || p.order?.customerEmail || "—"}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-[#999] shrink-0">
-                    <span>v{p.version}</span>
-                    <span>{timeAgo(p.createdAt)}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-[#999]">v{p.version}</span>
+                    <span className="text-xs text-[#999]">{timeAgo(p.createdAt)}</span>
+                    <Link
+                      href="/admin/tools/proof"
+                      className="inline-flex items-center gap-1 rounded-[3px] bg-black px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#222]"
+                    >
+                      {t("admin.workstation.openProof")}
+                      {I.arrowRight}
+                    </Link>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}
@@ -327,26 +350,35 @@ export default function WorkstationPage() {
             <div className="space-y-2">
               {recentJobs.map((j) => {
                 const toolHrefs = { contour: "/admin/tools/contour", "stamp-studio": "/admin/tools/stamp-studio", proof: "/admin/tools/proof" };
-                const href = j.orderId ? `/admin/orders/${j.orderId}` : toolHrefs[j.toolType] || "/admin/tools";
+                const toolHref = toolHrefs[j.toolType] || "/admin/tools";
                 return (
                   <div key={j.id} className="flex items-center justify-between rounded-[3px] border border-[#ececec] p-3">
-                    <Link href={href} className="flex items-center gap-3 min-w-0 flex-1 transition-colors hover:text-[#4f46e5]">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <span className="inline-block rounded-full bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-semibold uppercase text-[#666]">{j.toolType}</span>
                       <span className="text-sm text-[#111] truncate">{j.operatorName || "—"}</span>
                       <StatusBadge status={j.status} />
                       <span className="text-xs text-[#999]">{timeAgo(j.createdAt)}</span>
-                    </Link>
-                    {j.outputFileUrl && (
-                      <a
-                        href={j.outputFileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-[3px] text-[#999] transition-colors hover:bg-[#f0f0f0] hover:text-[#111]"
-                        title="Download"
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {j.outputFileUrl && (
+                        <a
+                          href={j.outputFileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex h-7 w-7 items-center justify-center rounded-[3px] text-[#999] transition-colors hover:bg-[#f0f0f0] hover:text-[#111]"
+                          title="Download"
+                        >
+                          {I.download}
+                        </a>
+                      )}
+                      <Link
+                        href={j.orderId ? `/admin/orders/${j.orderId}` : toolHref}
+                        className="inline-flex items-center gap-1 rounded-[3px] border border-[#e0e0e0] px-2.5 py-1 text-[10px] font-semibold text-[#666] hover:border-black hover:text-black"
                       >
-                        {I.download}
-                      </a>
-                    )}
+                        {j.orderId ? t("admin.workstation.openOrder") : t("admin.workstation.openTool")}
+                        {I.arrowRight}
+                      </Link>
+                    </div>
                   </div>
                 );
               })}
