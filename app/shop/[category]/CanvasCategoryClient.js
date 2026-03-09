@@ -15,6 +15,26 @@ const formatCad = (cents) =>
     cents / 100
   );
 
+/* ── Compare cues (i18n keys) ── */
+const CUES = {
+  "canvas-standard": ["cue.galleryWrap"],
+  "canvas-split-2": ["cue.statement"],
+  "canvas-split-3": ["cue.statement"],
+  "canvas-split-5": ["cue.statement"],
+  "canvas-panoramic": ["cue.wideFormat"],
+  "canvas-custom-oversize": ["cue.customSize"],
+};
+
+/* ── Taglines (i18n keys) ── */
+const TAGLINE_KEYS = {
+  "canvas-standard": "cc.tagline.standard",
+  "canvas-split-2": "cc.tagline.split2",
+  "canvas-split-3": "cc.tagline.split3",
+  "canvas-split-5": "cc.tagline.split5",
+  "canvas-panoramic": "cc.tagline.panoramic",
+  "canvas-custom-oversize": "cc.tagline.oversize",
+};
+
 /* ── Item slug → i18n key map ── */
 const ITEM_I18N = {
   "canvas-standard": "cc.item.standard",
@@ -126,7 +146,6 @@ function PriceTag({ price, quoteOnly = false, t }) {
 }
 
 function CanvasCard({ item, price, variant = "standard", imageUrl, t }) {
-  const isLarge = variant === "large";
   const isWide = variant === "wide";
   const isSvg = imageUrl && isSvgImage(imageUrl);
   const name = t(ITEM_I18N[item.key] || item.key);
@@ -139,7 +158,7 @@ function CanvasCard({ item, price, variant = "standard", imageUrl, t }) {
         isWide ? "sm:col-span-2" : ""
       }`}
     >
-      <div className={`relative overflow-hidden ${imageUrl ? "bg-[var(--color-gray-100)]" : `bg-gradient-to-br ${item.gradient}`} ${isLarge ? "h-52" : isWide ? "h-40 sm:h-44" : "h-40"}`}>
+      <div className={`relative overflow-hidden ${imageUrl ? "bg-[var(--color-gray-100)]" : `bg-gradient-to-br ${item.gradient}`} aspect-[4/3]`}>
         {imageUrl ? (
           <>
             {isSvg ? (
@@ -203,9 +222,21 @@ function CanvasCard({ item, price, variant = "standard", imageUrl, t }) {
         )}
       </div>
 
-      <div className="flex flex-1 items-center justify-between gap-3 p-4">
+      <div className="flex flex-1 items-center justify-between gap-3 p-2.5 sm:p-3">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold leading-tight text-[var(--color-gray-900)] sm:text-base">{name}</h3>
+          {TAGLINE_KEYS[item.key] && (
+            <p className="mt-0.5 text-[11px] leading-tight text-gray-500 line-clamp-2">{t(TAGLINE_KEYS[item.key])}</p>
+          )}
+          {(CUES[item.key] || []).length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {CUES[item.key].map((c) => (
+                <span key={c} className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-600">
+                  {t(c)}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="mt-1">
             <PriceTag price={price} quoteOnly={item.quoteOnly} t={t} />
           </div>
@@ -227,7 +258,7 @@ function SectionGrid({ section, canvasPrices, canvasImages = {}, t }) {
 
   if (section.layout === "elegant-grid") {
     return (
-      <div className="mt-5 grid gap-4 md:grid-cols-3">
+      <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3">
         {visibleItems.map((item, idx) => (
           <CanvasCard
             key={item.key}
@@ -244,7 +275,7 @@ function SectionGrid({ section, canvasPrices, canvasImages = {}, t }) {
 
   if (section.layout === "statement-grid") {
     return (
-      <div className="mt-5 grid gap-4 md:grid-cols-3">
+      <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3">
         {visibleItems.map((item) => (
           <CanvasCard key={item.key} item={item} price={getPrice(canvasPrices, item)} variant="large" imageUrl={canvasImages[item.key]} t={t} />
         ))}
@@ -253,7 +284,7 @@ function SectionGrid({ section, canvasPrices, canvasImages = {}, t }) {
   }
 
   return (
-    <div className="mt-5 grid gap-4 md:grid-cols-3">
+    <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3">
       {visibleItems.map((item, idx) => (
         <CanvasCard
           key={item.key}
@@ -268,8 +299,14 @@ function SectionGrid({ section, canvasPrices, canvasImages = {}, t }) {
   );
 }
 
+/* ── Related categories ── */
+const CC_RELATED = [
+  { title: "Marketing & Business Print", titleZh: "营销和商务印刷", desc: "Business cards, flyers, brochures & more", descZh: "名片、传单、宣传册等", href: "/shop/marketing-business-print" },
+  { title: "Signs & Display Boards", titleZh: "标牌和展示板", desc: "Coroplast, foam board, acrylic & aluminum", descZh: "瓦楞板、泡沫板、亚克力和铝板", href: "/shop/signs-rigid-boards" },
+];
+
 export default function CanvasCategoryClient({ canvasPrices = {}, canvasImages = {} }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   return (
     <main className="bg-[linear-gradient(180deg,#f7f2eb_0%,#fbfaf7_35%,#ffffff_100%)] pb-20 pt-10 text-[var(--color-gray-900)]">
@@ -297,7 +334,39 @@ export default function CanvasCategoryClient({ canvasPrices = {}, canvasImages =
           </section>
         ))}
 
+        {SECTIONS.every((section) => section.items.every((item) => !shouldShow(canvasPrices, item))) && (
+          <p className="mt-12 text-center text-sm text-[var(--color-gray-500)]">
+            {t("shop.noProducts")}
+          </p>
+        )}
+
         <CategoryFaq category="canvas-prints" />
+
+        {/* Related categories */}
+        <section className="mt-12">
+          <h2 className="text-xl font-semibold tracking-tight">{t("cc.related")}</h2>
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
+            {CC_RELATED.map((cat) => (
+              <Link
+                key={cat.href}
+                href={cat.href}
+                className="group flex items-center gap-4 rounded-xl border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-sm transition-all hover:border-[var(--color-brand)] hover:shadow-md"
+              >
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
+                    {locale === "zh" ? cat.titleZh : cat.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-[var(--color-gray-500)] truncate">
+                    {locale === "zh" ? cat.descZh : cat.desc}
+                  </p>
+                </div>
+                <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-sm">

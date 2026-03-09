@@ -63,6 +63,7 @@ export default function MarketingPrintOrderClient({
   const [quantity, setQuantity] = useState(printType.quantities[0] ?? 100);
   const [customQty, setCustomQty] = useState(printType.quantityMode === "input" ? "1" : "");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
   const [artworkMode, setArtworkMode] = useState("upload"); // "upload" | "template"
   const [templateData, setTemplateData] = useState(null);   // { logo, fields }
 
@@ -143,6 +144,12 @@ export default function MarketingPrintOrderClient({
   }, [totalSurchargeCents]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canAddToCart = quote.quoteData && !quote.quoteLoading && effectiveQty > 0;
+  const disabledReason = !canAddToCart
+    ? quote.quoteLoading ? t?.("configurator.calculating") || "Calculating price..."
+    : quote.quoteError ? t?.("configurator.fixError") || "Fix the error above"
+    : effectiveQty <= 0 ? t?.("configurator.selectFirst") || "Select options above"
+    : null
+    : null;
 
   // --- Cart ---
   const buildCartItem = useCallback(() => {
@@ -162,15 +169,21 @@ export default function MarketingPrintOrderClient({
         width: widthIn,
         height: heightIn,
         material: paperId,
+        materialLabel: selectedPaper?.label || paperId,
         sizeLabel,
         sides,
+        doubleSided: sides === "double",
         finishing,
+        finishingLabel: FINISHING_LABELS[finishing] || finishing,
         ...(extraSizes.length > 0 ? { extraSizes: extraSizes.filter(s => s.w && s.h) } : {}),
         ...extrasForCart,
         ...(artworkMode === "template" && templateData ? { templateData } : {}),
+        fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
     };
-  }, [effectiveQty, typeId, printType, sizeLabel, quote.unitCents, widthIn, heightIn, paperId, sides, finishing, extrasState, extraSizes, artworkMode, templateData]);
+  }, [effectiveQty, typeId, printType, sizeLabel, quote.unitCents, widthIn, heightIn, paperId, selectedPaper, sides, finishing, extrasState, extraSizes, artworkMode, templateData, uploadedFile]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -250,8 +263,12 @@ export default function MarketingPrintOrderClient({
       }
     }
     lines.push({ label: "Quantity", value: effectiveQty.toLocaleString() });
+    lines.push({ label: "Artwork", value: uploadedFile
+      ? (sides === "double" ? "Uploaded (check front + back in PDF)" : "Uploaded")
+      : "Not uploaded yet"
+    });
     return lines;
-  }, [hideTypeSelector, printType, sizeLabel, selectedPaper, paperId, paperSurchargePerUnit, hasPaperStep, hasSidesStep, sides, hasFinishingStep, finishing, extrasState, effectiveQty, extraSizes]);
+  }, [hideTypeSelector, printType, sizeLabel, selectedPaper, paperId, paperSurchargePerUnit, hasPaperStep, hasSidesStep, sides, hasFinishingStep, finishing, extrasState, effectiveQty, extraSizes, uploadedFile]);
 
   // Extra pricing rows for PricingSidebar
   const extraRows = useMemo(() => {
@@ -669,6 +686,17 @@ export default function MarketingPrintOrderClient({
                       t={t}
                     />
                   )}
+                  {/* Double-sided guidance */}
+                  {sides === "double" && (
+                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                      <p className="text-sm font-semibold text-amber-800">Double-sided printing</p>
+                      <p className="mt-1 text-xs text-amber-700">
+                        Please upload a single PDF with <strong>page 1 = front</strong> and <strong>page 2 = back</strong>.
+                        If you have two separate files, combine them into one PDF before uploading.
+                        Our team will contact you if we need clarification.
+                      </p>
+                    </div>
+                  )}
                 </StepCard>
           </div>
 
@@ -727,6 +755,11 @@ export default function MarketingPrintOrderClient({
               locale={locale}
               productSlug={typeId}
               onRetryPrice={quote.retry}
+              disabledReason={disabledReason}
+              artworkMode="upload-optional"
+              hasArtwork={!!uploadedFile || artworkMode === "template"}
+              artworkIntent={artworkIntent}
+              onArtworkIntentChange={setArtworkIntent}
             />
           )}
         </div>
@@ -770,6 +803,11 @@ export default function MarketingPrintOrderClient({
         buyNowLoading={buyNowLoading}
         t={t}
         onRetryPrice={quote.retry}
+        disabledReason={disabledReason}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile || artworkMode === "template"}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
       />
     </main>
   );

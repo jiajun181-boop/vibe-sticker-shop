@@ -7,6 +7,7 @@ import { getUserFromRequest } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildInvoiceConfirmationHtml } from "@/lib/email/templates/invoice-confirmation";
 import { checkAndReserveStock } from "@/lib/inventory";
+import { HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "@/lib/order-config";
 
 const MetaSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
 
@@ -195,8 +196,8 @@ export async function POST(req: NextRequest) {
     );
 
     const subtotalAmount = pricedItems.reduce((sum, p) => sum + p.repriced.lineTotal, 0);
-    const shippingAmount = subtotalAmount >= 9900 ? 0 : 1500;
-    const taxAmount = Math.round((subtotalAmount + shippingAmount) * 0.13);
+    const shippingAmount = subtotalAmount >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+    const taxAmount = Math.round((subtotalAmount + shippingAmount) * HST_RATE);
     const totalAmount = subtotalAmount + shippingAmount + taxAmount;
 
     // Atomic stock check + reservation (prevents overselling)

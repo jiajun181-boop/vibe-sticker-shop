@@ -1,17 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useCartStore } from "@/lib/store";
-import { showErrorToast, showSuccessToast } from "@/components/Toast";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { UploadButton } from "@/utils/uploadthing";
-import Breadcrumbs from "@/components/Breadcrumbs";
-import ImageGallery from "@/components/product/ImageGallery";
+import { DECAL_UI_TYPES, DECAL_SLUG_MAP } from "@/lib/vehicle-order-config";
+import {
+  ConfigHero,
+  ConfigProductGallery,
+  PricingSidebar,
+  MobileBottomBar,
+  ArtworkUpload,
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useConfiguratorPrice,
+  useConfiguratorCart,
+  useStepScroll,
+} from "@/components/configurator";
+import QuantityScroller from "@/components/configurator/QuantityScroller";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
-import { DECAL_UI_TYPES, DECAL_SLUG_MAP } from "@/lib/vehicle-order-config";
-
-const DEBOUNCE_MS = 300;
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -45,57 +53,23 @@ const DEFAULT_SIZE_IDX = {
 };
 
 const MATERIALS = [
-  { id: "vinyl", surcharge: 0 },
-  { id: "reflective", surcharge: 300 },
+  { id: "vinyl", label: "Outdoor Vinyl", surcharge: 0 },
+  { id: "reflective", label: "Reflective Vinyl", surcharge: 300 },
 ];
 
 const COLORS = [
-  { id: "white", surcharge: 0 },
-  { id: "black", surcharge: 0 },
-  { id: "gold", surcharge: 200 },
-  { id: "silver", surcharge: 200 },
+  { id: "white", label: "White", surcharge: 0 },
+  { id: "black", label: "Black", surcharge: 0 },
+  { id: "gold", label: "Gold", surcharge: 200 },
+  { id: "silver", label: "Silver", surcharge: 200 },
 ];
 
 const QUANTITIES = [1, 2, 5, 10, 25];
 
-// ─── Icons ───
-
-function TypeIcon({ type, className = "h-7 w-7" }) {
-  const common = { className, strokeWidth: 1.5, fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" };
-  switch (type) {
-    case "company-lettering":
-      return (
-        <svg {...common}>
-          <rect x="2" y="7" width="20" height="10" rx="1.5" />
-          <path strokeLinecap="round" d="M6 12h4M14 12h4" opacity="0.5" />
-          <path strokeLinecap="round" d="M10 10v4M14 10v4" opacity="0.3" />
-        </svg>
-      );
-    case "dot-mc":
-      return (
-        <svg {...common}>
-          <rect x="2" y="4" width="20" height="7" rx="1" />
-          <rect x="2" y="13" width="20" height="7" rx="1" />
-          <path strokeLinecap="round" d="M6 7.5h12M6 16.5h12" opacity="0.4" />
-        </svg>
-      );
-    case "unit-numbers":
-      return (
-        <svg {...common}>
-          <rect x="3" y="8" width="18" height="8" rx="1" />
-          <path strokeLinecap="round" d="M7 12h2M11 12h2M15 12h2" opacity="0.5" />
-        </svg>
-      );
-    default:
-      return null;
-  }
-}
-
 // ─── Main Component ───
 
 export default function VehicleDecalOrderClient({ productImages = [] }) {
-  const { t } = useTranslation();
-  const { addItem, openCart } = useCartStore();
+  const { t, locale } = useTranslation();
 
   const [typeId, setTypeId] = useState("company-lettering");
   const [sizeIdx, setSizeIdx] = useState(DEFAULT_SIZE_IDX["company-lettering"]);
@@ -104,14 +78,8 @@ export default function VehicleDecalOrderClient({ productImages = [] }) {
   const [quantity, setQuantity] = useState(2);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
-
-  const [quoteData, setQuoteData] = useState(null);
-  const [quoteLoading, setQuoteLoading] = useState(true);
-  const [quoteError, setQuoteError] = useState(null);
-  const [buyNowLoading, setBuyNowLoading] = useState(false);
-
-  const debounceRef = useRef(null);
-  const abortRef = useRef(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
+  const [textInput, setTextInput] = useState(""); // for DOT/MC or company text
 
   const sizes = SIZES_BY_TYPE[typeId];
   const size = sizes[sizeIdx] || sizes[0];
@@ -119,6 +87,7 @@ export default function VehicleDecalOrderClient({ productImages = [] }) {
   // Reset size index when type changes
   useEffect(() => {
     setSizeIdx(DEFAULT_SIZE_IDX[typeId] ?? 0);
+    setTextInput("");
   }, [typeId]);
 
   const activeQty = useMemo(() => {
@@ -131,458 +100,383 @@ export default function VehicleDecalOrderClient({ productImages = [] }) {
 
   // ─── Quote ───
 
-  const fetchQuote = useCallback(() => {
-    if (abortRef.current) abortRef.current.abort();
-    if (activeQty <= 0) {
-      setQuoteData(null);
-      return;
-    }
-    const ac = new AbortController();
-    abortRef.current = ac;
-    setQuoteLoading(true);
-    setQuoteError(null);
+  const quote = useConfiguratorPrice({
+    slug: DECAL_SLUG_MAP[typeId] || "vehicle-decals",
+    quantity: activeQty,
+    widthIn: size.w,
+    heightIn: size.h,
+    enabled: activeQty > 0,
+  });
 
-    fetch("/api/pricing/calculate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        slug: DECAL_SLUG_MAP[typeId] || "vehicle-decals",
-        quantity: activeQty,
-        widthIn: size.w,
-        heightIn: size.h,
-        sides: "single",
-      }),
-      signal: ac.signal,
-    })
-      .then((r) => r.json().then((d) => ({ ok: r.ok, data: d })))
-      .then(({ ok, data }) => {
-        if (!ok) throw new Error(data.error || "Quote failed");
-        setQuoteData(data);
-      })
-      .catch((err) => {
-        if (err.name === "AbortError") return;
-        setQuoteError(err.message);
-      })
-      .finally(() => setQuoteLoading(false));
-  }, [typeId, size.w, size.h, activeQty]);
+  // ─── Surcharges ───
 
-  useEffect(() => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(fetchQuote, DEBOUNCE_MS);
-    return () => clearTimeout(debounceRef.current);
-  }, [fetchQuote]);
-
-  // ─── Pricing ───
-
-  const subtotalCents = quoteData?.totalCents ?? 0;
   const materialSurcharge = (MATERIALS.find((m) => m.id === materialId)?.surcharge ?? 0) * activeQty;
   const colorSurcharge = (COLORS.find((c) => c.id === colorId)?.surcharge ?? 0) * activeQty;
+  const totalSurcharge = materialSurcharge + colorSurcharge;
 
-  const adjustedSubtotal = subtotalCents + materialSurcharge + colorSurcharge;
-  const totalCents = adjustedSubtotal;
+  // Update surcharges in the hook
+  useEffect(() => {
+    quote.addSurcharge(totalSurcharge);
+  }, [totalSurcharge]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const canAddToCart = quoteData && !quoteLoading && activeQty > 0;
+  const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0;
+
+  const disabledReason = !canAddToCart
+    ? quote.quoteLoading ? "Calculating price..."
+    : !quote.quoteData ? "Select your options for pricing"
+    : "Complete all options to continue"
+    : null;
 
   // ─── Cart ───
 
-  function buildCartItem() {
-    if (!quoteData || activeQty <= 0) return null;
+  const buildCartItem = useCallback(() => {
+    if (!quote.quoteData || activeQty <= 0) return null;
+
+    const materialLabel = MATERIALS.find((m) => m.id === materialId)?.label || materialId;
+    const colorLabel = COLORS.find((c) => c.id === colorId)?.label || colorId;
 
     return {
       id: DECAL_SLUG_MAP[typeId] || "vehicle-decals",
       name: `${t("vd.title")} \u2014 ${t(`vd.type.${typeId}`)} ${size.tag}`,
       slug: DECAL_SLUG_MAP[typeId] || "vehicle-decals",
-      price: Math.round(adjustedSubtotal / activeQty),
+      price: Math.round(quote.subtotalCents / activeQty),
       quantity: activeQty,
       options: {
-        type: typeId,
+        vehicleType: typeId,
         sizeId: size.id,
         sizeLabel: size.label,
         width: size.w,
         height: size.h,
         material: materialId,
+        materialLabel,
         color: colorId,
+        colorLabel,
+        lamination: "gloss-overlaminate",
+        outdoor: true,
+        text: textInput.trim() || null,
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
       forceNewLine: true,
     };
+  }, [quote.quoteData, quote.subtotalCents, activeQty, typeId, size, materialId, colorId, textInput, uploadedFile, t]);
+
+  const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
+    buildCartItem,
+    successMessage: t("vd.addedToCart"),
+  });
+
+  // ─── Accordion state ───
+  const [activeStepId, setActiveStepId] = useState("step-type");
+
+  const needsTextInput = typeId === "dot-mc" || typeId === "unit-numbers";
+  const stepIds = useMemo(() => {
+    const ids = ["step-type", "step-size", "step-material", "step-color"];
+    if (needsTextInput) ids.push("step-text");
+    ids.push("step-quantity", "step-artwork");
+    return ids;
+  }, [needsTextInput]);
+
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  // ─── Summary texts ───
+  const typeSummary = t(`vd.type.${typeId}`);
+  const sizeSummary = size.label;
+  const materialSummary = MATERIALS.find((m) => m.id === materialId)?.label || materialId;
+  const colorSummary = COLORS.find((c) => c.id === colorId)?.label || colorId;
+  const textSummary = textInput.trim() || "Not entered";
+  const quantitySummary = `${activeQty.toLocaleString()} pcs`;
+  const artworkSummary = uploadedFile?.name || "Not uploaded yet";
+
+  // ─── Summary lines for PricingSidebar ───
+  const summaryLines = [
+    { label: t("vd.type.label"), value: t(`vd.type.${typeId}`) },
+    { label: t("vd.size"), value: size.label },
+    { label: t("vd.material.label"), value: t(`vd.material.${materialId}`) },
+    { label: t("vd.color.label"), value: t(`vd.color.${colorId}`) },
+    { label: t("vd.quantity"), value: activeQty > 0 ? activeQty.toLocaleString() : "\u2014" },
+  ];
+  if (textInput.trim()) {
+    summaryLines.push({ label: "Text", value: textInput.trim() });
   }
 
-  function handleAddToCart() {
-    const item = buildCartItem();
-    if (!item) return;
-    addItem(item);
-    openCart();
-    showSuccessToast(t("vd.addedToCart"));
+  // ─── Extra pricing rows for surcharges ───
+  const extraRows = [];
+  if (materialSurcharge > 0) {
+    extraRows.push({ label: t(`vd.material.${materialId}`), value: `+ ${formatCad(materialSurcharge)}` });
+  }
+  if (colorSurcharge > 0) {
+    extraRows.push({ label: t(`vd.color.${colorId}`), value: `+ ${formatCad(colorSurcharge)}` });
   }
 
-  async function handleBuyNow() {
-    const item = buildCartItem();
-    if (!item || buyNowLoading) return;
-    setBuyNowLoading(true);
-    try {
-      const meta = {};
-      for (const [k, v] of Object.entries(item.options)) {
-        if (v == null) continue;
-        meta[k] = typeof v === "object" ? JSON.stringify(v) : v;
-      }
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: [{
-            productId: String(item.id),
-            slug: String(item.slug),
-            name: item.name,
-            unitAmount: item.price,
-            quantity: item.quantity,
-            meta,
-          }],
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "Checkout failed");
-      window.location.href = data.url;
-    } catch (e) {
-      showErrorToast(e instanceof Error ? e.message : "Checkout failed");
-    } finally {
-      setBuyNowLoading(false);
-    }
-  }
+  // ─── Step numbering ───
+  let stepNum = 0;
+  const nextStep = () => ++stepNum;
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <Breadcrumbs
-        items={[
+    <main className="min-h-screen bg-[var(--color-gray-50)]">
+      <ConfigHero
+        breadcrumbs={[
           { label: t("nav.shop"), href: "/shop" },
           { label: t("vd.breadcrumb"), href: "/shop/vehicle-graphics-fleet" },
           { label: t("vd.order") },
         ]}
+        title={t("vd.title")}
+        subtitle={t("vd.subtitle") || "Cut vinyl lettering & compliance decals"}
+        badges={[t("vd.badge.outdoor"), t("vd.badge.shipping")]}
       />
+      <ConfigProductGallery images={productImages} />
 
-      <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-        {t("vd.title")}
-      </h1>
+      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+        <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+          <div className="space-y-3 lg:col-span-2">
 
-      {productImages?.length > 0 && (
-        <ImageGallery images={productImages} />
-      )}
-
-      <div className="lg:grid lg:grid-cols-5 lg:gap-10">
-        {/* ── LEFT: Options ── */}
-        <div className="space-y-8 lg:col-span-3">
-
-          {/* Type */}
-          <Section label={t("vd.type.label")}>
-            <div className="grid grid-cols-3 gap-3">
-              {TYPES.map((tp) => (
-                <button
-                  key={tp.id}
-                  type="button"
-                  onClick={() => setTypeId(tp.id)}
-                  className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
-                    typeId === tp.id
-                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  <TypeIcon type={tp.id} className="h-7 w-7" />
-                  <span className="text-sm font-semibold">{t(`vd.type.${tp.id}`)}</span>
-                  <span className={`text-[11px] leading-tight ${typeId === tp.id ? "text-gray-300" : "text-gray-400"}`}>
-                    {t(`vd.typeDesc.${tp.id}`)}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </Section>
-
-          {/* Size */}
-          <Section label={t("vd.size")}>
-            <div className="flex flex-wrap gap-2">
-              {sizes.map((s, i) => (
-                <Chip key={s.id} active={sizeIdx === i} onClick={() => setSizeIdx(i)}>
-                  {s.label}
-                </Chip>
-              ))}
-            </div>
-          </Section>
-
-          {/* Material */}
-          <Section label={t("vd.material.label")}>
-            <div className="grid grid-cols-2 gap-3">
-              {MATERIALS.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setMaterialId(m.id)}
-                  className={`relative rounded-xl border-2 px-3 py-3 text-left transition-all ${
-                    materialId === m.id
-                      ? "border-gray-900 bg-gray-50 shadow-sm"
-                      : "border-gray-200 bg-white hover:border-gray-400"
-                  }`}
-                >
-                  <span className="block text-sm font-medium text-gray-800">
-                    {t(`vd.material.${m.id}`)}
-                  </span>
-                  <span className="mt-0.5 block text-[11px] text-gray-400">
-                    {t(`vd.materialDesc.${m.id}`)}
-                  </span>
-                  {m.surcharge > 0 && (
-                    <span className="mt-0.5 block text-[11px] font-medium text-amber-600">
-                      +{formatCad(m.surcharge)}/ea
-                    </span>
-                  )}
-                  {materialId === m.id && (
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gray-900" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </Section>
-
-          {/* Color */}
-          <Section label={t("vd.color.label")}>
-            <div className="flex flex-wrap gap-2">
-              {COLORS.map((c) => (
-                <Chip key={c.id} active={colorId === c.id} onClick={() => setColorId(c.id)}>
-                  {t(`vd.color.${c.id}`)}
-                  {c.surcharge > 0 && (
-                    <span className="ml-1 text-[11px] opacity-70">+{formatCad(c.surcharge)}/ea</span>
-                  )}
-                </Chip>
-              ))}
-            </div>
-          </Section>
-
-          {/* Quantity */}
-          <Section label={t("vd.quantity")}>
-            <div className="flex flex-wrap gap-2">
-              {QUANTITIES.map((q) => (
-                <Chip
-                  key={q}
-                  active={customQty === "" && quantity === q}
-                  onClick={() => { setQuantity(q); setCustomQty(""); }}
-                >
-                  {q.toLocaleString()}
-                </Chip>
-              ))}
-            </div>
-            <div className="mt-3 flex items-center gap-2">
-              <label className="text-xs text-gray-500">{t("vd.customQty")}:</label>
-              <input
-                type="number"
-                min="1"
-                max="999999"
-                value={customQty}
-                onChange={(e) => setCustomQty(e.target.value)}
-                placeholder="e.g. 15"
-                className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-              />
-            </div>
-          </Section>
-
-          {/* Artwork Upload */}
-          <Section label={t("vd.artwork")} optional>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="mb-3 text-xs text-gray-600">{t("vd.uploadHint")}</p>
-              {uploadedFile ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-800">{uploadedFile.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => setUploadedFile(null)}
-                    className="text-xs text-red-500 hover:text-red-700"
-                  >
-                    {t("vd.remove")}
-                  </button>
-                </div>
-              ) : (
-                <UploadButton
-                  endpoint="artworkUploader"
-                  onClientUploadComplete={(res) => {
-                    const first = Array.isArray(res) ? res[0] : null;
-                    if (!first) return;
-                    setUploadedFile({
-                      url: first.ufsUrl || first.url,
-                      key: first.key,
-                      name: first.name,
-                      size: first.size,
-                    });
-                  }}
-                  onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
-                />
-              )}
-            </div>
-          </Section>
-        </div>
-
-        {/* ── RIGHT: Summary ── */}
-        <aside className="hidden lg:col-span-2 lg:block">
-          <div className="sticky top-24 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-base font-bold text-gray-900">{t("vd.summary")}</h2>
-
-            <dl className="space-y-2 text-sm">
-              <Row label={t("vd.type.label")} value={t(`vd.type.${typeId}`)} />
-              <Row label={t("vd.size")} value={size.label} />
-              <Row label={t("vd.material.label")} value={t(`vd.material.${materialId}`)} />
-              <Row label={t("vd.color.label")} value={t(`vd.color.${colorId}`)} />
-              <Row label={t("vd.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
-            </dl>
-
-            <hr className="border-gray-100" />
-
-            {quoteLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-4 animate-pulse rounded bg-gray-100" />
+            {/* Step: Type */}
+            <StepCard
+              stepNumber={nextStep()}
+              title={t("vd.type.label")}
+              hint={t("vd.typeHint") || "Choose decal type"}
+              summaryText={typeSummary}
+              open={isStepOpen("type")}
+              onToggle={() => toggleStep("type")}
+              stepId="step-type"
+            >
+              <OptionGrid columns={3} label={t("vd.type.label")}>
+                {TYPES.map((tp) => (
+                  <OptionCard
+                    key={tp.id}
+                    label={t(`vd.type.${tp.id}`)}
+                    description={t(`vd.typeDesc.${tp.id}`)}
+                    selected={typeId === tp.id}
+                    onSelect={() => { setTypeId(tp.id); advanceStep("step-type"); }}
+                  />
                 ))}
-              </div>
-            ) : quoteError ? (
-              <p className="text-xs text-red-500">{quoteError}</p>
-            ) : quoteData ? (
-              <dl className="space-y-2 text-sm">
-                <Row label={t("vd.basePrice")} value={formatCad(subtotalCents)} />
-                {materialSurcharge > 0 && (
-                  <Row label={t(`vd.material.${materialId}`)} value={`+ ${formatCad(materialSurcharge)}`} />
-                )}
-                {colorSurcharge > 0 && (
-                  <Row label={t(`vd.color.${colorId}`)} value={`+ ${formatCad(colorSurcharge)}`} />
-                )}
-                <Row label={t("vd.subtotal")} value={formatCad(adjustedSubtotal)} />
-                <div className="flex justify-between border-t border-gray-100 pt-2">
-                  <dt className="font-semibold text-gray-900">{t("vd.total")}</dt>
-                  <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
+              </OptionGrid>
+            </StepCard>
+
+            {/* Step: Size */}
+            <StepCard
+              stepNumber={nextStep()}
+              title={t("vd.size")}
+              hint={t("vd.sizeHint") || "Select size"}
+              summaryText={sizeSummary}
+              open={isStepOpen("size")}
+              onToggle={() => toggleStep("size")}
+              stepId="step-size"
+            >
+              <OptionGrid columns={4} label={t("vd.size")}>
+                {sizes.map((s, i) => (
+                  <OptionCard
+                    key={s.id}
+                    label={s.label}
+                    selected={sizeIdx === i}
+                    onSelect={() => { setSizeIdx(i); advanceStep("step-size"); }}
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
+
+            {/* Step: Material */}
+            <StepCard
+              stepNumber={nextStep()}
+              title={t("vd.material.label")}
+              hint={t("vd.materialHint") || "Select vinyl material"}
+              summaryText={materialSummary}
+              open={isStepOpen("material")}
+              onToggle={() => toggleStep("material")}
+              stepId="step-material"
+            >
+              <OptionGrid columns={2} label={t("vd.material.label")}>
+                {MATERIALS.map((m) => (
+                  <OptionCard
+                    key={m.id}
+                    label={m.label}
+                    description={t(`vd.materialDesc.${m.id}`)}
+                    selected={materialId === m.id}
+                    onSelect={() => { setMaterialId(m.id); advanceStep("step-material"); }}
+                    badge={m.surcharge > 0 ? (
+                      <span className="text-[10px] font-bold text-amber-600">+{formatCad(m.surcharge)}/ea</span>
+                    ) : null}
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
+
+            {/* Step: Color */}
+            <StepCard
+              stepNumber={nextStep()}
+              title={t("vd.color.label")}
+              hint={t("vd.colorHint") || "Choose vinyl color"}
+              summaryText={colorSummary}
+              open={isStepOpen("color")}
+              onToggle={() => toggleStep("color")}
+              stepId="step-color"
+            >
+              <OptionGrid columns={4} label={t("vd.color.label")}>
+                {COLORS.map((c) => (
+                  <OptionCard
+                    key={c.id}
+                    label={c.label}
+                    selected={colorId === c.id}
+                    onSelect={() => { setColorId(c.id); advanceStep("step-color"); }}
+                    badge={c.surcharge > 0 ? (
+                      <span className="text-[10px] font-bold text-amber-600">+{formatCad(c.surcharge)}/ea</span>
+                    ) : null}
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
+
+            {/* Step: Text Input (for DOT/MC and unit numbers) */}
+            {needsTextInput && (
+              <StepCard
+                stepNumber={nextStep()}
+                title={typeId === "dot-mc" ? "DOT / MC Numbers" : "Unit Numbers"}
+                hint={typeId === "dot-mc" ? "Enter your DOT and MC numbers" : "Enter your unit numbers"}
+                summaryText={textSummary}
+                open={isStepOpen("text")}
+                onToggle={() => toggleStep("text")}
+                stepId="step-text"
+              >
+                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                  <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                    {typeId === "dot-mc" ? "Enter DOT / MC numbers" : "Enter unit numbers"}
+                  </label>
+                  <input
+                    type="text"
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    placeholder={typeId === "dot-mc" ? "e.g. USDOT 1234567 MC 987654" : "e.g. Unit 001, Unit 002"}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
+                  />
+                  <p className="mt-1.5 text-[11px] text-gray-400">
+                    This text will be printed exactly as entered
+                  </p>
                 </div>
-                {activeQty > 1 && (
-                  <div className="pt-1">
-                    <p className="text-[11px] text-gray-400">
-                      {formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("vd.each")}
-                    </p>
-                  </div>
-                )}
-              </dl>
-            ) : (
-              <p className="text-xs text-gray-400">{t("vd.selectOptions")}</p>
+              </StepCard>
             )}
 
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={!canAddToCart}
-                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
-                  canAddToCart
-                    ? "bg-gray-900 text-[#fff] hover:bg-gray-800"
-                    : "cursor-not-allowed bg-gray-200 text-gray-400"
-                }`}
-              >
-                {t("vd.addToCart")}
-              </button>
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
-                  canAddToCart && !buyNowLoading
-                    ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800"
-                    : "cursor-not-allowed border-gray-200 text-gray-400"
-                }`}
-              >
-                {buyNowLoading ? t("vd.processing") : t("vd.buyNow")}
-              </button>
-            </div>
+            {/* Step: Quantity */}
+            <StepCard
+              stepNumber={nextStep()}
+              title={t("vd.quantity")}
+              hint={t("vd.quantityHint") || "How many decals?"}
+              summaryText={quantitySummary}
+              open={isStepOpen("quantity")}
+              onToggle={() => toggleStep("quantity")}
+              stepId="step-quantity"
+              alwaysOpen
+            >
+              <QuantityScroller
+                quantities={QUANTITIES}
+                selected={quantity}
+                onSelect={(q) => { setQuantity(q); setCustomQty(""); advanceStep("step-quantity"); }}
+                customQty={customQty}
+                onCustomChange={setCustomQty}
+                t={t}
+                placeholder="e.g. 15"
+              />
+            </StepCard>
 
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
-              <span>{t("vd.badge.outdoor")}</span>
-              <span className="text-gray-300">|</span>
-              <span>{t("vd.badge.shipping")}</span>
-            </div>
+            {/* Step: Artwork Upload */}
+            <StepCard
+              stepNumber={nextStep()}
+              title={t("vd.artwork")}
+              hint={t("vd.artworkHint") || "Upload your design or logo"}
+              summaryText={artworkSummary}
+              optional
+              open={isStepOpen("artwork")}
+              onToggle={() => toggleStep("artwork")}
+              stepId="step-artwork"
+            >
+              <ArtworkUpload
+                uploadedFile={uploadedFile}
+                onUploaded={setUploadedFile}
+                onRemove={() => setUploadedFile(null)}
+                t={t}
+              />
+            </StepCard>
           </div>
-        </aside>
+
+          <PricingSidebar
+            summaryLines={summaryLines}
+            quoteLoading={quote.quoteLoading}
+            quoteError={quote.quoteError}
+            unitCents={quote.unitCents}
+            subtotalCents={quote.subtotalCents}
+            taxCents={quote.taxCents}
+            totalCents={quote.subtotalCents}
+            quantity={activeQty}
+            canAddToCart={canAddToCart}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            buyNowLoading={buyNowLoading}
+            extraRows={extraRows}
+            badges={[t("vd.badge.outdoor"), t("vd.badge.shipping")]}
+            t={t}
+            productName={t("vd.title")}
+            categorySlug="vehicle-graphics-fleet"
+            locale={locale}
+            productSlug={DECAL_SLUG_MAP[typeId] || "vehicle-decals"}
+            onRetryPrice={quote.retry}
+            disabledReason={disabledReason}
+            artworkMode="upload-optional"
+            hasArtwork={!!uploadedFile}
+            artworkIntent={artworkIntent}
+            onArtworkIntentChange={setArtworkIntent}
+          />
+        </div>
       </div>
 
       {(() => {
         const faqItems = getConfiguratorFaqs("vehicle-decals");
         if (!faqItems) return null;
         return (
-          <div className="mx-auto max-w-4xl pb-16 pt-8">
+          <div className="mx-auto max-w-4xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
             <FaqAccordion items={faqItems} />
           </div>
         );
       })()}
 
-      {/* ── MOBILE: Bottom bar ── */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          <div className="min-w-0 flex-1">
-            {quoteLoading ? (
-              <div className="h-5 w-20 animate-pulse rounded bg-gray-200" />
-            ) : quoteData ? (
-              <>
-                <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
-                <p className="truncate text-[11px] text-gray-500">
-                  {activeQty} \u00d7 {t(`vd.type.${typeId}`)} {size.tag}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-gray-400">{t("vd.selectOptions")}</p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={!canAddToCart}
-            className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
-              canAddToCart
-                ? "bg-gray-900 text-[#fff] hover:bg-gray-800"
-                : "cursor-not-allowed bg-gray-200 text-gray-400"
-            }`}
-          >
-            {t("vd.addToCart")}
-          </button>
+      {/* Inline mobile delivery estimate */}
+      {!!quote.quoteData && (
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden">
+          <DeliveryEstimate categorySlug="vehicle-graphics-fleet" t={t} locale={locale} />
         </div>
-      </div>
+      )}
 
-      <div className="h-20 lg:hidden" />
+      <MobileBottomBar
+        quoteLoading={quote.quoteLoading}
+        hasQuote={!!quote.quoteData}
+        totalCents={quote.subtotalCents}
+        quantity={activeQty}
+        summaryText={
+          quote.quoteData
+            ? `${formatCad(quote.unitCents)}/ea \u00d7 ${activeQty}`
+            : null
+        }
+        canAddToCart={canAddToCart}
+        onAddToCart={handleAddToCart}
+        onBuyNow={handleBuyNow}
+        buyNowLoading={buyNowLoading}
+        t={t}
+        productName={t("vd.title")}
+        summaryLines={summaryLines}
+        unitCents={quote.unitCents}
+        subtotalCents={quote.subtotalCents}
+        categorySlug="vehicle-graphics-fleet"
+        locale={locale}
+        onRetryPrice={quote.retry}
+        disabledReason={disabledReason}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
+      />
     </main>
-  );
-}
-
-// ─── Helpers ───
-
-function Section({ label, optional, children }) {
-  return (
-    <section>
-      <div className="mb-3 flex items-baseline gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{label}</h2>
-        {optional && <span className="text-[10px] text-gray-400">(optional)</span>}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Chip({ active, onClick, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-        active
-          ? "border-gray-900 bg-gray-900 text-[#fff]"
-          : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Row({ label, value }) {
-  return (
-    <div className="flex justify-between">
-      <dt className="text-gray-500">{label}</dt>
-      <dd className="font-medium text-gray-800">{value}</dd>
-    </div>
   );
 }

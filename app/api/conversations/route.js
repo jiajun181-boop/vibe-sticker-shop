@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAdminSession } from "@/lib/admin-auth";
 
 export async function GET(request) {
   try {
+    const session = await getAdminSession(request);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const userId = searchParams.get("userId");
@@ -50,6 +56,11 @@ export async function GET(request) {
 
 export async function PATCH(request) {
   try {
+    const session = await getAdminSession(request);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { id, status } = body;
 

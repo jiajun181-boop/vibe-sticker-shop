@@ -79,6 +79,7 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
   const [quantity, setQuantity] = useState(100);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
 
   const binding = useMemo(() => BINDINGS.find((b) => b.id === bindingId) || BINDINGS[0], [bindingId]);
   const size = SIZES[sizeIdx];
@@ -140,6 +141,12 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
 
   const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0;
 
+  const disabledReason = !canAddToCart
+    ? quote.quoteLoading ? "Calculating price..."
+    : !quote.quoteData ? "Select your options for pricing"
+    : "Complete all options to continue"
+    : null;
+
   // ─── Cart ───
   const buildCartItem = useCallback(() => {
     if (!quote.quoteData || activeQty <= 0) return null;
@@ -156,15 +163,22 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
       quantity: activeQty,
       options: {
         binding: bindingId,
+        bindingType: bindingId,
+        bindingLabel: BINDINGS.find((b) => b.id === bindingId)?.label || bindingId,
         sizeId: size.id,
         sizeLabel: size.label,
         width: size.w,
         height: size.h,
         pageCount,
         interiorPaper,
+        interiorPaperLabel: INTERIOR_PAPERS.find((p) => p.id === interiorPaper)?.label || interiorPaper,
         coverPaper,
+        coverPaperLabel: COVER_PAPERS.find((p) => p.id === coverPaper)?.label || coverPaper,
         coverCoating: isSelfCover ? "none" : coverCoating,
+        coverCoatingLabel: isSelfCover ? "None (self-cover)" : (COVER_COATINGS.find((c) => c.id === coverCoating)?.label || coverCoating),
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
       forceNewLine: true,
     };
@@ -516,6 +530,11 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
             locale={locale}
             productSlug={binding.slug}
             onRetryPrice={quote.retry}
+            disabledReason={disabledReason}
+            artworkMode="upload-optional"
+            hasArtwork={!!uploadedFile}
+            artworkIntent={artworkIntent}
+            onArtworkIntentChange={setArtworkIntent}
           />
         </div>
       </div>
@@ -556,6 +575,11 @@ export default function BookletOrderClient({ defaultBinding, productImages }) {
         categorySlug="marketing-business-print"
         locale={locale}
         onRetryPrice={quote.retry}
+        disabledReason={disabledReason}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
       />
     </main>
   );

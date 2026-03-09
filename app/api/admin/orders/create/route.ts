@@ -1,12 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/admin-auth";
 
 /**
  * POST /api/admin/orders/create
  * Creates a manual order from admin panel.
  * Creates Order + OrderItems + ProductionJobs in a single transaction.
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const auth = await requirePermission(request, "orders", "edit");
+  if (!auth.authenticated) return auth.response;
+
   try {
     const body = await request.json();
     const {
@@ -123,7 +127,7 @@ export async function POST(request: Request) {
           orderId: newOrder.id,
           action: "created",
           details: "Order created manually from admin panel",
-          actor: "admin",
+          actor: auth.user?.email || "admin",
         },
       });
 

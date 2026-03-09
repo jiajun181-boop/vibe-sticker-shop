@@ -77,21 +77,26 @@ export async function GET(
   const auth = await requirePermission(request, "products", "view");
   if (!auth.authenticated) return auth.response;
 
-  const { id } = await params;
+  try {
+    const { id } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { id },
-    include: {
-      images: { orderBy: { sortOrder: "asc" } },
-      pricingPreset: true,
-    },
-  });
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        images: { orderBy: { sortOrder: "asc" } },
+        pricingPreset: true,
+      },
+    });
 
-  if (!product) {
-    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(await attachImageSourceMeta(product));
+  } catch (err) {
+    console.error("[admin/products/[id]] GET error:", err);
+    return NextResponse.json({ error: "Failed to fetch product" }, { status: 500 });
   }
-
-  return NextResponse.json(await attachImageSourceMeta(product));
 }
 
 export async function PATCH(
@@ -101,6 +106,7 @@ export async function PATCH(
   const auth = await requirePermission(request, "products", "edit");
   if (!auth.authenticated) return auth.response;
 
+  try {
   const { id } = await params;
   const body = await request.json();
 
@@ -217,6 +223,10 @@ export async function PATCH(
 
   revalidatePath("/shop", "layout");
   return NextResponse.json(await attachImageSourceMeta(product));
+  } catch (err) {
+    console.error("[admin/products/[id]] PATCH error:", err);
+    return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
+  }
 }
 
 export async function DELETE(
@@ -226,14 +236,19 @@ export async function DELETE(
   const auth = await requirePermission(request, "products", "edit");
   if (!auth.authenticated) return auth.response;
 
-  const { id } = await params;
+  try {
+    const { id } = await params;
 
-  // Soft-delete: deactivate instead of hard delete to preserve order references
-  const product = await prisma.product.update({
-    where: { id },
-    data: { isActive: false },
-  });
+    // Soft-delete: deactivate instead of hard delete to preserve order references
+    const product = await prisma.product.update({
+      where: { id },
+      data: { isActive: false },
+    });
 
-  revalidatePath("/shop", "layout");
-  return NextResponse.json({ success: true, deactivated: true, id: product.id });
+    revalidatePath("/shop", "layout");
+    return NextResponse.json({ success: true, deactivated: true, id: product.id });
+  } catch (err) {
+    console.error("[admin/products/[id]] DELETE error:", err);
+    return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
+  }
 }

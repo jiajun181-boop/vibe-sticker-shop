@@ -99,9 +99,12 @@ export default function ProductionBoardPage() {
   const [loading, setLoading] = useState(true);
   const [factories, setFactories] = useState([]);
 
+  const [operators, setOperators] = useState([]);
+
   // Filters
   const [factoryFilter, setFactoryFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [operatorFilter, setOperatorFilter] = useState("all");
   const [dateRange, setDateRange] = useState("all");
 
   // Drag and drop
@@ -120,18 +123,20 @@ export default function ProductionBoardPage() {
     const params = new URLSearchParams();
     if (factoryFilter !== "all") params.set("factory", factoryFilter);
     if (priorityFilter !== "all") params.set("priority", priorityFilter);
+    if (operatorFilter !== "all") params.set("operator", operatorFilter);
     if (dateRange !== "all") params.set("dateRange", dateRange);
 
     try {
       const res = await fetch(`/api/admin/production/board?${params}`);
       const data = await res.json();
-      setColumns(data);
+      setColumns(data.columns || data);
+      if (data.operators) setOperators(data.operators);
     } catch (err) {
       console.error("Failed to load board data:", err);
     } finally {
       setLoading(false);
     }
-  }, [factoryFilter, priorityFilter, dateRange]);
+  }, [factoryFilter, priorityFilter, operatorFilter, dateRange]);
 
   const fetchFactories = useCallback(async () => {
     try {
@@ -166,7 +171,9 @@ export default function ProductionBoardPage() {
       if (res.ok) {
         await fetchBoard();
       } else {
-        console.error("Failed to update job status");
+        const data = await res.json().catch(() => ({}));
+        const msg = data.error || "Failed to update job status";
+        alert(msg);
       }
     } catch (err) {
       console.error("Failed to update job status:", err);
@@ -270,6 +277,29 @@ export default function ProductionBoardPage() {
             {priorityOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Operator filter */}
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="board-operator-filter"
+            className="text-xs font-medium text-[#999]"
+          >
+            Operator
+          </label>
+          <select
+            id="board-operator-filter"
+            value={operatorFilter}
+            onChange={(e) => setOperatorFilter(e.target.value)}
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-black"
+          >
+            <option value="all">All Operators</option>
+            {operators.map((op) => (
+              <option key={op} value={op}>
+                {op}
               </option>
             ))}
           </select>
@@ -386,9 +416,9 @@ export default function ProductionBoardPage() {
                           {job.productName || "Unknown Product"}
                         </p>
 
-                        {/* Customer email */}
+                        {/* Customer */}
                         <p className="text-xs text-[#999] truncate mt-0.5">
-                          {job.customerEmail || "\u2014"}
+                          {job.customerName || job.customerEmail || "\u2014"}
                         </p>
 
                         {/* Badges row */}
@@ -409,7 +439,29 @@ export default function ProductionBoardPage() {
                               Rush
                             </span>
                           )}
+
+                          {/* Due date badge */}
+                          {job.dueAt && (() => {
+                            const due = new Date(job.dueAt);
+                            const now = new Date();
+                            const overdue = due < now;
+                            const dueSoon = !overdue && (due - now) < 24 * 60 * 60 * 1000;
+                            return (
+                              <span className={`inline-block rounded-[2px] px-2 py-0.5 text-xs font-medium ${
+                                overdue ? "bg-red-100 text-red-700" : dueSoon ? "bg-amber-100 text-amber-700" : "bg-blue-50 text-blue-600"
+                              }`}>
+                                Due: {due.toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+                              </span>
+                            );
+                          })()}
                         </div>
+
+                        {/* Assigned operator */}
+                        {job.assignedTo && (
+                          <p className="text-[11px] text-blue-600 mt-1.5 truncate">
+                            Operator: {job.assignedTo}
+                          </p>
+                        )}
 
                         {/* Footer row: factory, time, actions */}
                         <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#e0e0e0]">

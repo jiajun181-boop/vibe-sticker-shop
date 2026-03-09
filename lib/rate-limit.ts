@@ -78,6 +78,15 @@ export const checkoutLimiter = createRateLimiter({ windowMs: 5 * 60 * 1000, max:
 // Forgot password: 3 per 15 minutes
 export const forgotPasswordLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 3 });
 
+// Support tickets: 5 per 10 minutes (ticket creation)
+export const supportLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 5 });
+
+// Support messages: 15 per 10 minutes (replies in existing tickets)
+export const supportMessageLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 15 });
+
+// Push subscribe: 10 per 5 minutes
+export const pushLimiter = createRateLimiter({ windowMs: 5 * 60 * 1000, max: 10 });
+
 // Upload endpoints: 20 per 10 minutes
 export const uploadLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 20 });
 

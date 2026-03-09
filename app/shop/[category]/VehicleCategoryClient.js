@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -57,6 +58,29 @@ const NOTE_I18N = {
   "dangerous-goods-placards": "vc.item.dangerousGoods.note",
   "tire-pressure-load-labels": "vc.item.tirePressure.note",
   "reflective-conspicuity-chevron-kits": "vc.item.reflectiveTape.note",
+};
+
+/* ── Taglines (i18n keys) ── */
+const TAGLINE_KEYS = {
+  "full-vehicle-wrap-design-print": "vc.tagline.fullWrap",
+  "partial-wrap-spot-graphics": "vc.tagline.partialWrap",
+  "trailer-box-truck-large-graphics": "vc.tagline.trailerGraphics",
+  "vehicle-roof-wrap": "vc.tagline.roofWrap",
+  "custom-truck-door-lettering-kit": "vc.tagline.doorLettering",
+  "magnetic-truck-door-signs": "vc.tagline.magneticTruck",
+  "car-door-magnets-pair": "vc.tagline.magneticCar",
+  "printed-truck-door-decals-full-color": "vc.tagline.printedDoorDecals",
+  "usdot-number-decals": "vc.tagline.usdot",
+  "cvor-number-decals": "vc.tagline.cvor",
+  "mc-nsc-number-decals": "vc.tagline.mcNsc",
+  "tssa-truck-number-lettering-cut-vinyl": "vc.tagline.tssa",
+  "gvw-tare-weight-lettering": "vc.tagline.gvwTare",
+  "fleet-unit-number-stickers": "vc.tagline.fleetUnit",
+  "vehicle-inspection-maintenance-stickers": "vc.tagline.inspection",
+  "fuel-type-labels-diesel-gas": "vc.tagline.fuelType",
+  "dangerous-goods-placards": "vc.tagline.dangerousGoods",
+  "tire-pressure-load-labels": "vc.tagline.tirePressure",
+  "reflective-conspicuity-chevron-kits": "vc.tagline.reflectiveTape",
 };
 
 const BADGE_I18N = {
@@ -250,22 +274,24 @@ function Badge({ label, tone = "neutral" }) {
 
 function ProductCard({ item, price, premium = false, cta = "View", imageUrl }) {
   const { t } = useTranslation();
+  const [imgError, setImgError] = useState(false);
   const isSvg = imageUrl && isSvgImage(imageUrl);
   const name = t(ITEM_I18N[item.key] || item.key);
   const note = NOTE_I18N[item.key] ? t(NOTE_I18N[item.key]) : null;
+  const tagline = TAGLINE_KEYS[item.key] ? t(TAGLINE_KEYS[item.key]) : null;
   const badges = (item.badgeKeys || []).map((b) => ({ label: t(BADGE_I18N[b] || b), raw: b }));
   return (
     <Link
       href={item.href}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-gray-200)] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
     >
-      <div className={`relative overflow-hidden ${premium ? "h-44" : "h-24"} ${imageUrl ? "bg-[var(--color-gray-100)]" : `bg-gradient-to-br ${item.gradient || "from-slate-400 to-slate-600"}`}`}>
-        {imageUrl ? (
+      <div className={`relative overflow-hidden ${premium ? "aspect-[4/3]" : "aspect-[16/7]"} ${imageUrl && !imgError ? "bg-[var(--color-gray-100)]" : `bg-gradient-to-br ${item.gradient || "from-slate-400 to-slate-600"}`}`}>
+        {imageUrl && !imgError ? (
           <>
             {isSvg ? (
-              <img src={imageUrl} alt={name} loading="lazy" className="h-full w-full object-cover" />
+              <img src={imageUrl} alt={name} loading="lazy" onError={() => setImgError(true)} className="h-full w-full object-cover" />
             ) : (
-              <Image src={imageUrl} alt={name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
+              <Image src={imageUrl} alt={name} fill onError={() => setImgError(true)} className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw" />
             )}
             <div className="absolute left-3 top-2 flex flex-wrap gap-1.5">
               {premium && <Badge label={t("vc.badge.premium")} tone="neutral" />}
@@ -284,24 +310,28 @@ function ProductCard({ item, price, premium = false, cta = "View", imageUrl }) {
                   <Badge key={b.raw} label={b.label} tone={b.raw === "Same-Day" ? "success" : premium ? "dark" : "neutral"} />
                 ))}
               </div>
-              <p className={`pr-2 font-semibold leading-tight text-[#fff] drop-shadow ${premium ? "text-base" : "text-sm"}`}>
-                {name}
-              </p>
+              <div>
+                <p className={`pr-2 font-semibold leading-tight text-[#fff] drop-shadow ${premium ? "text-base" : "text-sm"}`}>
+                  {name}
+                </p>
+                {tagline && <p className="mt-0.5 text-[11px] leading-tight text-[#fff]/70 line-clamp-2">{tagline}</p>}
+              </div>
               {premium && note ? <p className="text-xs text-[#fff]/80">{note}</p> : <span />}
             </div>
           </>
         )}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
-        {imageUrl && (
+        {imageUrl && !imgError && (
           <div>
             <p className={`font-semibold leading-tight text-[var(--color-gray-900)] ${premium ? "text-base" : "text-sm"}`}>{name}</p>
+            {tagline && <p className="mt-0.5 text-[11px] leading-tight text-gray-500 line-clamp-2">{tagline}</p>}
             {note && <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">{note}</p>}
           </div>
         )}
         <div className="flex items-center justify-between gap-2">
           <PriceLabel price={price} />
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[9px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
             {cta}
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -316,6 +346,7 @@ function ProductCard({ item, price, premium = false, cta = "View", imageUrl }) {
 function ComplianceListItem({ item, price }) {
   const { t } = useTranslation();
   const name = t(ITEM_I18N[item.key] || item.key);
+  const tagline = TAGLINE_KEYS[item.key] ? t(TAGLINE_KEYS[item.key]) : null;
   const badges = (item.badgeKeys || []).map((b) => ({ label: t(BADGE_I18N[b] || b), raw: b }));
   return (
     <Link
@@ -324,6 +355,7 @@ function ComplianceListItem({ item, price }) {
     >
       <div className="min-w-0">
         <p className="text-sm font-semibold leading-tight text-[var(--color-gray-900)]">{name}</p>
+        {tagline && <p className="mt-0.5 text-[11px] leading-tight text-gray-500 line-clamp-2">{tagline}</p>}
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           <span className="text-[11px] text-[var(--color-gray-500)]">{t("vc.complianceDecal")}</span>
           {badges.map((b) => (
@@ -360,7 +392,7 @@ function RenderSectionBody({ section, vehiclePrices, vehicleImages = {} }) {
 
   if (section.ui === "premium") {
     return (
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
+      <div className="mt-5 grid gap-2.5 sm:gap-3 md:grid-cols-2">
         {visibleItems.map((item) => (
           <ProductCard key={item.key} item={item} price={item.price} premium cta={t("vc.cta.quoteView")} imageUrl={vehicleImages[item.key]} />
         ))}
@@ -370,7 +402,7 @@ function RenderSectionBody({ section, vehiclePrices, vehicleImages = {} }) {
 
   if (section.ui === "list") {
     return (
-      <div className="mt-5 grid gap-3 lg:grid-cols-2">
+      <div className="mt-5 grid gap-2.5 sm:gap-3 lg:grid-cols-2">
         {visibleItems.map((item) => (
           <ComplianceListItem key={item.key} item={item} price={item.price} />
         ))}
@@ -379,7 +411,7 @@ function RenderSectionBody({ section, vehiclePrices, vehicleImages = {} }) {
   }
 
   return (
-    <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="mt-5 grid gap-2.5 sm:gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {visibleItems.map((item) => (
         <ProductCard key={item.key} item={item} price={item.price} cta={t("vc.cta.view")} imageUrl={vehicleImages[item.key]} />
       ))}
@@ -387,8 +419,15 @@ function RenderSectionBody({ section, vehiclePrices, vehicleImages = {} }) {
   );
 }
 
+/* ── Related categories ── */
+const VC_RELATED = [
+  { title: "Signs & Display Boards", titleZh: "标牌和展示板", desc: "Coroplast, foam board, acrylic & aluminum", descZh: "瓦楞板、泡沫板、亚克力和铝板", href: "/shop/signs-rigid-boards" },
+  { title: "Banners & Displays", titleZh: "横幅和展示", desc: "Vinyl banners, roll-ups, flags & backdrops", descZh: "乙烯基横幅、易拉宝、旗帜和背景墙", href: "/shop/banners-displays" },
+  { title: "Window, Wall & Floor", titleZh: "窗户、墙面和地面", desc: "Window film, wall graphics & floor decals", descZh: "窗膜、墙面图案和地面贴花", href: "/shop/windows-walls-floors" },
+];
+
 export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImages = {} }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const visibleSections = visibleSectionsForPrices(vehiclePrices);
 
   return (
@@ -448,6 +487,12 @@ export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImage
           </section>
         ))}
 
+        {visibleSections.length === 0 && (
+          <p className="mt-12 text-center text-sm text-[var(--color-gray-500)]">
+            {t("shop.noProducts")}
+          </p>
+        )}
+
         <div className="mt-12 grid gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">{t("vc.feature1.title")}</h3>
@@ -476,6 +521,32 @@ export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImage
         </div>
 
         <CategoryFaq category="vehicle-graphics-fleet" />
+
+        {/* Related categories */}
+        <section className="mt-12">
+          <h2 className="text-xl font-semibold tracking-tight">{t("vc.related")}</h2>
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-3">
+            {VC_RELATED.map((cat) => (
+              <Link
+                key={cat.href}
+                href={cat.href}
+                className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-5 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
+              >
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
+                    {locale === "zh" ? cat.titleZh : cat.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-[var(--color-gray-500)] truncate">
+                    {locale === "zh" ? cat.descZh : cat.desc}
+                  </p>
+                </div>
+                <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         <div className="mt-12 text-center">
           <Link

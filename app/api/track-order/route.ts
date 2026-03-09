@@ -34,14 +34,17 @@ export async function POST(req: Request) {
         status: true,
         productionStatus: true,
         totalAmount: true,
+        shippingAmount: true,
+        taxAmount: true,
         createdAt: true,
+        estimatedCompletion: true,
         items: {
           select: { productName: true, quantity: true, unitPrice: true },
         },
         timeline: {
           orderBy: { createdAt: "desc" },
           take: 8,
-          select: { id: true, action: true, createdAt: true },
+          select: { id: true, action: true, details: true, createdAt: true },
         },
       },
     });
@@ -53,18 +56,44 @@ export async function POST(req: Request) {
       );
     }
 
+    // Extract tracking info from the most recent "shipped" timeline event
+    let tracking: { trackingNumber?: string; carrier?: string; estimatedDelivery?: string } | null = null;
+    for (const evt of order.timeline) {
+      if (evt.action === "shipped" && evt.details) {
+        try {
+          const d = typeof evt.details === "string" ? JSON.parse(evt.details) : evt.details;
+          if (d.trackingNumber) {
+            tracking = {
+              trackingNumber: d.trackingNumber,
+              carrier: d.carrier || null,
+              estimatedDelivery: d.estimatedDelivery || null,
+            };
+            break;
+          }
+        } catch {}
+      }
+    }
+
     return NextResponse.json({
       id: order.id,
       status: order.status,
       totalAmount: order.totalAmount,
+      shippingAmount: order.shippingAmount,
+      taxAmount: order.taxAmount,
       createdAt: order.createdAt,
       productionStatus: order.productionStatus,
+      estimatedCompletion: order.estimatedCompletion,
+      tracking,
       items: order.items.map((item) => ({
         name: item.productName,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
       })),
-      timeline: order.timeline,
+      timeline: order.timeline.map((evt) => ({
+        id: evt.id,
+        action: evt.action,
+        createdAt: evt.createdAt,
+      })),
     });
   } catch {
     return NextResponse.json(

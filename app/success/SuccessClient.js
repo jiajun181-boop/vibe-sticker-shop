@@ -287,12 +287,20 @@ export default function SuccessClient({ sessionId, statusToken }) {
           </div>
         </div>
 
-        <Link
-          href="/shop"
-          className="block w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-black"
-        >
-          {t("success.continueShopping")}
-        </Link>
+        <div className="space-y-3">
+          <Link
+            href="/track-order"
+            className="block w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-black"
+          >
+            {t("success.trackOrder")}
+          </Link>
+          <Link
+            href="/shop"
+            className="block w-full rounded-xl border border-[var(--color-gray-300)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+          >
+            {t("success.continueShopping")}
+          </Link>
+        </div>
       </div>
     </div>
   );

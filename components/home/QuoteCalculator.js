@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { RUSH_MULTIPLIER } from "@/lib/order-config";
 
 // Hardcoded fallback — only used when server props are empty
 const FALLBACK_PRODUCTS = [
@@ -76,7 +77,7 @@ export default function QuoteCalculator({ products: serverProducts }) {
     } else {
       base = product.basePrice * qty;
     }
-    return Math.round(rush ? base * 1.3 : base);
+    return Math.round(rush ? base * RUSH_MULTIPLIER : base);
   }, [product, size, qty, rush]);
 
   const handleProductChange = (slug) => {

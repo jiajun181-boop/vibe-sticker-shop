@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/admin-auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildTicketReplyHtml } from "@/lib/email/templates/ticket-reply";
 
@@ -10,21 +11,29 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const auth = await requirePermission(req, "support", "view");
+  if (!auth.authenticated) return auth.response;
 
-  const ticket = await prisma.supportTicket.findUnique({
-    where: { id },
-    include: {
-      user: { select: { id: true, name: true, email: true } },
-      messages: { orderBy: { createdAt: "asc" } },
-    },
-  });
+  try {
+    const { id } = await params;
 
-  if (!ticket) {
-    return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        messages: { orderBy: { createdAt: "asc" } },
+      },
+    });
+
+    if (!ticket) {
+      return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ ticket });
+  } catch (err) {
+    console.error("[admin/support/[id]] GET error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  return NextResponse.json({ ticket });
 }
 
 /**
@@ -34,21 +43,29 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const body = await req.json();
-  const { status, priority } = body;
+  const auth = await requirePermission(req, "support", "edit");
+  if (!auth.authenticated) return auth.response;
 
-  const data: any = {};
-  if (status) data.status = status;
-  if (priority) data.priority = priority;
-  if (status === "closed" || status === "resolved") data.closedAt = new Date();
+  try {
+    const { id } = await params;
+    const body = await req.json();
+    const { status, priority } = body;
 
-  const ticket = await prisma.supportTicket.update({
-    where: { id },
-    data,
-  });
+    const data: Record<string, unknown> = {};
+    if (status) data.status = status;
+    if (priority) data.priority = priority;
+    if (status === "closed" || status === "resolved") data.closedAt = new Date();
 
-  return NextResponse.json({ ticket });
+    const ticket = await prisma.supportTicket.update({
+      where: { id },
+      data,
+    });
+
+    return NextResponse.json({ ticket });
+  } catch (err) {
+    console.error("[admin/support/[id]] PATCH error:", err);
+    return NextResponse.json({ error: "Failed to update ticket" }, { status: 500 });
+  }
 }
 
 /**
@@ -58,50 +75,58 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const body = await req.json();
-  const { message, authorName } = body;
+  const auth = await requirePermission(req, "support", "edit");
+  if (!auth.authenticated) return auth.response;
 
-  if (!message?.trim()) {
-    return NextResponse.json({ error: "Message is required" }, { status: 400 });
-  }
-
-  const ticket = await prisma.supportTicket.findUnique({
-    where: { id },
-    select: { id: true, email: true, subject: true },
-  });
-
-  if (!ticket) {
-    return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
-  }
-
-  const msg = await prisma.ticketMessage.create({
-    data: {
-      ticketId: id,
-      authorType: "admin",
-      authorName: authorName || "Support Team",
-      body: message.trim(),
-    },
-  });
-
-  // Update ticket status to waiting_customer
-  await prisma.supportTicket.update({
-    where: { id },
-    data: { status: "waiting_customer" },
-  });
-
-  // Send email notification to customer
   try {
-    const emailData = buildTicketReplyHtml(id, ticket.subject, message.trim(), authorName || "Support Team");
-    await sendEmail({
-      to: ticket.email,
-      subject: emailData.subject,
-      html: emailData.html,
-      template: "ticket-reply",
-    });
-  } catch (err) {
-    console.error("[Support] Reply email failed:", err);
-  }
+    const { id } = await params;
+    const body = await req.json();
+    const { message, authorName } = body;
 
-  return NextResponse.json({ message: msg }, { status: 201 });
+    if (!message?.trim()) {
+      return NextResponse.json({ error: "Message is required" }, { status: 400 });
+    }
+
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id },
+      select: { id: true, email: true, subject: true },
+    });
+
+    if (!ticket) {
+      return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+    }
+
+    const msg = await prisma.ticketMessage.create({
+      data: {
+        ticketId: id,
+        authorType: "admin",
+        authorName: authorName || "Support Team",
+        body: message.trim(),
+      },
+    });
+
+    // Update ticket status to waiting_customer
+    await prisma.supportTicket.update({
+      where: { id },
+      data: { status: "waiting_customer" },
+    });
+
+    // Send email notification to customer
+    try {
+      const emailData = buildTicketReplyHtml(id, ticket.subject, message.trim(), authorName || "Support Team");
+      await sendEmail({
+        to: ticket.email,
+        subject: emailData.subject,
+        html: emailData.html,
+        template: "ticket-reply",
+      });
+    } catch (err) {
+      console.error("[Support] Reply email failed:", err);
+    }
+
+    return NextResponse.json({ message: msg }, { status: 201 });
+  } catch (err) {
+    console.error("[admin/support/[id]] POST error:", err);
+    return NextResponse.json({ error: "Failed to send reply" }, { status: 500 });
+  }
 }

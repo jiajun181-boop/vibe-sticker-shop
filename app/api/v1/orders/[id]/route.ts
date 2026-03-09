@@ -11,36 +11,41 @@ export async function GET(
     return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
   }
 
-  const { id } = await params;
+  try {
+    const { id } = await params;
 
-  const order = await prisma.order.findFirst({
-    where: { id, userId: user.id },
-    select: {
-      id: true,
-      status: true,
-      paymentStatus: true,
-      productionStatus: true,
-      subtotalAmount: true,
-      taxAmount: true,
-      shippingAmount: true,
-      totalAmount: true,
-      createdAt: true,
-      paidAt: true,
-      items: {
-        select: {
-          id: true,
-          productName: true,
-          quantity: true,
-          unitPrice: true,
-          totalPrice: true,
+    const order = await prisma.order.findFirst({
+      where: { id, userId: user.id },
+      select: {
+        id: true,
+        status: true,
+        paymentStatus: true,
+        productionStatus: true,
+        subtotalAmount: true,
+        taxAmount: true,
+        shippingAmount: true,
+        totalAmount: true,
+        createdAt: true,
+        paidAt: true,
+        items: {
+          select: {
+            id: true,
+            productName: true,
+            quantity: true,
+            unitPrice: true,
+            totalPrice: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!order) {
-    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ order });
+  } catch (err) {
+    console.error("[v1/orders/[id]] GET error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  return NextResponse.json({ order });
 }

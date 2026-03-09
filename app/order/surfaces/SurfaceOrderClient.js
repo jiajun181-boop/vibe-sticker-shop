@@ -45,6 +45,7 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
   const [quantity, setQuantity] = useState(surfaceType.quantities[0] ?? 1);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
   const [dimErrors, setDimErrors] = useState([]);
   const [applicationSide, setApplicationSide] = useState("outside"); // "outside" | "inside"
   const [sizeMode, setSizeMode] = useState("single"); // "single" | "multi"
@@ -171,6 +172,12 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
   const canAddToCart = quote.quoteData && !quote.quoteLoading && effectiveQty > 0
     && (sizeMode === "multi" ? multiValid : dimErrors.length === 0);
 
+  const disabledReason = !canAddToCart
+    ? quote.quoteLoading ? "Calculating price..."
+    : !quote.quoteData ? "Select your options for pricing"
+    : "Complete all options to continue"
+    : null;
+
   // Cart
   const buildCartItem = useCallback(() => {
     if (!quote.quoteData || effectiveQty <= 0) return null;
@@ -198,6 +205,8 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
         cutType,
         finishing: finishing !== "none" ? finishing : null,
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
       forceNewLine: true,
     };
@@ -677,6 +686,11 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
             locale={locale}
             productSlug={surfaceType.defaultSlug}
             onRetryPrice={quote.retry}
+            disabledReason={disabledReason}
+            artworkMode="upload-optional"
+            hasArtwork={!!uploadedFile}
+            artworkIntent={artworkIntent}
+            onArtworkIntentChange={setArtworkIntent}
           />
         </div>
       </div>
@@ -717,6 +731,11 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
         categorySlug="windows-walls-floors"
         locale={locale}
         onRetryPrice={quote.retry}
+        disabledReason={disabledReason}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
       />
     </main>
   );

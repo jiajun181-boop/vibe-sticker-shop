@@ -99,6 +99,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
   const [customQty, setCustomQty] = useState("");
   const [doubleSided, setDoubleSided] = useState(signType.doubleSided);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
   const [dimErrors, setDimErrors] = useState([]);
 
   const isCustomSize = sizeIdx === -1;
@@ -177,6 +178,12 @@ export default function SignOrderClient({ defaultType, productImages }) {
 
   const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
 
+  const disabledReason = !canAddToCart
+    ? quote.quoteLoading ? "Calculating price..."
+    : !quote.quoteData ? "Select your options for pricing"
+    : "Complete all options to continue"
+    : null;
+
   // Cart
   const buildCartItem = useCallback(() => {
     if (!quote.quoteData || activeQty <= 0) return null;
@@ -195,9 +202,12 @@ export default function SignOrderClient({ defaultType, productImages }) {
         height: heightIn,
         sizeLabel,
         material: materialId,
+        materialLabel: signType.materials.find(m => m.id === materialId)?.label || materialId,
         doubleSided,
         accessories: accessories.join(", ") || "None",
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
       forceNewLine: true,
     };
@@ -535,6 +545,11 @@ export default function SignOrderClient({ defaultType, productImages }) {
             locale={locale}
             productSlug={signType.defaultSlug}
             onRetryPrice={quote.retry}
+            disabledReason={disabledReason}
+            artworkMode="upload-optional"
+            hasArtwork={!!uploadedFile}
+            artworkIntent={artworkIntent}
+            onArtworkIntentChange={setArtworkIntent}
           />
         </div>
       </div>
@@ -575,6 +590,11 @@ export default function SignOrderClient({ defaultType, productImages }) {
         categorySlug="signs-rigid-boards"
         locale={locale}
         onRetryPrice={quote.retry}
+        disabledReason={disabledReason}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
       />
     </main>
   );

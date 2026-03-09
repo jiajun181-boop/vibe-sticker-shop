@@ -4,25 +4,8 @@ import { useCallback, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { trackAddToCart } from "@/lib/analytics";
-
-/**
- * Normalise meta values for Stripe checkout (strings/numbers/booleans only).
- */
-function normalizeCheckoutMeta(meta) {
-  const input = meta && typeof meta === "object" ? meta : {};
-  const out = {};
-  for (const [k, v] of Object.entries(input)) {
-    if (v == null) continue;
-    if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
-      out[k] = v;
-      continue;
-    }
-    try { out[k] = JSON.stringify(v); } catch { /* skip */ }
-  }
-  return out;
-}
-
-const DESIGN_HELP_CENTS = 4500;
+import { normalizeCheckoutMeta } from "@/lib/product-helpers";
+import { DESIGN_HELP_CENTS, RUSH_MULTIPLIER } from "@/lib/order-config";
 
 /**
  * Hook providing addToCart and buyNow handlers for configurator components.
@@ -41,15 +24,21 @@ export default function useConfiguratorCart({ buildCartItem, successMessage = "A
   const { addItem, openCart } = useCartStore();
   const [buyNowLoading, setBuyNowLoading] = useState(false);
 
-  const handleAddToCart = useCallback((extraOptions) => {
-    const item = buildCartItem();
+  const handleAddToCart = useCallback(async (extraOptions) => {
+    // buildCartItem may be sync or async — always await
+    const item = await Promise.resolve(buildCartItem());
     if (!item) return;
 
-    // Merge rush production and other extra options
+    // Merge rush production, intake mode, and other extra options
     if (extraOptions && typeof extraOptions === "object") {
       item.options = { ...item.options, ...extraOptions };
       if (extraOptions.rushProduction) {
-        item.price = Math.round(item.price * 1.3);
+        item.price = Math.round(item.price * RUSH_MULTIPLIER);
+      }
+      if (extraOptions.artworkIntent === "design-help") {
+        item.price += DESIGN_HELP_CENTS;
+        item.options.designHelp = true;
+        item.options.designHelpFee = DESIGN_HELP_CENTS;
       }
     }
 
@@ -66,15 +55,23 @@ export default function useConfiguratorCart({ buildCartItem, successMessage = "A
   }, [buildCartItem, addItem, openCart, successMessage]);
 
   const handleBuyNow = useCallback(async (extraOptions) => {
-    const item = buildCartItem();
-    if (!item || buyNowLoading) return;
+    if (buyNowLoading) return;
     setBuyNowLoading(true);
     try {
-      // Merge rush production and other extra options
+      // buildCartItem may be sync or async — always await
+      const item = await Promise.resolve(buildCartItem());
+      if (!item) { setBuyNowLoading(false); return; }
+
+      // Merge rush production, intake mode, and other extra options
       if (extraOptions && typeof extraOptions === "object") {
         item.options = { ...item.options, ...extraOptions };
         if (extraOptions.rushProduction) {
-          item.price = Math.round(item.price * 1.3);
+          item.price = Math.round(item.price * RUSH_MULTIPLIER);
+        }
+        if (extraOptions.artworkIntent === "design-help") {
+          item.price += DESIGN_HELP_CENTS;
+          item.options.designHelp = true;
+          item.options.designHelpFee = DESIGN_HELP_CENTS;
         }
       }
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import EmailQuotePopover from "./EmailQuotePopover";
 import DeliveryEstimate from "./DeliveryEstimate";
 import { PRODUCT_PRINT_SPECS } from "@/lib/design-studio/product-configs";
+import { RUSH_MULTIPLIER } from "@/lib/order-config";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -55,15 +56,30 @@ export default function PricingSidebar({
   categorySlug,
   locale,
   productSlug,
+  disabledReason,
+  artworkMode,
+  hasArtwork,
+  artworkIntent,
+  onArtworkIntentChange,
 }) {
   // ─── Rush Production ───
   const [rushProduction, setRushProduction] = useState(false);
-  const rushMultiplier = rushProduction ? 1.3 : 1;
+  const rushMultiplier = rushProduction ? RUSH_MULTIPLIER : 1;
 
   const displaySubtotal = Math.round(subtotalCents * rushMultiplier);
   const displayTax = Math.round(taxCents * rushMultiplier);
   const displayTotal = Math.round(totalCents * rushMultiplier);
   const displayUnit = Math.round(unitCents * rushMultiplier);
+
+  // ─── Artwork Intake ───
+  const DESIGN_HELP_CENTS = 4500;
+  const needsArtworkDecision = (artworkMode === "upload-required" || artworkMode === "upload-optional") && !hasArtwork;
+  const designHelpCents = (needsArtworkDecision && artworkIntent === "design-help") ? DESIGN_HELP_CENTS : 0;
+  const displaySubtotalWithFees = displaySubtotal + designHelpCents;
+  const effectiveCanAddToCart = canAddToCart && (
+    !needsArtworkDecision ||
+    (artworkMode === "upload-optional" && !!artworkIntent)
+  );
 
   // ─── Add to Cart Animation ───
   const [atcState, setAtcState] = useState("idle"); // "idle" | "adding" | "added"
@@ -77,8 +93,13 @@ export default function PricingSidebar({
     if (atcState !== "idle") return;
     setAtcState("adding");
 
-    // Call parent handler with rush info
-    onAddToCart?.({ rushProduction });
+    // Call parent handler with rush + intake info
+    const payload = { rushProduction };
+    if (artworkMode) {
+      payload.intakeMode = artworkMode;
+      if (!hasArtwork && artworkIntent) payload.artworkIntent = artworkIntent;
+    }
+    onAddToCart?.(payload);
 
     // Spinner → Added! → idle
     atcTimerRef.current = setTimeout(() => {
@@ -87,11 +108,16 @@ export default function PricingSidebar({
         setAtcState("idle");
       }, 2000);
     }, 1000);
-  }, [atcState, onAddToCart, rushProduction]);
+  }, [atcState, onAddToCart, rushProduction, artworkMode, hasArtwork, artworkIntent]);
 
   const handleBuyNowClick = useCallback(() => {
-    onBuyNow?.({ rushProduction });
-  }, [onBuyNow, rushProduction]);
+    const payload = { rushProduction };
+    if (artworkMode) {
+      payload.intakeMode = artworkMode;
+      if (!hasArtwork && artworkIntent) payload.artworkIntent = artworkIntent;
+    }
+    onBuyNow?.(payload);
+  }, [onBuyNow, rushProduction, artworkMode, hasArtwork, artworkIntent]);
 
   const atcLabel =
     atcState === "adding" ? null :
@@ -103,7 +129,7 @@ export default function PricingSidebar({
       ? "w-full rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider bg-emerald-600 text-[#fff] cursor-default"
       : atcState === "adding"
       ? "w-full rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider bg-gray-600 text-[#fff] cursor-wait"
-      : canAddToCart
+      : effectiveCanAddToCart
       ? "w-full rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all duration-200 bg-gray-900 text-[#fff] shadow-lg shadow-gray-900/20 hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
       : "w-full rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider cursor-not-allowed bg-gray-200 text-gray-400";
 
@@ -186,10 +212,18 @@ export default function PricingSidebar({
                 </span>
               </div>
             )}
+            {designHelpCents > 0 && (
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs text-indigo-600">{t?.("configurator.designHelp") || "Design help"}</span>
+                <span className="text-sm font-medium text-indigo-600">
+                  + {formatCad(designHelpCents)}
+                </span>
+              </div>
+            )}
             <hr className="border-gray-100" />
             <div className="flex items-baseline justify-between">
               <span className="text-base font-black text-gray-900">{t?.("configurator.total") || "Total"}</span>
-              <span className="text-2xl font-black text-gray-900">{formatCad(displaySubtotal)}</span>
+              <span className="text-2xl font-black text-gray-900">{formatCad(displaySubtotalWithFees)}</span>
             </div>
             <p className="text-right text-[10px] text-gray-400">{t?.("configurator.beforeTax") || "Before tax"}</p>
             {/* Prominent unit price callout */}
@@ -292,21 +326,64 @@ export default function PricingSidebar({
           </label>
         )}
 
-        {/* Disabled hint */}
-        {(() => {
-          const hint = !canAddToCart
-            ? quoteLoading
-              ? t?.("configurator.calculating") || "Calculating price..."
-              : quoteError
-              ? t?.("configurator.fixError") || "Fix the error above"
-              : unitCents === 0
-              ? t?.("configurator.selectFirst") || "Select options above"
-              : t?.("configurator.completeOptions") || "Complete all required options"
-            : null;
-          return hint ? (
-            <p className="text-center text-xs text-amber-600">{hint}</p>
-          ) : null;
-        })()}
+        {/* Artwork intent picker — shown when artwork not yet uploaded */}
+        {needsArtworkDecision && unitCents > 0 && !quoteOnly && (
+          artworkMode === "upload-required" ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-sm font-semibold text-amber-800">{t?.("configurator.artworkRequired") || "Artwork Required"}</p>
+              <p className="text-xs text-amber-600 mt-1">{t?.("configurator.uploadDesign") || "Upload your design file above to continue"}</p>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 space-y-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{t?.("configurator.noArtwork") || "No artwork yet?"}</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => onArtworkIntentChange?.(artworkIntent === "upload-later" ? null : "upload-later")}
+                  className={`rounded-lg px-3 py-2 text-xs font-semibold border transition-colors ${
+                    artworkIntent === "upload-later"
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  {t?.("configurator.uploadLater") || "Upload Later"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onArtworkIntentChange?.(artworkIntent === "design-help" ? null : "design-help")}
+                  className={`rounded-lg px-3 py-2 text-xs font-semibold border transition-colors ${
+                    artworkIntent === "design-help"
+                      ? "border-indigo-600 bg-indigo-600 text-white"
+                      : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400"
+                  }`}
+                >
+                  {t?.("configurator.designHelpOption") || "Design Help (+$45)"}
+                </button>
+              </div>
+              {artworkIntent === "upload-later" && (
+                <p className="text-[11px] text-gray-500">{t?.("configurator.uploadLaterNote") || "We'll email you for artwork after you order."}</p>
+              )}
+              {artworkIntent === "design-help" && (
+                <p className="text-[11px] text-indigo-600">{t?.("configurator.designHelpNote") || "Our designer will create your layout — $45 flat fee included."}</p>
+              )}
+            </div>
+          )
+        )}
+
+        {/* Disabled hint — specific reason when available */}
+        {!effectiveCanAddToCart && (
+          <p className="text-center text-xs text-amber-600">
+            {(artworkMode === "upload-required" && !hasArtwork && canAddToCart)
+              ? (t?.("configurator.uploadDesign") || "Upload your artwork above to continue")
+              : (artworkMode === "upload-optional" && !hasArtwork && !artworkIntent && canAddToCart)
+              ? (t?.("configurator.chooseArtworkOption") || "Choose an artwork option above")
+              : disabledReason
+              || (quoteLoading ? (t?.("configurator.calculating") || "Calculating price...") : null)
+              || (quoteError ? (t?.("configurator.fixError") || "Fix the error above") : null)
+              || (unitCents === 0 ? (t?.("configurator.selectFirst") || "Select options above") : null)
+              || (t?.("configurator.completeOptions") || "Complete all required options")}
+          </p>
+        )}
 
         {/* Action buttons */}
         <div className="space-y-2.5 pt-2">
@@ -323,7 +400,7 @@ export default function PricingSidebar({
               <button
                 type="button"
                 onClick={handleAtcClick}
-                disabled={!canAddToCart || atcState !== "idle"}
+                disabled={!effectiveCanAddToCart || atcState !== "idle"}
                 className={atcClasses}
               >
                 {atcState === "adding" ? (
@@ -345,9 +422,9 @@ export default function PricingSidebar({
               <button
                 type="button"
                 onClick={handleBuyNowClick}
-                disabled={!canAddToCart || buyNowLoading}
+                disabled={!effectiveCanAddToCart || buyNowLoading}
                 className={`w-full rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
-                  canAddToCart && !buyNowLoading
+                  effectiveCanAddToCart && !buyNowLoading
                     ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800 active:scale-[0.98]"
                     : "cursor-not-allowed bg-gray-100 text-gray-400"
                 }`}

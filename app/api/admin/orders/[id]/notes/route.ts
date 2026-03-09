@@ -20,6 +20,13 @@ export async function POST(
       );
     }
 
+    if (message.length > 5000) {
+      return NextResponse.json(
+        { error: "Message must be under 5000 characters" },
+        { status: 400 }
+      );
+    }
+
     // Verify order exists
     const order = await prisma.order.findUnique({ where: { id }, select: { id: true } });
     if (!order) {

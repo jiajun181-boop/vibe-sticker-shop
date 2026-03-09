@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { useCartStore } from "@/lib/store";
-import { showErrorToast, showSuccessToast } from "@/components/Toast";
+import { showErrorToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageGallery from "@/components/product/ImageGallery";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import { useConfiguratorCart } from "@/components/configurator";
 
 const DEBOUNCE_MS = 300;
 
@@ -91,7 +91,6 @@ function AppIcon({ type, className = "h-8 w-8" }) {
 
 export default function DecalOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
-  const { addItem, openCart } = useCartStore();
 
   const [appId, setAppId] = useState("window");
   const [vinyl, setVinyl] = useState("white");
@@ -101,11 +100,11 @@ export default function DecalOrderClient({ productImages = [] }) {
   const [quantity, setQuantity] = useState(10);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
 
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
   const [quoteError, setQuoteError] = useState(null);
-  const [buyNowLoading, setBuyNowLoading] = useState(false);
 
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
@@ -125,6 +124,7 @@ export default function DecalOrderClient({ productImages = [] }) {
 
   // Floor = forced outdoor durability; non-window = no inside-glass
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- derived reset on application change
     if (isFloor) setDurability("outdoor");
     if (!isWindow) setAdhesiveSide("front");
   }, [isFloor, isWindow]);
@@ -170,7 +170,13 @@ export default function DecalOrderClient({ productImages = [] }) {
 
   const canAddToCart = quoteData && !quoteLoading && activeQty > 0;
 
-  function buildCartItem() {
+  const disabledReason = !canAddToCart
+    ? quoteLoading ? "Calculating price..."
+    : !quoteData ? "Select your options for pricing"
+    : "Complete all options to continue"
+    : null;
+
+  const buildCartItem = useCallback(() => {
     if (!quoteData || activeQty <= 0) return null;
     return {
       id: app.slug,
@@ -178,33 +184,15 @@ export default function DecalOrderClient({ productImages = [] }) {
       slug: app.slug,
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
-      options: { application: appId, vinyl, adhesiveSide: isWindow ? adhesiveSide : "front", durability, sizeId: size.id, sizeLabel: size.label, width: size.w, height: size.h, fileName: uploadedFile?.name || null },
+      options: { application: appId, vinyl, adhesiveSide: isWindow ? adhesiveSide : "front", durability, ...(isFloor ? { floorLamination: true } : {}), sizeId: size.id, sizeLabel: size.label, width: size.w, height: size.h, fileName: uploadedFile?.name || null, artworkUrl: uploadedFile?.url || null, artworkKey: uploadedFile?.key || null, artworkIntent: artworkIntent || null },
       forceNewLine: true,
     };
-  }
+  }, [quoteData, activeQty, app.slug, appId, size, adjustedSubtotal, vinyl, isWindow, adhesiveSide, durability, isFloor, uploadedFile, artworkIntent, t]);
 
-  function handleAddToCart() {
-    const item = buildCartItem();
-    if (!item) return;
-    addItem(item); openCart();
-    showSuccessToast(t("decal.addedToCart"));
-  }
-
-  async function handleBuyNow() {
-    const item = buildCartItem();
-    if (!item || buyNowLoading) return;
-    setBuyNowLoading(true);
-    try {
-      const meta = {};
-      for (const [k, v] of Object.entries(item.options)) { if (v == null) continue; meta[k] = typeof v === "object" ? JSON.stringify(v) : v; }
-      const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: [{ productId: String(item.id), slug: String(item.slug), name: item.name, unitAmount: item.price, quantity: item.quantity, meta }] }) });
-      const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "Checkout failed");
-      window.location.href = data.url;
-    } catch (e) { showErrorToast(e instanceof Error ? e.message : "Checkout failed"); }
-    finally { setBuyNowLoading(false); }
-  }
+  const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
+    buildCartItem,
+    successMessage: t("decal.addedToCart"),
+  });
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -306,8 +294,34 @@ export default function DecalOrderClient({ productImages = [] }) {
                 </div>
               ) : (
                 <UploadButton endpoint="artworkUploader"
-                  onClientUploadComplete={(res) => { const first = Array.isArray(res) ? res[0] : null; if (!first) return; setUploadedFile({ url: first.ufsUrl || first.url, key: first.key, name: first.name, size: first.size }); }}
+                  onClientUploadComplete={(res) => { const first = Array.isArray(res) ? res[0] : null; if (!first) return; setUploadedFile({ url: first.ufsUrl || first.url, key: first.key, name: first.name, size: first.size }); setArtworkIntent(null); }}
                   onUploadError={(err) => showErrorToast(err?.message || "Upload failed")} />
+              )}
+              {!uploadedFile && (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setArtworkIntent(artworkIntent === "upload-later" ? null : "upload-later")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      artworkIntent === "upload-later"
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
+                    }`}
+                  >
+                    I&apos;ll Upload Later
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setArtworkIntent(artworkIntent === "design-help" ? null : "design-help")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      artworkIntent === "design-help"
+                        ? "border-indigo-600 bg-indigo-600 text-white"
+                        : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400"
+                    }`}
+                  >
+                    Design Help (+$45)
+                  </button>
+                </div>
               )}
             </div>
           </Section>
@@ -343,9 +357,12 @@ export default function DecalOrderClient({ productImages = [] }) {
                 {activeQty > 1 && <div className="pt-1"><p className="text-[11px] text-gray-400">{formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("decal.each")}</p></div>}
               </dl>
             ) : <p className="text-xs text-gray-400">{t("decal.selectOptions")}</p>}
+            {disabledReason && (
+              <p className="text-center text-xs text-amber-600">{disabledReason}</p>
+            )}
             <div className="space-y-3">
-              <button type="button" onClick={handleAddToCart} disabled={!canAddToCart} className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>{t("decal.addToCart")}</button>
-              <button type="button" onClick={handleBuyNow} disabled={!canAddToCart || buyNowLoading} className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"}`}>{buyNowLoading ? t("decal.processing") : t("decal.buyNow")}</button>
+              <button type="button" onClick={() => handleAddToCart({ artworkIntent })} disabled={!canAddToCart} className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>{t("decal.addToCart")}</button>
+              <button type="button" onClick={() => handleBuyNow({ artworkIntent })} disabled={!canAddToCart || buyNowLoading} className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"}`}>{buyNowLoading ? t("decal.processing") : t("decal.buyNow")}</button>
             </div>
             <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
               <span>{t("decal.badge.contourCut")}</span><span className="text-gray-300">|</span><span>{t("decal.badge.shipping")}</span>
@@ -369,9 +386,9 @@ export default function DecalOrderClient({ productImages = [] }) {
           <div className="min-w-0 flex-1">
             {quoteLoading ? <div className="h-5 w-20 animate-pulse rounded bg-gray-200" /> : quoteData ? (
               <><p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p><p className="truncate text-[11px] text-gray-500">{activeQty} × {t(`decal.app.${appId}`)} {size.label}</p></>
-            ) : <p className="text-sm text-gray-400">{t("decal.selectOptions")}</p>}
+            ) : <p className="text-sm text-gray-400">{disabledReason || t("decal.selectOptions")}</p>}
           </div>
-          <button type="button" onClick={handleAddToCart} disabled={!canAddToCart} className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>{t("decal.addToCart")}</button>
+          <button type="button" onClick={() => handleAddToCart({ artworkIntent })} disabled={!canAddToCart} className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>{t("decal.addToCart")}</button>
         </div>
       </div>
       <div className="h-20 lg:hidden" />

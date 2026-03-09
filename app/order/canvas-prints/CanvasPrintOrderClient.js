@@ -1,19 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useCartStore } from "@/lib/store";
-import { showErrorToast, showSuccessToast } from "@/components/Toast";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { UploadButton } from "@/utils/uploadthing";
-import Breadcrumbs from "@/components/Breadcrumbs";
 import CanvasPreview from "@/components/canvas/CanvasPreview";
 import ImageCropper from "@/components/canvas/ImageCropper";
 import QualityBadges from "@/components/canvas/QualityBadges";
-
-const DEBOUNCE_MS = 300;
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import {
+  StepCard,
+  OptionCard,
+  OptionGrid,
+  useStepScroll,
+  ConfigHero,
+  PricingSidebar,
+  MobileBottomBar,
+  ArtworkUpload,
+  useConfiguratorPrice,
+  useConfiguratorCart,
+} from "@/components/configurator";
+import FaqAccordion from "@/components/sticker-product/FaqAccordion";
+import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 
 // ─── Canvas Print Configuration ───
 
@@ -26,32 +32,35 @@ const SIZES = [
 ];
 
 const WRAP_DEPTHS = [
-  { id: "0.75in", surcharge: 0, icon: "standard" },
-  { id: "1.5in", surcharge: 300, icon: "gallery" },
+  { id: "0.75in", label: "Standard (0.75\")", surcharge: 0, icon: "standard" },
+  { id: "1.5in", label: "Gallery (1.5\")", surcharge: 300, icon: "gallery" },
 ];
 
 const EDGE_STYLES = [
-  { id: "wrapped-image", surcharge: 0 },
-  { id: "mirror-wrap", surcharge: 0 },
-  { id: "black-edges", surcharge: 0 },
-  { id: "white-edges", surcharge: 0 },
+  { id: "wrapped-image", label: "Wrapped Image", surcharge: 0 },
+  { id: "mirror-wrap", label: "Mirror Wrap", surcharge: 0 },
+  { id: "black-edges", label: "Black Edges", surcharge: 0 },
+  { id: "white-edges", label: "White Edges", surcharge: 0 },
 ];
 
 const COATINGS = [
-  { id: "satin", surcharge: 0 },
-  { id: "gloss", surcharge: 100 },
-  { id: "matte", surcharge: 100 },
+  { id: "satin", label: "Satin", surcharge: 0 },
+  { id: "gloss", label: "Gloss", surcharge: 100 },
+  { id: "matte", label: "Matte", surcharge: 100 },
 ];
 
 const QUANTITIES = [1, 2, 5, 10];
 
-// Map our edge style IDs to CanvasPreview edgeTreatment values
+// Map edge style IDs to CanvasPreview edgeTreatment values
 const EDGE_TO_TREATMENT = {
   "wrapped-image": "image-wrap",
   "mirror-wrap": "mirror",
   "black-edges": "color",
   "white-edges": "white",
 };
+
+const formatCad = (cents) =>
+  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 // ─── Icons ───
 
@@ -83,9 +92,9 @@ function WrapIcon({ type, className = "h-7 w-7" }) {
 // ─── Main Component ───
 
 export default function CanvasPrintOrderClient() {
-  const { t } = useTranslation();
-  const { addItem, openCart } = useCartStore();
+  const { t, locale } = useTranslation();
 
+  // ── State ──
   const [sizeIdx, setSizeIdx] = useState(2); // 16×20 default
   const [wrapId, setWrapId] = useState("0.75in");
   const [edgeId, setEdgeId] = useState("wrapped-image");
@@ -93,15 +102,8 @@ export default function CanvasPrintOrderClient() {
   const [quantity, setQuantity] = useState(1);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [cropData, setCropData] = useState({ x: 0, y: 0, zoom: 1 });
-
-  const [quoteData, setQuoteData] = useState(null);
-  const [quoteLoading, setQuoteLoading] = useState(true);
-  const [quoteError, setQuoteError] = useState(null);
-  const [buyNowLoading, setBuyNowLoading] = useState(false);
-
-  const debounceRef = useRef(null);
-  const abortRef = useRef(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
+  const [cropData, setCropData] = useState(null);
 
   const size = SIZES[sizeIdx];
 
@@ -113,480 +115,481 @@ export default function CanvasPrintOrderClient() {
     return quantity;
   }, [quantity, customQty]);
 
-  // ─── Quote ───
+  const slug = wrapId === "1.5in" ? "canvas-gallery-wrap" : "canvas-standard";
 
-  const fetchQuote = useCallback(() => {
-    if (abortRef.current) abortRef.current.abort();
-    if (activeQty <= 0) {
-      setQuoteData(null);
-      return;
-    }
-    const ac = new AbortController();
-    abortRef.current = ac;
-    setQuoteLoading(true);
-    setQuoteError(null);
+  // ── Surcharges ──
+  const wrapSurcharge = useMemo(
+    () => (WRAP_DEPTHS.find((w) => w.id === wrapId)?.surcharge ?? 0) * activeQty,
+    [wrapId, activeQty]
+  );
+  const coatingSurcharge = useMemo(
+    () => (COATINGS.find((c) => c.id === coatingId)?.surcharge ?? 0) * activeQty,
+    [coatingId, activeQty]
+  );
 
-    const slug = wrapId === "1.5in" ? "canvas-gallery-wrap" : "canvas-standard";
-    fetch("/api/pricing/calculate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        slug,
-        quantity: activeQty,
-        widthIn: size.w,
-        heightIn: size.h,
-        options: {
-          edge: EDGE_TO_TREATMENT[edgeId] || edgeId,
-          coating: coatingId,
-          barDepth: wrapId === "1.5in" ? 1.5 : 0.75,
-        },
-      }),
-      signal: ac.signal,
-    })
-      .then((r) => r.json().then((d) => ({ ok: r.ok, data: d })))
-      .then(({ ok, data }) => {
-        if (!ok) throw new Error(data.error || "Quote failed");
-        setQuoteData(data);
-      })
-      .catch((err) => {
-        if (err.name === "AbortError") return;
-        setQuoteError(err.message);
-      })
-      .finally(() => setQuoteLoading(false));
-  }, [size.w, size.h, activeQty, wrapId, edgeId, coatingId]);
+  // ── Pricing (via shared hook) ──
+  const quoteExtra = useMemo(
+    () => ({
+      edge: EDGE_TO_TREATMENT[edgeId] || edgeId,
+      coating: coatingId,
+      barDepth: wrapId === "1.5in" ? 1.5 : 0.75,
+    }),
+    [edgeId, coatingId, wrapId]
+  );
 
+  const quote = useConfiguratorPrice({
+    slug,
+    quantity: activeQty,
+    widthIn: size.w,
+    heightIn: size.h,
+    options: quoteExtra,
+    enabled: activeQty > 0,
+  });
+
+  // Add surcharges
   useEffect(() => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(fetchQuote, DEBOUNCE_MS);
-    return () => clearTimeout(debounceRef.current);
-  }, [fetchQuote]);
+    quote.addSurcharge(wrapSurcharge + coatingSurcharge);
+  }, [wrapSurcharge, coatingSurcharge]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─── Pricing ───
+  const canAddToCart =
+    quote.quoteData && !quote.quoteLoading && activeQty > 0;
 
-  const subtotalCents = quoteData?.totalCents ?? 0;
-  const wrapSurcharge = (WRAP_DEPTHS.find((w) => w.id === wrapId)?.surcharge ?? 0) * activeQty;
-  const coatingSurcharge = (COATINGS.find((c) => c.id === coatingId)?.surcharge ?? 0) * activeQty;
-  const adjustedSubtotal = subtotalCents + wrapSurcharge + coatingSurcharge;
-  const totalCents = adjustedSubtotal;
+  const disabledReason = !canAddToCart
+    ? quote.quoteLoading
+      ? "Calculating price\u2026"
+      : !quote.quoteData
+        ? "Select your options for pricing"
+        : "Complete all options to continue"
+    : null;
 
-  const canAddToCart = quoteData && !quoteLoading && activeQty > 0;
+  // ── Cart (via shared hook) ──
+  const buildCartItem = useCallback(() => {
+    if (!quote.quoteData || activeQty <= 0) return null;
 
-  // ─── Cart ───
-
-  function buildCartItem() {
-    if (!quoteData || activeQty <= 0) return null;
-
-    const nameParts = [
-      t("cv.title"),
-      size.label,
-      t(`cv.wrap.${wrapId}`),
-    ];
+    const wrapObj = WRAP_DEPTHS.find((w) => w.id === wrapId);
+    const edgeObj = EDGE_STYLES.find((e) => e.id === edgeId);
+    const coatingObj = COATINGS.find((c) => c.id === coatingId);
+    const orientation = size.w > size.h ? "landscape" : size.w < size.h ? "portrait" : "square";
 
     return {
-      id: wrapId === "1.5in" ? "canvas-gallery-wrap" : "canvas-standard",
-      name: nameParts.join(" \u2014 "),
-      slug: wrapId === "1.5in" ? "canvas-gallery-wrap" : "canvas-standard",
-      price: Math.round(adjustedSubtotal / activeQty),
+      id: slug,
+      name: `${t("cv.title")} \u2014 ${size.label} \u2014 ${wrapObj?.label || wrapId}`,
+      slug,
+      price: Math.round(quote.subtotalCents / activeQty),
       quantity: activeQty,
       options: {
         sizeId: size.id,
         sizeLabel: size.label,
         width: size.w,
         height: size.h,
+        orientation,
         wrapDepth: wrapId,
+        wrapDepthLabel: wrapObj?.label || wrapId,
         edgeStyle: edgeId,
+        edgeStyleLabel: edgeObj?.label || edgeId,
         coating: coatingId,
+        coatingLabel: coatingObj?.label || coatingId,
+        barDepth: wrapId === "1.5in" ? 1.5 : 0.75,
         fileName: uploadedFile?.name || null,
-        cropX: cropData.x,
-        cropY: cropData.y,
-        cropZoom: cropData.zoom,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
+        cropData: cropData ? JSON.stringify(cropData) : null,
       },
       forceNewLine: true,
     };
-  }
+  }, [
+    quote.quoteData,
+    quote.subtotalCents,
+    activeQty,
+    slug,
+    size,
+    wrapId,
+    edgeId,
+    coatingId,
+    uploadedFile,
+    cropData,
+    t,
+  ]);
 
-  function handleAddToCart() {
-    const item = buildCartItem();
-    if (!item) return;
-    addItem(item);
-    openCart();
-    showSuccessToast(t("cv.addedToCart"));
-  }
+  const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
+    buildCartItem,
+    successMessage: t("cv.addedToCart"),
+  });
 
-  async function handleBuyNow() {
-    const item = buildCartItem();
-    if (!item || buyNowLoading) return;
-    setBuyNowLoading(true);
-    try {
-      const meta = {};
-      for (const [k, v] of Object.entries(item.options)) {
-        if (v == null) continue;
-        meta[k] = typeof v === "object" ? JSON.stringify(v) : v;
-      }
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: [{
-            productId: String(item.id),
-            slug: String(item.slug),
-            name: item.name,
-            unitAmount: item.price,
-            quantity: item.quantity,
-            meta,
-          }],
-        }),
+  // ── Summary lines ──
+  const summaryLines = useMemo(() => {
+    const wrapObj = WRAP_DEPTHS.find((w) => w.id === wrapId);
+    const edgeObj = EDGE_STYLES.find((e) => e.id === edgeId);
+    const coatingObj = COATINGS.find((c) => c.id === coatingId);
+    return [
+      { label: t("cv.size"), value: size.label },
+      { label: t("cv.wrap.label"), value: wrapObj?.label || t(`cv.wrap.${wrapId}`) },
+      { label: t("cv.edge.label"), value: edgeObj?.label || t(`cv.edge.${edgeId}`) },
+      { label: t("cv.coating.label"), value: coatingObj?.label || t(`cv.coating.${coatingId}`) },
+      { label: t("cv.quantity"), value: activeQty > 0 ? activeQty.toLocaleString() : "\u2014" },
+      { label: "Artwork", value: uploadedFile ? "Uploaded" : "Not uploaded" },
+      ...(uploadedFile ? [{ label: "Crop", value: cropData ? "Positioned" : "Default" }] : []),
+    ];
+  }, [size, wrapId, edgeId, coatingId, activeQty, uploadedFile, cropData, t]);
+
+  // Extra pricing rows
+  const extraRows = useMemo(() => {
+    const rows = [];
+    if (wrapSurcharge > 0) {
+      rows.push({
+        label: t(`cv.wrap.${wrapId}`),
+        value: `+ $${(wrapSurcharge / 100).toFixed(2)}`,
       });
-      const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "Checkout failed");
-      window.location.href = data.url;
-    } catch (e) {
-      showErrorToast(e instanceof Error ? e.message : "Checkout failed");
-    } finally {
-      setBuyNowLoading(false);
     }
-  }
+    if (coatingSurcharge > 0) {
+      rows.push({
+        label: t(`cv.coating.${coatingId}`),
+        value: `+ $${(coatingSurcharge / 100).toFixed(2)}`,
+      });
+    }
+    return rows;
+  }, [wrapSurcharge, coatingSurcharge, wrapId, coatingId, t]);
+
+  // ── Accordion state ──
+  const [activeStepId, setActiveStepId] = useState("step-size");
+
+  const visibleSteps = useMemo(() => {
+    const defs = [
+      { id: "size", vis: true },
+      { id: "wrap", vis: true },
+      { id: "edge", vis: true },
+      { id: "coating", vis: true },
+      { id: "quantity", vis: true },
+      { id: "artwork", vis: true },
+      { id: "imageCrop", vis: !!uploadedFile },
+      { id: "quality", vis: true },
+    ];
+    let n = 0;
+    return defs.map((d) => ({ ...d, num: d.vis ? ++n : 0 }));
+  }, [uploadedFile]);
+
+  const stepNum = (id) => visibleSteps.find((s) => s.id === id)?.num || 0;
+  const stepIds = visibleSteps.filter((s) => s.vis).map((s) => "step-" + s.id);
+  const advanceStep = useStepScroll(stepIds, setActiveStepId);
+
+  const isStepOpen = (id) => activeStepId === "step-" + id;
+  const toggleStep = (id) => setActiveStepId((prev) => (prev === "step-" + id ? null : "step-" + id));
+
+  // ── Preview slot ──
+  const previewSlot = useMemo(() => (
+    <div className="flex flex-col items-center">
+      <CanvasPreview
+        imageUrl={uploadedFile?.url || null}
+        widthIn={size.w}
+        heightIn={size.h}
+        barDepth={wrapId === "1.5in" ? 1.5 : 0.75}
+        edgeTreatment={EDGE_TO_TREATMENT[edgeId] || "mirror"}
+        frameColor={null}
+      />
+      {!uploadedFile && (
+        <p className="mt-2 text-center text-[10px] text-gray-400">Upload artwork to see live preview</p>
+      )}
+    </div>
+  ), [uploadedFile, size, wrapId, edgeId]);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <Breadcrumbs
-        items={[
+    <main className="min-h-screen bg-[var(--color-gray-50)]">
+      <ConfigHero
+        breadcrumbs={[
           { label: t("nav.shop"), href: "/shop" },
           { label: t("cv.breadcrumb"), href: "/shop/signs-banners/canvas-prints" },
           { label: t("cv.order") },
         ]}
+        title={t("cv.title")}
+        subtitle={t("cv.subtitle", "Premium canvas prints on gallery-grade material")}
+        badges={[t("cv.badge.gallery"), t("cv.badge.shipping")]}
       />
 
-      <h1 className="mb-8 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-        {t("cv.title")}
-      </h1>
+      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+        <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+          <div className="space-y-3 lg:col-span-2">
 
-      <div className="lg:grid lg:grid-cols-5 lg:gap-10">
-        {/* ── LEFT: Options ── */}
-        <div className="space-y-8 lg:col-span-3">
-
-          {/* Size */}
-          <Section label={t("cv.size")}>
-            <div className="flex flex-wrap gap-2">
-              {SIZES.map((s, i) => (
-                <Chip key={s.id} active={sizeIdx === i} onClick={() => setSizeIdx(i)}>
-                  {s.label}
-                  {s.tag && <span className="ml-1 text-[11px] opacity-70">{s.tag}</span>}
-                </Chip>
-              ))}
-            </div>
-          </Section>
-
-          {/* Wrap Depth */}
-          <Section label={t("cv.wrap.label")}>
-            <div className="grid grid-cols-2 gap-3">
-              {WRAP_DEPTHS.map((w) => (
-                <button
-                  key={w.id}
-                  type="button"
-                  onClick={() => setWrapId(w.id)}
-                  className={`group flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
-                    wrapId === w.id
-                      ? "border-gray-900 bg-gray-900 text-[#fff] shadow-md"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
-                >
-                  <WrapIcon type={w.icon} className="h-7 w-7" />
-                  <span className="text-sm font-semibold">{t(`cv.wrap.${w.id}`)}</span>
-                  <span className={`text-[11px] leading-tight ${wrapId === w.id ? "text-gray-300" : "text-gray-400"}`}>
-                    {t(`cv.wrapDesc.${w.id}`)}
-                  </span>
-                  {w.surcharge > 0 && (
-                    <span className={`text-[11px] font-medium ${wrapId === w.id ? "text-amber-300" : "text-amber-600"}`}>
-                      +{formatCad(w.surcharge)}/ea
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </Section>
-
-          {/* Edge Style */}
-          <Section label={t("cv.edge.label")}>
-            <div className="flex flex-wrap gap-2">
-              {EDGE_STYLES.map((e) => (
-                <Chip key={e.id} active={edgeId === e.id} onClick={() => setEdgeId(e.id)}>
-                  {t(`cv.edge.${e.id}`)}
-                </Chip>
-              ))}
-            </div>
-          </Section>
-
-          {/* Coating */}
-          <Section label={t("cv.coating.label")}>
-            <div className="flex flex-wrap gap-2">
-              {COATINGS.map((c) => (
-                <Chip key={c.id} active={coatingId === c.id} onClick={() => setCoatingId(c.id)}>
-                  {t(`cv.coating.${c.id}`)}
-                  {c.surcharge > 0 && (
-                    <span className="ml-1 text-[11px] opacity-70">+{formatCad(c.surcharge)}/ea</span>
-                  )}
-                </Chip>
-              ))}
-            </div>
-          </Section>
-
-          {/* Quantity */}
-          <Section label={t("cv.quantity")}>
-            <div className="flex flex-wrap gap-2">
-              {QUANTITIES.map((q) => (
-                <Chip
-                  key={q}
-                  active={customQty === "" && quantity === q}
-                  onClick={() => { setQuantity(q); setCustomQty(""); }}
-                >
-                  {q.toLocaleString()}
-                </Chip>
-              ))}
-            </div>
-            <div className="mt-3 flex items-center gap-2">
-              <label className="text-xs text-gray-500">{t("cv.customQty")}:</label>
-              <input
-                type="number"
-                min="1"
-                max="999999"
-                value={customQty}
-                onChange={(e) => setCustomQty(e.target.value)}
-                placeholder="e.g. 3"
-                className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-              />
-            </div>
-          </Section>
-
-          {/* File Upload + Image Cropper */}
-          <Section label={t("cv.artwork")} optional>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              {uploadedFile ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100">
-                        <svg className="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-medium text-gray-800">{uploadedFile.name}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { setUploadedFile(null); setCropData({ x: 0, y: 0, zoom: 1 }); }}
-                      className="text-xs text-red-500 hover:text-red-700"
-                    >
-                      {t("cv.remove")}
-                    </button>
-                  </div>
-                  <div>
-                    <p className="mb-2 text-xs font-medium text-gray-500">Drag to reposition, scroll to zoom</p>
-                    <ImageCropper
-                      imageUrl={uploadedFile.url}
-                      aspectRatio={size.w / size.h}
-                      onChange={setCropData}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="mb-3 text-xs text-gray-600">{t("cv.uploadHint")}</p>
-                  <UploadButton
-                    endpoint="artworkUploader"
-                    onClientUploadComplete={(res) => {
-                      const first = Array.isArray(res) ? res[0] : null;
-                      if (!first) return;
-                      setUploadedFile({
-                        url: first.ufsUrl || first.url,
-                        key: first.key,
-                        name: first.name,
-                        size: first.size,
-                      });
-                    }}
-                    onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
+            {/* Step: Size */}
+            <StepCard
+              stepNumber={stepNum("size")}
+              title={t("cv.size")}
+              hint="Choose your canvas size"
+              summaryText={size.label}
+              open={isStepOpen("size")}
+              onToggle={() => toggleStep("size")}
+              stepId="step-size"
+            >
+              <OptionGrid columns={3}>
+                {SIZES.map((s, i) => (
+                  <OptionCard
+                    key={s.id}
+                    label={s.label}
+                    description={s.tag || null}
+                    selected={sizeIdx === i}
+                    onSelect={() => { setSizeIdx(i); advanceStep("step-size"); }}
                   />
-                </>
-              )}
-            </div>
-          </Section>
-
-          {/* Quality Badges */}
-          <QualityBadges className="mt-2" />
-        </div>
-
-        {/* ── RIGHT: Summary ── */}
-        <aside className="hidden lg:col-span-2 lg:block">
-          <div className="sticky top-24 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            {/* Live 3D Canvas Preview */}
-            <div className="flex flex-col items-center">
-              <CanvasPreview
-                imageUrl={uploadedFile?.url || null}
-                widthIn={size.w}
-                heightIn={size.h}
-                barDepth={wrapId === "1.5in" ? 1.5 : 0.75}
-                edgeTreatment={EDGE_TO_TREATMENT[edgeId] || "mirror"}
-                frameColor={null}
-              />
-              {!uploadedFile && (
-                <p className="mt-2 text-center text-[10px] text-gray-400">Upload artwork to see live preview</p>
-              )}
-            </div>
-
-            <hr className="border-gray-100" />
-
-            <h2 className="text-base font-bold text-gray-900">{t("cv.summary")}</h2>
-
-            <dl className="space-y-2 text-sm">
-              <Row label={t("cv.size")} value={size.label} />
-              <Row label={t("cv.wrap.label")} value={t(`cv.wrap.${wrapId}`)} />
-              <Row label={t("cv.edge.label")} value={t(`cv.edge.${edgeId}`)} />
-              <Row label={t("cv.coating.label")} value={t(`cv.coating.${coatingId}`)} />
-              <Row label={t("cv.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
-            </dl>
-
-            <hr className="border-gray-100" />
-
-            {quoteLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-4 animate-pulse rounded bg-gray-100" />
                 ))}
+              </OptionGrid>
+            </StepCard>
+
+            {/* Step: Wrap Depth */}
+            <StepCard
+              stepNumber={stepNum("wrap")}
+              title={t("cv.wrap.label")}
+              hint="Standard or gallery depth stretcher bars"
+              summaryText={WRAP_DEPTHS.find((w) => w.id === wrapId)?.label || wrapId}
+              open={isStepOpen("wrap")}
+              onToggle={() => toggleStep("wrap")}
+              stepId="step-wrap"
+            >
+              <OptionGrid columns={2}>
+                {WRAP_DEPTHS.map((w) => (
+                  <OptionCard
+                    key={w.id}
+                    label={w.label}
+                    selected={wrapId === w.id}
+                    onSelect={() => { setWrapId(w.id); advanceStep("step-wrap"); }}
+                    icon={<WrapIcon type={w.icon} className="h-7 w-7" />}
+                    badge={w.surcharge > 0 ? (
+                      <span className="text-[9px] font-bold text-amber-600">
+                        +{formatCad(w.surcharge)}/ea
+                      </span>
+                    ) : null}
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
+
+            {/* Step: Edge Style */}
+            <StepCard
+              stepNumber={stepNum("edge")}
+              title={t("cv.edge.label")}
+              hint="How the image wraps around the sides"
+              summaryText={EDGE_STYLES.find((e) => e.id === edgeId)?.label || edgeId}
+              open={isStepOpen("edge")}
+              onToggle={() => toggleStep("edge")}
+              stepId="step-edge"
+            >
+              <OptionGrid columns={2}>
+                {EDGE_STYLES.map((e) => (
+                  <OptionCard
+                    key={e.id}
+                    label={e.label}
+                    selected={edgeId === e.id}
+                    onSelect={() => { setEdgeId(e.id); advanceStep("step-edge"); }}
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
+
+            {/* Step: Coating */}
+            <StepCard
+              stepNumber={stepNum("coating")}
+              title={t("cv.coating.label")}
+              hint="Protective finish for your canvas"
+              summaryText={COATINGS.find((c) => c.id === coatingId)?.label || coatingId}
+              open={isStepOpen("coating")}
+              onToggle={() => toggleStep("coating")}
+              stepId="step-coating"
+            >
+              <OptionGrid columns={3}>
+                {COATINGS.map((c) => (
+                  <OptionCard
+                    key={c.id}
+                    label={c.label}
+                    selected={coatingId === c.id}
+                    onSelect={() => { setCoatingId(c.id); advanceStep("step-coating"); }}
+                    badge={c.surcharge > 0 ? (
+                      <span className="text-[9px] font-bold text-amber-600">
+                        +{formatCad(c.surcharge)}/ea
+                      </span>
+                    ) : null}
+                  />
+                ))}
+              </OptionGrid>
+            </StepCard>
+
+            {/* Step: Quantity */}
+            <StepCard
+              stepNumber={stepNum("quantity")}
+              title={t("cv.quantity")}
+              hint="How many prints do you need?"
+              summaryText={`${activeQty.toLocaleString()} pcs`}
+              open={isStepOpen("quantity")}
+              onToggle={() => toggleStep("quantity")}
+              stepId="step-quantity"
+              alwaysOpen
+            >
+              <div className="flex flex-wrap gap-2">
+                {QUANTITIES.map((q) => {
+                  const isActive = customQty === "" && quantity === q;
+                  return (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => {
+                        setQuantity(q);
+                        setCustomQty("");
+                        advanceStep("step-quantity");
+                      }}
+                      className={`flex-shrink-0 rounded-full border-2 px-4 py-2 text-sm font-bold transition-all duration-150 ${
+                        isActive
+                          ? "border-teal-500 bg-teal-50 text-gray-900"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      {q}
+                    </button>
+                  );
+                })}
               </div>
-            ) : quoteError ? (
-              <p className="text-xs text-red-500">{quoteError}</p>
-            ) : quoteData ? (
-              <dl className="space-y-2 text-sm">
-                <Row label={t("cv.basePrice")} value={formatCad(subtotalCents)} />
-                {wrapSurcharge > 0 && (
-                  <Row label={t(`cv.wrap.${wrapId}`)} value={`+ ${formatCad(wrapSurcharge)}`} />
-                )}
-                {coatingSurcharge > 0 && (
-                  <Row label={t(`cv.coating.${coatingId}`)} value={`+ ${formatCad(coatingSurcharge)}`} />
-                )}
-                <Row label={t("cv.subtotal")} value={formatCad(adjustedSubtotal)} />
-                <div className="flex justify-between border-t border-gray-100 pt-2">
-                  <dt className="font-semibold text-gray-900">{t("cv.total")}</dt>
-                  <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
-                </div>
-                <div className="pt-1">
-                  <p className="text-[11px] text-gray-400">
-                    {formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("cv.each")}
-                  </p>
-                </div>
-              </dl>
-            ) : (
-              <p className="text-xs text-gray-400">{t("cv.selectOptions")}</p>
+              <div className="mt-3 flex items-center gap-3">
+                <label className="text-xs font-medium text-gray-500">
+                  {t("cv.customQty")}:
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="999999"
+                  value={customQty}
+                  onChange={(e) => setCustomQty(e.target.value)}
+                  placeholder="e.g. 3"
+                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10"
+                />
+              </div>
+            </StepCard>
+
+            {/* Step: Artwork Upload */}
+            <StepCard
+              stepNumber={stepNum("artwork")}
+              title={t("cv.artwork")}
+              hint="Upload your image for a live preview"
+              summaryText={uploadedFile?.name || "Not uploaded yet"}
+              optional
+              open={isStepOpen("artwork")}
+              onToggle={() => toggleStep("artwork")}
+              stepId="step-artwork"
+            >
+              <ArtworkUpload
+                uploadedFile={uploadedFile}
+                onUploaded={setUploadedFile}
+                onRemove={() => { setUploadedFile(null); setCropData(null); }}
+                t={t}
+              />
+            </StepCard>
+
+            {/* Step: Image Positioning (shown when image uploaded) */}
+            {uploadedFile && (
+              <StepCard
+                stepNumber={stepNum("imageCrop")}
+                title="Image Position"
+                hint="Drag to reposition, scroll to zoom"
+                summaryText={cropData ? "Positioned" : "Default"}
+                optional
+                open={isStepOpen("imageCrop")}
+                onToggle={() => toggleStep("imageCrop")}
+                stepId="step-imageCrop"
+              >
+                <ImageCropper
+                  imageUrl={uploadedFile.url}
+                  aspectRatio={size.w / size.h}
+                  onChange={setCropData}
+                />
+              </StepCard>
             )}
 
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={!canAddToCart}
-                className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
-                  canAddToCart
-                    ? "bg-gray-900 text-[#fff] hover:bg-gray-800"
-                    : "cursor-not-allowed bg-gray-200 text-gray-400"
-                }`}
-              >
-                {t("cv.addToCart")}
-              </button>
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                disabled={!canAddToCart || buyNowLoading}
-                className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
-                  canAddToCart && !buyNowLoading
-                    ? "border-gray-900 bg-gray-900 text-[#fff] hover:bg-gray-800"
-                    : "cursor-not-allowed border-gray-200 text-gray-400"
-                }`}
-              >
-                {buyNowLoading ? t("cv.processing") : t("cv.buyNow")}
-              </button>
-            </div>
-
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
-              <span>{t("cv.badge.gallery")}</span>
-              <span className="text-gray-300">|</span>
-              <span>{t("cv.badge.shipping")}</span>
-            </div>
+            {/* Step: Quality Badges */}
+            <StepCard
+              stepNumber={stepNum("quality")}
+              title="Quality Promise"
+              hint="Gallery-grade materials and craftsmanship"
+              summaryText="Premium quality"
+              open={isStepOpen("quality")}
+              onToggle={() => toggleStep("quality")}
+              stepId="step-quality"
+            >
+              <QualityBadges />
+            </StepCard>
           </div>
-        </aside>
-      </div>
 
-      {/* ── MOBILE: Bottom bar ── */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          <div className="min-w-0 flex-1">
-            {quoteLoading ? (
-              <div className="h-5 w-20 animate-pulse rounded bg-gray-200" />
-            ) : quoteData ? (
-              <>
-                <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
-                <p className="truncate text-[11px] text-gray-500">
-                  {activeQty.toLocaleString()} × {size.label} {t("cv.title")}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-gray-400">{t("cv.selectOptions")}</p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={!canAddToCart}
-            className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
-              canAddToCart
-                ? "bg-gray-900 text-[#fff] hover:bg-gray-800"
-                : "cursor-not-allowed bg-gray-200 text-gray-400"
-            }`}
-          >
-            {t("cv.addToCart")}
-          </button>
+          {/* RIGHT: Pricing Sidebar */}
+          <PricingSidebar
+            previewSlot={previewSlot}
+            summaryLines={summaryLines}
+            quoteLoading={quote.quoteLoading}
+            quoteError={quote.quoteError}
+            unitCents={quote.unitCents}
+            subtotalCents={quote.subtotalCents}
+            taxCents={quote.taxCents}
+            totalCents={quote.subtotalCents}
+            quantity={activeQty}
+            canAddToCart={canAddToCart}
+            disabledReason={disabledReason}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            buyNowLoading={buyNowLoading}
+            extraRows={extraRows}
+            badges={[t("cv.badge.gallery"), t("cv.badge.shipping")]}
+            t={t}
+            productName={t("cv.title")}
+            categorySlug="canvas-prints"
+            locale={locale}
+            productSlug={slug}
+            onRetryPrice={quote.retry}
+            artworkMode="upload-optional"
+            hasArtwork={!!uploadedFile}
+            artworkIntent={artworkIntent}
+            onArtworkIntentChange={setArtworkIntent}
+          />
         </div>
       </div>
 
-      <div className="h-20 lg:hidden" />
+      {/* FAQ */}
+      {(() => {
+        const faqItems = getConfiguratorFaqs("canvas-prints");
+        if (!faqItems) return null;
+        return (
+          <div className="mx-auto max-w-4xl pb-16 pt-8">
+            <FaqAccordion items={faqItems} />
+          </div>
+        );
+      })()}
+
+      {/* Inline mobile delivery estimate */}
+      {!!quote.quoteData && (
+        <div className="mx-auto max-w-4xl px-4 pb-4 md:hidden">
+          <DeliveryEstimate categorySlug="canvas-prints" t={t} locale={locale} />
+        </div>
+      )}
+
+      <MobileBottomBar
+        quoteLoading={quote.quoteLoading}
+        hasQuote={!!quote.quoteData}
+        totalCents={quote.subtotalCents}
+        quantity={activeQty}
+        summaryText={
+          quote.quoteData
+            ? `${formatCad(quote.unitCents)}/ea \u00d7 ${activeQty}`
+            : null
+        }
+        canAddToCart={canAddToCart}
+        disabledReason={disabledReason}
+        onAddToCart={handleAddToCart}
+        onBuyNow={handleBuyNow}
+        buyNowLoading={buyNowLoading}
+        t={t}
+        productName={t("cv.title")}
+        summaryLines={summaryLines}
+        unitCents={quote.unitCents}
+        subtotalCents={quote.subtotalCents}
+        categorySlug="canvas-prints"
+        locale={locale}
+        onRetryPrice={quote.retry}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
+      />
     </main>
-  );
-}
-
-// ─── Helpers ───
-
-function Section({ label, optional, children }) {
-  return (
-    <section>
-      <div className="mb-3 flex items-baseline gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{label}</h2>
-        {optional && <span className="text-[10px] text-gray-400">(optional)</span>}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Chip({ active, onClick, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-        active
-          ? "border-gray-900 bg-gray-900 text-[#fff]"
-          : "border-gray-300 bg-white text-gray-700 hover:border-gray-500"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Row({ label, value }) {
-  return (
-    <div className="flex justify-between">
-      <dt className="text-gray-500">{label}</dt>
-      <dd className="font-medium text-gray-800">{value}</dd>
-    </div>
   );
 }

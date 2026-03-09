@@ -50,6 +50,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
   const [customQty, setCustomQty] = useState("");
   const [textInput, setTextInput] = useState(""); // for DOT/MC numbers
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
   const [dimErrors, setDimErrors] = useState([]);
 
   const isCustomSize = sizeIdx === -1;
@@ -123,6 +124,12 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
 
   const canAddToCart = !isQuoteOnly && quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
 
+  const disabledReason = !canAddToCart
+    ? quote.quoteLoading ? "Calculating price..."
+    : !quote.quoteData ? "Select your options for pricing"
+    : "Complete all options to continue"
+    : null;
+
   // Cart
   const buildCartItem = useCallback(() => {
     if (!quote.quoteData || activeQty <= 0) return null;
@@ -148,8 +155,12 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
         height: heightIn || null,
         sizeLabel,
         material: materialId,
+        lamination: "gloss-overlaminate",
+        outdoor: true,
         text: textInput.trim() || null,
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
       forceNewLine: true,
     };
@@ -500,6 +511,11 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
             locale={locale}
             productSlug={vehicleType.defaultSlug}
             onRetryPrice={quote.retry}
+            disabledReason={disabledReason}
+            artworkMode="upload-optional"
+            hasArtwork={!!uploadedFile}
+            artworkIntent={artworkIntent}
+            onArtworkIntentChange={setArtworkIntent}
           />
         </div>
       </div>
@@ -547,6 +563,11 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
         categorySlug="vehicle-graphics-fleet"
         locale={locale}
         onRetryPrice={quote.retry}
+        disabledReason={disabledReason}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
       />
     </main>
   );

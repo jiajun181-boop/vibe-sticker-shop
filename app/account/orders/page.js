@@ -45,7 +45,7 @@ export default function AccountOrdersPage() {
     e.stopPropagation();
     setReordering(orderId);
     try {
-      const res = await fetch(`/api/account/orders/${orderId}/reorder`, { method: "POST" });
+      const res = await fetch(`/api/account/orders/${orderId}/reorder`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to reorder");
       for (const item of data.items || []) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
+import { VALID_STATUS_TRANSITIONS, VALID_PRODUCTION_STATUSES } from "@/lib/order-config";
 
 export async function POST(request: NextRequest) {
   const auth = await requirePermission(request, "orders", "edit");
@@ -29,20 +30,42 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate enum values
-    const VALID_STATUSES = ["draft", "pending", "paid", "canceled", "refunded"];
-    const VALID_PRODUCTION = ["not_started", "preflight", "in_production", "ready_to_ship", "shipped", "completed", "on_hold", "canceled"];
+    const validStatuses = Object.keys(VALID_STATUS_TRANSITIONS);
 
-    if (status !== undefined && !VALID_STATUSES.includes(status)) {
+    if (status !== undefined && !validStatuses.includes(status)) {
       return NextResponse.json(
         { error: `Invalid status value: ${status}` },
         { status: 400 }
       );
     }
-    if (productionStatus !== undefined && !VALID_PRODUCTION.includes(productionStatus)) {
+    if (productionStatus !== undefined && !VALID_PRODUCTION_STATUSES.includes(productionStatus)) {
       return NextResponse.json(
         { error: `Invalid productionStatus value: ${productionStatus}` },
         { status: 400 }
       );
+    }
+
+    // If changing order status, validate transitions for each order
+    if (status !== undefined) {
+      const orders = await prisma.order.findMany({
+        where: { id: { in: orderIds } },
+        select: { id: true, status: true },
+      });
+
+      const blocked: string[] = [];
+      for (const order of orders) {
+        const allowed = VALID_STATUS_TRANSITIONS[order.status];
+        if (allowed && !allowed.includes(status)) {
+          blocked.push(`${order.id.slice(0, 8)} (${order.status} → ${status})`);
+        }
+      }
+
+      if (blocked.length > 0) {
+        return NextResponse.json(
+          { error: `Invalid status transitions: ${blocked.join(", ")}` },
+          { status: 400 }
+        );
+      }
     }
 
     // Build the data object with only provided fields
@@ -56,6 +79,8 @@ export async function POST(request: NextRequest) {
     if (productionStatus !== undefined) changeParts.push(`productionStatus → ${productionStatus}`);
     const changeDescription = changeParts.join(", ");
 
+    const actorEmail = auth.user?.email || "admin";
+
     // Use a transaction to update all orders and create timeline entries
     await prisma.$transaction(
       orderIds.flatMap((orderId: string) => [
@@ -68,7 +93,7 @@ export async function POST(request: NextRequest) {
             orderId,
             action: "bulk_update",
             details: JSON.stringify({ updated: data, description: changeDescription }),
-            actor: "admin",
+            actor: actorEmail,
           },
         }),
       ])
@@ -78,6 +103,7 @@ export async function POST(request: NextRequest) {
     logActivity({
       action: "bulk_update",
       entity: "order",
+      actor: actorEmail,
       details: {
         orderIds,
         updates: data,

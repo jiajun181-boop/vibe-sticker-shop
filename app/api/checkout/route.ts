@@ -12,6 +12,7 @@ import {
 } from "@/lib/checkout-origin";
 import { getSessionFromRequest } from "@/lib/auth";
 import { checkAndReserveStock } from "@/lib/inventory";
+import { HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "@/lib/order-config";
 
 let _stripe: Stripe | null = null;
 function getStripe() {
@@ -166,9 +167,11 @@ function repriceSingleItem(product: ProductWithPricingPreset, item: z.infer<type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const presetCfg = product.pricingPreset?.config as any;
   const addonDefs: Array<{ id: string; type?: string }> = Array.isArray(optsCfg?.addons)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ? optsCfg.addons.filter((a: any) => a && typeof a === "object" && "id" in a)
     : [];
   const finishingDefs: Array<{ id: string; type?: string }> = Array.isArray(presetCfg?.finishings)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ? presetCfg.finishings.filter((f: any) => f && typeof f === "object" && "id" in f)
     : [];
 
@@ -342,6 +345,7 @@ export async function POST(req: Request) {
     // Partner discount — auto-applied for B2B partners
     let partnerDiscount = 0;
     let partnerUserId: string | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const session = getSessionFromRequest(req as any);
     if (session?.userId) {
       const user = await prisma.user.findUnique({
@@ -399,19 +403,34 @@ export async function POST(req: Request) {
     const discountAmount = couponDiscount + partnerDiscount;
     const afterDiscount = Math.max(0, subtotal - discountAmount);
 
-    const FREE_SHIPPING_THRESHOLD = 9900;
     const isFreeShipping = isPickup || afterDiscount >= FREE_SHIPPING_THRESHOLD;
-    const shippingCost = isFreeShipping ? 0 : 1500;
+    const shippingCost = isFreeShipping ? 0 : SHIPPING_COST;
 
     // Tax is calculated by Stripe's automatic_tax; this estimate is for metadata only
     const taxableAmount = afterDiscount + shippingCost;
-    const estimatedTax = Math.round(taxableAmount * 0.13);
+    const estimatedTax = Math.round(taxableAmount * HST_RATE);
     const estimatedTotal = afterDiscount + shippingCost + estimatedTax;
 
     // Keys that can exceed Stripe's 500-char metadata value limit
     const LARGE_META_KEYS = new Set([
       "contourSvg", "bleedSvg", "templateData", "contourPoints", "bleedPoints",
     ]);
+
+    // --- Intake field extraction ---
+    // These fields describe the customer's artwork/design intent and production urgency.
+    // They originate from the configurator UI and are stringified by normalizeCheckoutMeta.
+    // We extract them explicitly so downstream systems (webhook → order, preflight, auto-tag)
+    // can rely on consistent, well-documented keys rather than opaque meta pass-through.
+    //
+    //   intakeMode      — "upload-required" | "upload-optional" | "editor-built-in"
+    //                     Describes whether the product requires artwork upload.
+    //   artworkIntent   — "upload-later" | "design-help" | null
+    //                     What the customer chose to do about artwork at checkout time.
+    //   designHelp      — "true" | "false"
+    //                     Whether the customer opted into the $45 design help service.
+    //   designHelpFee   — e.g. "4500" (cents) — the fee charged for design help.
+    //   rushProduction   — "true" | "false"
+    //                     Whether the customer requested rush production (30% surcharge).
 
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = pricedItems.map(
       (item) => {
@@ -423,6 +442,45 @@ export async function POST(req: Request) {
           const s = String(v);
           if (s.length > 490) continue; // Safety: skip any unexpectedly large value
           stripeMeta[k] = s;
+        }
+
+        // Ensure intake fields are explicitly present as strings in Stripe metadata.
+        // normalizeCheckoutMeta already stringifies, but we set explicit defaults
+        // so these keys are always present (never silently absent).
+        //
+        // intakeMode defaults to "upload-optional" — safest for a print shop because
+        // it means "customer can send artwork later" rather than silently empty.
+        const rawIntakeMode = String(meta.intakeMode ?? "").trim();
+        stripeMeta.intakeMode = rawIntakeMode || "upload-optional";
+
+        const rawArtworkIntent = String(meta.artworkIntent ?? "").trim();
+        stripeMeta.artworkIntent = rawArtworkIntent || "";
+
+        if (!("designHelp" in stripeMeta))    stripeMeta.designHelp    = String(meta.designHelp ?? "false");
+        if (!("designHelpFee" in stripeMeta)) stripeMeta.designHelpFee = String(meta.designHelpFee ?? "0");
+
+        const rawRush = String(meta.rushProduction ?? "false").trim();
+        stripeMeta.rushProduction = rawRush === "true" ? "true" : "false";
+
+        // If rush production is active, tag that the 30% surcharge was applied client-side.
+        // We don't reject orders over this — just flag it so the webhook/admin can verify.
+        if (stripeMeta.rushProduction === "true") {
+          stripeMeta.rushVerified = "client-side";
+        }
+
+        // Derive artworkStatus so downstream systems (webhook, preflight, auto-tag)
+        // know at a glance whether artwork was provided, pending, or needs design help.
+        const hasArtwork = Boolean(
+          meta.artworkUrl || meta.fileUrl || meta.uploadedFileUrl
+        );
+        if (hasArtwork) {
+          stripeMeta.artworkStatus = "uploaded";
+        } else if (rawArtworkIntent === "upload-later") {
+          stripeMeta.artworkStatus = "pending";
+        } else if (rawArtworkIntent === "design-help") {
+          stripeMeta.artworkStatus = "design-help";
+        } else {
+          stripeMeta.artworkStatus = "none";
         }
 
         return {
@@ -541,6 +599,20 @@ export async function POST(req: Request) {
         totalAmount: estimatedTotal.toString(),
         maxPriceDrift: Math.max(...pricedItems.map((i) => i.priceDrift || 0)).toString(),
         statusToken,
+        // Order-wide intake flags — summarized from all items for quick admin visibility.
+        // "true" if ANY item in the order has the flag set.
+        hasDesignHelp: pricedItems.some((i) => {
+          const m = i.meta || {};
+          return m.designHelp === true || m.designHelp === "true";
+        }).toString(),
+        hasRushProduction: pricedItems.some((i) => {
+          const m = i.meta || {};
+          return m.rushProduction === true || m.rushProduction === "true";
+        }).toString(),
+        hasUploadLater: pricedItems.some((i) => {
+          const m = i.meta || {};
+          return m.artworkIntent === "upload-later";
+        }).toString(),
         ...(couponData && {
           couponId: couponData.id,
           couponCode: couponData.code,

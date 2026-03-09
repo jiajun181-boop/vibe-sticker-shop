@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useCartStore } from "@/lib/store";
-import { showErrorToast, showSuccessToast } from "@/components/Toast";
+import { showErrorToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageGallery from "@/components/product/ImageGallery";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import { useConfiguratorCart } from "@/components/configurator";
 
 const DEBOUNCE_MS = 300;
 
@@ -43,7 +43,6 @@ const QUANTITIES = [1, 2, 5, 10];
 
 export default function XBannerStandOrderClient({ productImages = [] }) {
   const { t } = useTranslation();
-  const { addItem, openCart } = useCartStore();
 
   const [sizeIdx, setSizeIdx] = useState(1); // 32×74 Standard default
   const [orderType, setOrderType] = useState("complete-kit");
@@ -52,11 +51,11 @@ export default function XBannerStandOrderClient({ productImages = [] }) {
   const [quantity, setQuantity] = useState(1);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
 
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
   const [quoteError, setQuoteError] = useState(null);
-  const [buyNowLoading, setBuyNowLoading] = useState(false);
 
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
@@ -126,9 +125,15 @@ export default function XBannerStandOrderClient({ productImages = [] }) {
 
   const canAddToCart = quoteData && !quoteLoading && activeQty > 0;
 
+  const disabledReason = !canAddToCart
+    ? quoteLoading ? "Calculating price..."
+    : !quoteData ? "Select your options for pricing"
+    : "Complete all options to continue"
+    : null;
+
   // ─── Cart ───
 
-  function buildCartItem() {
+  const buildCartItem = useCallback(() => {
     if (!quoteData || activeQty <= 0) return null;
     const typeLabel = orderType === "print-only" ? "Print Only" : "Complete Kit";
     return {
@@ -146,52 +151,17 @@ export default function XBannerStandOrderClient({ productImages = [] }) {
         material,
         stand: orderType === "complete-kit" ? stand : "none",
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
       forceNewLine: true,
     };
-  }
+  }, [quoteData, activeQty, totalCents, size, orderType, material, stand, uploadedFile, t]);
 
-  function handleAddToCart() {
-    const item = buildCartItem();
-    if (!item) return;
-    addItem(item);
-    openCart();
-    showSuccessToast(t("xb.addedToCart"));
-  }
-
-  async function handleBuyNow() {
-    const item = buildCartItem();
-    if (!item || buyNowLoading) return;
-    setBuyNowLoading(true);
-    try {
-      const meta = {};
-      for (const [k, v] of Object.entries(item.options)) {
-        if (v == null) continue;
-        meta[k] = typeof v === "object" ? JSON.stringify(v) : v;
-      }
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: [{
-            productId: String(item.id),
-            slug: String(item.slug),
-            name: item.name,
-            unitAmount: item.price,
-            quantity: item.quantity,
-            meta,
-          }],
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "Checkout failed");
-      window.location.href = data.url;
-    } catch (e) {
-      showErrorToast(e instanceof Error ? e.message : "Checkout failed");
-    } finally {
-      setBuyNowLoading(false);
-    }
-  }
+  const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
+    buildCartItem,
+    successMessage: t("xb.addedToCart"),
+  });
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -330,9 +300,36 @@ export default function XBannerStandOrderClient({ productImages = [] }) {
                     const first = Array.isArray(res) ? res[0] : null;
                     if (!first) return;
                     setUploadedFile({ url: first.ufsUrl || first.url, key: first.key, name: first.name, size: first.size });
+                    setArtworkIntent(null);
                   }}
                   onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
                 />
+              )}
+              {!uploadedFile && (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setArtworkIntent(artworkIntent === "upload-later" ? null : "upload-later")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      artworkIntent === "upload-later"
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
+                    }`}
+                  >
+                    I&apos;ll Upload Later
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setArtworkIntent(artworkIntent === "design-help" ? null : "design-help")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      artworkIntent === "design-help"
+                        ? "border-indigo-600 bg-indigo-600 text-white"
+                        : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400"
+                    }`}
+                  >
+                    Design Help (+$45)
+                  </button>
+                </div>
               )}
             </div>
           </Section>
@@ -389,12 +386,16 @@ export default function XBannerStandOrderClient({ productImages = [] }) {
               <p className="text-xs text-gray-400">{t("xb.selectOptions")}</p>
             )}
 
+            {disabledReason && (
+              <p className="text-center text-xs text-amber-600">{disabledReason}</p>
+            )}
+
             <div className="space-y-3">
-              <button type="button" onClick={handleAddToCart} disabled={!canAddToCart}
+              <button type="button" onClick={() => handleAddToCart({ artworkIntent })} disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
                 {t("xb.addToCart")}
               </button>
-              <button type="button" onClick={handleBuyNow} disabled={!canAddToCart || buyNowLoading}
+              <button type="button" onClick={() => handleBuyNow({ artworkIntent })} disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"}`}>
                 {buyNowLoading ? t("xb.processing") : t("xb.buyNow")}
               </button>
@@ -433,10 +434,10 @@ export default function XBannerStandOrderClient({ productImages = [] }) {
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">{t("xb.selectOptions")}</p>
+              <p className="text-sm text-gray-400">{disabledReason || t("xb.selectOptions")}</p>
             )}
           </div>
-          <button type="button" onClick={handleAddToCart} disabled={!canAddToCart}
+          <button type="button" onClick={() => handleAddToCart({ artworkIntent })} disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
             {t("xb.addToCart")}
           </button>

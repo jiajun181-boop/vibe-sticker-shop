@@ -20,7 +20,18 @@ export default function ContactForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 429) {
+          showErrorToast(t("contact.form.rateLimited") || "Too many messages sent. Please wait a few minutes.");
+          return;
+        }
+        if (data.error) {
+          showErrorToast(data.error);
+          return;
+        }
+        throw new Error();
+      }
       showSuccessToast(t("contact.form.success"));
       setForm({ name: "", email: "", phone: "", company: "", message: "" });
     } catch {

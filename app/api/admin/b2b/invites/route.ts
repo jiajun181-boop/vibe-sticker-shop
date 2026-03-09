@@ -12,12 +12,17 @@ export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, "b2b", "view");
   if (!auth.authenticated) return auth.response;
 
-  const invites = await prisma.partnerInvite.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+  try {
+    const invites = await prisma.partnerInvite.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
 
-  return NextResponse.json({ invites });
+    return NextResponse.json({ invites });
+  } catch (err) {
+    console.error("[admin/b2b/invites] GET error:", err);
+    return NextResponse.json({ error: "Failed to load invites" }, { status: 500 });
+  }
 }
 
 /** POST — send a new partner invite */
@@ -25,6 +30,7 @@ export async function POST(request: NextRequest) {
   const auth = await requirePermission(request, "b2b", "edit");
   if (!auth.authenticated) return auth.response;
 
+  try {
   const body = await request.json();
   const { email, companyName, tier, discount, note } = body;
 
@@ -92,6 +98,10 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ success: true, invite: { id: invite.id, email: invite.email, token, expiresAt } });
+  } catch (err) {
+    console.error("[admin/b2b/invites] POST error:", err);
+    return NextResponse.json({ error: "Failed to create invite" }, { status: 500 });
+  }
 }
 
 /** DELETE — cancel/revoke an invite */
@@ -99,11 +109,16 @@ export async function DELETE(request: NextRequest) {
   const auth = await requirePermission(request, "b2b", "edit");
   if (!auth.authenticated) return auth.response;
 
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  await prisma.partnerInvite.delete({ where: { id } }).catch(() => {});
+    await prisma.partnerInvite.delete({ where: { id } }).catch(() => {});
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("[admin/b2b/invites] DELETE error:", err);
+    return NextResponse.json({ error: "Failed to delete invite" }, { status: 500 });
+  }
 }

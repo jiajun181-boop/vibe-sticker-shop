@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
+import { syncOrderProductionStatus } from "@/lib/production-sync";
+import { VALID_JOB_TRANSITIONS } from "@/lib/order-config";
 
 const JOB_INCLUDE = {
   orderItem: {
@@ -110,6 +112,17 @@ export async function PATCH(
     const factoryChanged =
       data.factoryId !== undefined && data.factoryId !== existing.factoryId;
 
+    // Validate status transition
+    if (statusChanged) {
+      const allowed = VALID_JOB_TRANSITIONS[existing.status];
+      if (allowed && !allowed.includes(data.status as string)) {
+        return NextResponse.json(
+          { error: `Cannot transition from "${existing.status}" to "${data.status}". Allowed: ${allowed.join(", ") || "none (terminal)"}` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Auto-set startedAt when status changes to "printing"
     if (statusChanged && data.status === "printing" && !existing.startedAt && !data.startedAt) {
       data.startedAt = new Date();
@@ -147,6 +160,27 @@ export async function PATCH(
         entityId: id,
         details: { from: existing.status, to: data.status },
       });
+    }
+
+    // Sync parent order's productionStatus from all its jobs
+    if (statusChanged && job.orderItem?.order?.id) {
+      const orderId = job.orderItem.order.id;
+      const newOrderStatus = await syncOrderProductionStatus(orderId);
+
+      // Create an OrderTimeline event so the customer tracking page shows progress
+      if (newOrderStatus) {
+        prisma.orderTimeline.create({
+          data: {
+            orderId,
+            action: "status_updated",
+            details: JSON.stringify({
+              productionStatus: newOrderStatus,
+              triggeredBy: `job ${id.slice(0, 8)} → ${data.status}`,
+            }),
+            actor: "system",
+          },
+        }).catch(() => {});
+      }
     }
 
     // Create JobEvent for factory assignment
@@ -193,9 +227,23 @@ export async function POST(
 
     const { type, payload, operatorName } = body;
 
+    const VALID_EVENT_TYPES = [
+      "status_change", "factory_assigned", "note", "quality_check",
+      "defect_found", "rework", "file_received", "proof_uploaded",
+      "proof_approved", "proof_rejected", "priority_changed",
+      "operator_note", "delay", "custom",
+    ];
+
     if (!type) {
       return NextResponse.json(
         { error: "Event type is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!VALID_EVENT_TYPES.includes(type)) {
+      return NextResponse.json(
+        { error: `Invalid event type: "${type}". Allowed: ${VALID_EVENT_TYPES.join(", ")}` },
         { status: 400 }
       );
     }

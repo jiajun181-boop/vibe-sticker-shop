@@ -99,6 +99,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
   const [multiMaxW, setMultiMaxW] = useState("2");
   const [multiMaxH, setMultiMaxH] = useState("2");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
 
   const customerSheet = useMemo(
     () => CUSTOMER_SHEET_SIZES.find((s) => s.id === sheetSizeId) || CUSTOMER_SHEET_SIZES[0],
@@ -165,6 +166,7 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
   const showPaperWarning = LAMINATION_RULES.paperWarning.includes(materialId) && laminationId === "none";
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- derived reset when material hides lamination
     if (hideLamination && laminationId !== "none") setLaminationId("none");
   }, [hideLamination, laminationId]);
 
@@ -237,10 +239,15 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
       options: {
         type: "Sticker Sheets",
         mode: mode === "multi" ? "Multiple Designs" : "Same Design",
+        shape: mode === "same" ? shapeId : null,
         stickerSize: sizeLabel,
+        width: widthIn,
+        height: heightIn,
         material: materialId,
-        materialName: t(`stickerOrder.mat.${materialId}`),
+        materialLabel: t(`stickerOrder.mat.${materialId}`),
         lamination: laminationId !== "none" ? laminationId : null,
+        ...(isWhiteInkMaterial && { printMode }),
+        ...(isWhiteInkMaterial && { whiteInk: true }),
         stickersPerSheet: pricing.perSheet,
         sheetsOrdered: pricing.sheetsNeeded,
         totalStickers: pricing.actualQty,
@@ -249,10 +256,12 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
         ...(pricing.designFee > 0 && { setupFee: `$${pricing.designFee.toFixed(2)}` }),
         turnaround: turnaroundId,
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
       forceNewLine: true,
     };
-  }, [pricing, activeStickerQty, materialId, sheetSizeId, widthIn, heightIn, sizeLabel, numDesigns, mode, laminationId, turnaroundId, uploadedFile, t, customerSheet]);
+  }, [pricing, activeStickerQty, materialId, sheetSizeId, widthIn, heightIn, sizeLabel, numDesigns, mode, shapeId, laminationId, printMode, isWhiteInkMaterial, turnaroundId, uploadedFile, t, customerSheet]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -704,6 +713,10 @@ export default function SheetsConfigurator({ mode: modeProp = "same" }) {
         onBuyNow={handleBuyNow}
         buyNowLoading={buyNowLoading}
         t={t}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
       />
     </div>
   );

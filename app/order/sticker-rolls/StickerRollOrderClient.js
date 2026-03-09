@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useCartStore } from "@/lib/store";
-import { showErrorToast, showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
+import { showErrorToast } from "@/components/Toast";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import WhiteInkStep, { needsWhiteInk } from "@/components/configurator/WhiteInkStep";
+import { useConfiguratorCart } from "@/components/configurator";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 
@@ -87,7 +88,6 @@ const WIND_DIRECTIONS = [
 
 export default function StickerRollOrderClient() {
   const { t } = useTranslation();
-  const { addItem, openCart } = useCartStore();
 
   const [shapeId, setShapeId] = useState("circle");
   const [sizeIdx, setSizeIdx] = useState(DEFAULT_SIZE_IDX["circle"]);
@@ -97,11 +97,12 @@ export default function StickerRollOrderClient() {
   const [quantity, setQuantity] = useState(1000);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
+  const [whiteInk, setWhiteInk] = useState({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null });
 
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
   const [quoteError, setQuoteError] = useState(null);
-  const [buyNowLoading, setBuyNowLoading] = useState(false);
 
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
@@ -119,6 +120,7 @@ export default function StickerRollOrderClient() {
 
   // Reset size when shape changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSizeIdx(DEFAULT_SIZE_IDX[shapeId] ?? 0);
   }, [shapeId]);
 
@@ -173,11 +175,19 @@ export default function StickerRollOrderClient() {
   const adjustedSubtotal = subtotalCents + materialSurcharge + finishSurcharge;
   const totalCents = adjustedSubtotal;
 
-  const canAddToCart = quoteData && !quoteLoading && activeQty > 0;
+  // White ink enabled on transparent material → URL must be ready before checkout
+  const whiteInkReady = !needsWhiteInk(materialId) || !whiteInk.enabled || whiteInk.whiteInkUrl != null;
+  const canAddToCart = quoteData && !quoteLoading && activeQty > 0 && whiteInkReady;
+  const disabledReason = !canAddToCart
+    ? quoteLoading ? "Calculating price..."
+    : !quoteData ? "Select your options for pricing"
+    : !whiteInkReady ? "White ink layer is being generated..."
+    : "Complete all options to continue"
+    : null;
 
   // ─── Cart ───
 
-  function buildCartItem() {
+  const buildCartItem = useCallback(() => {
     if (!quoteData || activeQty <= 0) return null;
 
     const shape = SHAPES.find((s) => s.id === shapeId);
@@ -200,55 +210,30 @@ export default function StickerRollOrderClient() {
         width: size.w,
         height: size.h,
         material: materialId,
+        materialLabel: t(`sr.material.${materialId}`),
         finish: finishId,
+        finishLabel: t(`sr.finish.${finishId}`),
         wind: windId,
+        coreSize: "3-inch",
+        stickersPerRoll: activeQty,
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
+        whiteInkEnabled: needsWhiteInk(materialId) && whiteInk.enabled,
+        whiteInkMode: needsWhiteInk(materialId) && whiteInk.enabled ? (whiteInk.mode || "auto") : null,
+        whiteInkUrl: needsWhiteInk(materialId) && whiteInk.enabled ? (whiteInk.whiteInkUrl || null) : null,
+        whiteInkKey: needsWhiteInk(materialId) && whiteInk.enabled ? (whiteInk.whiteInkKey || null) : null,
+        whiteInkWidth: needsWhiteInk(materialId) && whiteInk.enabled ? (whiteInk.whiteInkWidth || null) : null,
+        whiteInkHeight: needsWhiteInk(materialId) && whiteInk.enabled ? (whiteInk.whiteInkHeight || null) : null,
       },
       forceNewLine: true,
     };
-  }
+  }, [quoteData, activeQty, shapeId, materialId, finishId, windId, size, adjustedSubtotal, uploadedFile, whiteInk, t]);
 
-  function handleAddToCart() {
-    const item = buildCartItem();
-    if (!item) return;
-    addItem(item);
-    openCart();
-    showSuccessToast(t("sr.addedToCart"));
-  }
-
-  async function handleBuyNow() {
-    const item = buildCartItem();
-    if (!item || buyNowLoading) return;
-    setBuyNowLoading(true);
-    try {
-      const meta = {};
-      for (const [k, v] of Object.entries(item.options)) {
-        if (v == null) continue;
-        meta[k] = typeof v === "object" ? JSON.stringify(v) : v;
-      }
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: [{
-            productId: String(item.id),
-            slug: String(item.slug),
-            name: item.name,
-            unitAmount: item.price,
-            quantity: item.quantity,
-            meta,
-          }],
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "Checkout failed");
-      window.location.href = data.url;
-    } catch (e) {
-      showErrorToast(e instanceof Error ? e.message : "Checkout failed");
-    } finally {
-      setBuyNowLoading(false);
-    }
-  }
+  const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
+    buildCartItem,
+    successMessage: t("sr.addedToCart"),
+  });
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -299,7 +284,7 @@ export default function StickerRollOrderClient() {
                   <button
                     key={mat.id}
                     type="button"
-                    onClick={() => setMaterialId(mat.id)}
+                    onClick={() => { setMaterialId(mat.id); setWhiteInk({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null }); }}
                     className={`relative rounded-xl border-2 px-3 py-3 text-left transition-all ${
                       materialId === mat.id
                         ? "border-gray-900 bg-gray-50 shadow-sm"
@@ -321,6 +306,19 @@ export default function StickerRollOrderClient() {
                 );
               })}
             </div>
+            {/* Transparent material explanation */}
+            {needsWhiteInk(materialId) && (
+              <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+                <p className="text-sm font-semibold text-blue-800">This material is transparent</p>
+                <p className="mt-1 text-xs text-blue-700">
+                  Without a white ink layer, colors will appear translucent on the sticker.
+                  After uploading your artwork, you can choose how to add a white base:
+                  <strong> Automatic</strong> (full white under your design),
+                  <strong> Match Design</strong> (white follows your artwork edges), or
+                  <strong> Upload Your Own</strong> white layer.
+                </p>
+              </div>
+            )}
           </Section>
 
           {/* Finish */}
@@ -426,7 +424,7 @@ export default function StickerRollOrderClient() {
                   <span className="text-sm text-gray-800">{uploadedFile.name}</span>
                   <button
                     type="button"
-                    onClick={() => setUploadedFile(null)}
+                    onClick={() => { setUploadedFile(null); setWhiteInk({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null }); }}
                     className="text-xs text-red-500 hover:text-red-700"
                   >
                     {t("sr.remove")}
@@ -444,12 +442,49 @@ export default function StickerRollOrderClient() {
                       name: first.name,
                       size: first.size,
                     });
+                    setArtworkIntent(null);
                   }}
                   onUploadError={(err) => showErrorToast(err?.message || "Upload failed")}
                 />
               )}
+              {!uploadedFile && (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setArtworkIntent(artworkIntent === "upload-later" ? null : "upload-later")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      artworkIntent === "upload-later"
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
+                    }`}
+                  >
+                    I&apos;ll Upload Later
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setArtworkIntent(artworkIntent === "design-help" ? null : "design-help")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      artworkIntent === "design-help"
+                        ? "border-indigo-600 bg-indigo-600 text-white"
+                        : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400"
+                    }`}
+                  >
+                    Design Help (+$45)
+                  </button>
+                </div>
+              )}
             </div>
           </Section>
+
+          {/* White Ink — shown when artwork uploaded on transparent material */}
+          {uploadedFile && (
+            <WhiteInkStep
+              key={materialId}
+              materialId={materialId}
+              artworkUrl={uploadedFile?.url}
+              onChange={setWhiteInk}
+            />
+          )}
         </div>
 
         {/* ── RIGHT: Summary ── */}
@@ -463,6 +498,9 @@ export default function StickerRollOrderClient() {
               <Row label={t("sr.material.label")} value={t(`sr.material.${materialId}`)} />
               <Row label={t("sr.finish.label")} value={t(`sr.finish.${finishId}`)} />
               <Row label={t("sr.wind") || "Unwind"} value={t(`sr.wind.${windId}`) || WIND_DIRECTIONS.find((w) => w.id === windId)?.label || windId} />
+              {needsWhiteInk(materialId) && whiteInk.enabled && (
+                <Row label="White Ink" value={whiteInk.mode === "auto" ? "Automatic" : whiteInk.mode === "follow" ? "Match Design" : "Custom Upload"} />
+              )}
               <Row label={t("sr.quantity")} value={activeQty > 0 ? activeQty.toLocaleString() : "\u2014"} />
             </dl>
 
@@ -499,10 +537,14 @@ export default function StickerRollOrderClient() {
               <p className="text-xs text-gray-400">{t("sr.selectOptions")}</p>
             )}
 
+            {disabledReason && (
+              <p className="text-center text-xs text-amber-600">{disabledReason}</p>
+            )}
+
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={handleAddToCart}
+                onClick={() => handleAddToCart({ artworkIntent })}
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart
@@ -514,7 +556,7 @@ export default function StickerRollOrderClient() {
               </button>
               <button
                 type="button"
-                onClick={handleBuyNow}
+                onClick={() => handleBuyNow({ artworkIntent })}
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading
@@ -549,12 +591,12 @@ export default function StickerRollOrderClient() {
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">{t("sr.selectOptions")}</p>
+              <p className="text-sm text-gray-400">{disabledReason || t("sr.selectOptions")}</p>
             )}
           </div>
           <button
             type="button"
-            onClick={handleAddToCart}
+            onClick={() => handleAddToCart({ artworkIntent })}
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart

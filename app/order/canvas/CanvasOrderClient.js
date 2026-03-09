@@ -50,6 +50,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
   const [quantity, setQuantity] = useState(canvasType.quantities?.[0] ?? 1);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
   const [cropData, setCropData] = useState(null);
   const [dimErrors, setDimErrors] = useState([]);
   const [viewMode, setViewMode] = useState("closeup");
@@ -147,12 +148,28 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
   const canAddToCart =
     !isQuoteOnly && quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
 
+  const disabledReason = isQuoteOnly
+    ? "This type requires a custom quote"
+    : !quote.quoteData && !quote.quoteLoading
+      ? "Select all options to see pricing"
+      : quote.quoteLoading
+        ? "Calculating price…"
+        : activeQty <= 0
+          ? "Select a quantity"
+          : dimErrors.length > 0
+            ? dimErrors[0]
+            : null;
+
   // Cart
   const buildCartItem = useCallback(() => {
     if (!quote.quoteData || activeQty <= 0) return null;
     const sizeLabel = isCustomSize
       ? `${widthIn.toFixed(1)}" × ${heightIn.toFixed(1)}"`
       : canvasType.sizes[sizeIdx]?.label;
+    const materialObj = canvasType.materials.find((m) => m.id === materialId);
+    const edgeObj = canvasType.edgeTreatments?.find((e) => e.id === edgeTreatment);
+    const frameObj = canvasType.frameOptions?.find((f) => f.id === frameColor);
+    const orientation = widthIn > heightIn ? "landscape" : widthIn < heightIn ? "portrait" : "square";
     return {
       id: canvasType.defaultSlug,
       name: `${canvasType.label} — ${sizeLabel}`,
@@ -161,15 +178,25 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
       quantity: activeQty,
       options: {
         canvasType: typeId,
+        canvasTypeLabel: canvasType.label,
         panels: canvasType.panels,
+        barDepth: canvasType.barDepth || null,
+        gapInches: canvasType.gapInches || null,
+        printMode: selectedMat?.printMode || null,
         width: widthIn,
         height: heightIn,
+        orientation,
         sizeLabel,
         material: materialId,
+        materialLabel: materialObj?.label || materialId,
         edgeTreatment: edgeTreatment || null,
+        edgeLabel: edgeObj?.label || edgeTreatment || null,
         frameColor: canvasType.frameOptions ? frameColor : null,
+        frameLabel: frameObj?.label || (canvasType.frameOptions ? frameColor : null),
         fileName: uploadedFile?.name || null,
-        cropData: cropData || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
+        cropData: cropData ? JSON.stringify(cropData) : null,
       },
       forceNewLine: true,
     };
@@ -184,9 +211,11 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
     sizeIdx,
     canvasType,
     materialId,
+    selectedMat,
     edgeTreatment,
     frameColor,
     uploadedFile,
+    cropData,
   ]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
@@ -209,6 +238,8 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
       value: canvasType.materials.find((m) => m.id === materialId)?.label || materialId,
     },
     { label: t("canvas.quantity"), value: activeQty > 0 ? activeQty.toLocaleString() : "—" },
+    { label: "Artwork", value: uploadedFile ? "Uploaded" : "Not uploaded" },
+    ...(uploadedFile ? [{ label: "Crop", value: cropData ? "Positioned" : "Default" }] : []),
   ];
 
   if (canvasType.panels > 1) {
@@ -691,6 +722,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
               totalCents={quote.subtotalCents}
               quantity={activeQty}
               canAddToCart={canAddToCart}
+              disabledReason={disabledReason}
               onAddToCart={handleAddToCart}
               onBuyNow={handleBuyNow}
               buyNowLoading={buyNowLoading}
@@ -702,6 +734,10 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
               locale={locale}
               productSlug={canvasType.defaultSlug}
               onRetryPrice={quote.retry}
+              artworkMode="upload-optional"
+              hasArtwork={!!uploadedFile}
+              artworkIntent={artworkIntent}
+              onArtworkIntentChange={setArtworkIntent}
             />
           )}
         </div>
@@ -746,6 +782,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
               : null
           }
           canAddToCart={canAddToCart}
+          disabledReason={disabledReason}
           onAddToCart={handleAddToCart}
           onBuyNow={handleBuyNow}
           buyNowLoading={buyNowLoading}
@@ -757,6 +794,10 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
           categorySlug="canvas-prints"
           locale={locale}
           onRetryPrice={quote.retry}
+          artworkMode="upload-optional"
+          hasArtwork={!!uploadedFile}
+          artworkIntent={artworkIntent}
+          onArtworkIntentChange={setArtworkIntent}
         />
       )}
     </main>

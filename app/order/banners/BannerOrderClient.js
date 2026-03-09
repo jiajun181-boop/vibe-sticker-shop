@@ -52,6 +52,7 @@ export default function BannerOrderClient({ defaultType, productImages }) {
   const [quantity, setQuantity] = useState(bannerType.quantities[0] ?? 1);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [artworkIntent, setArtworkIntent] = useState(null);
   const [dimErrors, setDimErrors] = useState([]);
 
   const isHardwareType = !!bannerType.includesHardware;
@@ -135,6 +136,12 @@ export default function BannerOrderClient({ defaultType, productImages }) {
 
   const canAddToCart = quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
 
+  const disabledReason = !canAddToCart
+    ? quote.quoteLoading ? "Calculating price..."
+    : !quote.quoteData ? "Select your options for pricing"
+    : "Complete all options to continue"
+    : null;
+
   // Cart
   const buildCartItem = useCallback(() => {
     if (!quote.quoteData || activeQty <= 0) return null;
@@ -149,17 +156,20 @@ export default function BannerOrderClient({ defaultType, productImages }) {
       quantity: activeQty,
       options: {
         bannerType: typeId,
-        ...(isHardwareType && { purchaseType: t(PURCHASE_TYPES.find((p) => p.id === purchaseType)?.label || purchaseType) }),
+        ...(isHardwareType && { purchaseType }),
         width: widthIn,
         height: heightIn,
         sizeLabel,
         material: materialId,
-        finishings: finishings.join(", "),
+        finishing: finishings.join(", ") || "none",
+        finishingList: JSON.stringify(finishings),
         fileName: uploadedFile?.name || null,
+        artworkUrl: uploadedFile?.url || null,
+        artworkKey: uploadedFile?.key || null,
       },
       forceNewLine: true,
     };
-  }, [quote.quoteData, quote.subtotalCents, activeQty, typeId, widthIn, heightIn, isCustomSize, sizeIdx, bannerType, materialId, finishings, uploadedFile, t]);
+  }, [quote.quoteData, quote.subtotalCents, activeQty, typeId, widthIn, heightIn, isCustomSize, sizeIdx, bannerType, materialId, finishings, uploadedFile, t, isHardwareType, purchaseType]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -538,6 +548,11 @@ export default function BannerOrderClient({ defaultType, productImages }) {
             locale={locale}
             productSlug={bannerType.defaultSlug}
             onRetryPrice={quote.retry}
+            disabledReason={disabledReason}
+            artworkMode="upload-optional"
+            hasArtwork={!!uploadedFile}
+            artworkIntent={artworkIntent}
+            onArtworkIntentChange={setArtworkIntent}
           />
         </div>
       </div>
@@ -578,6 +593,11 @@ export default function BannerOrderClient({ defaultType, productImages }) {
         categorySlug="banners-displays"
         locale={locale}
         onRetryPrice={quote.retry}
+        disabledReason={disabledReason}
+        artworkMode="upload-optional"
+        hasArtwork={!!uploadedFile}
+        artworkIntent={artworkIntent}
+        onArtworkIntentChange={setArtworkIntent}
       />
     </main>
   );
