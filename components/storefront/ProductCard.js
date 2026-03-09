@@ -14,16 +14,16 @@ const formatCad = (cents) =>
  * Unified product card for all storefront category/family pages.
  *
  * Props:
- * - product      — { slug, name, description, fromPrice, basePrice, images, category }
+ * - product      — { slug, name, description, fromPrice, basePrice, images, category, badge?, ctaKey? }
  * - href         — link URL (default: /shop/{category}/{slug})
  * - imageSrc     — resolved image URL (falls back to getProductImage)
  * - hoverImageSrc — optional second image for hover swap
- * - badge        — { label, color } e.g. { label: "Best Seller", color: "bg-orange-100 text-orange-700" }
+ * - badge        — { label, color } overrides product.badge if both set
  * - showTurnaround — show turnaround badge (default: true)
  * - showDescription — show product description (default: false)
  * - gradientFallback — tailwind gradient class for when no image (e.g. "from-violet-400 to-fuchsia-400")
  * - aspect       — image aspect ratio class (default: "aspect-[4/3]")
- * - ctaKey        — i18n key for CTA button text (default: "shop.configure")
+ * - ctaKey        — i18n key for CTA (default: product.ctaKey or "shop.configure")
  * - children     — optional extra content below CTA
  */
 export default function ProductCard({
@@ -36,7 +36,7 @@ export default function ProductCard({
   showDescription = false,
   gradientFallback = "from-gray-200 to-gray-300",
   aspect = "aspect-[4/3]",
-  ctaKey = "shop.configure",
+  ctaKey,
   children,
 }) {
   const { t } = useTranslation();
@@ -48,6 +48,8 @@ export default function ProductCard({
   const isSvg = showUrl && isSvgImage(showUrl);
   const price = product.fromPrice || product.basePrice || 0;
   const turnaround = showTurnaround ? getTurnaround(product) : null;
+  const resolvedBadge = badge || product.badge;
+  const resolvedCtaKey = ctaKey || product.ctaKey || "shop.configure";
 
   return (
     <article
@@ -90,9 +92,9 @@ export default function ProductCard({
           )}
 
           {/* Product badge (e.g. Best Seller) */}
-          {badge && (
-            <span className={`absolute ${turnaround ? "top-7" : "top-1.5"} left-1.5 max-w-[calc(100%-12px)] truncate rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.color}`}>
-              {badge.label}
+          {resolvedBadge && (
+            <span className={`absolute ${turnaround ? "top-7" : "top-1.5"} left-1.5 max-w-[calc(100%-12px)] truncate rounded-full px-2 py-0.5 text-[10px] font-bold ${resolvedBadge.color}`}>
+              {resolvedBadge.label}
             </span>
           )}
         </div>
@@ -123,7 +125,7 @@ export default function ProductCard({
             href={resolvedHref}
             className="inline-flex items-center gap-0.5 rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[10px] font-semibold text-white transition-colors hover:bg-[var(--color-brand-dark)]"
           >
-            {t(ctaKey)}
+            {t(resolvedCtaKey)}
             <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>

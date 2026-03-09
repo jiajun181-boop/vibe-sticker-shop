@@ -1,18 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import Breadcrumbs from "@/components/Breadcrumbs";
-import CategoryHero from "@/components/category/CategoryHero";
-import CategoryFaq from "@/components/category/CategoryFaq";
+import FamilyLandingShell from "@/components/storefront/FamilyLandingShell";
+import FamilySectionHeader from "@/components/storefront/FamilySectionHeader";
 import ProductCard from "@/components/storefront/ProductCard";
-import ComparisonTable from "@/components/storefront/ComparisonTable";
-import UseCaseCards from "@/components/storefront/UseCaseCards";
-import ValueProps from "@/components/storefront/ValueProps";
 
 const BASE = "/shop/marketing-business-print";
 
-/* ── Item slug → i18n key map ── */
+/* ── Item slug \u2192 i18n key map ── */
 const ITEM_I18N = {
   "business-cards": "mc.item.businessCards",
   "flyers": "mc.item.flyers",
@@ -46,7 +41,6 @@ const SECTIONS = [
     key: "essentials",
     titleKey: "mc.section.essentials.title",
     subtitleKey: "mc.section.essentials.subtitle",
-    size: "large",
     items: [
       { key: "business-cards", href: `${BASE}/business-cards`, gradient: "from-amber-400 to-orange-400" },
       { key: "flyers", href: `${BASE}/flyers`, gradient: "from-rose-400 to-pink-400" },
@@ -60,7 +54,6 @@ const SECTIONS = [
     key: "corporate",
     titleKey: "mc.section.corporate.title",
     subtitleKey: "mc.section.corporate.subtitle",
-    size: "medium",
     items: [
       { key: "letterhead", href: `${BASE}/letterhead`, gradient: "from-slate-400 to-gray-400" },
       { key: "notepads", href: `${BASE}/notepads`, gradient: "from-amber-400 to-yellow-400" },
@@ -74,7 +67,6 @@ const SECTIONS = [
     key: "retail",
     titleKey: "mc.section.retail.title",
     subtitleKey: "mc.section.retail.subtitle",
-    size: "medium",
     items: [
       { key: "menus", href: `${BASE}/menus`, gradient: "from-orange-400 to-red-400" },
       { key: "table-tents", href: `${BASE}/table-tents`, gradient: "from-pink-400 to-fuchsia-400" },
@@ -90,7 +82,6 @@ const SECTIONS = [
     key: "forms",
     titleKey: "mc.section.forms.title",
     subtitleKey: "mc.section.forms.subtitle",
-    size: "medium",
     items: [
       { key: "ncr-forms", href: `${BASE}/ncr-forms`, gradient: "from-slate-400 to-zinc-400" },
       { key: "tickets-coupons", href: `${BASE}/tickets-coupons`, gradient: "from-rose-400 to-pink-400" },
@@ -163,109 +154,97 @@ const COMPARISON_FEATURES = [
   { key: "turnaround", labelKey: "storefront.marketing.cmp.feat.turnaround" },
 ];
 
-/* ── Use cases ── */
+/* ── Browse by need (strong entry at top) ── */
+const BROWSE_CASES = [
+  { key: "newBiz", icon: "\uD83C\uDFE2", titleKey: "storefront.marketing.uc.newBiz.title", descKey: "storefront.marketing.uc.newBiz.desc", href: `${BASE}/business-cards` },
+  { key: "directMail", icon: "\uD83D\uDCEC", titleKey: "storefront.marketing.uc.directMail.title", descKey: "storefront.marketing.uc.directMail.desc", href: `${BASE}/postcards` },
+  { key: "restaurant", icon: "\uD83C\uDF7D\uFE0F", titleKey: "storefront.marketing.uc.restaurant.title", descKey: "storefront.marketing.uc.restaurant.desc", href: `${BASE}/menus` },
+  { key: "tradeshow", icon: "\uD83C\uDFAA", titleKey: "storefront.marketing.uc.tradeshow.title", descKey: "storefront.marketing.uc.tradeshow.desc", href: `${BASE}/brochures` },
+  { key: "retail", icon: "\uD83D\uDECD\uFE0F", titleKey: "storefront.marketing.uc.retail.title", descKey: "storefront.marketing.uc.retail.desc", href: `${BASE}/shelf-displays` },
+  { key: "corporate", icon: "\uD83D\uDCBC", titleKey: "storefront.marketing.uc.corporate.title", descKey: "storefront.marketing.uc.corporate.desc", href: `${BASE}/letterhead` },
+];
+
+/* ── Use cases (light supplement at bottom) ── */
 const USE_CASES = [
-  { key: "newBiz", icon: "🏢", titleKey: "storefront.marketing.uc.newBiz.title", descKey: "storefront.marketing.uc.newBiz.desc", href: `${BASE}/business-cards` },
-  { key: "directMail", icon: "📬", titleKey: "storefront.marketing.uc.directMail.title", descKey: "storefront.marketing.uc.directMail.desc", href: `${BASE}/postcards` },
-  { key: "restaurant", icon: "🍽️", titleKey: "storefront.marketing.uc.restaurant.title", descKey: "storefront.marketing.uc.restaurant.desc", href: `${BASE}/menus` },
-  { key: "tradeshow", icon: "🎪", titleKey: "storefront.marketing.uc.tradeshow.title", descKey: "storefront.marketing.uc.tradeshow.desc", href: `${BASE}/brochures` },
-  { key: "retail", icon: "🛍️", titleKey: "storefront.marketing.uc.retail.title", descKey: "storefront.marketing.uc.retail.desc", href: `${BASE}/shelf-displays` },
-  { key: "corporate", icon: "💼", titleKey: "storefront.marketing.uc.corporate.title", descKey: "storefront.marketing.uc.corporate.desc", href: `${BASE}/letterhead` },
+  { key: "newBiz", icon: "\uD83C\uDFE2", titleKey: "storefront.marketing.uc.newBiz.title", descKey: "storefront.marketing.uc.newBiz.desc", href: `${BASE}/business-cards` },
+  { key: "directMail", icon: "\uD83D\uDCEC", titleKey: "storefront.marketing.uc.directMail.title", descKey: "storefront.marketing.uc.directMail.desc", href: `${BASE}/postcards` },
+  { key: "restaurant", icon: "\uD83C\uDF7D\uFE0F", titleKey: "storefront.marketing.uc.restaurant.title", descKey: "storefront.marketing.uc.restaurant.desc", href: `${BASE}/menus` },
+  { key: "tradeshow", icon: "\uD83C\uDFAA", titleKey: "storefront.marketing.uc.tradeshow.title", descKey: "storefront.marketing.uc.tradeshow.desc", href: `${BASE}/brochures` },
+  { key: "retail", icon: "\uD83D\uDECD\uFE0F", titleKey: "storefront.marketing.uc.retail.title", descKey: "storefront.marketing.uc.retail.desc", href: `${BASE}/shelf-displays` },
+  { key: "corporate", icon: "\uD83D\uDCBC", titleKey: "storefront.marketing.uc.corporate.title", descKey: "storefront.marketing.uc.corporate.desc", href: `${BASE}/letterhead` },
 ];
 
 /* ── Value props ── */
 const VALUE_PROPS = [
-  { icon: "🎨", titleKey: "mc.vp1.title", descKey: "mc.vp1.desc" },
-  { icon: "📦", titleKey: "mc.vp2.title", descKey: "mc.vp2.desc" },
-  { icon: "💬", titleKey: "mc.vp3.title", descKey: "mc.vp3.desc", ctaKey: "shop.contactUs", ctaHref: "/quote" },
+  { icon: "\uD83C\uDFA8", titleKey: "mc.vp1.title", descKey: "mc.vp1.desc" },
+  { icon: "\uD83D\uDCE6", titleKey: "mc.vp2.title", descKey: "mc.vp2.desc" },
+  { icon: "\uD83D\uDCAC", titleKey: "mc.vp3.title", descKey: "mc.vp3.desc", ctaKey: "shop.contactUs", ctaHref: "/quote" },
 ];
 
 export default function MarketingCategoryClient({ marketingPrices = {}, marketingImages = {}, marketingImages2 = {} }) {
   const { t } = useTranslation();
 
   return (
-    <main className="bg-gradient-to-b from-amber-50 to-white pb-20 pt-10 text-[var(--color-gray-900)]">
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
-        <Breadcrumbs
-          items={[
-            { label: t("product.shop"), href: "/shop" },
-            { label: t("mc.breadcrumb") },
-          ]}
-        />
+    <FamilyLandingShell
+      bgClassName="bg-gradient-to-b from-amber-50 to-white"
+      breadcrumbs={[
+        { label: t("product.shop"), href: "/shop" },
+        { label: t("mc.breadcrumb") },
+      ]}
+      heroCategory="marketing-business-print"
+      heroTitle={t("mc.title")}
+      heroIcon="\uD83D\uDCC4"
+      browseByNeed={{
+        titleKey: "storefront.browseByNeed.title",
+        subtitleKey: "storefront.browseByNeed.subtitle",
+        cases: BROWSE_CASES,
+      }}
+      comparison={{
+        title: "storefront.comparison.title",
+        subtitle: "storefront.comparison.subtitle",
+        columns: COMPARISON_COLUMNS,
+        features: COMPARISON_FEATURES,
+      }}
+      useCases={{
+        title: "storefront.useCases.title",
+        cases: USE_CASES,
+      }}
+      valueProps={VALUE_PROPS}
+      faqCategory="marketing-business-print"
+    >
+      {/* Product sections — family-specific grid */}
+      {SECTIONS.map((section) => {
+        const visibleItems = section.items.filter((item) => item.key in marketingPrices);
+        if (visibleItems.length === 0) return null;
 
-        <div className="mt-6">
-          <CategoryHero category="marketing-business-print" title={t("mc.title")} icon="📄" />
-        </div>
-
-        {/* Sections — using unified ProductCard */}
-        {SECTIONS.map((section) => {
-          const visibleItems = section.items.filter((item) => item.key in marketingPrices);
-          if (visibleItems.length === 0) return null;
-
-          return (
-            <section key={section.key} className="mt-8">
-              <h2 className="text-base font-semibold tracking-tight">{t(section.titleKey)}</h2>
-              <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">{t(section.subtitleKey)}</p>
-              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {visibleItems.map((item) => {
-                  const name = t(ITEM_I18N[item.key] || item.key);
-                  const product = {
-                    slug: item.key,
-                    name,
-                    category: "marketing-business-print",
-                    fromPrice: marketingPrices[item.key] || 0,
-                  };
-                  return (
-                    <ProductCard
-                      key={item.key}
-                      product={product}
-                      href={item.href}
-                      imageSrc={marketingImages[item.key]}
-                      hoverImageSrc={marketingImages2[item.key]}
-                      showTurnaround={false}
-                      gradientFallback={item.gradient}
-                    />
-                  );
-                })}
-              </div>
-            </section>
-          );
-        })}
-
-        {/* Comparison Table: Which product is right for you? */}
-        <ComparisonTable
-          title="storefront.comparison.title"
-          subtitle="storefront.comparison.subtitle"
-          columns={COMPARISON_COLUMNS}
-          features={COMPARISON_FEATURES}
-        />
-
-        {/* Popular Use Cases */}
-        <UseCaseCards
-          title="storefront.useCases.title"
-          cases={USE_CASES}
-        />
-
-        <CategoryFaq category="marketing-business-print" />
-
-        {/* Back to shop */}
-        <div className="mt-12 text-center">
-          <Link
-            href="/shop"
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-            {t("shop.backToCategories")}
-          </Link>
-        </div>
-
-        {/* Value Props — unified */}
-        <section className="mt-8">
-          <ValueProps props={VALUE_PROPS} />
-        </section>
-      </div>
-    </main>
+        return (
+          <section key={section.key} className="mt-8">
+            <FamilySectionHeader titleKey={section.titleKey} subtitleKey={section.subtitleKey} />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {visibleItems.map((item) => {
+                const name = t(ITEM_I18N[item.key] || item.key);
+                const product = {
+                  slug: item.key,
+                  name,
+                  category: "marketing-business-print",
+                  fromPrice: marketingPrices[item.key] || 0,
+                };
+                return (
+                  <ProductCard
+                    key={item.key}
+                    product={product}
+                    href={item.href}
+                    imageSrc={marketingImages[item.key]}
+                    hoverImageSrc={marketingImages2[item.key]}
+                    showTurnaround={false}
+                    gradientFallback={item.gradient}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+    </FamilyLandingShell>
   );
 }
