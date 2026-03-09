@@ -7,10 +7,10 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
  * "Which product is right for you?" comparison table.
  *
  * Props:
- * - title     — section title (i18n key)
- * - subtitle  — section subtitle (i18n key)
- * - columns   — array of { key, nameKey, href, features: { [featureKey]: string | boolean } }
- * - features  — array of { key, labelKey } — rows of the table
+ * - title     \u2014 section title (i18n key)
+ * - subtitle  \u2014 section subtitle (i18n key)
+ * - columns   \u2014 array of { key, nameKey, taglineKey?, popular?, href, features }
+ * - features  \u2014 array of { key, labelKey } \u2014 rows of the table
  */
 export default function ComparisonTable({ title, subtitle, columns, features }) {
   const { t } = useTranslation();
@@ -35,10 +35,22 @@ export default function ComparisonTable({ title, subtitle, columns, features }) 
                 {t("storefront.comparison.feature")}
               </th>
               {columns.map((col) => (
-                <th key={col.key} className="px-3 py-3 text-center text-sm font-semibold text-[var(--color-gray-900)]">
+                <th key={col.key} className="px-3 py-3 text-center">
                   <Link href={col.href} className="hover:text-[var(--color-brand)] transition-colors">
-                    {t(col.nameKey)}
+                    <span className="text-sm font-semibold text-[var(--color-gray-900)]">
+                      {t(col.nameKey)}
+                    </span>
                   </Link>
+                  {col.popular && (
+                    <span className="ml-1.5 inline-block rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-bold text-orange-700 align-middle">
+                      {t("storefront.comparison.popular")}
+                    </span>
+                  )}
+                  {col.taglineKey && (
+                    <p className="mt-0.5 text-[10px] text-[var(--color-gray-400)] font-normal">
+                      {t(col.taglineKey)}
+                    </p>
+                  )}
                 </th>
               ))}
             </tr>
@@ -93,31 +105,65 @@ export default function ComparisonTable({ title, subtitle, columns, features }) 
         </table>
       </div>
 
-      {/* Mobile: stacked cards */}
+      {/* Mobile: enhanced stacked cards */}
       <div className="mt-4 grid gap-3 sm:hidden">
         {columns.map((col) => (
           <Link
             key={col.key}
             href={col.href}
-            className="group rounded-xl border border-[var(--color-gray-200)] bg-white p-4 transition-all hover:border-[var(--color-brand)] hover:shadow-sm"
+            className={`group rounded-xl border bg-white p-4 transition-all hover:shadow-md ${
+              col.popular
+                ? "border-[var(--color-brand)] ring-1 ring-[var(--color-brand)]/20"
+                : "border-[var(--color-gray-200)] hover:border-[var(--color-brand)]"
+            }`}
           >
-            <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
-              {t(col.nameKey)}
-            </h3>
-            <ul className="mt-2 space-y-1">
-              {features.slice(0, 4).map((feat) => {
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
+                {t(col.nameKey)}
+              </h3>
+              {col.popular && (
+                <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-bold text-orange-700">
+                  {t("storefront.comparison.popular")}
+                </span>
+              )}
+            </div>
+
+            {col.taglineKey && (
+              <p className="mt-0.5 text-[11px] text-[var(--color-gray-500)]">
+                {t(col.taglineKey)}
+              </p>
+            )}
+
+            <ul className="mt-2 space-y-1.5">
+              {features.map((feat) => {
                 const val = col.features?.[feat.key];
-                if (val === false || !val) return null;
+                if (val === false) return null;
                 return (
-                  <li key={feat.key} className="flex items-center gap-1.5 text-xs text-[var(--color-gray-600)]">
-                    <svg className="h-3 w-3 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                    {t(feat.labelKey)}{typeof val === "string" ? `: ${t(val)}` : ""}
+                  <li key={feat.key} className="flex items-start gap-1.5 text-xs text-[var(--color-gray-600)]">
+                    {typeof val === "boolean" && val ? (
+                      <svg className="h-3.5 w-3.5 shrink-0 text-emerald-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    ) : (
+                      <span className="w-3.5 shrink-0" />
+                    )}
+                    <span>
+                      <span className="font-medium text-[var(--color-gray-700)]">{t(feat.labelKey)}</span>
+                      {typeof val === "string" && val ? `: ${t(val)}` : ""}
+                    </span>
                   </li>
                 );
               })}
             </ul>
+
+            <div className="mt-3 flex items-center justify-between">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-white">
+                {t("shop.configure")}
+                <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </span>
+            </div>
           </Link>
         ))}
       </div>
