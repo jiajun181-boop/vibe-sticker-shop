@@ -156,6 +156,7 @@ export default function SignsCategoryClient({
           href="/shop/banners-displays"
           className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-5 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
         >
+          <span className="text-2xl shrink-0">{"\uD83C\uDFAA"}</span>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
               {t("storefront.signsFamily.crossLink.banners")}
