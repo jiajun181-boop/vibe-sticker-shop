@@ -265,7 +265,7 @@ export default function WorkstationPage() {
                   </span>
                 </Link>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-[#999]">{o._count?.items || 0} item{(o._count?.items || 0) !== 1 ? "s" : ""}</span>
+                  <span className="text-xs text-[#999]">{t("admin.common.itemCount").replace("{count}", o._count?.items || 0)}</span>
                   <span className="text-xs font-medium text-[#111]">{fmtMoney(o.totalAmount)}</span>
                   <span className="text-xs text-[#999]">{timeAgo(o.createdAt, t)}</span>
                   <Link
@@ -353,7 +353,7 @@ export default function WorkstationPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex h-7 w-7 items-center justify-center rounded-[3px] text-[#999] transition-colors hover:bg-[#f0f0f0] hover:text-[#111]"
-                          title="Download"
+                          title={t("admin.common.downloadTitle")}
                         >
                           {I.download}
                         </a>

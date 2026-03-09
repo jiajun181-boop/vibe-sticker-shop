@@ -148,22 +148,25 @@ export default function ProofManagerPage() {
   for (const p of allProofs) counts[p.status] = (counts[p.status] || 0) + 1;
 
   // ── Actions ──
+  const [actionError, setActionError] = useState(null);
+
   async function handleUpdateStatus(item, newStatus) {
     if (item.source !== "order") return;
     setUpdatingId(item.id);
+    setActionError(null);
     try {
       const res = await fetch(`/api/admin/proofs/${item.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) throw new Error("Failed to update");
+      if (!res.ok) throw new Error(t("admin.tools.proof.errorUpdate"));
       await fetchOrderProofs();
       if (detailItem?.id === item.id) {
         setDetailItem((prev) => prev ? { ...prev, status: newStatus } : null);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to update");
+      setActionError(err instanceof Error ? err.message : t("admin.tools.proof.errorUpdate"));
     } finally {
       setUpdatingId(null);
     }
@@ -177,9 +180,9 @@ export default function ProofManagerPage() {
       const res = await fetch(`/api/admin/orders/${item.orderId}/proofs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: uploaded.url, fileName: revisionFile.name || null, notes: `Revision of v${item.version}` }),
+        body: JSON.stringify({ imageUrl: uploaded.url, fileName: revisionFile.name || null, notes: t("admin.tools.proof.revisionNote").replace("{version}", item.version) }),
       });
-      if (!res.ok) { const err = await res.json().catch(() => null); throw new Error(err?.error || "Failed to upload revision"); }
+      if (!res.ok) { const err = await res.json().catch(() => null); throw new Error(err?.error || t("admin.tools.proof.errorUploadRevision")); }
       // Mark current proof as revised
       await handleUpdateStatus(item, "revised");
       setRevisionFile(null);
@@ -188,7 +191,7 @@ export default function ProofManagerPage() {
       await fetchOrderProofs();
       setLoading(false);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to upload revision");
+      setActionError(err instanceof Error ? err.message : t("admin.tools.proof.errorUploadRevision"));
     } finally {
       setRevisionSaving(false);
     }
@@ -204,14 +207,14 @@ export default function ProofManagerPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageUrl: uploaded.url, fileName: orderProofData.file.name || null, notes: orderProofData.notes || null }),
       });
-      if (!res.ok) { const err = await res.json().catch(() => null); throw new Error(err?.error || "Failed to upload proof"); }
+      if (!res.ok) { const err = await res.json().catch(() => null); throw new Error(err?.error || t("admin.tools.proof.errorUpload")); }
       setOrderProofModal(false);
       setOrderProofData({ orderId: "", notes: "", file: null });
       setLoading(true);
       await fetchOrderProofs();
       setLoading(false);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to upload proof");
+      setActionError(err instanceof Error ? err.message : t("admin.tools.proof.errorUpload"));
     } finally {
       setOrderProofSaving(false);
     }
@@ -233,14 +236,14 @@ export default function ProofManagerPage() {
           notes: standaloneData.notes || null, status: "completed",
         }),
       });
-      if (!res.ok) throw new Error("Failed to save standalone proof");
+      if (!res.ok) throw new Error(t("admin.tools.proof.errorSaveStandalone"));
       setStandaloneModal(false);
       setStandaloneData({ customerName: "", customerEmail: "", description: "", notes: "", file: null });
       setLoading(true);
       await fetchStandaloneJobs();
       setLoading(false);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to save");
+      setActionError(err instanceof Error ? err.message : t("admin.tools.proof.errorSaveStandalone"));
     } finally {
       setStandaloneSaving(false);
     }
@@ -266,6 +269,16 @@ export default function ProofManagerPage() {
           </button>
         </div>
       </div>
+
+      {/* Action error banner */}
+      {actionError && (
+        <div className="flex items-center justify-between rounded-[3px] border border-red-200 bg-red-50 px-4 py-2.5">
+          <p className="text-xs text-red-700">{actionError}</p>
+          <button type="button" onClick={() => setActionError(null)} className="text-red-400 hover:text-red-700">
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+      )}
 
       {/* Status Filter Tabs */}
       <div className="flex gap-1.5 overflow-x-auto">
@@ -526,7 +539,7 @@ function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, r
 
               {/* Metadata */}
               <div className="space-y-3 text-sm">
-                <MetaRow label={t("admin.tools.proof.sourceLabel")} value={item.source === "order" ? `Order #${item.orderId?.slice(-8) || "—"}` : t("admin.tools.proof.standaloneLabel")} />
+                <MetaRow label={t("admin.tools.proof.sourceLabel")} value={item.source === "order" ? t("admin.tools.proof.orderSource").replace("{orderId}", item.orderId?.slice(-8) || "—") : t("admin.tools.proof.standaloneLabel")} />
                 {item.version != null && <MetaRow label={t("admin.tools.proof.versionLabel")} value={`v${item.version}`} />}
                 <MetaRow label={t("admin.tools.proof.customerLabel")} value={item.customerName || item.customerEmail || "—"} />
                 {item.customerEmail && item.customerName && <MetaRow label={t("admin.tools.proof.customerEmail")} value={item.customerEmail} />}

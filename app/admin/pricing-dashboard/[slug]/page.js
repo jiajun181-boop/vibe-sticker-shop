@@ -42,11 +42,14 @@ export default function ProductPricingDetailPage() {
   // ── Load product from dedicated endpoint ──
   useEffect(() => {
     if (!slug) return;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
     setProdLoading(true);
     setProdError(null);
-    fetch(`/api/admin/products/by-slug/${encodeURIComponent(slug)}`)
+    fetch(`/api/admin/products/by-slug/${encodeURIComponent(slug)}`, { signal: controller.signal })
       .then((r) => {
-        if (r.status === 401) {
+        if (r.status === 401 || r.status === 403) {
           window.location.href = "/admin/login";
           return null;
         }
@@ -67,13 +70,25 @@ export default function ProductPricingDetailPage() {
           setHeightIn(24);
         }
       })
-      .catch((err) => setProdError(err.message))
-      .finally(() => setProdLoading(false));
+      .catch((err) => {
+        if (err.name === "AbortError") {
+          setProdError("timeout");
+        } else {
+          setProdError(err.message || "unknown");
+        }
+      })
+      .finally(() => {
+        clearTimeout(timeout);
+        setProdLoading(false);
+      });
+    return () => { clearTimeout(timeout); controller.abort(); };
   }, [slug]);
 
   // ── Fetch quote (independent, can fail without affecting product display) ──
   const fetchQuote = useCallback(async () => {
     if (!slug) return;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
     setQuoteLoading(true);
     setQuoteError(null);
     try {
@@ -83,13 +98,19 @@ export default function ProductPricingDetailPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        signal: controller.signal,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || t("admin.priceDetail.quoteFailed"));
       setQuote(data);
     } catch (err) {
-      setQuoteError(err.message);
+      if (err.name === "AbortError") {
+        setQuoteError(t("admin.priceDetail.timeoutError"));
+      } else {
+        setQuoteError(err.message);
+      }
     } finally {
+      clearTimeout(timeout);
       setQuoteLoading(false);
     }
   }, [slug, quantity, widthIn, heightIn, material, t]);
@@ -136,6 +157,26 @@ export default function ProductPricingDetailPage() {
     );
   }
 
+  // ── Timeout error state ──
+  if (prodError === "timeout") {
+    return (
+      <div className="mx-auto max-w-xl py-12 text-center">
+        <div className="rounded-[3px] border border-amber-200 bg-amber-50 p-8">
+          <p className="text-lg font-bold text-amber-700">{t("admin.priceDetail.timeoutError")}</p>
+          <p className="mt-2 text-sm text-amber-600">{t("admin.priceDetail.timeoutDesc")}</p>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <button onClick={() => window.location.reload()} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-[#222]">
+              {t("admin.priceDetail.retryLoad")}
+            </button>
+            <Link href="/admin/pricing-dashboard" className="rounded-[3px] border border-amber-300 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100">
+              {t("admin.priceDetail.backToList")}
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Generic error state ──
   if (prodError) {
     return (
@@ -143,9 +184,14 @@ export default function ProductPricingDetailPage() {
         <div className="rounded-[3px] border border-red-200 bg-red-50 p-8">
           <p className="text-lg font-bold text-red-700">{t("admin.priceDetail.loadError")}</p>
           <p className="mt-2 text-sm text-red-600">{prodError}</p>
-          <Link href="/admin/pricing-dashboard" className="mt-4 inline-block rounded-[3px] border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100">
-            {t("admin.priceDetail.backToList")}
-          </Link>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <button onClick={() => window.location.reload()} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-[#222]">
+              {t("admin.priceDetail.retryLoad")}
+            </button>
+            <Link href="/admin/pricing-dashboard" className="rounded-[3px] border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100">
+              {t("admin.priceDetail.backToList")}
+            </Link>
+          </div>
         </div>
       </div>
     );

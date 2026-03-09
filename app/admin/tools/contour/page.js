@@ -33,6 +33,7 @@ export default function ContourToolPage() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
+  const [saveIsError, setSaveIsError] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [dragOver, setDragOver] = useState(false);
@@ -75,11 +76,11 @@ export default function ContourToolPage() {
 
   async function processContour(url) {
     setProcessing(true);
-    setProgress("Loading contour library...");
+    setProgress(t("admin.tools.contour.progressLoading"));
 
     try {
       const { generateContour } = await import("@/lib/contour/generate-contour");
-      setProgress("Tracing contour...");
+      setProgress(t("admin.tools.contour.progressTracing"));
       const result = await generateContour(url, {
         bleedMm,
         onProgress: (stage) => setProgress(stage),
@@ -88,7 +89,7 @@ export default function ContourToolPage() {
       setProgress("");
     } catch (err) {
       console.error("Contour error:", err);
-      setProgress(`Error: ${err instanceof Error ? err.message : "Failed to trace contour"}`);
+      setProgress(err instanceof Error ? err.message : t("admin.tools.contour.errorTrace"));
     } finally {
       setProcessing(false);
     }
@@ -159,7 +160,7 @@ export default function ContourToolPage() {
         uploadDesignSnapshot(sourceFile, sourceFile.name),
         buildSvgBlob(),
       ]);
-      if (!svgBlob) throw new Error("Failed to build contour SVG");
+      if (!svgBlob) throw new Error(t("admin.tools.contour.errorBuildSvg"));
 
       const uploadedSvg = await uploadDesignSnapshot(svgBlob, `contour-${Date.now()}.svg`);
 
@@ -209,14 +210,16 @@ export default function ContourToolPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        throw new Error(err?.error || "Failed to save contour record");
+        throw new Error(err?.error || t("admin.tools.contour.errorSave"));
       }
 
       setSaveMsg(t("admin.tools.savedMsg"));
+      setSaveIsError(false);
       fetchJobs();
       setTimeout(() => setSaveMsg(""), 3000);
     } catch (err) {
-      setSaveMsg(`Error: ${err instanceof Error ? err.message : "Failed to save"}`);
+      setSaveMsg(err instanceof Error ? err.message : t("admin.common.saveFailed"));
+      setSaveIsError(true);
     } finally {
       setSaving(false);
     }
@@ -262,6 +265,14 @@ export default function ContourToolPage() {
         <p className="mt-1 text-sm text-[#666]">
           {t("admin.tools.contour.subtitle")}
         </p>
+      </div>
+
+      {/* Usage guidance banner */}
+      <div className="flex items-start gap-3 rounded-[3px] border border-blue-200 bg-blue-50 px-4 py-3">
+        <svg className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+        </svg>
+        <p className="text-xs text-blue-700">{t("admin.tools.contour.guidanceBanner")}</p>
       </div>
 
       <div className="max-w-xs">
@@ -411,7 +422,7 @@ export default function ContourToolPage() {
               {saving ? t("admin.tools.saving") : t("admin.tools.saveToRecords")}
             </button>
             {saveMsg ? (
-              <span className={`text-xs font-medium ${saveMsg.startsWith("Error") ? "text-red-600" : "text-green-600"}`}>
+              <span className={`text-xs font-medium ${saveIsError ? "text-red-600" : "text-green-600"}`}>
                 {saveMsg}
               </span>
             ) : null}
@@ -502,7 +513,7 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, reopening }) {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold text-black truncate">{data.fileName || "artwork"}</span>
           {data.bleedMm != null && (
-            <span className="rounded-[2px] bg-[#f0f0f0] px-1.5 py-0.5 text-[10px] font-medium text-[#666]">{data.bleedMm}mm bleed</span>
+            <span className="rounded-[2px] bg-[#f0f0f0] px-1.5 py-0.5 text-[10px] font-medium text-[#666]">{data.bleedMm}{t("admin.tools.contour.mmBleed")}</span>
           )}
           {dims && (
             <span className="rounded-[2px] bg-[#f0f0f0] px-1.5 py-0.5 text-[10px] font-medium text-[#666]">{dims}</span>

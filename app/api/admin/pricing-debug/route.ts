@@ -1,33 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { calculatePrice } from "@/lib/pricing/template-resolver";
-import { cookies } from "next/headers";
-import { jwtVerify } from "jose";
-
-const JWT_SECRET = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET || "admin-secret-change-me");
-
-async function getAdmin(req: Request) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("admin_token")?.value;
-  if (!token) return null;
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as { id: string; email: string; role: string; name: string };
-  } catch {
-    return null;
-  }
-}
+import { requirePermission } from "@/lib/admin-auth";
 
 /**
  * POST /api/admin/pricing-debug
  * Calls the production pricing engine and returns the full QuoteLedger.
  * Admin-only — identical path as front-end pricing, but returns extra debug info.
  */
-export async function POST(req: Request) {
-  const admin = await getAdmin(req);
-  if (!admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function POST(req: NextRequest) {
+  const auth = await requirePermission(req, "products", "view");
+  if (!auth.authenticated) return auth.response;
 
   try {
     const body = await req.json();

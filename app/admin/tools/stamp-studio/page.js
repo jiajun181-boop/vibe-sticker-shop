@@ -38,6 +38,7 @@ export default function StampStudioPage() {
   const [stampConfig, setStampConfig] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
+  const [saveIsError, setSaveIsError] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -142,15 +143,17 @@ export default function StampStudioPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        throw new Error(err?.error || "Failed to save stamp record");
+        throw new Error(err?.error || t("admin.tools.stamp.errorSave"));
       }
 
       setSaveMsg(t("admin.tools.savedMsg"));
+      setSaveIsError(false);
       setReopenedFrom(null);
       fetchJobs();
       setTimeout(() => setSaveMsg(""), 3000);
     } catch (err) {
-      setSaveMsg(`Error: ${err instanceof Error ? err.message : "Failed to save"}`);
+      setSaveMsg(err instanceof Error ? err.message : t("admin.common.saveFailed"));
+      setSaveIsError(true);
     } finally {
       setSaving(false);
     }
@@ -248,7 +251,7 @@ export default function StampStudioPage() {
           {saving ? t("admin.tools.saving") : t("admin.tools.saveToRecords")}
         </button>
         {saveMsg ? (
-          <span className={`text-xs font-medium ${saveMsg.startsWith("Error") ? "text-red-600" : "text-green-600"}`}>
+          <span className={`text-xs font-medium ${saveIsError ? "text-red-600" : "text-green-600"}`}>
             {saveMsg}
           </span>
         ) : null}
@@ -316,7 +319,7 @@ export default function StampStudioPage() {
 function StampJobRow({ job, t, onPreview, onDetail, onReopen }) {
   const data = job.inputData || {};
   const output = job.outputData || {};
-  const shapeLabel = output.shape === "round" ? "Round" : output.shape === "rect" ? "Rect" : "";
+  const shapeLabel = output.shape === "round" ? t("admin.tools.stamp.shapeRound") : output.shape === "rect" ? t("admin.tools.stamp.shapeRectangle") : "";
   const dims = output.diameterIn
     ? `\u2300${output.diameterIn}"`
     : output.widthIn && output.heightIn
@@ -426,7 +429,7 @@ function StampDetailModal({ job, t, onClose, onReopen }) {
           {/* Metadata */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <MetaCell label={t("admin.tools.stamp.modelLabel")} value={modelLabel(data.model)} />
-            <MetaCell label={t("admin.tools.stamp.shapeLabel")} value={output.shape === "round" ? "Round" : output.shape === "rect" ? "Rectangle" : "—"} />
+            <MetaCell label={t("admin.tools.stamp.shapeLabel")} value={output.shape === "round" ? t("admin.tools.stamp.shapeRound") : output.shape === "rect" ? t("admin.tools.stamp.shapeRectangle") : "—"} />
             <MetaCell label={t("admin.tools.stamp.dimensionsLabel")} value={
               output.diameterIn ? `\u2300${output.diameterIn}"` : output.widthIn && output.heightIn ? `${output.widthIn}" × ${output.heightIn}"` : "—"
             } />
