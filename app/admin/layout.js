@@ -42,6 +42,7 @@ const navGroups = [
   {
     labelKey: "admin.navGroup.tools",
     items: [
+      { key: "admin.nav.workstation", href: "/admin/workstation", icon: "grid", sub: "Operations hub" },
       { key: "admin.nav.toolsHub", href: "/admin/tools", icon: "grid", sub: "All tools" },
       { key: "admin.nav.contour", href: "/admin/tools/contour", icon: "image", sub: "Die-cut contour" },
       { key: "admin.nav.proof", href: "/admin/tools/proof", icon: "shield", sub: "Proof manager" },
