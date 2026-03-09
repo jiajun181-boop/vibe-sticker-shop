@@ -15,70 +15,52 @@ const statusColors = {
   refunded: "bg-purple-100 text-purple-700",
 };
 
-const SITE_FEATURES = [
+// ── Capabilities: tools (clickable) vs system features (info-only) ──────────
+
+const TOOLS = [
   {
-    icon: "\u2702\uFE0F",
-    title: "Auto Die-Cut Contour",
-    desc: "Customer uploads artwork \u2192 auto background removal + marching squares contour tracing \u2192 generates die-cut outline with adjustable bleed. No manual tracing needed.",
-    products: ["Die-Cut Stickers", "Kiss-Cut Stickers", "Decals", "Vinyl Lettering", "Vehicle Decals", "Die-Cut Business Cards", "Cake Toppers", "Foam Board Signs"],
+    title: "admin.dashboard.toolContour",
+    desc: "admin.dashboard.toolContourDesc",
     href: "/admin/tools/contour",
+    type: "tool",
   },
   {
-    icon: "\uD83D\uDD0D",
-    title: "On-the-Spot Proofing",
-    desc: "Customers preview the final sticker with cut line overlay, bleed area, and actual dimensions before ordering. Tabs to see mockup on laptop, water bottle, phone case.",
-    products: ["Die-Cut Stickers", "Kiss-Cut Stickers", "Foam Board Signs", "Vehicle Decals"],
+    title: "admin.dashboard.toolProof",
+    desc: "admin.dashboard.toolProofDesc",
     href: "/admin/tools/proof",
+    type: "tool",
   },
   {
-    icon: "\uD83D\uDCCB",
-    title: "Instant Quote Engine",
-    desc: "Real-time pricing across all 60+ products. Supports area-tiered, quantity-tiered, and cost-plus pricing models. Debounced API calls with server-side repricing at checkout.",
-    href: "/admin/pricing-dashboard",
-  },
-  {
-    icon: "\uD83D\uDE9A",
-    title: "Smart Shipping",
-    desc: "Free shipping over $99 CAD. Three options: pickup ($0), local delivery ($15), Canada-wide ($20). Automatic threshold detection and promo bar progress.",
-    href: "/admin/settings",
-  },
-  {
-    icon: "\uD83C\uDF10",
-    title: "Bilingual (EN/ZH)",
-    desc: "Full English and Simplified Chinese support across entire site including configurators, checkout, emails, and admin. Language toggle in navbar.",
-    href: "/admin/content",
-  },
-  {
-    icon: "\uD83D\uDCE7",
-    title: "Order Lifecycle Automation",
-    desc: "Stripe webhook \u2192 order creation \u2192 preflight review \u2192 auto-advance to production \u2192 proof emails \u2192 customer approval. Full audit trail via OrderTimeline.",
-    href: "/admin/orders",
-  },
-  {
-    icon: "\uD83C\uDFF7\uFE0F",
-    title: "Coupon & Partner Discounts",
-    desc: "Promo code system with usage limits, date ranges, min amounts. B2B partner auto-discount via user tier. Rate-limited validation (10/min).",
-    href: "/admin/coupons",
-  },
-  {
-    icon: "\uD83D\uDCC4",
-    title: "Invoice Checkout",
-    desc: "B2B customers can checkout with PO number and payment terms (Net 15/30/45) instead of credit card. Creates order with invoice_checkout tag.",
-    href: "/admin/b2b",
-  },
-  {
-    icon: "\uD83D\uDDA8\uFE0F",
-    title: "Stamp Studio",
-    desc: "Use the internal stamp editor for walk-ins, phone orders, and production previews. Save records and download generated stamp artwork internally.",
-    products: ["Address Stamps", "Office Stamps", "Custom Face Stamp", "Book Name Stamp"],
+    title: "admin.dashboard.toolStamp",
+    desc: "admin.dashboard.toolStampDesc",
     href: "/admin/tools/stamp-studio",
+    type: "tool",
   },
   {
-    icon: "\uD83D\uDDA8\uFE0F",
-    title: "Production Board",
-    desc: "Kanban-style production tracking: preflight \u2192 in production \u2192 ready to ship \u2192 shipped. Auto status transitions and staff assignment.",
+    title: "admin.dashboard.toolProduction",
+    desc: "admin.dashboard.toolProductionDesc",
     href: "/admin/production/board",
+    type: "tool",
   },
+  {
+    title: "admin.dashboard.toolPricing",
+    desc: "admin.dashboard.toolPricingDesc",
+    href: "/admin/pricing-dashboard",
+    type: "tool",
+  },
+  {
+    title: "admin.dashboard.toolWorkstation",
+    desc: "admin.dashboard.toolWorkstationDesc",
+    href: "/admin/workstation",
+    type: "tool",
+  },
+];
+
+const SYSTEM_CAPABILITIES = [
+  { title: "admin.dashboard.capShipping", desc: "admin.dashboard.capShippingDesc" },
+  { title: "admin.dashboard.capBilingual", desc: "admin.dashboard.capBilingualDesc" },
+  { title: "admin.dashboard.capLifecycle", desc: "admin.dashboard.capLifecycleDesc" },
+  { title: "admin.dashboard.capCoupons", desc: "admin.dashboard.capCouponsDesc" },
 ];
 
 /* ── Mini sparkline (7 bars) ── */
@@ -139,6 +121,7 @@ function QIcon({ name, className }) {
     add: "M12 4.5v15m7.5-7.5h-15",
     board: "M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6z",
     chart: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z",
+    workstation: "M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z",
   };
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
@@ -177,7 +160,7 @@ export default function AdminDashboard() {
 
   const actions = [
     { label: t("admin.quick.viewOrders"), href: "/admin/orders", icon: "orders" },
-    { label: t("admin.quick.addProduct"), href: "/admin/products", icon: "add" },
+    { label: t("admin.quick.workstation"), href: "/admin/workstation", icon: "workstation" },
     { label: t("admin.quick.production"), href: "/admin/production/board", icon: "board" },
     { label: t("admin.quick.analytics"), href: "/admin/analytics", icon: "chart" },
   ];
@@ -222,46 +205,48 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* ── Website Special Features ── */}
+      {/* ── Internal Tools (clickable, real tools) ── */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="border-b border-[#e0e0e0] px-5 py-4">
-          <h2 className="text-sm font-bold text-black">Website Special Features</h2>
-          <p className="mt-0.5 text-[10px] text-[#999]">Unique capabilities that set us apart from competitors</p>
+          <h2 className="text-sm font-bold text-black">{t("admin.dashboard.internalTools")}</h2>
+          <p className="mt-0.5 text-[10px] text-[#999]">{t("admin.dashboard.internalToolsDesc")}</p>
         </div>
         <div className="grid gap-px bg-[#e0e0e0] sm:grid-cols-2 lg:grid-cols-3">
-          {SITE_FEATURES.map((feat) => {
-            const content = (
-              <div className="flex items-start gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-[#f5f5f5] text-base">{feat.icon}</span>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-black">{feat.title}</p>
-                  <p className="mt-0.5 text-[10px] leading-relaxed text-[#777]">{feat.desc}</p>
-                  {feat.products && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {feat.products.map((p) => (
-                        <span key={p} className="rounded-[2px] bg-[#f0f0f0] px-1.5 py-0.5 text-[9px] font-medium text-[#555]">{p}</span>
-                      ))}
-                    </div>
-                  )}
-                  {feat.href && (
-                    <p className="mt-2 text-[10px] font-semibold text-[#999] group-hover:text-black transition-colors">Open tool &rarr;</p>
-                  )}
-                </div>
+          {TOOLS.map((tool) => (
+            <Link key={tool.title} href={tool.href} className="group flex items-start gap-3 bg-white p-5 transition-colors hover:bg-[#fafafa]">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-[#f0f0f0] text-[#666] transition-colors group-hover:bg-black group-hover:text-white">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-black">{t(tool.title)}</p>
+                <p className="mt-0.5 text-[10px] leading-relaxed text-[#777]">{t(tool.desc)}</p>
+                <p className="mt-1.5 text-[10px] font-semibold text-[#4f46e5] transition-colors group-hover:text-black">{t("admin.dashboard.openTool")}</p>
               </div>
-            );
-            return feat.href ? (
-              <Link key={feat.title} href={feat.href} className="group bg-white p-5 transition-colors hover:bg-[#fafafa]">
-                {content}
-              </Link>
-            ) : (
-              <div key={feat.title} className="bg-white p-5">
-                {content}
-              </div>
-            );
-          })}
+            </Link>
+          ))}
         </div>
       </div>
 
+      {/* ── System Capabilities (info-only, no separate tool page) ── */}
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
+        <div className="border-b border-[#e0e0e0] px-5 py-4">
+          <h2 className="text-sm font-bold text-black">{t("admin.dashboard.systemCaps")}</h2>
+          <p className="mt-0.5 text-[10px] text-[#999]">{t("admin.dashboard.systemCapsDesc")}</p>
+        </div>
+        <div className="grid gap-px bg-[#e0e0e0] sm:grid-cols-2">
+          {SYSTEM_CAPABILITIES.map((cap) => (
+            <div key={cap.title} className="bg-white p-5">
+              <p className="text-xs font-bold text-black">{t(cap.title)}</p>
+              <p className="mt-0.5 text-[10px] leading-relaxed text-[#777]">{t(cap.desc)}</p>
+              <p className="mt-1.5 text-[10px] font-semibold text-[#bbb]">{t("admin.dashboard.systemBuiltIn")}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Recent Orders ── */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="flex items-center justify-between border-b border-[#e0e0e0] px-5 py-4">
           <div>
