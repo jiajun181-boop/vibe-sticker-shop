@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { uploadDesignSnapshot } from "@/lib/design-studio/upload-snapshot";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { timeAgo } from "@/lib/admin/time-ago";
 
 const StampEditor = dynamic(() => import("@/components/product/StampEditor"), { ssr: false });
 
@@ -22,17 +23,6 @@ function formatJobTime(dateString) {
     hour: "2-digit",
     minute: "2-digit",
   })}`;
-}
-
-function timeAgo(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  const mins = Math.floor((Date.now() - d.getTime()) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
 }
 
 function modelLabel(modelId) {
@@ -362,9 +352,9 @@ function StampJobRow({ job, t, onPreview, onDetail, onReopen }) {
           </span>
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-[#999]">
-          <span>{timeAgo(job.createdAt)}</span>
+          <span>{timeAgo(job.createdAt, t)}</span>
           {job.operatorName && <><span>·</span><span>{job.operatorName}</span></>}
-          {job.orderId && <><span>·</span><span>Order: #{job.orderId.slice(0, 8)}</span></>}
+          {job.orderId && <><span>·</span><span>{t("admin.common.order")}: #{job.orderId.slice(0, 8)}</span></>}
         </div>
         {textPreview && <p className="mt-0.5 truncate text-xs italic text-[#777]">&ldquo;{textPreview}&rdquo;</p>}
         {job.notes && !textPreview && <p className="mt-0.5 truncate text-xs text-[#777]">{job.notes}</p>}

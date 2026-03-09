@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { timeAgo } from "@/lib/admin/time-ago";
 
 // ─── Single summary API fetch ────────────────────────────────────────────────
 
@@ -46,14 +47,14 @@ function Section({ title, children, action }) {
 
 // ─── Stat Card ───────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, loading, error, href }) {
+function StatCard({ label, value, loading, error, href, t }) {
   const inner = (
     <div className="rounded-[3px] border border-[#e3e3e3] bg-white p-4 transition-shadow hover:shadow-sm">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-[#999]">{label}</p>
       {loading ? (
         <div className="mt-2 h-8 w-16 animate-pulse rounded bg-[#f0f0f0]" />
       ) : error ? (
-        <p className="mt-2 text-xs text-red-500">Error</p>
+        <p className="mt-2 text-xs text-red-500">{t?.("admin.common.error") || "Error"}</p>
       ) : (
         <p className="mt-1 text-2xl font-bold text-[#111]">{value ?? 0}</p>
       )}
@@ -100,33 +101,19 @@ function StatusBadge({ status }) {
 
 // ─── Priority badge ──────────────────────────────────────────────────────────
 
-function PriorityBadge({ priority }) {
+function PriorityBadge({ priority, t }) {
   if (priority > 1) return null; // normal = 2, skip it
   const isUrgent = priority === 0;
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
       isUrgent ? "bg-red-500 text-white" : "bg-orange-100 text-orange-800"
     }`}>
-      {isUrgent ? "URGENT" : "RUSH"}
+      {isUrgent ? t("admin.common.urgent") : t("admin.common.rush")}
     </span>
   );
 }
 
 // ─── Format helpers ──────────────────────────────────────────────────────────
-
-function timeAgo(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  const now = Date.now();
-  const diffMs = now - d.getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
-}
 
 function fmtMoney(cents) {
   if (cents == null) return "$0.00";
@@ -227,11 +214,11 @@ export default function WorkstationPage() {
 
       {/* ── 1. Stats Cards ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <StatCard label={t("admin.workstation.statOrders")} value={stats?.totalOrders} loading={loading} error={!stats && !loading} href="/admin/orders" />
-        <StatCard label={t("admin.workstation.statAttention")} value={stats?.needsAttentionCount} loading={loading} error={!stats && !loading} href="/admin/orders" />
-        <StatCard label={t("admin.workstation.statProofs")} value={stats?.pendingProofsCount} loading={loading} error={!stats && !loading} href="/admin/tools/proof" />
-        <StatCard label={t("admin.workstation.statJobs")} value={stats?.recentJobsCount} loading={loading} error={!stats && !loading} href="/admin/tools" />
-        <StatCard label={t("admin.workstation.statProduction")} value={stats?.inProductionCount} loading={loading} error={!stats && !loading} href="/admin/production/board" />
+        <StatCard label={t("admin.workstation.statOrders")} value={stats?.totalOrders} loading={loading} error={!stats && !loading} t={t} href="/admin/orders" />
+        <StatCard label={t("admin.workstation.statAttention")} value={stats?.needsAttentionCount} loading={loading} error={!stats && !loading} t={t} href="/admin/orders" />
+        <StatCard label={t("admin.workstation.statProofs")} value={stats?.pendingProofsCount} loading={loading} error={!stats && !loading} t={t} href="/admin/tools/proof" />
+        <StatCard label={t("admin.workstation.statJobs")} value={stats?.recentJobsCount} loading={loading} error={!stats && !loading} t={t} href="/admin/tools" />
+        <StatCard label={t("admin.workstation.statProduction")} value={stats?.inProductionCount} loading={loading} error={!stats && !loading} t={t} href="/admin/production/board" />
       </div>
 
       {/* ── 2. Quick Actions ──────────────────────────────────────────── */}
@@ -264,7 +251,7 @@ export default function WorkstationPage() {
                 className="flex flex-col gap-2 rounded-[3px] border border-[#ececec] p-3 transition-colors hover:border-[#ccc] hover:bg-[#fafafa] sm:flex-row sm:items-center sm:justify-between"
               >
                 <Link href={`/admin/orders/${o.id}`} className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
-                  <PriorityBadge priority={o.priority} />
+                  <PriorityBadge priority={o.priority} t={t} />
                   <StatusBadge status={o.status} />
                   {o.productionStatus && o.productionStatus !== "not_started" && (
                     <StatusBadge status={o.productionStatus} />
@@ -280,7 +267,7 @@ export default function WorkstationPage() {
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs text-[#999]">{o._count?.items || 0} item{(o._count?.items || 0) !== 1 ? "s" : ""}</span>
                   <span className="text-xs font-medium text-[#111]">{fmtMoney(o.totalAmount)}</span>
-                  <span className="text-xs text-[#999]">{timeAgo(o.createdAt)}</span>
+                  <span className="text-xs text-[#999]">{timeAgo(o.createdAt, t)}</span>
                   <Link
                     href={`/admin/orders/${o.id}`}
                     className="ml-1 inline-flex items-center gap-1 rounded-[3px] bg-black px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#222]"
@@ -322,9 +309,9 @@ export default function WorkstationPage() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-xs text-[#999]">v{p.version}</span>
-                    <span className="text-xs text-[#999]">{timeAgo(p.createdAt)}</span>
+                    <span className="text-xs text-[#999]">{timeAgo(p.createdAt, t)}</span>
                     <Link
-                      href="/admin/tools/proof"
+                      href={`/admin/tools/proof?proofId=${p.id}`}
                       className="inline-flex items-center gap-1 rounded-[3px] bg-black px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#222]"
                     >
                       {t("admin.workstation.openProof")}
@@ -357,7 +344,7 @@ export default function WorkstationPage() {
                       <span className="inline-block rounded-full bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-semibold uppercase text-[#666]">{j.toolType}</span>
                       <span className="text-sm text-[#111] truncate">{j.operatorName || "—"}</span>
                       <StatusBadge status={j.status} />
-                      <span className="text-xs text-[#999]">{timeAgo(j.createdAt)}</span>
+                      <span className="text-xs text-[#999]">{timeAgo(j.createdAt, t)}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {j.outputFileUrl && (

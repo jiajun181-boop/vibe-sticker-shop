@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { timeAgo } from "@/lib/admin/time-ago";
 
 const TOOLS = [
   {
@@ -55,17 +56,6 @@ const TOOLS = [
   },
 ];
 
-function timeAgo(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  const diffMs = Date.now() - d.getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 export default function ToolsHubPage() {
   const { t } = useTranslation();
@@ -130,6 +120,16 @@ export default function ToolsHubPage() {
                     {jobCounts[tool.toolType]} {t("admin.tools.jobsRecorded")}
                   </p>
                 )}
+                {/* Last job for this tool — task continuation hint */}
+                {tool.toolType && (() => {
+                  const lastJob = recentJobs.find((j) => j.toolType === tool.toolType);
+                  if (!lastJob) return null;
+                  return (
+                    <p className="mt-1 text-[10px] text-[#bbb]">
+                      {t("admin.tools.lastJob")}: {lastJob.operatorName || "—"} · {timeAgo(lastJob.createdAt, t)}
+                    </p>
+                  );
+                })()}
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -191,7 +191,7 @@ export default function ToolsHubPage() {
                     }`}>
                       {job.status}
                     </span>
-                    <span className="text-xs text-[#999]">{timeAgo(job.createdAt)}</span>
+                    <span className="text-xs text-[#999]">{timeAgo(job.createdAt, t)}</span>
                   </Link>
                   {job.outputFileUrl && (
                     <a

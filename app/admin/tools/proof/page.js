@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { uploadDesignSnapshot } from "@/lib/design-studio/upload-snapshot";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { timeAgo } from "@/lib/admin/time-ago";
 
 const STATUS_FILTERS = [
   { value: "all", labelKey: "admin.tools.proof.filterAll" },
@@ -26,17 +28,6 @@ const STATUS_COLORS = {
 function isPdf(item) {
   const f = item?.fileName || item?.outputData?.fileType || "";
   return String(f).toLowerCase().includes("pdf");
-}
-
-function timeAgo(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  const mins = Math.floor((Date.now() - d.getTime()) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
 }
 
 // ─── Normalize both data sources into unified proof items ─────────────────
@@ -83,12 +74,14 @@ function normalizeStandaloneJob(j) {
 
 export default function ProofManagerPage() {
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
   const [orderProofs, setOrderProofs] = useState([]);
   const [standaloneJobs, setStandaloneJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [detailItem, setDetailItem] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [deepLinked, setDeepLinked] = useState(false);
 
   // ── Modals ──
   const [orderProofModal, setOrderProofModal] = useState(false);
@@ -97,6 +90,10 @@ export default function ProofManagerPage() {
   const [standaloneModal, setStandaloneModal] = useState(false);
   const [standaloneData, setStandaloneData] = useState({ customerName: "", customerEmail: "", description: "", notes: "", file: null });
   const [standaloneSaving, setStandaloneSaving] = useState(false);
+
+  // ── Revision upload from detail modal ──
+  const [revisionFile, setRevisionFile] = useState(null);
+  const [revisionSaving, setRevisionSaving] = useState(false);
 
   // ── Fetch ──
   const fetchOrderProofs = useCallback(async () => {
@@ -122,6 +119,20 @@ export default function ProofManagerPage() {
   useEffect(() => {
     Promise.all([fetchOrderProofs(), fetchStandaloneJobs()]).finally(() => setLoading(false));
   }, [fetchOrderProofs, fetchStandaloneJobs]);
+
+  // ── Deep link: open detail for ?proofId=xxx ──
+  useEffect(() => {
+    if (deepLinked || loading) return;
+    const proofId = searchParams.get("proofId");
+    if (!proofId) return;
+
+    const all = [...orderProofs, ...standaloneJobs];
+    const match = all.find((p) => p.id === proofId);
+    if (match) {
+      setDetailItem(match);
+      setDeepLinked(true);
+    }
+  }, [loading, orderProofs, standaloneJobs, searchParams, deepLinked]);
 
   // ── Unified + filtered list ──
   const allProofs = [...orderProofs, ...standaloneJobs].sort(
@@ -155,6 +166,31 @@ export default function ProofManagerPage() {
       alert(err instanceof Error ? err.message : "Failed to update");
     } finally {
       setUpdatingId(null);
+    }
+  }
+
+  async function handleUploadRevision(item) {
+    if (!revisionFile || !item.orderId) return;
+    setRevisionSaving(true);
+    try {
+      const uploaded = await uploadDesignSnapshot(revisionFile, revisionFile.name || `revision-${Date.now()}`);
+      const res = await fetch(`/api/admin/orders/${item.orderId}/proofs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: uploaded.url, fileName: revisionFile.name || null, notes: `Revision of v${item.version}` }),
+      });
+      if (!res.ok) { const err = await res.json().catch(() => null); throw new Error(err?.error || "Failed to upload revision"); }
+      // Mark current proof as revised
+      await handleUpdateStatus(item, "revised");
+      setRevisionFile(null);
+      setDetailItem(null);
+      setLoading(true);
+      await fetchOrderProofs();
+      setLoading(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to upload revision");
+    } finally {
+      setRevisionSaving(false);
     }
   }
 
@@ -279,9 +315,13 @@ export default function ProofManagerPage() {
           item={detailItem}
           t={t}
           updatingId={updatingId}
-          onClose={() => setDetailItem(null)}
+          onClose={() => { setDetailItem(null); setRevisionFile(null); }}
           onApprove={(it) => handleUpdateStatus(it, "approved")}
           onReject={(it) => handleUpdateStatus(it, "rejected")}
+          revisionFile={revisionFile}
+          onRevisionFileChange={setRevisionFile}
+          onUploadRevision={handleUploadRevision}
+          revisionSaving={revisionSaving}
         />
       ) : null}
 
@@ -380,7 +420,7 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-[#999]">
           <span>{customerLabel}</span>
           <span>·</span>
-          <span>{timeAgo(item.createdAt)}</span>
+          <span>{timeAgo(item.createdAt, t)}</span>
           {item.uploadedBy ? <><span>·</span><span>{item.uploadedBy}</span></> : null}
           {item.description ? <><span>·</span><span className="truncate max-w-[200px]">{item.description}</span></> : null}
         </div>
@@ -414,8 +454,9 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
 
 // ─── Proof Detail Modal ───────────────────────────────────────────────────────
 
-function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject }) {
+function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, revisionFile, onRevisionFileChange, onUploadRevision, revisionSaving }) {
   const isActionable = item.source === "order" && (item.status === "pending" || item.status === "revised");
+  const canRevise = item.source === "order" && item.status === "rejected";
   const colors = STATUS_COLORS[item.status] || "bg-gray-100 text-gray-700";
 
   return (
@@ -457,6 +498,29 @@ function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject })
                   <button type="button" onClick={() => onReject(item)} disabled={updatingId === item.id} className="w-full rounded-[3px] bg-red-600 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50">
                     {t("admin.tools.proof.reject")}
                   </button>
+                </div>
+              )}
+
+              {/* Upload revision for rejected proofs */}
+              {canRevise && (
+                <div className="rounded-[3px] border border-amber-200 bg-amber-50 p-3 space-y-2">
+                  <p className="text-[11px] font-semibold text-amber-800">{t("admin.tools.proof.uploadRevisionTitle")}</p>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf,application/pdf"
+                    onChange={(e) => onRevisionFileChange?.(e.target.files?.[0] || null)}
+                    className="block w-full text-xs text-[#666] file:mr-2 file:rounded-[3px] file:border-0 file:bg-black file:px-3 file:py-1.5 file:text-[10px] file:font-semibold file:text-white"
+                  />
+                  {revisionFile && (
+                    <button
+                      type="button"
+                      onClick={() => onUploadRevision?.(item)}
+                      disabled={revisionSaving}
+                      className="w-full rounded-[3px] bg-amber-600 py-2 text-xs font-bold text-white hover:bg-amber-700 disabled:opacity-50"
+                    >
+                      {revisionSaving ? t("admin.tools.proof.uploading") : t("admin.tools.proof.uploadRevision")}
+                    </button>
+                  )}
                 </div>
               )}
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { uploadDesignSnapshot } from "@/lib/design-studio/upload-snapshot";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { timeAgo } from "@/lib/admin/time-ago";
 
 function formatJobTime(dateString) {
   const date = new Date(dateString);
@@ -11,17 +12,6 @@ function formatJobTime(dateString) {
     hour: "2-digit",
     minute: "2-digit",
   })}`;
-}
-
-function timeAgo(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  const mins = Math.floor((Date.now() - d.getTime()) / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
 }
 
 async function blobFromUrl(url) {
@@ -202,6 +192,14 @@ export default function ContourToolPage() {
             svgFileKey: uploadedSvg.key,
             processedFileUrl: processedAsset?.url || null,
             processedFileKey: processedAsset?.key || null,
+            contourConfidence: contourResult.quality?.confidence || null,
+            contourShapeType: contourResult.quality?.shapeType || null,
+            contourWarnings: contourResult.quality?.warnings || [],
+            areaCoverage: contourResult.quality?.areaCoverage || null,
+            rectangularity: contourResult.quality?.rectangularity || null,
+            pointCount: contourResult.quality?.pointCount || null,
+            contourBounds: contourResult.quality?.contourBounds || null,
+            imageBounds: contourResult.quality?.imageBounds || null,
           },
           notes: notes || null,
           orderId: orderId || null,
@@ -317,7 +315,7 @@ export default function ContourToolPage() {
           {processing ? (
             <div className="text-center">
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#e0e0e0] border-t-black" />
-              <p className="mt-3 text-sm text-[#666]">{progress || "Processing..."}</p>
+              <p className="mt-3 text-sm text-[#666]">{progress || t("admin.common.processing")}</p>
             </div>
           ) : contourResult ? (
             <div className="relative w-full">
@@ -349,6 +347,10 @@ export default function ContourToolPage() {
                   {contourResult.imageWidth}x{contourResult.imageHeight}px
                 </span>
               </div>
+              {/* Quality grade */}
+              {contourResult.quality && (
+                <QualityBanner quality={contourResult.quality} t={t} />
+              )}
             </div>
           ) : (
             <p className="text-sm text-[#999]">{t("admin.tools.contour.dropzoneEmpty")}</p>
@@ -506,7 +508,10 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, reopening }) {
             <span className="rounded-[2px] bg-[#f0f0f0] px-1.5 py-0.5 text-[10px] font-medium text-[#666]">{dims}</span>
           )}
           {output.bgRemoved && (
-            <span className="rounded-[2px] bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-700">BG removed</span>
+            <span className="rounded-[2px] bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-700">{t("admin.tools.contour.bgRemoved")}</span>
+          )}
+          {output.contourConfidence && (
+            <ConfidenceBadge confidence={output.contourConfidence} shapeType={output.contourShapeType} t={t} />
           )}
           <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
             job.status === "completed" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
@@ -515,9 +520,9 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, reopening }) {
           </span>
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-[#999]">
-          <span>{timeAgo(job.createdAt)}</span>
+          <span>{timeAgo(job.createdAt, t)}</span>
           {job.operatorName && <><span>·</span><span>{job.operatorName}</span></>}
-          {job.orderId && <><span>·</span><span>Order: #{job.orderId.slice(0, 8)}</span></>}
+          {job.orderId && <><span>·</span><span>{t("admin.common.order")}: #{job.orderId.slice(0, 8)}</span></>}
         </div>
         {job.notes && <p className="mt-0.5 truncate text-xs text-[#777]">{job.notes}</p>}
       </div>
@@ -594,6 +599,33 @@ function ContourDetailModal({ job, t, onClose, onReopen, reopening }) {
               </div>
             ) : null}
           </div>
+          {/* Quality */}
+          {job.outputData?.contourConfidence && (
+            <div className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-medium text-[#666]">{t("admin.tools.contour.qualityLabel")}</span>
+                <ConfidenceBadge confidence={job.outputData.contourConfidence} shapeType={job.outputData.contourShapeType} t={t} />
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#666]">
+                {job.outputData.areaCoverage != null && (
+                  <span>{t("admin.tools.contour.coverage")}: {job.outputData.areaCoverage}%</span>
+                )}
+                {job.outputData.rectangularity != null && (
+                  <span>{t("admin.tools.contour.rectangularity")}: {job.outputData.rectangularity}%</span>
+                )}
+                {job.outputData.pointCount != null && (
+                  <span>{t("admin.tools.contour.points")}: {job.outputData.pointCount}</span>
+                )}
+              </div>
+              {job.outputData.contourWarnings?.length > 0 && (
+                <div className="space-y-1">
+                  {job.outputData.contourWarnings.map((w) => (
+                    <p key={w} className="text-xs text-amber-700">⚠ {t(`admin.tools.contour.${w}`)}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {/* Metadata */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <MetaCell label={t("admin.tools.contour.fileName")} value={job.inputData?.fileName || "—"} />
@@ -646,6 +678,42 @@ function ContourDetailModal({ job, t, onClose, onReopen, reopening }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Quality Components ───────────────────────────────────────────────────────
+
+const CONFIDENCE_STYLES = {
+  good: "bg-green-100 text-green-700",
+  rectangular: "bg-amber-100 text-amber-700",
+  low: "bg-red-100 text-red-700",
+};
+
+function ConfidenceBadge({ confidence, shapeType, t }) {
+  const cls = CONFIDENCE_STYLES[confidence] || CONFIDENCE_STYLES.low;
+  const label = t(`admin.tools.contour.grade_${confidence}`) || confidence;
+  return (
+    <span className={`rounded-[2px] px-1.5 py-0.5 text-[10px] font-bold ${cls}`}>
+      {label}
+    </span>
+  );
+}
+
+function QualityBanner({ quality, t }) {
+  if (!quality) return null;
+  const isGood = quality.confidence === "good" && quality.warnings.length === 0;
+  return (
+    <div className={`mt-2 rounded-[3px] px-3 py-2 text-xs ${
+      isGood ? "bg-green-50 text-green-700" : quality.confidence === "low" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"
+    }`}>
+      <div className="flex items-center gap-2 font-semibold">
+        <ConfidenceBadge confidence={quality.confidence} shapeType={quality.shapeType} t={t} />
+        <span>{quality.shapeType} · {quality.areaCoverage}% {t("admin.tools.contour.coverage").toLowerCase()}</span>
+      </div>
+      {quality.warnings.filter((w) => w !== "info_bg_removed").map((w) => (
+        <p key={w} className="mt-1">⚠ {t(`admin.tools.contour.${w}`)}</p>
+      ))}
     </div>
   );
 }

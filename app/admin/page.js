@@ -177,19 +177,19 @@ export default function AdminDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label={t("admin.dashboard.todayOrders")}
-          subtitle="vs yesterday"
+          subtitle={t("admin.dashboard.vsYesterday")}
           value={stats.todayOrders}
           change={<Change current={stats.todayOrders} previous={stats.yesterdayOrders} />}
           sparkline={stats.dailyOrders}
         />
-        <StatCard label={t("admin.dashboard.pendingOrders")} subtitle="awaiting action" value={stats.pendingOrders} />
+        <StatCard label={t("admin.dashboard.pendingOrders")} subtitle={t("admin.dashboard.awaitingAction")} value={stats.pendingOrders} />
         <StatCard
           label={t("admin.dashboard.monthRevenue")}
-          subtitle="this month"
+          subtitle={t("admin.dashboard.thisMonth")}
           value={formatCad(stats.monthRevenue)}
           change={<Change current={stats.monthRevenue} previous={stats.prevMonthRevenue} />}
         />
-        <StatCard label={t("admin.dashboard.totalOrders")} subtitle="all time" value={stats.totalOrders} sparkline={stats.dailyOrders} />
+        <StatCard label={t("admin.dashboard.totalOrders")} subtitle={t("admin.dashboard.allTime")} value={stats.totalOrders} sparkline={stats.dailyOrders} />
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -252,10 +252,10 @@ export default function AdminDashboard() {
           <div>
             <h2 className="text-sm font-bold text-black">{t("admin.dashboard.recentOrders")}</h2>
             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
-              {[["pending", "Pending"], ["paid", "Paid"], ["canceled", "Canceled"], ["refunded", "Refunded"]].map(([key, label]) => (
+              {["pending", "paid", "canceled", "refunded"].map((key) => (
                 <span key={key} className="inline-flex items-center gap-1 text-[9px] text-[#999]">
                   <span className={`inline-block h-1.5 w-1.5 rounded-full ${key === "pending" ? "bg-yellow-400" : key === "paid" ? "bg-green-500" : key === "canceled" ? "bg-red-400" : "bg-purple-400"}`} />
-                  {label}
+                  {t(`admin.dashboard.status_${key}`)}
                 </span>
               ))}
             </div>
