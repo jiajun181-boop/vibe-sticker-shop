@@ -614,26 +614,44 @@ function ContourDetailModal({ job, t, onClose, onReopen, reopening }) {
               </div>
             ) : null}
           </div>
-          {/* Quality */}
+          {/* Quality Assessment — prominent section */}
           {job.outputData?.contourConfidence && (
-            <div className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-medium text-[#666]">{t("admin.tools.contour.qualityLabel")}</span>
-                <ConfidenceBadge confidence={job.outputData.contourConfidence} shapeType={job.outputData.contourShapeType} t={t} />
+            <div className={`rounded-[3px] border-2 p-4 space-y-3 ${
+              job.outputData.contourConfidence === "good" ? "border-green-300 bg-green-50" :
+              job.outputData.contourConfidence === "rectangular" ? "border-amber-300 bg-amber-50" :
+              "border-red-300 bg-red-50"
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-[#333]">{t("admin.tools.contour.qualityLabel")}</span>
+                  <ConfidenceBadge confidence={job.outputData.contourConfidence} shapeType={job.outputData.contourShapeType} t={t} />
+                </div>
+                {job.outputData.contourShapeType && (
+                  <span className="text-[10px] font-medium text-[#666]">{t("admin.tools.contour.shapeTypeLabel")}: {job.outputData.contourShapeType}</span>
+                )}
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#666]">
+              <div className="grid grid-cols-3 gap-2 text-xs">
                 {job.outputData.areaCoverage != null && (
-                  <span>{t("admin.tools.contour.coverage")}: {job.outputData.areaCoverage}%</span>
+                  <div className="rounded-[3px] bg-white/60 px-2 py-1.5">
+                    <span className="block text-[10px] text-[#666]">{t("admin.tools.contour.coverage")}</span>
+                    <span className="font-bold text-[#111]">{job.outputData.areaCoverage}%</span>
+                  </div>
                 )}
                 {job.outputData.rectangularity != null && (
-                  <span>{t("admin.tools.contour.rectangularity")}: {job.outputData.rectangularity}%</span>
+                  <div className="rounded-[3px] bg-white/60 px-2 py-1.5">
+                    <span className="block text-[10px] text-[#666]">{t("admin.tools.contour.rectangularity")}</span>
+                    <span className="font-bold text-[#111]">{job.outputData.rectangularity}%</span>
+                  </div>
                 )}
                 {job.outputData.pointCount != null && (
-                  <span>{t("admin.tools.contour.points")}: {job.outputData.pointCount}</span>
+                  <div className="rounded-[3px] bg-white/60 px-2 py-1.5">
+                    <span className="block text-[10px] text-[#666]">{t("admin.tools.contour.points")}</span>
+                    <span className="font-bold text-[#111]">{job.outputData.pointCount}</span>
+                  </div>
                 )}
               </div>
               {job.outputData.contourWarnings?.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-1 rounded-[3px] bg-white/50 px-3 py-2">
                   {job.outputData.contourWarnings.map((w) => (
                     <p key={w} className="text-xs text-amber-700">⚠ {t(`admin.tools.contour.${w}`)}</p>
                   ))}
@@ -744,7 +762,7 @@ function QualityGatedSave({ confidence, saving, onSave, t }) {
         type="button"
         onClick={() => onSave("completed")}
         disabled={saving}
-        className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+        className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
       >
         {saving ? t("admin.tools.saving") : t("admin.tools.contour.saveApprove")}
       </button>
@@ -752,25 +770,38 @@ function QualityGatedSave({ confidence, saving, onSave, t }) {
   }
 
   if (confidence === "rectangular") {
+    // Mark for Review is PRIMARY — save-as-completed is secondary/smaller
     return (
-      <button
-        type="button"
-        onClick={() => onSave("needs_review")}
-        disabled={saving}
-        className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
-      >
-        {saving ? t("admin.tools.saving") : t("admin.tools.contour.saveWarning")}
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onSave("needs_review")}
+          disabled={saving}
+          className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
+        >
+          {saving ? t("admin.tools.saving") : t("admin.tools.contour.markForReview")}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (window.confirm(t("admin.tools.contour.confirmRectSave"))) onSave("completed");
+          }}
+          disabled={saving}
+          className="inline-flex items-center justify-center gap-1 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black disabled:opacity-50"
+        >
+          {t("admin.tools.contour.saveAnywayShort")}
+        </button>
+      </div>
     );
   }
 
-  // low confidence
+  // low confidence — NO approve/completed path, only flag for review
   return (
     <button
       type="button"
       onClick={() => onSave("needs_review")}
       disabled={saving}
-      className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+      className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
     >
       {saving ? t("admin.tools.saving") : t("admin.tools.contour.saveFlag")}
     </button>
@@ -781,14 +812,15 @@ function QualityGatedSave({ confidence, saving, onSave, t }) {
 
 function QualityGuidance({ confidence, t }) {
   const configs = {
-    good: { border: "border-green-200", bg: "bg-green-50", text: "text-green-700", key: "admin.tools.contour.guidanceGood" },
-    rectangular: { border: "border-amber-200", bg: "bg-amber-50", text: "text-amber-700", key: "admin.tools.contour.guidanceRectangular" },
-    low: { border: "border-red-200", bg: "bg-red-50", text: "text-red-700", key: "admin.tools.contour.guidanceLow" },
+    good: { border: "border-green-200", bg: "bg-green-50", text: "text-green-700", icon: "✓", titleKey: "admin.tools.contour.guidanceGoodTitle", key: "admin.tools.contour.guidanceGood" },
+    rectangular: { border: "border-amber-200", bg: "bg-amber-50", text: "text-amber-700", icon: "⚠", titleKey: "admin.tools.contour.guidanceRectTitle", key: "admin.tools.contour.guidanceRectangular" },
+    low: { border: "border-red-200", bg: "bg-red-50", text: "text-red-700", icon: "✗", titleKey: "admin.tools.contour.guidanceLowTitle", key: "admin.tools.contour.guidanceLow" },
   };
   const c = configs[confidence] || configs.low;
   return (
-    <div className={`rounded-[3px] border ${c.border} ${c.bg} px-4 py-2.5`}>
-      <p className={`text-xs font-medium ${c.text}`}>{t(c.key)}</p>
+    <div className={`rounded-[3px] border ${c.border} ${c.bg} px-4 py-3`}>
+      <p className={`text-xs font-bold ${c.text}`}>{c.icon} {t(c.titleKey)}</p>
+      <p className={`mt-1 text-xs ${c.text}`}>{t(c.key)}</p>
     </div>
   );
 }

@@ -400,7 +400,7 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
   const customerLabel = item.customerName || item.customerEmail || "—";
 
   return (
-    <div className={`flex flex-col gap-3 rounded-[3px] border bg-white p-3 sm:flex-row sm:items-center ${isActionable ? "border-yellow-300" : "border-[#e0e0e0]"}`}>
+    <div className={`flex flex-col gap-3 rounded-[3px] border bg-white p-3 sm:flex-row sm:items-center ${isActionable ? "border-yellow-300 bg-yellow-50/30" : "border-[#e0e0e0]"}`}>
       {/* Thumbnail — click opens detail */}
       <button type="button" onClick={() => onDetail(item)} className="h-14 w-14 shrink-0 overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] transition-opacity hover:opacity-80">
         {item.imageUrl ? (
@@ -433,14 +433,14 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
         {item.customerComment ? <p className="mt-1 truncate text-xs italic text-[#555]">&ldquo;{item.customerComment}&rdquo;</p> : null}
       </div>
 
-      {/* Actions */}
+      {/* Actions — always prominent */}
       <div className="flex flex-wrap items-center gap-1.5 shrink-0">
         {isActionable && (
           <>
-            <button type="button" onClick={() => onApprove(item)} disabled={updatingId === item.id} className="rounded-[3px] bg-green-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-green-700 disabled:opacity-50">
+            <button type="button" onClick={() => onApprove(item)} disabled={updatingId === item.id} className="rounded-[3px] bg-green-600 px-3.5 py-1.5 text-[11px] font-bold text-white hover:bg-green-700 disabled:opacity-50">
               {t("admin.tools.proof.approve")}
             </button>
-            <button type="button" onClick={() => onReject(item)} disabled={updatingId === item.id} className="rounded-[3px] bg-red-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+            <button type="button" onClick={() => onReject(item)} disabled={updatingId === item.id} className="rounded-[3px] bg-red-600 px-3.5 py-1.5 text-[11px] font-bold text-white hover:bg-red-700 disabled:opacity-50">
               {t("admin.tools.proof.reject")}
             </button>
           </>
@@ -448,6 +448,11 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
         <button type="button" onClick={() => onDetail(item)} className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-[11px] font-medium text-[#666] hover:border-black hover:text-black">
           {t("admin.tools.proof.openProof")}
         </button>
+        {item.imageUrl && (
+          <a href={item.imageUrl} download={item.fileName || undefined} className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-[11px] font-medium text-[#666] hover:border-black hover:text-black">
+            {t("admin.tools.download")}
+          </a>
+        )}
         {item.orderId && (
           <Link href={`/admin/orders/${item.orderId}`} className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-[11px] font-medium text-[#666] hover:border-black hover:text-black">
             {t("admin.tools.viewOrder")}
@@ -466,12 +471,20 @@ function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, r
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60" onClick={onClose}>
-      <div className="mx-4 flex w-full max-w-3xl flex-col rounded-[3px] bg-white shadow-xl" style={{ maxHeight: "90vh" }} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#e0e0e0] px-5 py-4">
+      <div className="mx-4 flex w-full max-w-4xl flex-col rounded-[3px] bg-white shadow-xl" style={{ maxHeight: "90vh" }} onClick={(e) => e.stopPropagation()}>
+        {/* Header — status-aware context bar */}
+        <div className={`flex items-center justify-between border-b px-5 py-4 ${
+          isActionable ? "border-yellow-300 bg-yellow-50" : canRevise ? "border-amber-200 bg-amber-50" : "border-[#e0e0e0] bg-white"
+        }`}>
           <div className="flex items-center gap-3">
             <h3 className="text-sm font-bold text-black">{t("admin.tools.proof.detailTitle")}</h3>
             <StatusBadge status={item.status} t={t} />
+            {isActionable && (
+              <span className="text-[11px] font-semibold text-yellow-700">{t("admin.tools.proof.needsDecision")}</span>
+            )}
+            {canRevise && (
+              <span className="text-[11px] font-semibold text-amber-700">{t("admin.tools.proof.needsRevision")}</span>
+            )}
           </div>
           <button type="button" onClick={onClose} className="text-[#999] hover:text-black">
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -480,7 +493,7 @@ function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, r
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-5">
-          <div className="grid gap-5 lg:grid-cols-[1fr,280px]">
+          <div className="grid gap-5 lg:grid-cols-[1fr,300px]">
             {/* Preview */}
             <div className="min-h-[200px] rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-2">
               {item.pdf ? (
@@ -492,11 +505,12 @@ function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, r
               )}
             </div>
 
-            {/* Sidebar */}
+            {/* Sidebar — action-first layout */}
             <div className="space-y-4">
-              {/* Actions */}
+              {/* Primary Actions — always visible at top */}
               {isActionable && (
-                <div className="space-y-2">
+                <div className="space-y-2 rounded-[3px] border-2 border-yellow-300 bg-yellow-50 p-3">
+                  <p className="text-[11px] font-bold text-yellow-800">{t("admin.tools.proof.actionRequired")}</p>
                   <button type="button" onClick={() => onApprove(item)} disabled={updatingId === item.id} className="w-full rounded-[3px] bg-green-600 py-2.5 text-xs font-bold text-white hover:bg-green-700 disabled:opacity-50">
                     {t("admin.tools.proof.approve")}
                   </button>
@@ -508,8 +522,9 @@ function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, r
 
               {/* Upload revision for rejected proofs */}
               {canRevise && (
-                <div className="rounded-[3px] border border-amber-200 bg-amber-50 p-3 space-y-2">
-                  <p className="text-[11px] font-semibold text-amber-800">{t("admin.tools.proof.uploadRevisionTitle")}</p>
+                <div className="rounded-[3px] border-2 border-amber-300 bg-amber-50 p-3 space-y-2">
+                  <p className="text-[11px] font-bold text-amber-800">{t("admin.tools.proof.uploadRevisionTitle")}</p>
+                  <p className="text-[10px] text-amber-700">{t("admin.tools.proof.uploadRevisionDesc")}</p>
                   <input
                     type="file"
                     accept="image/*,.pdf,application/pdf"
@@ -529,35 +544,44 @@ function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, r
                 </div>
               )}
 
-              {/* Metadata */}
-              <div className="space-y-3 text-sm">
-                <MetaRow label={t("admin.tools.proof.sourceLabel")} value={item.source === "order" ? t("admin.tools.proof.orderSource").replace("{orderId}", item.orderId?.slice(-8) || "—") : t("admin.tools.proof.standaloneLabel")} />
-                {item.version != null && <MetaRow label={t("admin.tools.proof.versionLabel")} value={`v${item.version}`} />}
-                <MetaRow label={t("admin.tools.proof.customerLabel")} value={item.customerName || item.customerEmail || "—"} />
-                {item.customerEmail && item.customerName && <MetaRow label={t("admin.tools.proof.customerEmail")} value={item.customerEmail} />}
-                <MetaRow label={t("admin.tools.proof.uploadedByLabel")} value={item.uploadedBy || "—"} />
-                <MetaRow label={t("admin.tools.contour.created")} value={item.createdAt ? new Date(item.createdAt).toLocaleString() : "—"} />
-                {item.notes && <MetaRow label={t("admin.tools.notesLabel")} value={item.notes} />}
-                {item.description && <MetaRow label={t("admin.tools.proof.description")} value={item.description} />}
+              {/* Context: who, when, source */}
+              <div className="space-y-2 rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">{t("admin.tools.proof.contextLabel")}</p>
+                <div className="space-y-2 text-sm">
+                  <MetaRow label={t("admin.tools.proof.sourceLabel")} value={item.source === "order" ? t("admin.tools.proof.orderSource").replace("{orderId}", item.orderId?.slice(-8) || "—") : t("admin.tools.proof.standaloneLabel")} />
+                  {item.version != null && <MetaRow label={t("admin.tools.proof.versionLabel")} value={`v${item.version}`} />}
+                  <MetaRow label={t("admin.tools.proof.customerLabel")} value={item.customerName || item.customerEmail || "—"} />
+                  {item.customerEmail && item.customerName && <MetaRow label={t("admin.tools.proof.customerEmail")} value={item.customerEmail} />}
+                  <MetaRow label={t("admin.tools.proof.uploadedByLabel")} value={item.uploadedBy || "—"} />
+                  <MetaRow label={t("admin.tools.proof.createdLabel")} value={item.createdAt ? new Date(item.createdAt).toLocaleString() : "—"} />
+                </div>
               </div>
 
-              {/* Customer comment */}
-              {item.customerComment && (
-                <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
-                  <p className="text-[11px] font-medium text-[#666]">{t("admin.tools.proof.customerFeedback")}</p>
-                  <p className="mt-1 text-sm italic text-[#333]">&ldquo;{item.customerComment}&rdquo;</p>
+              {/* Notes + description */}
+              {(item.notes || item.description) && (
+                <div className="space-y-2 rounded-[3px] border border-[#e0e0e0] bg-white p-3">
+                  {item.notes && <MetaRow label={t("admin.tools.notesLabel")} value={item.notes} />}
+                  {item.description && <MetaRow label={t("admin.tools.proof.description")} value={item.description} />}
                 </div>
               )}
 
-              {/* Links */}
+              {/* Customer comment */}
+              {item.customerComment && (
+                <div className="rounded-[3px] border border-blue-200 bg-blue-50 p-3">
+                  <p className="text-[11px] font-bold text-blue-800">{t("admin.tools.proof.customerFeedback")}</p>
+                  <p className="mt-1 text-sm italic text-blue-700">&ldquo;{item.customerComment}&rdquo;</p>
+                </div>
+              )}
+
+              {/* Quick Actions */}
               <div className="flex flex-col gap-2">
                 {item.imageUrl && (
-                  <a href={item.imageUrl} download={item.fileName || undefined} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-center text-xs font-medium text-[#666] hover:border-black hover:text-black">
+                  <a href={item.imageUrl} download={item.fileName || undefined} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2.5 text-center text-xs font-semibold text-[#666] hover:border-black hover:text-black">
                     {t("admin.tools.download")}
                   </a>
                 )}
                 {item.orderId && (
-                  <Link href={`/admin/orders/${item.orderId}`} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-center text-xs font-medium text-[#666] hover:border-black hover:text-black">
+                  <Link href={`/admin/orders/${item.orderId}`} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2.5 text-center text-xs font-semibold text-[#666] hover:border-black hover:text-black">
                     {t("admin.tools.viewOrder")}
                   </Link>
                 )}

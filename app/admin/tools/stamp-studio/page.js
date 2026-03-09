@@ -48,6 +48,20 @@ const QUICK_START_PRESETS = [
     font: "Helvetica",
   },
   {
+    id: "book-name",
+    labelKey: "admin.tools.stamp.presetBookName",
+    modelId: "rect-58x22",
+    text: "FROM THE LIBRARY OF\n[Name]",
+    font: "Georgia",
+  },
+  {
+    id: "funny-approval",
+    labelKey: "admin.tools.stamp.presetFunny",
+    modelId: "round-50mm",
+    text: "BOSS APPROVED\n★★★★★\nNo Questions Asked",
+    font: "Helvetica",
+  },
+  {
     id: "blank",
     labelKey: "admin.tools.stamp.presetBlank",
     modelId: "rect-58x22",
@@ -273,7 +287,7 @@ export default function StampStudioPage() {
       {/* Quick Start Presets */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
         <p className="mb-3 text-xs font-bold text-[#666]">{t("admin.tools.stamp.quickStart")}</p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {QUICK_START_PRESETS.map((preset) => (
             <button
               key={preset.id}
@@ -329,6 +343,17 @@ export default function StampStudioPage() {
       </div>
 
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 sm:p-6" ref={editorWrapRef}>
+        {/* Current task context */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#111]">{t("admin.tools.stamp.currentTask")}</span>
+            <span className="rounded-[2px] bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-medium text-[#666]">{modelLabel(modelId)}</span>
+            <span className="rounded-[2px] bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-medium text-[#666]">{model.shape === "round" ? t("admin.tools.stamp.shapeRound") : t("admin.tools.stamp.shapeRectangle")}</span>
+          </div>
+          {orderId && (
+            <span className="text-[10px] text-[#999]">{t("admin.common.order")}: #{orderId.slice(0, 8)}</span>
+          )}
+        </div>
         <StampEditor
           key={`${modelId}-${editorKey}`}
           shape={model.shape}
@@ -480,28 +505,12 @@ function StampJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate }) {
         {job.notes && !textPreview && <p className="mt-0.5 truncate text-xs text-[#777]">{job.notes}</p>}
       </div>
 
-      {/* Actions */}
+      {/* Actions — prominent, grouped by priority */}
       <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-        {job.outputFileUrl && (
-          <button
-            type="button"
-            onClick={() => onPreview(job.outputFileUrl)}
-            className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-          >
-            {t("admin.tools.preview")}
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => onDetail(job)}
-          className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
-        >
-          {t("admin.tools.stamp.detail")}
-        </button>
         <button
           type="button"
           onClick={() => onReopen(job)}
-          className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
+          className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#222]"
         >
           {t("admin.tools.reopen")}
         </button>
@@ -512,6 +521,24 @@ function StampJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate }) {
         >
           {t("admin.tools.stamp.duplicate")}
         </button>
+        {job.outputFileUrl && (
+          <a
+            href={job.outputFileUrl}
+            download={`stamp-${data.model || "stamp"}.png`}
+            className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
+          >
+            {t("admin.tools.downloadPng")}
+          </a>
+        )}
+        {job.outputFileUrl && (
+          <button
+            type="button"
+            onClick={() => onPreview(job.outputFileUrl)}
+            className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
+          >
+            {t("admin.tools.preview")}
+          </button>
+        )}
         {job.orderId && (
           <Link
             href={`/admin/orders/${job.orderId}`}

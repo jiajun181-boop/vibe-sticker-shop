@@ -6,6 +6,12 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { timeAgo } from "@/lib/admin/time-ago";
 import StatusBadge from "@/components/admin/StatusBadge";
 
+const TOOL_TYPE_LABELS = {
+  contour: "admin.tools.contourTitle",
+  proof: "admin.tools.proofTitle",
+  "stamp-studio": "admin.tools.stampTitle",
+};
+
 const TOOLS = [
   {
     titleKey: "admin.tools.contourTitle",
@@ -136,11 +142,11 @@ export default function ToolsHubPage() {
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
                 href={tool.href}
-                className="inline-flex items-center gap-1.5 rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#333]"
+                className="inline-flex items-center gap-1.5 rounded-[3px] bg-black px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#333]"
               >
-                {t("admin.tools.openTool")}
+                {t("admin.tools.newTask")}
                 <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
               </Link>
               {tool.actions.map((actionKey) => (
@@ -149,9 +155,6 @@ export default function ToolsHubPage() {
                   href={tool.href}
                   className="inline-flex items-center gap-1 rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
                 >
-                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
                   {t(actionKey)}
                 </Link>
               ))}
@@ -181,8 +184,8 @@ export default function ToolsHubPage() {
               return (
                 <div key={job.id} className="flex items-center justify-between px-5 py-3">
                   <Link href={href} className="flex items-center gap-3 min-w-0 flex-1 transition-colors hover:text-[#4f46e5]">
-                    <span className="inline-block rounded-full bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-semibold uppercase text-[#666]">
-                      {job.toolType}
+                    <span className="inline-block rounded-full bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-semibold text-[#666]">
+                      {TOOL_TYPE_LABELS[job.toolType] ? t(TOOL_TYPE_LABELS[job.toolType]) : job.toolType}
                     </span>
                     <span className="text-sm text-[#111] truncate">{job.operatorName || "—"}</span>
                     <StatusBadge status={job.status} t={t} />
@@ -194,7 +197,7 @@ export default function ToolsHubPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="ml-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-[3px] text-[#999] transition-colors hover:bg-[#f0f0f0] hover:text-[#111]"
-                      title="Download"
+                      title={t("admin.tools.download")}
                     >
                       <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />

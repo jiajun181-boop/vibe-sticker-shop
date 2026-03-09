@@ -308,7 +308,7 @@ export default function WorkstationPage() {
                 return (
                   <div key={j.id} className="flex items-center justify-between rounded-[3px] border border-[#ececec] p-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <span className="inline-block rounded-full bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-semibold uppercase text-[#666]">{j.toolType}</span>
+                      <span className="inline-block rounded-full bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-semibold text-[#666]">{t(`admin.tools.toolType_${j.toolType}`) || j.toolType}</span>
                       <span className="text-sm text-[#111] truncate">{j.operatorName || "—"}</span>
                       <StatusBadge status={j.status} t={t} />
                       <span className="text-xs text-[#999]">{timeAgo(j.createdAt, t)}</span>

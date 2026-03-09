@@ -88,12 +88,13 @@ export default function QuoteSimulator({ product }) {
           </button>
         </div>
 
-        {/* Quote Error */}
+        {/* Quote Error — local-only, doesn't affect product info above */}
         {quoteError && (
           <div className="mt-4 rounded-[3px] border border-red-200 bg-red-50 p-4">
             <p className="text-sm font-semibold text-red-700">{t("admin.priceDetail.quoteErrorTitle")}</p>
             <p className="mt-1 text-xs text-red-600">{quoteError}</p>
-            <button onClick={fetchQuote} className="mt-2 text-xs font-medium text-red-700 underline">{t("admin.priceDetail.retryQuote")}</button>
+            <p className="mt-1 text-[10px] text-red-500">{t("admin.priceDetail.quoteErrorHint")}</p>
+            <button onClick={fetchQuote} className="mt-2 rounded-[3px] bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">{t("admin.priceDetail.retryQuote")}</button>
           </div>
         )}
 
@@ -134,12 +135,14 @@ export default function QuoteSimulator({ product }) {
 
         {quoteLoading ? (
           <div className="mt-8 space-y-2">
+            <p className="text-xs text-[#999]">{t("admin.priceDetail.ledgerLoading")}</p>
             {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-8 animate-pulse rounded-[3px] bg-[#f0f0f0]" />)}
           </div>
         ) : quoteError ? (
           <div className="mt-8 rounded-[3px] border border-yellow-200 bg-yellow-50 p-4 text-center">
-            <p className="text-sm text-yellow-800">{t("admin.priceDetail.ledgerUnavailable")}</p>
+            <p className="text-sm font-semibold text-yellow-800">{t("admin.priceDetail.ledgerUnavailable")}</p>
             <p className="mt-1 text-xs text-yellow-700">{t("admin.priceDetail.ledgerUnavailableDesc")}</p>
+            <button onClick={fetchQuote} className="mt-2 rounded-[3px] bg-yellow-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-yellow-700">{t("admin.priceDetail.retryQuote")}</button>
           </div>
         ) : !ledger ? (
           <div className="mt-8 text-center text-sm text-[#999]">{t("admin.priceDetail.ledgerEmpty")}</div>
