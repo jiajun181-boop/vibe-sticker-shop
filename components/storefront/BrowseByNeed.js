@@ -13,7 +13,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
  * - cases       \u2014 array of { key, icon, titleKey, descKey, href }
  *                 href can be a URL (navigates) or "#sectionId" (smooth-scrolls in page)
  */
-export default function BrowseByNeed({ titleKey, subtitleKey, cases }) {
+export default function BrowseByNeed({ titleKey, subtitleKey, cases, onAction }) {
   const { t } = useTranslation();
 
   if (!cases?.length) return null;
@@ -40,6 +40,8 @@ export default function BrowseByNeed({ titleKey, subtitleKey, cases }) {
       <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3">
         {cases.map((c) => {
           const isAnchor = c.href?.startsWith("#");
+          const isAction = !!c.action;
+          const showDownArrow = isAnchor || isAction;
           const cardContent = (
             <>
               <span className="text-xl shrink-0 mt-0.5">{c.icon}</span>
@@ -52,7 +54,7 @@ export default function BrowseByNeed({ titleKey, subtitleKey, cases }) {
                 </p>
               </div>
               <svg className="h-3.5 w-3.5 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-colors mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                {isAnchor ? (
+                {showDownArrow ? (
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
                 ) : (
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -62,6 +64,19 @@ export default function BrowseByNeed({ titleKey, subtitleKey, cases }) {
           );
 
           const className = "group flex items-start gap-3 rounded-xl border-l-4 border-[var(--color-brand)] bg-white p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5";
+
+          if (isAction) {
+            return (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => onAction?.(c.action)}
+                className={`${className} text-left`}
+              >
+                {cardContent}
+              </button>
+            );
+          }
 
           if (isAnchor) {
             return (

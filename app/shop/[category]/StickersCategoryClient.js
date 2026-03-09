@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import FamilyLandingShell from "@/components/storefront/FamilyLandingShell";
 import ProductCard from "@/components/storefront/ProductCard";
@@ -10,6 +10,7 @@ import {
   STICKERS_CORE_ORDER,
   STICKERS_SLUG_TAG,
   STICKERS_FILTER_TABS,
+  STICKERS_FILTER_TIPS,
   STICKERS_RELATED,
   STICKERS_COMPARISON_COLUMNS,
   STICKERS_COMPARISON_FEATURES,
@@ -19,10 +20,11 @@ import {
   enrichStickerProduct,
 } from "@/lib/storefront/stickers-family";
 
-/* ── Main Component ── */
+/* \u2500\u2500 Main Component \u2500\u2500 */
 export default function StickersCategoryClient({ products = [] }) {
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState("all");
+  const gridRef = useRef(null);
 
   // Whitelist + enrich: only core sticker products, sorted by display order
   const taggedProducts = useMemo(() => {
@@ -48,6 +50,24 @@ export default function StickersCategoryClient({ products = [] }) {
     return counts;
   }, [taggedProducts]);
 
+  // BrowseByNeed action handler: parse "filter:xxx" and set filter + scroll
+  const handleBrowseAction = useCallback((action) => {
+    if (!action?.startsWith("filter:")) return;
+    const tag = action.slice(7);
+    setActiveFilter(tag);
+    // Scroll to grid after a tick (let filter state update)
+    requestAnimationFrame(() => {
+      const el = gridRef.current;
+      if (el) {
+        const offset = 140;
+        const top = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: "smooth" });
+      }
+    });
+  }, []);
+
+  const tipKey = STICKERS_FILTER_TIPS[activeFilter];
+
   return (
     <FamilyLandingShell
       bgClassName="bg-[var(--color-gray-50)]"
@@ -63,6 +83,7 @@ export default function StickersCategoryClient({ products = [] }) {
         subtitleKey: "storefront.browseByNeed.subtitle",
         cases: STICKERS_BROWSE_CASES,
       }}
+      onBrowseAction={handleBrowseAction}
       comparison={{
         title: "storefront.comparison.title",
         subtitle: "storefront.comparison.subtitle",
@@ -78,7 +99,11 @@ export default function StickersCategoryClient({ products = [] }) {
       backLabelKey="product.allCategories"
     >
       {/* Filter tabs \u2014 sticky on scroll */}
-      <div className="sticky top-[calc(var(--promo-offset,0px)+var(--nav-offset,72px))] z-10 -mx-4 sm:-mx-6 mt-6 border-b border-[var(--color-gray-200)] bg-[var(--color-gray-50)]/95 px-4 sm:px-6 py-3 backdrop-blur-sm">
+      <div
+        ref={gridRef}
+        id="stickers-products"
+        className="sticky top-[calc(var(--promo-offset,0px)+var(--nav-offset,72px))] z-10 -mx-4 sm:-mx-6 mt-6 border-b border-[var(--color-gray-200)] bg-[var(--color-gray-50)]/95 px-4 sm:px-6 py-3 backdrop-blur-sm"
+      >
         <div className="flex flex-wrap gap-2">
           {STICKERS_FILTER_TABS.map((tab) => {
             const count = filterCounts[tab.id] || 0;
@@ -104,6 +129,16 @@ export default function StickersCategoryClient({ products = [] }) {
           })}
         </div>
       </div>
+
+      {/* Filter tip \u2014 contextual recommendation when a filter is active */}
+      {tipKey && (
+        <div className="mt-3 flex items-start gap-2 rounded-lg bg-[var(--color-brand)]/5 border border-[var(--color-brand)]/15 px-4 py-2.5 text-sm text-[var(--color-gray-700)]">
+          <svg className="h-4 w-4 shrink-0 mt-0.5 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{t(tipKey)}</span>
+        </div>
+      )}
 
       {/* Product grid */}
       <div className="mt-6 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
