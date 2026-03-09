@@ -6,6 +6,7 @@ import Link from "next/link";
 import { uploadDesignSnapshot } from "@/lib/design-studio/upload-snapshot";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { timeAgo } from "@/lib/admin/time-ago";
+import StatusBadge from "@/components/admin/StatusBadge";
 
 const StampEditor = dynamic(() => import("@/components/product/StampEditor"), { ssr: false });
 
@@ -15,6 +16,44 @@ const STAMP_MODELS = [
   { id: "rect-47x18", label: "Rectangle 47x18mm", shape: "rect", widthIn: 1.85, heightIn: 0.71 },
   { id: "rect-58x22", label: "Rectangle 58x22mm", shape: "rect", widthIn: 2.28, heightIn: 0.87 },
   { id: "rect-70x30", label: "Rectangle 70x30mm", shape: "rect", widthIn: 2.76, heightIn: 1.18 },
+];
+
+const QUICK_START_PRESETS = [
+  {
+    id: "address",
+    labelKey: "admin.tools.stamp.presetAddress",
+    modelId: "rect-70x30",
+    text: "COMPANY NAME\n123 Street\nCity, Province A1A 1A1\nPhone: (416) 555-0000",
+    font: "Helvetica",
+  },
+  {
+    id: "approval",
+    labelKey: "admin.tools.stamp.presetApproval",
+    modelId: "round-40mm",
+    text: "APPROVED\n[Company Name]\nDate: ____/____/____",
+    font: "Helvetica",
+  },
+  {
+    id: "date-received",
+    labelKey: "admin.tools.stamp.presetDateReceived",
+    modelId: "rect-58x22",
+    text: "RECEIVED\nDate: ____/____/____\nBy: __________",
+    font: "Helvetica",
+  },
+  {
+    id: "signature",
+    labelKey: "admin.tools.stamp.presetSignature",
+    modelId: "rect-70x30",
+    text: "[Name]\n[Title]",
+    font: "Helvetica",
+  },
+  {
+    id: "blank",
+    labelKey: "admin.tools.stamp.presetBlank",
+    modelId: "rect-58x22",
+    text: "",
+    font: "Helvetica",
+  },
 ];
 
 function formatJobTime(dateString) {
@@ -48,6 +87,7 @@ export default function StampStudioPage() {
   const [initialColor, setInitialColor] = useState("#111111");
   const [reopenedFrom, setReopenedFrom] = useState(null);
   const [detailJob, setDetailJob] = useState(null);
+  const [hasEditorContent, setHasEditorContent] = useState(false);
   const editorWrapRef = useRef(null);
 
   const model = STAMP_MODELS.find((entry) => entry.id === modelId) || STAMP_MODELS[0];
@@ -94,8 +134,60 @@ export default function StampStudioPage() {
     setStampConfig({});
     setReopenedFrom(job);
     setDetailJob(null);
+    setHasEditorContent(false);
     setEditorKey((prev) => prev + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function applyPreset(preset) {
+    if (hasEditorContent) {
+      const ok = window.confirm(t("admin.tools.stamp.discardConfirm"));
+      if (!ok) return;
+    }
+    const targetModelId = STAMP_MODELS.find((m) => m.id === preset.modelId) ? preset.modelId : STAMP_MODELS[0].id;
+    setModelId(targetModelId);
+    setInitialText(preset.text);
+    setInitialFont(preset.font || "Helvetica");
+    setInitialColor("#111111");
+    setOrderId("");
+    setNotes("");
+    setStampConfig({});
+    setReopenedFrom(null);
+    setHasEditorContent(false);
+    setEditorKey((prev) => prev + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function handleDuplicate(job) {
+    const data = job.inputData || {};
+    const output = job.outputData || {};
+    // Create a new pending job with same config
+    try {
+      const res = await fetch("/api/admin/tools/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          toolType: "stamp-studio",
+          inputData: { model: data.model, text: data.text, font: data.font, color: data.color },
+          outputFileUrl: job.outputFileUrl || null,
+          outputFileKey: job.outputFileKey || null,
+          outputData: {
+            fileName: `stamp-dup-${Date.now()}.png`,
+            shape: output.shape || null,
+            widthIn: output.widthIn || null,
+            heightIn: output.heightIn || null,
+            diameterIn: output.diameterIn || null,
+          },
+          notes: job.notes ? `${t("admin.tools.stamp.duplicatedFrom")} · ${job.notes}` : t("admin.tools.stamp.duplicatedFrom"),
+          orderId: job.orderId || null,
+          status: "completed",
+        }),
+      });
+      if (!res.ok) throw new Error();
+      fetchJobs();
+    } catch {
+      // Silently fail duplicate — not critical
+    }
   }
 
   async function handleDownload() {
@@ -149,6 +241,7 @@ export default function StampStudioPage() {
       setSaveMsg(t("admin.tools.savedMsg"));
       setSaveIsError(false);
       setReopenedFrom(null);
+      setHasEditorContent(false);
       fetchJobs();
       setTimeout(() => setSaveMsg(""), 3000);
     } catch (err) {
@@ -161,11 +254,38 @@ export default function StampStudioPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-black">{t("admin.tools.stamp.title")}</h1>
-        <p className="mt-1 text-sm text-[#666]">
-          {t("admin.tools.stamp.subtitle")}
-        </p>
+      <div className="flex items-center gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-black">{t("admin.tools.stamp.title")}</h1>
+          <p className="mt-1 text-sm text-[#666]">
+            {t("admin.tools.stamp.subtitle")}
+          </p>
+        </div>
+        {/* Active task indicator */}
+        {(hasEditorContent || reopenedFrom) && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-700">
+            <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+            {reopenedFrom ? t("admin.tools.stamp.editingReopen") : t("admin.tools.stamp.editing")}
+          </span>
+        )}
+      </div>
+
+      {/* Quick Start Presets */}
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
+        <p className="mb-3 text-xs font-bold text-[#666]">{t("admin.tools.stamp.quickStart")}</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          {QUICK_START_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => applyPreset(preset)}
+              className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3 text-left transition-colors hover:border-black hover:bg-white"
+            >
+              <p className="text-xs font-semibold text-[#111]">{t(preset.labelKey)}</p>
+              <p className="mt-1 text-[10px] text-[#999]">{modelLabel(preset.modelId)}</p>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Reopened-task banner */}
@@ -219,7 +339,7 @@ export default function StampStudioPage() {
           font={initialFont}
           color={initialColor}
           hideInkColor
-          onChange={(patch) => setStampConfig((prev) => ({ ...prev, ...patch }))}
+          onChange={(patch) => { setStampConfig((prev) => ({ ...prev, ...patch })); setHasEditorContent(true); }}
         />
       </div>
 
@@ -277,6 +397,7 @@ export default function StampStudioPage() {
                 onPreview={setPreviewUrl}
                 onDetail={setDetailJob}
                 onReopen={handleReopen}
+                onDuplicate={handleDuplicate}
               />
             ))}
           </div>
@@ -316,7 +437,7 @@ export default function StampStudioPage() {
 
 // ─── Stamp Job Row ────────────────────────────────────────────────────────────
 
-function StampJobRow({ job, t, onPreview, onDetail, onReopen }) {
+function StampJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate }) {
   const data = job.inputData || {};
   const output = job.outputData || {};
   const shapeLabel = output.shape === "round" ? t("admin.tools.stamp.shapeRound") : output.shape === "rect" ? t("admin.tools.stamp.shapeRectangle") : "";
@@ -348,11 +469,7 @@ function StampJobRow({ job, t, onPreview, onDetail, onReopen }) {
           {data.font && data.font !== "Helvetica" && (
             <span className="text-[10px] text-[#999]">{data.font}</span>
           )}
-          <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-            job.status === "completed" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-          }`}>
-            {job.status}
-          </span>
+          <StatusBadge status={job.status} t={t} />
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-[#999]">
           <span>{timeAgo(job.createdAt, t)}</span>
@@ -387,6 +504,13 @@ function StampJobRow({ job, t, onPreview, onDetail, onReopen }) {
           className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
         >
           {t("admin.tools.reopen")}
+        </button>
+        <button
+          type="button"
+          onClick={() => onDuplicate(job)}
+          className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
+        >
+          {t("admin.tools.stamp.duplicate")}
         </button>
         {job.orderId && (
           <Link

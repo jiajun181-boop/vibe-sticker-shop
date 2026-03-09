@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { timeAgo } from "@/lib/admin/time-ago";
+import StatusBadge from "@/components/admin/StatusBadge";
 
 const TOOLS = [
   {
@@ -184,13 +185,7 @@ export default function ToolsHubPage() {
                       {job.toolType}
                     </span>
                     <span className="text-sm text-[#111] truncate">{job.operatorName || "—"}</span>
-                    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
-                      job.status === "completed" ? "bg-green-100 text-green-700" :
-                      job.status === "failed" ? "bg-red-100 text-red-700" :
-                      "bg-gray-100 text-gray-700"
-                    }`}>
-                      {job.status}
-                    </span>
+                    <StatusBadge status={job.status} t={t} />
                     <span className="text-xs text-[#999]">{timeAgo(job.createdAt, t)}</span>
                   </Link>
                   {job.outputFileUrl && (

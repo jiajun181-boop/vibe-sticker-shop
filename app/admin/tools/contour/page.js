@@ -5,6 +5,7 @@ import Link from "next/link";
 import { uploadDesignSnapshot } from "@/lib/design-studio/upload-snapshot";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { timeAgo } from "@/lib/admin/time-ago";
+import StatusBadge from "@/components/admin/StatusBadge";
 
 function formatJobTime(dateString) {
   const date = new Date(dateString);
@@ -149,7 +150,7 @@ export default function ContourToolPage() {
     URL.revokeObjectURL(url);
   }
 
-  async function handleSave() {
+  async function handleSave(saveStatus) {
     if (!contourResult || !sourceFile) return;
 
     setSaving(true);
@@ -204,7 +205,7 @@ export default function ContourToolPage() {
           },
           notes: notes || null,
           orderId: orderId || null,
-          status: "completed",
+          status: saveStatus,
         }),
       });
 
@@ -213,7 +214,7 @@ export default function ContourToolPage() {
         throw new Error(err?.error || t("admin.tools.contour.errorSave"));
       }
 
-      setSaveMsg(t("admin.tools.savedMsg"));
+      setSaveMsg(saveStatus === "completed" ? t("admin.tools.savedMsg") : t("admin.tools.contour.savedForReview"));
       setSaveIsError(false);
       fetchJobs();
       setTimeout(() => setSaveMsg(""), 3000);
@@ -396,6 +397,11 @@ export default function ContourToolPage() {
             />
           </div>
 
+          {/* Next-step guidance based on quality */}
+          {contourResult.quality && (
+            <QualityGuidance confidence={contourResult.quality.confidence} t={t} />
+          )}
+
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <button
               type="button"
@@ -413,14 +419,13 @@ export default function ContourToolPage() {
                 {t("admin.tools.downloadPng")}
               </button>
             ) : null}
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#222] disabled:opacity-50"
-            >
-              {saving ? t("admin.tools.saving") : t("admin.tools.saveToRecords")}
-            </button>
+            {/* Quality-gated save buttons */}
+            <QualityGatedSave
+              confidence={contourResult.quality?.confidence}
+              saving={saving}
+              onSave={handleSave}
+              t={t}
+            />
             {saveMsg ? (
               <span className={`text-xs font-medium ${saveIsError ? "text-red-600" : "text-green-600"}`}>
                 {saveMsg}
@@ -429,6 +434,9 @@ export default function ContourToolPage() {
           </div>
         </>
       ) : null}
+
+      {/* ── Good/Bad Input Examples (collapsible) ────────────────────── */}
+      <InputExamples t={t} />
 
       {/* ── Recent Jobs ──────────────────────────────────────────────── */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
@@ -524,11 +532,7 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, reopening }) {
           {output.contourConfidence && (
             <ConfidenceBadge confidence={output.contourConfidence} shapeType={output.contourShapeType} t={t} />
           )}
-          <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-            job.status === "completed" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-          }`}>
-            {job.status}
-          </span>
+          <StatusBadge status={job.status} t={t} />
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-[#999]">
           <span>{timeAgo(job.createdAt, t)}</span>
@@ -635,6 +639,8 @@ function ContourDetailModal({ job, t, onClose, onReopen, reopening }) {
                   ))}
                 </div>
               )}
+              {/* Recommendation */}
+              <QualityGuidance confidence={job.outputData.contourConfidence} t={t} />
             </div>
           )}
           {/* Metadata */}
@@ -726,6 +732,99 @@ function QualityBanner({ quality, t }) {
         <p key={w} className="mt-1">⚠ {t(`admin.tools.contour.${w}`)}</p>
       ))}
     </div>
+  );
+}
+
+// ─── Quality-Gated Save Button ────────────────────────────────────────────────
+
+function QualityGatedSave({ confidence, saving, onSave, t }) {
+  if (confidence === "good" || !confidence) {
+    return (
+      <button
+        type="button"
+        onClick={() => onSave("completed")}
+        disabled={saving}
+        className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+      >
+        {saving ? t("admin.tools.saving") : t("admin.tools.contour.saveApprove")}
+      </button>
+    );
+  }
+
+  if (confidence === "rectangular") {
+    return (
+      <button
+        type="button"
+        onClick={() => onSave("needs_review")}
+        disabled={saving}
+        className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-600 disabled:opacity-50"
+      >
+        {saving ? t("admin.tools.saving") : t("admin.tools.contour.saveWarning")}
+      </button>
+    );
+  }
+
+  // low confidence
+  return (
+    <button
+      type="button"
+      onClick={() => onSave("needs_review")}
+      disabled={saving}
+      className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+    >
+      {saving ? t("admin.tools.saving") : t("admin.tools.contour.saveFlag")}
+    </button>
+  );
+}
+
+// ─── Quality Next-Step Guidance ───────────────────────────────────────────────
+
+function QualityGuidance({ confidence, t }) {
+  const configs = {
+    good: { border: "border-green-200", bg: "bg-green-50", text: "text-green-700", key: "admin.tools.contour.guidanceGood" },
+    rectangular: { border: "border-amber-200", bg: "bg-amber-50", text: "text-amber-700", key: "admin.tools.contour.guidanceRectangular" },
+    low: { border: "border-red-200", bg: "bg-red-50", text: "text-red-700", key: "admin.tools.contour.guidanceLow" },
+  };
+  const c = configs[confidence] || configs.low;
+  return (
+    <div className={`rounded-[3px] border ${c.border} ${c.bg} px-4 py-2.5`}>
+      <p className={`text-xs font-medium ${c.text}`}>{t(c.key)}</p>
+    </div>
+  );
+}
+
+// ─── Good/Bad Input Examples ──────────────────────────────────────────────────
+
+function InputExamples({ t }) {
+  return (
+    <details className="rounded-[3px] border border-[#e0e0e0] bg-white">
+      <summary className="cursor-pointer px-5 py-3 text-sm font-semibold text-[#666] hover:bg-[#fafafa]">
+        {t("admin.tools.contour.examplesTitle")}
+      </summary>
+      <div className="border-t border-[#e0e0e0] px-5 py-4 space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Good inputs */}
+          <div className="rounded-[3px] border border-green-200 bg-green-50 p-4">
+            <p className="text-xs font-bold text-green-800">{t("admin.tools.contour.exGoodTitle")}</p>
+            <ul className="mt-2 space-y-1.5 text-xs text-green-700">
+              <li>✓ {t("admin.tools.contour.exGood1")}</li>
+              <li>✓ {t("admin.tools.contour.exGood2")}</li>
+              <li>✓ {t("admin.tools.contour.exGood3")}</li>
+            </ul>
+          </div>
+          {/* Bad inputs */}
+          <div className="rounded-[3px] border border-red-200 bg-red-50 p-4">
+            <p className="text-xs font-bold text-red-800">{t("admin.tools.contour.exBadTitle")}</p>
+            <ul className="mt-2 space-y-1.5 text-xs text-red-700">
+              <li>✗ {t("admin.tools.contour.exBad1")}</li>
+              <li>✗ {t("admin.tools.contour.exBad2")}</li>
+              <li>✗ {t("admin.tools.contour.exBad3")}</li>
+            </ul>
+          </div>
+        </div>
+        <p className="text-[11px] text-[#999]">{t("admin.tools.contour.exTip")}</p>
+      </div>
+    </details>
   );
 }
 

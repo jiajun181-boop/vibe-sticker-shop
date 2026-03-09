@@ -6,6 +6,7 @@ import Link from "next/link";
 import { uploadDesignSnapshot } from "@/lib/design-studio/upload-snapshot";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { timeAgo } from "@/lib/admin/time-ago";
+import StatusBadge from "@/components/admin/StatusBadge";
 
 const STATUS_FILTERS = [
   { value: "all", labelKey: "admin.tools.proof.filterAll" },
@@ -16,14 +17,7 @@ const STATUS_FILTERS = [
   { value: "standalone", labelKey: "admin.tools.proof.filterStandalone" },
 ];
 
-const STATUS_COLORS = {
-  pending: "bg-yellow-100 text-yellow-800",
-  approved: "bg-green-100 text-green-700",
-  rejected: "bg-red-100 text-red-700",
-  revised: "bg-blue-100 text-blue-700",
-  standalone: "bg-purple-100 text-purple-700",
-  completed: "bg-green-100 text-green-700",
-};
+// Colors now provided by shared StatusBadge via lib/admin/status-labels.js
 
 function isPdf(item) {
   const f = item?.fileName || item?.outputData?.fileType || "";
@@ -403,7 +397,6 @@ export default function ProofManagerPage() {
 
 function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
   const isActionable = item.source === "order" && (item.status === "pending" || item.status === "revised");
-  const colors = STATUS_COLORS[item.status] || "bg-gray-100 text-gray-700";
   const customerLabel = item.customerName || item.customerEmail || "—";
 
   return (
@@ -425,7 +418,7 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
           ) : (
             <span className="text-sm font-semibold text-[#111]">{t("admin.tools.proof.standaloneLabel")}</span>
           )}
-          <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${colors}`}>{item.status}</span>
+          <StatusBadge status={item.status} t={t} />
           {item.source === "order" && (
             <span className="text-[10px] text-[#999]">#{item.orderId?.slice(-8)}</span>
           )}
@@ -470,7 +463,6 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
 function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, revisionFile, onRevisionFileChange, onUploadRevision, revisionSaving }) {
   const isActionable = item.source === "order" && (item.status === "pending" || item.status === "revised");
   const canRevise = item.source === "order" && item.status === "rejected";
-  const colors = STATUS_COLORS[item.status] || "bg-gray-100 text-gray-700";
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60" onClick={onClose}>
@@ -479,7 +471,7 @@ function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, r
         <div className="flex items-center justify-between border-b border-[#e0e0e0] px-5 py-4">
           <div className="flex items-center gap-3">
             <h3 className="text-sm font-bold text-black">{t("admin.tools.proof.detailTitle")}</h3>
-            <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${colors}`}>{item.status}</span>
+            <StatusBadge status={item.status} t={t} />
           </div>
           <button type="button" onClick={onClose} className="text-[#999] hover:text-black">
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { timeAgo } from "@/lib/admin/time-ago";
+import StatusBadge from "@/components/admin/StatusBadge";
 
 // ─── Single summary API fetch ────────────────────────────────────────────────
 
@@ -63,40 +64,6 @@ function StatCard({ label, value, loading, error, href, t }) {
 
   if (href) return <Link href={href} className="block">{inner}</Link>;
   return inner;
-}
-
-// ─── Status badge ────────────────────────────────────────────────────────────
-
-const STATUS_COLORS = {
-  pending: "bg-yellow-100 text-yellow-800",
-  unpaid: "bg-yellow-100 text-yellow-800",
-  paid: "bg-green-100 text-green-800",
-  draft: "bg-gray-100 text-gray-600",
-  not_started: "bg-slate-100 text-slate-700",
-  preflight: "bg-orange-100 text-orange-800",
-  in_production: "bg-blue-100 text-blue-800",
-  approved: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800",
-  revised: "bg-amber-100 text-amber-800",
-  completed: "bg-green-100 text-green-800",
-  shipped: "bg-green-100 text-green-800",
-  canceled: "bg-gray-100 text-gray-600",
-  queued: "bg-slate-100 text-slate-700",
-  assigned: "bg-blue-100 text-blue-700",
-  printing: "bg-cyan-100 text-cyan-800",
-  quality_check: "bg-amber-100 text-amber-800",
-  on_hold: "bg-red-100 text-red-700",
-  finished: "bg-green-100 text-green-700",
-  failed: "bg-red-100 text-red-700",
-};
-
-function StatusBadge({ status }) {
-  const colors = STATUS_COLORS[status] || "bg-gray-100 text-gray-700";
-  return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${colors}`}>
-      {(status || "unknown").replace(/_/g, " ")}
-    </span>
-  );
 }
 
 // ─── Priority badge ──────────────────────────────────────────────────────────
@@ -252,12 +219,12 @@ export default function WorkstationPage() {
               >
                 <Link href={`/admin/orders/${o.id}`} className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
                   <PriorityBadge priority={o.priority} t={t} />
-                  <StatusBadge status={o.status} />
+                  <StatusBadge status={o.status} t={t} />
                   {o.productionStatus && o.productionStatus !== "not_started" && (
-                    <StatusBadge status={o.productionStatus} />
+                    <StatusBadge status={o.productionStatus} t={t} />
                   )}
                   {o.paymentStatus === "unpaid" && (
-                    <StatusBadge status="unpaid" />
+                    <StatusBadge status="unpaid" t={t} />
                   )}
                   <span className="text-sm font-medium text-[#111] truncate">#{o.id.slice(-8)}</span>
                   <span className="hidden text-xs text-[#666] truncate sm:inline">
@@ -301,7 +268,7 @@ export default function WorkstationPage() {
                   className="flex items-center justify-between rounded-[3px] border border-[#ececec] p-3 transition-colors hover:border-[#ccc] hover:bg-[#fafafa]"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <StatusBadge status={p.status} />
+                    <StatusBadge status={p.status} t={t} />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-[#111] truncate">#{p.orderId?.slice(-8)}</p>
                       <p className="text-[11px] text-[#999] truncate">{p.order?.customerName || p.order?.customerEmail || "—"}</p>
@@ -343,7 +310,7 @@ export default function WorkstationPage() {
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <span className="inline-block rounded-full bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-semibold uppercase text-[#666]">{j.toolType}</span>
                       <span className="text-sm text-[#111] truncate">{j.operatorName || "—"}</span>
-                      <StatusBadge status={j.status} />
+                      <StatusBadge status={j.status} t={t} />
                       <span className="text-xs text-[#999]">{timeAgo(j.createdAt, t)}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
