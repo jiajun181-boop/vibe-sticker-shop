@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { uploadDesignSnapshot } from "@/lib/design-studio/upload-snapshot";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const StampEditor = dynamic(() => import("@/components/product/StampEditor"), { ssr: false });
 
@@ -24,6 +25,7 @@ function formatJobTime(dateString) {
 }
 
 export default function StampStudioPage() {
+  const { t } = useTranslation();
   const [modelId, setModelId] = useState(STAMP_MODELS[0].id);
   const [orderId, setOrderId] = useState("");
   const [notes, setNotes] = useState("");
@@ -33,6 +35,10 @@ export default function StampStudioPage() {
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [editorKey, setEditorKey] = useState(0);
+  const [initialText, setInitialText] = useState("");
+  const [initialFont, setInitialFont] = useState("Helvetica");
+  const [initialColor, setInitialColor] = useState("#111111");
   const editorWrapRef = useRef(null);
 
   const model = STAMP_MODELS.find((entry) => entry.id === modelId) || STAMP_MODELS[0];
@@ -65,6 +71,20 @@ export default function StampStudioPage() {
     return new Promise((resolve) => {
       canvas.toBlob(resolve, "image/png");
     });
+  }
+
+  function handleReopen(job) {
+    const data = job.inputData || {};
+    const targetModelId = STAMP_MODELS.find((m) => m.id === data.model) ? data.model : STAMP_MODELS[0].id;
+    setModelId(targetModelId);
+    setInitialText(data.text || "");
+    setInitialFont(data.font || "Helvetica");
+    setInitialColor(data.color || "#111111");
+    setOrderId(job.orderId || "");
+    setNotes(job.notes || "");
+    setStampConfig({});
+    setEditorKey((prev) => prev + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function handleDownload() {
@@ -128,15 +148,15 @@ export default function StampStudioPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-black">Stamp Studio</h1>
+        <h1 className="text-xl font-bold text-black">{t("admin.tools.stamp.title")}</h1>
         <p className="mt-1 text-sm text-[#666]">
-          Create stamp artwork for walk-ins, phone orders, and internal production requests.
+          {t("admin.tools.stamp.subtitle")}
         </p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-[11px] font-medium text-[#666]">Stamp Model</label>
+          <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.stamp.modelLabel")}</label>
           <select
             value={modelId}
             onChange={(e) => setModelId(e.target.value)}
@@ -150,12 +170,12 @@ export default function StampStudioPage() {
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-[11px] font-medium text-[#666]">Order # (optional)</label>
+          <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.orderLabel")}</label>
           <input
             type="text"
             value={orderId}
             onChange={(e) => setOrderId(e.target.value)}
-            placeholder="e.g. existing order id"
+            placeholder={t("admin.tools.orderPlaceholder")}
             className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
         </div>
@@ -163,23 +183,26 @@ export default function StampStudioPage() {
 
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 sm:p-6" ref={editorWrapRef}>
         <StampEditor
-          key={modelId}
+          key={`${modelId}-${editorKey}`}
           shape={model.shape}
           widthIn={model.widthIn}
           heightIn={model.heightIn}
           diameterIn={model.diameterIn}
+          text={initialText}
+          font={initialFont}
+          color={initialColor}
           hideInkColor
           onChange={(patch) => setStampConfig((prev) => ({ ...prev, ...patch }))}
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-[11px] font-medium text-[#666]">Notes</label>
+        <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.notesLabel")}</label>
         <textarea
           rows={2}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Production notes, customer requests, or reference details..."
+          placeholder={t("admin.tools.stamp.notesPlaceholder")}
           className="w-full resize-none rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
         />
       </div>
@@ -190,7 +213,7 @@ export default function StampStudioPage() {
           onClick={handleDownload}
           className="inline-flex items-center justify-center gap-2 rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:border-black"
         >
-          Download PNG
+          {t("admin.tools.downloadPng")}
         </button>
         <button
           type="button"
@@ -198,7 +221,7 @@ export default function StampStudioPage() {
           disabled={saving}
           className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#222] disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Save to Records"}
+          {saving ? t("admin.tools.saving") : t("admin.tools.saveToRecords")}
         </button>
         {saveMsg ? (
           <span className={`text-xs font-medium ${saveMsg.startsWith("Error") ? "text-red-600" : "text-green-600"}`}>
@@ -209,13 +232,13 @@ export default function StampStudioPage() {
 
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="border-b border-[#e0e0e0] px-5 py-3">
-          <h2 className="text-sm font-bold text-black">Recent Stamp Jobs</h2>
-          <p className="mt-0.5 text-[10px] text-[#999]">Saved output files can be downloaded and reused for production.</p>
+          <h2 className="text-sm font-bold text-black">{t("admin.tools.stamp.recentTitle")}</h2>
+          <p className="mt-0.5 text-[10px] text-[#999]">{t("admin.tools.stamp.recentSubtitle")}</p>
         </div>
         {loadingJobs ? (
-          <div className="px-5 py-8 text-center text-sm text-[#999]">Loading...</div>
+          <div className="px-5 py-8 text-center text-sm text-[#999]">{t("admin.tools.loading")}</div>
         ) : jobs.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-[#999]">No stamp jobs yet</div>
+          <div className="px-5 py-8 text-center text-sm text-[#999]">{t("admin.tools.stamp.noJobs")}</div>
         ) : (
           <div className="divide-y divide-[#e0e0e0]">
             {jobs.map((job) => (
@@ -238,23 +261,30 @@ export default function StampStudioPage() {
                         onClick={() => setPreviewUrl(job.outputFileUrl)}
                         className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
                       >
-                        Preview
+                        {t("admin.tools.preview")}
                       </button>
                       <a
                         href={job.outputFileUrl}
                         download={job.outputData?.fileName || undefined}
                         className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
                       >
-                        Download
+                        {t("admin.tools.download")}
                       </a>
                     </>
                   ) : null}
+                  <button
+                    type="button"
+                    onClick={() => handleReopen(job)}
+                    className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
+                  >
+                    {t("admin.tools.reopen")}
+                  </button>
                   {job.orderId ? (
                     <Link
                       href={`/admin/orders/${job.orderId}`}
                       className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
                     >
-                      View Order
+                      {t("admin.tools.viewOrder")}
                     </Link>
                   ) : null}
                   <span

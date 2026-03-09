@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { uploadDesignSnapshot } from "@/lib/design-studio/upload-snapshot";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const STATUS_FILTERS = [
-  { value: "all", label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "approved", label: "Approved" },
-  { value: "rejected", label: "Rejected" },
-  { value: "revised", label: "Revised" },
+  { value: "all", labelKey: "admin.tools.proof.filterAll" },
+  { value: "pending", labelKey: "admin.tools.proof.filterPending" },
+  { value: "approved", labelKey: "admin.tools.proof.filterApproved" },
+  { value: "rejected", labelKey: "admin.tools.proof.filterRejected" },
+  { value: "revised", labelKey: "admin.tools.proof.filterRevised" },
 ];
 
 const STATUS_COLORS = {
@@ -25,6 +26,7 @@ function isPdf(jobOrProof) {
 }
 
 export default function ProofManagerPage() {
+  const { t } = useTranslation();
   const [proofs, setProofs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("all");
@@ -39,6 +41,10 @@ export default function ProofManagerPage() {
   });
   const [standaloneSaving, setStandaloneSaving] = useState(false);
   const [standaloneJobs, setStandaloneJobs] = useState([]);
+  const [orderProofModal, setOrderProofModal] = useState(false);
+  const [orderProofData, setOrderProofData] = useState({ orderId: "", notes: "", file: null });
+  const [orderProofSaving, setOrderProofSaving] = useState(false);
+  const [updatingProofId, setUpdatingProofId] = useState(null);
 
   const fetchProofs = useCallback(async () => {
     setLoading(true);
@@ -126,20 +132,81 @@ export default function ProofManagerPage() {
     }
   }
 
+  async function handleOrderProofSave() {
+    if (!orderProofData.file || !orderProofData.orderId.trim()) return;
+
+    setOrderProofSaving(true);
+    try {
+      const uploaded = await uploadDesignSnapshot(
+        orderProofData.file,
+        orderProofData.file.name || `proof-${Date.now()}`
+      );
+
+      const res = await fetch(`/api/admin/orders/${orderProofData.orderId.trim()}/proofs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrl: uploaded.url,
+          fileName: orderProofData.file.name || null,
+          notes: orderProofData.notes || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error || "Failed to upload proof");
+      }
+
+      setOrderProofModal(false);
+      setOrderProofData({ orderId: "", notes: "", file: null });
+      fetchProofs();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to upload proof");
+    } finally {
+      setOrderProofSaving(false);
+    }
+  }
+
+  async function handleUpdateProofStatus(proofId, newStatus) {
+    setUpdatingProofId(proofId);
+    try {
+      const res = await fetch(`/api/admin/proofs/${proofId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error("Failed to update proof status");
+      fetchProofs();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update");
+    } finally {
+      setUpdatingProofId(null);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-black">Proof Manager</h1>
-          <p className="mt-1 text-sm text-[#666]">Manage order proofs and create proof records for offline customers.</p>
+          <h1 className="text-xl font-bold text-black">{t("admin.tools.proof.title")}</h1>
+          <p className="mt-1 text-sm text-[#666]">{t("admin.tools.proof.subtitle")}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setStandaloneModal(true)}
-          className="inline-flex items-center gap-2 rounded-[3px] bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#222]"
-        >
-          Standalone Proof
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setOrderProofModal(true)}
+            className="inline-flex items-center gap-2 rounded-[3px] bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#222]"
+          >
+            {t("admin.tools.proof.uploadOrderProof")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setStandaloneModal(true)}
+            className="inline-flex items-center gap-2 rounded-[3px] border border-[#e0e0e0] px-4 py-2.5 text-sm font-semibold text-[#666] transition-colors hover:border-black hover:text-black"
+          >
+            {t("admin.tools.proof.standaloneProof")}
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-1.5 overflow-x-auto">
@@ -154,15 +221,15 @@ export default function ProofManagerPage() {
                 : "border border-[#e0e0e0] bg-white text-[#666] hover:border-black"
             }`}
           >
-            {filter.label}
+            {t(filter.labelKey)}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div className="py-12 text-center text-sm text-[#999]">Loading proofs...</div>
+        <div className="py-12 text-center text-sm text-[#999]">{t("admin.tools.proof.loadingProofs")}</div>
       ) : proofs.length === 0 ? (
-        <div className="py-12 text-center text-sm text-[#999]">No proofs found</div>
+        <div className="py-12 text-center text-sm text-[#999]">{t("admin.tools.proof.noProofs")}</div>
       ) : (
         <div className="space-y-3">
           {proofs.map((proof) => (
@@ -178,7 +245,7 @@ export default function ProofManagerPage() {
                   </button>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-black">Proof v{proof.version}</p>
+                      <p className="text-sm font-semibold text-black">{t("admin.tools.proof.proofVersion").replace("{version}", proof.version)}</p>
                       <span className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${STATUS_COLORS[proof.status] || "bg-gray-100 text-gray-700"}`}>
                         {proof.status}
                       </span>
@@ -193,18 +260,38 @@ export default function ProofManagerPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
+                  {(proof.status === "pending" || proof.status === "revised") && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateProofStatus(proof.id, "approved")}
+                        disabled={updatingProofId === proof.id}
+                        className="inline-flex items-center gap-1 rounded-[3px] bg-green-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+                      >
+                        {t("admin.tools.proof.approve")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateProofStatus(proof.id, "rejected")}
+                        disabled={updatingProofId === proof.id}
+                        className="inline-flex items-center gap-1 rounded-[3px] bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {t("admin.tools.proof.reject")}
+                      </button>
+                    </>
+                  )}
                   <Link
                     href={`/admin/orders/${proof.orderId}`}
                     className="inline-flex items-center gap-1 rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
                   >
-                    View Order
+                    {t("admin.tools.viewOrder")}
                   </Link>
                   <a
                     href={proof.imageUrl}
                     download
                     className="inline-flex items-center gap-1 rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
                   >
-                    Download
+                    {t("admin.tools.download")}
                   </a>
                 </div>
               </div>
@@ -216,8 +303,8 @@ export default function ProofManagerPage() {
       {standaloneJobs.length > 0 ? (
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
           <div className="border-b border-[#e0e0e0] px-5 py-3">
-            <h2 className="text-sm font-bold text-black">Standalone Proof Records</h2>
-            <p className="text-[10px] text-[#999]">For walk-ins and phone orders not linked to an order record yet.</p>
+            <h2 className="text-sm font-bold text-black">{t("admin.tools.proof.standaloneRecords")}</h2>
+            <p className="text-[10px] text-[#999]">{t("admin.tools.proof.standaloneRecordsSub")}</p>
           </div>
           <div className="divide-y divide-[#e0e0e0]">
             {standaloneJobs.map((job) => (
@@ -246,14 +333,14 @@ export default function ProofManagerPage() {
                         }
                         className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
                       >
-                        Preview
+                        {t("admin.tools.preview")}
                       </button>
                       <a
                         href={job.outputFileUrl}
                         download={job.outputData?.fileName || undefined}
                         className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
                       >
-                        Download
+                        {t("admin.tools.download")}
                       </a>
                     </>
                   ) : null}
@@ -288,17 +375,82 @@ export default function ProofManagerPage() {
         </div>
       ) : null}
 
+      {/* ── Upload Order Proof Modal ──────────────────────────────────── */}
+      {orderProofModal ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={(e) => {
+          if (e.target === e.currentTarget) setOrderProofModal(false);
+        }}>
+          <div className="mx-4 w-full max-w-md rounded-[3px] bg-white p-6 shadow-xl">
+            <h3 className="mb-4 text-sm font-bold text-black">{t("admin.tools.proof.orderProofModalTitle")}</h3>
+            <p className="mb-4 text-xs text-[#999]">{t("admin.tools.proof.orderProofModalSub")}</p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.orderIdLabel")}</label>
+                <input
+                  type="text"
+                  value={orderProofData.orderId}
+                  onChange={(e) => setOrderProofData((prev) => ({ ...prev, orderId: e.target.value }))}
+                  placeholder={t("admin.tools.proof.orderIdPlaceholder")}
+                  className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.proofFileLabel")}</label>
+                <input
+                  type="file"
+                  accept="image/*,.pdf,application/pdf"
+                  onChange={(e) => setOrderProofData((prev) => ({ ...prev, file: e.target.files?.[0] || null }))}
+                  className="block w-full text-sm text-[#666] file:mr-3 file:rounded-[3px] file:border-0 file:bg-black file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white"
+                />
+                {orderProofData.file ? (
+                  <p className="mt-1 text-[10px] text-[#999]">{orderProofData.file.name}</p>
+                ) : null}
+              </div>
+              <div>
+                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.notesLabel")}</label>
+                <textarea
+                  rows={2}
+                  value={orderProofData.notes}
+                  onChange={(e) => setOrderProofData((prev) => ({ ...prev, notes: e.target.value }))}
+                  placeholder={t("admin.tools.proof.notesPlaceholder")}
+                  className="w-full resize-none rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={handleOrderProofSave}
+                disabled={orderProofSaving || !orderProofData.file || !orderProofData.orderId.trim()}
+                className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+              >
+                {orderProofSaving ? t("admin.tools.proof.uploading") : t("admin.tools.proof.uploadProof")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setOrderProofModal(false)}
+                className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]"
+              >
+                {t("admin.tools.cancel")}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {standaloneModal ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={(e) => {
           if (e.target === e.currentTarget) setStandaloneModal(false);
         }}>
           <div className="mx-4 w-full max-w-md rounded-[3px] bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-sm font-bold text-black">Create Standalone Proof Record</h3>
-            <p className="mb-4 text-xs text-[#999]">Upload the proof file used for a walk-in or phone order.</p>
+            <h3 className="mb-4 text-sm font-bold text-black">{t("admin.tools.proof.standaloneModalTitle")}</h3>
+            <p className="mb-4 text-xs text-[#999]">{t("admin.tools.proof.standaloneModalSub")}</p>
 
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">Customer Name</label>
+                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.customerName")}</label>
                 <input
                   type="text"
                   value={standaloneData.customerName}
@@ -307,7 +459,7 @@ export default function ProofManagerPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">Customer Email</label>
+                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.customerEmail")}</label>
                 <input
                   type="email"
                   value={standaloneData.customerEmail}
@@ -316,17 +468,17 @@ export default function ProofManagerPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">Description</label>
+                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.description")}</label>
                 <input
                   type="text"
                   value={standaloneData.description}
                   onChange={(e) => setStandaloneData((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder="e.g. Business card proof for walk-in customer"
+                  placeholder={t("admin.tools.proof.descPlaceholder")}
                   className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">Proof File</label>
+                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.proof.proofFileLabel")}</label>
                 <input
                   type="file"
                   accept="image/*,.pdf,application/pdf"
@@ -338,7 +490,7 @@ export default function ProofManagerPage() {
                 ) : null}
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#666]">Notes</label>
+                <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.notesLabel")}</label>
                 <textarea
                   rows={2}
                   value={standaloneData.notes}
@@ -355,14 +507,14 @@ export default function ProofManagerPage() {
                 disabled={standaloneSaving || !standaloneData.file}
                 className="flex-1 rounded-[3px] bg-black py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
               >
-                {standaloneSaving ? "Saving..." : "Create Record"}
+                {standaloneSaving ? t("admin.tools.saving") : t("admin.tools.proof.createRecord")}
               </button>
               <button
                 type="button"
                 onClick={() => setStandaloneModal(false)}
                 className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]"
               >
-                Cancel
+                {t("admin.tools.cancel")}
               </button>
             </div>
           </div>
