@@ -126,9 +126,9 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
   const canAddToCart = !isQuoteOnly && quote.quoteData && !quote.quoteLoading && activeQty > 0 && dimErrors.length === 0;
 
   const disabledReason = !canAddToCart
-    ? quote.quoteLoading ? "Calculating price..."
-    : !quote.quoteData ? "Select your options for pricing"
-    : "Complete all options to continue"
+    ? quote.quoteLoading ? t("vehicle.calculatingPrice")
+    : !quote.quoteData ? t("vehicle.selectOptions")
+    : t("vehicle.completeOptions")
     : null;
 
   // Cart
@@ -542,7 +542,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
         quantity={activeQty}
         summaryText={
           isQuoteOnly
-            ? "Custom pricing — request a quote"
+            ? t("vehicle.customPricingQuote")
             : quote.quoteData
               ? `${formatCad(quote.unitCents)}/ea × ${activeQty}`
               : null

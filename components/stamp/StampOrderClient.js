@@ -244,22 +244,22 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
 
     return [
       ...(preset ? [{ label: "Product", value: preset.name }] : []),
-      { label: "Model", value: `${model.id} (${sizeLabel})` },
-      { label: "Size", value: `${widthIn}" × ${heightIn}"` },
-      { label: "Quantity", value: effectiveQty.toLocaleString() },
-      { label: "Text", value: textPreview },
-      { label: "Font", value: stampFont },
-      { label: "Ink", value: "Black" },
-      ...(stampConfig.border && stampConfig.border !== "none" ? [{ label: "Border", value: stampConfig.border }] : []),
-      ...(stampConfig.template ? [{ label: "Template", value: stampConfig.template }] : []),
-      ...(stampConfig.logoFile?.url ? [{ label: "Logo", value: "Uploaded" }] : []),
-      ...(stampConfig.halftoneEnabled ? [{ label: "Halftone", value: stampConfig.halftoneIntensity || "On" }] : []),
-      { label: "Artwork", value: previewUrl ? "Preview ready" : "Preview not generated yet" },
+      { label: t("stamp.summaryModel"), value: `${model.id} (${sizeLabel})` },
+      { label: t("stamp.summarySize"), value: `${widthIn}" × ${heightIn}"` },
+      { label: t("stamp.summaryQuantity"), value: effectiveQty.toLocaleString() },
+      { label: t("stamp.summaryText"), value: textPreview },
+      { label: t("stamp.summaryFont"), value: stampFont },
+      { label: t("stamp.summaryInk"), value: t("stamp.inkBlack") },
+      ...(stampConfig.border && stampConfig.border !== "none" ? [{ label: t("stamp.summaryBorder"), value: stampConfig.border }] : []),
+      ...(stampConfig.template ? [{ label: t("stamp.summaryTemplate"), value: stampConfig.template }] : []),
+      ...(stampConfig.logoFile?.url ? [{ label: t("stamp.summaryLogo"), value: t("canvas.artworkUploaded") }] : []),
+      ...(stampConfig.halftoneEnabled ? [{ label: t("stamp.summaryHalftone"), value: stampConfig.halftoneIntensity || "On" }] : []),
+      { label: t("stamp.summaryArtwork"), value: previewUrl ? t("stamp.previewReady", "Preview ready") : t("stamp.previewPending", "Preview not generated yet") },
     ];
   }, [sizeLabel, model.id, widthIn, heightIn, effectiveQty, preset, stampConfig, stampText, stampFont]);
 
   // ── Hero text ──
-  const heroTitle = preset ? preset.name : "Custom Self-Inking Stamps";
+  const heroTitle = preset ? preset.name : t("stamp.defaultTitle", "Custom Self-Inking Stamps");
   const heroSubtitle = preset
     ? preset.description
     : "Premium self-inking stamps with built-in ink pad and custom artwork";
@@ -277,7 +277,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
         title={heroTitle}
         subtitle={heroSubtitle}
         badges={[
-          preset?.badge || "Built-in ink pad",
+          preset?.badge || t("stamp.builtInInkPad"),
           t("marketingPrint.badgeShipping", "Fast shipping"),
           t("marketingPrint.badgeProof", "Free digital proof"),
         ]}
@@ -327,7 +327,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
                 <StepCard
                   stepNumber={stepNum("stampDesign")}
                   title={t("stamp.design", "Design Your Stamp")}
-                  summaryText={shape === "round" ? "Round" : "Rectangle"}
+                  summaryText={shape === "round" ? t("stamp.shapeRound") : t("stamp.shapeRect")}
                   stepId="step-stampDesign"
                   alwaysOpen
                 >
@@ -349,14 +349,14 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
                 {/* Step 2: Model / Size */}
                 <StepCard
                   stepNumber={stepNum("model")}
-                  title="Stamp Model"
-                  hint="Choose your stamp size"
+                  title={t("stamp.model")}
+                  hint={t("stamp.modelSubtitle")}
                   summaryText={sizeLabel}
                   stepId="step-model"
                   alwaysOpen
                   compact
                 >
-                  <OptionGrid columns={4} label="Stamp Model">
+                  <OptionGrid columns={4} label={t("stamp.model")}>
                     {STAMP_MODELS.map((m, idx) => (
                       <OptionCard
                         key={m.id}
@@ -412,14 +412,14 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
                 {/* Step 1: Model / Size */}
                 <StepCard
                   stepNumber={stepNum("model")}
-                  title="Stamp Model"
-                  hint="Choose your stamp size"
+                  title={t("stamp.model")}
+                  hint={t("stamp.modelSubtitle")}
                   summaryText={sizeLabel}
                   stepId="step-model"
                   alwaysOpen
                   compact
                 >
-                  <OptionGrid columns={4} label="Stamp Model">
+                  <OptionGrid columns={4} label={t("stamp.model")}>
                     {STAMP_MODELS.map((m, idx) => (
                       <OptionCard
                         key={m.id}
@@ -474,7 +474,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
                 <StepCard
                   stepNumber={stepNum("stampDesign")}
                   title={t("stamp.design", "Design Your Stamp")}
-                  summaryText={shape === "round" ? "Round" : "Rectangle"}
+                  summaryText={shape === "round" ? t("stamp.shapeRound") : t("stamp.shapeRect")}
                   stepId="step-stampDesign"
                   alwaysOpen
                 >
@@ -510,7 +510,7 @@ export default function StampOrderClient({ defaultSlug, productImages = [] }) {
             onBuyNow={handleBuyNow}
             buyNowLoading={buyNowLoading}
             badges={[
-              "Built-in ink pad",
+              t("stamp.builtInInkPad"),
               t("marketingPrint.badgeShipping", "Fast shipping"),
             ]}
             t={t}

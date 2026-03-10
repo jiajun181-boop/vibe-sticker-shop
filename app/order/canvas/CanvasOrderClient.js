@@ -239,7 +239,7 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
       value: canvasType.materials.find((m) => m.id === materialId)?.label || materialId,
     },
     { label: t("canvas.quantity"), value: activeQty > 0 ? activeQty.toLocaleString() : "—" },
-    { label: "Artwork", value: uploadedFile ? "Uploaded" : "Not uploaded" },
+    { label: t("canvas.artwork"), value: uploadedFile ? t("canvas.artworkUploaded") : t("canvas.artworkNotUploaded") },
     ...(uploadedFile ? [{ label: "Crop", value: cropData ? "Positioned" : "Default" }] : []),
   ];
 

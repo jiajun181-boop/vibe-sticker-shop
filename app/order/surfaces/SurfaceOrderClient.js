@@ -246,7 +246,7 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
     summaryLines.push({ label: t("surface.applicationSide"), value: applicationSide === "inside" ? t("surface.insideGlass") : t("surface.outsideGlass") });
   }
   if (surfaceType.cutTypes && surfaceType.cutTypes.length > 1) {
-    summaryLines.push({ label: "Cut Type", value: cutType === "contour" ? "Contour Cut" : "Rectangular" });
+    summaryLines.push({ label: t("surface.cutType"), value: cutType === "contour" ? t("surface.cutContour") : t("surface.cutRectangular") });
   }
   if (finishing && finishing !== "none") {
     summaryLines.push({ label: t("surface.finishing"), value: FINISHING_OPTIONS[finishing]?.label || finishing });
@@ -296,7 +296,7 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
       : surfaceType.sizes[sizeIdx]?.label || "—";
   const materialSummary = surfaceType.materials.find((m) => m.id === materialId)?.label || materialId;
   const appSideSummary = applicationSide === "inside" ? t("surface.insideGlass") : t("surface.outsideGlass");
-  const cutTypeSummary = cutType === "contour" ? "Contour Cut" : "Rectangular";
+  const cutTypeSummary = cutType === "contour" ? t("surface.cutContour") : t("surface.cutRectangular");
   const finishingSummaryText = finishing && finishing !== "none" ? (FINISHING_OPTIONS[finishing]?.label || finishing) : "None";
   const quantitySummaryText = `${activeQty.toLocaleString()} pcs`;
   const artworkSummary = uploadedFile?.name || "Not uploaded yet";
@@ -539,8 +539,8 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
             {/* Step: Cut Type (if multiple options) */}
             <StepCard
               stepNumber={stepNumFn("cutType")}
-              title="Cut Type"
-              hint="Choose how your graphic will be trimmed"
+              title={t("surface.cutType")}
+              hint={t("surface.cutTypeHint", "Choose how your graphic will be trimmed")}
               summaryText={cutTypeSummary}
               visible={!!(surfaceType.cutTypes && surfaceType.cutTypes.length > 1)}
               open={isStepOpen("cutType")}
@@ -549,8 +549,8 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
             >
               <OptionGrid columns={2} label="Cut type options">
                 {surfaceType.cutTypes.map((ct) => {
-                  const label = ct === "contour" ? "Contour Cut" : "Rectangular";
-                  const desc = ct === "contour" ? "Cut around your design shape" : "Standard straight-edge cut";
+                  const label = ct === "contour" ? t("surface.cutContour") : t("surface.cutRectangular");
+                  const desc = ct === "contour" ? t("surface.cutContourDesc", "Cut around your design shape") : t("surface.cutRectDesc", "Standard straight-edge cut");
                   return (
                     <OptionCard
                       key={ct}

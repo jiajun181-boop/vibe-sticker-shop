@@ -234,7 +234,7 @@ export default function SignOrderClient({ defaultType, productImages }) {
         : signType.sizes[sizeIdx]?.label || "—",
     },
     { label: t("sign.material"), value: signType.materials.find((m) => m.id === materialId)?.label || materialId },
-    { label: t("sign.sides"), value: doubleSided ? "Double-sided" : "Single-sided" },
+    { label: t("sign.sides"), value: doubleSided ? t("sign.doubleSided") : t("sign.singleSided") },
     { label: t("sign.quantity"), value: activeQty > 0 ? activeQty.toLocaleString() : "—" },
   ];
   if (accessories.length > 0) {
@@ -276,8 +276,8 @@ export default function SignOrderClient({ defaultType, productImages }) {
   const sizeTextSummary = isCustomSize
     ? widthIn > 0 && heightIn > 0 ? `${widthIn.toFixed(1)}" × ${heightIn.toFixed(1)}"` : "—"
     : signType.sizes[sizeIdx]?.label || "—";
-  const sidesSummary = doubleSided ? "Double-sided" : "Single-sided";
-  const accessoriesSummary = accessories.length > 0 ? accessories.map((a) => ACCESSORY_OPTIONS[a]?.label || a).join(", ") : "None";
+  const sidesSummary = doubleSided ? t("sign.doubleSided") : t("sign.singleSided");
+  const accessoriesSummary = accessories.length > 0 ? accessories.map((a) => ACCESSORY_OPTIONS[a]?.label || a).join(", ") : t("sign.noAccessories");
   const quantitySummary = `${activeQty.toLocaleString()} pcs`;
   const artworkSummary = uploadedFile?.name || "Not uploaded yet";
 
@@ -371,10 +371,9 @@ export default function SignOrderClient({ defaultType, productImages }) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                   </svg>
                   <div>
-                    <p className="text-sm font-semibold text-amber-800">Oversized Sign</p>
+                    <p className="text-sm font-semibold text-amber-800">{t("sign.oversizedTitle")}</p>
                     <p className="mt-0.5 text-xs text-amber-700">
-                      Signs larger than 48&quot; may require special handling, additional shipping charges, and longer production times.
-                      Contact us for bulk oversized orders.
+                      {t("sign.oversizedDesc")}
                     </p>
                   </div>
                 </div>
