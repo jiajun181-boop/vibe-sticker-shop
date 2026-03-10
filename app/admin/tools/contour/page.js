@@ -637,18 +637,41 @@ function ContourToolPage() {
 
       {contourResult ? (
         <>
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-[#666]">{t("admin.tools.contour.bleedLabel")}</label>
-            <input
-              type="range"
-              min="0"
-              max="6"
-              step="0.5"
-              value={bleedMm}
-              onChange={(e) => handleBleedChange(parseFloat(e.target.value))}
-              className="max-w-xs flex-1"
-            />
-            <span className="w-12 text-sm font-semibold tabular-nums text-black">{bleedMm}mm</span>
+          <div className="space-y-2">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-[#666]">{t("admin.tools.contour.bleedLabel")}</label>
+              <input
+                type="range"
+                min="0"
+                max="6"
+                step="0.5"
+                value={bleedMm}
+                onChange={(e) => handleBleedChange(parseFloat(e.target.value))}
+                className="max-w-xs flex-1"
+              />
+              <span className="w-12 text-sm font-semibold tabular-nums text-black">{bleedMm}mm</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {[
+                { mm: 0, key: "bleedNone" },
+                { mm: 1.5, key: "bleedTight" },
+                { mm: 3, key: "bleedStandard" },
+                { mm: 5, key: "bleedWide" },
+              ].map((preset) => (
+                <button
+                  key={preset.mm}
+                  type="button"
+                  onClick={() => handleBleedChange(preset.mm)}
+                  className={`rounded-[3px] px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+                    bleedMm === preset.mm
+                      ? "bg-black text-white"
+                      : "bg-[#f0f0f0] text-[#666] hover:bg-[#e0e0e0]"
+                  }`}
+                >
+                  {t(`admin.tools.contour.${preset.key}`)} ({preset.mm}mm)
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>

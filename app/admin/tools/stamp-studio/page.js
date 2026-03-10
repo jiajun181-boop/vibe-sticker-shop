@@ -26,6 +26,7 @@ const QUICK_START_PRESETS = [
     modelId: "rect-70x30",
     text: "COMPANY NAME\n123 Street\nCity, Province A1A 1A1\nPhone: (416) 555-0000",
     font: "Helvetica",
+    color: "#111111",
   },
   {
     id: "approval",
@@ -33,6 +34,9 @@ const QUICK_START_PRESETS = [
     modelId: "round-40mm",
     text: "APPROVED\n[Company Name]\nDate: ____/____/____",
     font: "Helvetica",
+    color: "#2563EB",
+    curve: 60,
+    border: "double",
   },
   {
     id: "date-received",
@@ -40,6 +44,7 @@ const QUICK_START_PRESETS = [
     modelId: "rect-58x22",
     text: "RECEIVED\nDate: ____/____/____\nBy: __________",
     font: "Helvetica",
+    color: "#2563EB",
   },
   {
     id: "signature",
@@ -47,6 +52,7 @@ const QUICK_START_PRESETS = [
     modelId: "rect-70x30",
     text: "[Name]\n[Title]",
     font: "Helvetica",
+    color: "#111111",
   },
   {
     id: "book-name",
@@ -54,6 +60,7 @@ const QUICK_START_PRESETS = [
     modelId: "rect-58x22",
     text: "FROM THE LIBRARY OF\n[Name]",
     font: "Georgia",
+    color: "#111111",
   },
   {
     id: "funny-approval",
@@ -61,13 +68,19 @@ const QUICK_START_PRESETS = [
     modelId: "round-50mm",
     text: "BOSS APPROVED\n★★★★★\nNo Questions Asked",
     font: "Helvetica",
+    color: "#DC2626",
+    curve: 70,
+    border: "single",
   },
   {
-    id: "blank",
-    labelKey: "admin.tools.stamp.presetBlank",
-    modelId: "rect-58x22",
-    text: "",
-    font: "Helvetica",
+    id: "face-stamp",
+    labelKey: "admin.tools.stamp.presetFaceStamp",
+    modelId: "round-50mm",
+    text: "[YOUR NAME]\n★ OFFICIAL ★",
+    font: "Playfair Display",
+    color: "#1E40AF",
+    curve: 65,
+    border: "double",
   },
 ];
 
@@ -112,6 +125,8 @@ function StampStudioPage() {
   const [initialText, setInitialText] = useState("");
   const [initialFont, setInitialFont] = useState("Helvetica");
   const [initialColor, setInitialColor] = useState("#111111");
+  const [initialCurve, setInitialCurve] = useState(undefined);
+  const [initialBorder, setInitialBorder] = useState(undefined);
   const [reopenedFrom, setReopenedFrom] = useState(null);
   const [detailJob, setDetailJob] = useState(null);
   const [hasEditorContent, setHasEditorContent] = useState(false);
@@ -174,6 +189,8 @@ function StampStudioPage() {
     setInitialText(data.text || "");
     setInitialFont(data.font || "Helvetica");
     setInitialColor(data.color || "#111111");
+    setInitialCurve(data.curveAmount ?? undefined);
+    setInitialBorder(data.border ?? undefined);
     setOrderId(job.orderId || "");
     setNotes(job.notes || "");
     setStampConfig({});
@@ -193,7 +210,9 @@ function StampStudioPage() {
     setModelId(targetModelId);
     setInitialText(preset.text);
     setInitialFont(preset.font || "Helvetica");
-    setInitialColor("#111111");
+    setInitialColor(preset.color || "#111111");
+    setInitialCurve(preset.curve ?? undefined);
+    setInitialBorder(preset.border ?? undefined);
     setOrderId("");
     setNotes("");
     setStampConfig({});
@@ -376,7 +395,13 @@ function StampStudioPage() {
               onClick={() => applyPreset(preset)}
               className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3 text-left transition-colors hover:border-black hover:bg-white"
             >
-              <p className="text-xs font-semibold text-[#111]">{t(preset.labelKey)}</p>
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block h-3 w-3 shrink-0 rounded-full border border-[#e0e0e0]"
+                  style={{ backgroundColor: preset.color || "#111111" }}
+                />
+                <p className="text-xs font-semibold text-[#111]">{t(preset.labelKey)}</p>
+              </div>
               <p className="mt-1 text-[10px] text-[#999]">{modelLabel(preset.modelId)}</p>
             </button>
           ))}
@@ -444,7 +469,8 @@ function StampStudioPage() {
           text={initialText}
           font={initialFont}
           color={initialColor}
-          hideInkColor
+          initialCurve={initialCurve}
+          initialBorder={initialBorder}
           onChange={(patch) => { setStampConfig((prev) => ({ ...prev, ...patch })); setHasEditorContent(true); }}
         />
       </div>

@@ -47,6 +47,8 @@ const StampEditor = forwardRef(function StampEditor({
   onChange,
   hideInkColor = false,
   uploadFirst = false,
+  initialCurve,
+  initialBorder,
 }, ref) {
   const { t } = useTranslation();
   const canvasRef = useRef(null);
@@ -67,10 +69,10 @@ const StampEditor = forwardRef(function StampEditor({
   }), []);
 
   // Internal state
-  const [curveAmount, setCurveAmount] = useState(50);
+  const [curveAmount, setCurveAmount] = useState(initialCurve ?? 50);
   const [logoFile, setLogoFile] = useState(null);
   const [logoScale, setLogoScale] = useState(40);
-  const [borderId, setBorderId] = useState("none");
+  const [borderId, setBorderId] = useState(initialBorder ?? "none");
   const [halftoneEnabled, setHalftoneEnabled] = useState(false);
   const [halftoneIntensity, setHalftoneIntensity] = useState("medium");
   const [templateCat, setTemplateCat] = useState("business");
