@@ -7,6 +7,7 @@ import { timeAgo } from "@/lib/admin/time-ago";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { categorizeForTaskQueue, getExecutableAction, assessItem, READINESS } from "@/lib/admin/production-readiness";
 import ItemProductionPanel from "@/components/admin/ItemProductionPanel";
+import { formatCad } from "@/lib/product-helpers";
 
 // ─── Single summary API fetch ────────────────────────────────────────────────
 
@@ -89,13 +90,6 @@ function PriorityBadge({ priority, t }) {
       {isUrgent ? t("admin.common.urgent") : t("admin.common.rush")}
     </span>
   );
-}
-
-// ─── Format helpers ──────────────────────────────────────────────────────────
-
-function fmtMoney(cents) {
-  if (cents == null) return "$0.00";
-  return `$${(cents / 100).toFixed(2)}`;
 }
 
 // ─── Context-aware action label — uses getExecutableAction on worst item ─────
@@ -467,7 +461,7 @@ function TaskQueueView({ orders, t }) {
                     </Link>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="text-xs text-[#999]">{t("admin.common.itemCount").replace("{count}", o._count?.items || items.length || 0)}</span>
-                      <span className="text-xs font-medium text-[#111]">{fmtMoney(o.totalAmount)}</span>
+                      <span className="text-xs font-medium text-[#111]">{formatCad(o.totalAmount)}</span>
                       <span className="text-xs text-[#999]">{timeAgo(o.createdAt, t)}</span>
                       <Link
                         href={deepLink}
@@ -508,7 +502,7 @@ function TaskQueueView({ orders, t }) {
                 </span>
               </Link>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-xs font-medium text-[#111]">{fmtMoney(o.totalAmount)}</span>
+                <span className="text-xs font-medium text-[#111]">{formatCad(o.totalAmount)}</span>
                 <Link
                   href={`/admin/orders/${o.id}`}
                   className="ml-1 inline-flex items-center gap-1 rounded-[3px] bg-black px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#222]"

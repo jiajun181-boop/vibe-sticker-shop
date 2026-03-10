@@ -11,6 +11,7 @@ import { hasArtworkUrl, getArtworkStatus } from "@/lib/artwork-detection";
 import { assessItem, assessOrder, assessOrderPackage, READINESS, READINESS_COLORS, READINESS_LABEL_KEYS } from "@/lib/admin/production-readiness";
 import { getActionLabel } from "@/lib/timeline-labels";
 import { formatCad } from "@/lib/admin/format-cad";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
 import { statusColor, paymentColor, productionColor } from "@/lib/admin/status-labels";
 import OrderReadinessSummary from "@/components/admin/OrderReadinessSummary";
 import ItemProductionPanel from "@/components/admin/ItemProductionPanel";
@@ -419,6 +420,60 @@ export default function OrderDetailPage() {
                     {formatCad(order.subtotalAmount)}
                   </span>
                 </div>
+                {/* Rush surcharge breakdown — informational, already baked into subtotal */}
+                {(() => {
+                  const rushItems = (order.items || []).filter(i => {
+                    const m = i.meta && typeof i.meta === "object" ? i.meta : {};
+                    return m.rushProduction === true || m.rushProduction === "true";
+                  });
+                  if (rushItems.length === 0) return null;
+                  const rushSurcharge = rushItems.reduce((sum, i) => {
+                    const base = Math.round(i.unitPrice / RUSH_MULTIPLIER);
+                    return sum + (i.unitPrice - base) * i.quantity;
+                  }, 0);
+                  return (
+                    <div className="flex justify-between text-amber-700">
+                      <span className="flex items-center gap-1">
+                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        {t("admin.orderDetail.rushSurcharge")} ({rushItems.length} {rushItems.length === 1 ? "item" : "items"})
+                      </span>
+                      <span className="font-medium">incl. ~{formatCad(rushSurcharge)}</span>
+                    </div>
+                  );
+                })()}
+                {/* Design help fee — informational, already baked into subtotal */}
+                {(() => {
+                  const dhItems = (order.items || []).filter(i => {
+                    const m = i.meta && typeof i.meta === "object" ? i.meta : {};
+                    return m.designHelp === true || m.designHelp === "true" || m.feeType === "design-help";
+                  });
+                  if (dhItems.length === 0) return null;
+                  // Check if design help is a separate OrderItem (Stripe/Interac pattern)
+                  const dhServiceItem = dhItems.find(i => {
+                    const m = i.meta && typeof i.meta === "object" ? i.meta : {};
+                    return m.isServiceFee === "true" && m.feeType === "design-help";
+                  });
+                  const dhTotal = dhServiceItem
+                    ? dhServiceItem.totalPrice
+                    : dhItems.length * DESIGN_HELP_CENTS;
+                  return (
+                    <div className="flex justify-between text-indigo-700">
+                      <span className="flex items-center gap-1">
+                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                        {t("admin.orderDetail.designHelpFee")} ({dhItems.length})
+                      </span>
+                      <span className="font-medium">incl. {formatCad(dhTotal)}</span>
+                    </div>
+                  );
+                })()}
+                {(order.discountAmount > 0 && !order.coupon) && (
+                  <div className="flex justify-between">
+                    <span className="text-[#666]">{t("admin.orderDetail.discount")}</span>
+                    <span className="font-medium text-green-700">
+                      -{formatCad(order.discountAmount)}
+                    </span>
+                  </div>
+                )}
                 {order.coupon && (
                   <div className="flex justify-between">
                     <span className="text-[#666]">

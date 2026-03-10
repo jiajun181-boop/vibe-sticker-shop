@@ -12,7 +12,7 @@ import CartUpsell from "@/components/cart/CartUpsell";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { isOversizedProduct } from "@/lib/pickup-hints";
 
-import { HST_RATE, SHIPPING_COST, CHECKOUT_COOLDOWN_MS } from "@/lib/order-config";
+import { HST_RATE, SHIPPING_COST, CHECKOUT_COOLDOWN_MS, DESIGN_HELP_CENTS } from "@/lib/order-config";
 
 function parseSizeRows(meta) {
   if (!meta || typeof meta !== "object") return [];
@@ -193,7 +193,7 @@ export default function CartDrawer() {
       const lineTotal = (item.unitAmount ?? item.price ?? 0) * item.quantity;
       // Design help is a flat fee per line item, not per unit
       const opts = item.options || item.meta || {};
-      const dhFee = (opts.designHelp === true || opts.designHelp === "true") ? (Number(opts.designHelpFee) || 4500) : 0;
+      const dhFee = (opts.designHelp === true || opts.designHelp === "true") ? DESIGN_HELP_CENTS : 0;
       return sum + lineTotal + dhFee;
     }, 0),
     [cart]
@@ -340,6 +340,7 @@ export default function CartDrawer() {
           poNumber: invoiceForm.poNumber.trim() || null,
           paymentTerms: invoiceForm.paymentTerms,
           notes: invoiceForm.notes.trim() || null,
+          promoCode: promoDiscount?.code || null,
         }),
       });
       const data = await res.json();
@@ -435,7 +436,7 @@ export default function CartDrawer() {
                   const unit = item.unitAmount ?? item.price ?? 0;
                   const lineTotal = unit * item.quantity;
                   const opts = item.options || item.meta || {};
-                  const itemDesignHelp = (opts.designHelp === true || opts.designHelp === "true") ? (Number(opts.designHelpFee) || 4500) : 0;
+                  const itemDesignHelp = (opts.designHelp === true || opts.designHelp === "true") ? DESIGN_HELP_CENTS : 0;
                   const rawMeta = item.meta && typeof item.meta === "object"
                     ? item.meta
                     : item.options && typeof item.options === "object"
