@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
 import { buildContourSvg } from "@/lib/contour/svg-path";
 import { preflightOrder, detectProductFamily, buildSpecsSummary } from "@/lib/preflight";
 import { hasArtworkUrl, getArtworkStatus } from "@/lib/artwork-detection";
@@ -97,10 +98,14 @@ function parseSizeRows(item) {
     .filter(Boolean);
 }
 
+const AUTO_REFRESH_MS = 30_000;
+
 export default function OrderDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const timeAgo = (d) => sharedTimeAgo(d, t);
+  const refreshTimer = useRef(null);
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -135,7 +140,7 @@ export default function OrderDetailPage() {
     }
   }, [id]);
 
-  useEffect(() => {
+  const fetchOrder = useCallback(() => {
     fetch(`/api/admin/orders/${id}`)
       .then((r) => r.json())
       .then((data) => {
@@ -163,9 +168,21 @@ export default function OrderDetailPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+  }, [id]);
 
+  useEffect(() => {
+    fetchOrder();
     fetchTimeline();
-  }, [id, fetchTimeline]);
+  }, [fetchOrder, fetchTimeline]);
+
+  // Auto-refresh every 30s
+  useEffect(() => {
+    refreshTimer.current = setInterval(() => {
+      fetchOrder();
+      fetchTimeline();
+    }, AUTO_REFRESH_MS);
+    return () => clearInterval(refreshTimer.current);
+  }, [fetchOrder, fetchTimeline]);
 
   function showMsg(text, isError = false) {
     setMessage(text);
@@ -504,7 +521,7 @@ export default function OrderDetailPage() {
                           </p>
                           {/* Production job status */}
                           {item.productionJob && (
-                            <div className="mt-1.5 flex flex-col items-end gap-0.5">
+                            <Link href={`/admin/production/${item.productionJob.id}`} className="mt-1.5 flex flex-col items-end gap-0.5 hover:opacity-80">
                               <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
                                 item.productionJob.status === "shipped" || item.productionJob.status === "finished" ? "bg-green-100 text-green-700" :
                                 item.productionJob.status === "printing" || item.productionJob.status === "quality_check" ? "bg-indigo-100 text-indigo-700" :
@@ -525,7 +542,7 @@ export default function OrderDetailPage() {
                               {item.productionJob.assignedTo && (
                                 <span className="text-[9px] text-[#999]">{item.productionJob.assignedTo}</span>
                               )}
-                            </div>
+                            </Link>
                           )}
                         </div>
                       </div>
