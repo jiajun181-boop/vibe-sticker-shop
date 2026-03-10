@@ -103,9 +103,10 @@ export default function ToolsHubPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
         <h1 className="text-xl font-bold text-black">{t("admin.tools.hubTitle")}</h1>
-        <p className="mt-1 text-sm text-[#999]">{t("admin.tools.hubSubtitle")}</p>
+        <p className="mt-1 text-sm text-[#666]">{t("admin.tools.hubSubtitle")}</p>
+        <p className="mt-2 text-xs text-[#999]">{t("admin.tools.hubGuidance")}</p>
       </div>
 
       {/* Tool Cards */}

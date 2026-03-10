@@ -21,14 +21,29 @@ async function blobFromUrl(url) {
   return res.blob();
 }
 
+/** Detect touch-only mobile device (no hover). */
+function useIsMobile() {
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    setMobile(
+      typeof window !== "undefined" &&
+      ("ontouchstart" in window || navigator.maxTouchPoints > 0) &&
+      window.innerWidth < 768
+    );
+  }, []);
+  return mobile;
+}
+
 export default function ContourToolPage() {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [imageUrl, setImageUrl] = useState(null);
   const [imageName, setImageName] = useState("");
   const [sourceFile, setSourceFile] = useState(null);
   const [contourResult, setContourResult] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState("");
+  const [progressHuman, setProgressHuman] = useState("");
   const [bleedMm, setBleedMm] = useState(3);
   const [orderId, setOrderId] = useState("");
   const [notes, setNotes] = useState("");
@@ -41,7 +56,9 @@ export default function ContourToolPage() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [detailJob, setDetailJob] = useState(null);
   const [reopening, setReopening] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const fileInputRef = useRef(null);
+  const prevObjectUrlRef = useRef(null);
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -62,35 +79,71 @@ export default function ContourToolPage() {
   }, [fetchJobs]);
 
   function resetPreviewState(objectUrl, fileName, file) {
+    // Revoke previous ObjectURLs to free memory (critical on mobile)
+    if (prevObjectUrlRef.current) {
+      URL.revokeObjectURL(prevObjectUrlRef.current);
+    }
+    if (contourResult?.processedImageUrl) {
+      URL.revokeObjectURL(contourResult.processedImageUrl);
+    }
+    prevObjectUrlRef.current = objectUrl;
     setImageName(fileName);
     setSourceFile(file);
     setImageUrl(objectUrl);
     setContourResult(null);
+    setErrorMsg("");
   }
 
   function handleFile(file) {
-    if (!file || !file.type.startsWith("image/")) return;
+    if (!file || !file.type.startsWith("image/")) {
+      setErrorMsg(t("admin.tools.contour.errorNotImage"));
+      return;
+    }
+    // Guard: reject files > 25MB (mobile devices can OOM on large images)
+    if (file.size > 25 * 1024 * 1024) {
+      setErrorMsg(t("admin.tools.contour.errorTooLarge"));
+      return;
+    }
+    setErrorMsg("");
     const objectUrl = URL.createObjectURL(file);
     resetPreviewState(objectUrl, file.name, file);
     processContour(objectUrl);
   }
 
+  // Human-readable progress labels
+  const PROGRESS_LABELS = {
+    loading: "admin.tools.contour.progressLoading",
+    "removing-bg": "admin.tools.contour.progressBgRemoval",
+    tracing: "admin.tools.contour.progressTracing",
+    done: "admin.tools.contour.progressDone",
+  };
+
   async function processContour(url) {
     setProcessing(true);
-    setProgress(t("admin.tools.contour.progressLoading"));
+    setProgress("");
+    setProgressHuman(t("admin.tools.contour.progressLoading"));
 
     try {
       const { generateContour } = await import("@/lib/contour/generate-contour");
-      setProgress(t("admin.tools.contour.progressTracing"));
+      setProgressHuman(t("admin.tools.contour.progressTracing"));
       const result = await generateContour(url, {
         bleedMm,
-        onProgress: (stage) => setProgress(stage),
+        // On mobile, skip background removal (too memory-intensive)
+        skipBgRemoval: isMobile,
+        onProgress: (stage) => {
+          setProgress(stage);
+          const key = PROGRESS_LABELS[stage];
+          if (key) setProgressHuman(t(key));
+        },
       });
       setContourResult(result);
       setProgress("");
+      setProgressHuman("");
     } catch (err) {
       console.error("Contour error:", err);
-      setProgress(err instanceof Error ? err.message : t("admin.tools.contour.errorTrace"));
+      const msg = err instanceof Error ? err.message : t("admin.tools.contour.errorTrace");
+      setErrorMsg(msg);
+      setProgressHuman("");
     } finally {
       setProcessing(false);
     }
@@ -261,12 +314,42 @@ export default function ContourToolPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
+      {/* Page header — what / input / output / next step */}
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
         <h1 className="text-xl font-bold text-black">{t("admin.tools.contour.title")}</h1>
-        <p className="mt-1 text-sm text-[#666]">
-          {t("admin.tools.contour.subtitle")}
-        </p>
+        <p className="mt-1 text-sm text-[#666]">{t("admin.tools.contour.subtitle")}</p>
+        <div className="mt-3 grid gap-3 text-xs sm:grid-cols-4">
+          <div>
+            <p className="font-semibold text-[#111]">{t("admin.tools.meta.whatItDoes")}</p>
+            <p className="mt-0.5 text-[#666]">{t("admin.tools.contour.metaWhat")}</p>
+          </div>
+          <div>
+            <p className="font-semibold text-[#111]">{t("admin.tools.meta.input")}</p>
+            <p className="mt-0.5 text-[#666]">{t("admin.tools.contour.metaInput")}</p>
+          </div>
+          <div>
+            <p className="font-semibold text-[#111]">{t("admin.tools.meta.output")}</p>
+            <p className="mt-0.5 text-[#666]">{t("admin.tools.contour.metaOutput")}</p>
+          </div>
+          <div>
+            <p className="font-semibold text-[#111]">{t("admin.tools.meta.nextStep")}</p>
+            <p className="mt-0.5 text-[#666]">{t("admin.tools.contour.metaNext")}</p>
+          </div>
+        </div>
       </div>
+
+      {/* Mobile warning */}
+      {isMobile && (
+        <div className="flex items-start gap-3 rounded-[3px] border border-amber-300 bg-amber-50 px-4 py-3">
+          <svg className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+          </svg>
+          <div>
+            <p className="text-xs font-semibold text-amber-800">{t("admin.tools.contour.mobileWarningTitle")}</p>
+            <p className="mt-0.5 text-xs text-amber-700">{t("admin.tools.contour.mobileWarningBody")}</p>
+          </div>
+        </div>
+      )}
 
       {/* Usage guidance banner */}
       <div className="flex items-start gap-3 rounded-[3px] border border-blue-200 bg-blue-50 px-4 py-3">
@@ -275,6 +358,16 @@ export default function ContourToolPage() {
         </svg>
         <p className="text-xs text-blue-700">{t("admin.tools.contour.guidanceBanner")}</p>
       </div>
+
+      {/* Error banner */}
+      {errorMsg && (
+        <div className="flex items-center justify-between rounded-[3px] border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-xs text-red-700">{errorMsg}</p>
+          <button type="button" onClick={() => setErrorMsg("")} className="ml-3 text-red-400 hover:text-red-700">
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+      )}
 
       <div className="max-w-xs">
         <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.orderLabel")}</label>
@@ -327,7 +420,8 @@ export default function ContourToolPage() {
           {processing ? (
             <div className="text-center">
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#e0e0e0] border-t-black" />
-              <p className="mt-3 text-sm text-[#666]">{progress || t("admin.common.processing")}</p>
+              <p className="mt-3 text-sm text-[#666]">{progressHuman || t("admin.common.processing")}</p>
+              {isMobile && <p className="mt-1 text-[10px] text-[#999]">{t("admin.tools.contour.mobileSlower")}</p>}
             </div>
           ) : contourResult ? (
             <div className="relative w-full">

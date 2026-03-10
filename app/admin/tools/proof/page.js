@@ -251,6 +251,24 @@ export default function ProofManagerPage() {
         <div>
           <h1 className="text-xl font-bold text-black">{t("admin.tools.proof.title")}</h1>
           <p className="mt-1 text-sm text-[#666]">{t("admin.tools.proof.subtitle")}</p>
+          <div className="mt-3 grid gap-3 text-xs sm:grid-cols-4">
+            <div>
+              <p className="font-semibold text-[#111]">{t("admin.tools.meta.whatItDoes")}</p>
+              <p className="mt-0.5 text-[#666]">{t("admin.tools.proof.metaWhat")}</p>
+            </div>
+            <div>
+              <p className="font-semibold text-[#111]">{t("admin.tools.meta.input")}</p>
+              <p className="mt-0.5 text-[#666]">{t("admin.tools.proof.metaInput")}</p>
+            </div>
+            <div>
+              <p className="font-semibold text-[#111]">{t("admin.tools.meta.output")}</p>
+              <p className="mt-0.5 text-[#666]">{t("admin.tools.proof.metaOutput")}</p>
+            </div>
+            <div>
+              <p className="font-semibold text-[#111]">{t("admin.tools.meta.nextStep")}</p>
+              <p className="mt-0.5 text-[#666]">{t("admin.tools.proof.metaNext")}</p>
+            </div>
+          </div>
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => setOrderProofModal(true)} className="inline-flex items-center gap-1.5 rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]">

@@ -160,6 +160,7 @@ export default function WorkstationPage() {
         <div>
           <h1 className="text-lg font-bold text-[#111]">{t("admin.workstation.title")}</h1>
           <p className="text-xs text-[#999]">{t("admin.workstation.subtitle")}</p>
+          <p className="mt-1 text-[11px] text-[#bbb]">{t("admin.workstation.guidance")}</p>
         </div>
         <button
           type="button"
