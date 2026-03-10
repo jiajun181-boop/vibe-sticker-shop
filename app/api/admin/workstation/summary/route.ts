@@ -132,7 +132,27 @@ async function fetchNeedsAttention() {
       totalAmount: true,
       priority: true,
       createdAt: true,
+      tags: true,
       _count: { select: { items: true } },
+      items: {
+        select: {
+          id: true,
+          productName: true,
+          productType: true,
+          quantity: true,
+          widthIn: true,
+          heightIn: true,
+          material: true,
+          finishing: true,
+          meta: true,
+          specsJson: true,
+          fileUrl: true,
+          fileName: true,
+          productionJob: {
+            select: { id: true, status: true, priority: true, dueAt: true },
+          },
+        },
+      },
     },
     orderBy: [
       { priority: "asc" },   // urgent (0) first

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { timeAgo } from "@/lib/admin/time-ago";
 import StatusBadge from "@/components/admin/StatusBadge";
+import { categorizeForTaskQueue, getExecutableAction, assessItem, READINESS } from "@/lib/admin/production-readiness";
+import ItemProductionPanel from "@/components/admin/ItemProductionPanel";
 
 // ─── Single summary API fetch ────────────────────────────────────────────────
 
@@ -96,43 +98,43 @@ function fmtMoney(cents) {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-// ─── Workstation order categorization (from available summary data) ──────────
-
-function categorizeAttentionOrders(orders) {
-  const rush = [];
-  const missingArtwork = [];
-  const pendingPayment = [];
-  const readyToStart = [];
-  const other = [];
-
-  for (const o of orders) {
-    const tags = o.tags || [];
-    const isRush = o.priority === 0 || tags.includes("rush") || tags.includes("urgent");
-
-    if (isRush) rush.push(o);
-
-    if (tags.includes("missing-artwork") || tags.includes("upload-later")) {
-      missingArtwork.push(o);
-    } else if (o.paymentStatus === "unpaid" || o.status === "pending") {
-      pendingPayment.push(o);
-    } else if (o.status === "paid" && o.productionStatus === "not_started") {
-      readyToStart.push(o);
-    } else {
-      other.push(o);
-    }
-  }
-
-  return { rush, missingArtwork, pendingPayment, readyToStart, other };
-}
-
-// ─── Context-aware action label for needs-attention orders ───────────────────
+// ─── Context-aware action label — uses getExecutableAction on worst item ─────
 
 function orderActionLabel(order, t) {
+  // Try item-level assessment first for specific action labels
+  const items = order.items || [];
+  if (items.length > 0) {
+    for (const item of items) {
+      const assessment = assessItem(item, order.id);
+      const ea = getExecutableAction(assessment, order.id, item.id);
+      if (ea) {
+        // Return a short version of the action
+        const short = ea.action.split(" ").slice(0, 4).join(" ");
+        return short.length > 25 ? short.slice(0, 22) + "..." : short;
+      }
+    }
+  }
+  // Fallback to order-level status labels
   if (order.status === "pending") return t("admin.workstation.actionReview");
   if (order.paymentStatus === "unpaid") return t("admin.workstation.actionCheckPayment");
   if (order.productionStatus === "preflight") return t("admin.workstation.actionPreflight");
   if (order.status === "paid" && order.productionStatus === "not_started") return t("admin.workstation.actionStartProd");
   return t("admin.workstation.actionOpen");
+}
+
+// ─── Find worst item for deep-link ──────────────────────────────────────────
+
+function findWorstItemId(order) {
+  const items = order.items || [];
+  for (const item of items) {
+    const assessment = assessItem(item, order.id);
+    if (assessment.level === READINESS.BLOCKED) return item.id;
+  }
+  for (const item of items) {
+    const assessment = assessItem(item, order.id);
+    if (assessment.level === "needs-info") return item.id;
+  }
+  return items[0]?.id || null;
 }
 
 // ─── Quick Action Button ─────────────────────────────────────────────────────
@@ -394,15 +396,21 @@ export default function WorkstationPage() {
 // ─── Task Queue View — categorized needs-attention orders ────────────────────
 
 function TaskQueueView({ orders, t }) {
-  const cats = categorizeAttentionOrders(orders);
+  // Use the shared categorizeForTaskQueue which does item-level assessments
+  const hasItems = orders.some((o) => o.items && o.items.length > 0);
+  const cats = hasItems ? categorizeForTaskQueue(orders) : null;
 
-  const groups = [
-    { key: "rush", label: t("admin.workstation.queueRush"), orders: cats.rush, dot: "bg-red-500" },
-    { key: "missingArtwork", label: t("admin.workstation.queueMissingArt"), orders: cats.missingArtwork, dot: "bg-amber-400" },
-    { key: "pendingPayment", label: t("admin.workstation.queuePendingPay"), orders: cats.pendingPayment, dot: "bg-yellow-400" },
-    { key: "readyToStart", label: t("admin.workstation.queueReady"), orders: cats.readyToStart, dot: "bg-green-500" },
-    { key: "other", label: t("admin.workstation.queueOther"), orders: cats.other, dot: "bg-gray-400" },
-  ].filter((g) => g.orders.length > 0);
+  // Build groups: if we have item-level data, use categorizeForTaskQueue buckets
+  // Otherwise fall back to simple order-status grouping
+  const groups = cats ? [
+    { key: "rush", label: t("admin.workstation.queueRush"), entries: cats.rush, dot: "bg-red-500" },
+    { key: "missingArtwork", label: t("admin.workstation.queueMissingArt"), entries: cats.missingArtwork, dot: "bg-amber-400" },
+    { key: "contourReview", label: t("admin.workstation.queueContour"), entries: cats.contourReview, dot: "bg-indigo-400" },
+    { key: "pendingProof", label: t("admin.workstation.queueProof"), entries: cats.pendingProof, dot: "bg-purple-400" },
+    { key: "blocked", label: t("admin.workstation.queueBlocked"), entries: cats.blocked, dot: "bg-red-400" },
+    { key: "readyForProduction", label: t("admin.workstation.queueReadyProd"), entries: cats.readyForProduction, dot: "bg-green-500" },
+    { key: "inProgress", label: t("admin.workstation.queueInProgress"), entries: cats.inProgress, dot: "bg-blue-500" },
+  ].filter((g) => g.entries.length > 0) : [];
 
   return (
     <div className="space-y-4">
@@ -411,7 +419,7 @@ function TaskQueueView({ orders, t }) {
         {groups.map((g) => (
           <span key={g.key} className="inline-flex items-center gap-1.5 rounded-full border border-[#e0e0e0] bg-white px-3 py-1 text-[10px] font-semibold text-[#555]">
             <span className={`inline-block h-2 w-2 rounded-full ${g.dot}`} />
-            {g.label} ({g.orders.length})
+            {g.label} ({g.entries.length})
           </span>
         ))}
       </div>
@@ -424,42 +432,95 @@ function TaskQueueView({ orders, t }) {
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#999]">{g.label}</span>
           </div>
           <div className="space-y-1.5">
-            {g.orders.map((o) => (
-              <div
-                key={`${g.key}-${o.id}`}
-                className="flex flex-col gap-2 rounded-[3px] border border-[#ececec] p-3 transition-colors hover:border-[#ccc] hover:bg-[#fafafa] sm:flex-row sm:items-center sm:justify-between"
-              >
-                <Link href={`/admin/orders/${o.id}`} className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
-                  <PriorityBadge priority={o.priority} t={t} />
-                  <StatusBadge status={o.status} t={t} />
-                  {o.productionStatus && o.productionStatus !== "not_started" && (
-                    <StatusBadge status={o.productionStatus} t={t} />
+            {g.entries.map(({ order: o }) => {
+              const worstItemId = findWorstItemId(o);
+              const deepLink = worstItemId
+                ? `/admin/orders/${o.id}#item-${worstItemId}`
+                : `/admin/orders/${o.id}`;
+              const items = o.items || [];
+              // Items with issues (not ready/done)
+              const issueItems = items.filter((item) => {
+                const a = assessItem(item, o.id);
+                return a.level !== READINESS.READY && a.level !== READINESS.DONE;
+              });
+
+              return (
+                <div
+                  key={`${g.key}-${o.id}`}
+                  className="rounded-[3px] border border-[#ececec] transition-colors hover:border-[#ccc] hover:bg-[#fafafa]"
+                >
+                  {/* Order row */}
+                  <div className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <Link href={deepLink} className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
+                      <PriorityBadge priority={o.priority} t={t} />
+                      <StatusBadge status={o.status} t={t} />
+                      {o.productionStatus && o.productionStatus !== "not_started" && (
+                        <StatusBadge status={o.productionStatus} t={t} />
+                      )}
+                      {o.paymentStatus === "unpaid" && (
+                        <StatusBadge status="unpaid" t={t} />
+                      )}
+                      <span className="text-sm font-medium text-[#111] truncate">#{o.id.slice(-8)}</span>
+                      <span className="hidden text-xs text-[#666] truncate sm:inline">
+                        {o.customerName || o.customerEmail}
+                      </span>
+                    </Link>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs text-[#999]">{t("admin.common.itemCount").replace("{count}", o._count?.items || items.length || 0)}</span>
+                      <span className="text-xs font-medium text-[#111]">{fmtMoney(o.totalAmount)}</span>
+                      <span className="text-xs text-[#999]">{timeAgo(o.createdAt, t)}</span>
+                      <Link
+                        href={deepLink}
+                        className="ml-1 inline-flex items-center gap-1 rounded-[3px] bg-black px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#222]"
+                      >
+                        {orderActionLabel(o, t)}
+                        {I.arrowRight}
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Per-item compact strips — only items with issues */}
+                  {issueItems.length > 0 && (
+                    <div className="border-t border-[#ececec] px-3 py-2 space-y-1">
+                      {issueItems.map((item) => (
+                        <ItemProductionPanel key={item.id} item={item} orderId={o.id} compact />
+                      ))}
+                    </div>
                   )}
-                  {o.paymentStatus === "unpaid" && (
-                    <StatusBadge status="unpaid" t={t} />
-                  )}
-                  <span className="text-sm font-medium text-[#111] truncate">#{o.id.slice(-8)}</span>
-                  <span className="hidden text-xs text-[#666] truncate sm:inline">
-                    {o.customerName || o.customerEmail}
-                  </span>
-                </Link>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-[#999]">{t("admin.common.itemCount").replace("{count}", o._count?.items || 0)}</span>
-                  <span className="text-xs font-medium text-[#111]">{fmtMoney(o.totalAmount)}</span>
-                  <span className="text-xs text-[#999]">{timeAgo(o.createdAt, t)}</span>
-                  <Link
-                    href={`/admin/orders/${o.id}`}
-                    className="ml-1 inline-flex items-center gap-1 rounded-[3px] bg-black px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#222]"
-                  >
-                    {orderActionLabel(o, t)}
-                    {I.arrowRight}
-                  </Link>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ))}
+
+      {/* Fallback if no item data available */}
+      {!cats && orders.length > 0 && (
+        <div className="space-y-1.5">
+          {orders.map((o) => (
+            <div key={o.id} className="flex flex-col gap-2 rounded-[3px] border border-[#ececec] p-3 sm:flex-row sm:items-center sm:justify-between">
+              <Link href={`/admin/orders/${o.id}`} className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
+                <PriorityBadge priority={o.priority} t={t} />
+                <StatusBadge status={o.status} t={t} />
+                <span className="text-sm font-medium text-[#111] truncate">#{o.id.slice(-8)}</span>
+                <span className="hidden text-xs text-[#666] truncate sm:inline">
+                  {o.customerName || o.customerEmail}
+                </span>
+              </Link>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs font-medium text-[#111]">{fmtMoney(o.totalAmount)}</span>
+                <Link
+                  href={`/admin/orders/${o.id}`}
+                  className="ml-1 inline-flex items-center gap-1 rounded-[3px] bg-black px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#222]"
+                >
+                  {orderActionLabel(o, t)}
+                  {I.arrowRight}
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
