@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
@@ -121,23 +121,34 @@ function QIcon({ name, className }) {
   );
 }
 
+const AUTO_REFRESH_MS = 30_000;
+
 /* ══════════════ MAIN DASHBOARD ══════════════ */
 export default function AdminDashboard() {
   const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState(null);
+  const refreshTimer = useRef(null);
 
-  useEffect(() => {
+  const fetchStats = useCallback(() => {
     fetch("/api/admin/stats")
       .then((r) => {
         if (r.status === 401 || r.status === 403) { window.location.href = "/admin/login"; return null; }
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
-      .then((data) => { if (data) setStats(data); })
+      .then((data) => { if (data) { setStats(data); setLastRefresh(new Date()); } })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { fetchStats(); }, [fetchStats]);
+
+  useEffect(() => {
+    refreshTimer.current = setInterval(fetchStats, AUTO_REFRESH_MS);
+    return () => clearInterval(refreshTimer.current);
+  }, [fetchStats]);
 
   if (loading) return <DashboardSkeleton />;
 
@@ -160,9 +171,21 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-black">{t("admin.dashboard.title")}</h1>
-        <p className="text-xs text-[#999]">
-          {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
-        </p>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={fetchStats}
+            title={lastRefresh ? `Last refresh: ${lastRefresh.toLocaleTimeString()}` : "Refresh"}
+            className="rounded-[3px] border border-[#d0d0d0] p-1.5 text-[#999] hover:bg-gray-50 hover:text-black transition-colors"
+          >
+            <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H4.757a.75.75 0 00-.75.75v3.475a.75.75 0 001.5 0v-1.836l.217.216a7 7 0 0011.712-3.138.75.75 0 00-1.124-.122zm-1.624-7.848a7 7 0 00-11.712 3.138.75.75 0 001.124.122 5.5 5.5 0 019.201-2.466l.312.311h-2.433a.75.75 0 000 1.5h3.475a.75.75 0 00.75-.75V2.88a.75.75 0 00-1.5 0v1.836l-.217-.216z" clipRule="evenodd" />
+            </svg>
+          </button>
+          <p className="text-xs text-[#999]">
+            {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
