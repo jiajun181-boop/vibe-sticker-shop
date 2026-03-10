@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { isServiceFeeItem } from "@/lib/order-item-utils";
 
 /**
  * POST /api/admin/orders/create
@@ -98,8 +99,9 @@ export async function POST(request: NextRequest) {
         include: { items: true },
       });
 
-      // Create ProductionJob for each item
+      // Create ProductionJob for each item (skip service-fee items)
       for (const orderItem of newOrder.items) {
+        if (isServiceFeeItem(orderItem)) continue;
         await tx.productionJob.create({
           data: {
             orderItemId: orderItem.id,

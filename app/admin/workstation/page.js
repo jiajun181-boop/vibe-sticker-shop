@@ -8,6 +8,7 @@ import StatusBadge from "@/components/admin/StatusBadge";
 import { categorizeForTaskQueue, getExecutableAction, assessItem, READINESS } from "@/lib/admin/production-readiness";
 import ItemProductionPanel from "@/components/admin/ItemProductionPanel";
 import { formatCad } from "@/lib/product-helpers";
+import { isProductionItem } from "@/lib/order-item-utils";
 
 // ─── Single summary API fetch ────────────────────────────────────────────────
 
@@ -96,7 +97,8 @@ function PriorityBadge({ priority, t }) {
 
 function orderActionLabel(order, t) {
   // Try item-level assessment first for specific action labels
-  const items = order.items || [];
+  // Filter out service-fee items — they are not actionable production items
+  const items = (order.items || []).filter(isProductionItem);
   if (items.length > 0) {
     for (const item of items) {
       const assessment = assessItem(item, order.id);
@@ -119,7 +121,7 @@ function orderActionLabel(order, t) {
 // ─── Find worst item for deep-link ──────────────────────────────────────────
 
 function findWorstItemId(order) {
-  const items = order.items || [];
+  const items = (order.items || []).filter(isProductionItem);
   for (const item of items) {
     const assessment = assessItem(item, order.id);
     if (assessment.level === READINESS.BLOCKED) return item.id;

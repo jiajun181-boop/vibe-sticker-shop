@@ -149,7 +149,7 @@ export default function ProofManagerPage() {
   for (const p of allProofs) counts[p.status] = (counts[p.status] || 0) + 1;
 
   // Summary stat cards
-  const needsReviewCount = (counts["pending"] || 0) + (counts["revised"] || 0);
+  const needsReviewCount = counts["pending"] || 0;
   const now = new Date();
   const approvedTodayCount = allProofs.filter((p) => {
     if (p.status !== "approved") return false;
@@ -175,7 +175,10 @@ export default function ProofManagerPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) throw new Error(t("admin.tools.proof.errorUpdate"));
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || t("admin.tools.proof.errorUpdate"));
+      }
       await fetchOrderProofs();
       if (detailItem?.id === item.id) {
         setDetailItem((prev) => prev ? { ...prev, status: newStatus } : null);
@@ -223,8 +226,7 @@ export default function ProofManagerPage() {
         body: JSON.stringify({ imageUrl: uploaded.url, fileName: revisionFile.name || null, notes: t("admin.tools.proof.revisionNote").replace("{version}", item.version) }),
       });
       if (!res.ok) { const err = await res.json().catch(() => null); throw new Error(err?.error || t("admin.tools.proof.errorUploadRevision")); }
-      // Mark current proof as revised
-      await handleUpdateStatus(item, "revised");
+      // POST already auto-marks the old proof as revised — no separate PATCH needed
       setRevisionFile(null);
       setDetailItem(null);
       setActionSuccess(t("admin.tools.proof.successRevisionUploaded"));
@@ -603,7 +605,7 @@ export default function ProofManagerPage() {
 // ─── Proof Row ────────────────────────────────────────────────────────────────
 
 function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject, onReopen, fetchStandaloneJobs }) {
-  const isActionable = item.source === "order" && (item.status === "pending" || item.status === "revised");
+  const isActionable = item.source === "order" && item.status === "pending";
   const canReopen = item.source === "order" && (item.status === "approved" || item.status === "rejected");
   const customerLabel = item.customerName || item.customerEmail || "—";
 
@@ -750,7 +752,7 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject, onReopen
 // ─── Proof Detail Modal ───────────────────────────────────────────────────────
 
 function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, onReopen, revisionFile, onRevisionFileChange, onUploadRevision, revisionSaving, allOrderProofs, onSwitchProof, fetchStandaloneJobs }) {
-  const isActionable = item.source === "order" && (item.status === "pending" || item.status === "revised");
+  const isActionable = item.source === "order" && item.status === "pending";
   const canRevise = item.source === "order" && item.status === "rejected";
   const canReopen = item.source === "order" && (item.status === "approved" || item.status === "rejected");
 

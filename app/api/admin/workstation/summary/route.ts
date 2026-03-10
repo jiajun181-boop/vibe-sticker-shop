@@ -72,9 +72,9 @@ async function fetchStats() {
       },
     }),
 
-    // Proofs waiting for action (pending or revised)
+    // Proofs waiting for action (pending only — revised is historical)
     prisma.orderProof.count({
-      where: { status: { in: ["pending", "revised"] } },
+      where: { status: "pending" },
     }),
 
     // Tool jobs in last 7 days
@@ -168,7 +168,7 @@ async function fetchNeedsAttention() {
 
 async function fetchPendingProofs() {
   const proofs = await prisma.orderProof.findMany({
-    where: { status: { in: ["pending", "revised"] } },
+    where: { status: "pending" },
     select: {
       id: true,
       orderId: true,

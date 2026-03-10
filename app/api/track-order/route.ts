@@ -33,6 +33,8 @@ export async function POST(req: Request) {
         id: true,
         status: true,
         productionStatus: true,
+        subtotalAmount: true,
+        discountAmount: true,
         totalAmount: true,
         shippingAmount: true,
         taxAmount: true,
@@ -77,6 +79,8 @@ export async function POST(req: Request) {
     return NextResponse.json({
       id: order.id,
       status: order.status,
+      subtotalAmount: order.subtotalAmount,
+      discountAmount: order.discountAmount,
       totalAmount: order.totalAmount,
       shippingAmount: order.shippingAmount,
       taxAmount: order.taxAmount,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
+import { isProductionItem } from "@/lib/order-item-utils";
 
 /**
  * GET /api/account/orders/[id]/reorder
@@ -31,9 +32,12 @@ export async function GET(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
+    // Filter out service-fee items (e.g. design help) — only rebuild real products
+    const productItems = order.items.filter(isProductionItem);
+
     // Reconstruct cart items from order items
     const cartItems = await Promise.all(
-      order.items.map(async (item) => {
+      productItems.map(async (item) => {
         // Try to find the current product for latest price
         let currentProduct = null;
         if (item.productId) {

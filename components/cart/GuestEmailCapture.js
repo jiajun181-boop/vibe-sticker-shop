@@ -2,23 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { useAuthStatus } from "@/lib/useAuthStatus";
 
 const STORAGE_KEY = "vibe_guest_email_captured";
 
 export default function GuestEmailCapture() {
   const { t } = useTranslation();
+  const { isLoggedIn, isLoading } = useAuthStatus();
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("idle"); // idle | saving | done
+  const [status, setStatus] = useState("idle"); // idle | saving | done | error
 
   useEffect(() => {
-    // Only show for guests who haven't submitted yet
-    const isLoggedIn = document.cookie.includes("session=");
+    if (isLoading) return;
     const alreadyCaptured = localStorage.getItem(STORAGE_KEY);
     if (!isLoggedIn && !alreadyCaptured) {
       setVisible(true);
     }
-  }, []);
+  }, [isLoggedIn, isLoading]);
 
   if (!visible || status === "done") {
     if (status === "done") {
@@ -36,16 +37,27 @@ export default function GuestEmailCapture() {
     if (!email.trim() || !email.includes("@")) return;
     setStatus("saving");
     try {
-      await fetch("/api/newsletter/subscribe", {
+      const res = await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), source: "add-to-cart" }),
       });
-      localStorage.setItem(STORAGE_KEY, "1");
-      setStatus("done");
+      if (res.ok) {
+        localStorage.setItem(STORAGE_KEY, "1");
+        setStatus("done");
+      } else {
+        // 429/400/500 — don't mark as captured, let user retry
+        setStatus("error");
+      }
     } catch {
-      setStatus("idle");
+      setStatus("error");
     }
+  }
+
+  function handleEmailChange(e) {
+    setEmail(e.target.value);
+    // Clear error when user starts editing — they're about to retry
+    if (status === "error") setStatus("idle");
   }
 
   function handleDismiss() {
@@ -62,7 +74,7 @@ export default function GuestEmailCapture() {
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           placeholder={t("cart.emailCapture.placeholder")}
           className="w-full rounded-sm border border-[var(--color-gray-300)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-gray-500)]"
           required
@@ -75,6 +87,11 @@ export default function GuestEmailCapture() {
           {status === "saving" ? "..." : t("cart.emailCapture.cta")}
         </button>
       </form>
+      {status === "error" && (
+        <p className="mt-1 text-[10px] text-red-600">
+          {t("cart.emailCapture.error")}
+        </p>
+      )}
       <button
         type="button"
         onClick={handleDismiss}

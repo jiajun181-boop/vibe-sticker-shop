@@ -58,7 +58,7 @@ function getTrackingUrl(carrier, trackingNumber) {
   return builder ? builder(trackingNumber) : null;
 }
 
-import { getActionLabel } from "@/lib/timeline-labels";
+import { getCustomerTimelineLabel } from "@/lib/customer-labels";
 
 export default function TrackOrderClient() {
   const { t } = useTranslation();
@@ -228,12 +228,18 @@ export default function TrackOrderClient() {
               </div>
               {/* Breakdown */}
               <div className="mt-3 pt-3 border-t border-[var(--color-gray-100)] space-y-1 text-sm">
-                {(order.shippingAmount != null || order.taxAmount != null) && (
+                {(order.subtotalAmount != null) && (
                   <>
                     <div className="flex justify-between text-[var(--color-gray-500)]">
                       <span>{t("track.subtotal")}</span>
-                      <span>{formatCad(order.totalAmount - (order.shippingAmount || 0) - (order.taxAmount || 0))}</span>
+                      <span>{formatCad(order.subtotalAmount)}</span>
                     </div>
+                    {order.discountAmount > 0 && (
+                      <div className="flex justify-between text-emerald-600">
+                        <span>{t("track.discount")}</span>
+                        <span>-{formatCad(order.discountAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-[var(--color-gray-500)]">
                       <span>{t("track.shipping")}</span>
                       <span>{order.shippingAmount === 0 ? t("track.free") : formatCad(order.shippingAmount || 0)}</span>
@@ -265,7 +271,7 @@ export default function TrackOrderClient() {
                   <div key={event.id} className="flex items-start gap-2">
                     <span className="mt-1 h-2 w-2 rounded-full bg-[var(--color-gray-400)]" />
                     <div>
-                      <p className="text-sm text-[var(--color-gray-800)]">{getActionLabel(event.action)}</p>
+                      <p className="text-sm text-[var(--color-gray-800)]">{getCustomerTimelineLabel(t, event.action)}</p>
                       <p className="text-[11px] text-[var(--color-gray-500)]">
                         {new Date(event.createdAt).toLocaleDateString("en-CA", {
                           month: "short",

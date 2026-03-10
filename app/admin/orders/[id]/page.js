@@ -466,21 +466,13 @@ export default function OrderDetailPage() {
                     </div>
                   );
                 })()}
-                {(order.discountAmount > 0 && !order.coupon) && (
-                  <div className="flex justify-between">
-                    <span className="text-[#666]">{t("admin.orderDetail.discount")}</span>
-                    <span className="font-medium text-green-700">
-                      -{formatCad(order.discountAmount)}
-                    </span>
-                  </div>
-                )}
-                {order.coupon && (
+                {order.discountAmount > 0 && (
                   <div className="flex justify-between">
                     <span className="text-[#666]">
-                      {t("admin.orderDetail.coupon")} ({order.coupon.code})
+                      {order.coupon ? `${t("admin.orderDetail.coupon")} (${order.coupon.code})` : t("admin.orderDetail.discount")}
                     </span>
                     <span className="font-medium text-green-700">
-                      -{formatCad(order.coupon.discountAmount || 0)}
+                      -{formatCad(order.discountAmount)}
                     </span>
                   </div>
                 )}
@@ -968,10 +960,10 @@ function PrintInvoice({ order }) {
           <span>{t("admin.orderDetail.subtotal")}</span>
           <span>{formatCad(order.subtotalAmount)}</span>
         </div>
-        {order.coupon && (
+        {order.discountAmount > 0 && (
           <div className="flex justify-between text-green-700">
-            <span>{t("admin.orderDetail.coupon")} ({order.coupon.code})</span>
-            <span>-{formatCad(order.coupon.discountAmount || 0)}</span>
+            <span>{order.coupon ? `${t("admin.orderDetail.coupon")} (${order.coupon.code})` : t("admin.orderDetail.discount")}</span>
+            <span>-{formatCad(order.discountAmount)}</span>
           </div>
         )}
         <div className="flex justify-between">

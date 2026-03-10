@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
 
     // Build order items
     const orderItemsData = pricedItems.map(({ product, item, repriced }) => ({
-      productId: product!.id,
+      productId: product!.id as string | null,
       productName: product!.name || item.name,
       productType: product!.type,
       quantity: repriced.quantity,
@@ -175,11 +175,11 @@ export async function POST(req: NextRequest) {
     // Design help as separate order item (same pattern as Interac checkout)
     if (designHelpTotal > 0) {
       orderItemsData.push({
-        productId: pricedItems[0].product!.id,
+        productId: null,
         productName: designHelpCount > 1
           ? `Design Help Service (\u00d7${designHelpCount})`
           : "Design Help Service",
-        productType: pricedItems[0].product!.type,
+        productType: "service",
         quantity: 1,
         unitPrice: designHelpTotal,
         totalPrice: designHelpTotal,
@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
         customerEmail: email,
         customerName: contactName,
         userId: user?.id || null,
-        subtotalAmount: afterDiscount,
+        subtotalAmount,
         discountAmount,
         taxAmount,
         shippingAmount,

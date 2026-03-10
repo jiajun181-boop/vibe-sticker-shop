@@ -75,6 +75,14 @@ export async function POST(
       );
     }
 
+    // Require comment for rejection so production gets actionable feedback
+    if (action === "rejected" && (!comment || !comment.trim())) {
+      return NextResponse.json(
+        { error: "Please describe what changes you need so our team can update your proof." },
+        { status: 400 }
+      );
+    }
+
     // Verify order belongs to user (match userId or email)
     const order = await prisma.order.findUnique({
       where: { id },
@@ -98,6 +106,14 @@ export async function POST(
       return NextResponse.json(
         { error: "Proof not found for this order" },
         { status: 404 }
+      );
+    }
+
+    // Guard: only pending proofs can be approved/rejected
+    if (proof.status !== "pending") {
+      return NextResponse.json(
+        { error: `This proof has already been ${proof.status}. Please refresh the page to see the latest status.` },
+        { status: 409 }
       );
     }
 

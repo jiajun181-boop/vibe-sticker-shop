@@ -58,8 +58,11 @@ export async function POST(
       );
     }
 
-    // Verify order exists
-    const order = await prisma.order.findUnique({ where: { id } });
+    // Verify order exists (select productionStatus for lifecycle nudge)
+    const order = await prisma.order.findUnique({
+      where: { id },
+      select: { id: true, productionStatus: true },
+    });
     if (!order) {
       return NextResponse.json(
         { error: "Order not found" },
@@ -71,7 +74,7 @@ export async function POST(
     const latestProof = await prisma.orderProof.findFirst({
       where: { orderId: id },
       orderBy: { version: "desc" },
-      select: { version: true },
+      select: { id: true, version: true, status: true },
     });
     const nextVersion = (latestProof?.version ?? 0) + 1;
 
@@ -85,6 +88,33 @@ export async function POST(
         uploadedBy: auth.user?.name || auth.user?.email || "admin",
       },
     });
+
+    // Auto-mark previous proof as "revised" if it was rejected or pending
+    const actorName = auth.user?.name || auth.user?.email || "admin";
+    if (latestProof && (latestProof.status === "rejected" || latestProof.status === "pending")) {
+      await prisma.orderProof.update({
+        where: { id: latestProof.id },
+        data: { status: "revised" },
+      });
+
+      // Timeline entry for the superseded proof
+      await prisma.orderTimeline.create({
+        data: {
+          orderId: id,
+          action: "proof_revised",
+          details: `Proof v${latestProof.version} superseded by v${nextVersion}`,
+          actor: actorName,
+        },
+      });
+    }
+
+    // Nudge order to preflight if still at not_started
+    if (order.productionStatus === "not_started") {
+      await prisma.order.update({
+        where: { id },
+        data: { productionStatus: "preflight" },
+      });
+    }
 
     // Add timeline entry
     await prisma.orderTimeline.create({

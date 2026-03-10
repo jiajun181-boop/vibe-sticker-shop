@@ -6,6 +6,7 @@ import { useCartStore } from "@/lib/store";
 import { trackPurchase } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/product-helpers";
+import { useAuthStatus } from "@/lib/useAuthStatus";
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_ATTEMPTS = 30;
@@ -62,6 +63,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
   const [lineItems, setLineItems] = useState([]);
   const [retryToken, setRetryToken] = useState(0);
   const [orderId, setOrderId] = useState("");
+  const { isLoggedIn } = useAuthStatus();
 
   const statusCopy = useMemo(() => buildStatusCopy(t, status, reason), [t, status, reason]);
   const timelinePlan = useMemo(() => {
@@ -295,27 +297,29 @@ export default function SuccessClient({ sessionId, statusToken }) {
           <span className="font-semibold">{t("success.qualityGuarantee")}</span>
         </div>
 
-        {/* Referral CTA */}
-        <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <svg className="mt-0.5 h-5 w-5 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-            </svg>
-            <div>
-              <p className="text-sm font-semibold text-indigo-800">{t("success.referralTitle")}</p>
-              <p className="mt-0.5 text-xs text-indigo-700">{t("success.referralDesc")}</p>
-              <Link
-                href="/account"
-                className="mt-2 inline-block rounded-lg bg-indigo-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-indigo-700"
-              >
-                {t("success.referralCta")}
-              </Link>
+        {/* Referral CTA — only for logged-in users who can access /account */}
+        {isLoggedIn && (
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <svg className="mt-0.5 h-5 w-5 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-indigo-800">{t("success.referralTitle")}</p>
+                <p className="mt-0.5 text-xs text-indigo-700">{t("success.referralDesc")}</p>
+                <Link
+                  href="/account"
+                  className="mt-2 inline-block rounded-lg bg-indigo-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-indigo-700"
+                >
+                  {t("success.referralCta")}
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Reorder CTA */}
-        {orderId && (
+        {/* Reorder CTA — logged-in only (copy references "your account") */}
+        {isLoggedIn && orderId && (
           <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 mb-6">
             <div className="flex items-start gap-3">
               <svg className="mt-0.5 h-5 w-5 shrink-0 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -337,7 +341,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
 
         <div className="space-y-3">
           <Link
-            href="/track-order"
+            href={orderId ? `/track-order?order=${orderId}` : "/track-order"}
             className="block w-full rounded-xl bg-[var(--color-gray-900)] px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] transition-colors hover:bg-black"
           >
             {t("success.trackOrder")}

@@ -91,8 +91,9 @@ export async function POST(req: Request) {
 
     // Build order items data
     const orderItemsData = pricedItems.map((item) => ({
-      productId: item.productId,
+      productId: item.productId as string | null,
       productName: item.productName,
+      productType: "custom" as string,
       quantity: item.quantity,
       unitPrice: item.unitAmount,
       totalPrice: item.lineTotal,
@@ -102,8 +103,9 @@ export async function POST(req: Request) {
     // Add design help as a separate order item (if applicable)
     if (designHelpTotal > 0) {
       orderItemsData.push({
-        productId: pricedItems[0].productId, // associate with first item
+        productId: null,
         productName: "Design Help Service",
+        productType: "service",
         quantity: 1,
         unitPrice: designHelpTotal,
         totalPrice: designHelpTotal,
