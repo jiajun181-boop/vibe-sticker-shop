@@ -97,6 +97,21 @@ function modelLabel(modelId) {
   return m ? m.label : modelId || "stamp";
 }
 
+// M2 Change 3: Smarter download filename
+function buildFileName(text, modelId) {
+  const firstLine = (text || "").split("\n")[0] || "";
+  const sanitized = firstLine.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 20);
+  const prefix = sanitized || "stamp";
+  return `stamp-${prefix}-${modelId}.png`;
+}
+
+// M2 Change 4: Check if a date is today
+function isToday(dateString) {
+  const d = new Date(dateString);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}
+
 export default function StampStudioPageWrapper() {
   return (
     <Suspense fallback={<div className="flex h-64 items-center justify-center text-sm text-[#999]">Loading…</div>}>
@@ -131,6 +146,8 @@ function StampStudioPage() {
   const [detailJob, setDetailJob] = useState(null);
   const [hasEditorContent, setHasEditorContent] = useState(false);
   const editorWrapRef = useRef(null);
+  // M2 Change 2: Track active preset label for context bar
+  const [activePresetLabel, setActivePresetLabel] = useState(null);
 
   const model = STAMP_MODELS.find((entry) => entry.id === modelId) || STAMP_MODELS[0];
 
@@ -151,6 +168,29 @@ function StampStudioPage() {
   useEffect(() => {
     fetchJobs();
   }, [fetchJobs]);
+
+  // M2 Change 1: Unsaved-changes browser guard
+  useEffect(() => {
+    if (!hasEditorContent) return;
+    const handler = (e) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasEditorContent]);
+
+  // M2 Change 6: Keyboard shortcuts (Ctrl+S save, Ctrl+D download)
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        handleSave();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+        e.preventDefault();
+        handleDownload();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  });
 
   // Fetch item context when opened from an order with a specific item
   useEffect(() => {
@@ -183,6 +223,11 @@ function StampStudioPage() {
   }
 
   function handleReopen(job) {
+    // M2 Change 1: Check unsaved content before reopening
+    if (hasEditorContent) {
+      const ok = window.confirm(t("admin.tools.stamp.discardConfirm"));
+      if (!ok) return;
+    }
     const data = job.inputData || {};
     const targetModelId = STAMP_MODELS.find((m) => m.id === data.model) ? data.model : STAMP_MODELS[0].id;
     setModelId(targetModelId);
@@ -197,6 +242,8 @@ function StampStudioPage() {
     setReopenedFrom(job);
     setDetailJob(null);
     setHasEditorContent(false);
+    // M2 Change 2: Clear preset label on reopen
+    setActivePresetLabel(null);
     setEditorKey((prev) => prev + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -218,6 +265,8 @@ function StampStudioPage() {
     setStampConfig({});
     setReopenedFrom(null);
     setHasEditorContent(false);
+    // M2 Change 2: Set active preset label
+    setActivePresetLabel(t(preset.labelKey));
     setEditorKey((prev) => prev + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -254,17 +303,19 @@ function StampStudioPage() {
     }
   }
 
+  // M2 Change 3: Use smarter filename
   async function handleDownload() {
     const blob = await exportCanvasBlob();
     if (!blob) return;
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `stamp-${modelId}-${Date.now()}.png`;
+    anchor.download = buildFileName(stampConfig.text || initialText, modelId);
     anchor.click();
     URL.revokeObjectURL(url);
   }
 
+  // M2 Change 3: Use smarter filename
   async function handleSave() {
     const blob = await exportCanvasBlob();
     if (!blob) return;
@@ -273,7 +324,7 @@ function StampStudioPage() {
     setSaveMsg("");
 
     try {
-      const fileName = `stamp-${modelId}-${Date.now()}.png`;
+      const fileName = buildFileName(stampConfig.text || initialText, modelId);
       const uploaded = await uploadDesignSnapshot(blob, fileName);
 
       const res = await fetch("/api/admin/tools/jobs", {
@@ -316,6 +367,19 @@ function StampStudioPage() {
       setSaving(false);
     }
   }
+
+  // M2 Change 2: Derive context bar label
+  const contextLabel = activePresetLabel
+    ? `${t("admin.tools.stamp.contextFrom")}: ${activePresetLabel}`
+    : reopenedFrom
+    ? t("admin.tools.stamp.contextReopened")
+    : hasEditorContent
+    ? t("admin.tools.stamp.contextCustom")
+    : null;
+
+  // M2 Change 4: Split jobs into today and earlier
+  const todayJobs = jobs.filter((j) => isToday(j.createdAt));
+  const earlierJobs = jobs.filter((j) => !isToday(j.createdAt));
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -426,7 +490,7 @@ function StampStudioPage() {
           <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.stamp.modelLabel")}</label>
           <select
             value={modelId}
-            onChange={(e) => setModelId(e.target.value)}
+            onChange={(e) => { setModelId(e.target.value); setActivePresetLabel(null); }}
             className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           >
             {STAMP_MODELS.map((entry) => (
@@ -449,12 +513,21 @@ function StampStudioPage() {
       </div>
 
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 sm:p-6" ref={editorWrapRef}>
-        {/* Current task context */}
+        {/* M2 Change 2: Enhanced current task context bar */}
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-[#111]">{t("admin.tools.stamp.currentTask")}</span>
             <span className="rounded-[2px] bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-medium text-[#666]">{modelLabel(modelId)}</span>
             <span className="rounded-[2px] bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-medium text-[#666]">{model.shape === "round" ? t("admin.tools.stamp.shapeRound") : t("admin.tools.stamp.shapeRectangle")}</span>
+            {contextLabel && (
+              <span className="rounded-[2px] bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">{contextLabel}</span>
+            )}
+            {hasEditorContent && !saving && (
+              <span className="inline-flex items-center gap-1 rounded-[2px] bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                {t("admin.tools.stamp.unsaved")}
+              </span>
+            )}
           </div>
           {orderId && (
             <span className="text-[10px] text-[#999]">{t("admin.common.order")}: #{orderId.slice(0, 8)}</span>
@@ -507,6 +580,8 @@ function StampStudioPage() {
             {saveMsg}
           </span>
         ) : null}
+        {/* M2 Change 6: Keyboard shortcut hints */}
+        <span className="text-[10px] text-[#bbb]">{t("admin.tools.stamp.shortcutHint")}</span>
       </div>
 
       {/* ── Post-save guidance (when saved with order link) ──────────── */}
@@ -544,22 +619,50 @@ function StampStudioPage() {
           <div className="px-5 py-8 text-center text-sm text-[#999]">{t("admin.tools.loading")}</div>
         ) : jobs.length === 0 ? (
           <div className="px-5 py-8 text-center">
+            {/* M2 Change 7: Getting Started guide when no jobs and no editor content */}
+            {!hasEditorContent && (
+              <div className="mx-auto mb-4 max-w-sm space-y-2">
+                <p className="text-xs font-bold text-[#333]">{t("admin.tools.stamp.gettingStarted")}</p>
+                <div className="flex items-start gap-2 text-left">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">1</span>
+                  <p className="text-xs text-[#666]">{t("admin.tools.stamp.guideStep1")}</p>
+                </div>
+                <div className="flex items-start gap-2 text-left">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">2</span>
+                  <p className="text-xs text-[#666]">{t("admin.tools.stamp.guideStep2")}</p>
+                </div>
+                <div className="flex items-start gap-2 text-left">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">3</span>
+                  <p className="text-xs text-[#666]">{t("admin.tools.stamp.guideStep3")}</p>
+                </div>
+              </div>
+            )}
             <p className="text-sm text-[#999]">{t("admin.tools.stamp.noJobs")}</p>
             <p className="mt-1 text-xs text-[#bbb]">{t("admin.tools.stamp.noJobsHint")}</p>
           </div>
         ) : (
           <div className="divide-y divide-[#e0e0e0]">
-            {jobs.map((job) => (
-              <StampJobRow
-                key={job.id}
-                job={job}
-                t={t}
-                onPreview={setPreviewUrl}
-                onDetail={setDetailJob}
-                onReopen={handleReopen}
-                onDuplicate={handleDuplicate}
-              />
-            ))}
+            {/* M2 Change 4: Today / Earlier grouping */}
+            {todayJobs.length > 0 && (
+              <>
+                <div className="px-5 py-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">{t("admin.tools.stamp.groupToday")}</span>
+                </div>
+                {todayJobs.map((job) => (
+                  <StampJobRow key={job.id} job={job} t={t} onPreview={setPreviewUrl} onDetail={setDetailJob} onReopen={handleReopen} onDuplicate={handleDuplicate} fetchJobs={fetchJobs} />
+                ))}
+              </>
+            )}
+            {earlierJobs.length > 0 && (
+              <>
+                <div className="px-5 py-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">{t("admin.tools.stamp.groupEarlier")}</span>
+                </div>
+                {earlierJobs.map((job) => (
+                  <StampJobRow key={job.id} job={job} t={t} onPreview={setPreviewUrl} onDetail={setDetailJob} onReopen={handleReopen} onDuplicate={handleDuplicate} fetchJobs={fetchJobs} />
+                ))}
+              </>
+            )}
           </div>
         )}
       </div>
@@ -597,7 +700,7 @@ function StampStudioPage() {
 
 // ─── Stamp Job Row ────────────────────────────────────────────────────────────
 
-function StampJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate }) {
+function StampJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate, fetchJobs }) {
   const data = job.inputData || {};
   const output = job.outputData || {};
   const shapeLabel = output.shape === "round" ? t("admin.tools.stamp.shapeRound") : output.shape === "rect" ? t("admin.tools.stamp.shapeRectangle") : "";
@@ -607,6 +710,31 @@ function StampJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate }) {
     ? `${output.widthIn}" × ${output.heightIn}"`
     : "";
   const textPreview = data.text ? (data.text.length > 30 ? data.text.slice(0, 30) + "…" : data.text) : null;
+
+  // M2 Change 5: Inline notes editing
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [noteValue, setNoteValue] = useState(job.notes || "");
+  const [noteSaving, setNoteSaving] = useState(false);
+  const noteInputRef = useRef(null);
+
+  useEffect(() => {
+    if (editingNotes && noteInputRef.current) noteInputRef.current.focus();
+  }, [editingNotes]);
+
+  async function saveNotes() {
+    if (noteValue === (job.notes || "")) { setEditingNotes(false); return; }
+    setNoteSaving(true);
+    try {
+      const res = await fetch(`/api/admin/tools/jobs/${job.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: noteValue || null }),
+      });
+      if (res.ok) fetchJobs();
+    } catch { /* non-critical */ }
+    setNoteSaving(false);
+    setEditingNotes(false);
+  }
 
   return (
     <div className="flex flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -637,7 +765,28 @@ function StampJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate }) {
           {job.orderId && <><span>·</span><span>{t("admin.common.order")}: #{job.orderId.slice(0, 8)}</span></>}
         </div>
         {textPreview && <p className="mt-0.5 truncate text-xs italic text-[#777]">&ldquo;{textPreview}&rdquo;</p>}
-        {job.notes && !textPreview && <p className="mt-0.5 truncate text-xs text-[#777]">{job.notes}</p>}
+        {/* M2 Change 5: Notes with inline editing */}
+        <div className="mt-0.5 flex items-center gap-1">
+          {editingNotes ? (
+            <input
+              ref={noteInputRef}
+              type="text"
+              value={noteValue}
+              onChange={(e) => setNoteValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") saveNotes(); if (e.key === "Escape") setEditingNotes(false); }}
+              onBlur={saveNotes}
+              disabled={noteSaving}
+              className="w-full max-w-xs rounded-[2px] border border-[#d0d0d0] px-1.5 py-0.5 text-xs text-[#111] outline-none focus:border-black"
+            />
+          ) : (
+            <>
+              {(job.notes && !textPreview) && <p className="truncate text-xs text-[#777]">{job.notes}</p>}
+              <button type="button" onClick={() => { setNoteValue(job.notes || ""); setEditingNotes(true); }} className="shrink-0 text-[#bbb] hover:text-[#666]" title={t("admin.tools.stamp.editNotes")}>
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" /></svg>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Actions — prominent, grouped by priority */}

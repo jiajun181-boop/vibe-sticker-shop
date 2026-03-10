@@ -141,6 +141,15 @@ export default function ProofManagerPage() {
   const counts = {};
   for (const p of allProofs) counts[p.status] = (counts[p.status] || 0) + 1;
 
+  // M2 Change 1: Summary stat cards
+  const needsReviewCount = (counts["pending"] || 0) + (counts["revised"] || 0);
+  const now = new Date();
+  const approvedTodayCount = allProofs.filter((p) => {
+    if (p.status !== "approved") return false;
+    const d = new Date(p.createdAt);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  }).length;
+
   // ── Actions ──
   const [actionError, setActionError] = useState(null);
 
@@ -164,6 +173,23 @@ export default function ProofManagerPage() {
     } finally {
       setUpdatingId(null);
     }
+  }
+
+  // M2 Change 3: Approve/reject with confirmation dialogs
+  function handleApproveWithConfirm(item) {
+    if (!window.confirm(t("admin.tools.proof.confirmApprove"))) return;
+    handleUpdateStatus(item, "approved");
+  }
+
+  function handleRejectWithConfirm(item) {
+    if (!window.confirm(t("admin.tools.proof.confirmReject"))) return;
+    handleUpdateStatus(item, "rejected");
+  }
+
+  // M2 Change 4: Reopen action
+  function handleReopenWithConfirm(item) {
+    if (!window.confirm(t("admin.tools.proof.confirmReopen"))) return;
+    handleUpdateStatus(item, "pending");
   }
 
   async function handleUploadRevision(item) {
@@ -301,6 +327,28 @@ export default function ProofManagerPage() {
         </div>
       )}
 
+      {/* M2 Change 1: Summary stat cards */}
+      {!loading && (
+        <div className="grid grid-cols-3 gap-3">
+          <button
+            type="button"
+            onClick={() => setStatusFilter("pending")}
+            className={`rounded-[3px] border p-3 text-left transition-colors ${needsReviewCount > 0 ? "border-yellow-300 bg-yellow-50 hover:border-yellow-400" : "border-[#e0e0e0] bg-white hover:border-[#ccc]"}`}
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">{t("admin.tools.proof.statNeedsReview")}</p>
+            <p className={`text-2xl font-bold ${needsReviewCount > 0 ? "text-yellow-700" : "text-[#111]"}`}>{needsReviewCount}</p>
+          </button>
+          <div className={`rounded-[3px] border p-3 ${approvedTodayCount > 0 ? "border-green-200 bg-green-50" : "border-[#e0e0e0] bg-white"}`}>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">{t("admin.tools.proof.statApprovedToday")}</p>
+            <p className={`text-2xl font-bold ${approvedTodayCount > 0 ? "text-green-700" : "text-[#111]"}`}>{approvedTodayCount}</p>
+          </div>
+          <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">{t("admin.tools.proof.statTotal")}</p>
+            <p className="text-2xl font-bold text-[#111]">{allProofs.length}</p>
+          </div>
+        </div>
+      )}
+
       {/* Status Filter Tabs */}
       <div className="flex gap-1.5 overflow-x-auto">
         {STATUS_FILTERS.map((f) => {
@@ -326,17 +374,36 @@ export default function ProofManagerPage() {
           {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-[3px] bg-[#f0f0f0]" />)}
         </div>
       ) : filteredProofs.length === 0 ? (
+        /* M2 Change 2: Filter-aware empty states */
         <div className="py-12 text-center">
-          <p className="text-sm text-[#999]">{t("admin.tools.proof.noProofs")}</p>
-          <p className="mt-1 text-xs text-[#bbb]">{t("admin.tools.proof.noProofsHint")}</p>
-          <div className="mt-4 flex justify-center gap-2">
-            <button type="button" onClick={() => setOrderProofModal(true)} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]">
-              {t("admin.tools.proof.uploadOrderProof")}
-            </button>
-            <button type="button" onClick={() => setStandaloneModal(true)} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-semibold text-[#666] hover:border-black hover:text-black">
-              {t("admin.tools.proof.standaloneProof")}
-            </button>
-          </div>
+          {statusFilter === "pending" ? (
+            <>
+              <svg className="mx-auto h-8 w-8 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <p className="mt-2 text-sm font-medium text-green-700">{t("admin.tools.proof.emptyPending")}</p>
+            </>
+          ) : statusFilter === "rejected" ? (
+            <p className="text-sm text-[#999]">{t("admin.tools.proof.emptyRejected")}</p>
+          ) : statusFilter === "standalone" ? (
+            <>
+              <p className="text-sm text-[#999]">{t("admin.tools.proof.emptyStandalone")}</p>
+              <button type="button" onClick={() => setStandaloneModal(true)} className="mt-3 rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-semibold text-[#666] hover:border-black hover:text-black">
+                {t("admin.tools.proof.standaloneProof")}
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-[#999]">{t("admin.tools.proof.noProofs")}</p>
+              <p className="mt-1 text-xs text-[#bbb]">{t("admin.tools.proof.noProofsHint")}</p>
+              <div className="mt-4 flex justify-center gap-2">
+                <button type="button" onClick={() => setOrderProofModal(true)} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]">
+                  {t("admin.tools.proof.uploadOrderProof")}
+                </button>
+                <button type="button" onClick={() => setStandaloneModal(true)} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-semibold text-[#666] hover:border-black hover:text-black">
+                  {t("admin.tools.proof.standaloneProof")}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
@@ -347,8 +414,9 @@ export default function ProofManagerPage() {
               t={t}
               updatingId={updatingId}
               onDetail={setDetailItem}
-              onApprove={(it) => handleUpdateStatus(it, "approved")}
-              onReject={(it) => handleUpdateStatus(it, "rejected")}
+              onApprove={handleApproveWithConfirm}
+              onReject={handleRejectWithConfirm}
+              onReopen={handleReopenWithConfirm}
             />
           ))}
         </div>
@@ -361,12 +429,15 @@ export default function ProofManagerPage() {
           t={t}
           updatingId={updatingId}
           onClose={() => { setDetailItem(null); setRevisionFile(null); }}
-          onApprove={(it) => handleUpdateStatus(it, "approved")}
-          onReject={(it) => handleUpdateStatus(it, "rejected")}
+          onApprove={handleApproveWithConfirm}
+          onReject={handleRejectWithConfirm}
+          onReopen={handleReopenWithConfirm}
           revisionFile={revisionFile}
           onRevisionFileChange={setRevisionFile}
           onUploadRevision={handleUploadRevision}
           revisionSaving={revisionSaving}
+          allOrderProofs={orderProofs}
+          onSwitchProof={setDetailItem}
         />
       ) : null}
 
@@ -433,8 +504,9 @@ export default function ProofManagerPage() {
 
 // ─── Proof Row ────────────────────────────────────────────────────────────────
 
-function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
+function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject, onReopen }) {
   const isActionable = item.source === "order" && (item.status === "pending" || item.status === "revised");
+  const canReopen = item.source === "order" && (item.status === "approved" || item.status === "rejected");
   const customerLabel = item.customerName || item.customerEmail || "—";
 
   return (
@@ -454,7 +526,10 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
           {item.source === "order" ? (
             <span className="text-sm font-semibold text-[#111]">{t("admin.tools.proof.proofVersion").replace("{version}", item.version)}</span>
           ) : (
-            <span className="text-sm font-semibold text-[#111]">{t("admin.tools.proof.standaloneLabel")}</span>
+            /* M2 Change 5: Description label for standalone proofs */
+            <span className="text-sm font-semibold text-[#111]">
+              {item.description ? `${t("admin.tools.proof.standaloneLabel")} — ${item.description.length > 40 ? item.description.slice(0, 40) + "…" : item.description}` : t("admin.tools.proof.standaloneLabel")}
+            </span>
           )}
           <StatusBadge status={item.status} t={t} />
           {item.source === "order" && (
@@ -466,7 +541,6 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
           <span>·</span>
           <span>{timeAgo(item.createdAt, t)}</span>
           {item.uploadedBy ? <><span>·</span><span>{item.uploadedBy}</span></> : null}
-          {item.description ? <><span>·</span><span className="truncate max-w-[200px]">{item.description}</span></> : null}
         </div>
         {item.customerComment ? <p className="mt-1 truncate text-xs italic text-[#555]">&ldquo;{item.customerComment}&rdquo;</p> : null}
       </div>
@@ -482,6 +556,12 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
               {t("admin.tools.proof.reject")}
             </button>
           </>
+        )}
+        {/* M2 Change 4: Reopen link for approved/rejected proofs */}
+        {canReopen && (
+          <button type="button" onClick={() => onReopen(item)} disabled={updatingId === item.id} className="text-[11px] font-medium text-[#999] underline hover:text-[#111] disabled:opacity-50">
+            {t("admin.tools.proof.reopenAction")}
+          </button>
         )}
         <button type="button" onClick={() => onDetail(item)} className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-[11px] font-medium text-[#666] hover:border-black hover:text-black">
           {t("admin.tools.proof.openProof")}
@@ -503,9 +583,15 @@ function ProofRow({ item, t, updatingId, onDetail, onApprove, onReject }) {
 
 // ─── Proof Detail Modal ───────────────────────────────────────────────────────
 
-function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, revisionFile, onRevisionFileChange, onUploadRevision, revisionSaving }) {
+function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, onReopen, revisionFile, onRevisionFileChange, onUploadRevision, revisionSaving, allOrderProofs, onSwitchProof }) {
   const isActionable = item.source === "order" && (item.status === "pending" || item.status === "revised");
   const canRevise = item.source === "order" && item.status === "rejected";
+  const canReopen = item.source === "order" && (item.status === "approved" || item.status === "rejected");
+
+  // M2 Change 6: Version history — find all proofs for same order
+  const versionHistory = item.source === "order" && item.orderId
+    ? (allOrderProofs || []).filter((p) => p.orderId === item.orderId).sort((a, b) => (a.version || 0) - (b.version || 0))
+    : [];
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60" onClick={onClose}>
@@ -558,6 +644,13 @@ function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, r
                 </div>
               )}
 
+              {/* M2 Change 4: Reopen button for approved/rejected proofs */}
+              {canReopen && (
+                <button type="button" onClick={() => onReopen(item)} disabled={updatingId === item.id} className="w-full rounded-[3px] border border-[#e0e0e0] py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black disabled:opacity-50">
+                  {t("admin.tools.proof.reopenAction")}
+                </button>
+              )}
+
               {/* Upload revision for rejected proofs */}
               {canRevise && (
                 <div className="rounded-[3px] border-2 border-amber-300 bg-amber-50 p-3 space-y-2">
@@ -608,6 +701,29 @@ function ProofDetailModal({ item, t, updatingId, onClose, onApprove, onReject, r
                 <div className="rounded-[3px] border border-blue-200 bg-blue-50 p-3">
                   <p className="text-[11px] font-bold text-blue-800">{t("admin.tools.proof.customerFeedback")}</p>
                   <p className="mt-1 text-sm italic text-blue-700">&ldquo;{item.customerComment}&rdquo;</p>
+                </div>
+              )}
+
+              {/* M2 Change 6: Version History */}
+              {versionHistory.length > 1 && (
+                <div className="space-y-2 rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">{t("admin.tools.proof.versionHistory")}</p>
+                  <div className="space-y-1">
+                    {versionHistory.map((v) => (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => onSwitchProof(v)}
+                        className={`flex w-full items-center justify-between rounded-[2px] px-2 py-1.5 text-left text-xs transition-colors ${v.id === item.id ? "bg-black text-white" : "hover:bg-[#e8e8e8] text-[#666]"}`}
+                      >
+                        <span className="font-medium">v{v.version}</span>
+                        <span className="flex items-center gap-1.5">
+                          <StatusBadge status={v.status} t={t} />
+                          <span className={`text-[10px] ${v.id === item.id ? "text-white/70" : "text-[#999]"}`}>{timeAgo(v.createdAt, t)}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
