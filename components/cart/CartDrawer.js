@@ -9,6 +9,7 @@ import { PaymentBadges } from "@/components/TrustBadges";
 import { trackBeginCheckout } from "@/lib/analytics";
 import useFocusTrap from "@/lib/useFocusTrap";
 import CartUpsell from "@/components/cart/CartUpsell";
+import GuestEmailCapture from "@/components/cart/GuestEmailCapture";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { isOversizedProduct } from "@/lib/pickup-hints";
 
@@ -169,9 +170,21 @@ export default function CartDrawer() {
   const checkoutInFlightRef = useRef(false);
   const lastCheckoutAtRef = useRef(0);
   const asideRef = useRef(null);
+  const prevCartLenRef = useRef(cart.length);
+  const [isFirstAdd, setIsFirstAdd] = useState(false);
   useFocusTrap(asideRef, isOpen);
 
   useEffect(() => setMounted(true), []);
+
+  // Detect first add-to-cart (0→1+)
+  useEffect(() => {
+    if (prevCartLenRef.current === 0 && cart.length > 0) {
+      setIsFirstAdd(true);
+    } else if (cart.length > prevCartLenRef.current && prevCartLenRef.current > 0) {
+      setIsFirstAdd(false);
+    }
+    prevCartLenRef.current = cart.length;
+  }, [cart.length]);
 
   useEffect(() => {
     if (isOpen) {
@@ -559,7 +572,8 @@ export default function CartDrawer() {
             )}
           </div>
 
-          {cart.length > 0 && <CartUpsell />}
+          {cart.length > 0 && <CartUpsell isFirstAdd={isFirstAdd} />}
+          {cart.length > 0 && isFirstAdd && <GuestEmailCapture />}
 
           {cart.length > 0 && (
             <div className="space-y-3 border-t border-[var(--color-gray-200)] px-5 py-4">

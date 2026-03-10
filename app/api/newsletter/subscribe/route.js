@@ -19,7 +19,7 @@ export async function POST(req) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const validSources = ["footer", "exit-popup", "checkout"];
+    const validSources = ["footer", "exit-popup", "checkout", "add-to-cart", "quote-followup", "save-for-later", "reorder-reminder"];
     const safeSource = validSources.includes(source) ? source : "footer";
 
     // Upsert — don't error if already subscribed

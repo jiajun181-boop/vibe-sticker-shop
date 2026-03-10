@@ -6,69 +6,62 @@ import { showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getProductImage } from "@/lib/product-image";
 import { formatCad } from "@/lib/product-helpers";
+import { getUpsellSuggestions } from "@/lib/storefront/upsell-rules";
 
-// Complementary product rules: category -> suggested categories
-// Only use the 7 actual DB categories
-const COMPLEMENT_RULES = {
-  "marketing-business-print": ["stickers-labels-decals", "banners-displays"],
-  "signs-rigid-boards": ["banners-displays", "stickers-labels-decals"],
-  "banners-displays": ["signs-rigid-boards", "stickers-labels-decals"],
-  "stickers-labels-decals": ["marketing-business-print", "windows-walls-floors"],
-  "vehicle-graphics-fleet": ["stickers-labels-decals", "windows-walls-floors"],
-  "windows-walls-floors": ["vehicle-graphics-fleet", "signs-rigid-boards"],
-  "canvas-prints": ["signs-rigid-boards", "banners-displays"],
-};
-
-export default function CartUpsell() {
+export default function CartUpsell({ isFirstAdd = false }) {
   const cart = useCartStore((s) => s.cart);
   const addItem = useCartStore((s) => s.addItem);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [suggestions, setSuggestions] = useState([]);
+  const [reasonMap, setReasonMap] = useState({});
 
   useEffect(() => {
     if (cart.length === 0) {
       setSuggestions([]);
+      setReasonMap({});
       return;
     }
 
-    const cartSlugs = new Set(cart.map((item) => item.slug));
-    const cartCategories = new Set(
-      cart.map((item) => item.meta?.category || item.options?.category || "").filter(Boolean)
-    );
+    const cartSlugs = cart.map((item) => item.slug);
+    const lastItem = cart[cart.length - 1];
+    const lastSlug = lastItem?.slug || "";
+    const lastCategory = lastItem?.meta?.category || lastItem?.options?.category || "";
 
-    // Build list of suggested categories
-    const suggestCategories = new Set();
-    for (const cat of cartCategories) {
-      const complements = COMPLEMENT_RULES[cat];
-      if (complements) {
-        for (const c of complements) suggestCategories.add(c);
-      }
+    const rules = getUpsellSuggestions(lastSlug, lastCategory, cartSlugs, 3);
+    if (rules.length === 0) {
+      setSuggestions([]);
+      setReasonMap({});
+      return;
     }
 
-    // Fetch suggestions from API
-    if (suggestCategories.size === 0) return;
+    // Build reason map keyed by slug
+    const reasons = {};
+    for (const r of rules) {
+      reasons[r.slug] = locale === "zh" ? r.reason_zh : r.reason_en;
+    }
+    setReasonMap(reasons);
 
     const params = new URLSearchParams();
-    params.set("categories", [...suggestCategories].join(","));
-    params.set("exclude", [...cartSlugs].join(","));
+    params.set("slugs", rules.map((r) => r.slug).join(","));
     params.set("limit", "3");
 
     fetch(`/api/products/suggestions?${params}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setSuggestions(Array.isArray(data) ? data.slice(0, 3) : []))
       .catch(() => setSuggestions([]));
-  }, [cart]);
+  }, [cart, locale]);
 
   if (suggestions.length === 0) return null;
 
   return (
     <div className="border-t border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-5 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
-        {t("cart.youMayAlsoNeed")}
+        {isFirstAdd ? t("cart.upsell.firstAddTitle") : t("cart.upsell.title")}
       </p>
       <div className="mt-3 space-y-2">
         {suggestions.map((item) => {
           const imageSrc = getProductImage(item);
+          const reason = reasonMap[item.slug];
           return (
           <div
             key={item.slug}
@@ -79,6 +72,9 @@ export default function CartUpsell() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-semibold text-[var(--color-gray-900)]">{item.name}</p>
+              {reason && (
+                <p className="truncate text-[10px] text-[var(--color-gray-500)]">{reason}</p>
+              )}
               <p className="text-[11px] text-[var(--color-gray-500)]">{formatCad(item.basePrice)}</p>
             </div>
             <button

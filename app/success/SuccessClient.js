@@ -61,6 +61,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
   const [amountTotal, setAmountTotal] = useState(0);
   const [lineItems, setLineItems] = useState([]);
   const [retryToken, setRetryToken] = useState(0);
+  const [orderId, setOrderId] = useState("");
 
   const statusCopy = useMemo(() => buildStatusCopy(t, status, reason), [t, status, reason]);
   const timelinePlan = useMemo(() => {
@@ -104,6 +105,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
           setCustomerEmail(data.customerEmail || "");
           setAmountTotal(data.amountTotal || 0);
           setLineItems(Array.isArray(data.lineItems) ? data.lineItems : []);
+          if (data.orderId) setOrderId(String(data.orderId));
           return;
         }
 
@@ -311,6 +313,27 @@ export default function SuccessClient({ sessionId, statusToken }) {
             </div>
           </div>
         </div>
+
+        {/* Reorder CTA */}
+        {orderId && (
+          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <svg className="mt-0.5 h-5 w-5 shrink-0 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.182" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-sky-800">{t("success.reorderTitle")}</p>
+                <p className="mt-0.5 text-xs text-sky-700">{t("success.reorderDesc")}</p>
+                <Link
+                  href={`/account/orders/${orderId}`}
+                  className="mt-2 inline-block rounded-lg bg-sky-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-sky-700"
+                >
+                  {t("success.reorderCta")}
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-3">
           <Link
