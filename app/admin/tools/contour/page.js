@@ -35,6 +35,23 @@ function useIsMobile() {
   return mobile;
 }
 
+/** Same-day comparison for Today/Earlier grouping. */
+function isToday(dateString) {
+  const d = new Date(dateString);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}
+
+/** Build a descriptive download filename from the artwork name. */
+function buildContourFileName(imageName, suffix, ext) {
+  const base = (imageName || "artwork")
+    .replace(/\.[^.]+$/, "")         // strip extension
+    .replace(/[^a-zA-Z0-9_-]/g, "-") // sanitize
+    .replace(/-+/g, "-")             // collapse dashes
+    .slice(0, 30);                   // max length
+  return `${base}-${suffix}.${ext}`;
+}
+
 export default function ContourToolPageWrapper() {
   return (
     <Suspense fallback={<div className="flex h-64 items-center justify-center text-sm text-[#999]">Loading…</div>}>
@@ -71,9 +88,12 @@ function ContourToolPage() {
   const [reopening, setReopening] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [previewMode, setPreviewMode] = useState("contour"); // "contour" | "mask" | "source"
+  const [taskSource, setTaskSource] = useState(null); // "new" | "reopened" | "duplicated"
   const fileInputRef = useRef(null);
   const prevObjectUrlRef = useRef(null);
   const processingRef = useRef(false);
+
+  const hasEditorContent = !!(imageUrl || contourResult);
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -92,6 +112,34 @@ function ContourToolPage() {
   useEffect(() => {
     fetchJobs();
   }, [fetchJobs]);
+
+  // Unsaved-changes browser guard
+  useEffect(() => {
+    if (!hasEditorContent) return;
+    function onBeforeUnload(e) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [hasEditorContent]);
+
+  // Keyboard shortcuts: Ctrl+S save, Ctrl+D download SVG
+  useEffect(() => {
+    function onKeyDown(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        if (contourResult && !saving) handleSave("completed");
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+        e.preventDefault();
+        if (contourResult) handleDownloadSvg();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contourResult, saving]);
 
   // Fetch item context when opened from an order with a specific item
   useEffect(() => {
@@ -147,6 +195,7 @@ function ContourToolPage() {
       return;
     }
     setErrorMsg("");
+    setTaskSource("new");
     const objectUrl = URL.createObjectURL(file);
     resetPreviewState(objectUrl, file.name, file);
     processContour(objectUrl);
@@ -235,7 +284,7 @@ function ContourToolPage() {
     const url = URL.createObjectURL(svgBlob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `contour-${imageName || "artwork"}.svg`;
+    anchor.download = buildContourFileName(imageName, `contour-${bleedMm}mm`, "svg");
     anchor.click();
     URL.revokeObjectURL(url);
   }
@@ -246,7 +295,28 @@ function ContourToolPage() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `processed-${imageName || "artwork"}.png`;
+    anchor.download = buildContourFileName(imageName, "preview", "png");
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleDownloadMask() {
+    if (!contourResult?.maskOverlayUrl) return;
+    const blob = await blobFromUrl(contourResult.maskOverlayUrl);
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = buildContourFileName(imageName, "mask", "png");
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleDownloadSource() {
+    if (!sourceFile) return;
+    const url = URL.createObjectURL(sourceFile);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = imageName || "source.png";
     anchor.click();
     URL.revokeObjectURL(url);
   }
@@ -337,11 +407,15 @@ function ContourToolPage() {
   }
 
   async function handleReopen(job) {
+    // Unsaved-changes guard on reopen
+    if (hasEditorContent && !window.confirm(t("admin.tools.contour.confirmDiscard"))) return;
+
     const data = job.inputData || {};
     setBleedMm(data.bleedMm ?? 3);
     setOrderId(job.orderId || "");
     setNotes(job.notes || "");
     setDetailJob(null);
+    setTaskSource("reopened");
 
     if (job.inputFileUrl) {
       setReopening(true);
@@ -373,12 +447,57 @@ function ContourToolPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  async function handleDuplicate(job) {
+    // Like reopen but clears orderId — for walk-in reuse
+    if (hasEditorContent && !window.confirm(t("admin.tools.contour.confirmDiscard"))) return;
+
+    const data = job.inputData || {};
+    setBleedMm(data.bleedMm ?? 3);
+    setOrderId("");
+    setNotes("");
+    setDetailJob(null);
+    setTaskSource("duplicated");
+
+    if (job.inputFileUrl) {
+      setReopening(true);
+      try {
+        const res = await fetch(job.inputFileUrl);
+        if (!res.ok) {
+          setErrorMsg(t("admin.tools.contour.errorReopenFetch"));
+          setReopening(false);
+          return;
+        }
+        const blob = await res.blob();
+        if (!blob.type.startsWith("image/") && blob.size < 100) {
+          setErrorMsg(t("admin.tools.contour.errorReopenFetch"));
+          setReopening(false);
+          return;
+        }
+        const file = new File([blob], data.fileName || "artwork.png", { type: blob.type || "image/png" });
+        const objectUrl = URL.createObjectURL(blob);
+        resetPreviewState(objectUrl, data.fileName || "artwork.png", file);
+        processContour(objectUrl);
+      } catch (err) {
+        console.error("Failed to duplicate contour job:", err);
+        setErrorMsg(t("admin.tools.contour.errorReopenFetch"));
+      } finally {
+        setReopening(false);
+      }
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function onDrop(event) {
     event.preventDefault();
     setDragOver(false);
     const file = event.dataTransfer?.files?.[0];
     if (file) handleFile(file);
   }
+
+  // Split jobs into Today / Earlier groups
+  const todayJobs = jobs.filter((j) => isToday(j.createdAt));
+  const earlierJobs = jobs.filter((j) => !isToday(j.createdAt));
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -437,6 +556,45 @@ function ContourToolPage() {
               <p className="mt-0.5 text-red-700">{t("admin.tools.contour.mobileCannotDoList")}</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── Current Task Context Bar ──────────────────────────────── */}
+      {hasEditorContent && (
+        <div className="flex items-center justify-between gap-3 rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] px-4 py-2.5">
+          <div className="flex items-center gap-2 min-w-0 text-xs">
+            {/* Order context */}
+            {orderId ? (
+              <span className="rounded-[2px] bg-indigo-100 px-2 py-0.5 font-semibold text-indigo-700">
+                {t("admin.tools.contour.order")} #{orderId.slice(0, 8)}
+              </span>
+            ) : (
+              <span className="rounded-[2px] bg-gray-100 px-2 py-0.5 font-semibold text-[#666]">
+                {t("admin.tools.contour.contextNoOrder")}
+              </span>
+            )}
+            {/* Task source */}
+            {taskSource === "reopened" && (
+              <span className="text-[#999]">{t("admin.tools.contour.contextReopened")}</span>
+            )}
+            {taskSource === "duplicated" && (
+              <span className="text-[#999]">{t("admin.tools.contour.contextDuplicated")}</span>
+            )}
+            {taskSource === "new" && (
+              <span className="text-[#999]">{t("admin.tools.contour.contextNew")}</span>
+            )}
+            {/* File name */}
+            {imageName && <span className="truncate text-[#999]">· {imageName}</span>}
+            {/* Unsaved dot */}
+            {hasEditorContent && !saving && (
+              <span className="flex items-center gap-1 text-amber-600">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                {t("admin.tools.contour.unsaved")}
+              </span>
+            )}
+          </div>
+          {/* Shortcut hint */}
+          <span className="hidden sm:inline text-[10px] text-[#bbb]">{t("admin.tools.contour.shortcutHint")}</span>
         </div>
       )}
 
@@ -690,35 +848,69 @@ function ContourToolPage() {
             <QualityGuidance confidence={contourResult.quality.confidence} t={t} />
           )}
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <button
-              type="button"
-              onClick={handleDownloadSvg}
-              className="inline-flex items-center justify-center gap-2 rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:border-black"
-            >
-              {t("admin.tools.downloadSvg")}
-            </button>
-            {contourResult.processedImageUrl ? (
-              <button
-                type="button"
-                onClick={handleDownloadPng}
-                className="inline-flex items-center justify-center gap-2 rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:border-black"
-              >
-                {t("admin.tools.downloadPng")}
-              </button>
-            ) : null}
+          {/* ── Export Panel ──────────────────────────────────────────── */}
+          <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 space-y-3">
+            <h3 className="text-xs font-bold text-[#333]">{t("admin.tools.contour.exportTitle")}</h3>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {/* Production files */}
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-[#999] uppercase">{t("admin.tools.contour.exportProduction")}</p>
+                <button
+                  type="button"
+                  onClick={handleDownloadSvg}
+                  className="flex w-full items-center gap-2 rounded-[3px] border border-[#e0e0e0] px-3 py-2 text-left text-xs font-medium text-[#333] transition-colors hover:border-black"
+                >
+                  <span className="rounded-[2px] bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">SVG</span>
+                  {t("admin.tools.contour.exportContourSvg")}
+                </button>
+                {contourResult.processedImageUrl && (
+                  <button
+                    type="button"
+                    onClick={handleDownloadPng}
+                    className="flex w-full items-center gap-2 rounded-[3px] border border-[#e0e0e0] px-3 py-2 text-left text-xs font-medium text-[#333] transition-colors hover:border-black"
+                  >
+                    <span className="rounded-[2px] bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">PNG</span>
+                    {t("admin.tools.contour.exportPreviewPng")}
+                  </button>
+                )}
+              </div>
+              {/* Reference files */}
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-[#999] uppercase">{t("admin.tools.contour.exportReference")}</p>
+                {contourResult.maskOverlayUrl && (
+                  <button
+                    type="button"
+                    onClick={handleDownloadMask}
+                    className="flex w-full items-center gap-2 rounded-[3px] border border-[#e0e0e0] px-3 py-2 text-left text-xs font-medium text-[#333] transition-colors hover:border-black"
+                  >
+                    <span className="rounded-[2px] bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-700">MASK</span>
+                    {t("admin.tools.contour.exportMaskPng")}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleDownloadSource}
+                  className="flex w-full items-center gap-2 rounded-[3px] border border-[#e0e0e0] px-3 py-2 text-left text-xs font-medium text-[#333] transition-colors hover:border-black"
+                >
+                  <span className="rounded-[2px] bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-[#666]">SRC</span>
+                  {t("admin.tools.contour.exportSourceImg")}
+                </button>
+              </div>
+            </div>
             {/* Quality-gated save buttons */}
-            <QualityGatedSave
-              confidence={contourResult.quality?.confidence}
-              saving={saving}
-              onSave={handleSave}
-              t={t}
-            />
-            {saveMsg ? (
-              <span className={`text-xs font-medium ${saveIsError ? "text-red-600" : "text-green-600"}`}>
-                {saveMsg}
-              </span>
-            ) : null}
+            <div className="flex flex-col gap-2 border-t border-[#e0e0e0] pt-3 sm:flex-row sm:items-center">
+              <QualityGatedSave
+                confidence={contourResult.quality?.confidence}
+                saving={saving}
+                onSave={handleSave}
+                t={t}
+              />
+              {saveMsg ? (
+                <span className={`text-xs font-medium ${saveIsError ? "text-red-600" : "text-green-600"}`}>
+                  {saveMsg}
+                </span>
+              ) : null}
+            </div>
           </div>
         </>
       ) : null}
@@ -748,6 +940,27 @@ function ContourToolPage() {
         </div>
       )}
 
+      {/* ── Getting Started Guide (empty state) ────────────────────── */}
+      {jobs.length === 0 && !hasEditorContent && !loadingJobs && (
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5 space-y-4">
+          <h3 className="text-sm font-bold text-black">{t("admin.tools.contour.gettingStarted")}</h3>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[3px] bg-[#fafafa] p-3 text-center">
+              <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-black text-white text-xs font-bold">1</div>
+              <p className="text-xs font-medium text-[#333]">{t("admin.tools.contour.guideStep1")}</p>
+            </div>
+            <div className="rounded-[3px] bg-[#fafafa] p-3 text-center">
+              <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-black text-white text-xs font-bold">2</div>
+              <p className="text-xs font-medium text-[#333]">{t("admin.tools.contour.guideStep2")}</p>
+            </div>
+            <div className="rounded-[3px] bg-[#fafafa] p-3 text-center">
+              <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-black text-white text-xs font-bold">3</div>
+              <p className="text-xs font-medium text-[#333]">{t("admin.tools.contour.guideStep3")}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Good/Bad Input Examples (collapsible) ────────────────────── */}
       <InputExamples t={t} />
 
@@ -765,18 +978,49 @@ function ContourToolPage() {
             <p className="mt-1 text-xs text-[#bbb]">{t("admin.tools.contour.noJobsHint")}</p>
           </div>
         ) : (
-          <div className="divide-y divide-[#e0e0e0]">
-            {jobs.map((job) => (
-              <ContourJobRow
-                key={job.id}
-                job={job}
-                t={t}
-                onPreview={setPreviewUrl}
-                onDetail={setDetailJob}
-                onReopen={handleReopen}
-                reopening={reopening}
-              />
-            ))}
+          <div>
+            {todayJobs.length > 0 && (
+              <>
+                <div className="px-5 pt-3 pb-1">
+                  <p className="text-[10px] font-semibold uppercase text-[#999]">{t("admin.tools.contour.groupToday")}</p>
+                </div>
+                <div className="divide-y divide-[#e0e0e0]">
+                  {todayJobs.map((job) => (
+                    <ContourJobRow
+                      key={job.id}
+                      job={job}
+                      t={t}
+                      onPreview={setPreviewUrl}
+                      onDetail={setDetailJob}
+                      onReopen={handleReopen}
+                      onDuplicate={handleDuplicate}
+                      reopening={reopening}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+            {earlierJobs.length > 0 && (
+              <>
+                <div className="px-5 pt-3 pb-1">
+                  <p className="text-[10px] font-semibold uppercase text-[#999]">{t("admin.tools.contour.groupEarlier")}</p>
+                </div>
+                <div className="divide-y divide-[#e0e0e0]">
+                  {earlierJobs.map((job) => (
+                    <ContourJobRow
+                      key={job.id}
+                      job={job}
+                      t={t}
+                      onPreview={setPreviewUrl}
+                      onDetail={setDetailJob}
+                      onReopen={handleReopen}
+                      onDuplicate={handleDuplicate}
+                      reopening={reopening}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -806,7 +1050,9 @@ function ContourToolPage() {
           t={t}
           onClose={() => setDetailJob(null)}
           onReopen={handleReopen}
+          onDuplicate={handleDuplicate}
           reopening={reopening}
+          fetchJobs={fetchJobs}
         />
       ) : null}
     </div>
@@ -815,11 +1061,42 @@ function ContourToolPage() {
 
 // ─── Contour Job Row ──────────────────────────────────────────────────────────
 
-function ContourJobRow({ job, t, onPreview, onDetail, onReopen, reopening }) {
+function ContourJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate, reopening }) {
   const data = job.inputData || {};
   const output = job.outputData || {};
   const thumbUrl = output.processedFileUrl || job.inputFileUrl;
   const dims = data.imageWidth && data.imageHeight ? `${data.imageWidth}×${data.imageHeight}px` : null;
+
+  // Inline notes editing
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState(job.notes || "");
+  const [notesSaving, setNotesSaving] = useState(false);
+  const notesInputRef = useRef(null);
+
+  useEffect(() => {
+    if (editingNotes && notesInputRef.current) notesInputRef.current.focus();
+  }, [editingNotes]);
+
+  async function saveNotes() {
+    if (notesValue === (job.notes || "")) {
+      setEditingNotes(false);
+      return;
+    }
+    setNotesSaving(true);
+    try {
+      const res = await fetch(`/api/admin/tools/jobs/${job.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: notesValue }),
+      });
+      if (res.ok) {
+        job.notes = notesValue; // update in-place for immediate UI
+        setEditingNotes(false);
+      }
+    } catch { /* ignore */ } finally {
+      setNotesSaving(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -855,7 +1132,36 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, reopening }) {
           {job.operatorName && <><span>·</span><span>{job.operatorName}</span></>}
           {job.orderId && <><span>·</span><span>{t("admin.common.order")}: #{job.orderId.slice(0, 8)}</span></>}
         </div>
-        {job.notes && <p className="mt-0.5 truncate text-xs text-[#777]">{job.notes}</p>}
+        {/* Inline notes with edit */}
+        <div className="mt-0.5 flex items-center gap-1">
+          {editingNotes ? (
+            <input
+              ref={notesInputRef}
+              type="text"
+              value={notesValue}
+              onChange={(e) => setNotesValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") saveNotes(); if (e.key === "Escape") setEditingNotes(false); }}
+              onBlur={saveNotes}
+              disabled={notesSaving}
+              className="flex-1 rounded-[2px] border border-[#d0d0d0] px-1.5 py-0.5 text-xs outline-none focus:border-black"
+              placeholder={t("admin.tools.contour.editNotesPlaceholder")}
+            />
+          ) : (
+            <>
+              {job.notes && <p className="truncate text-xs text-[#777]">{job.notes}</p>}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setNotesValue(job.notes || ""); setEditingNotes(true); }}
+                className="shrink-0 text-[#bbb] hover:text-[#666]"
+                title={t("admin.tools.contour.editNotes")}
+              >
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
+                </svg>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Actions */}
@@ -884,6 +1190,14 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, reopening }) {
         >
           {t("admin.tools.reopen")}
         </button>
+        <button
+          type="button"
+          onClick={() => onDuplicate(job)}
+          disabled={reopening}
+          className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black disabled:opacity-50"
+        >
+          {t("admin.tools.contour.duplicate")}
+        </button>
         {job.orderId && (
           <Link
             href={`/admin/orders/${job.orderId}`}
@@ -899,7 +1213,39 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, reopening }) {
 
 // ─── Contour Detail Modal ─────────────────────────────────────────────────────
 
-function ContourDetailModal({ job, t, onClose, onReopen, reopening }) {
+function ContourDetailModal({ job, t, onClose, onReopen, onDuplicate, reopening, fetchJobs }) {
+  // Inline notes editing in modal
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState(job.notes || "");
+  const [notesSaving, setNotesSaving] = useState(false);
+  const notesInputRef = useRef(null);
+
+  useEffect(() => {
+    if (editingNotes && notesInputRef.current) notesInputRef.current.focus();
+  }, [editingNotes]);
+
+  async function saveNotes() {
+    if (notesValue === (job.notes || "")) {
+      setEditingNotes(false);
+      return;
+    }
+    setNotesSaving(true);
+    try {
+      const res = await fetch(`/api/admin/tools/jobs/${job.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: notesValue }),
+      });
+      if (res.ok) {
+        job.notes = notesValue;
+        setEditingNotes(false);
+        if (fetchJobs) fetchJobs();
+      }
+    } catch { /* ignore */ } finally {
+      setNotesSaving(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={onClose}>
       <div
@@ -1013,12 +1359,39 @@ function ContourDetailModal({ job, t, onClose, onReopen, reopening }) {
               } />
             ) : null}
           </div>
-          {job.notes ? (
-            <div>
+          {/* Notes with inline edit */}
+          <div>
+            <div className="flex items-center gap-1.5">
               <p className="text-[11px] font-medium text-[#666]">{t("admin.tools.notesLabel")}</p>
-              <p className="text-sm text-[#111]">{job.notes}</p>
+              {!editingNotes && (
+                <button
+                  type="button"
+                  onClick={() => { setNotesValue(job.notes || ""); setEditingNotes(true); }}
+                  className="text-[#bbb] hover:text-[#666]"
+                  title={t("admin.tools.contour.editNotes")}
+                >
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
+                  </svg>
+                </button>
+              )}
             </div>
-          ) : null}
+            {editingNotes ? (
+              <input
+                ref={notesInputRef}
+                type="text"
+                value={notesValue}
+                onChange={(e) => setNotesValue(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") saveNotes(); if (e.key === "Escape") setEditingNotes(false); }}
+                onBlur={saveNotes}
+                disabled={notesSaving}
+                className="mt-1 w-full rounded-[2px] border border-[#d0d0d0] px-2 py-1 text-sm outline-none focus:border-black"
+                placeholder={t("admin.tools.contour.editNotesPlaceholder")}
+              />
+            ) : (
+              <p className="text-sm text-[#111]">{job.notes || "—"}</p>
+            )}
+          </div>
           {/* Actions */}
           <div className="flex flex-wrap gap-2 border-t border-[#e0e0e0] pt-4">
             <button
@@ -1028,6 +1401,14 @@ function ContourDetailModal({ job, t, onClose, onReopen, reopening }) {
               className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
             >
               {reopening ? t("admin.tools.contour.loadingReopen") : t("admin.tools.contour.reopenEdit")}
+            </button>
+            <button
+              type="button"
+              onClick={() => onDuplicate(job)}
+              disabled={reopening}
+              className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black disabled:opacity-50"
+            >
+              {t("admin.tools.contour.duplicate")}
             </button>
             {job.outputData?.svgFileUrl ? (
               <a href={job.outputData.svgFileUrl} download className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black">
