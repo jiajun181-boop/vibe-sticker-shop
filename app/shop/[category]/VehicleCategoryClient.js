@@ -4,242 +4,28 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import Breadcrumbs from "@/components/Breadcrumbs";
-import CategoryHero from "@/components/category/CategoryHero";
-import CategoryFaq from "@/components/category/CategoryFaq";
+import FamilyLandingShell from "@/components/storefront/FamilyLandingShell";
 import { isSvgImage } from "@/lib/product-image";
 import { formatCad } from "@/lib/product-helpers";
-
-const BASE = "/shop/vehicle-graphics-fleet";
+import {
+  VEHICLE_BROWSE_CASES,
+  VEHICLE_COMPARISON_COLUMNS,
+  VEHICLE_COMPARISON_FEATURES,
+  VEHICLE_SECTIONS,
+  VEHICLE_VALUE_PROPS,
+  VEHICLE_USE_CASES,
+  VEHICLE_PRODUCTION_GUIDE,
+  VEHICLE_CROSS_LINKS,
+  ITEM_I18N,
+  NOTE_I18N,
+  TAGLINE_KEYS,
+  BADGE_I18N,
+} from "@/lib/storefront/vehicle-family";
 
 function minPrice(vehiclePrices, keys = []) {
   const prices = keys.map((k) => vehiclePrices[k]).filter((v) => Number(v) > 0);
   return prices.length ? Math.min(...prices) : 0;
 }
-
-/* ── Item slug → i18n key map ── */
-const ITEM_I18N = {
-  "full-vehicle-wrap-design-print": "vc.item.fullWrap",
-  "partial-wrap-spot-graphics": "vc.item.partialWrap",
-  "trailer-box-truck-large-graphics": "vc.item.trailerGraphics",
-  "vehicle-roof-wrap": "vc.item.roofWrap",
-  "custom-truck-door-lettering-kit": "vc.item.doorLettering",
-  "magnetic-truck-door-signs": "vc.item.magneticTruck",
-  "car-door-magnets-pair": "vc.item.magneticCar",
-  "printed-truck-door-decals-full-color": "vc.item.printedDoorDecals",
-  "usdot-number-decals": "vc.item.usdot",
-  "cvor-number-decals": "vc.item.cvor",
-  "mc-nsc-number-decals": "vc.item.mcNsc",
-  "tssa-truck-number-lettering-cut-vinyl": "vc.item.tssa",
-  "gvw-tare-weight-lettering": "vc.item.gvwTare",
-  "fleet-unit-number-stickers": "vc.item.fleetUnit",
-  "vehicle-inspection-maintenance-stickers": "vc.item.inspection",
-  "fuel-type-labels-diesel-gas": "vc.item.fuelType",
-  "dangerous-goods-placards": "vc.item.dangerousGoods",
-  "tire-pressure-load-labels": "vc.item.tirePressure",
-  "reflective-conspicuity-chevron-kits": "vc.item.reflectiveTape",
-};
-
-const NOTE_I18N = {
-  "full-vehicle-wrap-design-print": "vc.item.fullWrap.note",
-  "partial-wrap-spot-graphics": "vc.item.partialWrap.note",
-  "trailer-box-truck-large-graphics": "vc.item.trailerGraphics.note",
-  "vehicle-roof-wrap": "vc.item.roofWrap.note",
-  "custom-truck-door-lettering-kit": "vc.item.doorLettering.note",
-  "magnetic-truck-door-signs": "vc.item.magneticTruck.note",
-  "car-door-magnets-pair": "vc.item.magneticCar.note",
-  "printed-truck-door-decals-full-color": "vc.item.printedDoorDecals.note",
-  "vehicle-inspection-maintenance-stickers": "vc.item.inspection.note",
-  "fuel-type-labels-diesel-gas": "vc.item.fuelType.note",
-  "dangerous-goods-placards": "vc.item.dangerousGoods.note",
-  "tire-pressure-load-labels": "vc.item.tirePressure.note",
-  "reflective-conspicuity-chevron-kits": "vc.item.reflectiveTape.note",
-};
-
-/* ── Taglines (i18n keys) ── */
-const TAGLINE_KEYS = {
-  "full-vehicle-wrap-design-print": "vc.tagline.fullWrap",
-  "partial-wrap-spot-graphics": "vc.tagline.partialWrap",
-  "trailer-box-truck-large-graphics": "vc.tagline.trailerGraphics",
-  "vehicle-roof-wrap": "vc.tagline.roofWrap",
-  "custom-truck-door-lettering-kit": "vc.tagline.doorLettering",
-  "magnetic-truck-door-signs": "vc.tagline.magneticTruck",
-  "car-door-magnets-pair": "vc.tagline.magneticCar",
-  "printed-truck-door-decals-full-color": "vc.tagline.printedDoorDecals",
-  "usdot-number-decals": "vc.tagline.usdot",
-  "cvor-number-decals": "vc.tagline.cvor",
-  "mc-nsc-number-decals": "vc.tagline.mcNsc",
-  "tssa-truck-number-lettering-cut-vinyl": "vc.tagline.tssa",
-  "gvw-tare-weight-lettering": "vc.tagline.gvwTare",
-  "fleet-unit-number-stickers": "vc.tagline.fleetUnit",
-  "vehicle-inspection-maintenance-stickers": "vc.tagline.inspection",
-  "fuel-type-labels-diesel-gas": "vc.tagline.fuelType",
-  "dangerous-goods-placards": "vc.tagline.dangerousGoods",
-  "tire-pressure-load-labels": "vc.tagline.tirePressure",
-  "reflective-conspicuity-chevron-kits": "vc.tagline.reflectiveTape",
-};
-
-const BADGE_I18N = {
-  "Quote-Only": "vc.badge.quoteOnly",
-  "Install Available": "vc.badge.installAvailable",
-  "Same-Day": "vc.badge.sameDay",
-  "Premium": "vc.badge.premium",
-};
-
-const SECTIONS = [
-  {
-    key: "wraps-large",
-    jumpLabelKey: "vc.section.wrapsLarge.jump",
-    titleKey: "vc.section.wrapsLarge.title",
-    subtitleKey: "vc.section.wrapsLarge.subtitle",
-    ui: "premium",
-    items: [
-      {
-        key: "full-vehicle-wrap-design-print",
-        href: `${BASE}/full-vehicle-wrap-design-print`,
-        priceKeys: ["full-vehicle-wrap-design-print"],
-        badgeKeys: ["Quote-Only", "Install Available"],
-        gradient: "from-violet-700 via-fuchsia-600 to-pink-500",
-      },
-      {
-        key: "partial-wrap-spot-graphics",
-        href: `${BASE}/partial-wrap-spot-graphics`,
-        priceKeys: ["partial-wrap-spot-graphics"],
-        gradient: "from-indigo-700 via-blue-600 to-cyan-500",
-      },
-      {
-        key: "trailer-box-truck-large-graphics",
-        href: `${BASE}/trailer-box-truck-large-graphics`,
-        priceKeys: ["trailer-box-truck-large-graphics", "trailer-full-wrap"],
-        gradient: "from-slate-700 via-slate-600 to-blue-500",
-      },
-      {
-        key: "vehicle-roof-wrap",
-        href: `${BASE}/vehicle-roof-wrap`,
-        priceKeys: ["vehicle-roof-wrap"],
-        gradient: "from-emerald-700 via-teal-600 to-cyan-500",
-      },
-    ],
-  },
-  {
-    key: "door-decals-magnets",
-    jumpLabelKey: "vc.section.doorDecals.jump",
-    titleKey: "vc.section.doorDecals.title",
-    subtitleKey: "vc.section.doorDecals.subtitle",
-    ui: "cards",
-    items: [
-      {
-        key: "custom-truck-door-lettering-kit",
-        href: `${BASE}/custom-truck-door-lettering-kit`,
-        priceKeys: ["custom-truck-door-lettering-kit"],
-        gradient: "from-blue-500 to-indigo-500",
-      },
-      {
-        key: "magnetic-truck-door-signs",
-        href: `${BASE}/magnetic-truck-door-signs`,
-        priceKeys: ["magnetic-truck-door-signs"],
-        gradient: "from-slate-500 to-slate-700",
-      },
-      {
-        key: "car-door-magnets-pair",
-        href: `${BASE}/car-door-magnets-pair`,
-        priceKeys: ["car-door-magnets-pair", "magnetic-car-signs"],
-        gradient: "from-violet-500 to-fuchsia-500",
-      },
-      {
-        key: "printed-truck-door-decals-full-color",
-        href: `${BASE}/printed-truck-door-decals-full-color`,
-        priceKeys: ["printed-truck-door-decals-full-color"],
-        gradient: "from-cyan-500 to-sky-500",
-      },
-    ],
-  },
-  {
-    key: "dot-fleet-compliance",
-    jumpLabelKey: "vc.section.dotCompliance.jump",
-    titleKey: "vc.section.dotCompliance.title",
-    subtitleKey: "vc.section.dotCompliance.subtitle",
-    ui: "list",
-    items: [
-      {
-        key: "usdot-number-decals",
-        href: `${BASE}/usdot-number-decals`,
-        priceKeys: ["usdot-number-decals"],
-        badgeKeys: ["Same-Day"],
-      },
-      {
-        key: "cvor-number-decals",
-        href: `${BASE}/cvor-number-decals`,
-        priceKeys: ["cvor-number-decals"],
-        badgeKeys: ["Same-Day"],
-      },
-      {
-        key: "mc-nsc-number-decals",
-        href: `${BASE}/mc-number-decals`,
-        priceKeys: ["mc-number-decals", "nsc-number-decals"],
-        badgeKeys: ["Same-Day"],
-      },
-      {
-        key: "tssa-truck-number-lettering-cut-vinyl",
-        href: `${BASE}/tssa-truck-number-lettering-cut-vinyl`,
-        priceKeys: ["tssa-truck-number-lettering-cut-vinyl"],
-      },
-      {
-        key: "gvw-tare-weight-lettering",
-        href: `${BASE}/gvw-tare-weight-lettering`,
-        priceKeys: ["gvw-tare-weight-lettering"],
-      },
-      {
-        key: "fleet-unit-number-stickers",
-        href: `${BASE}/fleet-unit-number-stickers`,
-        priceKeys: ["fleet-unit-number-stickers"],
-      },
-    ],
-  },
-  {
-    key: "safety-spec-labels",
-    jumpLabelKey: "vc.section.safetyLabels.jump",
-    titleKey: "vc.section.safetyLabels.title",
-    subtitleKey: "vc.section.safetyLabels.subtitle",
-    ui: "cards",
-    items: [
-      {
-        key: "vehicle-inspection-maintenance-stickers",
-        href: `${BASE}/vehicle-inspection-maintenance-stickers`,
-        priceKeys: ["vehicle-inspection-maintenance-stickers"],
-        gradient: "from-rose-500 to-red-500",
-      },
-      {
-        key: "fuel-type-labels-diesel-gas",
-        href: `${BASE}/fuel-type-labels-diesel-gas`,
-        priceKeys: ["fuel-type-labels-diesel-gas"],
-        gradient: "from-amber-500 to-orange-500",
-      },
-      {
-        key: "dangerous-goods-placards",
-        href: `${BASE}/dangerous-goods-placards`,
-        priceKeys: ["dangerous-goods-placards"],
-        gradient: "from-red-600 to-rose-600",
-      },
-      {
-        key: "tire-pressure-load-labels",
-        href: `${BASE}/tire-pressure-load-labels`,
-        priceKeys: ["tire-pressure-load-labels"],
-        gradient: "from-zinc-600 to-slate-600",
-      },
-      {
-        key: "reflective-conspicuity-chevron-kits",
-        href: `${BASE}/reflective-conspicuity-tape-kit`,
-        priceKeys: [
-          "reflective-conspicuity-tape-kit",
-          "high-visibility-rear-chevron-kit",
-          "reflective-safety-stripes-kit",
-        ],
-        gradient: "from-yellow-500 to-red-500",
-      },
-    ],
-  },
-];
 
 function PriceLabel({ price }) {
   const { t } = useTranslation();
@@ -370,7 +156,7 @@ function ComplianceListItem({ item, price }) {
 }
 
 function visibleSectionsForPrices(vehiclePrices) {
-  return SECTIONS.filter((section) =>
+  return VEHICLE_SECTIONS.filter((section) =>
     section.items.some((item) => (item.priceKeys || [item.key]).some((k) => k in vehiclePrices))
   );
 }
@@ -415,147 +201,154 @@ function RenderSectionBody({ section, vehiclePrices, vehicleImages = {} }) {
   );
 }
 
-/* ── Related categories ── */
-const VC_RELATED = [
-  { title: "Signs & Display Boards", titleZh: "标牌和展示板", desc: "Coroplast, foam board, acrylic & aluminum", descZh: "瓦楞板、泡沫板、亚克力和铝板", href: "/shop/signs-rigid-boards" },
-  { title: "Banners & Displays", titleZh: "横幅和展示", desc: "Vinyl banners, roll-ups, flags & backdrops", descZh: "乙烯基横幅、易拉宝、旗帜和背景墙", href: "/shop/banners-displays" },
-  { title: "Window, Wall & Floor", titleZh: "窗户、墙面和地面", desc: "Window film, wall graphics & floor decals", descZh: "窗膜、墙面图案和地面贴花", href: "/shop/windows-walls-floors" },
-];
+/* ── Production Guidance Section ── */
+function ProductionGuide() {
+  const { t } = useTranslation();
+  return (
+    <section className="mt-12">
+      <h2 className="text-xl font-semibold tracking-tight text-[var(--color-gray-900)]">
+        {t("vc.prod.sectionTitle")}
+      </h2>
+      <p className="mt-1 text-sm text-[var(--color-gray-500)]">
+        {t("vc.prod.sectionSubtitle")}
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {VEHICLE_PRODUCTION_GUIDE.map((g) => (
+          <div key={g.key} className="rounded-xl border border-[var(--color-gray-200)] bg-white p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-xl shrink-0">{g.iconKey}</span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-[var(--color-gray-900)]">{t(g.titleKey)}</h3>
+                <p className="mt-1 text-xs text-[var(--color-gray-600)] leading-relaxed">{t(g.descKey)}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ── Cross-links to related categories ── */
+function CrossLinks() {
+  const { t } = useTranslation();
+  return (
+    <section className="mt-12">
+      <h2 className="text-xl font-semibold tracking-tight">{t("vc.related")}</h2>
+      <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-3">
+        {VEHICLE_CROSS_LINKS.map((cat) => (
+          <Link
+            key={cat.href}
+            href={cat.href}
+            className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-5 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
+          >
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
+                {t(cat.titleKey)}
+              </h3>
+              <p className="mt-1 text-xs text-[var(--color-gray-500)] truncate">
+                {t(cat.descKey)}
+              </p>
+            </div>
+            <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export default function VehicleCategoryClient({ vehiclePrices = {}, vehicleImages = {} }) {
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
   const visibleSections = visibleSectionsForPrices(vehiclePrices);
 
   return (
-    <main className="bg-gradient-to-b from-slate-50 via-white to-white pb-20 pt-10 text-[var(--color-gray-900)]">
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
-        <Breadcrumbs
-          items={[
-            { label: t("product.shop"), href: "/shop" },
-            { label: t("vc.breadcrumb") },
-          ]}
-        />
-
-        <div className="mt-6">
-          <CategoryHero category="vehicle-graphics-fleet" title={t("vc.title")} icon="🚗" />
-        </div>
-
-        {visibleSections.length > 0 && (
-          <div className="sticky top-[calc(var(--promo-offset,0px)+var(--nav-offset,72px)+8px)] z-10 -mx-4 mt-5 border-y border-slate-200/70 bg-white/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 2xl:-mx-4 2xl:px-4">
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                {t("vc.quickJump")}
-              </span>
-              {visibleSections.map((section) => (
-                <a
-                  key={section.key}
-                  href={`#${section.key}`}
-                  className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-[var(--color-brand)] hover:text-[var(--color-gray-900)]"
-                >
-                  {t(section.jumpLabelKey || section.titleKey)}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {visibleSections.map((section, index) => (
-          <section
-            key={section.key}
-            id={section.key}
-            className={`${index === 0 ? "mt-8" : "mt-12"} scroll-mt-40`}
-          >
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{t(section.titleKey)}</h2>
-                <p className="mt-1 text-sm text-[var(--color-gray-500)]">{t(section.subtitleKey)}</p>
-              </div>
-              {section.ui === "premium" && (
-                <Link
-                  href="/quote"
-                  className="inline-flex items-center gap-2 self-start rounded-full border border-[var(--color-gray-300)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
-                >
-                  {t("vc.requestFleetQuote")}
-                </Link>
-              )}
-            </div>
-            <RenderSectionBody section={section} vehiclePrices={vehiclePrices} vehicleImages={vehicleImages} />
-          </section>
-        ))}
-
-        {visibleSections.length === 0 && (
-          <p className="mt-12 text-center text-sm text-[var(--color-gray-500)]">
-            {t("shop.noProducts")}
-          </p>
-        )}
-
-        <div className="mt-12 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">{t("vc.feature1.title")}</h3>
-            <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              {t("vc.feature1.desc")}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">{t("vc.feature2.title")}</h3>
-            <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              {t("vc.feature2.desc")}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-700)]">{t("vc.feature3.title")}</h3>
-            <p className="mt-2 text-sm text-[var(--color-gray-600)]">
-              {t("vc.feature3.desc")}
-            </p>
-            <Link
-              href="/quote"
-              className="mt-3 inline-block rounded-full bg-[var(--color-brand)] px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[var(--color-brand-dark)]"
-            >
-              {t("vc.getQuote")}
-            </Link>
-          </div>
-        </div>
-
-        <CategoryFaq category="vehicle-graphics-fleet" />
-
-        {/* Related categories */}
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight">{t("vc.related")}</h2>
-          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-3">
-            {VC_RELATED.map((cat) => (
-              <Link
-                key={cat.href}
-                href={cat.href}
-                className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-5 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
+    <FamilyLandingShell
+      bgClassName="bg-gradient-to-b from-slate-50 via-white to-white"
+      breadcrumbs={[
+        { label: t("product.shop"), href: "/shop" },
+        { label: t("vc.breadcrumb") },
+      ]}
+      heroCategory="vehicle-graphics-fleet"
+      heroTitle={t("vc.title")}
+      heroIcon="\uD83D\uDE97"
+      browseByNeed={{
+        titleKey: "vc.browse.sectionTitle",
+        subtitleKey: "vc.browse.sectionSubtitle",
+        cases: VEHICLE_BROWSE_CASES,
+      }}
+      comparison={{
+        title: "vc.cmp.sectionTitle",
+        subtitle: "vc.cmp.sectionSubtitle",
+        columns: VEHICLE_COMPARISON_COLUMNS,
+        features: VEHICLE_COMPARISON_FEATURES,
+      }}
+      useCases={{
+        title: "vc.uc.sectionTitle",
+        cases: VEHICLE_USE_CASES,
+      }}
+      valueProps={VEHICLE_VALUE_PROPS}
+      faqCategory="vehicle-graphics-fleet"
+      familyContext={{ family: "vehicle" }}
+    >
+      {/* Quick-jump nav */}
+      {visibleSections.length > 0 && (
+        <div className="sticky top-[calc(var(--promo-offset,0px)+var(--nav-offset,72px)+8px)] z-10 -mx-4 mt-5 border-y border-slate-200/70 bg-white/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 2xl:-mx-4 2xl:px-4">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              {t("vc.quickJump")}
+            </span>
+            {visibleSections.map((section) => (
+              <a
+                key={section.key}
+                href={`#${section.key}`}
+                className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-[var(--color-brand)] hover:text-[var(--color-gray-900)]"
               >
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
-                    {locale === "zh" ? cat.titleZh : cat.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-[var(--color-gray-500)] truncate">
-                    {locale === "zh" ? cat.descZh : cat.desc}
-                  </p>
-                </div>
-                <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                </svg>
-              </Link>
+                {t(section.jumpLabelKey || section.titleKey)}
+              </a>
             ))}
           </div>
-        </section>
-
-        <div className="mt-12 text-center">
-          <Link
-            href="/shop"
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-gray-300)] px-5 py-2.5 text-xs font-semibold text-[var(--color-gray-600)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-            {t("vc.allCategories")}
-          </Link>
         </div>
-      </div>
-    </main>
+      )}
+
+      {/* Product sections */}
+      {visibleSections.map((section, index) => (
+        <section
+          key={section.key}
+          id={section.key}
+          className={`${index === 0 ? "mt-8" : "mt-12"} scroll-mt-40`}
+        >
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{t(section.titleKey)}</h2>
+              <p className="mt-1 text-sm text-[var(--color-gray-500)]">{t(section.subtitleKey)}</p>
+            </div>
+            {section.ui === "premium" && (
+              <Link
+                href="/quote"
+                className="inline-flex items-center gap-2 self-start rounded-full border border-[var(--color-gray-300)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-700)] transition-colors hover:border-[var(--color-gray-900)] hover:text-[var(--color-gray-900)]"
+              >
+                {t("vc.requestFleetQuote")}
+              </Link>
+            )}
+          </div>
+          <RenderSectionBody section={section} vehiclePrices={vehiclePrices} vehicleImages={vehicleImages} />
+        </section>
+      ))}
+
+      {visibleSections.length === 0 && (
+        <p className="mt-12 text-center text-sm text-[var(--color-gray-500)]">
+          {t("shop.noProducts")}
+        </p>
+      )}
+
+      {/* Production guidance — key differences that matter */}
+      <ProductionGuide />
+
+      {/* Cross-links to related categories */}
+      <CrossLinks />
+    </FamilyLandingShell>
   );
 }
