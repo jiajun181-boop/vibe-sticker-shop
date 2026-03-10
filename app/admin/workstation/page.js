@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { timeAgo } from "@/lib/admin/time-ago";
@@ -8,10 +8,13 @@ import StatusBadge from "@/components/admin/StatusBadge";
 
 // ─── Single summary API fetch ────────────────────────────────────────────────
 
+const AUTO_REFRESH_MS = 30_000;
+
 function useSummary() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const timer = useRef(null);
 
   const refetch = useCallback(() => {
     setLoading(true);
@@ -28,6 +31,12 @@ function useSummary() {
   }, []);
 
   useEffect(() => { refetch(); }, [refetch]);
+
+  // Auto-refresh every 30s
+  useEffect(() => {
+    timer.current = setInterval(() => refetch(), AUTO_REFRESH_MS);
+    return () => clearInterval(timer.current);
+  }, [refetch]);
 
   return { data, error, loading, refetch };
 }

@@ -1,17 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-
-function timeAgo(date) {
-  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
+import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function truncate(str, len) {
   if (!str) return "";
@@ -19,6 +10,8 @@ function truncate(str, len) {
 }
 
 export default function AdminMessagesPage() {
+  const { t } = useTranslation();
+  const timeAgo = (d) => sharedTimeAgo(d, t);
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState(null);

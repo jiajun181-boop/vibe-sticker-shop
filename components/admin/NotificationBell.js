@@ -2,20 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-
-function timeAgo(dateStr) {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = Math.max(0, now - then);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 30) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString();
-}
+import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function NotifIcon({ type, className }) {
   const map = {
@@ -56,6 +44,8 @@ function NotifIcon({ type, className }) {
 
 export default function NotificationBell() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const timeAgo = (d) => sharedTimeAgo(d, t);
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);

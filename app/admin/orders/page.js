@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, Suspense } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -90,14 +90,18 @@ export default function OrdersPage() {
   );
 }
 
+const AUTO_REFRESH_MS = 30_000;
+
 function OrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
+  const refreshTimer = useRef(null);
 
   const [orders, setOrders] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState(null);
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState(
     searchParams.get("status") || "all"
@@ -154,11 +158,18 @@ function OrdersContent() {
       setPagination(null);
     } finally {
       setLoading(false);
+      setLastRefresh(new Date());
     }
   }, [page, statusFilter, prodFilter, search]);
 
   useEffect(() => {
     fetchOrders();
+  }, [fetchOrders]);
+
+  // Auto-refresh every 30s
+  useEffect(() => {
+    refreshTimer.current = setInterval(() => fetchOrders(), AUTO_REFRESH_MS);
+    return () => clearInterval(refreshTimer.current);
   }, [fetchOrders]);
 
   function updateParams(updates) {
@@ -304,12 +315,23 @@ function OrdersContent() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-black">Orders</h1>
-        <Link
-          href="/admin/orders/create"
-          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
-        >
-          + New Order 新建订单
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => fetchOrders()}
+            disabled={loading}
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-50"
+            title={lastRefresh ? `Last refresh: ${lastRefresh.toLocaleTimeString()}` : ""}
+          >
+            {loading ? "..." : "Refresh"}
+          </button>
+          <Link
+            href="/admin/orders/create"
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
+          >
+            + New Order 新建订单
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}

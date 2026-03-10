@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -43,20 +45,7 @@ const priorityColors = {
   urgent: "bg-red-100 text-red-700",
 };
 
-function timeAgo(dateString) {
-  const now = new Date();
-  const date = new Date(dateString);
-  const seconds = Math.floor((now - date) / 1000);
-
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString("en-CA");
-}
+const AUTO_REFRESH_MS = 30_000;
 
 export default function ProductionPage() {
   return (
@@ -75,6 +64,9 @@ export default function ProductionPage() {
 function ProductionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
+  const timeAgo = (d) => sharedTimeAgo(d, t);
+  const refreshTimer = useRef(null);
 
   const [jobs, setJobs] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -83,6 +75,7 @@ function ProductionContent() {
   const [updatingJob, setUpdatingJob] = useState(null);
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(null);
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState(
@@ -125,6 +118,7 @@ function ProductionContent() {
       console.error("Failed to load production jobs:", err);
     } finally {
       setLoading(false);
+      setLastRefresh(new Date());
     }
   }, [page, statusFilter, priorityFilter, factoryFilter, search]);
 
@@ -134,6 +128,12 @@ function ProductionContent() {
 
   useEffect(() => {
     fetchJobs();
+  }, [fetchJobs]);
+
+  // Auto-refresh every 30s
+  useEffect(() => {
+    refreshTimer.current = setInterval(() => fetchJobs(), AUTO_REFRESH_MS);
+    return () => clearInterval(refreshTimer.current);
   }, [fetchJobs]);
 
   function updateParams(updates) {
@@ -256,6 +256,15 @@ function ProductionContent() {
           </span>
         )}
         <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => fetchJobs()}
+            disabled={loading}
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-50"
+            title={lastRefresh ? `Last refresh: ${lastRefresh.toLocaleTimeString()}` : ""}
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
           <Link
             href="/admin/production/board"
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
@@ -543,6 +552,14 @@ function ProductionContent() {
                             job.productName ||
                             "Unknown"}
                         </p>
+                        {(job.orderItem?.order?.id || job.orderId) && (
+                          <Link
+                            href={`/admin/orders/${job.orderItem?.order?.id || job.orderId}`}
+                            className="text-[10px] text-blue-600 hover:underline"
+                          >
+                            Order #{(job.orderItem?.order?.id || job.orderId).slice(0, 8)}
+                          </Link>
+                        )}
                       </td>
 
                       {/* Customer */}
@@ -650,6 +667,17 @@ function ProductionContent() {
                       </p>
                       <p className="mt-0.5 font-mono text-xs text-[#999]">
                         {job.id.slice(0, 8)}
+                        {(job.orderItem?.order?.id || job.orderId) && (
+                          <>
+                            {" · "}
+                            <Link
+                              href={`/admin/orders/${job.orderItem?.order?.id || job.orderId}`}
+                              className="text-blue-600 hover:underline"
+                            >
+                              Order
+                            </Link>
+                          </>
+                        )}
                       </p>
                       <p className="mt-0.5 truncate text-xs text-[#999]">
                         {job.orderItem?.order?.customerEmail ||

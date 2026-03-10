@@ -1,22 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-
-function timeAgo(dateString) {
-  if (!dateString) return "Never";
-  const now = new Date();
-  const date = new Date(dateString);
-  const seconds = Math.floor((now - date) / 1000);
-
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString("en-CA");
-}
+import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function buildConditionsPills(conditions) {
   if (!conditions) return [];
@@ -59,6 +45,8 @@ const autoPriorityOptions = [
 ];
 
 export default function AssignmentRulesPage() {
+  const { t } = useTranslation();
+  const timeAgo = (d) => sharedTimeAgo(d, t);
   const [rules, setRules] = useState([]);
   const [factories, setFactories] = useState([]);
   const [loading, setLoading] = useState(true);
