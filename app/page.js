@@ -309,10 +309,10 @@ export default async function HomePage() {
               <div className="rounded-2xl border border-[var(--color-gray-200)] bg-white p-6 text-center">
                 <span className="text-3xl">&#x1F3C6;</span>
                 <h3 className="mt-3 text-base font-bold text-[var(--color-gray-900)]">
-                  {isZh ? "8年行业经验" : "8 Years in Business"}
+                  {t("home.yearsInBusiness")}
                 </h3>
                 <p className="mt-2 text-sm text-[var(--color-gray-500)]">
-                  {isZh ? "自2018年起服务客户，值得信赖的印刷合作伙伴。" : "Trusted printing partner since 2018. Thousands of satisfied customers across Canada."}
+                  {t("home.yearsInBusinessDesc")}
                 </p>
               </div>
             </div>

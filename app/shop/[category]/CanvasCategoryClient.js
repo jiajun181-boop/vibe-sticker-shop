@@ -242,7 +242,7 @@ function CanvasCard({ item, price, variant = "standard", imageUrl, t }) {
           </div>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--color-gray-200)] bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-gray-700)] transition-colors group-hover:border-[var(--color-brand)] group-hover:text-[var(--color-gray-900)]">
-          {item.quoteOnly ? t("shop.quoteLabel") : t("shop.configure")}
+          {item.quoteOnly ? t("shop.quoteLabel") : t("shop.configureQuote")}
           <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
           </svg>

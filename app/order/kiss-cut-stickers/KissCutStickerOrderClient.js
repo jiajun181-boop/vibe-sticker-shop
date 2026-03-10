@@ -10,6 +10,7 @@ import saveProofData from "@/lib/proof/saveProofData";
 import WhiteInkStep, { needsWhiteInk } from "@/components/configurator/WhiteInkStep";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
 
 const DEBOUNCE_MS = 300;
 
@@ -63,6 +64,7 @@ export default function KissCutStickerOrderClient() {
   const [proofDataId, setProofDataId] = useState(null);
   const [whiteInk, setWhiteInk] = useState({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null });
   const [artworkIntent, setArtworkIntent] = useState(null);
+  const [rushProduction, setRushProduction] = useState(false);
 
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
@@ -115,7 +117,11 @@ export default function KissCutStickerOrderClient() {
   const subtotalCents = quoteData?.totalCents ?? 0;
   const backingSurcharge = (BACKING_SHAPES.find((b) => b.id === backingId)?.surcharge ?? 0) * activeQty;
   const finishSurcharge = (FINISHES.find((f) => f.id === finishId)?.surcharge ?? 0) * activeQty;
-  const totalCents = subtotalCents + backingSurcharge + finishSurcharge;
+  const rushMultiplier = rushProduction ? RUSH_MULTIPLIER : 1;
+  const baseTotalCents = subtotalCents + backingSurcharge + finishSurcharge;
+  const rushSurchargeCents = rushProduction ? Math.round(baseTotalCents * 0.3) : 0;
+  const designHelpCents = artworkIntent === "design-help" ? DESIGN_HELP_CENTS : 0;
+  const totalCents = Math.round(baseTotalCents * rushMultiplier) + designHelpCents;
 
   const requiresProof = uploadedFile != null;
   // White ink enabled on transparent material → URL must be ready before checkout
@@ -137,7 +143,8 @@ export default function KissCutStickerOrderClient() {
       id: "kiss-cut-stickers",
       name: `${t("kc.title")} — ${size.tag}`,
       slug: "kiss-cut-stickers",
-      price: Math.round(totalCents / activeQty),
+      // Use baseTotalCents (no rush, no design help) — useConfiguratorCart applies these
+      price: Math.round(baseTotalCents / activeQty),
       quantity: activeQty,
       options: {
         material: materialId,
@@ -401,16 +408,28 @@ export default function KissCutStickerOrderClient() {
               <p className="text-xs text-red-500">{quoteError}</p>
             ) : quoteData ? (
               <dl className="space-y-2 text-sm">
-                <Row label={t("kc.basePrice")} value={formatCad(subtotalCents)} />
+                <Row label={t("kc.basePrice")} value={formatCad(baseTotalCents)} />
                 {backingSurcharge > 0 && <Row label={t(`kc.backing.${backingId}`)} value={`+ ${formatCad(backingSurcharge)}`} />}
                 {finishSurcharge > 0 && <Row label={t(`kc.finish.${finishId}`)} value={`+ ${formatCad(finishSurcharge)}`} />}
+                {rushSurchargeCents > 0 && (
+                  <div className="flex justify-between text-amber-600">
+                    <dt>{t?.("configurator.rushSurcharge") || "Rush surcharge"}</dt>
+                    <dd className="font-medium">+ {formatCad(rushSurchargeCents)}</dd>
+                  </div>
+                )}
+                {designHelpCents > 0 && (
+                  <div className="flex justify-between text-indigo-600">
+                    <dt>{t?.("configurator.designHelp") || "Design help"}</dt>
+                    <dd className="font-medium">+ {formatCad(designHelpCents)}</dd>
+                  </div>
+                )}
                 <div className="flex justify-between border-t border-gray-100 pt-2">
                   <dt className="font-semibold text-gray-900">{t("kc.total")}</dt>
                   <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
                 </div>
                 {activeQty > 1 && (
                   <div className="pt-1">
-                    <p className="text-[11px] text-gray-400">{formatCad(Math.round(totalCents / activeQty))}/{t("kc.each")}</p>
+                    <p className="text-[11px] text-gray-400">{formatCad(Math.round((totalCents - designHelpCents) / activeQty))}/{t("kc.each")}</p>
                   </div>
                 )}
               </dl>
@@ -422,10 +441,23 @@ export default function KissCutStickerOrderClient() {
               <p className="text-center text-xs text-amber-600">{disabledReason}</p>
             )}
 
+            {/* Rush Production */}
+            {quoteData && !quoteLoading && (
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-colors hover:bg-gray-100">
+                <input
+                  type="checkbox"
+                  checked={rushProduction}
+                  onChange={(e) => setRushProduction(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                />
+                <span className="text-sm font-semibold text-gray-800">{t?.("configurator.rushProduction") || "24-Hour Rush Production"}</span>
+              </label>
+            )}
+
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={() => handleAddToCart({ intakeMode: "upload-optional", artworkIntent })}
+                onClick={() => handleAddToCart({ rushProduction, intakeMode: "upload-optional", artworkIntent })}
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"
@@ -435,7 +467,7 @@ export default function KissCutStickerOrderClient() {
               </button>
               <button
                 type="button"
-                onClick={() => handleBuyNow({ intakeMode: "upload-optional", artworkIntent })}
+                onClick={() => handleBuyNow({ rushProduction, intakeMode: "upload-optional", artworkIntent })}
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"
@@ -473,7 +505,7 @@ export default function KissCutStickerOrderClient() {
           </div>
           <button
             type="button"
-            onClick={() => handleAddToCart({ intakeMode: "upload-optional", artworkIntent })}
+            onClick={() => handleAddToCart({ rushProduction, intakeMode: "upload-optional", artworkIntent })}
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"
@@ -483,7 +515,7 @@ export default function KissCutStickerOrderClient() {
           </button>
           <button
             type="button"
-            onClick={() => handleBuyNow({ intakeMode: "upload-optional", artworkIntent })}
+            onClick={() => handleBuyNow({ rushProduction, intakeMode: "upload-optional", artworkIntent })}
             disabled={!canAddToCart || buyNowLoading}
             className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart && !buyNowLoading ? "bg-gray-900 text-[#fff] shadow-lg hover:bg-gray-800" : "cursor-not-allowed bg-gray-100 text-gray-400"

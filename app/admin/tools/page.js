@@ -103,6 +103,13 @@ export default function ToolsHubPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-1.5 text-xs text-[#999]">
+        <Link href="/admin/workstation" className="hover:text-[#111]">{t("admin.workstation.title")}</Link>
+        <span>/</span>
+        <span className="text-[#111] font-medium">{t("admin.tools.hubTitle")}</span>
+      </div>
+
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
         <h1 className="text-xl font-bold text-black">{t("admin.tools.hubTitle")}</h1>
         <p className="mt-1 text-sm text-[#666]">{t("admin.tools.hubSubtitle")}</p>
@@ -176,7 +183,10 @@ export default function ToolsHubPage() {
             ))}
           </div>
         ) : recentJobs.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-[#999]">{t("admin.tools.noRecentJobs")}</div>
+          <div className="px-5 py-8 text-center">
+            <p className="text-sm text-[#999]">{t("admin.tools.noRecentJobs")}</p>
+            <p className="mt-1 text-xs text-[#bbb]">{t("admin.tools.noRecentJobsHint")}</p>
+          </div>
         ) : (
           <div className="divide-y divide-[#ececec]">
             {recentJobs.map((job) => {

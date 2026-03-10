@@ -10,6 +10,7 @@ import MeshBannerSections from "@/components/banners/MeshBannerSections";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useConfiguratorCart } from "@/components/configurator";
+import { RUSH_MULTIPLIER } from "@/lib/order-config";
 
 const DEBOUNCE_MS = 300;
 
@@ -40,7 +41,7 @@ const FINISHINGS = [
 
 const TURNAROUNDS = [
   { id: "standard", multiplier: 1 },
-  { id: "rush", multiplier: 1.3 },
+  { id: "rush", multiplier: RUSH_MULTIPLIER },
 ];
 
 const QUANTITIES = [1, 2, 5, 10, 25];

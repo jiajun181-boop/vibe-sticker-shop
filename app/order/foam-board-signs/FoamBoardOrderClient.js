@@ -10,6 +10,7 @@ import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useConfiguratorCart } from "@/components/configurator";
 import { ProofPreview } from "@/components/configurator";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
 
 const DEBOUNCE_MS = 300;
 
@@ -91,6 +92,7 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
   const [artworkIntent, setArtworkIntent] = useState(null);
+  const [rushProduction, setRushProduction] = useState(false);
   const [proofConfirmed, setProofConfirmed] = useState(false);
   const [contourData, setContourData] = useState(null);
   const [proofDataId, setProofDataId] = useState(null);
@@ -163,6 +165,11 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
   const mountingSurcharge = (MOUNTINGS.find((m) => m.id === mountingId)?.surcharge ?? 0) * activeQty;
   const adjustedSubtotal = subtotalCents + thicknessSurcharge + mountingSurcharge;
   const totalCents = adjustedSubtotal;
+
+  const rushMultiplier = rushProduction ? RUSH_MULTIPLIER : 1;
+  const rushSurchargeCents = rushProduction ? Math.round(adjustedSubtotal * (RUSH_MULTIPLIER - 1)) : 0;
+  const designHelpCents = artworkIntent === "design-help" ? DESIGN_HELP_CENTS : 0;
+  const displayTotal = Math.round(adjustedSubtotal * rushMultiplier) + designHelpCents;
 
   const requiresProof = uploadedFile != null;
   const canAddToCart = quoteData && !quoteLoading && activeQty > 0 && (!requiresProof || proofConfirmed);
@@ -469,9 +476,15 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
                   <Row label={t(`fb.mounting.${mountingId}`)} value={`+ ${formatCad(mountingSurcharge)}`} />
                 )}
                 <Row label={t("fb.subtotal")} value={formatCad(adjustedSubtotal)} />
+                {rushSurchargeCents > 0 && (
+                  <Row label={t("configurator.rushProduction") || "24-Hour Rush"} value={`+ ${formatCad(rushSurchargeCents)}`} />
+                )}
+                {designHelpCents > 0 && (
+                  <Row label={t("configurator.designHelp") || "Design Help"} value={`+ ${formatCad(designHelpCents)}`} />
+                )}
                 <div className="flex justify-between border-t border-gray-100 pt-2">
                   <dt className="font-semibold text-gray-900">{t("fb.total")}</dt>
-                  <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
+                  <dd className="text-lg font-bold text-gray-900">{formatCad(displayTotal)}</dd>
                 </div>
                 <div className="pt-1">
                   <p className="text-[11px] text-gray-400">
@@ -483,10 +496,20 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
               <p className="text-xs text-gray-400">{t("fb.selectOptions")}</p>
             )}
 
+            {quoteData && (
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-colors has-[:checked]:border-red-300 has-[:checked]:bg-red-50">
+                <input type="checkbox" checked={rushProduction} onChange={(e) => setRushProduction(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
+                <div>
+                  <span className="text-sm font-semibold text-gray-800">{t("configurator.rushProduction") || "24-Hour Rush Production"}</span>
+                  {rushProduction && <span className="ml-2 text-xs text-red-600 font-medium">+30%</span>}
+                </div>
+              </label>
+            )}
+
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={() => handleAddToCart({ artworkIntent })}
+                onClick={() => handleAddToCart({ artworkIntent, rushProduction })}
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart
@@ -498,7 +521,7 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
               </button>
               <button
                 type="button"
-                onClick={() => handleBuyNow({ artworkIntent })}
+                onClick={() => handleBuyNow({ artworkIntent, rushProduction })}
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading
@@ -537,7 +560,7 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
               <div className="h-5 w-20 animate-pulse rounded bg-gray-200" />
             ) : quoteData ? (
               <>
-                <p className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</p>
+                <p className="text-lg font-bold text-gray-900">{formatCad(displayTotal)}</p>
                 <p className="truncate text-[11px] text-gray-500">
                   {activeQty.toLocaleString()} × {size.tag} {t(`fb.sides.${sidesId}`)}
                 </p>
@@ -548,7 +571,7 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
           </div>
           <button
             type="button"
-            onClick={() => handleAddToCart({ artworkIntent })}
+            onClick={() => handleAddToCart({ artworkIntent, rushProduction })}
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart

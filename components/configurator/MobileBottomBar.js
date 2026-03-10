@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import EmailQuotePopover from "./EmailQuotePopover";
 import DeliveryEstimate from "./DeliveryEstimate";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -82,6 +83,13 @@ export default function MobileBottomBar({
 
   // ─── Rush Production (mobile-local, mirrors PricingSidebar) ───
   const [rushProduction, setRushProduction] = useState(false);
+  const rushMultiplier = rushProduction ? RUSH_MULTIPLIER : 1;
+
+  // ─── Rush + Design Help adjusted display prices ───
+  const displayTotal = Math.round(totalCents * rushMultiplier);
+  const displayUnit = unitCents > 0 ? Math.round(unitCents * rushMultiplier) : 0;
+  const designHelpCents = (artworkMode === "upload-optional" && !hasArtwork && artworkIntent === "design-help") ? DESIGN_HELP_CENTS : 0;
+  const displayTotalWithFees = displayTotal + designHelpCents;
 
   // ─── Artwork Intake Gating ───
   const needsArtworkDecision = (artworkMode === "upload-required" || artworkMode === "upload-optional") && !hasArtwork;
@@ -218,10 +226,10 @@ export default function MobileBottomBar({
               </div>
             ) : hasQuote ? (
               <>
-                <p className="text-lg font-black text-gray-900">{formatCad(totalCents)} <span className="text-[10px] font-normal text-gray-400">{t?.("configurator.beforeTax") || "before tax"}</span></p>
+                <p className="text-lg font-black text-gray-900">{formatCad(displayTotalWithFees)} <span className="text-[10px] font-normal text-gray-400">{t?.("configurator.beforeTax") || "before tax"}</span></p>
                 {quantity > 1 ? (
                   <p className="truncate text-[11px] font-semibold text-emerald-600">
-                    {(t?.("configurator.thatsOnly") || "That's only {price} each").replace("{price}", formatCad(Math.round(totalCents / quantity)))}
+                    {(t?.("configurator.thatsOnly") || "That's only {price} each").replace("{price}", formatCad(Math.round(displayTotal / quantity)))}
                   </p>
                 ) : summaryText ? (
                   <p className="truncate text-[11px] text-gray-500">{summaryText}</p>

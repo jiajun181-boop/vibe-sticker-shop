@@ -7,6 +7,7 @@ import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import WhiteInkStep, { needsWhiteInk } from "@/components/configurator/WhiteInkStep";
 import { useConfiguratorCart } from "@/components/configurator";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
 
 const DEBOUNCE_MS = 300;
 
@@ -115,6 +116,7 @@ export default function StickerSheetOrderClient() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [whiteInk, setWhiteInk] = useState({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null });
   const [artworkIntent, setArtworkIntent] = useState(null);
+  const [rushProduction, setRushProduction] = useState(false);
 
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
@@ -220,7 +222,11 @@ export default function StickerSheetOrderClient() {
   const finishSurcharge = (FINISHES.find((f) => f.id === finishId)?.surcharge ?? 0) * activeQty;
 
   const adjustedSubtotal = subtotalCents + materialSurcharge + cutStyleSurcharge + finishSurcharge;
-  const totalCents = adjustedSubtotal;
+  const rushMultiplier = rushProduction ? RUSH_MULTIPLIER : 1;
+  const baseTotalCents = adjustedSubtotal;
+  const rushSurchargeCents = rushProduction ? Math.round(baseTotalCents * 0.3) : 0;
+  const designHelpCents = artworkIntent === "design-help" ? DESIGN_HELP_CENTS : 0;
+  const totalCents = Math.round(baseTotalCents * rushMultiplier) + designHelpCents;
 
   // White ink enabled on transparent material → URL must be ready before checkout
   const whiteInkReady = !needsWhiteInk(materialId) || !whiteInk.enabled || whiteInk.whiteInkUrl != null;
@@ -590,14 +596,25 @@ export default function StickerSheetOrderClient() {
               <p className="text-xs text-red-500">{quoteError}</p>
             ) : quoteData ? (
               <dl className="space-y-2 text-sm">
-                <Row label={t("ss.basePrice")} value={formatCad(subtotalCents)} />
+                <Row label={t("ss.basePrice")} value={formatCad(baseTotalCents)} />
                 {materialSurcharge > 0 && (
                   <Row label={t(`ss.material.${materialId}`)} value={`+ ${formatCad(materialSurcharge)}`} />
                 )}
                 {cutStyleSurcharge > 0 && (
                   <Row label={t(`ss.cutStyle.${cutStyleId}`)} value={`+ ${formatCad(cutStyleSurcharge)}`} />
                 )}
-                <Row label={t("ss.subtotal")} value={formatCad(adjustedSubtotal)} />
+                {rushSurchargeCents > 0 && (
+                  <div className="flex justify-between text-amber-600">
+                    <dt>{t?.("configurator.rushSurcharge") || "Rush surcharge"}</dt>
+                    <dd className="font-medium">+ {formatCad(rushSurchargeCents)}</dd>
+                  </div>
+                )}
+                {designHelpCents > 0 && (
+                  <div className="flex justify-between text-indigo-600">
+                    <dt>{t?.("configurator.designHelp") || "Design help"}</dt>
+                    <dd className="font-medium">+ {formatCad(designHelpCents)}</dd>
+                  </div>
+                )}
                 <div className="flex justify-between border-t border-gray-100 pt-2">
                   <dt className="font-semibold text-gray-900">{t("ss.total")}</dt>
                   <dd className="text-lg font-bold text-gray-900">{formatCad(totalCents)}</dd>
@@ -605,7 +622,7 @@ export default function StickerSheetOrderClient() {
                 {activeQty > 1 && (
                   <div className="pt-1">
                     <p className="text-[11px] text-gray-400">
-                      {formatCad(Math.round(adjustedSubtotal / activeQty))}/{t("ss.each")}
+                      {formatCad(Math.round((totalCents - designHelpCents) / activeQty))}/{t("ss.each")}
                     </p>
                   </div>
                 )}
@@ -618,10 +635,25 @@ export default function StickerSheetOrderClient() {
               <p className="text-center text-xs text-amber-600">{disabledReason}</p>
             )}
 
+            {/* Rush Production */}
+            {quoteData && !quoteLoading && (
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-colors hover:bg-gray-100">
+                <input
+                  type="checkbox"
+                  checked={rushProduction}
+                  onChange={(e) => setRushProduction(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                />
+                <div className="flex-1">
+                  <span className="text-sm font-semibold text-gray-800">{t?.("configurator.rushProduction") || "24-Hour Rush Production"}</span>
+                </div>
+              </label>
+            )}
+
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={() => handleAddToCart({ artworkIntent })}
+                onClick={() => handleAddToCart({ rushProduction, intakeMode: "upload-optional", artworkIntent })}
                 disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart
@@ -633,7 +665,7 @@ export default function StickerSheetOrderClient() {
               </button>
               <button
                 type="button"
-                onClick={() => handleBuyNow({ artworkIntent })}
+                onClick={() => handleBuyNow({ rushProduction, intakeMode: "upload-optional", artworkIntent })}
                 disabled={!canAddToCart || buyNowLoading}
                 className={`w-full rounded-full border-2 px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${
                   canAddToCart && !buyNowLoading
@@ -673,7 +705,7 @@ export default function StickerSheetOrderClient() {
           </div>
           <button
             type="button"
-            onClick={() => handleAddToCart({ artworkIntent })}
+            onClick={() => handleAddToCart({ rushProduction, intakeMode: "upload-optional", artworkIntent })}
             disabled={!canAddToCart}
             className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
               canAddToCart

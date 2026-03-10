@@ -90,7 +90,9 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
                     href={item.href}
                     imageSrc={bannerImages[item.key]}
                     hoverImageSrc={bannerImages2[item.key]}
-                    showTurnaround={false}
+                    showTurnaround
+                    showDescription
+                    ctaKey="shop.configureQuote"
                     aspect={section.size === "large" ? "aspect-[3/2]" : "aspect-[4/3]"}
                     gradientFallback={item.gradient}
                   />

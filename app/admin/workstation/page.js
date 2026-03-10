@@ -87,6 +87,35 @@ function fmtMoney(cents) {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
+// ─── Workstation order categorization (from available summary data) ──────────
+
+function categorizeAttentionOrders(orders) {
+  const rush = [];
+  const missingArtwork = [];
+  const pendingPayment = [];
+  const readyToStart = [];
+  const other = [];
+
+  for (const o of orders) {
+    const tags = o.tags || [];
+    const isRush = o.priority === 0 || tags.includes("rush") || tags.includes("urgent");
+
+    if (isRush) rush.push(o);
+
+    if (tags.includes("missing-artwork") || tags.includes("upload-later")) {
+      missingArtwork.push(o);
+    } else if (o.paymentStatus === "unpaid" || o.status === "pending") {
+      pendingPayment.push(o);
+    } else if (o.status === "paid" && o.productionStatus === "not_started") {
+      readyToStart.push(o);
+    } else {
+      other.push(o);
+    }
+  }
+
+  return { rush, missingArtwork, pendingPayment, readyToStart, other };
+}
+
 // ─── Context-aware action label for needs-attention orders ───────────────────
 
 function orderActionLabel(order, t) {
@@ -158,6 +187,11 @@ export default function WorkstationPage() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
+          <div className="mb-1 flex items-center gap-1.5 text-xs text-[#999]">
+            <Link href="/admin" className="hover:text-[#111]">{t("admin.dashboard.title")}</Link>
+            <span>/</span>
+            <span className="text-[#111] font-medium">{t("admin.workstation.title")}</span>
+          </div>
           <h1 className="text-lg font-bold text-[#111]">{t("admin.workstation.title")}</h1>
           <p className="text-xs text-[#999]">{t("admin.workstation.subtitle")}</p>
           <p className="mt-1 text-[11px] text-[#bbb]">{t("admin.workstation.guidance")}</p>
@@ -202,7 +236,7 @@ export default function WorkstationPage() {
         </div>
       </Section>
 
-      {/* ── 3. Needs Attention (server-filtered, priority-sorted) ───── */}
+      {/* ── 3. Needs Attention — categorized task queue ─────────────── */}
       <Section
         title={`${t("admin.workstation.needsAttention")}${stats?.needsAttentionCount ? ` (${stats.needsAttentionCount})` : ""}`}
         action={<Link href="/admin/orders" className="text-xs font-medium text-[#4f46e5] hover:underline">{t("admin.workstation.viewAll")}</Link>}
@@ -210,43 +244,12 @@ export default function WorkstationPage() {
         {loading ? (
           <LoadingSkeleton rows={4} />
         ) : needsAttention.length === 0 ? (
-          <p className="py-6 text-center text-sm text-[#999]">{t("admin.workstation.noAttention")}</p>
-        ) : (
-          <div className="space-y-2">
-            {needsAttention.map((o) => (
-              <div
-                key={o.id}
-                className="flex flex-col gap-2 rounded-[3px] border border-[#ececec] p-3 transition-colors hover:border-[#ccc] hover:bg-[#fafafa] sm:flex-row sm:items-center sm:justify-between"
-              >
-                <Link href={`/admin/orders/${o.id}`} className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
-                  <PriorityBadge priority={o.priority} t={t} />
-                  <StatusBadge status={o.status} t={t} />
-                  {o.productionStatus && o.productionStatus !== "not_started" && (
-                    <StatusBadge status={o.productionStatus} t={t} />
-                  )}
-                  {o.paymentStatus === "unpaid" && (
-                    <StatusBadge status="unpaid" t={t} />
-                  )}
-                  <span className="text-sm font-medium text-[#111] truncate">#{o.id.slice(-8)}</span>
-                  <span className="hidden text-xs text-[#666] truncate sm:inline">
-                    {o.customerName || o.customerEmail}
-                  </span>
-                </Link>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-[#999]">{t("admin.common.itemCount").replace("{count}", o._count?.items || 0)}</span>
-                  <span className="text-xs font-medium text-[#111]">{fmtMoney(o.totalAmount)}</span>
-                  <span className="text-xs text-[#999]">{timeAgo(o.createdAt, t)}</span>
-                  <Link
-                    href={`/admin/orders/${o.id}`}
-                    className="ml-1 inline-flex items-center gap-1 rounded-[3px] bg-black px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#222]"
-                  >
-                    {orderActionLabel(o, t)}
-                    {I.arrowRight}
-                  </Link>
-                </div>
-              </div>
-            ))}
+          <div className="py-6 text-center">
+            <p className="text-sm text-[#999]">{t("admin.workstation.noAttention")}</p>
+            <p className="mt-1 text-xs text-[#bbb]">{t("admin.workstation.noAttentionHint")}</p>
           </div>
+        ) : (
+          <TaskQueueView orders={needsAttention} t={t} />
         )}
       </Section>
 
@@ -260,7 +263,10 @@ export default function WorkstationPage() {
           {loading ? (
             <LoadingSkeleton rows={3} />
           ) : pendingProofs.length === 0 ? (
-            <p className="py-6 text-center text-sm text-[#999]">{t("admin.workstation.noProofs")}</p>
+            <div className="py-6 text-center">
+              <p className="text-sm text-[#999]">{t("admin.workstation.noProofs")}</p>
+              <p className="mt-1 text-xs text-[#bbb]">{t("admin.workstation.noProofsHint")}</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {pendingProofs.map((p) => (
@@ -300,7 +306,10 @@ export default function WorkstationPage() {
           {loading ? (
             <LoadingSkeleton rows={3} />
           ) : recentJobs.length === 0 ? (
-            <p className="py-6 text-center text-sm text-[#999]">{t("admin.workstation.noJobs")}</p>
+            <div className="py-6 text-center">
+              <p className="text-sm text-[#999]">{t("admin.workstation.noJobs")}</p>
+              <p className="mt-1 text-xs text-[#bbb]">{t("admin.workstation.noJobsHint")}</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {recentJobs.map((j) => {
@@ -350,7 +359,10 @@ export default function WorkstationPage() {
         {loading ? (
           <LoadingSkeleton rows={2} />
         ) : !prodSummary ? (
-          <p className="py-6 text-center text-sm text-[#999]">{t("admin.workstation.loadError")}</p>
+          <div className="py-6 text-center">
+            <p className="text-sm text-[#999]">{t("admin.workstation.prodLoadError")}</p>
+            <button type="button" onClick={refetch} className="mt-2 text-xs font-medium text-[#4f46e5] hover:underline">{t("admin.workstation.retry")}</button>
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {prodColumns.map((col) => (
@@ -366,6 +378,79 @@ export default function WorkstationPage() {
           </div>
         )}
       </Section>
+    </div>
+  );
+}
+
+// ─── Task Queue View — categorized needs-attention orders ────────────────────
+
+function TaskQueueView({ orders, t }) {
+  const cats = categorizeAttentionOrders(orders);
+
+  const groups = [
+    { key: "rush", label: t("admin.workstation.queueRush"), orders: cats.rush, dot: "bg-red-500" },
+    { key: "missingArtwork", label: t("admin.workstation.queueMissingArt"), orders: cats.missingArtwork, dot: "bg-amber-400" },
+    { key: "pendingPayment", label: t("admin.workstation.queuePendingPay"), orders: cats.pendingPayment, dot: "bg-yellow-400" },
+    { key: "readyToStart", label: t("admin.workstation.queueReady"), orders: cats.readyToStart, dot: "bg-green-500" },
+    { key: "other", label: t("admin.workstation.queueOther"), orders: cats.other, dot: "bg-gray-400" },
+  ].filter((g) => g.orders.length > 0);
+
+  return (
+    <div className="space-y-4">
+      {/* Category summary pills */}
+      <div className="flex flex-wrap gap-2">
+        {groups.map((g) => (
+          <span key={g.key} className="inline-flex items-center gap-1.5 rounded-full border border-[#e0e0e0] bg-white px-3 py-1 text-[10px] font-semibold text-[#555]">
+            <span className={`inline-block h-2 w-2 rounded-full ${g.dot}`} />
+            {g.label} ({g.orders.length})
+          </span>
+        ))}
+      </div>
+
+      {/* Orders grouped by category */}
+      {groups.map((g) => (
+        <div key={g.key}>
+          <div className="mb-1.5 flex items-center gap-2">
+            <span className={`inline-block h-2 w-2 rounded-full ${g.dot}`} />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#999]">{g.label}</span>
+          </div>
+          <div className="space-y-1.5">
+            {g.orders.map((o) => (
+              <div
+                key={`${g.key}-${o.id}`}
+                className="flex flex-col gap-2 rounded-[3px] border border-[#ececec] p-3 transition-colors hover:border-[#ccc] hover:bg-[#fafafa] sm:flex-row sm:items-center sm:justify-between"
+              >
+                <Link href={`/admin/orders/${o.id}`} className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
+                  <PriorityBadge priority={o.priority} t={t} />
+                  <StatusBadge status={o.status} t={t} />
+                  {o.productionStatus && o.productionStatus !== "not_started" && (
+                    <StatusBadge status={o.productionStatus} t={t} />
+                  )}
+                  {o.paymentStatus === "unpaid" && (
+                    <StatusBadge status="unpaid" t={t} />
+                  )}
+                  <span className="text-sm font-medium text-[#111] truncate">#{o.id.slice(-8)}</span>
+                  <span className="hidden text-xs text-[#666] truncate sm:inline">
+                    {o.customerName || o.customerEmail}
+                  </span>
+                </Link>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-[#999]">{t("admin.common.itemCount").replace("{count}", o._count?.items || 0)}</span>
+                  <span className="text-xs font-medium text-[#111]">{fmtMoney(o.totalAmount)}</span>
+                  <span className="text-xs text-[#999]">{timeAgo(o.createdAt, t)}</span>
+                  <Link
+                    href={`/admin/orders/${o.id}`}
+                    className="ml-1 inline-flex items-center gap-1 rounded-[3px] bg-black px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#222]"
+                  >
+                    {orderActionLabel(o, t)}
+                    {I.arrowRight}
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

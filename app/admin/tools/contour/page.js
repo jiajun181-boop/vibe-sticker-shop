@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { uploadDesignSnapshot } from "@/lib/design-studio/upload-snapshot";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -34,8 +35,17 @@ function useIsMobile() {
   return mobile;
 }
 
-export default function ContourToolPage() {
+export default function ContourToolPageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex h-64 items-center justify-center text-sm text-[#999]">Loading…</div>}>
+      <ContourToolPage />
+    </Suspense>
+  );
+}
+
+function ContourToolPage() {
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
   const isMobile = useIsMobile();
   const [imageUrl, setImageUrl] = useState(null);
   const [imageName, setImageName] = useState("");
@@ -45,11 +55,12 @@ export default function ContourToolPage() {
   const [progress, setProgress] = useState("");
   const [progressHuman, setProgressHuman] = useState("");
   const [bleedMm, setBleedMm] = useState(3);
-  const [orderId, setOrderId] = useState("");
+  const [orderId, setOrderId] = useState(() => searchParams.get("orderId") || "");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [saveIsError, setSaveIsError] = useState(false);
+  const [savedOrderId, setSavedOrderId] = useState(null); // post-save guidance
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [dragOver, setDragOver] = useState(false);
@@ -59,6 +70,7 @@ export default function ContourToolPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const fileInputRef = useRef(null);
   const prevObjectUrlRef = useRef(null);
+  const processingRef = useRef(false);
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -77,6 +89,15 @@ export default function ContourToolPage() {
   useEffect(() => {
     fetchJobs();
   }, [fetchJobs]);
+
+  // Cleanup blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (prevObjectUrlRef.current) URL.revokeObjectURL(prevObjectUrlRef.current);
+      if (contourResult?.processedImageUrl) URL.revokeObjectURL(contourResult.processedImageUrl);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function resetPreviewState(objectUrl, fileName, file) {
     // Revoke previous ObjectURLs to free memory (critical on mobile)
@@ -119,6 +140,9 @@ export default function ContourToolPage() {
   };
 
   async function processContour(url) {
+    // Guard: skip if another processContour is already running
+    if (processingRef.current) return;
+    processingRef.current = true;
     setProcessing(true);
     setProgress("");
     setProgressHuman(t("admin.tools.contour.progressLoading"));
@@ -146,6 +170,7 @@ export default function ContourToolPage() {
       setProgressHuman("");
     } finally {
       setProcessing(false);
+      processingRef.current = false;
     }
   }
 
@@ -166,6 +191,7 @@ export default function ContourToolPage() {
       }));
     } catch (err) {
       console.error("Bleed regeneration error:", err);
+      setErrorMsg(t("admin.tools.contour.errorBleedRegen"));
     }
   }
 
@@ -269,8 +295,9 @@ export default function ContourToolPage() {
 
       setSaveMsg(saveStatus === "completed" ? t("admin.tools.savedMsg") : t("admin.tools.contour.savedForReview"));
       setSaveIsError(false);
+      if (orderId) setSavedOrderId(orderId);
       fetchJobs();
-      setTimeout(() => setSaveMsg(""), 3000);
+      if (!orderId) setTimeout(() => setSaveMsg(""), 3000);
     } catch (err) {
       setSaveMsg(err instanceof Error ? err.message : t("admin.common.saveFailed"));
       setSaveIsError(true);
@@ -290,13 +317,24 @@ export default function ContourToolPage() {
       setReopening(true);
       try {
         const res = await fetch(job.inputFileUrl);
+        if (!res.ok) {
+          setErrorMsg(t("admin.tools.contour.errorReopenFetch"));
+          setReopening(false);
+          return;
+        }
         const blob = await res.blob();
-        const file = new File([blob], data.fileName || "artwork.png", { type: blob.type });
+        if (!blob.type.startsWith("image/") && blob.size < 100) {
+          setErrorMsg(t("admin.tools.contour.errorReopenFetch"));
+          setReopening(false);
+          return;
+        }
+        const file = new File([blob], data.fileName || "artwork.png", { type: blob.type || "image/png" });
         const objectUrl = URL.createObjectURL(blob);
         resetPreviewState(objectUrl, data.fileName || "artwork.png", file);
         processContour(objectUrl);
       } catch (err) {
         console.error("Failed to reopen contour job:", err);
+        setErrorMsg(t("admin.tools.contour.errorReopenFetch"));
       } finally {
         setReopening(false);
       }
@@ -314,6 +352,15 @@ export default function ContourToolPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-1.5 text-xs text-[#999]">
+        <Link href="/admin/workstation" className="hover:text-[#111]">{t("admin.workstation.title")}</Link>
+        <span>/</span>
+        <Link href="/admin/tools" className="hover:text-[#111]">{t("admin.tools.hubTitle")}</Link>
+        <span>/</span>
+        <span className="text-[#111] font-medium">{t("admin.tools.contour.title")}</span>
+      </div>
+
       {/* Page header — what / input / output / next step */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
         <h1 className="text-xl font-bold text-black">{t("admin.tools.contour.title")}</h1>
@@ -338,16 +385,47 @@ export default function ContourToolPage() {
         </div>
       </div>
 
-      {/* Mobile warning */}
+      {/* Mobile degradation notice */}
       {isMobile && (
-        <div className="flex items-start gap-3 rounded-[3px] border border-amber-300 bg-amber-50 px-4 py-3">
-          <svg className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
-          </svg>
-          <div>
-            <p className="text-xs font-semibold text-amber-800">{t("admin.tools.contour.mobileWarningTitle")}</p>
-            <p className="mt-0.5 text-xs text-amber-700">{t("admin.tools.contour.mobileWarningBody")}</p>
+        <div className="rounded-[3px] border border-amber-300 bg-amber-50 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <svg className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+            </svg>
+            <div>
+              <p className="text-xs font-semibold text-amber-800">{t("admin.tools.contour.mobileWarningTitle")}</p>
+              <p className="mt-0.5 text-xs text-amber-700">{t("admin.tools.contour.mobileWarningBody")}</p>
+            </div>
           </div>
+          <div className="mt-2.5 ml-7 grid grid-cols-2 gap-2 text-[10px]">
+            <div className="rounded-[2px] bg-green-100 px-2 py-1.5">
+              <p className="font-semibold text-green-800">{t("admin.tools.contour.mobileCanDo")}</p>
+              <p className="mt-0.5 text-green-700">{t("admin.tools.contour.mobileCanDoList")}</p>
+            </div>
+            <div className="rounded-[2px] bg-red-100 px-2 py-1.5">
+              <p className="font-semibold text-red-800">{t("admin.tools.contour.mobileCannotDo")}</p>
+              <p className="mt-0.5 text-red-700">{t("admin.tools.contour.mobileCannotDoList")}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order context banner — shown when opened from an order */}
+      {searchParams.get("orderId") && (
+        <div className="flex items-center justify-between gap-3 rounded-[3px] border border-indigo-200 bg-indigo-50 px-4 py-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="inline-block h-2 w-2 rounded-full bg-indigo-500" />
+            <p className="text-xs text-indigo-800">
+              <span className="font-semibold">{t("admin.tools.orderContext")}</span>{" "}
+              <span className="font-mono">#{orderId.slice(0, 8)}</span>
+            </p>
+          </div>
+          <Link
+            href={`/admin/orders/${orderId}`}
+            className="shrink-0 rounded-[3px] border border-indigo-300 px-2.5 py-1 text-[10px] font-semibold text-indigo-700 hover:bg-indigo-100"
+          >
+            {t("admin.tools.viewOrder")}
+          </Link>
         </div>
       )}
 
@@ -529,6 +607,31 @@ export default function ContourToolPage() {
         </>
       ) : null}
 
+      {/* ── Post-save guidance (when saved with order link) ──────────── */}
+      {savedOrderId && !saveIsError && (
+        <div className="flex items-center justify-between gap-3 rounded-[3px] border border-green-300 bg-green-50 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-green-800">{t("admin.tools.contour.savedSuccess")}</p>
+            <p className="mt-0.5 text-[11px] text-green-700">{t("admin.tools.postSaveGuidance")}</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href={`/admin/orders/${savedOrderId}`}
+              className="rounded-[3px] bg-black px-3 py-1.5 text-[10px] font-bold text-white hover:bg-[#222]"
+            >
+              {t("admin.tools.viewOrder")}
+            </Link>
+            <button
+              type="button"
+              onClick={() => setSavedOrderId(null)}
+              className="text-green-600 hover:text-green-800"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Good/Bad Input Examples (collapsible) ────────────────────── */}
       <InputExamples t={t} />
 
@@ -541,7 +644,10 @@ export default function ContourToolPage() {
         {loadingJobs ? (
           <div className="px-5 py-8 text-center text-sm text-[#999]">{t("admin.tools.loading")}</div>
         ) : jobs.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-[#999]">{t("admin.tools.contour.noJobs")}</div>
+          <div className="px-5 py-8 text-center">
+            <p className="text-sm text-[#999]">{t("admin.tools.contour.noJobs")}</p>
+            <p className="mt-1 text-xs text-[#bbb]">{t("admin.tools.contour.noJobsHint")}</p>
+          </div>
         ) : (
           <div className="divide-y divide-[#e0e0e0]">
             {jobs.map((job) => (

@@ -70,7 +70,9 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
                     href={item.href}
                     imageSrc={marketingImages[item.key]}
                     hoverImageSrc={marketingImages2[item.key]}
-                    showTurnaround={false}
+                    showTurnaround
+                    showDescription
+                    ctaKey="shop.configureQuote"
                     gradientFallback={item.gradient}
                   />
                 );

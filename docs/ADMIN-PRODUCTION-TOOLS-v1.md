@@ -1,7 +1,7 @@
 # Admin Production Tools — Engineering Foundation Document
 
-> Last updated: 2026-03-09
-> Status: v1 — current capabilities + gap analysis for future automation
+> Last updated: 2026-03-10
+> Status: v1.2 — M7 unified readiness, tool↔order loop, Caldera-lite groundwork
 
 ---
 
@@ -15,7 +15,7 @@
 1. Upload image (drag-drop or file picker, max 25 MB)
 2. Detect alpha channel (sample 5000 pixels, >1% transparent = has alpha)
 3. If no alpha: run `@imgly/background-removal` (ONNX/WASM, ~20 MB model download)
-   - Skipped on mobile (OOM risk) — operator sees warning banner
+   - Skipped on mobile (OOM risk) — operator sees detailed degradation notice
 4. Downsample to max 512px for processing
 5. Marching squares contour tracing → simplify (epsilon 1.5) → smooth (2 iterations)
 6. Scale back to original dimensions
@@ -142,19 +142,81 @@ orderId    → optional
 | Output file generation | SVG + PNG | Stored as-is | PNG |
 | Output file download | Yes | Yes | Yes |
 | Job record in DB | Yes (ToolJob) | Yes (OrderProof + ToolJob) | Yes (ToolJob) |
-| Order association | Optional (manual) | Required (order proofs) | Optional (manual) |
+| Order association | Optional (manual + URL) | Required (order proofs) | Optional (manual + URL) |
+| Read orderId from URL | Yes (M7) | N/A | Yes (M7) |
+| Order context banner | Yes (M7) | N/A | Yes (M7) |
+| Post-save guidance | Yes (M7) | N/A | Yes (M7) |
 | Quality assessment | Yes (confidence grade) | N/A | N/A |
 | Reopen previous job | Yes | No | Yes |
 | Duplicate job | No | No | Yes |
-| Mobile support | Degraded (no bg removal) | Full | Full (canvas works) |
-| Error boundary | Yes (route-level) | Shared admin | Shared admin |
+| Mobile support | Degraded (explicit notice) | Full | Full (canvas works) |
+| Error boundary | Yes (route-level, i18n) | Shared admin | Shared admin |
 | i18n (en + zh) | Full | Full | Full |
+| Breadcrumb navigation | Yes | Yes | Yes |
+| Empty state guidance | Yes | Yes | Yes |
 
 ---
 
-## 3. Gap Analysis for Future Automation
+## 3. Runtime Protections (M6)
 
-### 3.1 Auto-Layout / Imposition (`FUTURE`)
+### 3.1 Contour Tool — Crash Prevention
+
+| Protection | Location | What it prevents |
+|---|---|---|
+| Canvas context null guard | `generate-contour.js:67` | Browser OOM on canvas creation — throws descriptive error instead of `TypeError: null` |
+| Dual-processing guard | `contour/page.js` (`processingRef`) | User clicking upload while previous contour is still running |
+| Blob URL cleanup on unmount | `contour/page.js` (useEffect cleanup) | Memory leak when navigating away during processing |
+| Reopen fetch validation | `contour/page.js` (`handleReopen`) | Expired or deleted source files showing corrupt data |
+| Bleed recalc error feedback | `contour/page.js` (`handleBleedChange`) | Silent failure on bleed slider — now shows error banner |
+| File type guard | `contour/page.js:98` | Non-image files dropped into upload zone |
+| File size guard | `contour/page.js:103` | Files >25 MB that would OOM mobile browsers |
+| Background removal fallback | `generate-contour.js:95` | WASM load failure or bg-removal crash — falls back to using original image |
+| Route-level error boundary | `contour/error.js` | Uncaught exceptions (canvas OOM, WASM crash) — shows recovery UI with i18n |
+
+### 3.2 Mobile Degradation Strategy
+
+**Contour Tool on Mobile:**
+- Background removal is **completely skipped** (WASM + 20MB model = OOM risk)
+- Explicit degradation notice shows what mobile **can** and **cannot** do
+- Can do: upload PNG with alpha, trace contour, adjust bleed, download, save
+- Cannot do: auto background removal, process large files (>10 MB)
+- Recommendation: use desktop for full experience
+
+**Other tools on mobile:** Full functionality, no degradation needed.
+
+---
+
+## 4. Navigation & Workflow (M6)
+
+### 4.1 Breadcrumb Navigation
+
+All 5 admin tool pages now show a consistent breadcrumb trail:
+- Workstation → Tools Hub → [Tool Name]
+- Allows quick navigation without using browser back button
+
+### 4.2 Inter-page Flow
+
+| From | To | Mechanism |
+|---|---|---|
+| Order detail | Any tool | Quick action links (contour/proof/stamp) |
+| Any tool | Order detail | "View Order" button on job rows (when orderId is set) |
+| Tool page | Tools Hub | Breadcrumb |
+| Tools Hub | Workstation | Breadcrumb |
+| Workstation | Tool pages | Quick action cards |
+| Workstation | Proof detail | Deep link via `?proofId=xxx` |
+
+### 4.3 Empty State Guidance
+
+All empty states now include:
+- Human-readable description of why it's empty
+- Hint about what to do next
+- Action buttons where applicable (e.g., proof page shows upload buttons in empty state)
+
+---
+
+## 5. Gap Analysis for Future Automation
+
+### 5.1 Auto-Layout / Imposition (`FUTURE`)
 
 **What it does:** Arranges multiple sticker contours onto a print sheet (e.g., 12"×18") to minimize waste.
 
@@ -181,7 +243,7 @@ PrintSheet {
 }
 ```
 
-### 3.2 Registration Marks (`FUTURE`)
+### 5.2 Registration Marks (`FUTURE`)
 
 **What it does:** Adds alignment marks (crosshairs, crop marks) to print files for accurate cutting.
 
@@ -201,7 +263,7 @@ PrintSheet {
 - `markOffset` (mm from bleed edge)
 - Registration layer in SVG output
 
-### 3.3 Automated Order-to-Production Pipeline (`FUTURE`)
+### 5.3 Automated Order-to-Production Pipeline (`FUTURE`)
 
 **What it does:** When an order is approved, automatically:
 1. Find the contour job linked to the order
@@ -232,7 +294,7 @@ OrderItem {
 }
 ```
 
-### 3.4 Print-Ready File Assembly (`FUTURE`)
+### 5.4 Print-Ready File Assembly (`FUTURE`)
 
 **What it does:** Combine artwork image + contour SVG + registration marks into final production file.
 
@@ -245,7 +307,7 @@ OrderItem {
 
 ---
 
-## 4. API Endpoints Reference
+## 6. API Endpoints Reference
 
 | Endpoint | Method | Purpose |
 |---|---|---|
@@ -259,7 +321,7 @@ OrderItem {
 
 ---
 
-## 5. File Upload Infrastructure
+## 7. File Upload Infrastructure
 
 All tool output files use `uploadDesignSnapshot()` from `@/lib/design-studio/upload-snapshot`:
 - Backend: UploadThing (hosted file storage)
@@ -268,11 +330,11 @@ All tool output files use `uploadDesignSnapshot()` from `@/lib/design-studio/upl
 
 ---
 
-## 6. Mobile Compatibility Summary
+## 8. Mobile Compatibility Summary
 
 | Tool | Mobile Status | Notes |
 |---|---|---|
-| Contour | Degraded | Bg removal skipped (OOM risk). Basic contour tracing works for PNG with alpha. Warning banner shown. |
+| Contour | Degraded | Bg removal skipped (OOM risk). Basic tracing works for PNG with alpha. Explicit can/cannot notice shown. Desktop recommended for full workflow. |
 | Proof | Full | Upload + review + approve/reject all work on mobile. |
 | Stamp | Full | StampEditor canvas renders fine on mobile. Touch interactions work. |
 | Workstation | Full | Responsive grid layout, all actions accessible. |
@@ -280,11 +342,30 @@ All tool output files use `uploadDesignSnapshot()` from `@/lib/design-studio/upl
 
 ---
 
-## 7. Recommended Next Steps (Priority Order)
+## 9. M7 Additions
 
-1. **Sheet size configuration** — Create `PrintSheet` model with standard sizes
-2. **Order item → contour linking** — Add `contourJobId` to `OrderItem`
-3. **Registration marks** — Add mark layer to SVG output in contour generator
-4. **Auto-layout prototype** — Bin-packing algorithm for single-size stickers on standard sheet
-5. **PDF assembly** — Use `pdf-lib` to combine artwork + contour + marks into print-ready file
-6. **Production queue integration** — Feed assembled files into production board workflow
+### 9.1 Unified Production Readiness (`lib/admin/production-readiness.js`)
+Shared helper used by order detail, workstation, and production board. Provides consistent "ready/needs-info/blocked/in-progress/done" assessment across all pages. See `docs/PRODUCTION-WORKFLOW-v1.md` for full documentation.
+
+### 9.2 Tool ↔ Order Context Loop (M7-5)
+Contour and Stamp Studio tools now read `orderId` from URL search params. When opened from an order (e.g., `?orderId=xxx`), they show an order context banner and pre-fill the order ID field. After saving, they show post-save guidance with a "View Order" link.
+
+### 9.3 Package Completeness (M7-4)
+`assessPackage(item)` and `assessOrderPackage(order)` evaluate which production files exist vs. which are needed for each item. Displayed in order detail as a per-item file checklist.
+
+### 9.4 Caldera-lite Groundwork (M7-6)
+- `lib/contour/registration-marks.js` — Crosshair generation, SVG wrapping, step-and-repeat placeholder
+- `lib/production-manifest.js` — Structured manifest for downstream production tools
+- `docs/PRODUCTION-WORKFLOW-v1.md` — Full documentation of production workflow architecture
+
+---
+
+## 10. Recommended Next Steps (Priority Order)
+
+1. **Tool result writeback** — After contour/stamp save, auto-update OrderItem.meta
+2. **Per-item tool context** — Pass itemId in tool URLs for multi-item orders
+3. **Registration mark UI** — Add mark toggle to contour tool output
+4. **Sheet size configuration** — Create `PrintSheet` model with standard sizes
+5. **Real nesting algorithm** — Replace step-and-repeat with bin-packing solver
+6. **PDF assembly** — Use `pdf-lib` to combine artwork + contour + marks into print-ready file
+7. **Production queue integration** — Feed manifest data into production board workflow

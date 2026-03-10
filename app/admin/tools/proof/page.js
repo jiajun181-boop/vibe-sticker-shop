@@ -246,6 +246,15 @@ export default function ProofManagerPage() {
   // ── Render ──
   return (
     <div className="mx-auto max-w-5xl space-y-5">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-1.5 text-xs text-[#999]">
+        <Link href="/admin/workstation" className="hover:text-[#111]">{t("admin.workstation.title")}</Link>
+        <span>/</span>
+        <Link href="/admin/tools" className="hover:text-[#111]">{t("admin.tools.hubTitle")}</Link>
+        <span>/</span>
+        <span className="text-[#111] font-medium">{t("admin.tools.proof.title")}</span>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -317,7 +326,18 @@ export default function ProofManagerPage() {
           {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-[3px] bg-[#f0f0f0]" />)}
         </div>
       ) : filteredProofs.length === 0 ? (
-        <div className="py-12 text-center text-sm text-[#999]">{t("admin.tools.proof.noProofs")}</div>
+        <div className="py-12 text-center">
+          <p className="text-sm text-[#999]">{t("admin.tools.proof.noProofs")}</p>
+          <p className="mt-1 text-xs text-[#bbb]">{t("admin.tools.proof.noProofsHint")}</p>
+          <div className="mt-4 flex justify-center gap-2">
+            <button type="button" onClick={() => setOrderProofModal(true)} className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]">
+              {t("admin.tools.proof.uploadOrderProof")}
+            </button>
+            <button type="button" onClick={() => setStandaloneModal(true)} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-semibold text-[#666] hover:border-black hover:text-black">
+              {t("admin.tools.proof.standaloneProof")}
+            </button>
+          </div>
+        </div>
       ) : (
         <div className="space-y-2">
           {filteredProofs.map((item) => (

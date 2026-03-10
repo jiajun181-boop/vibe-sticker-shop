@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import EmailQuotePopover from "./EmailQuotePopover";
 import DeliveryEstimate from "./DeliveryEstimate";
 import { PRODUCT_PRINT_SPECS } from "@/lib/design-studio/product-configs";
-import { RUSH_MULTIPLIER } from "@/lib/order-config";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
@@ -67,12 +67,9 @@ export default function PricingSidebar({
   const rushMultiplier = rushProduction ? RUSH_MULTIPLIER : 1;
 
   const displaySubtotal = Math.round(subtotalCents * rushMultiplier);
-  const displayTax = Math.round(taxCents * rushMultiplier);
-  const displayTotal = Math.round(totalCents * rushMultiplier);
   const displayUnit = Math.round(unitCents * rushMultiplier);
 
   // ─── Artwork Intake ───
-  const DESIGN_HELP_CENTS = 4500;
   const needsArtworkDecision = (artworkMode === "upload-required" || artworkMode === "upload-optional") && !hasArtwork;
   const designHelpCents = (needsArtworkDecision && artworkIntent === "design-help") ? DESIGN_HELP_CENTS : 0;
   const displaySubtotalWithFees = displaySubtotal + designHelpCents;
@@ -202,11 +199,11 @@ export default function PricingSidebar({
             ))}
             <div className="flex items-baseline justify-between">
               <span className="text-xs text-gray-500">{t?.("configurator.subtotal") || "Subtotal"}</span>
-              <span className="text-sm font-medium text-gray-700">{formatCad(displaySubtotal)}</span>
+              <span className="text-sm font-medium text-gray-700">{formatCad(subtotalCents)}</span>
             </div>
             {rushProduction && (
               <div className="flex items-baseline justify-between">
-                <span className="text-xs text-amber-600">{t?.("configurator.rushSurcharge") || "Rush surcharge"}</span>
+                <span className="text-xs text-amber-600">{t?.("configurator.rushSurcharge") || "Rush surcharge (+30%)"}</span>
                 <span className="text-sm font-medium text-amber-600">
                   + {formatCad(Math.round(subtotalCents * 0.3))}
                 </span>
@@ -230,7 +227,7 @@ export default function PricingSidebar({
             {quantity > 1 && (
               <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-center">
                 <p className="text-sm font-bold text-emerald-700">
-                  {(t?.("configurator.thatsOnly") || "That's only {price} each").replace("{price}", formatCad(Math.round(displaySubtotal / quantity)))}
+                  {(t?.("configurator.thatsOnly") || "That's only {price} each").replace("{price}", formatCad(displayUnit))}
                 </p>
               </div>
             )}

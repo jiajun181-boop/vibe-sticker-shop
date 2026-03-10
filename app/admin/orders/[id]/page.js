@@ -7,6 +7,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { buildContourSvg } from "@/lib/contour/svg-path";
 import { preflightOrder, detectProductFamily, buildSpecsSummary } from "@/lib/preflight";
 import { hasArtworkUrl, getArtworkStatus } from "@/lib/artwork-detection";
+import { assessItem, assessOrder, assessOrderPackage, READINESS, READINESS_COLORS, READINESS_LABEL_KEYS } from "@/lib/admin/production-readiness";
 import { getActionLabel } from "@/lib/timeline-labels";
 
 const formatCad = (cents) =>
@@ -332,6 +333,9 @@ export default function OrderDetailPage() {
         {/* Production Issues — full list of what's blocking each item */}
         <ProductionIssuesCard order={order} />
 
+        {/* Unified readiness summary — one-line status from shared helper */}
+        <UnifiedReadinessBanner order={order} t={t} />
+
         {/* Next Action Banner */}
         <NextActionBanner order={order} />
 
@@ -374,26 +378,20 @@ export default function OrderDetailPage() {
                     const specs = buildSpecsSummary(item);
                     const meta = item.meta && typeof item.meta === "object" ? item.meta : {};
 
-                    // --- Per-item readiness evaluation (shared utility) ---
+                    // --- Per-item readiness evaluation (unified helper) ---
+                    const itemAssessment = assessItem(item, order.id);
+                    const readinessDot = READINESS_COLORS[itemAssessment.level]?.dot || "bg-gray-400";
+                    const readinessTitle = t(READINESS_LABEL_KEYS[itemAssessment.level] || "admin.readiness.ready");
+
+                    // Artwork status (still needed for badge display)
                     const hasRealUrl = hasArtworkUrl(item);
                     const artStatus = getArtworkStatus(item);
                     const hasFileNameOnly = artStatus === "file-name-only";
                     const isDesignHelp = artStatus === "design-help";
                     const isUploadLater = artStatus === "upload-later";
-                    // Artwork states: green = real URL, amber = fileName-only / upload-later / design-help, red = completely missing
                     const artworkGreen = hasRealUrl;
                     const artworkAmber = !hasRealUrl && (hasFileNameOnly || isUploadLater || isDesignHelp);
                     const artworkRed = artStatus === "missing";
-                    const hasMaterial = !!(item.material || meta.material || meta.stock || meta.labelType);
-                    const hasDimensions = !!(item.widthIn && item.heightIn) || !!meta.sizeLabel || parseSizeRows(item).length > 0;
-                    const needsMaterial = ["sticker", "label", "banner", "sign"].includes(family);
-                    const materialBlocked = needsMaterial && !hasMaterial;
-                    const isBlocked = artworkRed || materialBlocked || (!hasDimensions && family !== "stamp");
-                    const hasWarning = !isBlocked && (artworkAmber
-                      || ((meta.whiteInkMode && meta.whiteInkMode !== "none") && !meta.whiteInkUrl));
-                    // readiness: green = good to go, amber = needs attention, red = blocked
-                    const readinessDot = isBlocked ? "bg-red-500" : hasWarning ? "bg-amber-400" : "bg-green-500";
-                    const readinessTitle = isBlocked ? "Blocked — missing required info" : hasWarning ? "Needs attention before production" : "Ready for production";
 
                     // --- Extract key production specs for prominent display ---
                     const materialLabel = item.material || meta.material || meta.stock || meta.labelType || null;
@@ -531,6 +529,21 @@ export default function OrderDetailPage() {
                           )}
                         </div>
                       </div>
+                      {/* Per-item tool action — from unified readiness assessment */}
+                      {itemAssessment.toolLink && itemAssessment.level !== READINESS.DONE && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <Link
+                            href={itemAssessment.toolLink.href}
+                            className="inline-flex items-center gap-1.5 rounded-[3px] bg-black px-3 py-1.5 text-[10px] font-bold text-white hover:bg-[#222]"
+                          >
+                            {t(itemAssessment.toolLink.label)}
+                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                          </Link>
+                          {itemAssessment.nextAction && (
+                            <span className="text-[10px] text-[#999]">{t(itemAssessment.nextAction)}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     );
                   })}
@@ -928,6 +941,9 @@ export default function OrderDetailPage() {
 
             {/* Production Readiness — at-a-glance indicator */}
             <ProductionReadinessSection order={order} />
+
+            {/* Package Completeness — per-item file checklist */}
+            <PackageCompletenessSection order={order} />
 
             {/* Production Files — all layers for one-click download */}
             <ProductionFilesSection order={order} />
@@ -1752,6 +1768,7 @@ function CustomerSummarySection({ order }) {
 
 /* ========== Production Readiness Section ========== */
 function ProductionReadinessSection({ order }) {
+  const { t } = useTranslation();
   const items = order.items || [];
   if (items.length === 0) return null;
 
@@ -2000,11 +2017,11 @@ function ProductionReadinessSection({ order }) {
   const allReady = itemChecks.every((c) => c.allGood);
   const hasBlockers = itemChecks.some((c) => c.hasBlocker);
   const overallColor = allReady ? "bg-green-100 text-green-800" : hasBlockers ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-800";
-  const overallLabel = allReady ? "Ready for Production" : hasBlockers ? "Blocked — Missing Required Info" : "Needs Attention";
+  const overallLabel = allReady ? t("admin.production.statusReady") : hasBlockers ? t("admin.production.statusBlocked") : t("admin.production.statusNeedsAttention");
   const overallDot = allReady ? "bg-green-500" : hasBlockers ? "bg-red-500" : "bg-yellow-500";
 
   return (
-    <Section title="Production Readiness">
+    <Section title={t("admin.production.readinessTitle")}>
       <div className="space-y-3">
         {/* Overall indicator */}
         <div className={`flex items-center gap-2 rounded-[3px] px-3 py-2 ${overallColor}`}>
@@ -2048,6 +2065,69 @@ function CheckItem({ label, ok }) {
 }
 
 /* ========== Production Files Section ========== */
+/* ========== Package Completeness Section ========== */
+function PackageCompletenessSection({ order }) {
+  const { t } = useTranslation();
+  const pkg = assessOrderPackage(order);
+  if (pkg.items.length === 0) return null;
+
+  const statusColors = {
+    complete: { bg: "bg-green-50", border: "border-green-300", text: "text-green-800", dot: "bg-green-500" },
+    partial: { bg: "bg-amber-50", border: "border-amber-300", text: "text-amber-800", dot: "bg-amber-400" },
+    blocked: { bg: "bg-red-50", border: "border-red-300", text: "text-red-800", dot: "bg-red-500" },
+  };
+
+  const statusLabelKeys = {
+    complete: "admin.package.complete",
+    partial: "admin.package.partial",
+    blocked: "admin.package.blocked",
+  };
+
+  const colors = statusColors[pkg.status];
+
+  return (
+    <Section title={t("admin.package.title")}>
+      {/* Overall status */}
+      <div className={`flex items-center gap-2 rounded-[3px] px-3 py-2 ${colors.bg} ${colors.border} border`}>
+        <span className={`inline-block h-2.5 w-2.5 rounded-full ${colors.dot}`} />
+        <span className={`text-xs font-semibold ${colors.text}`}>{t(statusLabelKeys[pkg.status])}</span>
+        <span className="text-[10px] text-[#666] ml-auto">
+          {pkg.complete} {t("admin.package.complete")} / {pkg.partial} {t("admin.package.partial")} / {pkg.blocked} {t("admin.package.blocked")}
+        </span>
+      </div>
+
+      {/* Per-item file checklist */}
+      <div className="mt-3 space-y-2">
+        {pkg.items.map((item) => {
+          const itemColors = statusColors[item.status];
+          return (
+            <div key={item.itemId} className="rounded-[3px] border border-[#e0e0e0] px-3 py-2">
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`inline-block h-2 w-2 rounded-full ${itemColors.dot}`} />
+                <span className="text-[10px] font-semibold text-black">{item.itemName}</span>
+                <span className="rounded bg-gray-100 px-1 py-0.5 text-[8px] font-medium text-gray-500">
+                  {FAMILY_LABELS[item.family] || item.family}
+                </span>
+                <span className={`ml-auto text-[9px] font-medium ${itemColors.text}`}>
+                  {item.missingCount === 0 ? t("admin.package.allPresent") : t("admin.package.missing").replace("{count}", item.missingCount)}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-1 text-[10px]">
+                {item.files.map((f, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <span className={`inline-block h-1.5 w-1.5 rounded-full ${f.present ? "bg-green-500" : "bg-red-400"}`} />
+                    <span className={f.present ? "text-[#666]" : "font-medium text-red-600"}>{f.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Section>
+  );
+}
+
 function ProductionFilesSection({ order }) {
   const items = order.items || [];
   const proofData = order.proofData || [];
@@ -2518,6 +2598,7 @@ function OrderActions({ order, onUpdate }) {
 
 /* ── Next Action Banner — tells staff what to do right now ── */
 function NextActionBanner({ order }) {
+  const { t } = useTranslation();
   const items = order.items || [];
   if (!items.length) return null;
 
@@ -2526,7 +2607,7 @@ function NextActionBanner({ order }) {
   let toolLink = null;
 
   if (order.productionStatus === "on_hold") {
-    action = "This order is ON HOLD — review and resolve before continuing.";
+    action = t("admin.production.onHold");
     severity = "blocker";
   } else if (order.productionStatus === "shipped" || order.productionStatus === "completed") {
     return null;
@@ -2672,16 +2753,16 @@ function NextActionBanner({ order }) {
 
   if (!action) {
     if (order.status === "paid" && order.productionStatus === "not_started") {
-      action = "Order paid — move to preflight to begin production.";
+      action = t("admin.production.paidReady");
       severity = "info";
     } else if (order.productionStatus === "preflight") {
-      action = "In preflight — verify files, dimensions, material. Then move to production.";
+      action = t("admin.production.inPreflight");
       severity = "info";
     } else if (order.productionStatus === "in_production") {
-      action = "In production. Mark as ready to ship when complete.";
+      action = t("admin.production.inProduction");
       severity = "info";
     } else if (order.productionStatus === "ready_to_ship") {
-      action = "Ready to ship — enter tracking and mark shipped.";
+      action = t("admin.production.readyToShip");
       severity = "info";
     }
   }
@@ -2780,7 +2861,50 @@ function getBlockingIssues(order) {
   return issues;
 }
 
+/* ── Unified Readiness Banner — uses shared production-readiness helper ── */
+function UnifiedReadinessBanner({ order, t }) {
+  const assessment = assessOrder(order);
+  // Don't show for terminal states
+  if (order.productionStatus === "shipped" || order.productionStatus === "completed") return null;
+
+  const colors = READINESS_COLORS[assessment.level] || READINESS_COLORS.ready;
+  const label = t(READINESS_LABEL_KEYS[assessment.level] || "admin.readiness.ready");
+  const summary = t(assessment.summary);
+
+  // Find first tool link across all items for the primary action
+  const firstToolLink = assessment.items.find((a) => a.toolLink)?.toolLink;
+
+  return (
+    <div className={`flex items-center justify-between gap-3 rounded-[3px] border ${colors.border} ${colors.bg} px-4 py-2.5`}>
+      <div className="flex items-center gap-2 min-w-0">
+        <span className={`inline-block h-2.5 w-2.5 rounded-full ${colors.dot}`} />
+        <div>
+          <span className={`text-xs font-bold ${colors.text}`}>{label}</span>
+          {assessment.blockerCount + assessment.warningCount > 0 && (
+            <span className="ml-2 text-[10px] text-[#666]">
+              {assessment.blockerCount > 0 && `${assessment.blockerCount} blocked`}
+              {assessment.blockerCount > 0 && assessment.warningCount > 0 && ", "}
+              {assessment.warningCount > 0 && `${assessment.warningCount} warning${assessment.warningCount > 1 ? "s" : ""}`}
+              {" / "}
+              {assessment.readyCount} ready
+            </span>
+          )}
+        </div>
+      </div>
+      {firstToolLink && (
+        <Link
+          href={firstToolLink.href}
+          className="shrink-0 rounded-[3px] bg-black px-3 py-1.5 text-[10px] font-bold text-white hover:bg-[#222]"
+        >
+          {t(firstToolLink.label)}
+        </Link>
+      )}
+    </div>
+  );
+}
+
 function ProductionIssuesCard({ order }) {
+  const { t } = useTranslation();
   const issues = getBlockingIssues(order);
 
   // Don't show for completed/shipped orders
@@ -2804,7 +2928,7 @@ function ProductionIssuesCard({ order }) {
     ? `${redCount} blocking issue${redCount > 1 ? "s" : ""}${amberCount ? `, ${amberCount} warning${amberCount > 1 ? "s" : ""}` : ""}`
     : hasAmber
       ? `${amberCount} warning${amberCount > 1 ? "s" : ""}`
-      : "All items ready for production";
+      : t("admin.production.allReady");
 
   const headerColor = hasRed ? "text-red-800" : hasAmber ? "text-amber-800" : "text-green-800";
 
@@ -2815,7 +2939,7 @@ function ProductionIssuesCard({ order }) {
       <div className="flex items-center gap-2 mb-1">
         <span className={`inline-block h-2 w-2 rounded-full ${hasRed ? "bg-red-500" : hasAmber ? "bg-amber-400" : "bg-green-500"}`} />
         <span className={`text-xs font-bold uppercase tracking-wider ${headerColor}`}>
-          Production Issues
+          {t("admin.production.issuesTitle")}
         </span>
         <span className={`text-[10px] ${headerColor}`}>— {headerText}</span>
       </div>
@@ -2833,7 +2957,7 @@ function ProductionIssuesCard({ order }) {
           ))}
         </ul>
       ) : (
-        <p className="mt-0.5 text-xs text-green-700">No blocking issues or warnings detected.</p>
+        <p className="mt-0.5 text-xs text-green-700">{t("admin.production.noIssues")}</p>
       )}
     </div>
   );

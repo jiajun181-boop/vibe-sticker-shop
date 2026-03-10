@@ -177,7 +177,7 @@ function ProductCard({ item, price, imageUrl, hoverImageUrl, t }) {
             <span className="text-xs text-[var(--color-gray-400)]">{t("shop.getQuote")}</span>
           )}
           <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-2.5 py-1 text-[9px] font-semibold text-[#fff] transition-colors group-hover:bg-[var(--color-brand-dark)]">
-            {t("shop.configure")}
+            {t("shop.configureQuote")}
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>

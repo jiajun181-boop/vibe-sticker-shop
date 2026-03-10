@@ -10,6 +10,7 @@ import VinylBannerSections from "@/components/banners/VinylBannerSections";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useConfiguratorCart } from "@/components/configurator";
+import { RUSH_MULTIPLIER } from "@/lib/order-config";
 
 const DEBOUNCE_MS = 300;
 
@@ -60,7 +61,7 @@ const SIDES = [
 
 const TURNAROUNDS = [
   { id: "standard", multiplier: 1 },
-  { id: "rush", multiplier: 1.3 },
+  { id: "rush", multiplier: RUSH_MULTIPLIER },
 ];
 
 const QUANTITIES = [1, 2, 5, 10, 25];
