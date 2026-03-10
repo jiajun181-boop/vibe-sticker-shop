@@ -9,6 +9,8 @@ import ImageGallery from "@/components/product/ImageGallery";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useConfiguratorCart } from "@/components/configurator";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
+import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 
 const DEBOUNCE_MS = 300;
 
@@ -81,7 +83,7 @@ const TURNAROUND_OPTIONS = [
 // ─── Main Component ───
 
 export default function VinylLetteringOrderClient({ productImages = [] }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   // Type: "text" (lettering) or "logo" (logo & shape decal)
   const [type, setType] = useState("text");
@@ -722,6 +724,13 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
               <p className="text-xs text-gray-400">{t("vl.selectOptions")}</p>
             )}
 
+            <DeliveryEstimate
+              categorySlug="stickers-labels-decals"
+              rushProduction={turnaroundId === "rush"}
+              t={t}
+              locale={locale}
+            />
+
             <div className="space-y-3">
               <button
                 type="button"
@@ -749,11 +758,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
-              <span>{t("vl.badge.outdoor")}</span>
-              <span className="text-gray-300">|</span>
-              <span>{t("vl.badge.shipping")}</span>
-            </div>
+            <InlineTrustSignals t={t} />
           </div>
         </aside>
       </div>
