@@ -4,12 +4,7 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 
-// ── Helpers ──
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
+import { formatCad } from "@/lib/admin/format-cad";
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString("en-CA") : "—");
 

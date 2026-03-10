@@ -4,11 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
+import { formatCad } from "@/lib/admin/format-cad";
 
 function toDateInputValue(dateStr) {
   if (!dateStr) return "";

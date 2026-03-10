@@ -3,17 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
-
-const statusColors = {
-  draft: "bg-gray-100 text-gray-700",
-  pending: "bg-yellow-100 text-yellow-800",
-  paid: "bg-green-100 text-green-800",
-  canceled: "bg-red-100 text-red-700",
-  refunded: "bg-purple-100 text-purple-700",
-};
+import { formatCad } from "@/lib/admin/format-cad";
+import { statusColor } from "@/lib/admin/status-labels";
 
 // ── Capabilities: tools (clickable) vs system features (info-only) ──────────
 
@@ -282,7 +273,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
-                  <span className={`rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusColors[order.status] || "bg-gray-100 text-gray-700"}`}>
+                  <span className={`rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusColor(order.status)}`}>
                     {order.status}
                   </span>
                   <span className="text-sm font-semibold tabular-nums text-black">{formatCad(order.totalAmount)}</span>

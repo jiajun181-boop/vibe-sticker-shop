@@ -7,11 +7,7 @@ import ProductForm from "./product-form";
 import { createProduct, toggleProductStatus, deleteProduct } from "./actions";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
+import { formatCad } from "@/lib/admin/format-cad";
 const SUBSERIES_TAG_PREFIX = "subseries:";
 const PLACEMENT_TAG_PREFIX = "placement:";
 const CATEGORY_ORDER = [

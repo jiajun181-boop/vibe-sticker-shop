@@ -4,13 +4,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCad } from "@/lib/admin/format-cad";
 
 const AUTO_REFRESH_MS = 30_000;
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
 
 const resolutionOptions = [
   { value: "", label: "All Resolutions" },

@@ -3,14 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-
-const STATUS_COLORS = {
-  open: "bg-blue-100 text-blue-700",
-  in_progress: "bg-amber-100 text-amber-700",
-  waiting_customer: "bg-purple-100 text-purple-700",
-  resolved: "bg-emerald-100 text-emerald-700",
-  closed: "bg-gray-100 text-gray-500",
-};
+import { statusColor } from "@/lib/admin/status-labels";
 
 const STATUSES = ["open", "in_progress", "waiting_customer", "resolved", "closed"];
 const PRIORITIES = ["low", "normal", "high", "urgent"];
@@ -123,7 +116,7 @@ export default function AdminTicketDetailPage() {
           </div>
           <span
             className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ${
-              STATUS_COLORS[ticket?.status] || ""
+              statusColor(ticket?.status)
             }`}
           >
             {ticket?.status?.replace(/_/g, " ")}

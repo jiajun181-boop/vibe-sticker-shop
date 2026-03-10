@@ -5,11 +5,8 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
+import { formatCad } from "@/lib/admin/format-cad";
+import { statusColor, priorityColor } from "@/lib/admin/status-labels";
 
 const statusOptions = [
   { value: "all", label: "All" },
@@ -28,22 +25,6 @@ const priorityOptions = [
   { value: "rush", label: "Rush" },
   { value: "urgent", label: "Urgent" },
 ];
-
-const statusColors = {
-  queued: "bg-[#f5f5f5] text-black",
-  assigned: "bg-blue-100 text-blue-700",
-  printing: "bg-yellow-100 text-yellow-700",
-  quality_check: "bg-purple-100 text-purple-700",
-  finished: "bg-green-100 text-green-700",
-  shipped: "bg-emerald-100 text-emerald-700",
-  on_hold: "bg-red-100 text-red-700",
-};
-
-const priorityColors = {
-  normal: "bg-[#f5f5f5] text-[#666]",
-  rush: "bg-orange-100 text-orange-700",
-  urgent: "bg-red-100 text-red-700",
-};
 
 const AUTO_REFRESH_MS = 30_000;
 
@@ -580,7 +561,7 @@ function ProductionContent() {
                           }
                           disabled={updatingJob === job.id}
                           className={`rounded-[2px] border-0 px-2.5 py-0.5 text-xs font-medium outline-none cursor-pointer ${
-                            statusColors[job.status] || "bg-[#f5f5f5]"
+                            statusColor(job.status)
                           }`}
                         >
                           {statusOptions
@@ -597,7 +578,7 @@ function ProductionContent() {
                       <td className="px-4 py-3">
                         <span
                           className={`inline-block rounded-[2px] px-2.5 py-0.5 text-xs font-medium ${
-                            priorityColors[job.priority] || "bg-[#f5f5f5]"
+                            priorityColor(job.priority)
                           }`}
                         >
                           {job.priority}
@@ -702,7 +683,7 @@ function ProductionContent() {
                       }
                       disabled={updatingJob === job.id}
                       className={`rounded-[2px] border-0 px-2 py-0.5 text-xs font-medium outline-none cursor-pointer ${
-                        statusColors[job.status] || "bg-[#f5f5f5]"
+                        statusColor(job.status)
                       }`}
                     >
                       {statusOptions
@@ -716,7 +697,7 @@ function ProductionContent() {
 
                     <span
                       className={`rounded-[2px] px-2 py-0.5 text-xs font-medium ${
-                        priorityColors[job.priority] || "bg-[#f5f5f5]"
+                        priorityColor(job.priority)
                       }`}
                     >
                       {job.priority}

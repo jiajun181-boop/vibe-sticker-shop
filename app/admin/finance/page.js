@@ -2,11 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
+import { formatCad } from "@/lib/admin/format-cad";
 
 function formatDate(dateStr) {
   if (!dateStr) return "-";

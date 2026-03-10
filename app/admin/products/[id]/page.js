@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 import { resizeImageFile } from "@/lib/client-image-resize";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCad } from "@/lib/admin/format-cad";
 
 const TextOverlayModal = dynamic(() => import("@/components/admin/TextOverlayModal"), { ssr: false });
 const CropModal = dynamic(() => import("@/components/admin/CropModal"), { ssr: false });
@@ -66,11 +67,6 @@ function resolveWorkflowState(tags, isActive) {
   if (Array.isArray(tags) && tags.includes("workflow:published")) return "published";
   return isActive ? "published" : "draft";
 }
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
 
 /* ── Collapsible Section ────────────────────────────── */
 function Section({ title, defaultOpen = true, children }) {

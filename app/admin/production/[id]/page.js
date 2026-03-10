@@ -5,11 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
+import { formatCad } from "@/lib/admin/format-cad";
+import { statusColor, priorityColor } from "@/lib/admin/status-labels";
 
 const JOB_STATUSES = [
   "queued",
@@ -22,22 +19,6 @@ const JOB_STATUSES = [
 ];
 
 const PRIORITIES = ["normal", "rush", "urgent"];
-
-const statusColors = {
-  queued: "bg-gray-100 text-gray-700",
-  assigned: "bg-blue-100 text-blue-700",
-  printing: "bg-yellow-100 text-yellow-700",
-  quality_check: "bg-purple-100 text-purple-700",
-  finished: "bg-green-100 text-green-700",
-  shipped: "bg-emerald-100 text-emerald-700",
-  on_hold: "bg-red-100 text-red-700",
-};
-
-const priorityColors = {
-  normal: "bg-gray-100 text-gray-600",
-  rush: "bg-orange-100 text-orange-700",
-  urgent: "bg-red-100 text-red-700",
-};
 
 const eventDotColors = {
   status_change: "bg-blue-500",
@@ -253,14 +234,14 @@ export default function ProductionJobDetailPage() {
             </h1>
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                statusColors[job.status] || "bg-gray-100"
+                statusColor(job.status)
               }`}
             >
               {statusLabel(job.status)}
             </span>
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                priorityColors[job.priority] || "bg-gray-100"
+                priorityColor(job.priority)
               }`}
             >
               {job.priority}
@@ -535,7 +516,7 @@ export default function ProductionJobDetailPage() {
                             {payload.from && (
                               <span
                                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                  statusColors[payload.from] || "bg-gray-100 text-gray-600"
+                                  statusColor(payload.from)
                                 }`}
                               >
                                 {statusLabel(payload.from)}
@@ -547,7 +528,7 @@ export default function ProductionJobDetailPage() {
                             {payload.to && (
                               <span
                                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                  statusColors[payload.to] || "bg-gray-100 text-gray-600"
+                                  statusColor(payload.to)
                                 }`}
                               >
                                 {statusLabel(payload.to)}
@@ -569,7 +550,7 @@ export default function ProductionJobDetailPage() {
                             {payload.from && (
                               <span
                                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                  priorityColors[payload.from] || "bg-gray-100 text-gray-600"
+                                  priorityColor(payload.from)
                                 }`}
                               >
                                 {payload.from}
@@ -581,7 +562,7 @@ export default function ProductionJobDetailPage() {
                             {payload.to && (
                               <span
                                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                  priorityColors[payload.to] || "bg-gray-100 text-gray-600"
+                                  priorityColor(payload.to)
                                 }`}
                               >
                                 {payload.to}

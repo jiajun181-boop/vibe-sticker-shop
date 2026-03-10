@@ -6,38 +6,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { detectProductFamily } from "@/lib/preflight";
 import { getArtworkStatus, scanOrderArtwork as scanArtwork } from "@/lib/artwork-detection";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
-
-const statusColors = {
-  draft: "bg-gray-100 text-gray-700",
-  pending: "bg-yellow-100 text-yellow-800",
-  paid: "bg-green-100 text-green-800",
-  canceled: "bg-red-100 text-red-700",
-  refunded: "bg-purple-100 text-purple-700",
-};
-
-const paymentColors = {
-  unpaid: "bg-red-100 text-red-700",
-  paid: "bg-green-100 text-green-800",
-  failed: "bg-red-100 text-red-700",
-  refunded: "bg-purple-100 text-purple-700",
-  partially_refunded: "bg-orange-100 text-orange-700",
-};
-
-const productionColors = {
-  not_started: "bg-gray-100 text-gray-600",
-  preflight: "bg-blue-100 text-blue-700",
-  in_production: "bg-indigo-100 text-indigo-700",
-  ready_to_ship: "bg-cyan-100 text-cyan-700",
-  shipped: "bg-purple-100 text-purple-700",
-  completed: "bg-green-100 text-green-700",
-  on_hold: "bg-yellow-100 text-yellow-800",
-  canceled: "bg-red-100 text-red-700",
-};
+import { formatCad } from "@/lib/admin/format-cad";
+import { statusColor, paymentColor, productionColor } from "@/lib/admin/status-labels";
 
 const statuses = ["all", "pending", "paid", "draft", "canceled", "refunded"];
 const productionStatuses = ["all", "not_started", "preflight", "in_production", "ready_to_ship", "shipped", "on_hold"];
@@ -584,7 +554,7 @@ function OrdersContent() {
                       <td className="px-4 py-3">
                         <span
                           className={`inline-block rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                            statusColors[order.status] || "bg-gray-100"
+                            statusColor(order.status)
                           }`}
                         >
                           {statusLabel(order.status)}
@@ -593,7 +563,7 @@ function OrdersContent() {
                       <td className="px-4 py-3">
                         <span
                           className={`inline-block rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                            paymentColors[order.paymentStatus] || "bg-gray-100"
+                            paymentColor(order.paymentStatus)
                           }`}
                         >
                           {order.paymentStatus}
@@ -603,8 +573,7 @@ function OrdersContent() {
                         <div className="flex flex-wrap gap-1">
                           <span
                             className={`inline-block rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                              productionColors[order.productionStatus] ||
-                              "bg-gray-100"
+                              productionColor(order.productionStatus)
                             }`}
                           >
                             {productionLabel(order.productionStatus)}
@@ -706,22 +675,21 @@ function OrdersContent() {
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <span
                           className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                            statusColors[order.status] || "bg-gray-100"
+                            statusColor(order.status)
                           }`}
                         >
                           {order.status}
                         </span>
                         <span
                           className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                            paymentColors[order.paymentStatus] || "bg-gray-100"
+                            paymentColor(order.paymentStatus)
                           }`}
                         >
                           {order.paymentStatus}
                         </span>
                         <span
                           className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                            productionColors[order.productionStatus] ||
-                            "bg-gray-100"
+                            productionColor(order.productionStatus)
                           }`}
                         >
                           {productionLabel(order.productionStatus)}

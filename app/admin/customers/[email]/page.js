@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCad } from "@/lib/admin/format-cad";
+import { statusColor, productionColor } from "@/lib/admin/status-labels";
 
 const segmentStyles = {
   VIP: "bg-amber-100 text-amber-800 border-amber-300",
@@ -12,29 +14,6 @@ const segmentStyles = {
   "At Risk": "bg-red-100 text-red-700 border-red-300",
 };
 
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
-
-const statusColors = {
-  draft: "bg-[#f5f5f5] text-black",
-  pending: "bg-yellow-100 text-yellow-800",
-  paid: "bg-green-100 text-green-800",
-  canceled: "bg-red-100 text-red-700",
-  refunded: "bg-purple-100 text-purple-700",
-};
-
-const productionColors = {
-  not_started: "bg-[#f5f5f5] text-[#666]",
-  preflight: "bg-blue-100 text-blue-700",
-  in_production: "bg-indigo-100 text-indigo-700",
-  ready_to_ship: "bg-cyan-100 text-cyan-700",
-  shipped: "bg-purple-100 text-purple-700",
-  completed: "bg-green-100 text-green-700",
-  on_hold: "bg-yellow-100 text-yellow-800",
-  canceled: "bg-red-100 text-red-700",
-};
 
 export default function CustomerDetailPage() {
   const { email: rawEmail } = useParams();
@@ -266,7 +245,7 @@ export default function CustomerDetailPage() {
                         <td className="px-4 py-3">
                           <span
                             className={`inline-block rounded-[2px] px-2.5 py-0.5 text-xs font-medium ${
-                              statusColors[order.status] || "bg-[#f5f5f5]"
+                              statusColor(order.status)
                             }`}
                           >
                             {order.status}
@@ -275,8 +254,7 @@ export default function CustomerDetailPage() {
                         <td className="px-4 py-3">
                           <span
                             className={`inline-block rounded-[2px] px-2.5 py-0.5 text-xs font-medium ${
-                              productionColors[order.productionStatus] ||
-                              "bg-[#f5f5f5]"
+                              productionColor(order.productionStatus)
                             }`}
                           >
                             {order.productionStatus?.replace(/_/g, " ")}
@@ -331,15 +309,14 @@ export default function CustomerDetailPage() {
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <span
                         className={`rounded-[2px] px-2 py-0.5 text-xs font-medium ${
-                          statusColors[order.status] || "bg-[#f5f5f5]"
+                          statusColor(order.status)
                         }`}
                       >
                         {order.status}
                       </span>
                       <span
                         className={`rounded-[2px] px-2 py-0.5 text-xs font-medium ${
-                          productionColors[order.productionStatus] ||
-                          "bg-[#f5f5f5]"
+                          productionColor(order.productionStatus)
                         }`}
                       >
                         {order.productionStatus?.replace(/_/g, " ")}

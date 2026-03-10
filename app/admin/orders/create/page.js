@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { formatCad } from "@/lib/admin/format-cad";
 
 // ── Product type presets for quick selection ──
 const PRODUCT_TYPES = [
@@ -20,12 +21,6 @@ const PRODUCT_TYPES = [
   { value: "vehicle-wrap", label: "Vehicle Graphics", labelZh: "车贴" },
   { value: "other", label: "Other / Custom", labelZh: "其他" },
 ];
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: "CAD",
-  }).format(cents / 100);
 
 function emptyItem() {
   return {

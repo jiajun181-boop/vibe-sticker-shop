@@ -10,11 +10,8 @@ import { preflightOrder, detectProductFamily, buildSpecsSummary } from "@/lib/pr
 import { hasArtworkUrl, getArtworkStatus } from "@/lib/artwork-detection";
 import { assessItem, assessOrder, assessOrderPackage, READINESS, READINESS_COLORS, READINESS_LABEL_KEYS } from "@/lib/admin/production-readiness";
 import { getActionLabel } from "@/lib/timeline-labels";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
+import { formatCad } from "@/lib/admin/format-cad";
+import { statusColor, paymentColor, productionColor } from "@/lib/admin/status-labels";
 
 const statusOptions = ["draft", "pending", "paid", "canceled", "refunded"];
 const paymentOptions = ["unpaid", "paid", "failed", "refunded", "partially_refunded"];
@@ -28,35 +25,6 @@ const productionOptions = [
   "on_hold",
   "canceled",
 ];
-
-const statusColors = {
-  draft: "bg-[#f5f5f5] text-black",
-  pending: "bg-yellow-100 text-yellow-800",
-  paid: "bg-green-100 text-green-800",
-  canceled: "bg-red-100 text-red-700",
-  refunded: "bg-purple-100 text-purple-700",
-};
-
-/* eslint-disable @typescript-eslint/no-unused-vars -- used in status badge rendering */
-const paymentColors = {
-  unpaid: "bg-red-100 text-red-700",
-  paid: "bg-green-100 text-green-800",
-  failed: "bg-red-100 text-red-700",
-  refunded: "bg-purple-100 text-purple-700",
-  partially_refunded: "bg-orange-100 text-orange-700",
-};
-
-const productionColors = {
-  not_started: "bg-[#f5f5f5] text-[#666]",
-  preflight: "bg-blue-100 text-blue-700",
-  in_production: "bg-indigo-100 text-indigo-700",
-  ready_to_ship: "bg-cyan-100 text-cyan-700",
-  shipped: "bg-purple-100 text-purple-700",
-  completed: "bg-green-100 text-green-700",
-  on_hold: "bg-yellow-100 text-yellow-800",
-  canceled: "bg-red-100 text-red-700",
-};
-/* eslint-enable @typescript-eslint/no-unused-vars */
 
 const priorityLabelKeys = ["admin.orderDetail.priorityNormal", "admin.orderDetail.priorityHigh", "admin.orderDetail.priorityUrgent"];
 const priorityColors = [
@@ -340,7 +308,7 @@ export default function OrderDetailPage() {
           </div>
           <span
             className={`rounded-[2px] px-3 py-1 text-xs font-semibold ${
-              statusColors[order.status] || "bg-[#f5f5f5]"
+              statusColor(order.status)
             }`}
           >
             {order.status}
@@ -2100,7 +2068,7 @@ function PackageCompletenessSection({ order }) {
     blocked: "admin.package.blocked",
   };
 
-  const colors = statusColors[pkg.status];
+  const colors = statusColor(pkg.status);
 
   return (
     <Section title={t("admin.package.title")}>
@@ -2116,7 +2084,7 @@ function PackageCompletenessSection({ order }) {
       {/* Per-item file checklist */}
       <div className="mt-3 space-y-2">
         {pkg.items.map((item) => {
-          const itemColors = statusColors[item.status];
+          const itemColors = statusColor(item.status);
           return (
             <div key={item.itemId} className="rounded-[3px] border border-[#e0e0e0] px-3 py-2">
               <div className="flex items-center gap-2 mb-1">

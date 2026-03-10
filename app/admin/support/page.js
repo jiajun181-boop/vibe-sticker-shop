@@ -2,28 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-
-const STATUS_COLORS = {
-  open: "bg-blue-100 text-blue-700",
-  in_progress: "bg-amber-100 text-amber-700",
-  waiting_customer: "bg-purple-100 text-purple-700",
-  resolved: "bg-emerald-100 text-emerald-700",
-  closed: "bg-gray-100 text-gray-500",
-};
-
-const PRIORITY_COLORS = {
-  low: "text-gray-400",
-  normal: "text-gray-600",
-  high: "text-amber-600",
-  urgent: "text-red-600",
-};
-
-const PRIORITY_DOT = {
-  low: "bg-gray-300",
-  normal: "bg-gray-500",
-  high: "bg-amber-500",
-  urgent: "bg-red-500",
-};
+import { statusColor, priorityColor } from "@/lib/admin/status-labels";
 
 const STATUSES = ["all", "open", "in_progress", "waiting_customer", "resolved", "closed"];
 
@@ -198,7 +177,7 @@ export default function AdminSupportPage() {
                       value={tk.status}
                       onChange={(e) => handleInlineStatus(tk.id, e.target.value)}
                       className={`rounded-full border-0 px-2 py-0.5 text-[10px] font-semibold uppercase cursor-pointer ${
-                        STATUS_COLORS[tk.status] || ""
+                        statusColor(tk.status)
                       }`}
                     >
                       {STATUSES.filter((s) => s !== "all").map((s) => (
@@ -213,7 +192,7 @@ export default function AdminSupportPage() {
                       value={tk.priority}
                       onChange={(e) => handleInlinePriority(tk.id, e.target.value)}
                       className={`border-0 bg-transparent text-xs font-medium uppercase cursor-pointer ${
-                        PRIORITY_COLORS[tk.priority] || ""
+                        priorityColor(tk.priority)
                       }`}
                     >
                       {["low", "normal", "high", "urgent"].map((p) => (
