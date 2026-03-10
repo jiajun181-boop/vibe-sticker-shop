@@ -36,7 +36,9 @@ export default function useConfiguratorCart({ buildCartItem, successMessage = "A
         item.price = Math.round(item.price * RUSH_MULTIPLIER);
       }
       if (extraOptions.artworkIntent === "design-help") {
-        item.price += DESIGN_HELP_CENTS;
+        // Design help is a flat $45 fee per line item, NOT per unit.
+        // Don't add to item.price (per-unit) — track as separate flag.
+        // The store.js getSubtotal() adds it as a flat fee.
         item.options.designHelp = true;
         item.options.designHelpFee = DESIGN_HELP_CENTS;
       }
@@ -69,7 +71,7 @@ export default function useConfiguratorCart({ buildCartItem, successMessage = "A
           item.price = Math.round(item.price * RUSH_MULTIPLIER);
         }
         if (extraOptions.artworkIntent === "design-help") {
-          item.price += DESIGN_HELP_CENTS;
+          // Design help is a flat $45 fee per line item, NOT per unit.
           item.options.designHelp = true;
           item.options.designHelpFee = DESIGN_HELP_CENTS;
         }

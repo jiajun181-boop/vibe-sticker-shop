@@ -203,7 +203,7 @@ export default function PricingSidebar({
               <div className="flex items-baseline justify-between">
                 <span className="text-xs text-amber-600">{t?.("configurator.rushSurcharge") || "Rush surcharge (+30%)"}</span>
                 <span className="text-sm font-medium text-amber-600">
-                  + {formatCad(Math.round(subtotalCents * 0.3))}
+                  + {formatCad(Math.round(subtotalCents * (RUSH_MULTIPLIER - 1)))}
                 </span>
               </div>
             )}

@@ -189,7 +189,13 @@ export default function CartDrawer() {
   }, [isOpen]);
 
   const subtotal = useMemo(
-    () => cart.reduce((sum, item) => sum + (item.unitAmount ?? item.price ?? 0) * item.quantity, 0),
+    () => cart.reduce((sum, item) => {
+      const lineTotal = (item.unitAmount ?? item.price ?? 0) * item.quantity;
+      // Design help is a flat fee per line item, not per unit
+      const opts = item.options || item.meta || {};
+      const dhFee = (opts.designHelp === true || opts.designHelp === "true") ? (Number(opts.designHelpFee) || 4500) : 0;
+      return sum + lineTotal + dhFee;
+    }, 0),
     [cart]
   );
 
@@ -428,6 +434,8 @@ export default function CartDrawer() {
                 {cart.map((item) => {
                   const unit = item.unitAmount ?? item.price ?? 0;
                   const lineTotal = unit * item.quantity;
+                  const opts = item.options || item.meta || {};
+                  const itemDesignHelp = (opts.designHelp === true || opts.designHelp === "true") ? (Number(opts.designHelpFee) || 4500) : 0;
                   const rawMeta = item.meta && typeof item.meta === "object"
                     ? item.meta
                     : item.options && typeof item.options === "object"
@@ -536,8 +544,9 @@ export default function CartDrawer() {
                               </button>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-semibold text-[var(--color-gray-900)]">{formatCad(lineTotal)}</p>
+                              <p className="text-sm font-semibold text-[var(--color-gray-900)]">{formatCad(lineTotal + itemDesignHelp)}</p>
                               {item.quantity > 1 && <p className="text-[11px] text-[var(--color-gray-500)]">{t("cart.each", { price: formatCad(unit) })}</p>}
+                              {itemDesignHelp > 0 && <p className="text-[11px] text-indigo-600">{t("cart.designHelp")} +{formatCad(itemDesignHelp)}</p>}
                             </div>
                           </div>
                         </div>

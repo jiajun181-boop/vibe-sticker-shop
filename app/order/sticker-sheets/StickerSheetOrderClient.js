@@ -224,7 +224,7 @@ export default function StickerSheetOrderClient() {
   const adjustedSubtotal = subtotalCents + materialSurcharge + cutStyleSurcharge + finishSurcharge;
   const rushMultiplier = rushProduction ? RUSH_MULTIPLIER : 1;
   const baseTotalCents = adjustedSubtotal;
-  const rushSurchargeCents = rushProduction ? Math.round(baseTotalCents * 0.3) : 0;
+  const rushSurchargeCents = rushProduction ? Math.round(baseTotalCents * (RUSH_MULTIPLIER - 1)) : 0;
   const designHelpCents = artworkIntent === "design-help" ? DESIGN_HELP_CENTS : 0;
   const totalCents = Math.round(baseTotalCents * rushMultiplier) + designHelpCents;
 
