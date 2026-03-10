@@ -26,12 +26,14 @@ function getStripe() {
 
 const MetaSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
 
+const MAX_QTY = 50_000;
+
 const CartItemSchema = z.object({
   productId: z.string(),
   slug: z.string(),
   name: z.string(),
   unitAmount: z.number().int().nonnegative(),
-  quantity: z.number().int().positive(),
+  quantity: z.number().int().positive().max(MAX_QTY, `Quantity must be ≤ ${MAX_QTY.toLocaleString()}`),
   meta: MetaSchema.optional(),
 });
 
@@ -234,6 +236,9 @@ function repriceSingleItem(product: ProductWithPricingPreset, item: z.infer<type
 
   if (!Number.isFinite(unitAmount) || unitAmount <= 0) {
     throw new Error(`Unable to price item: ${item.name}`);
+  }
+  if (unitAmount < 50) {
+    throw new Error(`Price too low for ${item.name} (minimum $0.50)`);
   }
 
   return {

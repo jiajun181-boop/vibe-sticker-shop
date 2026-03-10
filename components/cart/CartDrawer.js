@@ -12,8 +12,7 @@ import CartUpsell from "@/components/cart/CartUpsell";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { isOversizedProduct } from "@/lib/pickup-hints";
 
-import { HST_RATE, SHIPPING_COST } from "@/lib/order-config";
-const CHECKOUT_COOLDOWN_MS = 8000;
+import { HST_RATE, SHIPPING_COST, CHECKOUT_COOLDOWN_MS } from "@/lib/order-config";
 
 function parseSizeRows(meta) {
   if (!meta || typeof meta !== "object") return [];
