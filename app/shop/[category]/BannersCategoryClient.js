@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import FamilyLandingShell from "@/components/storefront/FamilyLandingShell";
 import FamilySectionHeader from "@/components/storefront/FamilySectionHeader";
@@ -8,15 +9,28 @@ import ProductCard from "@/components/storefront/ProductCard";
 import {
   SIGNS_FAMILY_COMPARISON_COLUMNS,
   SIGNS_FAMILY_COMPARISON_FEATURES,
-  SIGNS_FAMILY_BROWSE_CASES,
+  BANNERS_BROWSE_CASES,
   SIGNS_FAMILY_USE_CASES,
   SIGNS_FAMILY_VALUE_PROPS,
+  BANNERS_CROSS_LINKS,
   BANNERS_ITEM_I18N,
   BANNERS_SECTIONS,
 } from "@/lib/storefront/signs-displays-family";
 
 export default function BannersCategoryClient({ bannerPrices = {}, bannerImages = {}, bannerImages2 = {} }) {
   const { t } = useTranslation();
+
+  // BrowseByNeed action handler: parse "scroll:sectionId" and scroll to it
+  const handleBrowseAction = useCallback((action) => {
+    if (!action?.startsWith("scroll:")) return;
+    const id = action.slice(7);
+    const el = document.getElementById(id);
+    if (el) {
+      const offset = 120;
+      const top = el.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
+  }, []);
 
   return (
     <FamilyLandingShell
@@ -31,8 +45,9 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
       browseByNeed={{
         titleKey: "storefront.browseByNeed.title",
         subtitleKey: "storefront.browseByNeed.subtitle",
-        cases: SIGNS_FAMILY_BROWSE_CASES,
+        cases: BANNERS_BROWSE_CASES,
       }}
+      onBrowseAction={handleBrowseAction}
       comparison={{
         title: "storefront.comparison.title",
         subtitle: "storefront.comparison.subtitle",
@@ -85,26 +100,30 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
         );
       })}
 
-      {/* Cross-link to Signs */}
-      <section className="mt-10">
-        <p className="text-xs font-medium text-[var(--color-gray-500)] mb-2">{t("storefront.signsFamily.alsoExplore")}</p>
-        <Link
-          href="/shop/signs-rigid-boards"
-          className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-5 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
-        >
-          <span className="text-2xl shrink-0">{"\uD83E\uDEA7"}</span>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
-              {t("storefront.signsFamily.crossLink.signs")}
-            </h3>
-            <p className="mt-1 text-xs text-[var(--color-gray-500)]">
-              {t("storefront.signsFamily.crossLink.signsDesc")}
-            </p>
+      {/* Cross-links with explicit reasons */}
+      <section className="mt-10 space-y-3">
+        {BANNERS_CROSS_LINKS.map((link) => (
+          <div key={link.href}>
+            <p className="text-xs font-medium text-[var(--color-brand)] mb-1.5">{t(link.reasonKey)}</p>
+            <Link
+              href={link.href}
+              className="group flex items-center gap-4 rounded-xl border border-[var(--color-gray-200)] bg-white p-5 transition-all hover:border-[var(--color-brand)] hover:shadow-md"
+            >
+              <span className="text-2xl shrink-0">{link.icon}</span>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-semibold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">
+                  {t(link.titleKey)}
+                </h3>
+                <p className="mt-1 text-xs text-[var(--color-gray-500)]">
+                  {t(link.descKey)}
+                </p>
+              </div>
+              <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </Link>
           </div>
-          <svg className="h-4 w-4 shrink-0 text-[var(--color-gray-400)] group-hover:text-[var(--color-brand)] transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        </Link>
+        ))}
       </section>
     </FamilyLandingShell>
   );
