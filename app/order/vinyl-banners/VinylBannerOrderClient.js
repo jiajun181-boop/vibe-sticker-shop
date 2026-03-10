@@ -11,6 +11,8 @@ import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useConfiguratorCart } from "@/components/configurator";
 import { RUSH_MULTIPLIER } from "@/lib/order-config";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
+import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 
 const DEBOUNCE_MS = 300;
 
@@ -94,7 +96,7 @@ function MaterialIcon({ type, className = "h-7 w-7" }) {
 // ─── Main Component ───
 
 export default function VinylBannerOrderClient({ productImages = [] }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   // Size mode: "preset" or "custom"
   const [sizeMode, setSizeMode] = useState("preset");
@@ -603,6 +605,11 @@ export default function VinylBannerOrderClient({ productImages = [] }) {
               <p className="text-xs text-gray-400">{t("vb.selectOptions")}</p>
             )}
 
+            {/* Delivery estimate */}
+            {quoteData && !quoteLoading && (
+              <DeliveryEstimate categorySlug="banners-displays" rushProduction={turnaroundId === "rush"} t={t} locale={locale} />
+            )}
+
             <div className="space-y-3">
               <button
                 type="button"
@@ -630,11 +637,7 @@ export default function VinylBannerOrderClient({ productImages = [] }) {
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
-              <span>{t("vb.badge.outdoor")}</span>
-              <span className="text-gray-300">|</span>
-              <span>{t("vb.badge.shipping")}</span>
-            </div>
+            <InlineTrustSignals t={t} />
           </div>
         </aside>
       </div>

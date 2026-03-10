@@ -10,6 +10,8 @@ import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useConfiguratorCart } from "@/components/configurator";
 import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
+import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 
 const DEBOUNCE_MS = 300;
 
@@ -71,7 +73,7 @@ function MaterialIcon({ type, className = "h-7 w-7" }) {
 // ─── Main Component ───
 
 export default function YardSignOrderClient({ productImages = [] }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const [sizeIdx, setSizeIdx] = useState(1); // 18×24 default
   const [materialId, setMaterialId] = useState("4mm-coroplast");
@@ -439,6 +441,11 @@ export default function YardSignOrderClient({ productImages = [] }) {
               <p className="text-center text-xs text-amber-600">{disabledReason}</p>
             )}
 
+            {/* Delivery estimate */}
+            {quoteData && !quoteLoading && (
+              <DeliveryEstimate categorySlug="signs-rigid-boards" rushProduction={rushProduction} t={t} locale={locale} />
+            )}
+
             {/* Rush toggle */}
             {quoteData && (
               <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-colors has-[:checked]:border-red-300 has-[:checked]:bg-red-50">
@@ -482,11 +489,7 @@ export default function YardSignOrderClient({ productImages = [] }) {
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
-              <span>{t("ys.badge.weatherproof")}</span>
-              <span className="text-gray-300">|</span>
-              <span>{t("ys.badge.shipping")}</span>
-            </div>
+            <InlineTrustSignals t={t} />
           </div>
         </aside>
       </div>

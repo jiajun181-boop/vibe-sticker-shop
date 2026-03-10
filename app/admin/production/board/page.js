@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -74,32 +76,21 @@ const dateRangeOptions = [
 // Helpers
 // ---------------------------------------------------------------------------
 
-function timeAgo(dateString) {
-  const now = new Date();
-  const date = new Date(dateString);
-  const seconds = Math.floor((now - date) / 1000);
-
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString("en-CA");
-}
+const AUTO_REFRESH_MS = 30_000; // Auto-refresh every 30 seconds
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function ProductionBoardPage() {
+  const { t } = useTranslation();
   // Board data keyed by status
   const [columns, setColumns] = useState({});
   const [loading, setLoading] = useState(true);
   const [factories, setFactories] = useState([]);
 
   const [operators, setOperators] = useState([]);
+  const autoRefreshRef = useRef(null);
 
   // Filters
   const [factoryFilter, setFactoryFilter] = useState("all");
@@ -156,6 +147,12 @@ export default function ProductionBoardPage() {
     fetchBoard();
   }, [fetchBoard]);
 
+  // Auto-refresh every 30s
+  useEffect(() => {
+    autoRefreshRef.current = setInterval(() => fetchBoard(), AUTO_REFRESH_MS);
+    return () => clearInterval(autoRefreshRef.current);
+  }, [fetchBoard]);
+
   // -----------------------------------------------------------
   // Actions
   // -----------------------------------------------------------
@@ -209,9 +206,14 @@ export default function ProductionBoardPage() {
     <div className="space-y-4">
       {/* Top toolbar */}
       <div className="flex flex-col gap-3 rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-center">
-        {/* Title */}
+        {/* Title + total count */}
         <h1 className="text-lg font-semibold text-black">
           Production Board
+          {!loading && (
+            <span className="ml-2 text-sm font-normal text-[#999]">
+              ({Object.values(columns).reduce((sum, arr) => sum + (arr?.length || 0), 0)} jobs)
+            </span>
+          )}
         </h1>
 
         {/* Refresh button */}
@@ -463,6 +465,16 @@ export default function ProductionBoardPage() {
                           </p>
                         )}
 
+                        {/* Order link */}
+                        {job.orderId && (
+                          <Link
+                            href={`/admin/orders/${job.orderId}`}
+                            className="mt-1.5 block text-[11px] text-indigo-600 hover:text-indigo-800 truncate"
+                          >
+                            Order #{job.orderId.slice(-8)}
+                          </Link>
+                        )}
+
                         {/* Footer row: factory, time, actions */}
                         <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#e0e0e0]">
                           <div className="min-w-0 flex-1">
@@ -470,7 +482,7 @@ export default function ProductionBoardPage() {
                               {job.factoryName || "Unassigned"}
                             </p>
                             <p className="text-xs text-[#999] mt-0.5">
-                              {timeAgo(job.createdAt)}
+                              {sharedTimeAgo(job.createdAt, t)}
                             </p>
                           </div>
 

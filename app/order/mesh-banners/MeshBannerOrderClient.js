@@ -11,6 +11,8 @@ import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useConfiguratorCart } from "@/components/configurator";
 import { RUSH_MULTIPLIER } from "@/lib/order-config";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
+import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 
 const DEBOUNCE_MS = 300;
 
@@ -74,7 +76,7 @@ function MaterialIcon({ type, className = "h-7 w-7" }) {
 // ─── Main Component ───
 
 export default function MeshBannerOrderClient({ productImages = [] }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const [sizeMode, setSizeMode] = useState("preset");
   const [sizeIdx, setSizeIdx] = useState(0);
@@ -473,6 +475,11 @@ export default function MeshBannerOrderClient({ productImages = [] }) {
               <p className="text-xs text-gray-400">{t("mb.selectOptions")}</p>
             )}
 
+            {/* Delivery estimate */}
+            {quoteData && !quoteLoading && (
+              <DeliveryEstimate categorySlug="banners-displays" rushProduction={turnaroundId === "rush"} t={t} locale={locale} />
+            )}
+
             <div className="space-y-3">
               <button type="button" onClick={() => handleAddToCart({ artworkIntent })} disabled={!canAddToCart}
                 className={`w-full rounded-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.15em] transition-all ${canAddToCart ? "bg-gray-900 text-[#fff] hover:bg-gray-800" : "cursor-not-allowed bg-gray-200 text-gray-400"}`}>
@@ -484,11 +491,7 @@ export default function MeshBannerOrderClient({ productImages = [] }) {
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
-              <span>{t("mb.badge.windResistant")}</span>
-              <span className="text-gray-300">|</span>
-              <span>{t("mb.badge.shipping")}</span>
-            </div>
+            <InlineTrustSignals t={t} />
           </div>
         </aside>
       </div>

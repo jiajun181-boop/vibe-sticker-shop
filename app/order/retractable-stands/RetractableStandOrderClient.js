@@ -11,6 +11,8 @@ import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useConfiguratorCart } from "@/components/configurator";
 import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
+import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 
 const DEBOUNCE_MS = 300;
 
@@ -59,7 +61,7 @@ function TierIcon({ tier, className = "h-10 w-10" }) {
 // ─── Main Component ───
 
 export default function RetractableStandOrderClient({ productImages = [] }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const [tierIdx, setTierIdx] = useState(1); // Standard default
   const [orderType, setOrderType] = useState("complete-kit");
@@ -404,6 +406,11 @@ export default function RetractableStandOrderClient({ productImages = [] }) {
               <p className="text-xs text-gray-400">{t("rs.selectOptions")}</p>
             )}
 
+            {/* Delivery estimate */}
+            {quoteData && !quoteLoading && (
+              <DeliveryEstimate categorySlug="display-stands" rushProduction={rushProduction} t={t} locale={locale} />
+            )}
+
             {quoteData && (
               <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-colors has-[:checked]:border-red-300 has-[:checked]:bg-red-50">
                 <input type="checkbox" checked={rushProduction} onChange={(e) => setRushProduction(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
@@ -425,11 +432,7 @@ export default function RetractableStandOrderClient({ productImages = [] }) {
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
-              <span>{t("rs.badge.portable")}</span>
-              <span className="text-gray-300">|</span>
-              <span>{t("rs.badge.shipping")}</span>
-            </div>
+            <InlineTrustSignals t={t} />
           </div>
         </aside>
       </div>

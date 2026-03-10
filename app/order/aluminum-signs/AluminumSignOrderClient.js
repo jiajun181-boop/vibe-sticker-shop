@@ -10,6 +10,8 @@ import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useConfiguratorCart } from "@/components/configurator";
 import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
+import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 
 const DEBOUNCE_MS = 300;
 
@@ -57,7 +59,7 @@ const QUANTITIES = [1, 5, 10, 25, 50];
 // ─── Main Component ───
 
 export default function AluminumSignOrderClient({ productImages = [] }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const [sizeIdx, setSizeIdx] = useState(1); // 18x24 default
   const [thickness, setThickness] = useState("aluminum-040");
@@ -450,6 +452,12 @@ export default function AluminumSignOrderClient({ productImages = [] }) {
               <p className="text-xs text-gray-400">{t("al.selectOptions")}</p>
             )}
 
+            {/* Delivery estimate */}
+            {quoteData && !quoteLoading && (
+              <DeliveryEstimate categorySlug="signs-rigid-boards" rushProduction={rushProduction} t={t} locale={locale} />
+            )}
+
+            {/* Rush toggle */}
             {quoteData && (
               <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-colors has-[:checked]:border-red-300 has-[:checked]:bg-red-50">
                 <input type="checkbox" checked={rushProduction} onChange={(e) => setRushProduction(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
@@ -487,11 +495,7 @@ export default function AluminumSignOrderClient({ productImages = [] }) {
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
-              <span>{t("al.badge.rustproof")}</span>
-              <span className="text-gray-300">|</span>
-              <span>{t("al.badge.shipping")}</span>
-            </div>
+            <InlineTrustSignals t={t} />
           </div>
         </aside>
       </div>

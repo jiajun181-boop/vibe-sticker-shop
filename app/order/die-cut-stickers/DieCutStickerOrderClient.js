@@ -11,6 +11,8 @@ import WhiteInkStep, { needsWhiteInk } from "@/components/configurator/WhiteInkS
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
+import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 
 const DEBOUNCE_MS = 300;
 
@@ -47,7 +49,7 @@ const DEFAULT_SIZE_IDX = 1; // 3"×3"
 // ─── Main Component ───
 
 export default function DieCutStickerOrderClient() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   // useConfiguratorCart provides unified Add to Cart + Buy Now handlers
 
   const [materialId, setMaterialId] = useState("white-vinyl");
@@ -425,6 +427,11 @@ export default function DieCutStickerOrderClient() {
               <p className="text-center text-xs text-amber-600">{disabledReason}</p>
             )}
 
+            {/* Delivery estimate */}
+            {quoteData && !quoteLoading && (
+              <DeliveryEstimate categorySlug="stickers-labels-decals" rushProduction={rushProduction} t={t} locale={locale} />
+            )}
+
             {/* Rush Production */}
             {quoteData && !quoteLoading && (
               <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-colors hover:bg-gray-100">
@@ -463,11 +470,7 @@ export default function DieCutStickerOrderClient() {
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-4 pt-2 text-[11px] text-gray-400">
-              <span>{t("dc.badge.waterproof")}</span>
-              <span className="text-gray-300">|</span>
-              <span>{t("dc.badge.shipping")}</span>
-            </div>
+            <InlineTrustSignals t={t} />
           </div>
         </aside>
       </div>
