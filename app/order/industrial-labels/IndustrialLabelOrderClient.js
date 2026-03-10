@@ -13,11 +13,9 @@ import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { TYPES, SIZES_BY_TYPE, DEFAULT_SIZE_IDX, MATERIALS, LAMINATIONS, QUANTITIES, SLUG_MAP } from "@/lib/industrial-label-order-config";
+import { formatCad } from "@/lib/product-helpers";
 
 const DEBOUNCE_MS = 300;
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 // ─── Icons ───
 

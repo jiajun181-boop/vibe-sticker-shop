@@ -5,9 +5,7 @@ import EmailQuotePopover from "./EmailQuotePopover";
 import DeliveryEstimate from "./DeliveryEstimate";
 import { PRODUCT_PRINT_SPECS } from "@/lib/design-studio/product-configs";
 import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 /**
  * Sticky pricing sidebar shared across all configurators.

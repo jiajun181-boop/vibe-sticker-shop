@@ -21,6 +21,7 @@ import { getBusinessCardConfig, computeMultiNameFileFees } from "@/lib/business-
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
+import { formatCad } from "@/lib/product-helpers";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -28,9 +29,6 @@ const SIDES = [
   { id: "single", label: "bc.side.single" },
   { id: "double", label: "bc.side.double" },
 ];
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 

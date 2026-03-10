@@ -10,11 +10,8 @@ import CategoryHero from "@/components/category/CategoryHero";
 import CategoryFaq from "@/components/category/CategoryFaq";
 import QuickAddButton from "@/components/product/QuickAddButton";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
+import { formatCad } from "@/lib/product-helpers";
 
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
 const safeText = (value, fallback) =>
   typeof value === "string" && value.trim() ? value : fallback;
 

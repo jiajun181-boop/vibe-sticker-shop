@@ -6,9 +6,7 @@ import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 /**
  * Unified product card for all storefront category/family pages.

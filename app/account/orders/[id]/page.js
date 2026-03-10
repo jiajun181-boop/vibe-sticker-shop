@@ -6,9 +6,7 @@ import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useCartStore } from "@/lib/store";
 import { getActionLabel } from "@/lib/timeline-labels";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 const STATUS_COLORS = {
   paid: "bg-emerald-100 text-emerald-700",

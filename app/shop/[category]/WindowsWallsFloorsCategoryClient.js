@@ -8,11 +8,9 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import CategoryHero from "@/components/category/CategoryHero";
 import CategoryFaq from "@/components/category/CategoryFaq";
 import { isSvgImage } from "@/lib/product-image";
+import { formatCad } from "@/lib/product-helpers";
 
 const BASE = "/shop/windows-walls-floors";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 /* ── Item slug → i18n key map ── */
 const ITEM_I18N = {

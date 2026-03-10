@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 export default function InteracCheckoutPage() {
   const { t } = useTranslation();

@@ -5,9 +5,7 @@ import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getProductImage } from "@/lib/product-image";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 // Complementary product rules: category -> suggested categories
 // Only use the 7 actual DB categories

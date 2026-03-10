@@ -6,9 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast } from "@/components/Toast";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 function ProductCard({ p, t, onQuickAdd }) {
   const img = p.images?.[0]?.url;

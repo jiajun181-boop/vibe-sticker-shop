@@ -20,6 +20,7 @@ import {
   OptionGrid,
 } from "@/components/configurator";
 import QuantityScroller from "@/components/configurator/QuantityScroller";
+import { formatCad } from "@/lib/product-helpers";
 
 function StampEditorSkeleton() {
   return (
@@ -64,9 +65,6 @@ const StampEditor = dynamic(() => import("@/components/product/StampEditor"), {
   ssr: false,
   loading: () => <StampEditorSkeleton />,
 });
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 // Ink color is locked to black for now
 const INK_COLOR = "#111111";

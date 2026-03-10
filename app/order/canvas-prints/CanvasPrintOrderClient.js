@@ -20,6 +20,7 @@ import {
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
+import { formatCad } from "@/lib/product-helpers";
 
 // ─── Canvas Print Configuration ───
 
@@ -58,9 +59,6 @@ const EDGE_TO_TREATMENT = {
   "black-edges": "color",
   "white-edges": "white",
 };
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 // ─── Icons ───
 

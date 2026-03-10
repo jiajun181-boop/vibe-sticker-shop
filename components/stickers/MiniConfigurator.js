@@ -7,14 +7,10 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getCuttingType, resolveProductSlug } from "@/lib/sticker-order-config";
 import { ShapeIcon } from "./ShapeIcon";
 import { showSuccessToast } from "@/components/Toast";
+import { formatCad } from "@/lib/product-helpers";
 
 const HST_RATE = 0.13;
 const DEBOUNCE_MS = 300;
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
 
 const MATERIAL_HINTS = {
   "white-vinyl": "Durable, waterproof",

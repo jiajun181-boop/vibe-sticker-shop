@@ -30,11 +30,9 @@ import {
   TURNAROUNDS,
   calculateRollLabelPrice,
 } from "@/lib/roll-labels-config";
+import { formatCad } from "@/lib/product-helpers";
 
 const HST_RATE = 0.13;
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 export default function RollLabelsOrderClient({ productImages = [] }) {
   const { t, locale } = useTranslation();

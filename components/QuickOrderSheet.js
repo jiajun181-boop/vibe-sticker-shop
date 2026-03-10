@@ -7,9 +7,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { showSuccessToast, showErrorToast } from "@/components/Toast";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 const POPULAR_SLUGS = [
   "business-cards-standard",

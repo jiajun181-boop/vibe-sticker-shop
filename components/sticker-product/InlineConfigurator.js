@@ -38,11 +38,9 @@ import {
   useStepScroll,
 } from "@/components/configurator";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
+import { formatCad } from "@/lib/product-helpers";
 
 const INCH_TO_CM = 2.54;
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 const MATERIAL_HINTS = {
   "white-vinyl": "Durable, waterproof",

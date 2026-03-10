@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCad } from "@/lib/product-helpers";
 import {
   BANNER_TYPES,
   BANNER_TYPE_GROUPS,
@@ -249,9 +250,6 @@ export default function BannerOrderClient({ defaultType, productImages }) {
   if (finishingSurcharge > 0) {
     extraRows.push({ label: t("banner.finishingSurcharge"), value: `+ $${(finishingSurcharge / 100).toFixed(2)}` });
   }
-
-  const formatCad = (cents) =>
-    new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)]">

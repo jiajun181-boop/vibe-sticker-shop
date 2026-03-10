@@ -8,13 +8,9 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import CategoryHero from "@/components/category/CategoryHero";
 import CategoryFaq from "@/components/category/CategoryFaq";
 import { isSvgImage } from "@/lib/product-image";
+import { formatCad } from "@/lib/product-helpers";
 
 const BASE = "/shop/vehicle-graphics-fleet";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
 
 function minPrice(vehiclePrices, keys = []) {
   const prices = keys.map((k) => vehiclePrices[k]).filter((v) => Number(v) > 0);

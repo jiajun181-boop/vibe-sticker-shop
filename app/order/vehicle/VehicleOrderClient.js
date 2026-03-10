@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCad } from "@/lib/product-helpers";
 import {
   VEHICLE_TYPES,
   VEHICLE_TYPE_GROUPS,
@@ -251,9 +252,6 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
   if (textInput.trim()) {
     summaryLines.push({ label: t("vehicle.text"), value: textInput.trim() });
   }
-
-  const formatCad = (cents) =>
-    new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
   return (
     <main className="min-h-screen bg-[var(--color-gray-50)]">

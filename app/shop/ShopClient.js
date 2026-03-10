@@ -14,6 +14,7 @@ import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaro
 import QuickViewModal from "@/components/product/QuickViewModal";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { useFavoritesStore } from "@/lib/favorites";
+import { formatCad } from "@/lib/product-helpers";
 
 const PAGE_SIZE_OPTIONS = [12, 24, 36];
 const HOT_PICK_SLUGS = [
@@ -43,9 +44,6 @@ const CATEGORY_MATERIAL_MAP = {
   "windows-walls-floors": "adhesive",
   "vehicle-graphics-fleet": "adhesive",
 };
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 function sortProducts(list, sortBy, catOrder) {
   const arr = [...list];

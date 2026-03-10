@@ -10,11 +10,8 @@ import QuickAddButton from "@/components/product/QuickAddButton";
 import { useSearchParams } from "next/navigation";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
+import { formatCad } from "@/lib/product-helpers";
 
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
 const safeText = (value, fallback) =>
   typeof value === "string" && value.trim() ? value : fallback;
 

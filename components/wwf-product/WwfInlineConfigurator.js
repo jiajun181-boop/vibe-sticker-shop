@@ -18,11 +18,9 @@ import {
   OptionGrid,
   useStepScroll,
 } from "@/components/configurator";
+import { formatCad } from "@/lib/product-helpers";
 
 const INCH_TO_CM = 2.54;
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 /**
  * Inline configurator for Windows, Walls & Floors product pages.

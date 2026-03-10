@@ -5,12 +5,10 @@ import Link from "next/link";
 import { useCartStore } from "@/lib/store";
 import { trackPurchase } from "@/lib/analytics";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCad } from "@/lib/product-helpers";
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_ATTEMPTS = 30;
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 function addBusinessDays(base, days) {
   const n = new Date(base);

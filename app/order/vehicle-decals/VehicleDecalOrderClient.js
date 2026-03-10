@@ -20,9 +20,7 @@ import QuantityScroller from "@/components/configurator/QuantityScroller";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 // ─── Vehicle Decal Configuration ───
 

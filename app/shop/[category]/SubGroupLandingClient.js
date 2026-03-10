@@ -12,11 +12,7 @@ import { ShapeIcon, getShapeBg } from "@/components/stickers/ShapeIcon";
 import DiscountBadge from "@/components/stickers/DiscountBadge";
 import TrustBadgeBar from "@/components/stickers/TrustBadgeBar";
 import MiniConfigurator from "@/components/stickers/MiniConfigurator";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
-    cents / 100
-  );
+import { formatCad } from "@/lib/product-helpers";
 
 /* ─── Sub-Group Card ─── */
 function SubGroupCard({ group, t, stickerConfig, isExpanded, onExpand }) {

@@ -4,9 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import EmailQuotePopover from "./EmailQuotePopover";
 import DeliveryEstimate from "./DeliveryEstimate";
 import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 /**
  * Fixed mobile bottom bar for configurator pricing + CTA.

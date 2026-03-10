@@ -29,9 +29,7 @@ import {
   useStepScroll,
 } from "@/components/configurator";
 import QuantityScroller from "@/components/configurator/QuantityScroller";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 const formatSurcharge = (cents) =>
   cents >= 100 ? `+${formatCad(cents)}/ea` : `+$0.${String(cents).padStart(2, "0")}/ea`;

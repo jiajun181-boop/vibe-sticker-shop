@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCad } from "@/lib/product-helpers";
 import {
   ACCESSORY_OPTIONS,
   getSignType,
@@ -250,9 +251,6 @@ export default function SignOrderClient({ defaultType, productImages }) {
   if (accessorySurcharge > 0) {
     extraRows.push({ label: t("sign.accessorySurcharge"), value: `+ $${(accessorySurcharge / 100).toFixed(2)}` });
   }
-
-  const formatCad = (cents) =>
-    new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
   // --- Accordion state ---
   const [activeStepId, setActiveStepId] = useState("step-material");

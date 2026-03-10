@@ -7,9 +7,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useCartStore } from "@/lib/store";
 import { showSuccessToast, showErrorToast } from "@/components/Toast";
 import ReferralSection from "@/components/account/ReferralSection";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 const STATUS_STYLES = {
   paid: { bg: "bg-emerald-100 text-emerald-700", icon: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },

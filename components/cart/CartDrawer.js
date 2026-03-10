@@ -15,9 +15,6 @@ import { isOversizedProduct } from "@/lib/pickup-hints";
 import { HST_RATE, SHIPPING_COST } from "@/lib/order-config";
 const CHECKOUT_COOLDOWN_MS = 8000;
 
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
-
 function parseSizeRows(meta) {
   if (!meta || typeof meta !== "object") return [];
   const raw = meta.sizeRows;
@@ -42,7 +39,7 @@ function parseSizeRows(meta) {
     .filter(Boolean);
 }
 
-import { normalizeCheckoutMeta as normalizeMeta } from "@/lib/product-helpers";
+import { normalizeCheckoutMeta as normalizeMeta, formatCad } from "@/lib/product-helpers";
 
 function getDeliveryWindow() {
   const d = new Date();

@@ -16,6 +16,7 @@ import {
   CollectionPageSchema,
   BreadcrumbSchemaFromItems,
 } from "@/components/JsonLd";
+import { formatCad } from "@/lib/product-helpers";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 
@@ -43,12 +44,6 @@ export async function generateMetadata({ params }) {
 }
 
 export const revalidate = 3600;
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: "CAD",
-  }).format(cents / 100);
 
 export default async function UseCasePage({ params }) {
   const { slug } = await params;

@@ -29,9 +29,7 @@ import {
   COVER_COATINGS,
   QUANTITIES,
 } from "@/lib/booklet-order-config";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 // ─── Icons ───
 

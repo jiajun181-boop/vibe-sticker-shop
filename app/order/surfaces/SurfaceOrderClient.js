@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCad } from "@/lib/product-helpers";
 import {
   SURFACE_TYPES,
   FINISHING_OPTIONS,
@@ -264,9 +265,6 @@ export default function SurfaceOrderClient({ defaultType, productSlug, productIm
   if (finishingSurcharge > 0) {
     extraRows.push({ label: t("surface.finishingSurcharge"), value: `+ $${(finishingSurcharge / 100).toFixed(2)}` });
   }
-
-  const formatCad = (cents) =>
-    new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
   // --- Accordion state ---
   const [activeStepId, setActiveStepId] = useState("step-type");

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCad } from "@/lib/product-helpers";
 import { CANVAS_TYPES, getCanvasType } from "@/lib/canvas-order-config";
 import CanvasPreview from "@/components/canvas/CanvasPreview";
 import SplitPanelPreview from "@/components/canvas/SplitPanelPreview";
@@ -279,9 +280,6 @@ export default function CanvasOrderClient({ defaultType, productImages }) {
       value: `+ $${(frameSurcharge / 100).toFixed(2)}`,
     });
   }
-
-  const formatCad = (cents) =>
-    new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
   // --- Accordion state ---
   const [activeStepId, setActiveStepId] = useState("step-artwork");

@@ -13,11 +13,9 @@ import { useConfiguratorCart } from "@/components/configurator";
 import { RUSH_MULTIPLIER } from "@/lib/order-config";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
+import { formatCad } from "@/lib/product-helpers";
 
 const DEBOUNCE_MS = 300;
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 // ─── Vinyl Banner Configuration ───
 

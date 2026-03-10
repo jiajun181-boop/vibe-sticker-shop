@@ -7,14 +7,12 @@ import DualEntryHero from "@/components/home/DualEntryHero";
 import GoogleReviews from "@/components/home/GoogleReviews";
 import HomeScrollWrapper from "@/components/home/HomeScrollWrapper";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
+import { formatCad } from "@/lib/product-helpers";
 
 export const revalidate = 60;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 const BRAND = "La Lunar Printing Inc.";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 const CATEGORY_CARDS = [
   { slug: "marketing-business-print", title: "Marketing & Business Print", titleZh: "营销 & 商务印刷", desc: "Business cards, flyers, brochures & more", descZh: "名片、传单、折页等", gradient: "from-amber-400 to-orange-400", href: "/shop/marketing-business-print", icon: "/api/product-image/business-cards-classic?category=marketing-business-print&name=Business+Cards" },

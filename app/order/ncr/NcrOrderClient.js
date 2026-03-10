@@ -19,9 +19,7 @@ import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 import { FORM_TYPES, SIZES, QUANTITIES } from "@/lib/ncr-order-config";
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+import { formatCad } from "@/lib/product-helpers";
 
 // ─── Main Component ───
 

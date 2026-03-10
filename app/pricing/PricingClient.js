@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { formatCad } from "@/lib/product-helpers";
 
 const DEPT_ICONS = {
   "marketing-business-print": "\uD83D\uDDA8\uFE0F",
@@ -12,9 +13,6 @@ const DEPT_ICONS = {
   "windows-walls-floors": "\uD83E\uDE9F",
   "vehicle-graphics-fleet": "\uD83D\uDE9A",
 };
-
-const formatCad = (cents) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 
 function formatPrice(dollars) {
   if (dollars >= 1) {
