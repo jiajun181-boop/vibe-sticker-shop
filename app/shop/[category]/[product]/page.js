@@ -16,6 +16,7 @@ import { SEO_NOINDEX_SLUGS } from "@/lib/seo-noindex-slugs";
 import { getAssociationsFor } from "@/lib/product-associations";
 import ProductClient from "./ProductClient";
 import SubProductLandingClient from "./SubProductLandingClient";
+import StampFamilyClient from "./StampFamilyClient";
 import VariantProductPage from "./VariantProductPage";
 import SceneLandingPage from "./SceneLandingPage";
 import StickerProductPageClient from "@/components/sticker-product/StickerProductPageClient";
@@ -563,6 +564,18 @@ export default async function ProductPage({ params }) {
         p.fromPrice = p.basePrice || 0;
         p.quickAddQty = 1;
       }
+    }
+
+    // ── Stamp family: use dedicated family landing instead of generic sub-product grid ──
+    if (decodedSlug === "stamps") {
+      return (
+        <Suspense>
+          <StampFamilyClient
+            products={toClientSafe(dedupedProducts)}
+            category={decodedCategory}
+          />
+        </Suspense>
+      );
     }
 
     const config = await getCatalogConfig();
