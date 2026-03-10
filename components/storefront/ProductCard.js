@@ -21,6 +21,7 @@ import { formatCad } from "@/lib/product-helpers";
  * - showDescription — show product description (default: false)
  * - gradientFallback — tailwind gradient class for when no image (e.g. "from-violet-400 to-fuchsia-400")
  * - aspect       — image aspect ratio class (default: "aspect-[4/3]")
+ * - tags         — array of pre-translated strings rendered as small pills (e.g. cues, attributes)
  * - ctaKey        — i18n key for CTA (default: product.ctaKey or "shop.configure")
  * - children     — optional extra content below CTA
  */
@@ -34,6 +35,7 @@ export default function ProductCard({
   showDescription = false,
   gradientFallback = "from-gray-200 to-gray-300",
   aspect = "aspect-[4/3]",
+  tags,
   ctaKey,
   children,
 }) {
@@ -109,6 +111,16 @@ export default function ProductCard({
           <p className="mt-1 text-[11px] text-[var(--color-gray-500)] line-clamp-2">
             {product.description}
           </p>
+        )}
+
+        {tags?.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {tags.map((tag) => (
+              <span key={tag} className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-600">
+                {tag}
+              </span>
+            ))}
+          </div>
         )}
 
         <div className="mt-auto pt-3 flex items-center justify-between">
