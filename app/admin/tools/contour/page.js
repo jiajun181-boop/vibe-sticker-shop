@@ -70,6 +70,7 @@ function ContourToolPage() {
   const [detailJob, setDetailJob] = useState(null);
   const [reopening, setReopening] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [previewMode, setPreviewMode] = useState("contour"); // "contour" | "mask" | "source"
   const fileInputRef = useRef(null);
   const prevObjectUrlRef = useRef(null);
   const processingRef = useRef(false);
@@ -154,6 +155,7 @@ function ContourToolPage() {
   // Human-readable progress labels
   const PROGRESS_LABELS = {
     loading: "admin.tools.contour.progressLoading",
+    analyzing: "admin.tools.contour.progressAnalyzing",
     "removing-bg": "admin.tools.contour.progressBgRemoval",
     tracing: "admin.tools.contour.progressTracing",
     done: "admin.tools.contour.progressDone",
@@ -297,11 +299,18 @@ function ContourToolPage() {
             contourConfidence: contourResult.quality?.confidence || null,
             contourShapeType: contourResult.quality?.shapeType || null,
             contourWarnings: contourResult.quality?.warnings || [],
+            contourSuggestion: contourResult.quality?.suggestion || null,
             areaCoverage: contourResult.quality?.areaCoverage || null,
             rectangularity: contourResult.quality?.rectangularity || null,
             pointCount: contourResult.quality?.pointCount || null,
             contourBounds: contourResult.quality?.contourBounds || null,
             imageBounds: contourResult.quality?.imageBounds || null,
+            // M6.1b: extraction metadata
+            extractionMode: contourResult.extractionMode || null,
+            maskCoverage: contourResult.extractionMeta?.maskCoverage || null,
+            componentCount: contourResult.extractionMeta?.componentCount || null,
+            selectedComponentArea: contourResult.extractionMeta?.selectedComponentArea || null,
+            backgroundUniformity: contourResult.extractionMeta?.bgUniformity || null,
           },
           notes: notes || null,
           orderId: orderId || null,
@@ -529,37 +538,95 @@ function ContourToolPage() {
             </div>
           ) : contourResult ? (
             <div className="relative w-full">
-              <svg
-                viewBox={`0 0 ${contourResult.imageWidth} ${contourResult.imageHeight}`}
-                className="mx-auto max-h-[280px] w-auto"
-                style={{ background: "repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50% / 16px 16px" }}
-              >
-                <image
-                  href={contourResult.processedImageUrl || imageUrl}
-                  width={contourResult.imageWidth}
-                  height={contourResult.imageHeight}
+              {/* View mode toggle: Source / Mask / Contour */}
+              <div className="mb-2 flex items-center justify-center gap-1">
+                {["source", contourResult.maskOverlayUrl ? "mask" : null, "contour"].filter(Boolean).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setPreviewMode(mode)}
+                    className={`rounded-[3px] px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+                      previewMode === mode
+                        ? "bg-black text-white"
+                        : "bg-[#f0f0f0] text-[#666] hover:bg-[#e0e0e0]"
+                    }`}
+                  >
+                    {t(`admin.tools.contour.view_${mode}`)}
+                  </button>
+                ))}
+              </div>
+
+              {/* Source view */}
+              {previewMode === "source" && (
+                <img
+                  src={imageUrl}
+                  alt="Source"
+                  className="mx-auto max-h-[260px] rounded-[3px] object-contain"
+                  style={{ background: "repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50% / 16px 16px" }}
                 />
-                {contourResult.bleedPath ? (
-                  <path d={contourResult.bleedPath} fill="none" stroke="red" strokeWidth="2" strokeDasharray="6,4" opacity="0.4" />
-                ) : null}
-                {contourResult.cutPath ? (
-                  <path d={contourResult.cutPath} fill="none" stroke="red" strokeWidth="2" />
-                ) : null}
-              </svg>
+              )}
+
+              {/* Mask view — shows detected foreground/background */}
+              {previewMode === "mask" && contourResult.maskOverlayUrl && (
+                <div>
+                  <img
+                    src={contourResult.maskOverlayUrl}
+                    alt="Detected mask"
+                    className="mx-auto max-h-[260px] rounded-[3px] object-contain"
+                    style={{ background: "repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50% / 16px 16px" }}
+                  />
+                  <p className="mt-1.5 text-center text-[10px] text-[#999]">
+                    {t("admin.tools.contour.maskHint")}
+                  </p>
+                </div>
+              )}
+
+              {/* Contour view (default) */}
+              {previewMode === "contour" && (
+                <svg
+                  viewBox={`0 0 ${contourResult.imageWidth} ${contourResult.imageHeight}`}
+                  className="mx-auto max-h-[260px] w-auto"
+                  style={{ background: "repeating-conic-gradient(#e0e0e0 0% 25%, transparent 0% 50%) 50% / 16px 16px" }}
+                >
+                  <image
+                    href={contourResult.processedImageUrl || imageUrl}
+                    width={contourResult.imageWidth}
+                    height={contourResult.imageHeight}
+                  />
+                  {contourResult.bleedPath ? (
+                    <path d={contourResult.bleedPath} fill="none" stroke="red" strokeWidth="2" strokeDasharray="6,4" opacity="0.4" />
+                  ) : null}
+                  {contourResult.cutPath ? (
+                    <path d={contourResult.cutPath} fill="none" stroke="red" strokeWidth="2" />
+                  ) : null}
+                </svg>
+              )}
+
+              {/* Extraction mode badge + legend */}
               <div className="mt-2 flex items-center justify-center gap-3 text-[10px] text-[#999]">
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-0.5 w-4 bg-red-500" /> {t("admin.tools.contour.cutLine")}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-0.5 w-4 border-t-2 border-dashed border-red-400" /> {t("admin.tools.contour.bleedLine")}
-                </span>
+                {previewMode === "contour" && (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block h-0.5 w-4 bg-red-500" /> {t("admin.tools.contour.cutLine")}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block h-0.5 w-4 border-t-2 border-dashed border-red-400" /> {t("admin.tools.contour.bleedLine")}
+                    </span>
+                  </>
+                )}
                 <span>
                   {contourResult.imageWidth}x{contourResult.imageHeight}px
                 </span>
+                {contourResult.extractionMode && (
+                  <ExtractionModeBadge mode={contourResult.extractionMode} t={t} />
+                )}
               </div>
-              {/* Quality grade */}
+              {/* Quality grade + suggestion */}
               {contourResult.quality && (
                 <QualityBanner quality={contourResult.quality} t={t} />
+              )}
+              {contourResult.quality?.suggestion && (
+                <SuggestionBanner suggestion={contourResult.quality.suggestion} t={t} />
               )}
             </div>
           ) : (
@@ -887,6 +954,10 @@ function ContourDetailModal({ job, t, onClose, onReopen, reopening }) {
               <QualityGuidance confidence={job.outputData.contourConfidence} t={t} />
             </div>
           )}
+          {/* Suggestion */}
+          {job.outputData?.contourSuggestion && (
+            <SuggestionBanner suggestion={job.outputData.contourSuggestion} t={t} />
+          )}
           {/* Metadata */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <MetaCell label={t("admin.tools.contour.fileName")} value={job.inputData?.fileName || "—"} />
@@ -894,6 +965,20 @@ function ContourDetailModal({ job, t, onClose, onReopen, reopening }) {
             <MetaCell label={t("admin.tools.contour.imageSize")} value={`${job.inputData?.imageWidth || "—"} × ${job.inputData?.imageHeight || "—"}px`} />
             <MetaCell label={t("admin.tools.contour.operator")} value={job.operatorName || "—"} />
             <MetaCell label={t("admin.tools.contour.created")} value={formatJobTime(job.createdAt)} />
+            {job.outputData?.extractionMode && (
+              <MetaCell label={t("admin.tools.contour.extractionModeLabel")} value={
+                <ExtractionModeBadge mode={job.outputData.extractionMode} t={t} />
+              } />
+            )}
+            {job.outputData?.maskCoverage != null && (
+              <MetaCell label={t("admin.tools.contour.maskCoverageLabel")} value={`${Math.round(job.outputData.maskCoverage * 100)}%`} />
+            )}
+            {job.outputData?.backgroundUniformity != null && (
+              <MetaCell label={t("admin.tools.contour.bgUniformityLabel")} value={`${Math.round(job.outputData.backgroundUniformity * 100)}%`} />
+            )}
+            {job.outputData?.componentCount != null && (
+              <MetaCell label={t("admin.tools.contour.componentCountLabel")} value={job.outputData.componentCount} />
+            )}
             {job.outputData?.bgRemoved && (
               <MetaCell label={t("admin.tools.contour.bgRemoved")} value="Yes" />
             )}
@@ -972,9 +1057,42 @@ function QualityBanner({ quality, t }) {
         <ConfidenceBadge confidence={quality.confidence} shapeType={quality.shapeType} t={t} />
         <span>{quality.shapeType} · {quality.areaCoverage}% {t("admin.tools.contour.coverage").toLowerCase()}</span>
       </div>
-      {quality.warnings.filter((w) => w !== "info_bg_removed").map((w) => (
+      {quality.warnings.filter((w) => !w.startsWith("info_")).map((w) => (
         <p key={w} className="mt-1">⚠ {t(`admin.tools.contour.${w}`)}</p>
       ))}
+    </div>
+  );
+}
+
+// ─── Extraction Mode Badge ────────────────────────────────────────────────────
+
+const EXTRACTION_MODE_STYLES = {
+  alpha: "bg-blue-100 text-blue-700",
+  corner_flood: "bg-teal-100 text-teal-700",
+  edge_gradient: "bg-purple-100 text-purple-700",
+  bg_removal: "bg-violet-100 text-violet-700",
+  hybrid: "bg-indigo-100 text-indigo-700",
+};
+
+function ExtractionModeBadge({ mode, t }) {
+  const cls = EXTRACTION_MODE_STYLES[mode] || "bg-gray-100 text-gray-600";
+  const label = t(`admin.tools.contour.mode_${mode}`) || mode;
+  return (
+    <span className={`rounded-[2px] px-1.5 py-0.5 text-[10px] font-bold ${cls}`}>
+      {label}
+    </span>
+  );
+}
+
+// ─── Human-readable Suggestion Banner ─────────────────────────────────────────
+
+function SuggestionBanner({ suggestion, t }) {
+  if (!suggestion) return null;
+  const text = t(`admin.tools.contour.${suggestion}`);
+  if (!text || text === `admin.tools.contour.${suggestion}`) return null;
+  return (
+    <div className="mt-1.5 rounded-[3px] bg-blue-50 border border-blue-200 px-3 py-2">
+      <p className="text-xs text-blue-700">{text}</p>
     </div>
   );
 }
