@@ -66,6 +66,12 @@ export default function AdminSupportPage() {
     fetchTickets(status, search, page);
   }, [status, page, fetchTickets]);
 
+  // Auto-refresh every 30s
+  useEffect(() => {
+    const timer = setInterval(() => fetchTickets(status, search, page), 30_000);
+    return () => clearInterval(timer);
+  }, [status, search, page, fetchTickets]);
+
   const handleSearch = (val) => {
     setSearch(val);
     clearTimeout(searchTimer.current);

@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+
+const AUTO_REFRESH_MS = 30_000;
 
 const formatCad = (cents) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
@@ -52,6 +54,7 @@ const resolutionColors = {
 export default function QCPage() {
   const { t } = useTranslation();
   const timeAgo = (d) => sharedTimeAgo(d, t);
+  const refreshTimer = useRef(null);
   const [reports, setReports] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -102,6 +105,12 @@ export default function QCPage() {
 
   useEffect(() => {
     fetchReports();
+  }, [fetchReports]);
+
+  // Auto-refresh every 30s
+  useEffect(() => {
+    refreshTimer.current = setInterval(() => fetchReports(), AUTO_REFRESH_MS);
+    return () => clearInterval(refreshTimer.current);
   }, [fetchReports]);
 
   async function handleCreateReport(e) {
@@ -184,13 +193,23 @@ export default function QCPage() {
             </span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => setShowForm(!showForm)}
-          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
-        >
-          {showForm ? "Cancel" : "Report Defect"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => fetchReports()}
+            disabled={loading}
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-50"
+          >
+            {loading ? "..." : "Refresh"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowForm(!showForm)}
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
+          >
+            {showForm ? "Cancel" : "Report Defect"}
+          </button>
+        </div>
       </div>
 
       {/* Report Defect Form (inline) */}
