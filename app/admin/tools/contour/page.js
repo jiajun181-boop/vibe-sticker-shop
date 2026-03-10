@@ -56,6 +56,8 @@ function ContourToolPage() {
   const [progressHuman, setProgressHuman] = useState("");
   const [bleedMm, setBleedMm] = useState(3);
   const [orderId, setOrderId] = useState(() => searchParams.get("orderId") || "");
+  const [itemId] = useState(() => searchParams.get("itemId") || "");
+  const [itemContext, setItemContext] = useState(null); // { productName, quantity }
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
@@ -89,6 +91,24 @@ function ContourToolPage() {
   useEffect(() => {
     fetchJobs();
   }, [fetchJobs]);
+
+  // Fetch item context when opened from an order with a specific item
+  useEffect(() => {
+    if (!orderId || !itemId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/orders/${orderId}`);
+        if (!res.ok || cancelled) return;
+        const order = await res.json();
+        const item = (order.items || []).find((i) => i.id === itemId);
+        if (item && !cancelled) {
+          setItemContext({ productName: item.productName, quantity: item.quantity });
+        }
+      } catch { /* non-critical */ }
+    })();
+    return () => { cancelled = true; };
+  }, [orderId, itemId]);
 
   // Cleanup blob URLs on unmount to prevent memory leaks
   useEffect(() => {
@@ -262,6 +282,7 @@ function ContourToolPage() {
             bleedMm,
             imageWidth: contourResult.imageWidth,
             imageHeight: contourResult.imageHeight,
+            ...(itemId ? { itemId } : {}),
           },
           outputFileUrl: uploadedSvg.url,
           outputFileKey: uploadedSvg.key,
@@ -418,6 +439,11 @@ function ContourToolPage() {
             <p className="text-xs text-indigo-800">
               <span className="font-semibold">{t("admin.tools.orderContext")}</span>{" "}
               <span className="font-mono">#{orderId.slice(0, 8)}</span>
+              {itemContext && (
+                <span className="ml-2 text-indigo-600">
+                  \u2014 {itemContext.productName} (\u00d7{itemContext.quantity})
+                </span>
+              )}
             </p>
           </div>
           <Link

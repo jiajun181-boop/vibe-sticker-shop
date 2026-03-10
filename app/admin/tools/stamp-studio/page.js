@@ -97,6 +97,8 @@ function StampStudioPage() {
   const searchParams = useSearchParams();
   const [modelId, setModelId] = useState(STAMP_MODELS[0].id);
   const [orderId, setOrderId] = useState(() => searchParams.get("orderId") || "");
+  const [itemId] = useState(() => searchParams.get("itemId") || "");
+  const [itemContext, setItemContext] = useState(null); // { productName, quantity }
   const [notes, setNotes] = useState("");
   const [stampConfig, setStampConfig] = useState({});
   const [saving, setSaving] = useState(false);
@@ -134,6 +136,24 @@ function StampStudioPage() {
   useEffect(() => {
     fetchJobs();
   }, [fetchJobs]);
+
+  // Fetch item context when opened from an order with a specific item
+  useEffect(() => {
+    if (!orderId || !itemId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/orders/${orderId}`);
+        if (!res.ok || cancelled) return;
+        const order = await res.json();
+        const item = (order.items || []).find((i) => i.id === itemId);
+        if (item && !cancelled) {
+          setItemContext({ productName: item.productName, quantity: item.quantity });
+        }
+      } catch { /* non-critical */ }
+    })();
+    return () => { cancelled = true; };
+  }, [orderId, itemId]);
 
   function getCanvas() {
     return editorWrapRef.current?.querySelector("canvas");
@@ -242,7 +262,7 @@ function StampStudioPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           toolType: "stamp-studio",
-          inputData: { model: modelId, ...stampConfig },
+          inputData: { model: modelId, ...stampConfig, ...(itemId ? { itemId } : {}) },
           outputFileUrl: uploaded.url,
           outputFileKey: uploaded.key,
           outputData: {
@@ -329,6 +349,11 @@ function StampStudioPage() {
             <p className="text-xs text-indigo-800">
               <span className="font-semibold">{t("admin.tools.orderContext")}</span>{" "}
               <span className="font-mono">#{orderId.slice(0, 8)}</span>
+              {itemContext && (
+                <span className="ml-2 text-indigo-600">
+                  \u2014 {itemContext.productName} (\u00d7{itemContext.quantity})
+                </span>
+              )}
             </p>
           </div>
           <Link

@@ -514,19 +514,40 @@ export default function OrderDetailPage() {
                           )}
                         </div>
                       </div>
-                      {/* Per-item tool action — from unified readiness assessment */}
-                      {itemAssessment.toolLink && itemAssessment.level !== READINESS.DONE && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <Link
-                            href={itemAssessment.toolLink.href}
-                            className="inline-flex items-center gap-1.5 rounded-[3px] bg-black px-3 py-1.5 text-[10px] font-bold text-white hover:bg-[#222]"
-                          >
-                            {t(itemAssessment.toolLink.label)}
-                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-                          </Link>
-                          {itemAssessment.nextAction && (
-                            <span className="text-[10px] text-[#999]">{t(itemAssessment.nextAction)}</span>
+                      {/* Per-item next action — from unified readiness assessment */}
+                      {itemAssessment.level !== READINESS.DONE && itemAssessment.level !== READINESS.READY && (
+                        <div className="mt-2 space-y-1.5">
+                          {/* Reason summary — show blocker/warning reasons inline */}
+                          {itemAssessment.reasons.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {itemAssessment.reasons.map((r, ri) => (
+                                <span key={ri} className={`rounded px-1.5 py-0.5 text-[9px] font-medium ${
+                                  r.severity === "blocker" ? "bg-red-100 text-red-700" :
+                                  r.severity === "warning" ? "bg-amber-100 text-amber-700" :
+                                  "bg-blue-50 text-blue-700"
+                                }`}>
+                                  {r.message}
+                                </span>
+                              ))}
+                            </div>
                           )}
+                          {/* Tool action button + next action label */}
+                          <div className="flex items-center gap-2">
+                            {itemAssessment.toolLink && (
+                              <Link
+                                href={itemAssessment.toolLink.href}
+                                className="inline-flex items-center gap-1.5 rounded-[3px] bg-black px-3 py-1.5 text-[10px] font-bold text-white hover:bg-[#222]"
+                              >
+                                {t(itemAssessment.toolLink.label)}
+                                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                              </Link>
+                            )}
+                            {itemAssessment.nextAction && (
+                              <span className={`text-[10px] ${itemAssessment.toolLink ? "text-[#999]" : "font-semibold text-amber-700"}`}>
+                                {itemAssessment.toolLink ? "" : "\u25B6 "}{t(itemAssessment.nextAction)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -2858,6 +2879,8 @@ function UnifiedReadinessBanner({ order, t }) {
 
   // Find first tool link across all items for the primary action
   const firstToolLink = assessment.items.find((a) => a.toolLink)?.toolLink;
+  // Find first next-action text when no tool link
+  const firstNextAction = assessment.items.find((a) => a.nextAction)?.nextAction;
 
   return (
     <div className={`flex items-center justify-between gap-3 rounded-[3px] border ${colors.border} ${colors.bg} px-4 py-2.5`}>
@@ -2872,6 +2895,11 @@ function UnifiedReadinessBanner({ order, t }) {
               {assessment.warningCount > 0 && `${assessment.warningCount} warning${assessment.warningCount > 1 ? "s" : ""}`}
               {" / "}
               {assessment.readyCount} ready
+            </span>
+          )}
+          {!firstToolLink && firstNextAction && (
+            <span className={`ml-2 text-[10px] font-medium ${colors.text}`}>
+              \u2014 {t(firstNextAction)}
             </span>
           )}
         </div>
