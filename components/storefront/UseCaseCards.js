@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { withFamilyEntry } from "@/lib/storefront/family-entry";
 
 /**
  * "Popular Use Cases" section — shows how customers use these products.
@@ -10,7 +11,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
  * - title    — i18n key for section title
  * - cases    — array of { key, icon, titleKey, descKey, href?, products?: string[] }
  */
-export default function UseCaseCards({ title, cases }) {
+export default function UseCaseCards({ title, cases, familyContext }) {
   const { t } = useTranslation();
 
   if (!cases?.length) return null;
@@ -23,8 +24,11 @@ export default function UseCaseCards({ title, cases }) {
 
       <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
         {cases.map((uc) => {
-          const Wrapper = uc.href ? Link : "div";
-          const wrapperProps = uc.href ? { href: uc.href } : {};
+          const resolvedHref = uc.href && familyContext
+            ? withFamilyEntry(uc.href, { family: familyContext.family, need: uc.key })
+            : uc.href;
+          const Wrapper = resolvedHref ? Link : "div";
+          const wrapperProps = resolvedHref ? { href: resolvedHref } : {};
           return (
             <Wrapper
               key={uc.key}

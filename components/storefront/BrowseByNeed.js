@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { withFamilyEntry } from "@/lib/storefront/family-entry";
 
 /**
  * "Browse by Need" \u2014 scenario-based guidance cards near the top of a family page.
@@ -13,7 +14,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
  * - cases       \u2014 array of { key, icon, titleKey, descKey, href }
  *                 href can be a URL (navigates) or "#sectionId" (smooth-scrolls in page)
  */
-export default function BrowseByNeed({ titleKey, subtitleKey, cases, onAction }) {
+export default function BrowseByNeed({ titleKey, subtitleKey, cases, onAction, familyContext }) {
   const { t } = useTranslation();
 
   if (!cases?.length) return null;
@@ -91,8 +92,12 @@ export default function BrowseByNeed({ titleKey, subtitleKey, cases, onAction })
             );
           }
 
+          const resolvedHref = familyContext
+            ? withFamilyEntry(c.href, { family: familyContext.family, need: c.key })
+            : c.href;
+
           return (
-            <Link key={c.key} href={c.href} className={className}>
+            <Link key={c.key} href={resolvedHref} className={className}>
               {cardContent}
             </Link>
           );

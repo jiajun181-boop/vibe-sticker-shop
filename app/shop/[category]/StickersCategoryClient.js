@@ -95,6 +95,7 @@ export default function StickersCategoryClient({ products = [] }) {
         cases: STICKERS_USE_CASES,
       }}
       valueProps={STICKERS_VALUE_PROPS}
+      familyContext={{ family: "stickers" }}
       faqCategory="stickers-labels-decals"
       backLabelKey="product.allCategories"
     >

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { withFamilyEntry } from "@/lib/storefront/family-entry";
 
 /**
  * "Which product is right for you?" comparison table.
@@ -9,13 +10,19 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
  * Props:
  * - title     \u2014 section title (i18n key)
  * - subtitle  \u2014 section subtitle (i18n key)
- * - columns   \u2014 array of { key, nameKey, taglineKey?, popular?, href, features }
+ * - columns   \u2014 array of { key, nameKey, taglineKey?, popular?, href, features, need? }
  * - features  \u2014 array of { key, labelKey } \u2014 rows of the table
+ * - familyContext \u2014 optional { family } for entry tracking
  */
-export default function ComparisonTable({ title, subtitle, columns, features }) {
+export default function ComparisonTable({ title, subtitle, columns, features, familyContext }) {
   const { t } = useTranslation();
 
   if (!columns?.length || !features?.length) return null;
+
+  const resolveHref = (col) =>
+    familyContext
+      ? withFamilyEntry(col.href, { family: familyContext.family, need: col.need })
+      : col.href;
 
   return (
     <section className="mt-12">
@@ -36,7 +43,7 @@ export default function ComparisonTable({ title, subtitle, columns, features }) 
               </th>
               {columns.map((col) => (
                 <th key={col.key} className="px-3 py-3 text-center">
-                  <Link href={col.href} className="hover:text-[var(--color-brand)] transition-colors">
+                  <Link href={resolveHref(col)} className="hover:text-[var(--color-brand)] transition-colors">
                     <span className="text-sm font-semibold text-[var(--color-gray-900)]">
                       {t(col.nameKey)}
                     </span>
@@ -90,7 +97,7 @@ export default function ComparisonTable({ title, subtitle, columns, features }) 
               {columns.map((col) => (
                 <td key={col.key} className="px-3 py-3 text-center">
                   <Link
-                    href={col.href}
+                    href={resolveHref(col)}
                     className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand)] px-3 py-1.5 text-[10px] font-semibold text-white hover:bg-[var(--color-brand-dark)] transition-colors"
                   >
                     {t("shop.configure")}
@@ -110,7 +117,7 @@ export default function ComparisonTable({ title, subtitle, columns, features }) 
         {columns.map((col) => (
           <Link
             key={col.key}
-            href={col.href}
+            href={resolveHref(col)}
             className={`group rounded-xl border bg-white p-4 transition-all hover:shadow-md ${
               col.popular
                 ? "border-[var(--color-brand)] ring-1 ring-[var(--color-brand)]/20"

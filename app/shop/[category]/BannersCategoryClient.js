@@ -59,6 +59,7 @@ export default function BannersCategoryClient({ bannerPrices = {}, bannerImages 
         cases: SIGNS_FAMILY_USE_CASES,
       }}
       valueProps={SIGNS_FAMILY_VALUE_PROPS}
+      familyContext={{ family: "banners" }}
       faqCategory="banners-displays"
     >
       {/* Product sections */}

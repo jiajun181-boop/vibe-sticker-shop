@@ -17,6 +17,7 @@ import { useRecentlyViewedStore } from "@/lib/recently-viewed";
 import dynamic from "next/dynamic";
 import AdminUploadOverlay from "@/components/admin/AdminUploadOverlay";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import FamilyContextStrip from "@/components/storefront/FamilyContextStrip";
 import TemplateGallery from "@/components/product/TemplateGallery";
 import { getTurnaround, turnaroundI18nKey, turnaroundColor } from "@/lib/turnaroundConfig";
 
@@ -1399,6 +1400,8 @@ export default function ProductClient({ product, relatedProducts, embedded = fal
             { label: product.name }
           ]} />
         )}
+
+        {!embedded && <FamilyContextStrip />}
 
         {!embedded && moved && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">

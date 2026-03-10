@@ -1,6 +1,7 @@
 "use client";
 
 import Breadcrumbs from "@/components/Breadcrumbs";
+import FamilyContextStrip from "@/components/storefront/FamilyContextStrip";
 import ImageGallery from "@/components/product/ImageGallery";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -47,6 +48,7 @@ export default function StickerProductPageClient({
             { label: intro.headline },
           ]}
         />
+        <div className="mt-3"><FamilyContextStrip /></div>
       </div>
 
       {/* Two-column hero: Gallery (60%) + Configurator (40%) */}

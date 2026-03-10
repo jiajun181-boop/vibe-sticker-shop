@@ -88,6 +88,7 @@ export default function SignsCategoryClient({
         cases: SIGNS_FAMILY_USE_CASES,
       }}
       valueProps={SIGNS_FAMILY_VALUE_PROPS}
+      familyContext={{ family: "signs" }}
       faqCategory="signs-rigid-boards"
     >
       {/* Filter tab bar \u2014 scroll-synced */}

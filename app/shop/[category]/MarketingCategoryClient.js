@@ -43,6 +43,7 @@ export default function MarketingCategoryClient({ marketingPrices = {}, marketin
         cases: MARKETING_USE_CASES,
       }}
       valueProps={MARKETING_VALUE_PROPS}
+      familyContext={{ family: "marketing" }}
       faqCategory="marketing-business-print"
     >
       {/* Product sections \u2014 each with anchor ID for BrowseByNeed scroll targets */}

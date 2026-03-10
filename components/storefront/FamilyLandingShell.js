@@ -39,6 +39,7 @@ export default function FamilyLandingShell({
   faqCategory,
   backLabelKey,
   onBrowseAction,
+  familyContext,
 }) {
   return (
     <main className={`${bgClassName} pb-20 pt-10 text-[var(--color-gray-900)]`}>
@@ -49,13 +50,13 @@ export default function FamilyLandingShell({
           <CategoryHero category={heroCategory} title={heroTitle} icon={heroIcon} />
         </div>
 
-        {browseByNeed && <BrowseByNeed {...browseByNeed} onAction={onBrowseAction} />}
+        {browseByNeed && <BrowseByNeed {...browseByNeed} onAction={onBrowseAction} familyContext={familyContext} />}
 
         {children}
 
-        {comparison && <ComparisonTable {...comparison} />}
+        {comparison && <ComparisonTable {...comparison} familyContext={familyContext} />}
 
-        {useCases && <UseCaseCards {...useCases} />}
+        {useCases && <UseCaseCards {...useCases} familyContext={familyContext} />}
 
         {valueProps && (
           <section className="mt-12">
