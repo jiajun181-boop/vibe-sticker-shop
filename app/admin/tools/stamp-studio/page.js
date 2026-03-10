@@ -23,6 +23,7 @@ const QUICK_START_PRESETS = [
   {
     id: "address",
     labelKey: "admin.tools.stamp.presetAddress",
+    descKey: "admin.tools.stamp.presetAddressDesc",
     modelId: "rect-70x30",
     text: "COMPANY NAME\n123 Street\nCity, Province A1A 1A1\nPhone: (416) 555-0000",
     font: "Helvetica",
@@ -31,6 +32,7 @@ const QUICK_START_PRESETS = [
   {
     id: "approval",
     labelKey: "admin.tools.stamp.presetApproval",
+    descKey: "admin.tools.stamp.presetApprovalDesc",
     modelId: "round-40mm",
     text: "APPROVED\n[Company Name]\nDate: ____/____/____",
     font: "Helvetica",
@@ -41,6 +43,7 @@ const QUICK_START_PRESETS = [
   {
     id: "date-received",
     labelKey: "admin.tools.stamp.presetDateReceived",
+    descKey: "admin.tools.stamp.presetDateReceivedDesc",
     modelId: "rect-58x22",
     text: "RECEIVED\nDate: ____/____/____\nBy: __________",
     font: "Helvetica",
@@ -49,6 +52,7 @@ const QUICK_START_PRESETS = [
   {
     id: "signature",
     labelKey: "admin.tools.stamp.presetSignature",
+    descKey: "admin.tools.stamp.presetSignatureDesc",
     modelId: "rect-70x30",
     text: "[Name]\n[Title]",
     font: "Helvetica",
@@ -57,6 +61,7 @@ const QUICK_START_PRESETS = [
   {
     id: "book-name",
     labelKey: "admin.tools.stamp.presetBookName",
+    descKey: "admin.tools.stamp.presetBookNameDesc",
     modelId: "rect-58x22",
     text: "FROM THE LIBRARY OF\n[Name]",
     font: "Georgia",
@@ -65,6 +70,7 @@ const QUICK_START_PRESETS = [
   {
     id: "funny-approval",
     labelKey: "admin.tools.stamp.presetFunny",
+    descKey: "admin.tools.stamp.presetFunnyDesc",
     modelId: "round-50mm",
     text: "BOSS APPROVED\n★★★★★\nNo Questions Asked",
     font: "Helvetica",
@@ -75,6 +81,7 @@ const QUICK_START_PRESETS = [
   {
     id: "face-stamp",
     labelKey: "admin.tools.stamp.presetFaceStamp",
+    descKey: "admin.tools.stamp.presetFaceStampDesc",
     modelId: "round-50mm",
     text: "[YOUR NAME]\n★ OFFICIAL ★",
     font: "Playfair Display",
@@ -97,12 +104,19 @@ function modelLabel(modelId) {
   return m ? m.label : modelId || "stamp";
 }
 
-// M2 Change 3: Smarter download filename
-function buildFileName(text, modelId) {
+// M2 Change 3 + M5: Smarter download filename with optional suffix
+function buildFileName(text, modelId, suffix) {
   const firstLine = (text || "").split("\n")[0] || "";
   const sanitized = firstLine.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 20);
   const prefix = sanitized || "stamp";
-  return `stamp-${prefix}-${modelId}.png`;
+  const sfx = suffix ? `-${suffix}` : "";
+  return `stamp-${prefix}-${modelId}${sfx}.png`;
+}
+
+// M5: Look up preset label from ID
+function presetLabelFromId(presetId, t) {
+  const p = QUICK_START_PRESETS.find((e) => e.id === presetId);
+  return p ? t(p.labelKey) : null;
 }
 
 // M2 Change 4: Check if a date is today
@@ -146,8 +160,11 @@ function StampStudioPage() {
   const [detailJob, setDetailJob] = useState(null);
   const [hasEditorContent, setHasEditorContent] = useState(false);
   const editorWrapRef = useRef(null);
-  // M2 Change 2: Track active preset label for context bar
+  // M2 Change 2 + M5: Track active preset for context bar
   const [activePresetLabel, setActivePresetLabel] = useState(null);
+  const [activePresetId, setActivePresetId] = useState(null);
+  // M5: Post-save success for all saves (not just order-linked)
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const model = STAMP_MODELS.find((entry) => entry.id === modelId) || STAMP_MODELS[0];
 
@@ -185,7 +202,7 @@ function StampStudioPage() {
         handleSave();
       } else if ((e.ctrlKey || e.metaKey) && e.key === "d") {
         e.preventDefault();
-        handleDownload();
+        handleDownloadPreview();
       }
     };
     window.addEventListener("keydown", handler);
@@ -242,8 +259,10 @@ function StampStudioPage() {
     setReopenedFrom(job);
     setDetailJob(null);
     setHasEditorContent(false);
-    // M2 Change 2: Clear preset label on reopen
+    setSaveSuccess(false);
+    // M2 Change 2 + M5: Clear preset on reopen
     setActivePresetLabel(null);
+    setActivePresetId(null);
     setEditorKey((prev) => prev + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -265,8 +284,10 @@ function StampStudioPage() {
     setStampConfig({});
     setReopenedFrom(null);
     setHasEditorContent(false);
-    // M2 Change 2: Set active preset label
+    setSaveSuccess(false);
+    // M2 Change 2 + M5: Set active preset
     setActivePresetLabel(t(preset.labelKey));
+    setActivePresetId(preset.id);
     setEditorKey((prev) => prev + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -303,14 +324,26 @@ function StampStudioPage() {
     }
   }
 
-  // M2 Change 3: Use smarter filename
-  async function handleDownload() {
+  // M5: Client preview download (concept art for sharing)
+  async function handleDownloadPreview() {
     const blob = await exportCanvasBlob();
     if (!blob) return;
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = buildFileName(stampConfig.text || initialText, modelId);
+    anchor.download = buildFileName(stampConfig.text || initialText, modelId, "preview");
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // M5: Production download (for plate-making)
+  async function handleDownloadProd() {
+    const blob = await exportCanvasBlob();
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = buildFileName(stampConfig.text || initialText, modelId, "production");
     anchor.click();
     URL.revokeObjectURL(url);
   }
@@ -332,7 +365,7 @@ function StampStudioPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           toolType: "stamp-studio",
-          inputData: { model: modelId, ...stampConfig, ...(itemId ? { itemId } : {}) },
+          inputData: { model: modelId, ...stampConfig, ...(itemId ? { itemId } : {}), ...(activePresetId ? { presetId: activePresetId } : {}) },
           outputFileUrl: uploaded.url,
           outputFileKey: uploaded.key,
           outputData: {
@@ -358,8 +391,8 @@ function StampStudioPage() {
       if (orderId) setSavedOrderId(orderId);
       setReopenedFrom(null);
       setHasEditorContent(false);
+      setSaveSuccess(true);
       fetchJobs();
-      if (!orderId) setTimeout(() => setSaveMsg(""), 3000);
     } catch (err) {
       setSaveMsg(err instanceof Error ? err.message : t("admin.common.saveFailed"));
       setSaveIsError(true);
@@ -448,16 +481,19 @@ function StampStudioPage() {
         </div>
       )}
 
-      {/* Quick Start Presets */}
+      {/* Quick Start Presets — M5: richer cards with use-case descriptions */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
-        <p className="mb-3 text-xs font-bold text-[#666]">{t("admin.tools.stamp.quickStart")}</p>
+        <div className="mb-3">
+          <p className="text-xs font-bold text-[#666]">{t("admin.tools.stamp.quickStart")}</p>
+          <p className="mt-0.5 text-[10px] text-[#999]">{t("admin.tools.stamp.quickStartHint")}</p>
+        </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {QUICK_START_PRESETS.map((preset) => (
             <button
               key={preset.id}
               type="button"
               onClick={() => applyPreset(preset)}
-              className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3 text-left transition-colors hover:border-black hover:bg-white"
+              className={`rounded-[3px] border p-3 text-left transition-colors hover:border-black hover:bg-white ${activePresetId === preset.id ? "border-black bg-white ring-1 ring-black/10" : "border-[#e0e0e0] bg-[#fafafa]"}`}
             >
               <div className="flex items-center gap-2">
                 <span
@@ -466,7 +502,8 @@ function StampStudioPage() {
                 />
                 <p className="text-xs font-semibold text-[#111]">{t(preset.labelKey)}</p>
               </div>
-              <p className="mt-1 text-[10px] text-[#999]">{modelLabel(preset.modelId)}</p>
+              <p className="mt-1 text-[10px] text-[#666]">{t(preset.descKey)}</p>
+              <p className="mt-0.5 text-[10px] text-[#bbb]">{modelLabel(preset.modelId)}</p>
             </button>
           ))}
         </div>
@@ -559,48 +596,79 @@ function StampStudioPage() {
         />
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <button
-          type="button"
-          onClick={handleDownload}
-          className="inline-flex items-center justify-center gap-2 rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:border-black"
-        >
-          {t("admin.tools.downloadPng")}
-        </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#222] disabled:opacity-50"
-        >
-          {saving ? t("admin.tools.saving") : t("admin.tools.saveToRecords")}
-        </button>
-        {saveMsg ? (
-          <span className={`text-xs font-medium ${saveIsError ? "text-red-600" : "text-green-600"}`}>
-            {saveMsg}
-          </span>
-        ) : null}
-        {/* M2 Change 6: Keyboard shortcut hints */}
-        <span className="text-[10px] text-[#bbb]">{t("admin.tools.stamp.shortcutHint")}</span>
-      </div>
-
-      {/* ── Post-save guidance (when saved with order link) ──────────── */}
-      {savedOrderId && !saveIsError && (
-        <div className="flex items-center justify-between gap-3 rounded-[3px] border border-green-300 bg-green-50 px-4 py-3">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-green-800">{t("admin.tools.stamp.savedSuccess")}</p>
-            <p className="mt-0.5 text-[11px] text-green-700">{t("admin.tools.postSaveGuidance")}</p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href={`/admin/orders/${savedOrderId}`}
-              className="rounded-[3px] bg-black px-3 py-1.5 text-[10px] font-bold text-white hover:bg-[#222]"
-            >
-              {t("admin.tools.viewOrder")}
-            </Link>
+      {/* M5: Organized export panel */}
+      <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
+        <p className="mb-3 text-xs font-bold text-[#111]">{t("admin.tools.stamp.exportTitle")}</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {/* Client Share */}
+          <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
+            <p className="text-[11px] font-semibold text-[#111]">{t("admin.tools.stamp.exportClient")}</p>
+            <p className="mt-0.5 text-[10px] text-[#999]">{t("admin.tools.stamp.exportClientDesc")}</p>
             <button
               type="button"
-              onClick={() => setSavedOrderId(null)}
+              onClick={handleDownloadPreview}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-[3px] border border-[#e0e0e0] bg-white px-3 py-1.5 text-xs font-medium text-[#111] transition-colors hover:border-black"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+              {t("admin.tools.stamp.exportPreviewPng")}
+            </button>
+          </div>
+          {/* Production */}
+          <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
+            <p className="text-[11px] font-semibold text-[#111]">{t("admin.tools.stamp.exportProduction")}</p>
+            <p className="mt-0.5 text-[10px] text-[#999]">{t("admin.tools.stamp.exportProductionDesc")}</p>
+            <button
+              type="button"
+              onClick={handleDownloadProd}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-[3px] border border-[#e0e0e0] bg-white px-3 py-1.5 text-xs font-medium text-[#111] transition-colors hover:border-black"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+              {t("admin.tools.stamp.exportProdPng")}
+            </button>
+          </div>
+        </div>
+        {/* Save + feedback row */}
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="inline-flex items-center justify-center gap-2 rounded-[3px] bg-black px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#222] disabled:opacity-50"
+          >
+            {saving ? t("admin.tools.saving") : t("admin.tools.saveToRecords")}
+          </button>
+          {saveMsg ? (
+            <span className={`text-xs font-medium ${saveIsError ? "text-red-600" : "text-green-600"}`}>
+              {saveMsg}
+            </span>
+          ) : null}
+          <span className="text-[10px] text-[#bbb]">{t("admin.tools.stamp.shortcutHint")}</span>
+        </div>
+      </div>
+
+      {/* ── Post-save guidance — M5: works for ALL saves ──────────── */}
+      {saveSuccess && !saveIsError && (
+        <div className="flex items-center justify-between gap-3 rounded-[3px] border border-green-300 bg-green-50 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-green-800">
+              {savedOrderId ? t("admin.tools.stamp.savedSuccess") : t("admin.tools.stamp.savedSuccessNoOrder")}
+            </p>
+            <p className="mt-0.5 text-[11px] text-green-700">
+              {savedOrderId ? t("admin.tools.postSaveGuidance") : t("admin.tools.stamp.savedNextNoOrder")}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {savedOrderId && (
+              <Link
+                href={`/admin/orders/${savedOrderId}`}
+                className="rounded-[3px] bg-black px-3 py-1.5 text-[10px] font-bold text-white hover:bg-[#222]"
+              >
+                {t("admin.tools.viewOrder")}
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={() => { setSaveSuccess(false); setSavedOrderId(null); setSaveMsg(""); }}
               className="text-green-600 hover:text-green-800"
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -619,10 +687,11 @@ function StampStudioPage() {
           <div className="px-5 py-8 text-center text-sm text-[#999]">{t("admin.tools.loading")}</div>
         ) : jobs.length === 0 ? (
           <div className="px-5 py-8 text-center">
-            {/* M2 Change 7: Getting Started guide when no jobs and no editor content */}
+            {/* M5: Enhanced Getting Started guide — concept-selling context */}
             {!hasEditorContent && (
-              <div className="mx-auto mb-4 max-w-sm space-y-2">
+              <div className="mx-auto mb-4 max-w-md space-y-2">
                 <p className="text-xs font-bold text-[#333]">{t("admin.tools.stamp.gettingStarted")}</p>
+                <p className="text-[10px] text-[#999]">{t("admin.tools.stamp.guideIntro")}</p>
                 <div className="flex items-start gap-2 text-left">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">1</span>
                   <p className="text-xs text-[#666]">{t("admin.tools.stamp.guideStep1")}</p>
@@ -633,7 +702,7 @@ function StampStudioPage() {
                 </div>
                 <div className="flex items-start gap-2 text-left">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">3</span>
-                  <p className="text-xs text-[#666]">{t("admin.tools.stamp.guideStep3")}</p>
+                  <p className="text-xs text-[#666]">{t("admin.tools.stamp.guideStep3m5")}</p>
                 </div>
               </div>
             )}
@@ -754,6 +823,10 @@ function StampJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate, fetch
           {shapeLabel && dims && (
             <span className="rounded-[2px] bg-[#f0f0f0] px-1.5 py-0.5 text-[10px] font-medium text-[#666]">{shapeLabel} · {dims}</span>
           )}
+          {/* M5: Show preset name if tracked */}
+          {data.presetId && (
+            <span className="rounded-[2px] bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">{presetLabelFromId(data.presetId, t) || data.presetId}</span>
+          )}
           {data.font && data.font !== "Helvetica" && (
             <span className="text-[10px] text-[#999]">{data.font}</span>
           )}
@@ -762,7 +835,11 @@ function StampJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate, fetch
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-[#999]">
           <span>{timeAgo(job.createdAt, t)}</span>
           {job.operatorName && <><span>·</span><span>{job.operatorName}</span></>}
-          {job.orderId && <><span>·</span><span>{t("admin.common.order")}: #{job.orderId.slice(0, 8)}</span></>}
+          {job.orderId ? (
+            <><span>·</span><span>{t("admin.common.order")}: #{job.orderId.slice(0, 8)}</span></>
+          ) : (
+            <><span>·</span><span className="text-[#bbb]">{t("admin.tools.stamp.noOrderLabel")}</span></>
+          )}
         </div>
         {textPreview && <p className="mt-0.5 truncate text-xs italic text-[#777]">&ldquo;{textPreview}&rdquo;</p>}
         {/* M2 Change 5: Notes with inline editing */}
@@ -808,7 +885,7 @@ function StampJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate, fetch
         {job.outputFileUrl && (
           <a
             href={job.outputFileUrl}
-            download={`stamp-${data.model || "stamp"}.png`}
+            download={output.fileName || buildFileName(data.text, data.model)}
             className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
           >
             {t("admin.tools.downloadPng")}
@@ -861,7 +938,7 @@ function StampDetailModal({ job, t, onClose, onReopen }) {
             </div>
           )}
 
-          {/* Metadata */}
+          {/* Metadata — M5: includes preset info */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <MetaCell label={t("admin.tools.stamp.modelLabel")} value={modelLabel(data.model)} />
             <MetaCell label={t("admin.tools.stamp.shapeLabel")} value={output.shape === "round" ? t("admin.tools.stamp.shapeRound") : output.shape === "rect" ? t("admin.tools.stamp.shapeRectangle") : "—"} />
@@ -875,12 +952,17 @@ function StampDetailModal({ job, t, onClose, onReopen }) {
                 {data.color || "#111111"}
               </span>
             } />
+            {data.presetId && (
+              <MetaCell label={t("admin.tools.stamp.presetLabel")} value={presetLabelFromId(data.presetId, t) || data.presetId} />
+            )}
             <MetaCell label={t("admin.tools.contour.operator")} value={job.operatorName || "—"} />
             <MetaCell label={t("admin.tools.contour.created")} value={formatJobTime(job.createdAt)} />
-            {job.orderId && (
+            {job.orderId ? (
               <MetaCell label={t("admin.tools.contour.order")} value={
                 <Link href={`/admin/orders/${job.orderId}`} className="text-[#4f46e5] hover:underline">#{job.orderId.slice(-8)}</Link>
               } />
+            ) : (
+              <MetaCell label={t("admin.tools.contour.order")} value={<span className="text-[#bbb]">{t("admin.tools.stamp.noOrderLabel")}</span>} />
             )}
           </div>
 
@@ -899,25 +981,34 @@ function StampDetailModal({ job, t, onClose, onReopen }) {
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex flex-wrap gap-2 border-t border-[#e0e0e0] pt-4">
-            <button
-              type="button"
-              onClick={() => onReopen(job)}
-              className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
-            >
-              {t("admin.tools.stamp.reopenEdit")}
-            </button>
+          {/* M5: Enhanced actions — client share + production downloads */}
+          <div className="space-y-3 border-t border-[#e0e0e0] pt-4">
             {job.outputFileUrl && (
-              <a href={job.outputFileUrl} download={output.fileName || undefined} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black">
-                {t("admin.tools.downloadPng")}
-              </a>
+              <div className="flex flex-wrap gap-2">
+                <a href={job.outputFileUrl} download={buildFileName(data.text, data.model, "preview")} className="inline-flex items-center gap-1.5 rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] hover:border-black hover:text-black">
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                  {t("admin.tools.stamp.exportPreviewPng")}
+                </a>
+                <a href={job.outputFileUrl} download={buildFileName(data.text, data.model, "production")} className="inline-flex items-center gap-1.5 rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] hover:border-black hover:text-black">
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                  {t("admin.tools.stamp.exportProdPng")}
+                </a>
+              </div>
             )}
-            {job.orderId && (
-              <Link href={`/admin/orders/${job.orderId}`} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black">
-                {t("admin.tools.viewOrder")}
-              </Link>
-            )}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => onReopen(job)}
+                className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222]"
+              >
+                {t("admin.tools.stamp.reopenEdit")}
+              </button>
+              {job.orderId && (
+                <Link href={`/admin/orders/${job.orderId}`} className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black">
+                  {t("admin.tools.viewOrder")}
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>
