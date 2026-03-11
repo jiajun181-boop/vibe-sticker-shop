@@ -93,6 +93,11 @@ export default function ProductionJobDetailPage() {
   // Layout (sticker/label only)
   const [layoutData, setLayoutData] = useState(null);
 
+  // Split job
+  const [showSplit, setShowSplit] = useState(false);
+  const [splitKeep, setSplitKeep] = useState("");
+  const [splitting, setSplitting] = useState(false);
+
   const fetchJob = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/production/${id}`);
@@ -304,6 +309,35 @@ export default function ProductionJobDetailPage() {
       console.error("Failed to log defect");
     } finally {
       setSubmittingQc(false);
+    }
+  }
+
+  // Split job handler
+  async function handleSplitJob() {
+    const keepQty = parseInt(splitKeep, 10);
+    if (!keepQty || keepQty < 1 || keepQty >= (job.quantity || 0)) return;
+    setSplitting(true);
+    try {
+      const res = await fetch(`/api/admin/production/${id}/split`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keepQuantity: keepQty }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setShowSplit(false);
+        setSplitKeep("");
+        setMessage(`Split: kept ${keepQty}, new job ${data.newJob.id.slice(0, 8)} with ${data.newJob.quantity}`);
+        await fetchJob();
+      } else {
+        const err = await res.json();
+        setMessage(err.error || "Split failed");
+      }
+    } catch {
+      setMessage("Network error during split");
+    } finally {
+      setSplitting(false);
+      setTimeout(() => setMessage(""), 5000);
     }
   }
 
@@ -1114,6 +1148,58 @@ export default function ProductionJobDetailPage() {
               >
                 Put on Hold
               </button>
+
+              {/* Split Job */}
+              {job.quantity > 1 && !["finished", "shipped"].includes(job.status) && (
+                <div className="border-t border-gray-100 pt-2 mt-2">
+                  {!showSplit ? (
+                    <button
+                      type="button"
+                      onClick={() => { setShowSplit(true); setSplitKeep(String(Math.floor(job.quantity / 2))); }}
+                      className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+                    >
+                      Split Job
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-xs text-gray-600">
+                        Split {job.quantity} into two jobs:
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-gray-600">Keep:</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max={(job.quantity || 2) - 1}
+                          value={splitKeep}
+                          onChange={(e) => setSplitKeep(e.target.value)}
+                          className="w-20 rounded border border-gray-300 px-2 py-1 text-xs outline-none focus:border-gray-900"
+                        />
+                        <span className="text-xs text-gray-600">
+                          + {(job.quantity || 0) - (parseInt(splitKeep, 10) || 0)}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleSplitJob}
+                          disabled={splitting || !splitKeep || parseInt(splitKeep, 10) < 1 || parseInt(splitKeep, 10) >= job.quantity}
+                          className="flex-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-[#fff] hover:bg-blue-700 disabled:bg-gray-400"
+                        >
+                          {splitting ? "Splitting..." : "Confirm Split"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowSplit(false)}
+                          className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </Section>
 

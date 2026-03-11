@@ -419,15 +419,41 @@ export default function ProductionBoardPage() {
                           draggedJob?.id === job.id ? "opacity-50" : ""
                         } ${updatingJob === job.id ? "opacity-50 pointer-events-none" : ""}`}
                       >
-                        {/* Product name */}
-                        <p className="font-semibold text-sm text-black truncate">
-                          {job.productName || "Unknown Product"}
-                        </p>
-
-                        {/* Customer */}
-                        <p className="text-xs text-[#999] truncate mt-0.5">
-                          {job.customerName || job.customerEmail || "\u2014"}
-                        </p>
+                        {/* Header: artwork thumb + product name + family */}
+                        <div className="flex items-start gap-2">
+                          {/* Artwork thumbnail */}
+                          {job.artworkUrl && /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(job.artworkUrl) ? (
+                            <a href={job.artworkUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                              <img
+                                src={job.artworkUrl}
+                                alt=""
+                                className="h-10 w-10 rounded border border-[#e0e0e0] object-cover bg-[repeating-conic-gradient(#f3f4f6_0%_25%,#fff_0%_50%)_0_0/8px_8px]"
+                                loading="lazy"
+                              />
+                            </a>
+                          ) : (
+                            <div className={`h-10 w-10 shrink-0 rounded border border-[#e0e0e0] flex items-center justify-center text-xs font-bold ${
+                              job.artworkUrl ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-500"
+                            }`}>
+                              {job.artworkUrl ? "✓" : "?"}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-sm text-black truncate">
+                              {job.productName || "Unknown Product"}
+                            </p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {job.family && (
+                                <span className="rounded bg-[#f0f0f0] px-1.5 py-0.5 text-[9px] font-medium text-[#666] uppercase">
+                                  {job.family}
+                                </span>
+                              )}
+                              <p className="text-xs text-[#999] truncate">
+                                {job.customerName || job.customerEmail || "\u2014"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
 
                         {/* Badges row */}
                         <div className="flex flex-wrap items-center gap-1.5 mt-2">
@@ -436,13 +462,13 @@ export default function ProductionBoardPage() {
                             Qty: {job.quantity}
                           </span>
 
-                          {/* Priority badge */}
-                          {job.priority === "urgent" && (
+                          {/* Priority / Rush badge */}
+                          {(job.priority === "urgent" || job.isRush) && (
                             <span className="inline-block rounded-[2px] bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-                              Urgent
+                              {job.priority === "urgent" ? "Urgent" : "Rush"}
                             </span>
                           )}
-                          {job.priority === "rush" && (
+                          {job.priority === "rush" && !job.isRush && (
                             <span className="inline-block rounded-[2px] bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
                               Rush
                             </span>
