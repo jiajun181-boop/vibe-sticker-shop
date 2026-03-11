@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { logActivity } from "@/lib/activity-log";
 
 export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, "pricing", "view");
@@ -66,6 +67,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    logActivity({
+      action: "material_created",
+      entity: "material",
+      entityId: material.id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+      details: { name: body.name, type: body.type },
+    });
+
     return NextResponse.json({ material });
   } catch (err) {
     console.error("[Materials POST]", err);
@@ -101,6 +110,13 @@ export async function PATCH(req: NextRequest) {
       data: updates,
     });
 
+    logActivity({
+      action: "material_updated",
+      entity: "material",
+      entityId: id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+    });
+
     return NextResponse.json({ material });
   } catch (err) {
     console.error("[Materials PATCH]", err);
@@ -122,6 +138,14 @@ export async function DELETE(req: NextRequest) {
       where: { id },
       data: { isActive: false },
     });
+
+    logActivity({
+      action: "material_deactivated",
+      entity: "material",
+      entityId: id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+    });
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[Materials DELETE]", err);

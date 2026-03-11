@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { logActivity } from "@/lib/activity-log";
 
 const PAGE_SIZE = 20;
 
@@ -103,11 +104,27 @@ export async function PATCH(request: NextRequest) {
         data: { isApproved: true },
       });
 
+      logActivity({
+        action: "review_approved",
+        entity: "review",
+        entityId: id,
+        actor: auth.user?.name || auth.user?.email || "admin",
+        details: { productId: review.productId },
+      });
+
       return NextResponse.json({ success: true, status: "approved" });
     }
 
     // action === "reject" — delete the review
     await prisma.review.delete({ where: { id } });
+
+    logActivity({
+      action: "review_rejected",
+      entity: "review",
+      entityId: id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+      details: { productId: review.productId },
+    });
 
     return NextResponse.json({ success: true, status: "rejected" });
   } catch (err) {

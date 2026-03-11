@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { logActivity } from "@/lib/activity-log";
 
 export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, "pricing", "view");
@@ -49,6 +50,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    logActivity({
+      action: "hardware_created",
+      entity: "hardware_item",
+      entityId: item.id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+      details: { name: body.name, category: body.category },
+    });
+
     return NextResponse.json({ item });
   } catch (err: any) {
     if (err?.code === "P2002") {
@@ -76,6 +85,13 @@ export async function PATCH(req: NextRequest) {
       data: updates,
     });
 
+    logActivity({
+      action: "hardware_updated",
+      entity: "hardware_item",
+      entityId: id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+    });
+
     return NextResponse.json({ item });
   } catch (err) {
     console.error("[Hardware PATCH]", err);
@@ -93,6 +109,14 @@ export async function DELETE(req: NextRequest) {
     if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
 
     await prisma.hardwareItem.delete({ where: { id } });
+
+    logActivity({
+      action: "hardware_deleted",
+      entity: "hardware_item",
+      entityId: id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+    });
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[Hardware DELETE]", err);
