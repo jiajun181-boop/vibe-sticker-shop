@@ -648,6 +648,25 @@ export default function ProductionJobDetailPage() {
           {/* Quick Actions Card */}
           <Section title="Quick Actions">
             <div className="space-y-2">
+              {/* Production documents */}
+              {order && (
+                <div className="flex gap-2 pb-2 mb-2 border-b border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => window.open(`/api/admin/orders/${order.id}/manifest?format=text`, "_blank")}
+                    className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+                  >
+                    Manifest
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.open(`/api/admin/orders/${order.id}/packing-slip`, "_blank")}
+                    className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+                  >
+                    Packing Slip
+                  </button>
+                </div>
+              )}
               {(job.status === "queued" || job.status === "assigned") && (
                 <button
                   type="button"

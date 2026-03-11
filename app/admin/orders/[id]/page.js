@@ -2232,6 +2232,28 @@ function OrderActions({ order, onUpdate }) {
         >
           Duplicate as Draft
         </button>
+
+        {/* Production Manifest download */}
+        <button
+          type="button"
+          onClick={() => {
+            window.open(`/api/admin/orders/${order.id}/manifest?format=text`, "_blank");
+          }}
+          className="w-full rounded-lg border border-gray-300 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+        >
+          Download Production Manifest
+        </button>
+
+        {/* Packing Slip */}
+        <button
+          type="button"
+          onClick={() => {
+            window.open(`/api/admin/orders/${order.id}/packing-slip`, "_blank");
+          }}
+          className="w-full rounded-lg border border-gray-300 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+        >
+          Print Packing Slip
+        </button>
       </div>
     </Section>
   );
