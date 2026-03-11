@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCad } from "@/lib/admin/format-cad";
+import { statusColor } from "@/lib/admin/status-labels";
 
 const STATUSES = [
   { value: "all", label: "All" },
@@ -14,16 +15,6 @@ const STATUSES = [
   { value: "expired", label: "Expired" },
   { value: "converted", label: "Converted" },
 ];
-
-const STATUS_COLORS = {
-  new: "bg-blue-100 text-blue-700",
-  reviewing: "bg-amber-100 text-amber-700",
-  quoted: "bg-indigo-100 text-indigo-700",
-  accepted: "bg-green-100 text-green-700",
-  rejected: "bg-red-100 text-red-700",
-  expired: "bg-gray-100 text-gray-500",
-  converted: "bg-emerald-100 text-emerald-700",
-};
 
 export default function AdminQuotesPage() {
   const [quotes, setQuotes] = useState([]);
@@ -199,7 +190,7 @@ export default function AdminQuotesPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono text-sm font-semibold text-black">{q.reference}</span>
-                        <span className={`rounded-[2px] px-1.5 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[q.status] || "bg-gray-100 text-gray-600"}`}>
+                        <span className={`rounded-[2px] px-1.5 py-0.5 text-[10px] font-semibold ${statusColor(q.status)}`}>
                           {q.status}
                         </span>
                         {q.isRush && <span className="rounded-[2px] bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700">RUSH</span>}

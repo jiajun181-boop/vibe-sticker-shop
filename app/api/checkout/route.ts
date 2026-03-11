@@ -118,17 +118,24 @@ export async function POST(req: Request) {
         const cartItem = { productId: item.productId, slug: item.slug, name: item.name, unitAmount: item.unitAmount, quantity: item.quantity, meta: item.meta };
         const repriced = repriceItem(product, cartItem);
 
-        // Log price drift between client and server for audit
+        // Price drift detection: reject when drift suggests tampering (>20%)
         const clientUnit = item.unitAmount;
         const serverUnit = repriced.unitAmount;
+        let driftPct = 0;
         if (clientUnit > 0 && serverUnit > 0) {
-          const driftPct = Math.round(Math.abs(serverUnit - clientUnit) / clientUnit * 100);
+          driftPct = Math.round(Math.abs(serverUnit - clientUnit) / clientUnit * 100);
+          if (driftPct > 20) {
+            // Extreme drift — reject checkout to prevent price tampering
+            console.error("[Checkout] BLOCKED — extreme price drift:", {
+              slug: product.slug, clientUnit, serverUnit, drift: `${driftPct}%`,
+            });
+            throw new Error(
+              `Price for "${item.name}" has changed significantly. Please refresh the page and try again.`
+            );
+          }
           if (driftPct > 5) {
             console.warn("[Checkout] Price drift:", {
-              slug: product.slug,
-              clientUnit,
-              serverUnit,
-              drift: `${driftPct}%`,
+              slug: product.slug, clientUnit, serverUnit, drift: `${driftPct}%`,
             });
           }
         }
@@ -500,6 +507,12 @@ export async function POST(req: Request) {
     if (error instanceof Error && error.message.includes("Product unavailable")) {
       return NextResponse.json(
         { error: error.message, code: "PRODUCT_UNAVAILABLE" },
+        { status: 409 }
+      );
+    }
+    if (error instanceof Error && error.message.includes("has changed significantly")) {
+      return NextResponse.json(
+        { error: error.message, code: "PRICE_DRIFT" },
         { status: 409 }
       );
     }

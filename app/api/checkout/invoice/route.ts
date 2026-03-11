@@ -91,17 +91,19 @@ export async function POST(req: NextRequest) {
         };
         const repriced = repriceItem(product, cartItem);
 
-        // Price drift audit (same as Stripe checkout)
+        // Price drift detection: reject extreme drift (>20%), warn moderate (>5%)
         const clientUnit = item.unitAmount;
         const serverUnit = repriced.unitAmount;
         if (clientUnit > 0 && serverUnit > 0) {
           const driftPct = Math.round(Math.abs(serverUnit - clientUnit) / clientUnit * 100);
+          if (driftPct > 20) {
+            throw new Error(
+              `Price for "${item.name}" has changed significantly. Please refresh the page and try again.`
+            );
+          }
           if (driftPct > 5) {
             console.warn("[Invoice checkout] Price drift:", {
-              slug: product.slug,
-              clientUnit,
-              serverUnit,
-              drift: `${driftPct}%`,
+              slug: product.slug, clientUnit, serverUnit, drift: `${driftPct}%`,
             });
           }
         }

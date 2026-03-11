@@ -6,6 +6,7 @@ import { buildInteracInstructionsHtml } from "@/lib/email/templates/interac-inst
 import { getSessionFromRequest } from "@/lib/auth";
 import { checkAndReserveStock } from "@/lib/inventory";
 import { repriceItem, calculateDesignHelpFee } from "@/lib/checkout-reprice";
+import { checkoutLimiter, getClientIp } from "@/lib/rate-limit";
 import {
   HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST, DESIGN_HELP_CENTS,
   MAX_ITEM_QUANTITY,
@@ -32,6 +33,16 @@ const InteracSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting — same as Stripe/Invoice checkout
+    const ip = getClientIp(req);
+    const { success } = checkoutLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many checkout attempts. Please try again shortly.", code: "RATE_LIMIT" },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const result = InteracSchema.safeParse(body);
     if (!result.success) {
@@ -40,32 +51,45 @@ export async function POST(req: Request) {
 
     const { items, email, name, phone, deliveryMethod, shippingAddress, shippingCity, shippingProvince, shippingPostal } = result.data;
 
-    // Server-side repricing: same logic as Stripe checkout.
-    // Recalculate each item's price using quoteProduct + rush surcharge.
+    // Server-side repricing: same logic as Stripe/Invoice checkout.
     const pricedItems = await Promise.all(
       items.map(async (item) => {
-        const product = await prisma.product.findFirst({
+        // findActiveProduct: by ID first, then by slug — same pattern as Stripe/Invoice
+        let product = await prisma.product.findFirst({
           where: { id: item.productId, isActive: true },
           include: { pricingPreset: true },
         });
-        if (!product) {
-          // Fallback: try by slug
-          const bySlug = item.slug
-            ? await prisma.product.findFirst({
-                where: { slug: item.slug, isActive: true },
-                include: { pricingPreset: true },
-              })
-            : null;
-          if (!bySlug) {
-            throw new Error(`Product not found or inactive: ${item.name}`);
-          }
-          const cartItem = { productId: bySlug.id, name: item.name, unitAmount: item.unitAmount, quantity: item.quantity, meta: item.meta, slug: item.slug };
-          const repriced = repriceItem(bySlug, cartItem);
-          return { ...item, productId: bySlug.id, ...repriced, productName: String(bySlug.name || item.name) };
+        if (!product && item.slug) {
+          product = await prisma.product.findFirst({
+            where: { slug: item.slug, isActive: true },
+            include: { pricingPreset: true },
+          });
         }
-        const cartItem = { productId: item.productId, name: item.name, unitAmount: item.unitAmount, quantity: item.quantity, meta: item.meta, slug: item.slug };
+        if (!product) {
+          throw new Error(`Product unavailable: ${item.name}`);
+        }
+
+        const cartItem = { productId: product.id, name: item.name, unitAmount: item.unitAmount, quantity: item.quantity, meta: item.meta, slug: item.slug };
         const repriced = repriceItem(product, cartItem);
-        return { ...item, ...repriced, productName: String(product.name || item.name) };
+
+        // Price drift detection: reject extreme drift (>20%), warn moderate (>5%)
+        const clientUnit = item.unitAmount;
+        const serverUnit = repriced.unitAmount;
+        if (clientUnit > 0 && serverUnit > 0) {
+          const driftPct = Math.round(Math.abs(serverUnit - clientUnit) / clientUnit * 100);
+          if (driftPct > 20) {
+            throw new Error(
+              `Price for "${item.name}" has changed significantly. Please refresh the page and try again.`
+            );
+          }
+          if (driftPct > 5) {
+            console.warn("[Interac checkout] Price drift:", {
+              slug: product.slug, clientUnit, serverUnit, drift: `${driftPct}%`,
+            });
+          }
+        }
+
+        return { ...item, productId: product.id, ...repriced, productName: String(product.name || item.name) };
       })
     );
 
@@ -74,7 +98,9 @@ export async function POST(req: Request) {
 
     const subtotal = pricedItems.reduce((sum, item) => sum + item.lineTotal, 0) + designHelpTotal;
     const isPickup = deliveryMethod === "pickup";
-    const shippingAmount = isPickup || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+    // Pickup = free, free shipping threshold applies to subtotal (no coupon discount for Interac)
+    const isFreeShipping = isPickup || subtotal >= FREE_SHIPPING_THRESHOLD;
+    const shippingAmount = isFreeShipping ? 0 : SHIPPING_COST;
     const taxAmount = Math.round((subtotal + shippingAmount) * HST_RATE);
     const totalAmount = subtotal + shippingAmount + taxAmount;
 
@@ -139,6 +165,12 @@ export async function POST(req: Request) {
         totalAmount,
         status: "pending",
         paymentStatus: "unpaid",
+        productionStatus: "not_started",
+        tags: [
+          "interac_checkout",
+          ...(pricedItems.some(p => p.rushApplied) ? ["rush"] : []),
+          ...(designHelpTotal > 0 ? ["design_help"] : []),
+        ],
         items: { create: orderItemsData },
         notes: {
           create: {

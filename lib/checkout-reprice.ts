@@ -103,6 +103,10 @@ function parseNormalizedMeta(meta: Record<string, string | number | boolean> | u
     names: toNumberOrNull(parseMetaValue(source.names)),
     sizeMode,
     sizeRows: parseSizeRows(source.sizeRows),
+    // Product-level turnaround multiplier (stickers=1.5, roll-labels=1.25, etc.)
+    // This is separate from RUSH_MULTIPLIER — it's baked into the pricing engine
+    // and must be forwarded so server repricing matches what the customer was shown.
+    turnaroundMultiplier: toNumberOrNull(parseMetaValue(source.turnaroundMultiplier)),
   };
 }
 
@@ -179,9 +183,12 @@ export function repriceItem(
 
     let unitAmount = Math.max(1, Math.round(totalCents / totalQty));
 
-    // Apply rush surcharge
-    const rushApplied = String(item.meta?.rushProduction ?? "false").trim() === "true";
-    if (rushApplied) {
+    // Apply rush surcharge — same guard as single-size path
+    const hasTurnaroundMultiplier = meta.turnaroundMultiplier != null && meta.turnaroundMultiplier > 1;
+    const rushApplied = hasTurnaroundMultiplier
+      ? true
+      : String(item.meta?.rushProduction ?? "false").trim() === "true";
+    if (rushApplied && !hasTurnaroundMultiplier) {
       unitAmount = Math.round(unitAmount * RUSH_MULTIPLIER);
     }
 
@@ -203,6 +210,24 @@ export function repriceItem(
   if (meta.finishings.length > 0) body.finishings = meta.finishings;
   if (names && names > 1) body.names = names;
 
+  // Forward product-specific pricing options from meta to the pricing engine.
+  // These are set by product configurators (stickers, vinyl lettering, etc.)
+  // and must be forwarded so server-side repricing matches what the customer saw.
+  const passThroughOptions: Record<string, unknown> = {};
+  const PASSTHROUGH_KEYS = [
+    "cutType", "isSticker", "lamination", "shapeSurcharge",
+    "printMode", "turnaroundMultiplier", "foilColor",
+  ];
+  for (const key of PASSTHROUGH_KEYS) {
+    const raw = item.meta?.[key];
+    if (raw !== undefined && raw !== null && raw !== "") {
+      passThroughOptions[key] = typeof raw === "string" ? parseMetaValue(raw) : raw;
+    }
+  }
+  if (Object.keys(passThroughOptions).length > 0) {
+    body.options = passThroughOptions;
+  }
+
   const quote = quoteProduct(product, body);
   let unitAmount = Number(quote.unitCents || Math.round(Number(quote.totalCents || 0) / item.quantity));
 
@@ -221,9 +246,14 @@ export function repriceItem(
 
   unitAmount = Math.round(unitAmount);
 
-  // Apply rush surcharge
-  const rushApplied = String(item.meta?.rushProduction ?? "false").trim() === "true";
-  if (rushApplied) {
+  // Apply rush surcharge — but NOT if the product already has a turnaroundMultiplier
+  // baked into the pricing engine (stickers=1.5, roll-labels=1.25, etc.)
+  // Applying both would double-charge the customer.
+  const hasTurnaroundMultiplier = meta.turnaroundMultiplier != null && meta.turnaroundMultiplier > 1;
+  const rushApplied = hasTurnaroundMultiplier
+    ? true  // Rush is already in the price from turnaroundMultiplier
+    : String(item.meta?.rushProduction ?? "false").trim() === "true";
+  if (rushApplied && !hasTurnaroundMultiplier) {
     unitAmount = Math.round(unitAmount * RUSH_MULTIPLIER);
   }
 

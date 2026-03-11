@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import EmailQuotePopover from "./EmailQuotePopover";
 import DeliveryEstimate from "./DeliveryEstimate";
+import useConfiguratorActions from "./useConfiguratorActions";
 import { PRODUCT_PRINT_SPECS } from "@/lib/design-studio/product-configs";
-import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import { RUSH_MULTIPLIER } from "@/lib/order-config";
 import { formatCad } from "@/lib/product-helpers";
 
 /**
@@ -59,60 +60,20 @@ export default function PricingSidebar({
   hasArtwork,
   artworkIntent,
   onArtworkIntentChange,
+  hideRush,
 }) {
-  // ─── Rush Production ───
-  const [rushProduction, setRushProduction] = useState(false);
-  const rushMultiplier = rushProduction ? RUSH_MULTIPLIER : 1;
-
-  const displaySubtotal = Math.round(subtotalCents * rushMultiplier);
-  const displayUnit = Math.round(unitCents * rushMultiplier);
-
-  // ─── Artwork Intake ───
-  const needsArtworkDecision = (artworkMode === "upload-required" || artworkMode === "upload-optional") && !hasArtwork;
-  const designHelpCents = (needsArtworkDecision && artworkIntent === "design-help") ? DESIGN_HELP_CENTS : 0;
-  const displaySubtotalWithFees = displaySubtotal + designHelpCents;
-  const effectiveCanAddToCart = canAddToCart && (
-    !needsArtworkDecision ||
-    (artworkMode === "upload-optional" && !!artworkIntent)
-  );
-
-  // ─── Add to Cart Animation ───
-  const [atcState, setAtcState] = useState("idle"); // "idle" | "adding" | "added"
-  const atcTimerRef = useRef(null);
-
-  useEffect(() => {
-    return () => clearTimeout(atcTimerRef.current);
-  }, []);
-
-  const handleAtcClick = useCallback(() => {
-    if (atcState !== "idle") return;
-    setAtcState("adding");
-
-    // Call parent handler with rush + intake info
-    const payload = { rushProduction };
-    if (artworkMode) {
-      payload.intakeMode = artworkMode;
-      if (!hasArtwork && artworkIntent) payload.artworkIntent = artworkIntent;
-    }
-    onAddToCart?.(payload);
-
-    // Spinner → Added! → idle
-    atcTimerRef.current = setTimeout(() => {
-      setAtcState("added");
-      atcTimerRef.current = setTimeout(() => {
-        setAtcState("idle");
-      }, 2000);
-    }, 1000);
-  }, [atcState, onAddToCart, rushProduction, artworkMode, hasArtwork, artworkIntent]);
-
-  const handleBuyNowClick = useCallback(() => {
-    const payload = { rushProduction };
-    if (artworkMode) {
-      payload.intakeMode = artworkMode;
-      if (!hasArtwork && artworkIntent) payload.artworkIntent = artworkIntent;
-    }
-    onBuyNow?.(payload);
-  }, [onBuyNow, rushProduction, artworkMode, hasArtwork, artworkIntent]);
+  // ─── Shared configurator state (rush, artwork gating, ATC animation) ───
+  const {
+    rushProduction, setRushProduction, rushSurcharge,
+    needsArtworkDecision, effectiveCanAddToCart,
+    designHelpCents,
+    displayUnit, displaySubtotal, displaySubtotalWithFees,
+    atcState, handleAtcClick, handleBuyNowClick,
+  } = useConfiguratorActions({
+    canAddToCart, artworkMode, hasArtwork, artworkIntent,
+    unitCents, subtotalCents, totalCents,
+    onAddToCart, onBuyNow,
+  });
 
   const atcLabel =
     atcState === "adding" ? null :
@@ -199,11 +160,11 @@ export default function PricingSidebar({
               <span className="text-xs text-gray-500">{t?.("configurator.subtotal") || "Subtotal"}</span>
               <span className="text-sm font-medium text-gray-700">{formatCad(subtotalCents)}</span>
             </div>
-            {rushProduction && (
+            {rushProduction && !hideRush && (
               <div className="flex items-baseline justify-between">
                 <span className="text-xs text-amber-600">{t?.("configurator.rushSurcharge") || "Rush surcharge (+30%)"}</span>
                 <span className="text-sm font-medium text-amber-600">
-                  + {formatCad(Math.round(subtotalCents * (RUSH_MULTIPLIER - 1)))}
+                  + {formatCad(rushSurcharge)}
                 </span>
               </div>
             )}
@@ -306,8 +267,8 @@ export default function PricingSidebar({
           />
         )}
 
-        {/* Rush Production Checkbox */}
-        {!quoteOnly && unitCents > 0 && (
+        {/* Rush Production Checkbox — hidden when product has its own turnaround step */}
+        {!quoteOnly && !hideRush && unitCents > 0 && (
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-colors hover:bg-gray-100">
             <input
               type="checkbox"

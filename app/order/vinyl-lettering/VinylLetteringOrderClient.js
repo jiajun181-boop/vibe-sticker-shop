@@ -233,6 +233,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
         materialLabel: t(`vl.material.${material}`),
         application,
         turnaround: turnaroundId,
+        ...(turnaroundId === "rush" && { turnaroundMultiplier: turnaround.multiplier }),
         fileName: uploadedFile?.name || null,
         artworkUrl: uploadedFile?.url || null,
         artworkKey: uploadedFile?.key || null,

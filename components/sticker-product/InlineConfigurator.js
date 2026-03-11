@@ -438,6 +438,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
         ...(isFoil && { foilColor }),
         ...(isWhiteInkMaterial && { printMode }),
         turnaround: turnaroundId,
+        ...(turnaroundId === "rush" && { turnaroundMultiplier: turnaround.multiplier }),
         windDirection: cutting.windDirections ? windId : undefined,
         fileName: uploadedFile?.name || null,
       },

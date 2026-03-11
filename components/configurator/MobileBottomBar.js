@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import EmailQuotePopover from "./EmailQuotePopover";
-import DeliveryEstimate from "./DeliveryEstimate";
-import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import { useEffect, useRef, useState } from "react";
+import useConfiguratorActions from "./useConfiguratorActions";
 import { formatCad } from "@/lib/product-helpers";
 
 /**
@@ -57,6 +55,7 @@ export default function MobileBottomBar({
   hasArtwork,
   artworkIntent,
   onArtworkIntentChange,
+  hideRush,
 }) {
   // ─── Publish --mobile-cta-h so page padding stays correct ───
   const barRef = useRef(null);
@@ -79,50 +78,17 @@ export default function MobileBottomBar({
     };
   }, []);
 
-  // ─── Rush Production (mobile-local, mirrors PricingSidebar) ───
-  const [rushProduction, setRushProduction] = useState(false);
-  const rushMultiplier = rushProduction ? RUSH_MULTIPLIER : 1;
-
-  // ─── Rush + Design Help adjusted display prices ───
-  const displayTotal = Math.round(totalCents * rushMultiplier);
-  const displayUnit = unitCents > 0 ? Math.round(unitCents * rushMultiplier) : 0;
-  const designHelpCents = (artworkMode === "upload-optional" && !hasArtwork && artworkIntent === "design-help") ? DESIGN_HELP_CENTS : 0;
-  const displayTotalWithFees = displayTotal + designHelpCents;
-
-  // ─── Artwork Intake Gating ───
-  const needsArtworkDecision = (artworkMode === "upload-required" || artworkMode === "upload-optional") && !hasArtwork;
-  const effectiveCanAddToCart = canAddToCart && (
-    !needsArtworkDecision ||
-    (artworkMode === "upload-optional" && !!artworkIntent)
-  );
-
-  // ─── Add to Cart Animation ───
-  const [atcState, setAtcState] = useState("idle");
-  const atcTimerRef = useRef(null);
-
-  useEffect(() => {
-    return () => clearTimeout(atcTimerRef.current);
-  }, []);
-
-  const handleAtcClick = useCallback(() => {
-    if (atcState !== "idle") return;
-    setAtcState("adding");
-
-    // Build same payload as PricingSidebar: rush + intake info
-    const payload = { rushProduction };
-    if (artworkMode) {
-      payload.intakeMode = artworkMode;
-      if (!hasArtwork && artworkIntent) payload.artworkIntent = artworkIntent;
-    }
-    onAddToCart?.(payload);
-
-    atcTimerRef.current = setTimeout(() => {
-      setAtcState("added");
-      atcTimerRef.current = setTimeout(() => {
-        setAtcState("idle");
-      }, 2000);
-    }, 1000);
-  }, [atcState, onAddToCart, rushProduction, artworkMode, hasArtwork, artworkIntent]);
+  // ─── Shared configurator state (rush, artwork gating, ATC animation) ───
+  const {
+    rushProduction, setRushProduction,
+    needsArtworkDecision, effectiveCanAddToCart,
+    displayTotal, displayTotalWithFees,
+    atcState, handleAtcClick, handleBuyNowClick,
+  } = useConfiguratorActions({
+    canAddToCart, artworkMode, hasArtwork, artworkIntent,
+    unitCents, subtotalCents, totalCents,
+    onAddToCart, onBuyNow,
+  });
 
   const atcContent =
     atcState === "adding" ? (
@@ -157,8 +123,8 @@ export default function MobileBottomBar({
         className="fixed inset-x-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] md:hidden"
         style={{ bottom: "calc(var(--mobile-nav-h, 0px) + var(--safe-bottom, 0px))" }}
       >
-        {/* Rush toggle for mobile */}
-        {hasQuote && !quoteOnly && (
+        {/* Rush toggle for mobile — hidden when product has its own turnaround step */}
+        {hasQuote && !quoteOnly && !hideRush && (
           <div className="mx-auto mb-2 flex max-w-lg items-center gap-2">
             <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-[11px] font-semibold text-gray-700 transition-colors has-[:checked]:border-red-300 has-[:checked]:bg-red-50 has-[:checked]:text-red-700">
               <input
@@ -209,7 +175,7 @@ export default function MobileBottomBar({
                     {t?.("configurator.priceError") || "Unable to calculate price"}
                   </p>
                   <p className="text-[10px] text-gray-400 truncate">
-                    {t?.("configurator.priceErrorHelp") || "Call (647) 886-9288"}
+                    {t?.("configurator.priceErrorHelp") || "Still having trouble? Call (647) 783-4728"}
                   </p>
                 </div>
                 {onRetryPrice && (
@@ -266,14 +232,7 @@ export default function MobileBottomBar({
               {onBuyNow && (
                 <button
                   type="button"
-                  onClick={() => {
-                    const payload = { rushProduction };
-                    if (artworkMode) {
-                      payload.intakeMode = artworkMode;
-                      if (!hasArtwork && artworkIntent) payload.artworkIntent = artworkIntent;
-                    }
-                    onBuyNow?.(payload);
-                  }}
+                  onClick={handleBuyNowClick}
                   disabled={!effectiveCanAddToCart || buyNowLoading}
                   className={`shrink-0 rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
                     effectiveCanAddToCart && !buyNowLoading

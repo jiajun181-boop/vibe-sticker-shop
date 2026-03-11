@@ -7,6 +7,7 @@ export { default as ArtworkUpload } from "./ArtworkUpload";
 export { default as CustomDimensions } from "./CustomDimensions";
 export { default as useConfiguratorPrice } from "./useConfiguratorPrice";
 export { default as useConfiguratorCart } from "./useConfiguratorCart";
+export { default as useConfiguratorActions } from "./useConfiguratorActions";
 export { default as ConfigProductGallery } from "./ConfigProductGallery";
 export { default as ProofPreview } from "./ProofPreview";
 export { default as LetterheadTemplateBuilder } from "./LetterheadTemplateBuilder";

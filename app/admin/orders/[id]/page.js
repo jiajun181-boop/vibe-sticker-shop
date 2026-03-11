@@ -1712,12 +1712,6 @@ function PackageCompletenessSection({ order }) {
   const pkg = assessOrderPackage(order);
   if (pkg.items.length === 0) return null;
 
-  const statusColors = {
-    complete: { bg: "bg-green-50", border: "border-green-300", text: "text-green-800", dot: "bg-green-500" },
-    partial: { bg: "bg-amber-50", border: "border-amber-300", text: "text-amber-800", dot: "bg-amber-400" },
-    blocked: { bg: "bg-red-50", border: "border-red-300", text: "text-red-800", dot: "bg-red-500" },
-  };
-
   const statusLabelKeys = {
     complete: "admin.package.complete",
     partial: "admin.package.partial",

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
-import { statusColor, priorityColor } from "@/lib/admin/status-labels";
+import { statusColor, statusLabel, priorityColor } from "@/lib/admin/status-labels";
 
 const JOB_STATUSES = [
   "queued",
@@ -54,9 +54,7 @@ function formatDate(dateString) {
   });
 }
 
-function statusLabel(status) {
-  return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
+// statusLabel imported from @/lib/admin/status-labels
 
 export default function ProductionJobDetailPage() {
   const { id } = useParams();
@@ -65,6 +63,7 @@ export default function ProductionJobDetailPage() {
 
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [factories, setFactories] = useState([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -101,9 +100,11 @@ export default function ProductionJobDetailPage() {
 
   const fetchJob = useCallback(async () => {
     try {
+      setFetchError(null);
       const res = await fetch(`/api/admin/production/${id}`);
       if (!res.ok) {
         setJob(null);
+        setFetchError(res.status === 404 ? "Job not found" : `Failed to load (HTTP ${res.status})`);
         return;
       }
       const data = await res.json();
@@ -115,7 +116,7 @@ export default function ProductionJobDetailPage() {
       setDueAt(data.dueAt ? data.dueAt.slice(0, 10) : "");
       setNotes(data.notes || "");
     } catch {
-      console.error("Failed to fetch job");
+      setFetchError("Network error — could not load job");
       setJob(null);
     } finally {
       setLoading(false);
@@ -391,8 +392,16 @@ export default function ProductionJobDetailPage() {
 
   if (!job) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-2">
-        <p className="text-sm text-gray-600">Production job not found</p>
+      <div className="flex h-64 flex-col items-center justify-center gap-3">
+        <p className="text-sm text-gray-600">{fetchError || "Production job not found"}</p>
+        {fetchError && fetchError !== "Job not found" && (
+          <button
+            onClick={() => { setLoading(true); fetchJob(); }}
+            className="rounded border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Retry
+          </button>
+        )}
         <Link
           href="/admin/production"
           className="text-sm text-blue-600 hover:text-blue-800"
