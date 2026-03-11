@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { isServiceFeeItem } from "@/lib/order-item-utils";
+import { detectProductFamily } from "@/lib/preflight";
 
 /**
  * POST /api/admin/orders/create
@@ -102,11 +103,25 @@ export async function POST(request: NextRequest) {
       // Create ProductionJob for each item (skip service-fee items)
       for (const orderItem of newOrder.items) {
         if (isServiceFeeItem(orderItem)) continue;
+        const itemMeta = orderItem.meta && typeof orderItem.meta === "object"
+          ? orderItem.meta as Record<string, unknown> : {};
+        const family = detectProductFamily(orderItem);
+        const artworkUrl = orderItem.fileUrl
+          || (typeof itemMeta.artworkUrl === "string" ? itemMeta.artworkUrl : null);
+
         await tx.productionJob.create({
           data: {
             orderItemId: orderItem.id,
             status: "queued",
             priority: "normal",
+            productName: orderItem.productName || null,
+            family,
+            quantity: orderItem.quantity,
+            widthIn: orderItem.widthIn || null,
+            heightIn: orderItem.heightIn || null,
+            material: orderItem.material || null,
+            finishing: orderItem.finishing || null,
+            artworkUrl,
           },
         });
       }

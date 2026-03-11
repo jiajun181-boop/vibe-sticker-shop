@@ -4,6 +4,10 @@ import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
 import { sendOrderNotification } from "@/lib/notifications/order-notifications";
 import { VALID_STATUS_TRANSITIONS } from "@/lib/order-config";
+import { isProductionItem } from "@/lib/order-item-utils";
+import { detectProductFamily } from "@/lib/preflight";
+import { applyAssignmentRules } from "@/lib/assignment-rules";
+import { syncOrderProductionStatus } from "@/lib/production-sync";
 
 export async function GET(
   request: NextRequest,
@@ -146,6 +150,53 @@ export async function PATCH(
       actor: actorEmail,
       details: data as Record<string, unknown>,
     });
+
+    // Auto-create production jobs when payment is first confirmed (invoice/interac orders)
+    if (data.paymentStatus === "paid" && !current.paidAt) {
+      try {
+        const orderItems = await prisma.orderItem.findMany({
+          where: { orderId: id },
+          include: { productionJob: { select: { id: true } } },
+        });
+        for (const item of orderItems) {
+          if (item.productionJob) continue; // already has a job
+          if (!isProductionItem(item)) continue;
+
+          const itemMeta = item.meta && typeof item.meta === "object"
+            ? item.meta as Record<string, unknown> : {};
+          const isRush = itemMeta.rushProduction === true || itemMeta.rushProduction === "true";
+          const isTwoSided = itemMeta.sides === "double" || itemMeta.doubleSided === true;
+          const family = detectProductFamily(item);
+          const artworkUrl = item.fileUrl
+            || (typeof itemMeta.artworkUrl === "string" ? itemMeta.artworkUrl : null);
+          const dueAt = new Date();
+          dueAt.setDate(dueAt.getDate() + (isRush ? 1 : 3));
+
+          const newJob = await prisma.productionJob.create({
+            data: {
+              orderItemId: item.id,
+              status: "queued",
+              priority: isRush ? "urgent" : "normal",
+              dueAt,
+              productName: item.productName || null,
+              family,
+              quantity: item.quantity,
+              widthIn: item.widthIn || null,
+              heightIn: item.heightIn || null,
+              material: item.material || null,
+              finishing: item.finishing || null,
+              artworkUrl,
+              isTwoSided: !!isTwoSided,
+              isRush,
+            },
+          });
+          await applyAssignmentRules(newJob.id);
+        }
+        await syncOrderProductionStatus(id);
+      } catch (jobErr) {
+        console.error("[Order PATCH] Failed to auto-create production jobs:", jobErr);
+      }
+    }
 
     // When order is canceled, cancel all production jobs + notify customer
     if (data.status === "canceled") {

@@ -267,15 +267,11 @@ export default function ProductionJobDetailPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <InfoField
                 label="Product"
-                value={
-                  orderItem?.productName ||
-                  orderItem?.product?.name ||
-                  "Unknown"
-                }
+                value={job.productName || orderItem?.productName || "Unknown"}
               />
               <InfoField
                 label="Quantity"
-                value={orderItem?.quantity ?? "\u2014"}
+                value={job.quantity || orderItem?.quantity || "\u2014"}
               />
               <InfoField
                 label="Customer Email"
@@ -285,17 +281,32 @@ export default function ProductionJobDetailPage() {
                 label="Customer Name"
                 value={order?.customerName || "\u2014"}
               />
-              {orderItem?.material && (
-                <InfoField label="Material" value={orderItem.material} />
+              {job.family && (
+                <InfoField label="Family" value={job.family} />
               )}
-              {orderItem?.finishing && (
-                <InfoField label="Finishing" value={orderItem.finishing} />
+              {(job.materialLabel || job.material || orderItem?.material) && (
+                <InfoField
+                  label="Material"
+                  value={job.materialLabel || job.material || orderItem?.material}
+                />
               )}
-              {orderItem?.widthIn && orderItem?.heightIn && (
+              {(job.finishingLabel || job.finishing || orderItem?.finishing) && (
+                <InfoField
+                  label="Finishing"
+                  value={job.finishingLabel || job.finishing || orderItem?.finishing}
+                />
+              )}
+              {(job.widthIn || orderItem?.widthIn) && (job.heightIn || orderItem?.heightIn) && (
                 <InfoField
                   label="Dimensions"
-                  value={`${orderItem.widthIn}" x ${orderItem.heightIn}"`}
+                  value={`${job.widthIn || orderItem?.widthIn}" x ${job.heightIn || orderItem?.heightIn}"`}
                 />
+              )}
+              {job.isTwoSided && (
+                <InfoField label="Sides" value="Double-sided" />
+              )}
+              {job.isRush && (
+                <InfoField label="Rush" value="Yes — 24h turnaround" />
               )}
               {orderItem?.unitPrice != null && (
                 <InfoField
@@ -310,21 +321,23 @@ export default function ProductionJobDetailPage() {
                 />
               )}
             </div>
-            {(orderItem?.fileUrl || orderItem?.fileName) && (
+
+            {/* Artwork section — use job-level URL first, fallback to orderItem */}
+            {(job.artworkUrl || orderItem?.fileUrl || orderItem?.fileName) && (
               <div className="mt-4 border-t border-gray-100 pt-4">
-                <p className="mb-1 text-xs font-medium text-gray-600">File</p>
-                {orderItem.fileUrl ? (
+                <p className="mb-1 text-xs font-medium text-gray-600">Artwork File</p>
+                {(job.artworkUrl || orderItem?.fileUrl) ? (
                   <a
-                    href={orderItem.fileUrl}
+                    href={job.artworkUrl || orderItem?.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-block rounded-lg border border-gray-200 px-3 py-2 text-xs text-blue-600 transition-colors hover:bg-gray-50"
                   >
-                    {orderItem.fileName || "Download File"}
+                    {orderItem?.fileName || "Download Artwork"}
                   </a>
                 ) : (
                   <p className="text-sm text-gray-600">
-                    {orderItem.fileName}
+                    {orderItem?.fileName}
                   </p>
                 )}
               </div>
