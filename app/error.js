@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function ErrorPage({ error, reset }) {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-[var(--color-gray-50)] px-6 text-center text-[var(--color-gray-900)]">

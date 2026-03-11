@@ -110,6 +110,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
   }, [widthIn, heightIn, vehicleType]);
 
   const isQuoteOnly = vehicleType.quoteOnly;
+  const fromPrice = vehicleType.fromPrice || 0;
 
   // Quote (skip for quote-only types)
   const quote = useConfiguratorPrice({
@@ -503,6 +504,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
             badges={[t("vehicle.badgeDurable"), t("vehicle.badgeShipping")]}
             t={t}
             quoteOnly={isQuoteOnly}
+            fromPrice={fromPrice}
             onRequestQuote={handleRequestQuote}
             productName={t(`vehicle.type.${typeId}`)}
             categorySlug="vehicle-graphics-fleet"
@@ -553,6 +555,7 @@ export default function VehicleOrderClient({ defaultType, productImages }) {
         buyNowLoading={buyNowLoading}
         t={t}
         quoteOnly={isQuoteOnly}
+        fromPrice={fromPrice}
         onRequestQuote={handleRequestQuote}
         productName={t(`vehicle.type.${typeId}`)}
         summaryLines={summaryLines}

@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { WRAP_UI_TYPES, WRAP_SLUG_MAP } from "@/lib/vehicle-order-config";
+import { WRAP_UI_TYPES, WRAP_SLUG_MAP, getVehicleType } from "@/lib/vehicle-order-config";
 import {
   ConfigHero,
   ConfigProductGallery,
@@ -60,6 +60,10 @@ export default function VehicleWrapOrderClient({ productImages = [] }) {
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
   const [artworkIntent, setArtworkIntent] = useState(null);
+
+  const typeConfig = getVehicleType(typeId);
+  const isQuoteOnly = typeConfig?.quoteOnly ?? true;
+  const fromPrice = typeConfig?.fromPrice || 0;
 
   const activeQty = useMemo(() => {
     if (customQty !== "") {
@@ -289,7 +293,8 @@ export default function VehicleWrapOrderClient({ productImages = [] }) {
             buyNowLoading={false}
             badges={[t("vw.badge.professional"), t("vw.badge.shipping")]}
             t={t}
-            quoteOnly={true}
+            quoteOnly={isQuoteOnly}
+            fromPrice={fromPrice}
             onRequestQuote={handleRequestQuote}
             productName={t("vw.title")}
             categorySlug="vehicle-graphics-fleet"
@@ -325,7 +330,8 @@ export default function VehicleWrapOrderClient({ productImages = [] }) {
         onBuyNow={null}
         buyNowLoading={false}
         t={t}
-        quoteOnly={true}
+        quoteOnly={isQuoteOnly}
+        fromPrice={fromPrice}
         onRequestQuote={handleRequestQuote}
         productName={t("vw.title")}
         summaryLines={summaryLines}

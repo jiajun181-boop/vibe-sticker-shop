@@ -48,6 +48,7 @@ export default function MobileBottomBar({
   summaryLines,
   unitCents = 0,
   subtotalCents = 0,
+  fromPrice,
   categorySlug,
   locale,
   disabledReason,
@@ -188,6 +189,13 @@ export default function MobileBottomBar({
                   </button>
                 )}
               </div>
+            ) : quoteOnly && fromPrice > 0 ? (
+              <>
+                <p className="text-sm font-black text-gray-900">
+                  {t?.("configurator.from") || "From"} {formatCad(fromPrice)}
+                </p>
+                <p className="truncate text-[10px] text-gray-400">{t?.("configurator.exactPriceOnQuote") || "Exact price based on vehicle & coverage"}</p>
+              </>
             ) : hasQuote ? (
               <>
                 <p className="text-lg font-black text-gray-900">{formatCad(displayTotalWithFees)} <span className="text-[10px] font-normal text-gray-400">{t?.("configurator.beforeTax") || "before tax"}</span></p>

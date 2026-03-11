@@ -49,6 +49,7 @@ export default function PricingSidebar({
   volumeRows,
   activeQty,
   quoteOnly,
+  fromPrice,
   onRequestQuote,
   onRetryPrice,
   productName,
@@ -143,6 +144,12 @@ export default function PricingSidebar({
             <p className="text-xs text-red-500">
               {t?.("configurator.priceErrorHelp") || "Still having trouble? Call (647) 783-4728"}
             </p>
+          </div>
+        ) : quoteOnly && fromPrice > 0 ? (
+          <div className="space-y-1 text-center">
+            <p className="text-xs text-gray-500">{t?.("configurator.startingFrom") || "Starting from"}</p>
+            <p className="text-2xl font-black text-gray-900">{formatCad(fromPrice)}</p>
+            <p className="text-[10px] text-gray-400">{t?.("configurator.exactPriceOnQuote") || "Exact price based on vehicle & coverage"}</p>
           </div>
         ) : unitCents > 0 ? (
           <div className="space-y-2.5">

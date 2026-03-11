@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 import { categoryReorgRedirectsV1 } from "./lib/redirects/category-reorg-v1";
 import { codexUrlMappingRedirects } from "./lib/redirects/codex-url-mapping";
 import { seoShortUrlRedirects } from "./lib/redirects/seo-short-urls";
@@ -23,7 +24,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://placehold.co https://utfs.io https://*.ufs.sh https://www.google-analytics.com https://www.facebook.com https://*.tawk.to",
               "font-src 'self' https://*.tawk.to",
-              "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://*.facebook.com https://api.stripe.com https://uploadthing.com https://*.uploadthing.com https://*.ufs.sh https://*.tawk.to wss://*.tawk.to",
+              "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://*.facebook.com https://api.stripe.com https://uploadthing.com https://*.uploadthing.com https://*.ufs.sh https://*.tawk.to wss://*.tawk.to https://*.ingest.sentry.io",
               "frame-src https://js.stripe.com https://hooks.stripe.com https://www.google.com https://tawk.to https://*.tawk.to",
               "object-src 'none'",
               "base-uri 'self'",
@@ -195,4 +196,18 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Wrap with Sentry only when DSN is configured — zero overhead otherwise
+export default process.env.SENTRY_DSN
+  ? withSentryConfig(nextConfig, {
+      // Suppress source map upload warnings when no auth token is set
+      silent: !process.env.SENTRY_AUTH_TOKEN,
+      // Don't widen existing org/project config — set via env vars
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      // Upload source maps to Sentry but don't expose publicly
+      sourcemaps: {
+        deleteSourcemapsAfterUpload: true,
+      },
+      disableLogger: true,
+    })
+  : nextConfig;
