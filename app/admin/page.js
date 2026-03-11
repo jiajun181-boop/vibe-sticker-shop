@@ -219,6 +219,9 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* ── Production Alerts ── */}
+      <ProductionAlerts />
+
       {/* ── Internal Tools (clickable, real tools) ── */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="border-b border-[#e0e0e0] px-5 py-4">
@@ -306,6 +309,50 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ProductionAlerts() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/admin/orders/missing-artwork?limit=5").then((r) => (r.ok ? r.json() : null)),
+      fetch("/api/admin/production/schedule").then((r) => (r.ok ? r.json() : null)),
+    ]).then(([artwork, schedule]) => setData({ artwork, schedule })).catch(() => {});
+  }, []);
+
+  if (!data) return null;
+
+  const artworkCount = data.artwork?.total || 0;
+  const staleCount = data.artwork?.staleCount || 0;
+  const overdueCount = data.schedule?.summary?.overdueCount || 0;
+  const rushCount = data.schedule?.summary?.rushCount || 0;
+
+  if (artworkCount === 0 && overdueCount === 0) return null;
+
+  return (
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      {artworkCount > 0 && (
+        <Link href="/admin/orders/missing-artwork" className="rounded-[3px] border border-amber-200 bg-amber-50 p-4 hover:bg-amber-100 transition-colors">
+          <p className="text-2xl font-bold text-amber-700">{artworkCount}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Missing Artwork</p>
+          {staleCount > 0 && <p className="mt-0.5 text-[10px] text-red-600">{staleCount} stale (7+ days)</p>}
+        </Link>
+      )}
+      {overdueCount > 0 && (
+        <Link href="/admin/production/schedule" className="rounded-[3px] border border-red-200 bg-red-50 p-4 hover:bg-red-100 transition-colors">
+          <p className="text-2xl font-bold text-red-700">{overdueCount}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-red-600">Overdue Jobs</p>
+        </Link>
+      )}
+      {rushCount > 0 && (
+        <Link href="/admin/production/schedule" className="rounded-[3px] border border-orange-200 bg-orange-50 p-4 hover:bg-orange-100 transition-colors">
+          <p className="text-2xl font-bold text-orange-700">{rushCount}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-orange-600">Rush Jobs Active</p>
+        </Link>
+      )}
     </div>
   );
 }
