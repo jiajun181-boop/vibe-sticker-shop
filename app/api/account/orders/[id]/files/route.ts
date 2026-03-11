@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
+import { refreshAutoTags } from "@/lib/auto-tag";
 
 /**
  * GET /api/account/orders/[id]/files
@@ -193,6 +194,9 @@ export async function POST(
         actor: user.email || "customer",
       },
     });
+
+    // Refresh auto-tags (clears missing-artwork if all items now have files)
+    refreshAutoTags(id, prisma);
 
     return NextResponse.json({ file: orderFile }, { status: 201 });
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getClientIp, uploadLimiter } from "@/lib/rate-limit";
+import { refreshAutoTags } from "@/lib/auto-tag";
 
 /**
  * POST /api/orders/upload-artwork
@@ -116,6 +117,9 @@ export async function POST(request: NextRequest) {
         actor: email.toLowerCase().trim(),
       },
     });
+
+    // Refresh auto-tags (clears missing-artwork if all items now have files)
+    refreshAutoTags(orderId, prisma);
 
     return NextResponse.json({
       success: true,

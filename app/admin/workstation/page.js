@@ -240,6 +240,8 @@ export default function WorkstationPage() {
           <QuickAction href="/admin/tools/proof" icon={I.proof} label={t("admin.workstation.actionProof")} sub={t("admin.workstation.actionProofSub")} />
           <QuickAction href="/admin/tools/stamp-studio" icon={I.stamp} label={t("admin.workstation.actionStamp")} sub={t("admin.workstation.actionStampSub")} />
           <QuickAction href="/admin/production/board" icon={I.production} label={t("admin.workstation.actionProduction")} sub={t("admin.workstation.actionProductionSub")} />
+          <QuickAction href="/admin/production/schedule" icon={I.orders} label="Schedule" sub="Due dates & workload" />
+          <QuickAction href="/admin/orders/missing-artwork" icon={I.contour} label="Missing Artwork" sub="Orders awaiting files" />
         </div>
       </Section>
 
