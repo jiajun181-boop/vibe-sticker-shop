@@ -17,6 +17,7 @@ const statusOptions = [
   { value: "finished", label: "Finished" },
   { value: "shipped", label: "Shipped" },
   { value: "on_hold", label: "On Hold" },
+  { value: "canceled", label: "Canceled" },
 ];
 
 const priorityOptions = [

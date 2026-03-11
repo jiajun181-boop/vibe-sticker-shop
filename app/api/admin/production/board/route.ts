@@ -126,6 +126,7 @@ export async function GET(request: NextRequest) {
       finished: [],
       shipped: [],
       on_hold: [],
+      canceled: [],
     };
 
     for (const job of formatted) {

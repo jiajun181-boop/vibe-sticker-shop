@@ -138,6 +138,11 @@ export async function PATCH(
       data.completedAt = new Date();
     }
 
+    // Auto-set canceledAt when status changes to "canceled"
+    if (statusChanged && data.status === "canceled" && !existing.canceledAt) {
+      data.canceledAt = new Date();
+    }
+
     const job = await prisma.productionJob.update({
       where: { id },
       data,

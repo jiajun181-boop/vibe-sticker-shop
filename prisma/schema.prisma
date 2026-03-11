@@ -710,6 +710,7 @@ enum JobStatus {
   finished
   shipped
   on_hold
+  canceled
 }
 
 enum Priority {
@@ -745,6 +746,8 @@ model ProductionJob {
   dueAt       DateTime?
   startedAt   DateTime?
   completedAt DateTime?
+  canceledAt  DateTime?
+  cancelReason String?
   notes       String?
 
   // ─── Production-critical fields (denormalized from OrderItem for direct access) ───

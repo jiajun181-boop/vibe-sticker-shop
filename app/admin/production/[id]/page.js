@@ -16,6 +16,7 @@ const JOB_STATUSES = [
   "finished",
   "shipped",
   "on_hold",
+  "canceled",
 ];
 
 const PRIORITIES = ["normal", "rush", "urgent"];
@@ -443,6 +444,14 @@ export default function ProductionJobDetailPage() {
             </Link>
           )}
         </div>
+        <a
+          href={`/api/admin/production/${id}/ticket`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
+        >
+          Print Ticket
+        </a>
       </div>
 
       {/* Two-column layout */}
