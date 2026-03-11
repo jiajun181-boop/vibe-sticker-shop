@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { sendOrderNotification } from "@/lib/notifications/order-notifications";
+import { logActivity } from "@/lib/activity-log";
 
 /**
  * GET /api/admin/orders/[id]/proofs
@@ -128,6 +129,14 @@ export async function POST(
 
     // Send proof ready notification (non-blocking)
     sendOrderNotification(id, "proof_ready", { proofUrl: imageUrl }).catch(() => {});
+
+    logActivity({
+      action: "proof_uploaded",
+      entity: "order",
+      entityId: id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+      details: { version: nextVersion, fileName },
+    });
 
     return NextResponse.json({ proof }, { status: 201 });
   } catch (err) {

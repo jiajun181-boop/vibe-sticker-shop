@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { getLowStockProducts } from "@/lib/inventory";
+import { logActivity } from "@/lib/activity-log";
 
 export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, "products", "view");
@@ -66,6 +67,14 @@ export async function PATCH(req: NextRequest) {
         lowStockThreshold: true,
         trackInventory: true,
       },
+    });
+
+    logActivity({
+      action: "inventory_updated",
+      entity: "product",
+      entityId: productId,
+      actor: auth.user?.name || auth.user?.email || "admin",
+      details: { stockQuantity, lowStockThreshold, trackInventory },
     });
 
     const { revalidatePath } = await import("next/cache");

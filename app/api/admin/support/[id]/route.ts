@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildTicketReplyHtml } from "@/lib/email/templates/ticket-reply";
+import { logActivity } from "@/lib/activity-log";
 
 /**
  * GET /api/admin/support/[id] — get ticket detail (admin)
@@ -59,6 +60,14 @@ export async function PATCH(
     const ticket = await prisma.supportTicket.update({
       where: { id },
       data,
+    });
+
+    logActivity({
+      action: "ticket_updated",
+      entity: "support_ticket",
+      entityId: id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+      details: { status, priority },
     });
 
     return NextResponse.json({ ticket });
@@ -123,6 +132,13 @@ export async function POST(
     } catch (err) {
       console.error("[Support] Reply email failed:", err);
     }
+
+    logActivity({
+      action: "ticket_reply",
+      entity: "support_ticket",
+      entityId: id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+    });
 
     return NextResponse.json({ message: msg }, { status: 201 });
   } catch (err) {

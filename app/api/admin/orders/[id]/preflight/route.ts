@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { logActivity } from "@/lib/activity-log";
 
 /**
  * GET /api/admin/orders/[id]/preflight
@@ -112,6 +113,14 @@ export async function PATCH(
         }
       }
     }
+
+    logActivity({
+      action: `preflight_${status}`,
+      entity: "order",
+      entityId: id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+      details: { fileId, fileName: file.fileName, status, notes },
+    });
 
     return NextResponse.json(updated);
   } catch (err) {

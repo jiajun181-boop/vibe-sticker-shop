@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { generateApiKey } from "@/lib/api-auth";
+import { logActivity } from "@/lib/activity-log";
 
 export async function GET(req: NextRequest) {
   try {
@@ -79,6 +80,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    logActivity({
+      action: "api_key_created",
+      entity: "api_key",
+      entityId: apiKey.id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+      details: { name: name.trim(), keyPrefix, userId: resolvedUserId },
+    });
+
     // Return raw key only on creation (never stored)
     return NextResponse.json({ plainKey: rawKey, apiKey }, { status: 201 });
 
@@ -104,6 +113,13 @@ export async function DELETE(req: NextRequest) {
     await prisma.apiKey.update({
       where: { id },
       data: { isActive: false },
+    });
+
+    logActivity({
+      action: "api_key_revoked",
+      entity: "api_key",
+      entityId: id,
+      actor: auth.user?.name || auth.user?.email || "admin",
     });
 
     return NextResponse.json({ success: true });

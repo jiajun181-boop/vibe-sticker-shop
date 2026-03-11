@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { statusColor } from "@/lib/admin/status-labels";
 
 /* ─── Date helpers ─── */
 
@@ -50,17 +51,7 @@ const presets = [
   { key: "this_year", label: "This Year" },
 ];
 
-/* ─── Status badge colors (same as production queue) ─── */
-
-const statusColors = {
-  queued: "bg-gray-100 text-gray-700",
-  assigned: "bg-blue-100 text-blue-700",
-  printing: "bg-yellow-100 text-yellow-700",
-  quality_check: "bg-purple-100 text-purple-700",
-  finished: "bg-green-100 text-green-700",
-  shipped: "bg-emerald-100 text-emerald-700",
-  on_hold: "bg-red-100 text-red-700",
-};
+/* Status badge colors — uses centralized statusColor() from lib/admin/status-labels.js */
 
 /* ─── Donut Chart ─── */
 
@@ -563,7 +554,7 @@ export default function ProductionReportPage() {
                         <td className="px-4 py-3">
                           <span
                             className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-                              statusColors[order.status] || "bg-gray-100 text-gray-700"
+                              statusColor(order.status)
                             }`}
                           >
                             {order.status.replace("_", " ")}
@@ -603,7 +594,7 @@ export default function ProductionReportPage() {
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className="font-mono text-[10px] text-gray-600">{order.jobId.slice(0, 8)}</span>
-                      <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${statusColors[order.status] || "bg-gray-100 text-gray-700"}`}>
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${statusColor(order.status)}`}>
                         {order.status.replace("_", " ")}
                       </span>
                       {order.factoryName && <span className="text-[10px] text-gray-600">{order.factoryName}</span>}
@@ -646,11 +637,11 @@ export default function ProductionReportPage() {
                   return (
                     <div key={`${phase.from}-${phase.to}`} className="flex items-center gap-3">
                       <div className="w-48 flex items-center gap-1.5 text-xs shrink-0">
-                        <span className={`rounded px-1.5 py-0.5 font-medium ${statusColors[phase.from] || "bg-gray-100 text-gray-700"}`}>
+                        <span className={`rounded px-1.5 py-0.5 font-medium ${statusColor(phase.from)}`}>
                           {phase.from.replace("_", " ")}
                         </span>
                         <span className="text-gray-400">&rarr;</span>
-                        <span className={`rounded px-1.5 py-0.5 font-medium ${statusColors[phase.to] || "bg-gray-100 text-gray-700"}`}>
+                        <span className={`rounded px-1.5 py-0.5 font-medium ${statusColor(phase.to)}`}>
                           {phase.to.replace("_", " ")}
                         </span>
                       </div>

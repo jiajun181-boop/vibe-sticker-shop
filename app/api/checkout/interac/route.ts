@@ -204,20 +204,24 @@ export async function POST(req: Request) {
       }
     }
 
-    // Send instructions email
-    const html = buildInteracInstructionsHtml({
-      orderId: order.id,
-      customerName: name,
-      totalAmount,
-    });
+    // Send instructions email (non-blocking — order already created)
+    try {
+      const html = buildInteracInstructionsHtml({
+        orderId: order.id,
+        customerName: name,
+        totalAmount,
+      });
 
-    await sendEmail({
-      to: email,
-      subject: `Interac e-Transfer Instructions \u2014 Order #${order.id.slice(0, 8)}`,
-      html,
-      template: "interac-instructions",
-      orderId: order.id,
-    });
+      await sendEmail({
+        to: email,
+        subject: `Interac e-Transfer Instructions \u2014 Order #${order.id.slice(0, 8)}`,
+        html,
+        template: "interac-instructions",
+        orderId: order.id,
+      });
+    } catch (emailErr) {
+      console.error("[Interac checkout] email send failed:", emailErr);
+    }
 
     return NextResponse.json({ orderId: order.id, totalAmount });
   } catch (err) {

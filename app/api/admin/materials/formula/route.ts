@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { logActivity } from "@/lib/activity-log";
 
 // GET: Read current COST_PLUS formula parameters
 export async function GET(req: NextRequest) {
@@ -65,6 +66,14 @@ export async function PUT(req: NextRequest) {
     await prisma.pricingPreset.update({
       where: { key: "window_film_costplus" },
       data: { config },
+    });
+
+    logActivity({
+      action: "formula_updated",
+      entity: "pricing_preset",
+      entityId: preset.id,
+      actor: auth.user?.name || auth.user?.email || "admin",
+      details: { updatedFields: Object.keys(body).filter((k) => body[k] !== undefined) },
     });
 
     return NextResponse.json({ ok: true, config });
