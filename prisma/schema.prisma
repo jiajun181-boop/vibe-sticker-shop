@@ -263,6 +263,14 @@ model Order {
   userId                String?
   user                  User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  // Shipping / delivery
+  deliveryMethod        String?          // "shipping" | "pickup" | "local_delivery"
+  shippingAddress       String?
+  shippingCity          String?
+  shippingProvince      String?
+  shippingPostal        String?
+  shippingCountry       String?          @default("CA")
+
   // Amounts (cents)
   subtotalAmount        Int              @default(0)
   taxAmount             Int              @default(0)

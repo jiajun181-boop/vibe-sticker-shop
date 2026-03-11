@@ -22,6 +22,12 @@ const InteracSchema = z.object({
   })).min(1).max(50),
   email: z.string().email(),
   name: z.string().min(1),
+  phone: z.string().optional(),
+  deliveryMethod: z.enum(["shipping", "pickup"]).default("shipping"),
+  shippingAddress: z.string().optional(),
+  shippingCity: z.string().optional(),
+  shippingProvince: z.string().optional(),
+  shippingPostal: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -32,7 +38,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Validation error", details: result.error.flatten() }, { status: 400 });
     }
 
-    const { items, email, name } = result.data;
+    const { items, email, name, phone, deliveryMethod, shippingAddress, shippingCity, shippingProvince, shippingPostal } = result.data;
 
     // Server-side repricing: same logic as Stripe checkout.
     // Recalculate each item's price using quoteProduct + rush surcharge.
@@ -67,7 +73,8 @@ export async function POST(req: Request) {
     const { totalCents: designHelpTotal } = calculateDesignHelpFee(pricedItems);
 
     const subtotal = pricedItems.reduce((sum, item) => sum + item.lineTotal, 0) + designHelpTotal;
-    const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+    const isPickup = deliveryMethod === "pickup";
+    const shippingAmount = isPickup || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
     const taxAmount = Math.round((subtotal + shippingAmount) * HST_RATE);
     const totalAmount = subtotal + shippingAmount + taxAmount;
 
@@ -119,7 +126,13 @@ export async function POST(req: Request) {
       data: {
         customerEmail: email,
         customerName: name,
+        customerPhone: phone || null,
         userId,
+        deliveryMethod: deliveryMethod || "shipping",
+        shippingAddress: shippingAddress || null,
+        shippingCity: shippingCity || null,
+        shippingProvince: shippingProvince || null,
+        shippingPostal: shippingPostal || null,
         subtotalAmount: subtotal,
         taxAmount,
         shippingAmount,

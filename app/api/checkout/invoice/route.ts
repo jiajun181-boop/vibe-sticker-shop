@@ -25,10 +25,16 @@ const InvoiceCheckoutSchema = z.object({
   companyName: z.string().nullable().optional(),
   contactName: z.string().min(1),
   email: z.string().email(),
+  phone: z.string().nullable().optional(),
   poNumber: z.string().nullable().optional(),
   paymentTerms: z.enum(["net15", "net30", "net45"]).default("net30"),
   notes: z.string().nullable().optional(),
   promoCode: z.string().max(50).nullable().optional(),
+  deliveryMethod: z.enum(["shipping", "pickup"]).default("shipping"),
+  shippingAddress: z.string().optional(),
+  shippingCity: z.string().optional(),
+  shippingProvince: z.string().optional(),
+  shippingPostal: z.string().optional(),
 });
 
 type CartItem = z.infer<typeof CartItemSchema>;
@@ -66,7 +72,7 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await getUserFromRequest(req);
-    const { items, companyName, contactName, email, poNumber, paymentTerms, notes, promoCode } = parsed.data;
+    const { items, companyName, contactName, email, phone, poNumber, paymentTerms, notes, promoCode, deliveryMethod, shippingAddress, shippingCity, shippingProvince, shippingPostal } = parsed.data;
 
     // Server-side repricing: same shared logic as Stripe/Interac checkout.
     // repriceItem() handles base pricing + rush surcharge via RUSH_MULTIPLIER.
@@ -209,11 +215,18 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const isPickup = deliveryMethod === "pickup";
     const created = await prisma.order.create({
       data: {
         customerEmail: email,
         customerName: contactName,
+        customerPhone: phone || null,
         userId: user?.id || null,
+        deliveryMethod: deliveryMethod || "shipping",
+        shippingAddress: shippingAddress || null,
+        shippingCity: shippingCity || null,
+        shippingProvince: shippingProvince || null,
+        shippingPostal: shippingPostal || null,
         subtotalAmount,
         discountAmount,
         taxAmount,

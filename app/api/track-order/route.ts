@@ -76,21 +76,39 @@ export async function POST(req: Request) {
       );
     }
 
-    // Extract tracking info from the most recent "shipped" timeline event
-    let tracking: { trackingNumber?: string; carrier?: string; estimatedDelivery?: string } | null = null;
-    for (const evt of order.timeline) {
-      if (evt.action === "shipped" && evt.details) {
-        try {
-          const d = typeof evt.details === "string" ? JSON.parse(evt.details) : evt.details;
-          if (d.trackingNumber) {
-            tracking = {
-              trackingNumber: d.trackingNumber,
-              carrier: d.carrier || null,
-              estimatedDelivery: d.estimatedDelivery || null,
-            };
-            break;
-          }
-        } catch {}
+    // Extract tracking info: prefer Shipment table, fallback to timeline JSON
+    let tracking: { trackingNumber?: string; carrier?: string; estimatedDelivery?: string; status?: string } | null = null;
+
+    // Try structured Shipment first
+    const shipment = await prisma.shipment.findFirst({
+      where: { orderId: order.id },
+      orderBy: { createdAt: "desc" },
+    });
+    if (shipment?.trackingNumber) {
+      tracking = {
+        trackingNumber: shipment.trackingNumber,
+        carrier: shipment.carrier || null,
+        estimatedDelivery: shipment.notes?.replace("Est. delivery: ", "") || null,
+        status: shipment.status,
+      };
+    }
+
+    // Fallback to timeline JSON if no Shipment record
+    if (!tracking) {
+      for (const evt of order.timeline) {
+        if (evt.action === "shipped" && evt.details) {
+          try {
+            const d = typeof evt.details === "string" ? JSON.parse(evt.details) : evt.details;
+            if (d.trackingNumber) {
+              tracking = {
+                trackingNumber: d.trackingNumber,
+                carrier: d.carrier || null,
+                estimatedDelivery: d.estimatedDelivery || null,
+              };
+              break;
+            }
+          } catch {}
+        }
       }
     }
 

@@ -50,6 +50,19 @@ export async function POST(
       console.error("[Ship] Failed to update production jobs:", jobErr);
     }
 
+    // Create Shipment record (structured tracking data)
+    await prisma.shipment.create({
+      data: {
+        orderId: id,
+        carrier: carrier || "canada_post",
+        trackingNumber: trackingNumber || null,
+        status: "in_transit",
+        shippedAt: new Date(),
+        notes: estimatedDelivery ? `Est. delivery: ${estimatedDelivery}` : null,
+        createdBy: auth.user?.email || "admin",
+      },
+    });
+
     // Timeline event
     await prisma.orderTimeline.create({
       data: {
