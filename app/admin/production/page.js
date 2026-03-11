@@ -272,6 +272,12 @@ function ProductionContent() {
           >
             Rules
           </Link>
+          <Link
+            href="/admin/reports/production"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
+          >
+            Analytics
+          </Link>
         </div>
       </div>
 

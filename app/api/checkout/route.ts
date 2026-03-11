@@ -479,6 +479,7 @@ export async function POST(req: Request) {
         ...(couponData && {
           couponId: couponData.id,
           couponCode: couponData.code,
+          couponDiscountAmount: couponData.discountAmount.toString(),
         }),
         ...(partnerUserId && {
           partnerUserId,

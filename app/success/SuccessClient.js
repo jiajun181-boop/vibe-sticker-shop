@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/lib/store";
 import { trackPurchase } from "@/lib/analytics";
@@ -64,6 +65,7 @@ export default function SuccessClient({ sessionId, statusToken }) {
   const [retryToken, setRetryToken] = useState(0);
   const [orderId, setOrderId] = useState("");
   const { isLoggedIn } = useAuthStatus();
+  const [featuredProducts, setFeaturedProducts] = useState([]);
 
   const statusCopy = useMemo(() => buildStatusCopy(t, status, reason), [t, status, reason]);
   const timelinePlan = useMemo(() => {
@@ -154,6 +156,12 @@ export default function SuccessClient({ sessionId, statusToken }) {
       transactionId: sessionId,
       items: lineItems || [],
     });
+
+    // Fetch featured products for cross-sell
+    fetch("/api/products/suggestions?featured=true&limit=4")
+      .then((res) => res.ok ? res.json() : [])
+      .then((products) => setFeaturedProducts(products))
+      .catch(() => {}); // Non-critical — fail silently
   }, [status, sessionId, lineItems, amountTotal]);
 
   if (status !== "paid") {
@@ -356,6 +364,38 @@ export default function SuccessClient({ sessionId, statusToken }) {
                   {t("success.reorderCta")}
                 </Link>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Cross-sell: featured products */}
+        {featuredProducts.length > 0 && (
+          <div className="mb-6">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">
+              {t("success.youMayAlsoLike")}
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {featuredProducts.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/shop/${p.category}/${p.slug}`}
+                  className="overflow-hidden rounded-xl border border-[var(--color-gray-200)] bg-white transition-all hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  {p.image && (
+                    <div className="relative aspect-[4/3] bg-[var(--color-gray-100)]">
+                      <Image src={p.image} alt={p.name} fill className="object-cover" sizes="(max-width: 640px) 50vw, 25vw" />
+                    </div>
+                  )}
+                  <div className="p-2.5">
+                    <p className="text-xs font-semibold text-[var(--color-gray-900)] line-clamp-1">{p.name}</p>
+                    {p.basePrice > 0 && (
+                      <p className="mt-0.5 text-[11px] text-[var(--color-gray-600)]">
+                        {t("success.fromPrice", { price: formatCad(p.basePrice) })}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         )}
