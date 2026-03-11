@@ -31,8 +31,7 @@ import {
   calculateRollLabelPrice,
 } from "@/lib/roll-labels-config";
 import { formatCad } from "@/lib/product-helpers";
-
-const HST_RATE = 0.13;
+import { HST_RATE } from "@/lib/order-config";
 
 export default function RollLabelsOrderClient({ productImages = [] }) {
   const { t, locale } = useTranslation();

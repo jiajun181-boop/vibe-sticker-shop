@@ -121,24 +121,38 @@ export async function POST(req: NextRequest) {
       const coupon = await prisma.coupon.findUnique({
         where: { code: promoCode.toUpperCase() },
       });
-      if (coupon && coupon.isActive) {
-        const now = new Date();
-        const isValid = (!coupon.validFrom || now >= coupon.validFrom) && (!coupon.validTo || now <= coupon.validTo);
-        const hasUsesLeft = !coupon.maxUses || coupon.usedCount < coupon.maxUses;
-        const meetsMinimum = !coupon.minAmount || subtotalAmount >= coupon.minAmount;
+      if (!coupon || !coupon.isActive) {
+        return NextResponse.json(
+          { error: "Invalid or inactive promo code", code: "COUPON_INVALID" },
+          { status: 422 }
+        );
+      }
+      const now = new Date();
+      const isValid = (!coupon.validFrom || now >= coupon.validFrom) && (!coupon.validTo || now <= coupon.validTo);
+      const hasUsesLeft = !coupon.maxUses || coupon.usedCount < coupon.maxUses;
+      const meetsMinimum = !coupon.minAmount || subtotalAmount >= coupon.minAmount;
 
-        if (isValid && hasUsesLeft && meetsMinimum) {
-          const discountAmount = coupon.type === "percentage"
-            ? Math.round(subtotalAmount * (coupon.value / 10000))
-            : Math.min(coupon.value, subtotalAmount);
+      if (!isValid) {
+        return NextResponse.json({ error: "Promo code has expired", code: "COUPON_INVALID" }, { status: 422 });
+      } else if (!hasUsesLeft) {
+        return NextResponse.json({ error: "Promo code usage limit reached", code: "COUPON_INVALID" }, { status: 422 });
+      } else if (!meetsMinimum) {
+        return NextResponse.json(
+          { error: `Minimum order of $${((coupon.minAmount || 0) / 100).toFixed(2)} required for this promo code`, code: "COUPON_INVALID" },
+          { status: 422 }
+        );
+      } else {
+        const discountAmount = coupon.type === "percentage"
+          ? Math.round(subtotalAmount * (coupon.value / 10000))
+          : Math.min(coupon.value, subtotalAmount);
 
-          couponData = { id: coupon.id, code: coupon.code, discountAmount };
-        }
+        couponData = { id: coupon.id, code: coupon.code, discountAmount };
       }
     }
 
-    const discountAmount = couponData?.discountAmount || 0;
-    const afterDiscount = Math.max(0, subtotalAmount - discountAmount);
+    // Cap discount at subtotal to prevent negative amounts
+    const discountAmount = Math.min(couponData?.discountAmount || 0, subtotalAmount);
+    const afterDiscount = subtotalAmount - discountAmount;
     const shippingAmount = afterDiscount >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
     const taxAmount = Math.round((afterDiscount + shippingAmount) * HST_RATE);
     const totalAmount = afterDiscount + shippingAmount + taxAmount;

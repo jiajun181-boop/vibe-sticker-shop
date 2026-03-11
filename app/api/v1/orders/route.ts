@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { authenticateApiKey } from "@/lib/api-auth";
-import { checkStock } from "@/lib/inventory";
-import { HST_RATE, SHIPPING_COST } from "@/lib/order-config";
+import { checkAndReserveStock } from "@/lib/inventory";
+import { HST_RATE, SHIPPING_COST, MIN_UNIT_AMOUNT, B2B_FREE_SHIPPING_THRESHOLD } from "@/lib/order-config";
 
 const BulkOrderSchema = z.object({
   email: z.string().email(),
@@ -48,16 +48,16 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      if (item.unitAmount < 50) {
+      if (item.unitAmount < MIN_UNIT_AMOUNT) {
         return NextResponse.json(
-          { error: `Invalid price for product ${item.productId}: minimum $0.50 per unit` },
+          { error: `Invalid price for product ${item.productId}: minimum $${(MIN_UNIT_AMOUNT / 100).toFixed(2)} per unit` },
           { status: 400 }
         );
       }
     }
 
-    // Stock check
-    const stockCheck = await checkStock(items.map((i) => ({ productId: i.productId, quantity: i.quantity })));
+    // Atomic stock check + reservation (prevents overselling on concurrent API calls)
+    const stockCheck = await checkAndReserveStock(items.map((i) => ({ productId: i.productId, quantity: i.quantity })));
     if (!stockCheck.ok) {
       return NextResponse.json(
         { error: "Insufficient stock", issues: stockCheck.issues },
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     const subtotal = items.reduce((sum, item) => sum + item.unitAmount * item.quantity, 0);
     const taxAmount = Math.round(subtotal * HST_RATE);
-    const shippingAmount = subtotal >= 15000 ? 0 : SHIPPING_COST; // B2B: $150 free shipping threshold
+    const shippingAmount = subtotal >= B2B_FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
     const totalAmount = subtotal + taxAmount + shippingAmount;
 
     const order = await prisma.order.create({

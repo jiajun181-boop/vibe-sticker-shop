@@ -297,6 +297,27 @@ export default function SuccessClient({ sessionId, statusToken }) {
           <span className="font-semibold">{t("success.qualityGuarantee")}</span>
         </div>
 
+        {/* Guest → Account conversion CTA */}
+        {!isLoggedIn && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <svg className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-amber-800">{t("success.createAccountTitle")}</p>
+                <p className="mt-0.5 text-xs text-amber-700">{t("success.createAccountDesc")}</p>
+                <Link
+                  href="/signup"
+                  className="mt-2 inline-block rounded-lg bg-amber-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-amber-700"
+                >
+                  {t("success.createAccountCta")}
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Referral CTA — only for logged-in users who can access /account */}
         {isLoggedIn && (
           <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 mb-6">

@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { HST_RATE } from "@/lib/order-config";
 
 const DEBOUNCE_MS = 300;
-const HST_RATE = 0.13;
 
 /**
  * Hook that fetches prices from /api/pricing/calculate (Phase 3 engine).

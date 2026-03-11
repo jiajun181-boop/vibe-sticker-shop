@@ -217,12 +217,26 @@ function ProductionContent() {
   const inProduction = jobs.filter((j) => j.status === "printing").length;
   const qualityCheck = jobs.filter((j) => j.status === "quality_check").length;
   const today = new Date().toDateString();
+  const now = new Date();
   const completedToday = jobs.filter(
     (j) =>
       j.status === "finished" &&
       j.updatedAt &&
       new Date(j.updatedAt).toDateString() === today
   ).length;
+  const overdue = jobs.filter(
+    (j) =>
+      j.dueAt &&
+      new Date(j.dueAt) < now &&
+      !["finished", "shipped"].includes(j.status)
+  ).length;
+  const dueToday = jobs.filter(
+    (j) =>
+      j.dueAt &&
+      new Date(j.dueAt).toDateString() === today &&
+      !["finished", "shipped"].includes(j.status)
+  ).length;
+  const onHold = jobs.filter((j) => j.status === "on_hold").length;
 
   return (
     <div className="space-y-4">
@@ -259,6 +273,24 @@ function ProductionContent() {
             Rules
           </Link>
         </div>
+      </div>
+
+      {/* Quick stats */}
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+        {[
+          { label: "Queued", value: totalQueued, color: "text-gray-700 bg-gray-50 border-gray-200" },
+          { label: "Printing", value: inProduction, color: "text-yellow-700 bg-yellow-50 border-yellow-200" },
+          { label: "QC", value: qualityCheck, color: "text-purple-700 bg-purple-50 border-purple-200" },
+          { label: "Done Today", value: completedToday, color: "text-green-700 bg-green-50 border-green-200" },
+          { label: "Due Today", value: dueToday, color: dueToday > 0 ? "text-amber-700 bg-amber-50 border-amber-200" : "text-gray-600 bg-gray-50 border-gray-200" },
+          { label: "Overdue", value: overdue, color: overdue > 0 ? "text-red-700 bg-red-50 border-red-200" : "text-gray-600 bg-gray-50 border-gray-200" },
+          { label: "On Hold", value: onHold, color: onHold > 0 ? "text-red-700 bg-red-50 border-red-200" : "text-gray-600 bg-gray-50 border-gray-200" },
+        ].map((stat) => (
+          <div key={stat.label} className={`rounded-[3px] border px-3 py-2 text-center ${stat.color}`}>
+            <p className="text-lg font-bold">{stat.value}</p>
+            <p className="text-[10px] font-medium uppercase tracking-wide">{stat.label}</p>
+          </div>
+        ))}
       </div>
 
       {/* Filter bar */}

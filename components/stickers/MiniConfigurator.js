@@ -8,8 +8,8 @@ import { getCuttingType, resolveProductSlug } from "@/lib/sticker-order-config";
 import { ShapeIcon } from "./ShapeIcon";
 import { showSuccessToast } from "@/components/Toast";
 import { formatCad } from "@/lib/product-helpers";
+import { HST_RATE } from "@/lib/order-config";
 
-const HST_RATE = 0.13;
 const DEBOUNCE_MS = 300;
 
 const MATERIAL_HINTS = {

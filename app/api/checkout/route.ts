@@ -13,7 +13,7 @@ import { getSessionFromRequest } from "@/lib/auth";
 import { checkAndReserveStock } from "@/lib/inventory";
 import {
   HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST,
-  RUSH_MULTIPLIER, DESIGN_HELP_CENTS,
+  RUSH_MULTIPLIER, DESIGN_HELP_CENTS, MAX_ITEM_QUANTITY,
 } from "@/lib/order-config";
 
 let _stripe: Stripe | null = null;
@@ -28,14 +28,12 @@ function getStripe() {
 
 const MetaSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
 
-const MAX_QTY = 50_000;
-
 const CartItemSchema = z.object({
   productId: z.string(),
   slug: z.string(),
   name: z.string(),
   unitAmount: z.number().int().nonnegative(),
-  quantity: z.number().int().positive().max(MAX_QTY, `Quantity must be ≤ ${MAX_QTY.toLocaleString()}`),
+  quantity: z.number().int().positive().max(MAX_ITEM_QUANTITY, `Quantity must be ≤ ${MAX_ITEM_QUANTITY.toLocaleString()}`),
   meta: MetaSchema.optional(),
 });
 
@@ -189,17 +187,26 @@ export async function POST(req: Request) {
 
     // Validate coupon server-side and create Stripe discount
     let couponData: { id: string; code: string; discountAmount: number; stripeCouponId?: string } | null = null;
+    let couponRejectionReason: string | null = null;
     if (promoCode) {
       const coupon = await prisma.coupon.findUnique({
         where: { code: promoCode.toUpperCase() },
       });
-      if (coupon && coupon.isActive) {
+      if (!coupon || !coupon.isActive) {
+        couponRejectionReason = "Invalid or inactive promo code";
+      } else {
         const now = new Date();
         const isValid = (!coupon.validFrom || now >= coupon.validFrom) && (!coupon.validTo || now <= coupon.validTo);
         const hasUsesLeft = !coupon.maxUses || coupon.usedCount < coupon.maxUses;
         const meetsMinimum = !coupon.minAmount || subtotal >= coupon.minAmount;
 
-        if (isValid && hasUsesLeft && meetsMinimum) {
+        if (!isValid) {
+          couponRejectionReason = "Promo code has expired";
+        } else if (!hasUsesLeft) {
+          couponRejectionReason = "Promo code usage limit reached";
+        } else if (!meetsMinimum) {
+          couponRejectionReason = `Minimum order of $${((coupon.minAmount || 0) / 100).toFixed(2)} required for this promo code`;
+        } else {
           const discountAmount = coupon.type === "percentage"
             ? Math.round(subtotal * (coupon.value / 10000))
             : Math.min(coupon.value, subtotal);
@@ -228,9 +235,18 @@ export async function POST(req: Request) {
       }
     }
 
+    // If coupon was provided but rejected, return error to client
+    if (promoCode && couponRejectionReason) {
+      return NextResponse.json(
+        { error: couponRejectionReason, code: "COUPON_INVALID" },
+        { status: 422 }
+      );
+    }
+
     const couponDiscount = couponData?.discountAmount || 0;
-    const discountAmount = couponDiscount + partnerDiscount;
-    const afterDiscount = Math.max(0, subtotal - discountAmount);
+    // Cap total discount at subtotal to prevent negative amounts
+    const discountAmount = Math.min(couponDiscount + partnerDiscount, subtotal);
+    const afterDiscount = subtotal - discountAmount;
 
     const isFreeShipping = isPickup || afterDiscount >= FREE_SHIPPING_THRESHOLD;
     const shippingCost = isFreeShipping ? 0 : SHIPPING_COST;

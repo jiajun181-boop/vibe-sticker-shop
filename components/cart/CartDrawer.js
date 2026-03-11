@@ -307,6 +307,11 @@ export default function CartDrawer() {
         if (data?.code === "VALIDATION_ERROR") {
           throw new Error(t("cart.invalidCheckout"));
         }
+        if (data?.code === "COUPON_INVALID") {
+          setPromoDiscount(null);
+          setPromoCode("");
+          throw new Error(data?.error || t("cart.promoInvalid"));
+        }
         if (response.status >= 500) {
           throw new Error(t("cart.serverError"));
         }
@@ -358,6 +363,10 @@ export default function CartDrawer() {
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data?.code === "COUPON_INVALID") {
+          setPromoDiscount(null);
+          setPromoCode("");
+        }
         throw new Error(data?.error || t("cart.serverError"));
       }
 
