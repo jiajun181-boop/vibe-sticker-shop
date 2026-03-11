@@ -25,7 +25,20 @@ const eventDotColors = {
   factory_assigned: "bg-indigo-500",
   note: "bg-green-500",
   priority_change: "bg-orange-500",
+  quality_check: "bg-purple-500",
+  defect_found: "bg-red-500",
+  rework: "bg-orange-500",
+  qc_passed: "bg-green-500",
+  file_received: "bg-cyan-500",
   default: "bg-gray-400",
+};
+
+const READINESS_COLORS = {
+  done:         { bg: "bg-green-50",  text: "text-green-800",  border: "border-green-300", dot: "bg-green-500" },
+  ready:        { bg: "bg-green-50",  text: "text-green-800",  border: "border-green-300", dot: "bg-green-500" },
+  "in-progress":{ bg: "bg-blue-50",   text: "text-blue-800",   border: "border-blue-300",  dot: "bg-blue-500" },
+  "needs-info": { bg: "bg-amber-50",  text: "text-amber-800",  border: "border-amber-300", dot: "bg-amber-400" },
+  blocked:      { bg: "bg-red-50",    text: "text-red-800",    border: "border-red-300",   dot: "bg-red-500" },
 };
 
 
@@ -68,6 +81,18 @@ export default function ProductionJobDetailPage() {
   const [notePayload, setNotePayload] = useState("");
   const [addingNote, setAddingNote] = useState(false);
 
+  // Readiness
+  const [readiness, setReadiness] = useState(null);
+  const [readinessLoading, setReadinessLoading] = useState(false);
+
+  // QC flow
+  const [defectType, setDefectType] = useState("");
+  const [defectDesc, setDefectDesc] = useState("");
+  const [submittingQc, setSubmittingQc] = useState(false);
+
+  // Layout (sticker/label only)
+  const [layoutData, setLayoutData] = useState(null);
+
   const fetchJob = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/production/${id}`);
@@ -101,10 +126,43 @@ export default function ProductionJobDetailPage() {
     }
   }, []);
 
+  const fetchReadiness = useCallback(async () => {
+    setReadinessLoading(true);
+    try {
+      const res = await fetch(`/api/admin/production/${id}/readiness`);
+      if (res.ok) {
+        setReadiness(await res.json());
+      }
+    } catch {
+      console.error("Failed to fetch readiness");
+    } finally {
+      setReadinessLoading(false);
+    }
+  }, [id]);
+
+  const fetchLayout = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/production/${id}/layout`);
+      if (res.ok) {
+        setLayoutData(await res.json());
+      }
+    } catch {
+      // Layout not available (missing dimensions) — ignore
+    }
+  }, [id]);
+
   useEffect(() => {
     fetchJob();
     fetchFactories();
-  }, [fetchJob, fetchFactories]);
+    fetchReadiness();
+  }, [fetchJob, fetchFactories, fetchReadiness]);
+
+  // Fetch layout only for sticker/label families (after job loads)
+  useEffect(() => {
+    if (job && (job.family === "sticker" || job.family === "label") && job.widthIn && job.heightIn) {
+      fetchLayout();
+    }
+  }, [job?.family, job?.widthIn, job?.heightIn, fetchLayout]);
 
   async function handleSaveChanges() {
     setSaving(true);
@@ -185,6 +243,67 @@ export default function ProductionJobDetailPage() {
       console.error("Failed to add note");
     } finally {
       setAddingNote(false);
+    }
+  }
+
+  // QC: Pass
+  async function handleQcPass() {
+    setSubmittingQc(true);
+    try {
+      // Log QC passed event
+      await fetch(`/api/admin/production/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "quality_check",
+          operatorName: assignedTo || null,
+          payload: { result: "passed", message: "Quality check passed" },
+        }),
+      });
+      // Advance to finished
+      await fetch(`/api/admin/production/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "finished" }),
+      });
+      await fetchJob();
+    } catch {
+      console.error("Failed to pass QC");
+    } finally {
+      setSubmittingQc(false);
+    }
+  }
+
+  // QC: Fail (defect found → rework)
+  async function handleQcFail() {
+    if (!defectType && !defectDesc.trim()) return;
+    setSubmittingQc(true);
+    try {
+      await fetch(`/api/admin/production/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "defect_found",
+          operatorName: assignedTo || null,
+          payload: {
+            defectType: defectType || "other",
+            description: defectDesc.trim() || "Defect found during QC",
+          },
+        }),
+      });
+      // Send back to printing for rework
+      await fetch(`/api/admin/production/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "printing" }),
+      });
+      setDefectType("");
+      setDefectDesc("");
+      await fetchJob();
+    } catch {
+      console.error("Failed to log defect");
+    } finally {
+      setSubmittingQc(false);
     }
   }
 
@@ -322,26 +441,37 @@ export default function ProductionJobDetailPage() {
               )}
             </div>
 
-            {/* Artwork section — use job-level URL first, fallback to orderItem */}
-            {(job.artworkUrl || orderItem?.fileUrl || orderItem?.fileName) && (
-              <div className="mt-4 border-t border-gray-100 pt-4">
-                <p className="mb-1 text-xs font-medium text-gray-600">Artwork File</p>
-                {(job.artworkUrl || orderItem?.fileUrl) ? (
-                  <a
-                    href={job.artworkUrl || orderItem?.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block rounded-lg border border-gray-200 px-3 py-2 text-xs text-blue-600 transition-colors hover:bg-gray-50"
-                  >
-                    {orderItem?.fileName || "Download Artwork"}
-                  </a>
-                ) : (
-                  <p className="text-sm text-gray-600">
-                    {orderItem?.fileName}
-                  </p>
-                )}
-              </div>
-            )}
+            {/* Artwork section — inline preview + download */}
+            {(job.artworkUrl || orderItem?.fileUrl || orderItem?.fileName) && (() => {
+              const artUrl = job.artworkUrl || orderItem?.fileUrl;
+              const isImage = artUrl && /\.(png|jpe?g|gif|webp|svg|bmp)(\?|$)/i.test(artUrl);
+              return (
+                <div className="mt-4 border-t border-gray-100 pt-4">
+                  <p className="mb-2 text-xs font-medium text-gray-600">Artwork File</p>
+                  {isImage && (
+                    <a href={artUrl} target="_blank" rel="noopener noreferrer" className="block mb-2">
+                      <img
+                        src={artUrl}
+                        alt="Artwork preview"
+                        className="max-h-48 max-w-full rounded-lg border border-gray-200 bg-[repeating-conic-gradient(#f3f4f6_0%_25%,#fff_0%_50%)_0_0/16px_16px] object-contain"
+                      />
+                    </a>
+                  )}
+                  {artUrl ? (
+                    <a
+                      href={artUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block rounded-lg border border-gray-200 px-3 py-2 text-xs text-blue-600 transition-colors hover:bg-gray-50"
+                    >
+                      {orderItem?.fileName || "Download Artwork"}
+                    </a>
+                  ) : (
+                    <p className="text-sm text-gray-600">{orderItem?.fileName}</p>
+                  )}
+                </div>
+              );
+            })()}
           </Section>
 
           {/* Status & Assignment Card */}
@@ -468,6 +598,65 @@ export default function ProductionJobDetailPage() {
             </div>
           </Section>
 
+          {/* QC Flow — only shows when job is at quality_check */}
+          {job.status === "quality_check" && (
+            <Section title="Quality Check">
+              <div className="space-y-4">
+                <p className="text-xs text-gray-600">
+                  Inspect the printed item and either pass or reject with defect details.
+                </p>
+
+                {/* Pass button */}
+                <button
+                  type="button"
+                  onClick={handleQcPass}
+                  disabled={submittingQc}
+                  className="w-full rounded-lg border-2 border-green-500 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 transition-colors hover:bg-green-100 disabled:opacity-50"
+                >
+                  {submittingQc ? "Processing..." : "QC Passed — Mark as Finished"}
+                </button>
+
+                {/* Defect form */}
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                  <h4 className="mb-2 text-xs font-semibold text-red-700">Report Defect</h4>
+                  <div className="space-y-2">
+                    <select
+                      value={defectType}
+                      onChange={(e) => setDefectType(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-red-500"
+                    >
+                      <option value="">Select defect type...</option>
+                      <option value="color_mismatch">Color mismatch</option>
+                      <option value="alignment_off">Alignment off</option>
+                      <option value="cut_error">Cut error / misregistration</option>
+                      <option value="print_defect">Print defect (streaks, banding)</option>
+                      <option value="material_damage">Material damage</option>
+                      <option value="wrong_material">Wrong material</option>
+                      <option value="wrong_size">Wrong size</option>
+                      <option value="artwork_issue">Artwork issue</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <textarea
+                      value={defectDesc}
+                      onChange={(e) => setDefectDesc(e.target.value)}
+                      rows={2}
+                      placeholder="Describe the defect..."
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-red-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleQcFail}
+                      disabled={submittingQc || (!defectType && !defectDesc.trim())}
+                      className="rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-red-700 disabled:bg-gray-400"
+                    >
+                      {submittingQc ? "Processing..." : "Reject — Send Back to Printing"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Section>
+          )}
+
           {/* Event Timeline */}
           <Section title="Event Timeline">
             {/* Add Note form */}
@@ -591,11 +780,49 @@ export default function ProductionJobDetailPage() {
                           </p>
                         )}
 
+                        {/* QC events */}
+                        {event.type === "quality_check" && payload && (
+                          <div className="mt-1">
+                            <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                              payload.result === "passed"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}>
+                              QC {payload.result || "checked"}
+                            </span>
+                            {payload.message && (
+                              <p className="mt-0.5 text-xs text-gray-600">{payload.message}</p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Defect found */}
+                        {event.type === "defect_found" && payload && (
+                          <div className="mt-1 rounded border border-red-200 bg-red-50 px-2 py-1.5">
+                            <p className="text-xs font-medium text-red-700">
+                              Defect: {(payload.defectType || "unknown").replace(/_/g, " ")}
+                            </p>
+                            {payload.description && (
+                              <p className="mt-0.5 text-xs text-red-600">{payload.description}</p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Rework */}
+                        {event.type === "rework" && payload && (
+                          <p className="mt-0.5 text-xs text-orange-600">
+                            Rework: {payload.reason || payload.message || JSON.stringify(payload)}
+                          </p>
+                        )}
+
                         {/* Generic payload for other types */}
                         {event.type !== "status_change" &&
                           event.type !== "factory_assigned" &&
                           event.type !== "priority_change" &&
                           event.type !== "note" &&
+                          event.type !== "quality_check" &&
+                          event.type !== "defect_found" &&
+                          event.type !== "rework" &&
                           payload && (
                             <p className="mt-0.5 text-xs text-gray-600 break-all">
                               {typeof payload === "object"
@@ -657,6 +884,176 @@ export default function ProductionJobDetailPage() {
               </div>
             </div>
           </Section>
+
+          {/* Production Readiness Card */}
+          {readiness && (
+            <Section title="Readiness">
+              {readinessLoading ? (
+                <p className="text-xs text-gray-600">Checking...</p>
+              ) : (
+                <div className="space-y-3">
+                  {/* Level badge */}
+                  <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold ${
+                    READINESS_COLORS[readiness.readiness?.level]?.bg || "bg-gray-50"
+                  } ${READINESS_COLORS[readiness.readiness?.level]?.text || "text-gray-700"} ${
+                    READINESS_COLORS[readiness.readiness?.level]?.border || "border-gray-200"
+                  } border`}>
+                    <span className={`h-2 w-2 rounded-full ${
+                      READINESS_COLORS[readiness.readiness?.level]?.dot || "bg-gray-400"
+                    }`} />
+                    {(readiness.readiness?.level || "unknown").replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+                  </div>
+
+                  {/* Reasons */}
+                  {readiness.readiness?.reasons?.length > 0 && (
+                    <div className="space-y-1.5">
+                      {readiness.readiness.reasons.map((r, i) => (
+                        <div key={i} className={`flex items-start gap-1.5 text-xs ${
+                          r.severity === "blocker" ? "text-red-700" : r.severity === "warning" ? "text-amber-700" : "text-gray-600"
+                        }`}>
+                          <span className="mt-0.5 shrink-0">{r.severity === "blocker" ? "●" : r.severity === "warning" ? "▲" : "○"}</span>
+                          <span>{r.message}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Executable action */}
+                  {readiness.executableAction && (
+                    <div className="border-t border-gray-100 pt-2">
+                      <p className="text-xs font-medium text-gray-700">Next Action</p>
+                      <p className="mt-0.5 text-xs text-gray-600">{readiness.executableAction.action}</p>
+                      {readiness.executableAction.toolLink && (
+                        <Link
+                          href={readiness.executableAction.toolLink}
+                          className="mt-1 inline-block rounded border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                        >
+                          Open Tool
+                        </Link>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Package files */}
+                  {readiness.package && (
+                    <div className="border-t border-gray-100 pt-2">
+                      <p className="text-xs font-medium text-gray-700">
+                        Files ({readiness.package.totalCount - readiness.package.missingCount}/{readiness.package.totalCount})
+                      </p>
+                      <div className="mt-1 space-y-1">
+                        {readiness.package.files?.map((f, i) => (
+                          <div key={i} className="flex items-center gap-1.5 text-xs">
+                            <span className={f.present ? "text-green-600" : "text-red-500"}>{f.present ? "✓" : "✗"}</span>
+                            <span className={f.present ? "text-gray-600" : "text-red-600"}>{f.label}</span>
+                            {f.present && f.url && (
+                              <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">↗</a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Section>
+          )}
+
+          {/* Step-and-Repeat Layout (sticker/label only) */}
+          {layoutData && layoutData.selectedLayout && (
+            <Section title="Sheet Layout">
+              <div className="space-y-3 text-xs">
+                {layoutData.recommendation && (
+                  <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
+                    <p className="font-semibold text-blue-800">
+                      Recommended: {layoutData.recommendation.sheetLabel}
+                    </p>
+                    <p className="text-blue-600">
+                      {layoutData.recommendation.sheetsNeeded} sheet{layoutData.recommendation.sheetsNeeded !== 1 ? "s" : ""} needed · {layoutData.recommendation.totalWastePercent}% waste
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-gray-600">Item Size</p>
+                    <p className="font-medium">{layoutData.itemWidthIn}" × {layoutData.itemHeightIn}"</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Quantity</p>
+                    <p className="font-medium">{layoutData.quantity}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Per Sheet</p>
+                    <p className="font-medium">{layoutData.selectedLayout.count}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Layout</p>
+                    <p className="font-medium">
+                      {layoutData.selectedLayout.cols}×{layoutData.selectedLayout.rows}
+                      {layoutData.selectedLayout.rotated ? " (rotated)" : ""}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Utilization</p>
+                    <p className="font-medium">{layoutData.selectedLayout.utilization}%</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Sheets Needed</p>
+                    <p className="font-medium">{layoutData.selectedLayout.sheetsNeeded}</p>
+                  </div>
+                </div>
+
+                {/* Visual grid preview */}
+                {layoutData.selectedLayout.cols > 0 && layoutData.selectedLayout.rows > 0 && (
+                  <div className="border-t border-gray-100 pt-2">
+                    <p className="mb-1.5 text-gray-600">Preview</p>
+                    <div
+                      className="border border-gray-300 bg-white p-1 rounded"
+                      style={{
+                        aspectRatio: `${layoutData.selectedLayout.sheet?.widthIn || 13} / ${layoutData.selectedLayout.sheet?.heightIn || 19}`,
+                        maxHeight: "120px",
+                      }}
+                    >
+                      <div
+                        className="grid gap-px h-full"
+                        style={{
+                          gridTemplateColumns: `repeat(${layoutData.selectedLayout.cols}, 1fr)`,
+                          gridTemplateRows: `repeat(${layoutData.selectedLayout.rows}, 1fr)`,
+                        }}
+                      >
+                        {Array.from({ length: Math.min(layoutData.selectedLayout.count, 100) }).map((_, i) => (
+                          <div key={i} className="bg-blue-200 rounded-sm" />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Requirements */}
+                {layoutData.requirements && (
+                  <div className="border-t border-gray-100 pt-2 space-y-1">
+                    {layoutData.requirements.needsContour && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-blue-600">◆</span>
+                        <span>Contour cut ({layoutData.requirements.cutType})</span>
+                      </div>
+                    )}
+                    {layoutData.requirements.needsWhiteInk && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-purple-600">◆</span>
+                        <span>White ink layer needed</span>
+                      </div>
+                    )}
+                    {layoutData.requirements.isLargeFormat && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-orange-600">◆</span>
+                        <span>Large format (&gt;24&quot;)</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Section>
+          )}
 
           {/* Quick Actions Card */}
           <Section title="Quick Actions">

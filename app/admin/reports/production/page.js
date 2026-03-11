@@ -630,6 +630,122 @@ export default function ProductionReportPage() {
             />
           </div>
 
+          {/* ── Phase Cycle Times ── */}
+          {data.phaseCycleTimes && data.phaseCycleTimes.length > 0 && (
+            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+              <h2 className="mb-4 text-sm font-semibold text-gray-900">
+                Phase Cycle Times
+              </h2>
+              <p className="mb-3 text-xs text-gray-600">
+                Average time spent between status transitions.
+              </p>
+              <div className="space-y-2">
+                {data.phaseCycleTimes.map((phase) => {
+                  const maxHours = Math.max(...data.phaseCycleTimes.map((p) => p.avgHours || 0), 1);
+                  const pct = ((phase.avgHours || 0) / maxHours) * 100;
+                  return (
+                    <div key={`${phase.from}-${phase.to}`} className="flex items-center gap-3">
+                      <div className="w-48 flex items-center gap-1.5 text-xs shrink-0">
+                        <span className={`rounded px-1.5 py-0.5 font-medium ${statusColors[phase.from] || "bg-gray-100 text-gray-700"}`}>
+                          {phase.from.replace("_", " ")}
+                        </span>
+                        <span className="text-gray-400">&rarr;</span>
+                        <span className={`rounded px-1.5 py-0.5 font-medium ${statusColors[phase.to] || "bg-gray-100 text-gray-700"}`}>
+                          {phase.to.replace("_", " ")}
+                        </span>
+                      </div>
+                      <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden relative">
+                        <div
+                          className="h-5 bg-blue-500 rounded-full transition-all"
+                          style={{ width: `${Math.max(pct, 2)}%` }}
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-gray-700">
+                          avg {phase.avgHours}h · median {phase.medianHours}h · {phase.transitions}×
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Product Family Breakdown ── */}
+          {data.familyBreakdown && data.familyBreakdown.length > 0 && (
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-200 px-5 py-4">
+                <h2 className="text-sm font-semibold text-gray-900">
+                  Product Family Breakdown
+                </h2>
+              </div>
+              <div className="hidden overflow-x-auto lg:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 bg-gray-50">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">Family</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-600">Total</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-600">Completed</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-600">Completion %</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-600">Avg Time</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-600">Rush</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {data.familyBreakdown.map((fam) => (
+                      <tr key={fam.family} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium text-gray-900 capitalize">{fam.family}</td>
+                        <td className="px-4 py-3 text-right text-gray-600">{fam.totalJobs}</td>
+                        <td className="px-4 py-3 text-right text-gray-600">{fam.completedJobs}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            fam.completionRate > 80 ? "bg-green-100 text-green-700" :
+                            fam.completionRate > 50 ? "bg-yellow-100 text-yellow-700" :
+                            "bg-gray-100 text-gray-700"
+                          }`}>
+                            {fam.completionRate}%
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right text-gray-600">
+                          {fam.avgHours != null ? `${fam.avgHours}h` : "\u2014"}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {fam.rushCount > 0 ? (
+                            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">{fam.rushCount}</span>
+                          ) : (
+                            <span className="text-gray-400">\u2014</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {/* Mobile cards */}
+              <div className="divide-y divide-gray-100 lg:hidden">
+                {data.familyBreakdown.map((fam) => (
+                  <div key={fam.family} className="px-4 py-3">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-gray-900 capitalize">{fam.family}</p>
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                        fam.completionRate > 80 ? "bg-green-100 text-green-700" :
+                        fam.completionRate > 50 ? "bg-yellow-100 text-yellow-700" :
+                        "bg-gray-100 text-gray-700"
+                      }`}>
+                        {fam.completionRate}%
+                      </span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-600">
+                      <span>{fam.totalJobs} total</span>
+                      <span>{fam.completedJobs} done</span>
+                      {fam.avgHours != null && <span>avg {fam.avgHours}h</span>}
+                      {fam.rushCount > 0 && <span className="text-red-600">{fam.rushCount} rush</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ── Factory Performance Table ── */}
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="border-b border-gray-200 px-5 py-4">

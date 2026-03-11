@@ -407,33 +407,8 @@ function ProductionContent() {
         </form>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-[#999]">Total Queued</p>
-          <p className="mt-1 text-2xl font-semibold text-black">
-            {totalQueued}
-          </p>
-        </div>
-        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-[#999]">In Production</p>
-          <p className="mt-1 text-2xl font-semibold text-yellow-600">
-            {inProduction}
-          </p>
-        </div>
-        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-[#999]">Quality Check</p>
-          <p className="mt-1 text-2xl font-semibold text-purple-600">
-            {qualityCheck}
-          </p>
-        </div>
-        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-[#999]">Completed Today</p>
-          <p className="mt-1 text-2xl font-semibold text-green-600">
-            {completedToday}
-          </p>
-        </div>
-      </div>
+      {/* Readiness summary — loaded async */}
+      <ReadinessSummary />
 
       {/* Bulk action bar */}
       {selectedJobs.length > 0 && (
@@ -849,6 +824,78 @@ function ProductionContent() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── Readiness Summary Widget ─── */
+function ReadinessSummary() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/production/readiness")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading || !data) return null;
+
+  const { counts, topBlockers, totalItems } = data;
+  const readyPct = totalItems > 0 ? Math.round(((counts.ready || 0) + (counts.done || 0)) / totalItems * 100) : 0;
+
+  return (
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-start gap-6">
+        {/* Readiness bar */}
+        <div className="flex-1 min-w-[200px]">
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-xs font-medium text-[#999] uppercase tracking-wide">Production Readiness</p>
+            <p className="text-xs font-semibold text-black">{readyPct}% Ready</p>
+          </div>
+          <div className="flex h-2.5 rounded-full overflow-hidden bg-gray-100">
+            {(counts.done || 0) > 0 && (
+              <div className="bg-green-500" style={{ width: `${((counts.done || 0) / totalItems) * 100}%` }} title={`Done: ${counts.done}`} />
+            )}
+            {(counts.ready || 0) > 0 && (
+              <div className="bg-green-300" style={{ width: `${((counts.ready || 0) / totalItems) * 100}%` }} title={`Ready: ${counts.ready}`} />
+            )}
+            {(counts["in-progress"] || 0) > 0 && (
+              <div className="bg-blue-400" style={{ width: `${((counts["in-progress"] || 0) / totalItems) * 100}%` }} title={`In Progress: ${counts["in-progress"]}`} />
+            )}
+            {(counts["needs-info"] || 0) > 0 && (
+              <div className="bg-amber-400" style={{ width: `${((counts["needs-info"] || 0) / totalItems) * 100}%` }} title={`Needs Info: ${counts["needs-info"]}`} />
+            )}
+            {(counts.blocked || 0) > 0 && (
+              <div className="bg-red-500" style={{ width: `${((counts.blocked || 0) / totalItems) * 100}%` }} title={`Blocked: ${counts.blocked}`} />
+            )}
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-3 text-[10px]">
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-green-500" />Done {counts.done || 0}</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-green-300" />Ready {counts.ready || 0}</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-blue-400" />In Progress {counts["in-progress"] || 0}</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-amber-400" />Needs Info {counts["needs-info"] || 0}</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-red-500" />Blocked {counts.blocked || 0}</span>
+          </div>
+        </div>
+
+        {/* Top blockers */}
+        {topBlockers && topBlockers.length > 0 && (
+          <div className="min-w-[200px]">
+            <p className="text-xs font-medium text-[#999] uppercase tracking-wide mb-1.5">Top Blockers</p>
+            <div className="space-y-1">
+              {topBlockers.slice(0, 5).map((b) => (
+                <div key={b.code} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="text-red-700 truncate">{b.code.replace(/_/g, " ")}</span>
+                  <span className="shrink-0 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">{b.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

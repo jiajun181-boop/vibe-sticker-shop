@@ -30,6 +30,22 @@ interface FactoryPerfRow {
   on_time_rate: number | null;
 }
 
+interface PhaseTimeRow {
+  from_status: string;
+  to_status: string;
+  avg_hours: number | null;
+  median_hours: number | null;
+  total_transitions: bigint;
+}
+
+interface FamilyBreakdownRow {
+  family: string;
+  total_jobs: bigint;
+  completed_jobs: bigint;
+  avg_hours: number | null;
+  rush_count: bigint;
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, "reports", "view");
   if (!auth.authenticated) return auth.response;
@@ -52,6 +68,8 @@ export async function GET(request: NextRequest) {
       statusDistResult,
       delayedOrders,
       turnaroundResult,
+      phaseTimeResult,
+      familyBreakdownResult,
       factoryPerfResult,
     ] = await Promise.all([
       // (a) On-time completion rate
@@ -189,7 +207,62 @@ export async function GET(request: NextRequest) {
         return rows;
       })(),
 
-      // (g) Factory performance
+      // (g) Phase-level cycle time from JobEvent transitions
+      (async () => {
+        const rows = (await prisma.$queryRaw(
+          Prisma.sql`
+            WITH transitions AS (
+              SELECT
+                e."jobId",
+                (e.payload->>'from')::text AS from_status,
+                (e.payload->>'to')::text AS to_status,
+                EXTRACT(EPOCH FROM (e."createdAt" - LAG(e."createdAt") OVER (
+                  PARTITION BY e."jobId" ORDER BY e."createdAt"
+                ))) / 3600 AS hours_in_phase
+              FROM "JobEvent" e
+              WHERE e.type = 'status_change'
+                AND e."createdAt" >= ${from}
+                AND e."createdAt" <= ${to}
+                AND e.payload->>'from' IS NOT NULL
+                AND e.payload->>'to' IS NOT NULL
+            )
+            SELECT
+              from_status,
+              to_status,
+              AVG(hours_in_phase) AS avg_hours,
+              PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY hours_in_phase) AS median_hours,
+              COUNT(*)::bigint AS total_transitions
+            FROM transitions
+            WHERE hours_in_phase IS NOT NULL AND hours_in_phase > 0
+            GROUP BY from_status, to_status
+            HAVING COUNT(*) > 1
+            ORDER BY total_transitions DESC
+          `
+        )) as PhaseTimeRow[];
+        return rows;
+      })(),
+
+      // (h) Per-family breakdown
+      (async () => {
+        const rows = (await prisma.$queryRaw(
+          Prisma.sql`
+            SELECT
+              COALESCE(family, 'unknown') AS family,
+              COUNT(*)::bigint AS total_jobs,
+              COUNT(*) FILTER (WHERE status IN ('finished', 'shipped'))::bigint AS completed_jobs,
+              AVG(EXTRACT(EPOCH FROM ("completedAt" - "createdAt")) / 3600) FILTER (WHERE "completedAt" IS NOT NULL) AS avg_hours,
+              COUNT(*) FILTER (WHERE "isRush" = true)::bigint AS rush_count
+            FROM "ProductionJob"
+            WHERE "createdAt" >= ${from}
+              AND "createdAt" <= ${to}
+            GROUP BY COALESCE(family, 'unknown')
+            ORDER BY total_jobs DESC
+          `
+        )) as FamilyBreakdownRow[];
+        return rows;
+      })(),
+
+      // (i) Factory performance
       (async () => {
         const rows = (await prisma.$queryRaw(
           Prisma.sql`
@@ -273,6 +346,29 @@ export async function GET(request: NextRequest) {
           : 0,
     }));
 
+    // Process phase-level cycle times
+    const phaseCycleTimes = (phaseTimeResult as PhaseTimeRow[])
+      .filter((r) => r.avg_hours != null)
+      .map((r) => ({
+        from: r.from_status,
+        to: r.to_status,
+        avgHours: r.avg_hours != null ? Math.round(Number(r.avg_hours) * 10) / 10 : 0,
+        medianHours: r.median_hours != null ? Math.round(Number(r.median_hours) * 10) / 10 : 0,
+        transitions: Number(r.total_transitions),
+      }));
+
+    // Process per-family breakdown
+    const familyBreakdown = (familyBreakdownResult as FamilyBreakdownRow[]).map((r) => ({
+      family: r.family,
+      totalJobs: Number(r.total_jobs),
+      completedJobs: Number(r.completed_jobs),
+      avgHours: r.avg_hours != null ? Math.round(Number(r.avg_hours) * 10) / 10 : null,
+      rushCount: Number(r.rush_count),
+      completionRate: Number(r.total_jobs) > 0
+        ? Math.round((Number(r.completed_jobs) / Number(r.total_jobs)) * 1000) / 10
+        : 0,
+    }));
+
     return NextResponse.json({
       metrics: {
         onTimeRate,
@@ -282,6 +378,8 @@ export async function GET(request: NextRequest) {
       statusDistribution,
       delayedOrders,
       avgTurnaroundTrend,
+      phaseCycleTimes,
+      familyBreakdown,
       factoryPerformance,
     });
   } catch (error) {
