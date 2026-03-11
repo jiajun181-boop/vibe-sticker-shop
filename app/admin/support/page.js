@@ -40,7 +40,7 @@ export default function AdminSupportPage() {
           setTickets(data.tickets || []);
           setTotal(data.total || 0);
         })
-        .catch(() => {})
+        .catch((err) => console.error("[Support] Load failed:", err))
         .finally(() => {
           if (fetchIdRef.current === id) setLoading(false);
         });

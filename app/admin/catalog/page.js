@@ -34,7 +34,7 @@ export default function CatalogPage({ embedded = false } = {}) {
     fetch("/api/admin/catalog")
       .then((r) => r.json())
       .then(setData)
-      .catch(() => {})
+      .catch((err) => console.error("[Catalog] Load failed:", err))
       .finally(() => setLoading(false));
   }, []);
 

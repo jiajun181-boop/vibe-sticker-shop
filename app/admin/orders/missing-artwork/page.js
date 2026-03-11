@@ -25,7 +25,7 @@ export default function MissingArtworkPage() {
     fetch("/api/admin/orders/missing-artwork?limit=100")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setData(d))
-      .catch(() => {})
+      .catch((err) => console.error("[Missing Artwork] Load failed:", err))
       .finally(() => setLoading(false));
   }, []);
 

@@ -16,7 +16,7 @@ export default function AdminApiKeysPage() {
     fetch("/api/admin/api-keys")
       .then((r) => r.json())
       .then((data) => setKeys(data.keys || []))
-      .catch(() => {})
+      .catch((err) => console.error("[API Keys] Load failed:", err))
       .finally(() => setLoading(false));
   };
 

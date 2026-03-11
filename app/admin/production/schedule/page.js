@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { statusColor } from "@/lib/admin/status-labels";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -21,13 +22,7 @@ const PRIORITY_DOT = {
   normal: "bg-gray-400",
 };
 
-const STATUS_BADGE = {
-  queued: "bg-gray-100 text-gray-700",
-  assigned: "bg-blue-100 text-blue-700",
-  printing: "bg-yellow-100 text-yellow-700",
-  quality_check: "bg-purple-100 text-purple-700",
-  on_hold: "bg-red-100 text-red-600",
-};
+/* Status badge colors — uses centralized statusColor() */
 
 export default function ProductionSchedulePage() {
   const [data, setData] = useState(null);
@@ -37,7 +32,7 @@ export default function ProductionSchedulePage() {
     fetch("/api/admin/production/schedule")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setData(d))
-      .catch(() => {})
+      .catch((err) => console.error("[Schedule] Load failed:", err))
       .finally(() => setLoading(false));
   }, []);
 
@@ -251,7 +246,7 @@ function JobRow({ job }) {
       </div>
 
       {/* Status badge */}
-      <span className={`shrink-0 rounded-[2px] px-2 py-0.5 text-[10px] font-semibold ${STATUS_BADGE[job.status] || "bg-gray-100 text-gray-600"}`}>
+      <span className={`shrink-0 rounded-[2px] px-2 py-0.5 text-[10px] font-semibold ${statusColor(job.status)}`}>
         {job.status.replace(/_/g, " ")}
       </span>
     </Link>

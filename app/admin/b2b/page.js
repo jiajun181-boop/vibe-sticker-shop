@@ -46,7 +46,7 @@ export default function AdminB2BPage() {
         setUsers(data.users || []);
         setTotal(data.total || 0);
       })
-      .catch(() => {})
+      .catch((err) => console.error("[B2B] Load users failed:", err))
       .finally(() => setLoading(false));
   }
 
@@ -55,7 +55,7 @@ export default function AdminB2BPage() {
     fetch("/api/admin/b2b/invites")
       .then((r) => r.json())
       .then((data) => setInvites(data.invites || []))
-      .catch(() => {})
+      .catch((err) => console.error("[B2B] Load invites failed:", err))
       .finally(() => setInvitesLoading(false));
   }
 

@@ -73,7 +73,13 @@ export async function handleCheckoutCompleted(
     throw new Error("Missing metadata");
   }
 
-  const items = JSON.parse(metadata.items);
+  let items: any[];
+  try {
+    items = JSON.parse(metadata.items);
+  } catch (parseErr) {
+    console.error("[Webhook] CRITICAL: Failed to parse metadata.items for session:", sessionId, parseErr);
+    throw new Error("Corrupted metadata: unable to parse order items");
+  }
 
   // 4. Amount reconciliation
   const totalAmount = validateAmountReconciliation(
@@ -380,7 +386,9 @@ export async function handleCheckoutCompleted(
   }
 
   // 8b. Auto-tag order based on items, materials, quantities (non-blocking)
-  applyAutoTags(order.id, prisma).catch(() => {});
+  applyAutoTags(order.id, prisma).catch((err) => {
+    console.error("[Webhook] Failed to auto-tag order:", err);
+  });
 
   // 9. Send order confirmation email (non-blocking)
   try {
@@ -403,7 +411,9 @@ export async function handleCheckoutCompleted(
   }
 
   // 10. Send SMS notification (non-blocking)
-  sendOrderSms(order.id, "order_confirmed").catch(() => {});
+  sendOrderSms(order.id, "order_confirmed").catch((err) => {
+    console.error("[Webhook] Failed to send SMS:", err);
+  });
 
   console.log(`[Webhook] Order created: ${order.id}`);
   return order;
