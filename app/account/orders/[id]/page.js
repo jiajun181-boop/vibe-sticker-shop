@@ -7,6 +7,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useCartStore } from "@/lib/store";
 import { getCustomerOrderStatus, getCustomerProductionStatus, getCustomerTimelineLabel } from "@/lib/customer-labels";
 import { formatCad } from "@/lib/product-helpers";
+import OrderArtworkUpload from "@/components/order/OrderArtworkUpload";
 
 const STATUS_COLORS = {
   paid: "bg-emerald-100 text-emerald-700",
@@ -70,6 +71,8 @@ export default function OrderDetailPage() {
   const [proofValidation, setProofValidation] = useState({}); // { [proofId]: errorMsg }
   const [proofResult, setProofResult] = useState(null); // { type: "approved"|"rejected"|"error", message }
   const [lightboxSrc, setLightboxSrc] = useState(null);
+  const [artworkFiles, setArtworkFiles] = useState([]);
+  const [itemsNeedingArtwork, setItemsNeedingArtwork] = useState([]);
 
   const fetchOrder = useCallback(() => {
     return fetch(`/api/account/orders/${id}`)
@@ -88,13 +91,24 @@ export default function OrderDetailPage() {
       .finally(() => setProofsLoading(false));
   }, [id]);
 
+  const fetchFiles = useCallback(() => {
+    fetch(`/api/account/orders/${id}/files`)
+      .then((r) => (r.ok ? r.json() : { files: [], itemsNeedingArtwork: [] }))
+      .then((data) => {
+        setArtworkFiles(data.files ?? []);
+        setItemsNeedingArtwork(data.itemsNeedingArtwork ?? []);
+      })
+      .catch(() => {});
+  }, [id]);
+
   useEffect(() => {
     fetchOrder()
       .catch(() => setLoadError(t("account.orders.notFound")))
       .finally(() => setLoading(false));
 
     fetchProofs();
-  }, [fetchOrder, fetchProofs, t]);
+    fetchFiles();
+  }, [fetchOrder, fetchProofs, fetchFiles, t]);
 
   const handleProofAction = async (proofId, action) => {
     // Client-side validation: require comment for rejection
@@ -356,6 +370,17 @@ export default function OrderDetailPage() {
           ))}
         </div>
       </div>
+
+      {/* Artwork Upload */}
+      {order.status !== "canceled" && order.status !== "refunded" && (
+        <OrderArtworkUpload
+          orderId={id}
+          isGuest={false}
+          itemsNeeding={itemsNeedingArtwork}
+          existingFiles={artworkFiles}
+          onUploadComplete={fetchFiles}
+        />
+      )}
 
       {/* Summary */}
       <div className="rounded-xl border border-[var(--color-gray-200)] p-4">

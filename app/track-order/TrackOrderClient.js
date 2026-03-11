@@ -59,6 +59,7 @@ function getTrackingUrl(carrier, trackingNumber) {
 }
 
 import { getCustomerTimelineLabel } from "@/lib/customer-labels";
+import OrderArtworkUpload from "@/components/order/OrderArtworkUpload";
 
 export default function TrackOrderClient() {
   const { t } = useTranslation();
@@ -256,6 +257,21 @@ export default function TrackOrderClient() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Artwork Upload (guest) */}
+          {order.status !== "canceled" && order.status !== "refunded" && (
+            <OrderArtworkUpload
+              orderId={order.id}
+              email={email}
+              isGuest={true}
+              itemsNeeding={order.itemsNeedingArtwork || []}
+              existingFiles={order.files || []}
+              onUploadComplete={() => {
+                // Re-fetch order to update file list
+                handleSubmit({ preventDefault: () => {} });
+              }}
+            />
           )}
 
           {/* Date */}

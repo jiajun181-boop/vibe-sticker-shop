@@ -54,4 +54,22 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ metadata }) => {
       return { uploadedBy: metadata?.uploadedBy };
     }),
+
+  // Guest artwork upload — rate-limited only, no auth required.
+  // The actual order-linking is verified by email in /api/orders/upload-artwork.
+  guestArtworkUploader: f({
+    image: { maxFileSize: "16MB", maxFileCount: 1 },
+    pdf: { maxFileSize: "16MB", maxFileCount: 1 },
+  })
+    .middleware(async ({ req }) => {
+      const ip = getClientIp(req);
+      const { success } = uploadLimiter.check(ip);
+      if (!success) {
+        throw new UploadThingError("Too many upload attempts. Please try again later.");
+      }
+      return { uploadedBy: "guest" };
+    })
+    .onUploadComplete(async ({ metadata }) => {
+      return { uploadedBy: metadata?.uploadedBy };
+    }),
 };

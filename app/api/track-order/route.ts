@@ -41,7 +41,25 @@ export async function POST(req: Request) {
         createdAt: true,
         estimatedCompletion: true,
         items: {
-          select: { productName: true, quantity: true, unitPrice: true },
+          select: {
+            id: true,
+            productName: true,
+            quantity: true,
+            unitPrice: true,
+            fileUrl: true,
+            fileName: true,
+            meta: true,
+          },
+        },
+        files: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            fileName: true,
+            fileUrl: true,
+            preflightStatus: true,
+            createdAt: true,
+          },
         },
         timeline: {
           orderBy: { createdAt: "desc" },
@@ -76,6 +94,16 @@ export async function POST(req: Request) {
       }
     }
 
+    // Detect items that need artwork (same logic as account/orders/[id]/files)
+    const itemsNeedingArtwork = order.items
+      .filter((item) => {
+        const meta = item.meta && typeof item.meta === "object" ? item.meta as Record<string, unknown> : {};
+        const hasFile = !!(item.fileUrl || meta.artworkUrl || meta.fileUrl);
+        const isDesignHelp = meta.artworkIntent === "design-help" || meta.designHelp === true;
+        return !hasFile && !isDesignHelp;
+      })
+      .map((item) => ({ id: item.id, productName: item.productName }));
+
     return NextResponse.json({
       id: order.id,
       status: order.status,
@@ -89,10 +117,13 @@ export async function POST(req: Request) {
       estimatedCompletion: order.estimatedCompletion,
       tracking,
       items: order.items.map((item) => ({
+        id: item.id,
         name: item.productName,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
       })),
+      files: order.files,
+      itemsNeedingArtwork,
       timeline: order.timeline.map((evt) => ({
         id: evt.id,
         action: evt.action,
