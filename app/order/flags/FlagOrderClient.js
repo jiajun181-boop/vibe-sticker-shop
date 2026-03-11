@@ -188,10 +188,13 @@ export default function FlagOrderClient({ productImages = [] }) {
         fileName: uploadedFile?.name || null,
         artworkUrl: uploadedFile?.url || null,
         artworkKey: uploadedFile?.key || null,
+        rushProduction: rushProduction,
+        artworkIntent: artworkIntent || null,
+        designHelp: artworkIntent === "design-help",
       },
       forceNewLine: true,
     };
-  }, [quoteData, activeQty, adjustedSubtotal, size, style, purchaseType, pole, sidesId, uploadedFile, t]);
+  }, [quoteData, activeQty, adjustedSubtotal, size, style, purchaseType, pole, sidesId, uploadedFile, rushProduction, artworkIntent, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,

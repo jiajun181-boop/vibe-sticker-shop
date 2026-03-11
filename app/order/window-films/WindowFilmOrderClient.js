@@ -227,10 +227,13 @@ export default function WindowFilmOrderClient({ productImages = [] }) {
         fileName: uploadedFile?.name || null,
         artworkUrl: uploadedFile?.url || null,
         artworkKey: uploadedFile?.key || null,
+        rushProduction: rushProduction,
+        artworkIntent: artworkIntent || null,
+        designHelp: artworkIntent === "design-help",
       },
       forceNewLine: true,
     };
-  }, [quoteData, activeQty, adjustedSubtotal, typeId, size, showFinish, finishId, showAdhesive, adhesiveId, uploadedFile, t]);
+  }, [quoteData, activeQty, adjustedSubtotal, typeId, size, showFinish, finishId, showAdhesive, adhesiveId, uploadedFile, rushProduction, artworkIntent, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,

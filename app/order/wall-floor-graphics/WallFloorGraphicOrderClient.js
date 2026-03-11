@@ -208,10 +208,13 @@ export default function WallFloorGraphicOrderClient({ productImages = [] }) {
         fileName: uploadedFile?.name || null,
         artworkUrl: uploadedFile?.url || null,
         artworkKey: uploadedFile?.key || null,
+        rushProduction: rushProduction,
+        artworkIntent: artworkIntent || null,
+        designHelp: artworkIntent === "design-help",
       },
       forceNewLine: true,
     };
-  }, [quoteData, activeQty, adjustedSubtotal, typeId, size, materialId, laminationId, isFloor, uploadedFile, t]);
+  }, [quoteData, activeQty, adjustedSubtotal, typeId, size, materialId, laminationId, isFloor, uploadedFile, rushProduction, artworkIntent, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,

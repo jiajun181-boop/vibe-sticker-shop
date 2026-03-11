@@ -209,10 +209,13 @@ export default function FoamBoardOrderClient({ productImages = [] }) {
         contourSvg: contourData?.contourSvg || null,
         bleedMm: contourData?.bleedMm || null,
         processedImageUrl: contourData?.processedImageUrl || null,
+        rushProduction: rushProduction,
+        artworkIntent: artworkIntent || null,
+        designHelp: artworkIntent === "design-help",
       },
       forceNewLine: true,
     };
-  }, [quoteData, activeQty, adjustedSubtotal, size, thicknessId, sidesId, mountingId, uploadedFile, proofConfirmed, proofDataId, contourData, t]);
+  }, [quoteData, activeQty, adjustedSubtotal, size, thicknessId, sidesId, mountingId, uploadedFile, proofConfirmed, proofDataId, contourData, rushProduction, artworkIntent, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,

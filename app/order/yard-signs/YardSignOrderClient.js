@@ -192,10 +192,13 @@ export default function YardSignOrderClient({ productImages = [] }) {
         fileName: uploadedFile?.name || null,
         artworkUrl: uploadedFile?.url || null,
         artworkKey: uploadedFile?.key || null,
+        rushProduction: rushProduction,
+        artworkIntent: artworkIntent || null,
+        designHelp: artworkIntent === "design-help",
       },
       forceNewLine: true,
     };
-  }, [quoteData, activeQty, adjustedSubtotal, size, sidesId, materialId, hardwareId, uploadedFile, t]);
+  }, [quoteData, activeQty, adjustedSubtotal, size, sidesId, materialId, hardwareId, uploadedFile, rushProduction, artworkIntent, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,

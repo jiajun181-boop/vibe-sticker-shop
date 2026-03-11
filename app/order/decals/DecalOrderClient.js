@@ -190,10 +190,10 @@ export default function DecalOrderClient({ productImages = [] }) {
       slug: app.slug,
       price: Math.round(adjustedSubtotal / activeQty),
       quantity: activeQty,
-      options: { application: appId, vinyl, adhesiveSide: isWindow ? adhesiveSide : "front", durability, ...(isFloor ? { floorLamination: true } : {}), sizeId: size.id, sizeLabel: size.label, width: size.w, height: size.h, fileName: uploadedFile?.name || null, artworkUrl: uploadedFile?.url || null, artworkKey: uploadedFile?.key || null, artworkIntent: artworkIntent || null },
+      options: { application: appId, vinyl, adhesiveSide: isWindow ? adhesiveSide : "front", durability, ...(isFloor ? { floorLamination: true } : {}), sizeId: size.id, sizeLabel: size.label, width: size.w, height: size.h, fileName: uploadedFile?.name || null, artworkUrl: uploadedFile?.url || null, artworkKey: uploadedFile?.key || null, artworkIntent: artworkIntent || null, rushProduction: rushProduction, designHelp: artworkIntent === "design-help" },
       forceNewLine: true,
     };
-  }, [quoteData, activeQty, app.slug, appId, size, adjustedSubtotal, vinyl, isWindow, adhesiveSide, durability, isFloor, uploadedFile, artworkIntent, t]);
+  }, [quoteData, activeQty, app.slug, appId, size, adjustedSubtotal, vinyl, isWindow, adhesiveSide, durability, isFloor, uploadedFile, artworkIntent, rushProduction, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
