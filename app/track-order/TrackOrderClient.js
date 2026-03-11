@@ -186,7 +186,7 @@ export default function TrackOrderClient() {
             <div className="rounded-xl border border-purple-200 bg-purple-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-purple-600 mb-2">{t("track.shipmentInfo")}</p>
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-[var(--color-gray-600)]">{order.tracking.carrier || "Carrier"}:</span>
+                <span className="text-[var(--color-gray-600)]">{order.tracking.carrier || t("track.carrier")}:</span>
                 {(() => {
                   const url = getTrackingUrl(order.tracking.carrier, order.tracking.trackingNumber);
                   return url ? (
