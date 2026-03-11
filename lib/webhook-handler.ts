@@ -8,6 +8,8 @@ import { decrementStock } from "./inventory";
 import { sendOrderSms } from "./notifications/sms-notifications";
 import { applyAutoTags } from "./auto-tag";
 import { syncOrderProductionStatus } from "./production-sync";
+import { detectProductFamily } from "./preflight";
+import { isProductionItem } from "./order-item-utils";
 
 function toNumberOrNull(v: unknown) {
   if (typeof v === "number" && Number.isFinite(v)) return v;
@@ -307,9 +309,37 @@ export async function handleCheckoutCompleted(
     });
 
     for (const item of orderItems) {
-      // Detect rush from item metadata
+      // Skip non-production items (service fees like design help)
+      if (!isProductionItem(item)) continue;
+
+      // Extract metadata for production-critical fields
       const itemMeta = item.meta && typeof item.meta === "object" ? item.meta as Record<string, unknown> : {};
       const isRush = itemMeta.rushProduction === true || itemMeta.rushProduction === "true";
+      const isTwoSided = itemMeta.sides === "double" || itemMeta.sides === "2" ||
+        itemMeta.doubleSided === true || itemMeta.doubleSided === "true";
+
+      // Detect product family (sticker, sign, banner, label, etc.)
+      const family = detectProductFamily(item);
+
+      // Artwork URL: check item-level fields first, then meta
+      const artworkUrl = item.fileUrl
+        || (typeof itemMeta.artworkUrl === "string" ? itemMeta.artworkUrl : null)
+        || (typeof itemMeta.fileUrl === "string" ? itemMeta.fileUrl : null)
+        || (typeof itemMeta.frontArtworkUrl === "string" ? itemMeta.frontArtworkUrl : null)
+        || null;
+      const artworkKey = item.fileKey
+        || (typeof itemMeta.artworkKey === "string" ? itemMeta.artworkKey : null)
+        || (typeof itemMeta.fileKey === "string" ? itemMeta.fileKey : null)
+        || null;
+
+      // Material labels from meta
+      const materialLabel = typeof itemMeta.materialLabel === "string" ? itemMeta.materialLabel
+        : typeof itemMeta.stockLabel === "string" ? itemMeta.stockLabel
+        : null;
+      const finishingLabel = typeof itemMeta.finishingLabel === "string" ? itemMeta.finishingLabel
+        : typeof itemMeta.laminationLabel === "string" ? itemMeta.laminationLabel
+        : null;
+
       // Calculate due date: rush = 24h, standard = 3 business days
       const dueAt = new Date();
       dueAt.setDate(dueAt.getDate() + (isRush ? 1 : 3));
@@ -320,6 +350,20 @@ export async function handleCheckoutCompleted(
           status: "queued",
           priority: isRush ? "urgent" : "normal",
           dueAt,
+          // Production-critical fields
+          productName: item.productName || null,
+          family,
+          quantity: item.quantity,
+          widthIn: item.widthIn || toNumberOrNull(itemMeta.width) || null,
+          heightIn: item.heightIn || toNumberOrNull(itemMeta.height) || null,
+          material: item.material || (typeof itemMeta.material === "string" ? itemMeta.material : null),
+          materialLabel,
+          finishing: item.finishing || (typeof itemMeta.finishing === "string" ? itemMeta.finishing : null),
+          finishingLabel,
+          artworkUrl,
+          artworkKey,
+          isTwoSided,
+          isRush,
         },
       });
 

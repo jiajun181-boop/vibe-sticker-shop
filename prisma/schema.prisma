@@ -738,6 +738,22 @@ model ProductionJob {
   startedAt   DateTime?
   completedAt DateTime?
   notes       String?
+
+  // ─── Production-critical fields (denormalized from OrderItem for direct access) ───
+  productName     String?   // e.g. "Die-Cut Stickers — Matte"
+  family          String?   // product family: sticker, sign, banner, label, etc.
+  quantity        Int?      // production quantity
+  widthIn         Float?    // finished width in inches
+  heightIn        Float?    // finished height in inches
+  material        String?   // material/stock id
+  materialLabel   String?   // human-readable material name
+  finishing       String?   // finishing/lamination id
+  finishingLabel  String?   // human-readable finishing name
+  artworkUrl      String?   // direct link to artwork file
+  artworkKey      String?   // UploadThing file key
+  isTwoSided      Boolean   @default(false)
+  isRush          Boolean   @default(false)
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   events      JobEvent[]
@@ -745,6 +761,7 @@ model ProductionJob {
   @@index([status, priority])
   @@index([factoryId])
   @@index([createdAt])
+  @@index([family])
 }
 
 model JobEvent {

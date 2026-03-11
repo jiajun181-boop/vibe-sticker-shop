@@ -41,16 +41,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      where.orderItem = {
-        OR: [
-          { productName: { contains: search, mode: "insensitive" } },
-          {
-            order: {
-              customerEmail: { contains: search, mode: "insensitive" },
-            },
-          },
-        ],
-      };
+      where.OR = [
+        { productName: { contains: search, mode: "insensitive" } },
+        { orderItem: { productName: { contains: search, mode: "insensitive" } } },
+        { orderItem: { order: { customerEmail: { contains: search, mode: "insensitive" } } } },
+      ];
     }
 
     const [jobs, total] = await Promise.all([
@@ -79,25 +74,43 @@ export async function GET(request: NextRequest) {
       prisma.productionJob.count({ where }),
     ]);
 
-    const formatted = jobs.map((job) => ({
-      id: job.id,
-      status: job.status,
-      priority: job.priority,
-      notes: job.notes,
-      dueAt: job.dueAt,
-      startedAt: job.startedAt,
-      completedAt: job.completedAt,
-      createdAt: job.createdAt,
-      orderItemId: job.orderItemId,
-      productName: job.orderItem.productName,
-      quantity: job.orderItem.quantity,
-      orderId: job.orderItem.order.id,
-      customerEmail: job.orderItem.order.customerEmail,
-      customerName: job.orderItem.order.customerName,
-      factoryId: job.factoryId,
-      factoryName: job.factory?.name ?? null,
-      assignedTo: job.assignedTo,
-    }));
+    const formatted = jobs.map((job) => {
+      const itemMeta = job.orderItem.meta && typeof job.orderItem.meta === "object"
+        ? job.orderItem.meta as Record<string, unknown>
+        : {};
+
+      return {
+        id: job.id,
+        status: job.status,
+        priority: job.priority,
+        notes: job.notes,
+        dueAt: job.dueAt,
+        startedAt: job.startedAt,
+        completedAt: job.completedAt,
+        createdAt: job.createdAt,
+        orderItemId: job.orderItemId,
+        orderId: job.orderItem.order.id,
+        customerEmail: job.orderItem.order.customerEmail,
+        customerName: job.orderItem.order.customerName,
+        factoryId: job.factoryId,
+        factoryName: job.factory?.name ?? null,
+        assignedTo: job.assignedTo,
+
+        // Production-critical fields (direct from job, fallback to orderItem/meta)
+        productName: job.productName || job.orderItem.productName,
+        family: job.family || null,
+        quantity: job.quantity || job.orderItem.quantity,
+        widthIn: job.widthIn ?? job.orderItem.widthIn ?? null,
+        heightIn: job.heightIn ?? job.orderItem.heightIn ?? null,
+        material: job.material || job.orderItem.material || null,
+        materialLabel: job.materialLabel || (typeof itemMeta.materialLabel === "string" ? itemMeta.materialLabel : null),
+        finishing: job.finishing || job.orderItem.finishing || null,
+        finishingLabel: job.finishingLabel || (typeof itemMeta.finishingLabel === "string" ? itemMeta.finishingLabel : null),
+        artworkUrl: job.artworkUrl || job.orderItem.fileUrl || (typeof itemMeta.artworkUrl === "string" ? itemMeta.artworkUrl : null),
+        isTwoSided: job.isTwoSided,
+        isRush: job.isRush,
+      };
+    });
 
     return NextResponse.json({
       jobs: formatted,

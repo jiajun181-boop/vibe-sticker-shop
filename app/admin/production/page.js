@@ -567,29 +567,42 @@ function ProductionContent() {
                         </span>
                       </td>
 
-                      {/* Product */}
+                      {/* Product + Specs */}
                       <td className="px-4 py-3">
-                        <p className="max-w-[200px] truncate font-medium text-black">
-                          {job.orderItem?.product?.name ||
-                            job.productName ||
-                            "Unknown"}
+                        <p className="max-w-[220px] truncate font-medium text-black">
+                          {job.productName || "Unknown"}
                         </p>
-                        {(job.orderItem?.order?.id || job.orderId) && (
-                          <Link
-                            href={`/admin/orders/${job.orderItem?.order?.id || job.orderId}`}
-                            className="text-[10px] text-blue-600 hover:underline"
-                          >
-                            Order #{(job.orderItem?.order?.id || job.orderId).slice(0, 8)}
-                          </Link>
-                        )}
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          {job.orderId && (
+                            <Link
+                              href={`/admin/orders/${job.orderId}`}
+                              className="text-[10px] text-blue-600 hover:underline"
+                            >
+                              Order #{job.orderId.slice(0, 8)}
+                            </Link>
+                          )}
+                          {job.family && (
+                            <span className="text-[10px] text-gray-400">{job.family}</span>
+                          )}
+                        </div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-[#999]">
+                          {job.quantity > 0 && <span>Qty {job.quantity}</span>}
+                          {job.widthIn && job.heightIn && <span>{job.widthIn}&quot;×{job.heightIn}&quot;</span>}
+                          {(job.materialLabel || job.material) && <span>{job.materialLabel || job.material}</span>}
+                          {(job.finishingLabel || job.finishing) && <span>{job.finishingLabel || job.finishing}</span>}
+                          {job.isTwoSided && <span>2-sided</span>}
+                          {job.artworkUrl ? (
+                            <a href={job.artworkUrl} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">Artwork ✓</a>
+                          ) : (
+                            <span className="text-amber-500">No artwork</span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Customer */}
                       <td className="px-4 py-3">
                         <p className="max-w-[180px] truncate text-[#666]">
-                          {job.orderItem?.order?.customerEmail ||
-                            job.customerEmail ||
-                            "\u2014"}
+                          {job.customerEmail || "\u2014"}
                         </p>
                       </td>
 
@@ -699,17 +712,26 @@ function ProductionContent() {
                     />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-black">
-                        {job.orderItem?.product?.name ||
-                          job.productName ||
-                          "Unknown"}
+                        {job.productName || "Unknown"}
                       </p>
+                      {/* Specs row */}
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-[#999]">
+                        {job.quantity > 0 && <span>Qty {job.quantity}</span>}
+                        {job.widthIn && job.heightIn && <span>{job.widthIn}&quot;×{job.heightIn}&quot;</span>}
+                        {(job.materialLabel || job.material) && <span>{job.materialLabel || job.material}</span>}
+                        {job.artworkUrl ? (
+                          <a href={job.artworkUrl} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">Artwork ✓</a>
+                        ) : (
+                          <span className="text-amber-500">No artwork</span>
+                        )}
+                      </div>
                       <p className="mt-0.5 font-mono text-xs text-[#999]">
                         {job.id.slice(0, 8)}
-                        {(job.orderItem?.order?.id || job.orderId) && (
+                        {job.orderId && (
                           <>
                             {" · "}
                             <Link
-                              href={`/admin/orders/${job.orderItem?.order?.id || job.orderId}`}
+                              href={`/admin/orders/${job.orderId}`}
                               className="text-blue-600 hover:underline"
                             >
                               Order
@@ -718,9 +740,7 @@ function ProductionContent() {
                         )}
                       </p>
                       <p className="mt-0.5 truncate text-xs text-[#999]">
-                        {job.orderItem?.order?.customerEmail ||
-                          job.customerEmail ||
-                          "\u2014"}
+                        {job.customerEmail || "\u2014"}
                       </p>
                     </div>
                     <Link

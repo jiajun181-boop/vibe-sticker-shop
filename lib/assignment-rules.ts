@@ -79,6 +79,23 @@ export async function applyAssignmentRules(jobId: string): Promise<boolean> {
       }
     }
 
+    // No rule matched — log a warning so admin knows jobs are unassigned
+    console.warn(`[AutoAssign] No rule matched for job ${jobId} (product: ${job.orderItem?.productName || "?"}, type: ${job.orderItem?.productType || "?"}, qty: ${job.orderItem?.quantity || "?"}). Job remains unassigned.`);
+
+    // Create a job event so the production board shows this was evaluated
+    await prisma.jobEvent.create({
+      data: {
+        jobId,
+        type: "auto_assign_miss",
+        payload: {
+          productType: job.orderItem?.productType || null,
+          material: job.orderItem?.material || null,
+          quantity: job.orderItem?.quantity || null,
+          rulesEvaluated: rules.length,
+        },
+      },
+    }).catch(() => {});
+
     return false;
   } catch (error) {
     console.error("[AutoAssign] Error:", error);

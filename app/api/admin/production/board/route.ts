@@ -88,11 +88,11 @@ export async function GET(request: NextRequest) {
       if (job.assignedTo) operatorSet.add(job.assignedTo);
     }
 
-    // Format jobs
+    // Format jobs with production-critical fields
     const formatted = jobs.map((job) => ({
       id: job.id,
       status: job.status,
-      productName: job.orderItem.productName,
+      productName: job.productName || job.orderItem.productName,
       customerEmail: job.orderItem.order.customerEmail,
       customerName: job.orderItem.order.customerName,
       priority: job.priority,
@@ -102,7 +102,17 @@ export async function GET(request: NextRequest) {
       dueAt: job.dueAt ?? null,
       createdAt: job.createdAt,
       orderId: job.orderItem.order.id,
-      quantity: job.orderItem.quantity,
+      quantity: job.quantity || job.orderItem.quantity,
+      // Production-critical fields
+      family: job.family ?? null,
+      widthIn: job.widthIn ?? null,
+      heightIn: job.heightIn ?? null,
+      material: job.material ?? null,
+      materialLabel: job.materialLabel ?? null,
+      finishing: job.finishing ?? null,
+      artworkUrl: job.artworkUrl ?? null,
+      isTwoSided: job.isTwoSided,
+      isRush: job.isRush,
     }));
 
     // Group by status

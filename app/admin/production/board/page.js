@@ -464,6 +464,19 @@ export default function ProductionBoardPage() {
                           })()}
                         </div>
 
+                        {/* Production specs */}
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] text-[#999]">
+                          {job.widthIn && job.heightIn && <span>{job.widthIn}&quot;×{job.heightIn}&quot;</span>}
+                          {(job.materialLabel || job.material) && <span>· {job.materialLabel || job.material}</span>}
+                          {(job.finishing) && <span>· {job.finishing}</span>}
+                          {job.isTwoSided && <span>· 2-sided</span>}
+                          {job.artworkUrl ? (
+                            <a href={job.artworkUrl} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">· Artwork ✓</a>
+                          ) : (
+                            <span className="text-amber-500">· No art</span>
+                          )}
+                        </div>
+
                         {/* Assigned operator */}
                         {job.assignedTo && (
                           <p className="text-[11px] text-blue-600 mt-1.5 truncate">
