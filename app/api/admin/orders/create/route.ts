@@ -22,6 +22,9 @@ export async function POST(request: NextRequest) {
       items,
       notes,
       paymentStatus = "unpaid",
+      isRush = false,
+      artworkIntent,
+      fromQuoteId,
     } = body;
 
     if (!customerEmail || !items || items.length === 0) {
@@ -67,7 +70,7 @@ export async function POST(request: NextRequest) {
           status: "pending",
           paymentStatus: paymentStatus as "unpaid" | "paid",
           productionStatus: "not_started",
-          tags: ["admin_manual"],
+          tags: isRush ? ["admin_manual", "rush"] : ["admin_manual"],
           items: {
             create: items.map(
               (item: {
@@ -113,7 +116,9 @@ export async function POST(request: NextRequest) {
           data: {
             orderItemId: orderItem.id,
             status: "queued",
-            priority: "normal",
+            priority: isRush ? "urgent" : "normal",
+            isRush: !!isRush,
+            dueAt: isRush ? new Date(Date.now() + 24 * 60 * 60 * 1000) : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
             productName: orderItem.productName || null,
             family,
             quantity: orderItem.quantity,
@@ -150,6 +155,18 @@ export async function POST(request: NextRequest) {
 
       return newOrder;
     });
+
+    // Link quote if converting
+    if (fromQuoteId) {
+      try {
+        await prisma.quoteRequest.update({
+          where: { id: fromQuoteId },
+          data: { status: "converted", convertedOrderId: order.id },
+        });
+      } catch {
+        // Non-critical — don't fail the order creation
+      }
+    }
 
     return NextResponse.json({ order }, { status: 201 });
   } catch (err) {

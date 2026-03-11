@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCad } from "@/lib/admin/format-cad";
 
@@ -38,22 +38,45 @@ function emptyItem() {
 }
 
 export default function CreateOrderPage() {
+  return (
+    <Suspense fallback={<div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading...</div>}>
+      <CreateOrderContent />
+    </Suspense>
+  );
+}
+
+function CreateOrderContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
+  // Pre-fill from quote conversion
+  const fromQuote = searchParams.get("fromQuote") || "";
+
   // Customer
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState(searchParams.get("email") || "");
+  const [customerName, setCustomerName] = useState(searchParams.get("name") || "");
+  const [customerPhone, setCustomerPhone] = useState(searchParams.get("phone") || "");
 
-  // Items
-  const [items, setItems] = useState([emptyItem()]);
+  // Items — pre-fill first item from quote if available
+  const [items, setItems] = useState(() => {
+    const first = emptyItem();
+    const qProduct = searchParams.get("product");
+    const qQty = searchParams.get("qty");
+    const qWidth = searchParams.get("width");
+    const qHeight = searchParams.get("height");
+    if (qProduct) first.productName = qProduct;
+    if (qQty) first.quantity = parseInt(qQty) || 1;
+    if (qWidth) first.widthIn = qWidth;
+    if (qHeight) first.heightIn = qHeight;
+    return [first];
+  });
 
-  // Order notes
+  // Order-level options
+  const [isRush, setIsRush] = useState(false);
+  const [artworkIntent, setArtworkIntent] = useState("upload-later"); // "upload-later" | "design-help" | "has-artwork"
   const [orderNotes, setOrderNotes] = useState("");
-
-  // Payment status
   const [paymentStatus, setPaymentStatus] = useState("unpaid");
 
   // Price calculation
@@ -155,6 +178,9 @@ export default function CreateOrderPage() {
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
         paymentStatus,
+        isRush,
+        artworkIntent,
+        fromQuoteId: fromQuote || null,
         notes: orderNotes.trim() || null,
         items: items.map((item) => ({
           productName: item.productName,
@@ -166,7 +192,11 @@ export default function CreateOrderPage() {
           heightIn: parseFloat(item.heightIn) || null,
           material: item.material || null,
           finishing: item.finishing || null,
-          meta: item.notes ? { adminNotes: item.notes } : null,
+          meta: {
+            ...(item.notes ? { adminNotes: item.notes } : {}),
+            ...(artworkIntent === "design-help" ? { artworkIntent: "design-help", designHelp: true } : {}),
+            ...(artworkIntent === "upload-later" ? { artworkIntent: "upload-later" } : {}),
+          },
         })),
       };
 
@@ -472,51 +502,68 @@ export default function CreateOrderPage() {
           </div>
         </div>
 
-        {/* ── Order Notes + Payment ── */}
+        {/* ── Rush + Artwork + Notes + Payment ── */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-            <h2 className="mb-3 text-sm font-bold text-black">
-              Order Notes 订单备注
-            </h2>
-            <textarea
-              value={orderNotes}
-              onChange={(e) => setOrderNotes(e.target.value)}
-              rows={3}
-              placeholder="Internal notes about this order..."
-              className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
-            />
+          {/* Rush & Artwork Intent */}
+          <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5 space-y-4">
+            <div>
+              <h2 className="mb-2 text-sm font-bold text-black">Rush Order</h2>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={isRush} onChange={(e) => setIsRush(e.target.checked)} className="h-4 w-4 rounded border-[#d0d0d0]" />
+                <span className="text-sm">Rush (24h turnaround, +30%)</span>
+              </label>
+            </div>
+            <div>
+              <h2 className="mb-2 text-sm font-bold text-black">Artwork</h2>
+              <div className="space-y-1.5">
+                {[
+                  { value: "has-artwork", label: "Customer has artwork" },
+                  { value: "upload-later", label: "Upload later (reminder will be sent)" },
+                  { value: "design-help", label: "Design help needed (+$45)" },
+                ].map((opt) => (
+                  <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="artworkIntent" value={opt.value} checked={artworkIntent === opt.value} onChange={() => setArtworkIntent(opt.value)} className="h-4 w-4" />
+                    <span className="text-sm">{opt.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-            <h2 className="mb-3 text-sm font-bold text-black">
-              Payment 付款状态
-            </h2>
-            <div className="flex gap-3">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="paymentStatus"
-                  value="unpaid"
-                  checked={paymentStatus === "unpaid"}
-                  onChange={() => setPaymentStatus("unpaid")}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Unpaid 未付款</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="paymentStatus"
-                  value="paid"
-                  checked={paymentStatus === "paid"}
-                  onChange={() => setPaymentStatus("paid")}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Paid 已付款</span>
-              </label>
+          {/* Notes + Payment */}
+          <div className="space-y-4">
+            <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+              <h2 className="mb-3 text-sm font-bold text-black">Order Notes</h2>
+              <textarea
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+                rows={3}
+                placeholder="Internal notes about this order..."
+                className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
+              />
+            </div>
+            <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+              <h2 className="mb-3 text-sm font-bold text-black">Payment</h2>
+              <div className="flex gap-3">
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="paymentStatus" value="unpaid" checked={paymentStatus === "unpaid"} onChange={() => setPaymentStatus("unpaid")} className="h-4 w-4" />
+                  <span className="text-sm">Unpaid</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="paymentStatus" value="paid" checked={paymentStatus === "paid"} onChange={() => setPaymentStatus("paid")} className="h-4 w-4" />
+                  <span className="text-sm">Paid</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Quote linkage banner */}
+        {fromQuote && (
+          <div className="rounded-[3px] border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800">
+            Creating order from quote <strong>{fromQuote.slice(0, 8)}</strong>. The quote will be marked as converted after order creation.
+          </div>
+        )}
 
         {/* ── Summary + Submit ── */}
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">

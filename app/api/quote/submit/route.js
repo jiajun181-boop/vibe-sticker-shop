@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email/resend";
 import { buildQuoteReceivedHtml, buildQuoteNotifyHtml } from "@/lib/email/templates/quote-request";
 import { createRateLimiter, getClientIp } from "@/lib/rate-limit";
@@ -43,6 +44,27 @@ export async function POST(request) {
     }
 
     const reference = generateReference();
+
+    // Persist quote to database
+    await prisma.quoteRequest.create({
+      data: {
+        reference,
+        customerName: name.slice(0, MAX_FIELD),
+        customerEmail: email.slice(0, MAX_FIELD),
+        customerPhone: phone?.slice(0, MAX_FIELD) || null,
+        companyName: company?.slice(0, MAX_FIELD) || null,
+        productType: productType || null,
+        description: description?.slice(0, MAX_DESC) || null,
+        widthIn: parseFloat(width) || null,
+        heightIn: parseFloat(height) || null,
+        quantity: parseInt(quantity) || null,
+        material: material || null,
+        colorMode: colorMode || null,
+        neededBy: neededBy || null,
+        isRush: !!isRush,
+        fileUrls: Array.isArray(fileUrls) ? fileUrls.slice(0, 10) : [],
+      },
+    });
 
     // Send confirmation to customer
     await sendEmail({

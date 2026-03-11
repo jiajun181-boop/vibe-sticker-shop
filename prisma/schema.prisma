@@ -1230,3 +1230,54 @@ model CustomerNote {
 
   @@index([userId, createdAt])
 }
+
+// ── Quote Requests ──
+
+enum QuoteStatus {
+  new
+  reviewing
+  quoted
+  accepted
+  rejected
+  expired
+  converted
+}
+
+model QuoteRequest {
+  id          String      @id @default(cuid())
+  reference   String      @unique // e.g. Q-ABCD1234
+  status      QuoteStatus @default(new)
+
+  // Customer info
+  customerName  String
+  customerEmail String
+  customerPhone String?
+  companyName   String?
+
+  // Product details
+  productType   String?
+  description   String?   @db.Text
+  widthIn       Float?
+  heightIn      Float?
+  quantity      Int?
+  material      String?
+  colorMode     String?
+  neededBy      String?
+  isRush        Boolean   @default(false)
+  fileUrls      String[]  @default([])
+
+  // Quoting
+  quotedAmountCents Int?
+  quotedBy          String?
+  quotedAt          DateTime?
+  adminNotes        String?   @db.Text
+  convertedOrderId  String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+  @@index([customerEmail])
+  @@index([createdAt])
+  @@index([reference])
+}

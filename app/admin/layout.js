@@ -28,6 +28,7 @@ const navGroups = [
     items: [
       { key: "admin.nav.orders", href: "/admin/orders", icon: "package" },
       { key: "admin.nav.missingArtwork", href: "/admin/orders/missing-artwork", icon: "image", sub: "Artwork reminders" },
+      { key: "admin.nav.quotes", href: "/admin/quotes", icon: "tag", sub: "Quote requests" },
       { key: "admin.nav.customers", href: "/admin/customers", icon: "users" },
       { key: "admin.nav.b2b", href: "/admin/b2b", icon: "briefcase" },
     ],
