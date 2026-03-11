@@ -10,7 +10,7 @@ import RollUpStandSections from "@/components/banners/RollUpStandSections";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useConfiguratorCart } from "@/components/configurator";
-import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS, PRINT_ONLY_DISCOUNT_RATE } from "@/lib/order-config";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 import { formatCad } from "@/lib/product-helpers";
@@ -18,11 +18,9 @@ import { formatCad } from "@/lib/product-helpers";
 const DEBOUNCE_MS = 300;
 
 // ─── Stand Tier Configuration ───
-// TODO: These priceCents are hardcoded frontend estimates. They should be
-// fetched from the pricing API (/api/pricing/calculate) per tier to ensure
-// consistency with backend pricing. Currently the tier buttons show these
-// cosmetic prices while the actual quote comes from /api/quote with slug
-// "roll-up-banners", and the two may diverge.
+// priceCents are cosmetic "from" prices shown on tier buttons before the API
+// responds. The actual price is always recalculated server-side via
+// /api/pricing/calculate and checkout-reprice.ts.
 
 const STAND_TIERS = [
   { id: "economy", label: 'Economy 33"\u00d780"', w: 33, h: 80, priceCents: 5900 },
@@ -133,10 +131,7 @@ export default function RetractableStandOrderClient({ productImages = [] }) {
 
   const subtotalCents = quoteData?.totalCents ?? 0;
   const bannerSurcharge = (BANNER_MATERIALS.find((b) => b.id === bannerId)?.surcharge ?? 0) * activeQty;
-  // TODO: This 35% print-only discount is a hardcoded frontend estimate with no
-  // backend pricing rule backing it. It should be replaced with an API-driven
-  // discount (e.g. separate "print-only" product slug or a pricing option).
-  const printOnlyDiscount = orderType === "print-only" ? Math.round(subtotalCents * 0.35) : 0;
+  const printOnlyDiscount = orderType === "print-only" ? Math.round(subtotalCents * PRINT_ONLY_DISCOUNT_RATE) : 0;
   const adjustedSubtotal = subtotalCents + bannerSurcharge - printOnlyDiscount;
   const totalCents = adjustedSubtotal;
 

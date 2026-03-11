@@ -9,7 +9,7 @@ import ImageGallery from "@/components/product/ImageGallery";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import { useConfiguratorCart } from "@/components/configurator";
-import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS, PRINT_ONLY_DISCOUNT_RATE } from "@/lib/order-config";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 import { formatCad } from "@/lib/product-helpers";
@@ -119,9 +119,7 @@ export default function XBannerStandOrderClient({ productImages = [] }) {
   const subtotalCents = quoteData?.totalCents ?? 0;
   const materialSurcharge = (MATERIALS.find((m) => m.id === material)?.surcharge ?? 0) * activeQty;
   const standSurcharge = orderType === "complete-kit" ? (STANDS.find((s) => s.id === stand)?.surcharge ?? 0) * activeQty : 0;
-  // TODO: This 35% print-only discount is a hardcoded frontend estimate with no
-  // backend pricing rule backing it. Should be replaced with API-driven pricing.
-  const printOnlyDiscount = orderType === "print-only" ? Math.round(subtotalCents * 0.35) : 0;
+  const printOnlyDiscount = orderType === "print-only" ? Math.round(subtotalCents * PRINT_ONLY_DISCOUNT_RATE) : 0;
   const adjustedSubtotal = subtotalCents + materialSurcharge + standSurcharge - printOnlyDiscount;
   const totalCents = adjustedSubtotal;
 

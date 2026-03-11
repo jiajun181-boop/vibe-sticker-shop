@@ -9,7 +9,7 @@
 
 import type { Prisma } from "@prisma/client";
 import { quoteProduct } from "@/lib/pricing/quote-server.js";
-import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS, MIN_UNIT_AMOUNT } from "@/lib/order-config";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS, MIN_UNIT_AMOUNT, PRINT_ONLY_DISCOUNT_RATE } from "@/lib/order-config";
 
 type ProductWithPricingPreset = Prisma.ProductGetPayload<{
   include: { pricingPreset: true };
@@ -171,6 +171,12 @@ export function repriceItem(
     if (totalQty <= 0 || totalCents <= 0) {
       throw new Error(`Unable to price item: ${item.name}`);
     }
+
+    // Apply print-only discount for display stands ordered without hardware
+    if (String(item.meta?.orderType ?? "").trim() === "print-only") {
+      totalCents = Math.round(totalCents * (1 - PRINT_ONLY_DISCOUNT_RATE));
+    }
+
     let unitAmount = Math.max(1, Math.round(totalCents / totalQty));
 
     // Apply rush surcharge
@@ -203,6 +209,12 @@ export function repriceItem(
   if (!Number.isFinite(unitAmount) || unitAmount <= 0) {
     throw new Error(`Unable to price item: ${item.name}`);
   }
+
+  // Apply print-only discount for display stands ordered without hardware
+  if (String(item.meta?.orderType ?? "").trim() === "print-only") {
+    unitAmount = Math.round(unitAmount * (1 - PRINT_ONLY_DISCOUNT_RATE));
+  }
+
   if (unitAmount < MIN_UNIT_AMOUNT) {
     throw new Error(`Price too low for ${item.name} (minimum $${(MIN_UNIT_AMOUNT / 100).toFixed(2)})`);
   }
