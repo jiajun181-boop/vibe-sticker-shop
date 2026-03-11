@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "@/lib/order-config";
 
 const DEFAULTS = {
   "store.name": "La Lunar Printing Inc.",
   "store.email": "",
   "store.phone": "",
   "store.address": "",
-  "shipping.freeThreshold": 9900,
-  "shipping.localRate": 1500,
+  "shipping.freeThreshold": FREE_SHIPPING_THRESHOLD,
+  "shipping.localRate": SHIPPING_COST,
   "shipping.nationwideRate": 2000,
-  "tax.hstRate": 13,
+  "tax.hstRate": Math.round(HST_RATE * 100),
   "tax.enabled": true,
   "order.autoConfirmEmail": true,
 };

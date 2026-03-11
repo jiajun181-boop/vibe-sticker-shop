@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { HST_RATE } from "@/lib/order-config";
 
 /**
  * Interactive Pricing Widget
@@ -17,7 +18,7 @@ export default function PricingSlider({
   onPriceChange,
   currency = "CAD",
   showTax = true,
-  taxRate = 0.13,
+  taxRate = HST_RATE,
 }) {
   const [quantity, setQuantity] = useState(min);
   const [isDragging, setIsDragging] = useState(false);
