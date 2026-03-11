@@ -471,7 +471,7 @@ function ExpensesTab({ showMsg }) {
     fetch("/api/admin/finance/suppliers?limit=100")
       .then((r) => r.json())
       .then((json) => setSuppliers(json.data || []))
-      .catch(() => {});
+      .catch((err) => console.error("[Finance] Load suppliers failed:", err));
   }, []);
 
   const fetchExpenses = useCallback(async () => {

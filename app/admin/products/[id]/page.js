@@ -229,7 +229,7 @@ export default function ProductDetailPage() {
     fetch("/api/admin/pricing")
       .then((r) => r.ok ? r.json() : [])
       .then((data) => setPresets(Array.isArray(data) ? data : []))
-      .catch(() => {});
+      .catch((err) => console.error("[Product Presets] Load failed:", err));
   }, []);
 
   // ── Clipboard paste (Ctrl+V) — auto-upload pasted images ──

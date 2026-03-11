@@ -99,7 +99,7 @@ function PricingParamCard({ title, titleZh, color = "blue", params }) {
         }
         setValues(merged);
       })
-      .catch(() => {})
+      .catch((err) => console.error("[Materials Config] Load failed:", err))
       .finally(() => setLoaded(true));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

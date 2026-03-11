@@ -872,7 +872,7 @@ function ReadinessSummary() {
     fetch("/api/admin/production/readiness")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setData(d))
-      .catch(() => {})
+      .catch((err) => console.error("[Production Readiness] Load failed:", err))
       .finally(() => setLoading(false));
   }, []);
 

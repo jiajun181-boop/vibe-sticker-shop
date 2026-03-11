@@ -47,7 +47,7 @@ export default function CustomerDetailPage() {
     fetch(`/api/admin/customers/${encodeURIComponent(email)}/stats`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data) setStats(data); })
-      .catch(() => {});
+      .catch((err) => console.error("[Customer Stats] Load failed:", err));
   }, [email]);
 
   // Fetch customer notes
@@ -55,7 +55,7 @@ export default function CustomerDetailPage() {
     fetch(`/api/admin/customers/${encodeURIComponent(email)}/notes`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data?.data) setNotes(data.data); })
-      .catch(() => {});
+      .catch((err) => console.error("[Customer Notes] Load failed:", err));
   }, [email]);
 
   useEffect(() => { fetchNotes(); }, [fetchNotes]);
