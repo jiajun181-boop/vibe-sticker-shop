@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { showErrorToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { ACCESSORY_OPTIONS } from "@/lib/sign-order-config";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageGallery from "@/components/product/ImageGallery";
@@ -40,8 +41,8 @@ const SIDES = [
 
 const MOUNTINGS = [
   { id: "none", surcharge: 0 },
-  { id: "easel-back", surcharge: 75 },
-  { id: "standoffs", surcharge: 400 },
+  { id: "easel-back", surcharge: ACCESSORY_OPTIONS["easel-back"].surcharge },
+  { id: "standoffs", surcharge: ACCESSORY_OPTIONS["standoffs"].surcharge },
 ];
 
 const QUANTITIES = [1, 5, 10, 25, 50];

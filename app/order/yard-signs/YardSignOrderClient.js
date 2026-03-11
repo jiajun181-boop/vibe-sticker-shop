@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { showErrorToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { ACCESSORY_OPTIONS } from "@/lib/sign-order-config";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageGallery from "@/components/product/ImageGallery";
@@ -37,8 +38,8 @@ const SIDES = [
 
 const HARDWARE = [
   { id: "none", surcharge: 0 },
-  { id: "h-stake", surcharge: 150 },
-  { id: "wire-stake", surcharge: 100 },
+  { id: "h-stake", surcharge: ACCESSORY_OPTIONS["h-stake"].surcharge },
+  { id: "wire-stake", surcharge: ACCESSORY_OPTIONS["wire-stake"].surcharge },
 ];
 
 const QUANTITIES = [1, 5, 10, 25, 50, 100];

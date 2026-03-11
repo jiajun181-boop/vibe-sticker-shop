@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { showErrorToast } from "@/components/Toast";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { ACCESSORY_OPTIONS } from "@/lib/sign-order-config";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageGallery from "@/components/product/ImageGallery";
@@ -38,9 +39,9 @@ const SIDES = [
 
 const MOUNTINGS = [
   { id: "none", surcharge: 0 },
-  { id: "grommets", surcharge: 100 },
-  { id: "holes", surcharge: 0 },
-  { id: "velcro-tabs", surcharge: 150 },
+  { id: "grommets", surcharge: ACCESSORY_OPTIONS["grommets"].surcharge },
+  { id: "holes", surcharge: ACCESSORY_OPTIONS["drilled-holes"].surcharge },
+  { id: "velcro-tabs", surcharge: ACCESSORY_OPTIONS["velcro-tabs"].surcharge },
 ];
 
 const QUANTITIES = [1, 5, 10, 25, 50];
