@@ -36,17 +36,16 @@ const navGroups = [
   {
     labelKey: "admin.navGroup.products",
     items: [
-      { key: "admin.nav.catalogOps", href: "/admin/catalog-ops", icon: "catalog", sub: "Products & pricing" },
-      { key: "admin.nav.pricingDashboard", href: "/admin/pricing-dashboard", icon: "pricing", sub: "Quote ledger & formulas" },
+      { key: "admin.nav.catalogOps", href: "/admin/catalog-ops", icon: "catalog", sub: "Products, catalog, pricing models" },
+      { key: "admin.nav.pricingDashboard", href: "/admin/pricing-dashboard", icon: "pricing", sub: "Formula health check" },
       { key: "admin.nav.imageDashboard", href: "/admin/image-dashboard", icon: "image", sub: "Quick image upload" },
-      { key: "admin.nav.materials", href: "/admin/materials", icon: "package", sub: "Materials & Pricing" },
-      { key: "admin.nav.materialsHandbook", href: "/admin/materials-handbook", icon: "document", sub: "Material specs ref" },
+      { key: "admin.nav.materials", href: "/admin/materials", icon: "package", sub: "Material & hardware costs" },
+      { key: "admin.nav.materialsHandbook", href: "/admin/materials-handbook", icon: "document", sub: "Material specs (read-only)" },
     ],
   },
   {
     labelKey: "admin.navGroup.tools",
     items: [
-      { key: "admin.nav.workstation", href: "/admin/workstation", icon: "grid", sub: "Operations hub" },
       { key: "admin.nav.toolsHub", href: "/admin/tools", icon: "grid", sub: "All tools" },
       { key: "admin.nav.contour", href: "/admin/tools/contour", icon: "image", sub: "Die-cut contour" },
       { key: "admin.nav.proof", href: "/admin/tools/proof", icon: "shield", sub: "Proof manager" },

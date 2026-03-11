@@ -117,10 +117,14 @@ export async function DELETE(req: NextRequest) {
     const id = url.searchParams.get("id");
     if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
 
-    await prisma.material.delete({ where: { id } });
+    // Soft-delete: deactivate instead of hard-delete to preserve historical references
+    await prisma.material.update({
+      where: { id },
+      data: { isActive: false },
+    });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[Materials DELETE]", err);
-    return NextResponse.json({ error: "Failed to delete material" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to deactivate material" }, { status: 500 });
   }
 }
