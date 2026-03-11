@@ -15,7 +15,15 @@ export async function GET(request: NextRequest) {
     const priority = searchParams.get("priority");
     const factoryId = searchParams.get("factoryId");
     const search = searchParams.get("search");
-    const sort = searchParams.get("sort") || "createdAt";
+    const sortParam = searchParams.get("sort") || "createdAt";
+    // Map frontend sort keys to Prisma field paths
+    const SORT_MAP: Record<string, string> = {
+      createdAt: "createdAt",
+      dueAt: "dueAt",
+      priority: "priority",
+      status: "status",
+    };
+    const sort = SORT_MAP[sortParam] || "createdAt";
     const order = searchParams.get("order") || "desc";
 
     const where: Record<string, unknown> = {};
@@ -88,6 +96,7 @@ export async function GET(request: NextRequest) {
       customerName: job.orderItem.order.customerName,
       factoryId: job.factoryId,
       factoryName: job.factory?.name ?? null,
+      assignedTo: job.assignedTo,
     }));
 
     return NextResponse.json({

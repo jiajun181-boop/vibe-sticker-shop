@@ -533,6 +533,9 @@ function ProductionContent() {
                       Factory
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
+                      Due
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
                       Created
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
@@ -640,6 +643,22 @@ function ProductionContent() {
                             </option>
                           ))}
                         </select>
+                      </td>
+
+                      {/* Due */}
+                      <td className="px-4 py-3 text-xs">
+                        {job.dueAt ? (() => {
+                          const due = new Date(job.dueAt);
+                          const now = new Date();
+                          const isTerminal = ["finished", "shipped"].includes(job.status);
+                          const isOverdue = !isTerminal && due < now;
+                          const isDueToday = !isTerminal && due.toDateString() === now.toDateString();
+                          return (
+                            <span className={isOverdue ? "font-semibold text-red-600" : isDueToday ? "font-semibold text-amber-600" : "text-[#999]"}>
+                              {due.toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+                            </span>
+                          );
+                        })() : <span className="text-[#ccc]">{"\u2014"}</span>}
                       </td>
 
                       {/* Created */}
@@ -757,6 +776,19 @@ function ProductionContent() {
                         </option>
                       ))}
                     </select>
+
+                    {job.dueAt && (() => {
+                      const due = new Date(job.dueAt);
+                      const now = new Date();
+                      const isTerminal = ["finished", "shipped"].includes(job.status);
+                      const isOverdue = !isTerminal && due < now;
+                      const isDueToday = !isTerminal && due.toDateString() === now.toDateString();
+                      return (
+                        <span className={`text-xs ${isOverdue ? "font-semibold text-red-600" : isDueToday ? "font-semibold text-amber-600" : "text-[#999]"}`}>
+                          Due {due.toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+                        </span>
+                      );
+                    })()}
 
                     <span className="text-xs text-[#999]">
                       {timeAgo(job.createdAt)}

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
 import { syncOrderProductionStatus } from "@/lib/production-sync";
+import { VALID_JOB_TRANSITIONS } from "@/lib/order-config";
 
 export async function POST(request: NextRequest) {
   const auth = await requirePermission(request, "production", "edit");
@@ -32,14 +33,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify all jobIds exist
+    // Fetch existing jobs with current status for transition validation
     const existingJobs = await prisma.productionJob.findMany({
       where: { id: { in: jobIds } },
-      select: { id: true },
+      select: { id: true, status: true, startedAt: true, completedAt: true },
     });
 
-    const existingIds = new Set(existingJobs.map((j) => j.id));
-    const missingIds = jobIds.filter((id: string) => !existingIds.has(id));
+    type JobRow = { id: string; status: string; startedAt: Date | null; completedAt: Date | null };
+    const existingMap = new Map<string, JobRow>(existingJobs.map((j) => [j.id, j as JobRow]));
+    const missingIds = jobIds.filter((id: string) => !existingMap.has(id));
 
     if (missingIds.length > 0) {
       return NextResponse.json(
@@ -48,30 +50,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build the update data
-    const data: Record<string, unknown> = {};
-    if (updates.status !== undefined) data.status = updates.status;
-    if (updates.factoryId !== undefined) data.factoryId = updates.factoryId;
-    if (updates.priority !== undefined) data.priority = updates.priority;
+    // Validate status transitions for each job
+    if (updates.status) {
+      const blocked: Array<{ jobId: string; from: string; to: string }> = [];
+      for (const jobId of jobIds) {
+        const job = existingMap.get(jobId)!;
+        if (job.status === updates.status) continue; // no-op is fine
+        const allowed = (VALID_JOB_TRANSITIONS as Record<string, string[]>)[job.status];
+        if (allowed && !allowed.includes(updates.status)) {
+          blocked.push({ jobId, from: job.status, to: updates.status });
+        }
+      }
+      if (blocked.length > 0) {
+        return NextResponse.json(
+          {
+            error: `${blocked.length} job(s) cannot transition to "${updates.status}"`,
+            blocked: blocked.slice(0, 10),
+          },
+          { status: 400 }
+        );
+      }
+    }
 
-    // Execute transaction: update all jobs and create events
+    const now = new Date();
+
+    // Execute transaction: update each job individually for auto-timestamp logic
     const result = await prisma.$transaction(async (tx) => {
-      // Update all jobs
-      const updateResult = await tx.productionJob.updateMany({
-        where: { id: { in: jobIds } },
-        data,
-      });
+      let updatedCount = 0;
+      for (const jobId of jobIds as string[]) {
+        const existing = existingMap.get(jobId)!;
+        const data: Record<string, unknown> = {};
+        if (updates.status !== undefined) data.status = updates.status;
+        if (updates.factoryId !== undefined) data.factoryId = updates.factoryId;
+        if (updates.priority !== undefined) data.priority = updates.priority;
+
+        // Auto-set startedAt when moving to "printing"
+        if (updates.status === "printing" && !existing.startedAt) {
+          data.startedAt = now;
+        }
+        // Auto-set completedAt when moving to "finished" or "shipped"
+        if (
+          (updates.status === "finished" || updates.status === "shipped") &&
+          !existing.completedAt
+        ) {
+          data.completedAt = now;
+        }
+
+        await tx.productionJob.update({ where: { id: jobId }, data });
+        updatedCount++;
+      }
 
       // Create a JobEvent for each job
       await tx.jobEvent.createMany({
-        data: jobIds.map((jobId: string) => ({
+        data: (jobIds as string[]).map((jobId) => ({
           jobId,
           type: "bulk_update",
           payload: updates,
         })),
       });
 
-      return updateResult;
+      return updatedCount;
     });
 
     // Sync parent order statuses for affected jobs (fire-and-forget)
@@ -93,11 +131,11 @@ export async function POST(request: NextRequest) {
       details: {
         jobIds,
         updates,
-        count: result.count,
+        count: result,
       },
     });
 
-    return NextResponse.json({ success: true, updated: result.count });
+    return NextResponse.json({ success: true, updated: result });
   } catch (error) {
     console.error("[Production Bulk Update POST] Error:", error);
     return NextResponse.json(
