@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { authenticateApiKey } from "@/lib/api-auth";
 import { checkAndReserveStock } from "@/lib/inventory";
-import { HST_RATE, SHIPPING_COST, MIN_UNIT_AMOUNT, B2B_FREE_SHIPPING_THRESHOLD } from "@/lib/order-config";
+import { HST_RATE, SHIPPING_COST, MIN_UNIT_AMOUNT, B2B_FREE_SHIPPING_THRESHOLD, MAX_ITEM_QUANTITY } from "@/lib/order-config";
 
 const BulkOrderSchema = z.object({
   email: z.string().email(),
@@ -11,7 +11,7 @@ const BulkOrderSchema = z.object({
   items: z.array(
     z.object({
       productId: z.string(),
-      quantity: z.number().int().positive(),
+      quantity: z.number().int().positive().max(MAX_ITEM_QUANTITY),
       unitAmount: z.number().int().nonnegative(),
       meta: z.record(z.string(), z.unknown()).optional(),
     })

@@ -312,6 +312,15 @@ export default function CartDrawer() {
           setPromoCode("");
           throw new Error(data?.error || t("cart.promoInvalid"));
         }
+        if (data?.code === "INSUFFICIENT_STOCK") {
+          throw new Error(data?.error || t("cart.insufficientStock"));
+        }
+        if (data?.code === "PRODUCT_UNAVAILABLE") {
+          throw new Error(data?.error || t("cart.productUnavailable"));
+        }
+        if (data?.code === "PRICE_RECALC_FAILED" || data?.code === "MISSING_DIMENSIONS") {
+          throw new Error(data?.error || t("cart.pricingError"));
+        }
         if (response.status >= 500) {
           throw new Error(t("cart.serverError"));
         }

@@ -8,6 +8,7 @@ import { checkAndReserveStock } from "@/lib/inventory";
 import { repriceItem, calculateDesignHelpFee } from "@/lib/checkout-reprice";
 import {
   HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST, DESIGN_HELP_CENTS,
+  MAX_ITEM_QUANTITY,
 } from "@/lib/order-config";
 
 const InteracSchema = z.object({
@@ -15,7 +16,7 @@ const InteracSchema = z.object({
     productId: z.string(),
     slug: z.string().optional(),
     name: z.string(),
-    quantity: z.number().int().positive(),
+    quantity: z.number().int().positive().max(MAX_ITEM_QUANTITY),
     unitAmount: z.number().int().nonnegative(),
     meta: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
   })).min(1).max(50),

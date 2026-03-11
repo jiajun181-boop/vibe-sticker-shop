@@ -7,7 +7,7 @@ import { getUserFromRequest } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildInvoiceConfirmationHtml } from "@/lib/email/templates/invoice-confirmation";
 import { checkAndReserveStock } from "@/lib/inventory";
-import { HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import { HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST, DESIGN_HELP_CENTS, MAX_ITEM_QUANTITY } from "@/lib/order-config";
 
 const MetaSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
 
@@ -16,7 +16,7 @@ const CartItemSchema = z.object({
   slug: z.string(),
   name: z.string(),
   unitAmount: z.number().int().nonnegative(),
-  quantity: z.number().int().positive(),
+  quantity: z.number().int().positive().max(MAX_ITEM_QUANTITY),
   meta: MetaSchema.optional(),
 });
 
