@@ -87,6 +87,7 @@ export default function OrderDetailPage() {
   const [message, setMessage] = useState("");
   const [messageIsError, setMessageIsError] = useState(false);
   const [timeline, setTimeline] = useState([]);
+  const [emailLogs, setEmailLogs] = useState([]);
 
   // Editable status fields
   const [status, setStatus] = useState("");
@@ -109,6 +110,13 @@ export default function OrderDetailPage() {
     } catch {
       console.error("Failed to fetch timeline");
     }
+  }, [id]);
+
+  const fetchEmailLogs = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/orders/${id}/emails`);
+      if (res.ok) setEmailLogs(await res.json());
+    } catch { /* silent */ }
   }, [id]);
 
   const fetchOrder = useCallback(() => {
@@ -144,16 +152,18 @@ export default function OrderDetailPage() {
   useEffect(() => {
     fetchOrder();
     fetchTimeline();
-  }, [fetchOrder, fetchTimeline]);
+    fetchEmailLogs();
+  }, [fetchOrder, fetchTimeline, fetchEmailLogs]);
 
   // Auto-refresh every 30s
   useEffect(() => {
     refreshTimer.current = setInterval(() => {
       fetchOrder();
       fetchTimeline();
+      fetchEmailLogs();
     }, AUTO_REFRESH_MS);
     return () => clearInterval(refreshTimer.current);
-  }, [fetchOrder, fetchTimeline]);
+  }, [fetchOrder, fetchTimeline, fetchEmailLogs]);
 
   function showMsg(text, isError = false) {
     setMessage(text);
@@ -378,28 +388,38 @@ export default function OrderDetailPage() {
                             {formatCad(item.unitPrice)} {t("admin.orderDetail.each")}
                           </p>
                           {item.productionJob && (
-                            <Link href={`/admin/production/${item.productionJob.id}`} className="mt-1.5 flex flex-col items-end gap-0.5 hover:opacity-80">
-                              <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
-                                item.productionJob.status === "shipped" || item.productionJob.status === "finished" ? "bg-green-100 text-green-700" :
-                                item.productionJob.status === "printing" || item.productionJob.status === "quality_check" ? "bg-indigo-100 text-indigo-700" :
-                                item.productionJob.status === "assigned" ? "bg-blue-100 text-blue-700" :
-                                item.productionJob.status === "on_hold" ? "bg-red-100 text-red-700" :
-                                "bg-gray-100 text-gray-600"
-                              }`}>
-                                {item.productionJob.status.replace(/_/g, " ")}
-                              </span>
-                              {item.productionJob.priority === "urgent" && (
-                                <span className="rounded bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-700">URGENT</span>
-                              )}
-                              {item.productionJob.dueAt && (
-                                <span className={`text-[9px] ${new Date(item.productionJob.dueAt) < new Date() ? "font-bold text-red-600" : "text-[#999]"}`}>
-                                  Due: {new Date(item.productionJob.dueAt).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+                            <div className="mt-1.5 flex flex-col items-end gap-0.5">
+                              <Link href={`/admin/production/${item.productionJob.id}`} className="flex flex-col items-end gap-0.5 hover:opacity-80">
+                                <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+                                  item.productionJob.status === "shipped" || item.productionJob.status === "finished" ? "bg-green-100 text-green-700" :
+                                  item.productionJob.status === "printing" || item.productionJob.status === "quality_check" ? "bg-indigo-100 text-indigo-700" :
+                                  item.productionJob.status === "assigned" ? "bg-blue-100 text-blue-700" :
+                                  item.productionJob.status === "on_hold" ? "bg-red-100 text-red-700" :
+                                  "bg-gray-100 text-gray-600"
+                                }`}>
+                                  {item.productionJob.status.replace(/_/g, " ")}
                                 </span>
-                              )}
-                              {item.productionJob.assignedTo && (
-                                <span className="text-[9px] text-[#999]">{item.productionJob.assignedTo}</span>
-                              )}
-                            </Link>
+                                {item.productionJob.priority === "urgent" && (
+                                  <span className="rounded bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-700">URGENT</span>
+                                )}
+                                {item.productionJob.dueAt && (
+                                  <span className={`text-[9px] ${new Date(item.productionJob.dueAt) < new Date() ? "font-bold text-red-600" : "text-[#999]"}`}>
+                                    Due: {new Date(item.productionJob.dueAt).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+                                  </span>
+                                )}
+                                {item.productionJob.assignedTo && (
+                                  <span className="text-[9px] text-[#999]">{item.productionJob.assignedTo}</span>
+                                )}
+                              </Link>
+                              <a
+                                href={`/api/admin/production/${item.productionJob.id}/ticket?format=pdf`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[9px] text-blue-600 hover:underline"
+                              >
+                                {t("admin.orderDetail.printTicket") || "Print Ticket"}
+                              </a>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -563,7 +583,7 @@ export default function OrderDetailPage() {
             </Section>
 
             {/* Order Timeline */}
-            <Section title={t("admin.orderDetail.timeline")}>
+            <Section title={t("admin.orderDetail.timeline")} collapsible>
               {timeline.length > 0 ? (
                 <div className="relative pl-6 border-l-2 border-[#e0e0e0]">
                   {timeline.map((event, idx) => {
@@ -600,6 +620,29 @@ export default function OrderDetailPage() {
                 <p className="text-xs text-[#999]">{t("admin.orderDetail.noTimeline")}</p>
               )}
             </Section>
+
+            {/* Email Log */}
+            {emailLogs.length > 0 && (
+              <Section title={t("admin.orderDetail.emailLog") || "Email Log"} collapsible>
+                <div className="space-y-2">
+                  {emailLogs.map((log) => (
+                    <div key={log.id} className="flex items-start gap-2 rounded-lg border border-[#e5e5e5] px-3 py-2">
+                      <span className={`mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full ${log.status === "sent" ? "bg-green-500" : "bg-red-500"}`} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-black truncate">{log.subject}</p>
+                        <p className="text-[10px] text-[#999]">
+                          {log.template} → {log.to}
+                        </p>
+                        {log.status === "failed" && log.error && (
+                          <p className="mt-0.5 text-[10px] text-red-600 truncate">{log.error}</p>
+                        )}
+                        <p className="text-[10px] text-[#bbb]">{new Date(log.createdAt).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
           </div>
 
           {/* Right column - status & meta */}
@@ -998,11 +1041,23 @@ function PrintInvoice({ order }) {
 }
 
 /* ========== Reusable Components ========== */
-function Section({ title, children }) {
+function Section({ title, children, collapsible = false, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <h2 className="mb-3 text-sm font-semibold text-gray-900">{title}</h2>
-      {children}
+      {collapsible ? (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex w-full items-center justify-between text-left"
+        >
+          <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
+          <span className={`text-xs text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}>&#9660;</span>
+        </button>
+      ) : (
+        <h2 className="mb-3 text-sm font-semibold text-gray-900">{title}</h2>
+      )}
+      {(!collapsible || open) && <div className={collapsible ? "mt-3" : ""}>{children}</div>}
     </div>
   );
 }
@@ -1320,7 +1375,7 @@ function ContourDataSection({ proofData, toolJobs }) {
   }
 
   return (
-    <Section title={`Contour / Proof Data (${(proofData || []).length})`}>
+    <Section title={`Contour / Proof Data (${(proofData || []).length})`} collapsible defaultOpen={false}>
       <div className="space-y-3">
         {(proofData || []).map((pd) => (
           <div key={pd.id} className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
@@ -1525,7 +1580,7 @@ function CustomerSummarySection({ order }) {
   if (items.length === 0) return null;
 
   return (
-    <Section title="Order Summary (Plain Language)">
+    <Section title="Order Summary (Plain Language)" collapsible>
       <div className="space-y-3">
         {items.map((item) => {
           const meta = {
@@ -1893,7 +1948,7 @@ function ProductionFilesSection({ order }) {
   const downloadableFiles = files.filter((f) => f.url);
 
   return (
-    <Section title={`Production Files (${downloadableFiles.length})`}>
+    <Section title={`Production Files (${downloadableFiles.length})`} collapsible>
       <div className="space-y-1.5">
         {files.map((f, i) => (
           <div key={i} className="flex items-center justify-between py-1">
@@ -1982,7 +2037,7 @@ function PreflightSection({ order }) {
   ].filter(Boolean).join(", ");
 
   return (
-    <Section title={`Preflight (${severitySummary})`}>
+    <Section title={`Preflight (${severitySummary})`} collapsible defaultOpen={false}>
       <div className="space-y-2">
         {results.map((r, i) => (
           <div key={i} className="space-y-1">

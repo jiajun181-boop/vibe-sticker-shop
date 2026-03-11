@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 
 /**
  * GET /api/admin/production/[id]/ticket
- * Returns a printable HTML job ticket with all production-critical info.
- * Print via browser's print dialog or save as PDF.
+ * Returns a printable job ticket.
+ *   ?format=pdf  → PDF download (pdf-lib)
+ *   default      → printable HTML page
  */
 export async function GET(
   request: NextRequest,
@@ -16,6 +18,7 @@ export async function GET(
 
   try {
     const { id } = await params;
+    const format = request.nextUrl.searchParams.get("format");
 
     const job = await prisma.productionJob.findUnique({
       where: { id },
@@ -56,6 +59,38 @@ export async function GET(
       ? `${job.widthIn || job.orderItem.widthIn}" × ${job.heightIn || job.orderItem.heightIn}"`
       : "—";
 
+    // ─── PDF format ───
+    if (format === "pdf") {
+      const pdfBytes = await generateTicketPdf({
+        jobId: job.id,
+        priority: job.priority || "normal",
+        createdAt: job.createdAt,
+        dueAt: job.dueAt,
+        productName: job.productName || job.orderItem.productName,
+        isRush: job.isRush || false,
+        isTwoSided: job.isTwoSided || false,
+        family: job.family || null,
+        quantity: job.quantity || job.orderItem.quantity,
+        sizeStr,
+        material: job.materialLabel || job.material || job.orderItem.material || "—",
+        finishing: job.finishingLabel || job.finishing || job.orderItem.finishing || "—",
+        orderId: order.id,
+        customerName: order.customerName || order.customerEmail,
+        factoryName: job.factory?.name || "Unassigned",
+        operator: job.assignedTo || "—",
+        artworkUrl: artworkUrl || null,
+        notes: job.notes || null,
+      });
+
+      return new NextResponse(Buffer.from(pdfBytes), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="ticket-${job.id.slice(0, 8)}.pdf"`,
+        },
+      });
+    }
+
+    // ─── HTML format (default) ───
     const html = `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
@@ -179,7 +214,10 @@ export async function GET(
   </div>
 </div>
 
-<button class="print-btn no-print" onclick="window.print()">Print Job Ticket</button>
+<div class="no-print" style="text-align:center;margin-top:16px;display:flex;gap:8px;justify-content:center">
+<button class="print-btn" onclick="window.print()" style="margin:0">Print</button>
+<a href="?format=pdf" class="print-btn" style="margin:0;text-decoration:none;display:inline-block;text-align:center;line-height:1">Download PDF</a>
+</div>
 </body></html>`;
 
     return new NextResponse(html, {
@@ -191,4 +229,274 @@ export async function GET(
     console.error("[Job Ticket] Error:", error);
     return NextResponse.json({ error: "Failed to generate ticket" }, { status: 500 });
   }
+}
+
+// ─── PDF Generator ─────────────────────────────────────────
+
+interface TicketData {
+  jobId: string;
+  priority: string;
+  createdAt: Date;
+  dueAt: Date | null;
+  productName: string;
+  isRush: boolean;
+  isTwoSided: boolean;
+  family: string | null;
+  quantity: number;
+  sizeStr: string;
+  material: string;
+  finishing: string;
+  orderId: string;
+  customerName: string;
+  factoryName: string;
+  operator: string;
+  artworkUrl: string | null;
+  notes: string | null;
+}
+
+async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const page = doc.addPage([396, 612]); // ~5.5" × 8.5" (half letter)
+  const { width, height } = page.getSize();
+
+  const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const fontMono = await doc.embedFont(StandardFonts.Courier);
+  const fontMonoBold = await doc.embedFont(StandardFonts.CourierBold);
+
+  const black = rgb(0, 0, 0);
+  const gray = rgb(0.4, 0.4, 0.4);
+  const lightGray = rgb(0.7, 0.7, 0.7);
+  const red = rgb(0.86, 0.15, 0.15);
+  const amber = rgb(0.85, 0.47, 0.04);
+
+  const margin = 24;
+  let y = height - margin;
+
+  // Helper: draw text and return new y
+  function drawText(
+    text: string,
+    x: number,
+    yPos: number,
+    opts: { font?: typeof fontRegular; size?: number; color?: typeof black; maxWidth?: number } = {}
+  ) {
+    const font = opts.font || fontRegular;
+    const size = opts.size || 10;
+    const color = opts.color || black;
+
+    // Truncate text if it would overflow
+    let displayText = text;
+    if (opts.maxWidth) {
+      while (font.widthOfTextAtSize(displayText, size) > opts.maxWidth && displayText.length > 3) {
+        displayText = displayText.slice(0, -4) + "...";
+      }
+    }
+
+    page.drawText(displayText, { x, y: yPos, font, size, color });
+  }
+
+  function drawLine(yPos: number, thickness = 1) {
+    page.drawLine({
+      start: { x: margin, y: yPos },
+      end: { x: width - margin, y: yPos },
+      thickness,
+      color: black,
+    });
+  }
+
+  function drawDashedLine(yPos: number) {
+    const dashLen = 4;
+    const gapLen = 3;
+    let xPos = margin;
+    while (xPos < width - margin) {
+      const end = Math.min(xPos + dashLen, width - margin);
+      page.drawLine({
+        start: { x: xPos, y: yPos },
+        end: { x: end, y: yPos },
+        thickness: 0.5,
+        color: lightGray,
+      });
+      xPos += dashLen + gapLen;
+    }
+  }
+
+  function sectionTitle(label: string, yPos: number): number {
+    drawText(label, margin, yPos, { font: fontBold, size: 7, color: gray });
+    return yPos - 14;
+  }
+
+  // ═══ HEADER ═══
+  drawText("JOB TICKET", margin, y, { font: fontBold, size: 18 });
+  drawText(data.jobId.slice(0, 8), margin, y - 16, { font: fontMonoBold, size: 12 });
+
+  // Priority badge (right side)
+  const priorityText = data.priority.toUpperCase();
+  const prColor = data.priority === "urgent" ? red : data.priority === "rush" ? amber : gray;
+  const prWidth = fontBold.widthOfTextAtSize(priorityText, 9) + 12;
+  const prX = width - margin - prWidth;
+  page.drawRectangle({
+    x: prX,
+    y: y - 12,
+    width: prWidth,
+    height: 16,
+    borderColor: prColor,
+    borderWidth: 1.5,
+    color: rgb(1, 1, 1),
+  });
+  drawText(priorityText, prX + 6, y - 8, { font: fontBold, size: 9, color: prColor });
+
+  // Date + due
+  const dateStr = new Date(data.createdAt).toLocaleDateString("en-CA");
+  drawText(dateStr, width - margin - fontRegular.widthOfTextAtSize(dateStr, 8), y - 28, {
+    size: 8,
+    color: gray,
+  });
+  if (data.dueAt) {
+    const dueStr = `DUE: ${new Date(data.dueAt).toLocaleDateString("en-CA")}`;
+    drawText(dueStr, width - margin - fontBold.widthOfTextAtSize(dueStr, 8), y - 38, {
+      font: fontBold,
+      size: 8,
+      color: red,
+    });
+  }
+
+  y -= 48;
+  drawLine(y, 2);
+  y -= 16;
+
+  // ═══ PRODUCT ═══
+  y = sectionTitle("PRODUCT", y);
+  drawText(data.productName, margin, y, {
+    font: fontBold,
+    size: 14,
+    maxWidth: width - 2 * margin,
+  });
+  y -= 16;
+
+  // Badges
+  let badgeX = margin;
+  const badges: Array<{ label: string; color: typeof black }> = [];
+  if (data.isRush) badges.push({ label: "RUSH", color: amber });
+  if (data.isTwoSided) badges.push({ label: "2-SIDED", color: rgb(0.31, 0.27, 0.9) });
+  if (data.family) badges.push({ label: data.family, color: gray });
+
+  for (const badge of badges) {
+    const bw = fontBold.widthOfTextAtSize(badge.label, 7) + 8;
+    page.drawRectangle({
+      x: badgeX,
+      y: y - 2,
+      width: bw,
+      height: 12,
+      borderColor: badge.color,
+      borderWidth: 1,
+      color: rgb(1, 1, 1),
+    });
+    drawText(badge.label, badgeX + 4, y + 1, { font: fontBold, size: 7, color: badge.color });
+    badgeX += bw + 6;
+  }
+  if (badges.length > 0) y -= 16;
+
+  y -= 8;
+
+  // ═══ SPECIFICATIONS ═══
+  y = sectionTitle("SPECIFICATIONS", y);
+  const col2X = margin + (width - 2 * margin) / 2;
+
+  // Row 1: Quantity + Size
+  drawText("QUANTITY", margin, y, { font: fontBold, size: 6, color: lightGray });
+  drawText("SIZE", col2X, y, { font: fontBold, size: 6, color: lightGray });
+  y -= 12;
+  drawText(String(data.quantity), margin, y, { font: fontBold, size: 14 });
+  drawText(data.sizeStr, col2X, y, { font: fontBold, size: 14 });
+  y -= 18;
+
+  // Row 2: Material + Finishing
+  drawText("MATERIAL", margin, y, { font: fontBold, size: 6, color: lightGray });
+  drawText("FINISHING", col2X, y, { font: fontBold, size: 6, color: lightGray });
+  y -= 12;
+  drawText(data.material, margin, y, {
+    font: fontBold,
+    size: 10,
+    maxWidth: (width - 2 * margin) / 2 - 8,
+  });
+  drawText(data.finishing, col2X, y, {
+    font: fontBold,
+    size: 10,
+    maxWidth: (width - 2 * margin) / 2 - 8,
+  });
+  y -= 18;
+
+  // ═══ ORDER & CUSTOMER ═══
+  y = sectionTitle("ORDER & CUSTOMER", y);
+
+  drawText("ORDER", margin, y, { font: fontBold, size: 6, color: lightGray });
+  drawText("CUSTOMER", col2X, y, { font: fontBold, size: 6, color: lightGray });
+  y -= 12;
+  drawText(`#${data.orderId.slice(0, 8)}`, margin, y, { font: fontBold, size: 10 });
+  drawText(data.customerName, col2X, y, {
+    font: fontBold,
+    size: 10,
+    maxWidth: (width - 2 * margin) / 2 - 8,
+  });
+  y -= 16;
+
+  drawText("FACTORY", margin, y, { font: fontBold, size: 6, color: lightGray });
+  drawText("OPERATOR", col2X, y, { font: fontBold, size: 6, color: lightGray });
+  y -= 12;
+  drawText(data.factoryName, margin, y, { font: fontBold, size: 10 });
+  drawText(data.operator, col2X, y, { font: fontBold, size: 10 });
+  y -= 18;
+
+  // ═══ ARTWORK ═══
+  y = sectionTitle("ARTWORK", y);
+  if (data.artworkUrl) {
+    // Truncate long URLs across lines
+    const url = data.artworkUrl;
+    const chunkSize = 60;
+    for (let i = 0; i < url.length && i < chunkSize * 3; i += chunkSize) {
+      drawText(url.slice(i, i + chunkSize), margin, y, { font: fontMono, size: 7, color: gray });
+      y -= 10;
+    }
+  } else {
+    drawText("NO ARTWORK ON FILE", margin, y, { font: fontBold, size: 10, color: red });
+    y -= 14;
+  }
+
+  // ═══ NOTES ═══
+  if (data.notes) {
+    y -= 4;
+    y = sectionTitle("NOTES", y);
+    // Word-wrap notes
+    const words = data.notes.split(/\s+/);
+    let line = "";
+    const maxW = width - 2 * margin;
+    for (const word of words) {
+      const test = line ? `${line} ${word}` : word;
+      if (fontRegular.widthOfTextAtSize(test, 9) > maxW) {
+        drawText(line, margin, y, { size: 9 });
+        y -= 12;
+        line = word;
+      } else {
+        line = test;
+      }
+    }
+    if (line) {
+      drawText(line, margin, y, { size: 9 });
+      y -= 12;
+    }
+  }
+
+  // ═══ BARCODE / JOB ID FOOTER ═══
+  y -= 8;
+  drawDashedLine(y);
+  y -= 20;
+  const idText = data.jobId;
+  const idWidth = fontMonoBold.widthOfTextAtSize(idText, 12);
+  drawText(idText, (width - idWidth) / 2, y, { font: fontMonoBold, size: 12 });
+  y -= 12;
+  const hint = "Scan or enter job ID to look up this ticket";
+  const hintWidth = fontRegular.widthOfTextAtSize(hint, 7);
+  drawText(hint, (width - hintWidth) / 2, y, { size: 7, color: lightGray });
+
+  return doc.save();
 }

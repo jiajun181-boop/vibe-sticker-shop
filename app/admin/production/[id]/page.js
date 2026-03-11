@@ -453,14 +453,24 @@ export default function ProductionJobDetailPage() {
             </Link>
           )}
         </div>
-        <a
-          href={`/api/admin/production/${id}/ticket`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
-        >
-          Print Ticket
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href={`/api/admin/production/${id}/ticket`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
+          >
+            Print Ticket
+          </a>
+          <a
+            href={`/api/admin/production/${id}/ticket?format=pdf`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
+          >
+            PDF
+          </a>
+        </div>
       </div>
 
       {/* Two-column layout */}
