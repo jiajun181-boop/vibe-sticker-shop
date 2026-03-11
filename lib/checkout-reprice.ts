@@ -9,7 +9,7 @@
 
 import type { Prisma } from "@prisma/client";
 import { quoteProduct } from "@/lib/pricing/quote-server.js";
-import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS, MIN_UNIT_AMOUNT } from "@/lib/order-config";
 
 type ProductWithPricingPreset = Prisma.ProductGetPayload<{
   include: { pricingPreset: true };
@@ -203,8 +203,8 @@ export function repriceItem(
   if (!Number.isFinite(unitAmount) || unitAmount <= 0) {
     throw new Error(`Unable to price item: ${item.name}`);
   }
-  if (unitAmount < 50) {
-    throw new Error(`Price too low for ${item.name} (minimum $0.50)`);
+  if (unitAmount < MIN_UNIT_AMOUNT) {
+    throw new Error(`Price too low for ${item.name} (minimum $${(MIN_UNIT_AMOUNT / 100).toFixed(2)})`);
   }
 
   unitAmount = Math.round(unitAmount);
