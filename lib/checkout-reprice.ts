@@ -10,6 +10,8 @@
 import type { Prisma } from "@prisma/client";
 import { quoteProduct } from "@/lib/pricing/quote-server.js";
 import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS, MIN_UNIT_AMOUNT, PRINT_ONLY_DISCOUNT_RATE } from "@/lib/order-config";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import { ACCESSORY_OPTIONS } from "@/lib/sign-order-config";
 
 type ProductWithPricingPreset = Prisma.ProductGetPayload<{
   include: { pricingPreset: true };
@@ -125,6 +127,28 @@ function splitByChargeType(
   return { flat, perUnit };
 }
 
+// ─── Sign accessory surcharges ───
+
+/**
+ * Compute per-unit accessory surcharge from cart item meta.
+ * Sign configurators store hardware/mounting/accessory IDs in meta;
+ * this looks them up in ACCESSORY_OPTIONS for the server-authoritative price.
+ */
+function computeAccessorySurcharge(meta: Record<string, string | number | boolean> | undefined): number {
+  if (!meta) return 0;
+  let surcharge = 0;
+  // Check known accessory meta keys used by sign configurators
+  const accessoryKeys = ["hardware", "mounting", "accessory"];
+  for (const key of accessoryKeys) {
+    const val = meta[key];
+    if (val && typeof val === "string" && val !== "none") {
+      const opt = (ACCESSORY_OPTIONS as Record<string, { surcharge: number }>)[val];
+      if (opt) surcharge += opt.surcharge;
+    }
+  }
+  return surcharge;
+}
+
 // ─── Core repricing ───
 
 /**
@@ -174,6 +198,12 @@ export function repriceItem(
     });
     if (totalQty <= 0 || totalCents <= 0) {
       throw new Error(`Unable to price item: ${item.name}`);
+    }
+
+    // Add sign accessory surcharges (per-unit × total qty)
+    const multiAccessorySurcharge = computeAccessorySurcharge(item.meta);
+    if (multiAccessorySurcharge > 0) {
+      totalCents += multiAccessorySurcharge * totalQty;
     }
 
     // Apply print-only discount for display stands ordered without hardware
@@ -233,6 +263,13 @@ export function repriceItem(
 
   if (!Number.isFinite(unitAmount) || unitAmount <= 0) {
     throw new Error(`Unable to price item: ${item.name}`);
+  }
+
+  // Add sign accessory surcharges (hardware, mounting) — these are per-unit
+  // and must match what the configurator charged the customer
+  const accessorySurcharge = computeAccessorySurcharge(item.meta);
+  if (accessorySurcharge > 0) {
+    unitAmount += accessorySurcharge;
   }
 
   // Apply print-only discount for display stands ordered without hardware

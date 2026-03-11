@@ -1,13 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupPageInner />
+    </Suspense>
+  );
+}
+
+function SignupPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get("ref") || "";
   const signup = useAuthStore((s) => s.signup);
   const { t } = useTranslation();
 
@@ -43,6 +53,7 @@ export default function SignupPage() {
         accountType,
         companyName: accountType === "B2B" ? companyName : undefined,
         companyRole: accountType === "B2B" ? companyRole : undefined,
+        ...(refCode && { inviteCode: refCode }),
       });
       router.push("/account");
     } catch (err) {

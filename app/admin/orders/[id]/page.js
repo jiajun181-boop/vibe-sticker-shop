@@ -1044,18 +1044,25 @@ function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
   const { t } = useTranslation();
   const [acting, setActing] = useState(false);
   const [notes, setNotes] = useState("");
+  const [reviewError, setReviewError] = useState("");
 
   async function handleReview(status) {
     setActing(true);
+    setReviewError("");
     try {
       const res = await fetch(`/api/admin/orders/${orderId}/preflight`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fileId, status, notes: notes || undefined }),
       });
-      if (res.ok) onUpdate();
+      if (res.ok) {
+        onUpdate();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setReviewError(data.error || `Failed to ${status} file`);
+      }
     } catch {
-      console.error("Preflight review failed");
+      setReviewError("Network error — review action failed");
     } finally {
       setActing(false);
     }
@@ -1086,6 +1093,7 @@ function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
       >
         {t("admin.orderDetail.reject")}
       </button>
+      {reviewError && <p className="text-[10px] font-medium text-red-600">{reviewError}</p>}
     </div>
   );
 }
@@ -1103,6 +1111,7 @@ function ProofSection({ orderId }) {
   const [proofs, setProofs] = useState([]);
   const [loadingProofs, setLoadingProofs] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [fileName, setFileName] = useState("");
   const [notes, setNotes] = useState("");
@@ -1128,6 +1137,7 @@ function ProofSection({ orderId }) {
   async function handleUploadProof() {
     if (!imageUrl.trim()) return;
     setSubmitting(true);
+    setUploadError("");
     try {
       const res = await fetch(`/api/admin/orders/${orderId}/proofs`, {
         method: "POST",
@@ -1143,9 +1153,12 @@ function ProofSection({ orderId }) {
         setFileName("");
         setNotes("");
         fetchProofs();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setUploadError(data.error || "Failed to upload proof — please try again");
       }
     } catch {
-      console.error("Failed to upload proof");
+      setUploadError("Network error — proof upload failed");
     } finally {
       setSubmitting(false);
     }
@@ -1185,6 +1198,9 @@ function ProofSection({ orderId }) {
           >
             {submitting ? t("admin.orderDetail.uploading") : t("admin.orderDetail.uploadProof")}
           </button>
+          {uploadError && (
+            <p className="text-xs font-medium text-red-600">{uploadError}</p>
+          )}
         </div>
 
         {/* Proof list */}
@@ -2049,6 +2065,12 @@ function OrderActions({ order, onUpdate }) {
     const amountCents = Math.round(parseFloat(refundAmount) * 100);
     if (!amountCents || amountCents <= 0) {
       setActionMsg(t("admin.orderDetail.enterValidAmount"));
+      setActing(false);
+      return;
+    }
+    // Safety confirmation — refunds are irreversible
+    const confirmMsg = `Refund $${(amountCents / 100).toFixed(2)} to ${order.customerEmail}?\n\nThis action cannot be undone.`;
+    if (!window.confirm(confirmMsg)) {
       setActing(false);
       return;
     }

@@ -18,7 +18,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { name, email, password, accountType, companyName, companyRole } = body;
+    const { name, email, password, accountType, companyName, companyRole, inviteCode } = body;
 
     // Validate required fields
     if (!name || typeof name !== "string" || name.trim().length < 1) {
@@ -48,6 +48,16 @@ export async function POST(request) {
     const emailVerifyTokenHash = hashToken(emailVerifyToken);
     const emailVerifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+    // Look up referrer by invite code (if provided)
+    let referredByUserId = null;
+    if (inviteCode && typeof inviteCode === "string") {
+      const referrer = await prisma.user.findFirst({
+        where: { inviteCode: inviteCode.trim().toUpperCase() },
+        select: { id: true },
+      });
+      if (referrer) referredByUserId = referrer.id;
+    }
+
     // Create user
     const user = await prisma.user.create({
       data: {
@@ -60,6 +70,7 @@ export async function POST(request) {
         companyName: type === "B2B" ? (companyName || "").trim() || null : null,
         companyRole: type === "B2B" ? (companyRole || "").trim() || null : null,
         b2bApproved: false,
+        ...(referredByUserId && { referredByUserId }),
       },
     });
 
