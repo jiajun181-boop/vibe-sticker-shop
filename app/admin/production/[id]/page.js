@@ -212,6 +212,8 @@ export default function ProductionJobDetailPage() {
   }
 
   async function handleQuickStatus(newStatus) {
+    setSaving(true);
+    setMessage("");
     try {
       const res = await fetch(`/api/admin/production/${id}`, {
         method: "PATCH",
@@ -219,16 +221,24 @@ export default function ProductionJobDetailPage() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
+        setMessage(`Status changed to ${statusLabel(newStatus)}`);
         await fetchJob();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setMessage(data.error || `Failed to change status to ${newStatus}`);
       }
     } catch {
-      console.error("Failed to update status");
+      setMessage("Network error — status change failed");
+    } finally {
+      setSaving(false);
+      setTimeout(() => setMessage(""), 4000);
     }
   }
 
   async function handleAddNote() {
     if (!notePayload.trim()) return;
     setAddingNote(true);
+    setMessage("");
     try {
       const res = await fetch(`/api/admin/production/${id}`, {
         method: "POST",
@@ -243,9 +253,13 @@ export default function ProductionJobDetailPage() {
         setNoteOperator("");
         setNotePayload("");
         await fetchJob();
+      } else {
+        setMessage("Failed to add note");
+        setTimeout(() => setMessage(""), 4000);
       }
     } catch {
-      console.error("Failed to add note");
+      setMessage("Network error — note not saved");
+      setTimeout(() => setMessage(""), 4000);
     } finally {
       setAddingNote(false);
     }
@@ -254,6 +268,7 @@ export default function ProductionJobDetailPage() {
   // QC: Pass
   async function handleQcPass() {
     setSubmittingQc(true);
+    setMessage("");
     try {
       // Log QC passed event
       await fetch(`/api/admin/production/${id}`, {
@@ -266,23 +281,35 @@ export default function ProductionJobDetailPage() {
         }),
       });
       // Advance to finished
-      await fetch(`/api/admin/production/${id}`, {
+      const res = await fetch(`/api/admin/production/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "finished" }),
       });
-      await fetchJob();
+      if (res.ok) {
+        setMessage("QC passed — job marked finished");
+        await fetchJob();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setMessage(data.error || "Failed to advance to finished");
+      }
     } catch {
-      console.error("Failed to pass QC");
+      setMessage("Network error — QC pass failed");
     } finally {
       setSubmittingQc(false);
+      setTimeout(() => setMessage(""), 4000);
     }
   }
 
-  // QC: Fail (defect found → rework)
+  // QC: Fail (defect found → rework) — requires confirmation
   async function handleQcFail() {
     if (!defectType && !defectDesc.trim()) return;
+    const confirmed = confirm(
+      `Send job back to PRINTING for rework?\n\nDefect: ${defectType || "other"}\n${defectDesc.trim() || "(no description)"}\n\nThis will reset the job status.`
+    );
+    if (!confirmed) return;
     setSubmittingQc(true);
+    setMessage("");
     try {
       await fetch(`/api/admin/production/${id}`, {
         method: "POST",
@@ -297,18 +324,25 @@ export default function ProductionJobDetailPage() {
         }),
       });
       // Send back to printing for rework
-      await fetch(`/api/admin/production/${id}`, {
+      const res = await fetch(`/api/admin/production/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "printing" }),
       });
-      setDefectType("");
-      setDefectDesc("");
-      await fetchJob();
+      if (res.ok) {
+        setDefectType("");
+        setDefectDesc("");
+        setMessage("Job sent back for rework");
+        await fetchJob();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setMessage(data.error || "Failed to send back for rework");
+      }
     } catch {
-      console.error("Failed to log defect");
+      setMessage("Network error — rework action failed");
     } finally {
       setSubmittingQc(false);
+      setTimeout(() => setMessage(""), 5000);
     }
   }
 

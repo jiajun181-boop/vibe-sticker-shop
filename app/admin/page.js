@@ -315,13 +315,32 @@ export default function AdminDashboard() {
 
 function ProductionAlerts() {
   const [data, setData] = useState(null);
+  const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
+  function loadAlerts() {
+    setLoadError(false);
     Promise.all([
       fetch("/api/admin/orders/missing-artwork?limit=5").then((r) => (r.ok ? r.json() : null)),
       fetch("/api/admin/production/schedule").then((r) => (r.ok ? r.json() : null)),
-    ]).then(([artwork, schedule]) => setData({ artwork, schedule })).catch(() => {});
-  }, []);
+    ]).then(([artwork, schedule]) => {
+      if (!artwork && !schedule) {
+        setLoadError(true);
+      } else {
+        setData({ artwork, schedule });
+      }
+    }).catch(() => setLoadError(true));
+  }
+
+  useEffect(() => { loadAlerts(); }, []);
+
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-between rounded-[3px] border border-amber-300 bg-amber-50 px-4 py-3">
+        <span className="text-xs font-medium text-amber-800">Production alerts failed to load</span>
+        <button type="button" onClick={loadAlerts} className="rounded-[3px] border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100">Retry</button>
+      </div>
+    );
+  }
 
   if (!data) return null;
 
@@ -330,7 +349,7 @@ function ProductionAlerts() {
   const overdueCount = data.schedule?.summary?.overdueCount || 0;
   const rushCount = data.schedule?.summary?.rushCount || 0;
 
-  if (artworkCount === 0 && overdueCount === 0) return null;
+  if (artworkCount === 0 && overdueCount === 0 && rushCount === 0) return null;
 
   return (
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">

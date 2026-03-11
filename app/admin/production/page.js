@@ -57,6 +57,7 @@ function ProductionContent() {
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState(
@@ -131,8 +132,14 @@ function ProductionContent() {
     updateParams({ search: search || null, page: "1" });
   }
 
+  function showActionError(msg) {
+    setActionError(msg);
+    setTimeout(() => setActionError(null), 5000);
+  }
+
   async function handleStatusChange(jobId, newStatus) {
     setUpdatingJob(jobId);
+    setActionError(null);
     try {
       const res = await fetch(`/api/admin/production/${jobId}`, {
         method: "PATCH",
@@ -142,10 +149,11 @@ function ProductionContent() {
       if (res.ok) {
         await fetchJobs();
       } else {
-        console.error("Failed to update status");
+        const data = await res.json().catch(() => ({}));
+        showActionError(data.error || `Failed to change status to ${newStatus}`);
       }
-    } catch (err) {
-      console.error("Failed to update status:", err);
+    } catch {
+      showActionError("Network error — status change failed");
     } finally {
       setUpdatingJob(null);
     }
@@ -153,6 +161,7 @@ function ProductionContent() {
 
   async function handleFactoryAssign(jobId, factoryId) {
     setUpdatingJob(jobId);
+    setActionError(null);
     try {
       const res = await fetch(`/api/admin/production/${jobId}`, {
         method: "PATCH",
@@ -162,10 +171,11 @@ function ProductionContent() {
       if (res.ok) {
         await fetchJobs();
       } else {
-        console.error("Failed to assign factory");
+        const data = await res.json().catch(() => ({}));
+        showActionError(data.error || "Failed to assign factory");
       }
-    } catch (err) {
-      console.error("Failed to assign factory:", err);
+    } catch {
+      showActionError("Network error — factory assignment failed");
     } finally {
       setUpdatingJob(null);
     }
@@ -195,6 +205,7 @@ function ProductionContent() {
     if (!confirmed) return;
 
     setBulkUpdating(true);
+    setActionError(null);
     try {
       const res = await fetch('/api/admin/production/bulk-update', {
         method: 'POST',
@@ -204,9 +215,12 @@ function ProductionContent() {
       if (res.ok) {
         setSelectedJobs([]);
         await fetchJobs();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showActionError(data.error || `Bulk update failed for ${selectedJobs.length} jobs`);
       }
-    } catch (err) {
-      console.error('Bulk update failed:', err);
+    } catch {
+      showActionError("Network error — bulk update failed");
     } finally {
       setBulkUpdating(false);
     }
@@ -412,6 +426,14 @@ function ProductionContent() {
           </button>
         </form>
       </div>
+
+      {/* Action error banner */}
+      {actionError && (
+        <div className="flex items-center justify-between rounded-[3px] border border-red-300 bg-red-50 px-4 py-3">
+          <span className="text-sm font-medium text-red-800">{actionError}</span>
+          <button type="button" onClick={() => setActionError(null)} className="text-xs font-medium text-red-600 hover:text-red-900">Dismiss</button>
+        </div>
+      )}
 
       {/* Readiness summary — loaded async */}
       <ReadinessSummary />

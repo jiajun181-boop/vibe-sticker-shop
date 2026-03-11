@@ -84,6 +84,7 @@ function OrdersContent() {
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [artworkFilter, setArtworkFilter] = useState("all");
   const [sortMode, setSortMode] = useState("newest");
+  const [actionError, setActionError] = useState(null);
 
   const statusLabel = (s) => t(`admin.orders.${s}`, s);
   const productionLabel = (s) => {
@@ -176,16 +177,23 @@ function OrdersContent() {
     if (!confirmed) return;
 
     setBulkUpdating(true);
+    setActionError(null);
     try {
-      await fetch('/api/admin/orders/bulk-update', {
+      const res = await fetch('/api/admin/orders/bulk-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: selectedOrders, updates: { status } })
       });
-      setSelectedOrders([]);
-      await fetchOrders();
-    } catch (err) {
-      console.error('Bulk update failed:', err);
+      if (res.ok) {
+        setSelectedOrders([]);
+        await fetchOrders();
+      } else {
+        setActionError("Bulk status update failed");
+        setTimeout(() => setActionError(null), 5000);
+      }
+    } catch {
+      setActionError("Network error — bulk update failed");
+      setTimeout(() => setActionError(null), 5000);
     } finally {
       setBulkUpdating(false);
     }
@@ -197,16 +205,23 @@ function OrdersContent() {
     if (!confirmed) return;
 
     setBulkUpdating(true);
+    setActionError(null);
     try {
-      await fetch('/api/admin/orders/bulk-update', {
+      const res = await fetch('/api/admin/orders/bulk-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: selectedOrders, updates: { productionStatus } })
       });
-      setSelectedOrders([]);
-      await fetchOrders();
-    } catch (err) {
-      console.error('Bulk production update failed:', err);
+      if (res.ok) {
+        setSelectedOrders([]);
+        await fetchOrders();
+      } else {
+        setActionError("Bulk production update failed");
+        setTimeout(() => setActionError(null), 5000);
+      }
+    } catch {
+      setActionError("Network error — bulk production update failed");
+      setTimeout(() => setActionError(null), 5000);
     } finally {
       setBulkUpdating(false);
     }
@@ -214,12 +229,18 @@ function OrdersContent() {
 
   async function handleBulkExport() {
     if (selectedOrders.length === 0) return;
+    setActionError(null);
     try {
       const res = await fetch('/api/admin/orders/bulk-export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: selectedOrders })
       });
+      if (!res.ok) {
+        setActionError("CSV export failed — server returned an error");
+        setTimeout(() => setActionError(null), 5000);
+        return;
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -227,8 +248,9 @@ function OrdersContent() {
       a.download = 'orders-export.csv';
       a.click();
       URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Export failed:', err);
+    } catch {
+      setActionError("CSV export failed — network error");
+      setTimeout(() => setActionError(null), 5000);
     }
   }
 
@@ -381,6 +403,14 @@ function OrdersContent() {
           </button>
         </form>
       </div>
+
+      {/* Action error banner */}
+      {actionError && (
+        <div className="flex items-center justify-between rounded-[3px] border border-red-300 bg-red-50 px-4 py-3">
+          <span className="text-sm font-medium text-red-800">{actionError}</span>
+          <button type="button" onClick={() => setActionError(null)} className="text-xs font-medium text-red-600 hover:text-red-900">Dismiss</button>
+        </div>
+      )}
 
       {/* Bulk Action Bar */}
       {selectedOrders.length > 0 && (

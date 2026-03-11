@@ -5,7 +5,13 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { statusColor } from "@/lib/admin/status-labels";
 
-const STATUSES = ["open", "in_progress", "waiting_customer", "resolved", "closed"];
+const STATUSES = [
+  { value: "open", label: "Open" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "waiting_customer", label: "Waiting on Customer" },
+  { value: "resolved", label: "Resolved (issue fixed)" },
+  { value: "closed", label: "Closed (archived)" },
+];
 const PRIORITIES = ["low", "normal", "high", "urgent"];
 
 export default function AdminTicketDetailPage() {
@@ -134,8 +140,8 @@ export default function AdminTicketDetailPage() {
             className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700"
           >
             {STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s.replace(/_/g, " ")}
+              <option key={s.value} value={s.value}>
+                {s.label}
               </option>
             ))}
           </select>

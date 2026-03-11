@@ -4,7 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { statusColor, priorityColor } from "@/lib/admin/status-labels";
 
-const STATUSES = ["all", "open", "in_progress", "waiting_customer", "resolved", "closed"];
+const STATUSES = [
+  { value: "all", label: "All" },
+  { value: "open", label: "Open" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "waiting_customer", label: "Waiting on Customer" },
+  { value: "resolved", label: "Resolved" },
+  { value: "closed", label: "Closed" },
+];
 
 export default function AdminSupportPage() {
   const [tickets, setTickets] = useState([]);
@@ -116,16 +123,16 @@ export default function AdminSupportPage() {
       <div className="flex gap-1.5 overflow-x-auto">
         {STATUSES.map((s) => (
           <button
-            key={s}
+            key={s.value}
             type="button"
-            onClick={() => handleStatusFilter(s)}
+            onClick={() => handleStatusFilter(s.value)}
             className={`whitespace-nowrap rounded-[3px] px-3 py-1.5 text-[11px] font-medium transition-colors ${
-              status === s
+              status === s.value
                 ? "bg-black text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            {s === "all" ? "All" : s.replace(/_/g, " ")}
+            {s.label}
           </button>
         ))}
       </div>
@@ -180,9 +187,9 @@ export default function AdminSupportPage() {
                         statusColor(tk.status)
                       }`}
                     >
-                      {STATUSES.filter((s) => s !== "all").map((s) => (
-                        <option key={s} value={s}>
-                          {s.replace(/_/g, " ")}
+                      {STATUSES.filter((s) => s.value !== "all").map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
                         </option>
                       ))}
                     </select>
