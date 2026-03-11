@@ -18,6 +18,8 @@ function getUrgency(days) {
 export default function MissingArtworkPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(null);
+  const [sendResult, setSendResult] = useState({});
 
   useEffect(() => {
     fetch("/api/admin/orders/missing-artwork?limit=100")
@@ -132,12 +134,36 @@ export default function MissingArtworkPage() {
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1.5 shrink-0">
-                    <a
-                      href={`mailto:${order.customerEmail}?subject=Artwork Needed - Order %23${order.orderId.slice(0, 8)}&body=Hi ${order.customerName || "there"},%0A%0AWe're ready to start production on your order %23${order.orderId.slice(0, 8)}, but we still need your artwork files.%0A%0AYou can upload your files here:%0Ahttps://lunarprint.ca/track-order?order=${order.orderId}%0A%0APlease let us know if you have any questions!%0A%0ABest,%0ALa Lunar Printing`}
-                      className="rounded-[3px] border border-[#d0d0d0] bg-white px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
+                    <button
+                      type="button"
+                      disabled={sending === order.orderId}
+                      onClick={async () => {
+                        setSending(order.orderId);
+                        setSendResult((prev) => ({ ...prev, [order.orderId]: null }));
+                        try {
+                          const res = await fetch(`/api/admin/orders/${order.orderId}/remind-artwork`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({}),
+                          });
+                          const data = await res.json();
+                          setSendResult((prev) => ({
+                            ...prev,
+                            [order.orderId]: res.ok ? "sent" : data.error || "Failed",
+                          }));
+                        } catch {
+                          setSendResult((prev) => ({ ...prev, [order.orderId]: "Failed" }));
+                        } finally {
+                          setSending(null);
+                        }
+                      }}
+                      className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-medium text-[#fff] hover:bg-[#222] disabled:opacity-50"
                     >
-                      Email Reminder
-                    </a>
+                      {sending === order.orderId ? "Sending..." : sendResult[order.orderId] === "sent" ? "Sent!" : "Send Reminder"}
+                    </button>
+                    {sendResult[order.orderId] && sendResult[order.orderId] !== "sent" && (
+                      <span className="text-[10px] text-red-600">{sendResult[order.orderId]}</span>
+                    )}
                     <Link
                       href={`/admin/orders/${order.orderId}`}
                       className="text-[10px] font-medium text-black hover:underline"
