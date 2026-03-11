@@ -577,6 +577,12 @@ function ProductionContent() {
                           {job.productName || "Unknown"}
                         </p>
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <Link
+                            href={`/admin/production/${job.id}`}
+                            className="text-[10px] font-medium text-black hover:underline"
+                          >
+                            Job #{job.id.slice(0, 8)}
+                          </Link>
                           {job.orderId && (
                             <Link
                               href={`/admin/orders/${job.orderId}`}
