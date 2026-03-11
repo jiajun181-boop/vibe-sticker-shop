@@ -887,7 +887,50 @@ export default function ProductionJobDetailPage() {
 
         {/* Sidebar - right 1 col */}
         <div className="space-y-6">
-          {/* Dates Card */}
+          {/* Quick Actions Card */}
+          <Section title="Quick Actions">
+            <div className="space-y-2">
+              {/* Claim Job */}
+              {!job.assignedTo && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setSaving(true);
+                    try {
+                      const res = await fetch(`/api/admin/production/${id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ assignedTo: "operator" }),
+                      });
+                      if (res.ok) { await fetchJob(); setMessage("Job claimed"); setTimeout(() => setMessage(""), 3000); }
+                    } catch {} finally { setSaving(false); }
+                  }}
+                  disabled={saving}
+                  className="w-full rounded-[3px] bg-blue-600 px-4 py-2.5 text-xs font-semibold text-[#fff] hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Claim Job
+                </button>
+              )}
+              {/* Quick advance */}
+              {(() => {
+                const NEXT = { queued: "assigned", assigned: "printing", printing: "quality_check", quality_check: "finished", finished: "shipped", on_hold: "queued" };
+                const next = NEXT[job.status];
+                if (!next) return null;
+                return (
+                  <button
+                    type="button"
+                    onClick={() => { handleSaveChanges(); setStatus(next); }}
+                    disabled={saving}
+                    className="w-full rounded-[3px] bg-black px-4 py-2.5 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
+                  >
+                    Advance to {statusLabel(next)}
+                  </button>
+                );
+              })()}
+            </div>
+          </Section>
+
+          {/* Dates & Cycle Time Card */}
           <Section title="Dates">
             <div className="space-y-3 text-xs">
               <div>
@@ -915,7 +958,38 @@ export default function ProductionJobDetailPage() {
                 <p className="mt-0.5 text-sm text-gray-900">
                   {job.dueAt ? formatDate(job.dueAt) : "No due date"}
                 </p>
+                {job.dueAt && !job.completedAt && (() => {
+                  const due = new Date(job.dueAt);
+                  const now = new Date();
+                  const overdue = due < now;
+                  const daysLeft = Math.ceil((due - now) / 86400000);
+                  return overdue ? (
+                    <p className="mt-0.5 text-xs font-semibold text-red-600">Overdue by {Math.abs(daysLeft)} day{Math.abs(daysLeft) !== 1 ? "s" : ""}</p>
+                  ) : daysLeft <= 1 ? (
+                    <p className="mt-0.5 text-xs font-semibold text-amber-600">Due today</p>
+                  ) : null;
+                })()}
               </div>
+              {/* Cycle time */}
+              {job.startedAt && (
+                <div className="border-t border-gray-100 pt-2">
+                  <p className="text-gray-600">Cycle Time</p>
+                  <p className="mt-0.5 text-sm font-semibold text-gray-900">
+                    {(() => {
+                      const end = job.completedAt ? new Date(job.completedAt) : new Date();
+                      const elapsed = end - new Date(job.startedAt);
+                      const h = Math.floor(elapsed / 3600000);
+                      const m = Math.floor((elapsed % 3600000) / 60000);
+                      if (h >= 24) {
+                        const d = Math.floor(h / 24);
+                        return `${d}d ${h % 24}h`;
+                      }
+                      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+                    })()}
+                    {!job.completedAt && <span className="text-xs font-normal text-gray-500"> (running)</span>}
+                  </p>
+                </div>
+              )}
             </div>
           </Section>
 

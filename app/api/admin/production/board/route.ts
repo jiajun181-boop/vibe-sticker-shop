@@ -113,6 +113,8 @@ export async function GET(request: NextRequest) {
       artworkUrl: job.artworkUrl ?? null,
       isTwoSided: job.isTwoSided,
       isRush: job.isRush,
+      startedAt: job.startedAt ?? null,
+      completedAt: job.completedAt ?? null,
     }));
 
     // Group by status

@@ -341,6 +341,12 @@ export default function ProductionBoardPage() {
             List
           </Link>
           <Link
+            href="/admin/production/schedule"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-[#fafafa]"
+          >
+            Schedule
+          </Link>
+          <Link
             href="/admin/reports/production"
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-[#fafafa]"
           >
@@ -462,15 +468,22 @@ export default function ProductionBoardPage() {
                             Qty: {job.quantity}
                           </span>
 
+                          {/* Two-sided — prominent */}
+                          {job.isTwoSided && (
+                            <span className="inline-block rounded-[2px] bg-indigo-100 px-2 py-0.5 text-xs font-bold text-indigo-700">
+                              2-Sided
+                            </span>
+                          )}
+
                           {/* Priority / Rush badge */}
                           {(job.priority === "urgent" || job.isRush) && (
                             <span className="inline-block rounded-[2px] bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-                              {job.priority === "urgent" ? "Urgent" : "Rush"}
+                              {job.priority === "urgent" ? "URGENT" : "RUSH"}
                             </span>
                           )}
                           {job.priority === "rush" && !job.isRush && (
                             <span className="inline-block rounded-[2px] bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
-                              Rush
+                              RUSH
                             </span>
                           )}
 
@@ -485,6 +498,18 @@ export default function ProductionBoardPage() {
                                 overdue ? "bg-red-100 text-red-700" : dueSoon ? "bg-amber-100 text-amber-700" : "bg-blue-50 text-blue-600"
                               }`}>
                                 Due: {due.toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+                              </span>
+                            );
+                          })()}
+
+                          {/* Elapsed time for in-progress jobs */}
+                          {job.startedAt && !job.completedAt && (() => {
+                            const elapsed = Date.now() - new Date(job.startedAt).getTime();
+                            const h = Math.floor(elapsed / 3600000);
+                            const m = Math.floor((elapsed % 3600000) / 60000);
+                            return (
+                              <span className="inline-block rounded-[2px] bg-yellow-50 px-2 py-0.5 text-[10px] font-medium text-yellow-700">
+                                {h > 0 ? `${h}h ${m}m` : `${m}m`}
                               </span>
                             );
                           })()}
@@ -532,27 +557,18 @@ export default function ProductionBoardPage() {
                           </div>
 
                           <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                            {/* Move to next status button */}
+                            {/* Quick advance button with label */}
                             {NEXT_STATUS[status] && (
                               <button
                                 type="button"
                                 onClick={() => handleMoveToNext({ ...job, status })}
                                 disabled={updatingJob === job.id}
-                                className="inline-flex items-center justify-center rounded-md border border-[#e0e0e0] bg-white p-1.5 text-[#999] transition-colors hover:bg-[#fafafa] hover:text-black disabled:opacity-40"
+                                className="inline-flex items-center gap-1 rounded-[3px] bg-black px-2.5 py-1 text-[10px] font-semibold text-[#fff] transition-colors hover:bg-[#333] disabled:opacity-40"
                                 title={`Move to ${COLUMN_LABELS[NEXT_STATUS[status]]}`}
                               >
-                                <svg
-                                  className="h-3.5 w-3.5"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth={2}
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                                  />
+                                {COLUMN_LABELS[NEXT_STATUS[status]]}
+                                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                                 </svg>
                               </button>
                             )}
@@ -560,26 +576,12 @@ export default function ProductionBoardPage() {
                             {/* View detail link */}
                             <Link
                               href={`/admin/production/${job.id}`}
-                              className="inline-flex items-center justify-center rounded-md border border-[#e0e0e0] bg-white p-1.5 text-[#999] transition-colors hover:bg-[#fafafa] hover:text-black"
+                              className="inline-flex items-center justify-center rounded-[3px] border border-[#e0e0e0] bg-white p-1.5 text-[#999] transition-colors hover:bg-[#fafafa] hover:text-black"
                               title="View details"
                             >
-                              <svg
-                                className="h-3.5 w-3.5"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
-                                />
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
                             </Link>
                           </div>
