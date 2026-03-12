@@ -8,6 +8,7 @@ import { createProduct, toggleProductStatus, deleteProduct } from "./actions";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
+import { ProductCenterViewStrip } from "@/components/admin/ProductCenterHeader";
 const SUBSERIES_TAG_PREFIX = "subseries:";
 const PLACEMENT_TAG_PREFIX = "placement:";
 const CATEGORY_ORDER = [
@@ -867,16 +868,22 @@ function ProductsContent({ embedded = false, basePath = "/admin/products" }) {
   return (
     <div className="space-y-4">
       {!embedded && (
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-black">{t("admin.products.title")}</h1>
-          <button
-            type="button"
-            onClick={() => setShowForm(true)}
-            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
-          >
-            {t("admin.products.addProduct")}
-          </button>
-        </div>
+        <>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="text-xl font-semibold text-black">{t("admin.productCenter.title")}</h1>
+              <p className="mt-1 text-sm text-[#999]">{t("admin.productCenter.subtitle")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowForm(true)}
+              className="self-start rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] lg:self-auto"
+            >
+              {t("admin.products.addProduct")}
+            </button>
+          </div>
+          <ProductCenterViewStrip activeView="products" />
+        </>
       )}
       {embedded && (
         <div className="flex items-center justify-end">

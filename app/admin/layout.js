@@ -149,7 +149,7 @@ export default function AdminLayout({ children }) {
         window.location.href = `/admin/login?redirect=${encodeURIComponent(stripLocalePrefix(window.location.pathname) || "/admin")}`;
       }
     } catch {
-      // Ignore — network errors shouldn't force logout
+      // Ignore - network errors shouldn't force logout
     }
   }, []);
 

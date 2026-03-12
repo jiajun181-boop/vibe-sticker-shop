@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { formatCad } from "@/lib/admin/format-cad";
+import { buildSettingsCenterHref } from "@/lib/admin-centers";
 
 function formatDate(dateStr) {
   if (!dateStr) return "-";
@@ -69,7 +70,15 @@ export default function FinancePage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-black">Finance</h1>
+        <div>
+          <Link
+            href={buildSettingsCenterHref()}
+            className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
+          >
+            Settings
+          </Link>
+          <h1 className="text-xl font-semibold text-black">Finance</h1>
+        </div>
         <p className="text-xs text-[#999]">
           {new Date().toLocaleDateString("en-CA", {
             weekday: "long",

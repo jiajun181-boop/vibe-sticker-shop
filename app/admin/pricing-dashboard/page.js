@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { getProductMaterials } from "@/lib/pricing/product-materials";
+import { ProductCenterBreadcrumb, ProductCenterViewStrip } from "@/components/admin/ProductCenterHeader";
 
 const CATEGORIES = [
   { value: "all", labelKey: "admin.priceDash.catAll" },
@@ -105,29 +106,25 @@ export default function PricingDashboardPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {/* Page header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">{t("admin.priceDash.title")}</h1>
-          <p className="mt-1 text-sm text-gray-500">{t("admin.priceDash.subtitle")}</p>
-          <p className="mt-0.5 text-xs text-gray-400">
-            Click a product to view/edit its pricing tiers. Use
-            {" "}<Link href="/admin/orders/create" className="text-indigo-500 hover:underline">New Order</Link>{" "}
-            to create manual orders with auto-calculated prices.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/admin/pricing-dashboard/log"
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {t("admin.priceDash.changeLog")}
-          </Link>
+      {/* Breadcrumb + view strip */}
+      <div>
+        <ProductCenterBreadcrumb />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-black">{t("admin.priceDash.title")}</h1>
+            <p className="mt-0.5 text-sm text-[#999]">{t("admin.priceDash.subtitle")}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/pricing-dashboard/log"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-[11px] font-medium text-[#666] hover:border-black hover:text-black"
+            >
+              {t("admin.priceDash.changeLog")}
+            </Link>
+          </div>
         </div>
       </div>
+      <ProductCenterViewStrip activeView="pricing" />
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

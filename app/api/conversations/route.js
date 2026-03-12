@@ -13,9 +13,12 @@ export async function GET(request) {
     const status = searchParams.get("status");
     const userId = searchParams.get("userId");
 
+    const email = searchParams.get("email");
+
     const where = {};
     if (status) where.status = status;
     if (userId) where.userId = userId;
+    if (email) where.customerEmail = email;
 
     const conversations = await prisma.conversation.findMany({
       where,

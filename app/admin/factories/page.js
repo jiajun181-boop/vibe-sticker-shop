@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
+import { buildSettingsCenterHref } from "@/lib/admin-centers";
 
 export default function FactoriesPage() {
   const [factories, setFactories] = useState([]);
@@ -178,7 +180,15 @@ export default function FactoriesPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-black">Factories</h1>
+        <div>
+          <Link
+            href={buildSettingsCenterHref()}
+            className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
+          >
+            Settings
+          </Link>
+          <h1 className="text-xl font-semibold text-black">Factories</h1>
+        </div>
         <button
           type="button"
           onClick={openAddModal}

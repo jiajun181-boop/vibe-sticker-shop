@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { statusColor, priorityColor } from "@/lib/admin/status-labels";
 import { buildCustomerCenterHref, buildCustomerDetailHref } from "@/lib/admin-centers";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -24,13 +25,17 @@ const PRIORITY_LABEL_KEYS = {
 };
 
 export default function AdminSupportPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
+  const searchParams = useSearchParams();
+  const scopedEmail = searchParams.get("email");
   const [tickets, setTickets] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [loadError, setLoadError] = useState("");
   const limit = 20;
   const fetchIdRef = useRef(0);
   const searchTimer = useRef(null);
@@ -41,9 +46,11 @@ export default function AdminSupportPage() {
       setLoading(true);
       const params = new URLSearchParams();
       if (s && s !== "all") params.set("status", s);
-      if (q) params.set("search", q);
+      if (scopedEmail) params.set("email", scopedEmail);
+      else if (q) params.set("search", q);
       params.set("page", String(p || 1));
       params.set("limit", String(limit));
+      setLoadError("");
       fetch(`/api/admin/support?${params}`)
         .then((r) => r.json())
         .then((data) => {
@@ -51,12 +58,12 @@ export default function AdminSupportPage() {
           setTickets(data.tickets || []);
           setTotal(data.total || 0);
         })
-        .catch(() => {})
+        .catch(() => { if (fetchIdRef.current === id) setLoadError(t("admin.support.loadFailed")); })
         .finally(() => {
           if (fetchIdRef.current === id) setLoading(false);
         });
     },
-    []
+    [scopedEmail]
   );
 
   useEffect(() => {
@@ -91,7 +98,9 @@ export default function AdminSupportPage() {
         body: JSON.stringify({ status: newStatus }),
       });
       fetchTickets(status, search, page);
-    } catch {}
+    } catch {
+      setLoadError(t("admin.support.actionFailed"));
+    }
   };
 
   const handleInlinePriority = async (ticketId, newPriority) => {
@@ -102,7 +111,9 @@ export default function AdminSupportPage() {
         body: JSON.stringify({ priority: newPriority }),
       });
       fetchTickets(status, search, page);
-    } catch {}
+    } catch {
+      setLoadError(t("admin.support.actionFailed"));
+    }
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -116,24 +127,50 @@ export default function AdminSupportPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Link
-            href={buildCustomerCenterHref()}
-            className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
-          >
-            {t("admin.customers.title")}
-          </Link>
+          {scopedEmail ? (
+            <div className="mb-1 text-[11px] text-[#666]">
+              <Link href={buildCustomerCenterHref()} className="underline hover:text-black hover:no-underline">
+                {t("admin.customers.title")}
+              </Link>
+              <span className="mx-1">/</span>
+              <Link href={buildCustomerDetailHref(scopedEmail)} className="underline hover:text-black hover:no-underline">
+                {scopedEmail}
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href={buildCustomerCenterHref()}
+              className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
+            >
+              {t("admin.customers.title")}
+            </Link>
+          )}
           <h1 className="text-xl font-semibold text-black">{t("admin.support.title")}</h1>
           <p className="text-sm text-[#999]">
-            {t("admin.support.total").replace("{total}", total)}{urgentCount > 0 && ` · ${t("admin.support.urgentCount").replace("{count}", urgentCount)}`}
+            {scopedEmail
+              ? scopedEmail
+              : t("admin.support.total").replace("{total}", total)}{urgentCount > 0 && ` - ${t("admin.support.urgentCount").replace("{count}", urgentCount)}`}
           </p>
         </div>
-        <input
-          type="text"
-          placeholder={t("admin.support.searchPlaceholder")}
-          value={search}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs outline-none focus:border-black w-56"
-        />
+        <div className="flex items-center gap-2">
+          {scopedEmail && (
+            <Link
+              href="/admin/customers/support"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-[11px] font-medium text-[#666] hover:border-black hover:text-black"
+            >
+              {t("admin.support.viewAll") || "View all"}
+            </Link>
+          )}
+          {!scopedEmail && (
+            <input
+              type="text"
+              placeholder={t("admin.support.searchPlaceholder")}
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs outline-none focus:border-black w-56"
+            />
+          )}
+        </div>
       </div>
 
       {/* Status filter tabs */}
@@ -153,6 +190,12 @@ export default function AdminSupportPage() {
           </button>
         ))}
       </div>
+
+      {loadError && (
+        <div className="rounded-[3px] border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+          {loadError}
+        </div>
+      )}
 
       {/* Table */}
       {loading ? (
@@ -232,7 +275,7 @@ export default function AdminSupportPage() {
                     {tk._count?.messages || 0}
                   </td>
                   <td className="px-4 py-3 text-[11px] text-gray-500">
-                    {new Date(tk.updatedAt).toLocaleDateString("en-CA", {
+                    {new Date(tk.updatedAt).toLocaleDateString(dateLocale, {
                       month: "short",
                       day: "numeric",
                       hour: "2-digit",

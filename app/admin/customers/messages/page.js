@@ -16,6 +16,7 @@ export default function AdminMessagesPage() {
   const { t } = useTranslation();
   const searchParams = useSearchParams();
   const timeAgo = (d) => sharedTimeAgo(d, t);
+  const scopedEmail = searchParams.get("email");
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const initialConvId = searchParams.get("conv");
@@ -32,7 +33,11 @@ export default function AdminMessagesPage() {
 
   const fetchConversations = useCallback(async () => {
     try {
-      const url = filter === "all" ? "/api/conversations" : `/api/conversations?status=${filter}`;
+      const params = new URLSearchParams();
+      if (filter !== "all") params.set("status", filter);
+      if (scopedEmail) params.set("email", scopedEmail);
+      const qs = params.toString();
+      const url = qs ? `/api/conversations?${qs}` : "/api/conversations";
       const res = await fetch(url);
       if (!res.ok) return;
       const data = await res.json();
@@ -40,7 +45,7 @@ export default function AdminMessagesPage() {
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, scopedEmail]);
 
   useEffect(() => {
     fetchConversations();
@@ -161,15 +166,29 @@ export default function AdminMessagesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <Link
-            href={buildCustomerCenterHref()}
-            className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
-          >
-            {t("admin.customers.title")}
-          </Link>
+          {scopedEmail ? (
+            <div className="mb-1 text-[11px] text-[#666]">
+              <Link href={buildCustomerCenterHref()} className="underline hover:text-black hover:no-underline">
+                {t("admin.customers.title")}
+              </Link>
+              <span className="mx-1">/</span>
+              <Link href={buildCustomerDetailHref(scopedEmail)} className="underline hover:text-black hover:no-underline">
+                {scopedEmail}
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href={buildCustomerCenterHref()}
+              className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
+            >
+              {t("admin.customers.title")}
+            </Link>
+          )}
           <h1 className="text-xl font-semibold text-black">{t("admin.messages.title")}</h1>
           <p className="text-sm text-[#999]">
-            {t("admin.messages.subtitle")}
+            {scopedEmail
+              ? scopedEmail
+              : t("admin.messages.subtitle")}
             {totalUnread > 0 && (
               <span className="ml-2 inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">
                 {totalUnread} {t("admin.messages.unread")}
@@ -177,6 +196,14 @@ export default function AdminMessagesPage() {
             )}
           </p>
         </div>
+        {scopedEmail && (
+          <Link
+            href="/admin/customers/messages"
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-[11px] font-medium text-[#666] hover:border-black hover:text-black"
+          >
+            {t("admin.messages.viewAll") || "View all"}
+          </Link>
+        )}
       </div>
 
       <div className="flex h-[calc(100vh-200px)] overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -360,7 +387,7 @@ export default function AdminMessagesPage() {
                             msg.senderType === "staff" ? "text-white/60" : "text-gray-400"
                           }`}
                         >
-                          {msg.senderName && `${msg.senderName} · `}
+                          {msg.senderName && `${msg.senderName} - `}
                           {timeAgo(msg.createdAt)}
                         </p>
                       </div>

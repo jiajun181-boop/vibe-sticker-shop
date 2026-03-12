@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
 import { statusColor, productionColor } from "@/lib/admin/status-labels";
-import { buildCustomerCenterHref } from "@/lib/admin-centers";
+import { buildCustomerCenterHref, buildCustomerWorkspaceHref } from "@/lib/admin-centers";
 
 const segmentStyles = {
   VIP: "bg-amber-100 text-amber-800 border-amber-300",
@@ -39,6 +39,13 @@ const ORDER_STATUS_KEYS = {
   refunded: "admin.orders.statusRefunded",
 };
 
+const TIER_LABEL_KEYS = {
+  bronze: "admin.b2b.bronze",
+  silver: "admin.b2b.silver",
+  gold: "admin.b2b.gold",
+  platinum: "admin.b2b.platinum",
+};
+
 const PRODUCTION_STATUS_KEYS = {
   not_started: "admin.orders.productionNotStarted",
   preflight: "admin.orders.productionNotStarted",
@@ -52,13 +59,16 @@ const PRODUCTION_STATUS_KEYS = {
 
 export default function CustomerDetailPage() {
   const { email: rawEmail } = useParams();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const email = decodeURIComponent(rawEmail);
 
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
+  const [statsError, setStatsError] = useState("");
   const [notes, setNotes] = useState([]);
+  const [notesError, setNotesError] = useState("");
   const [noteContent, setNoteContent] = useState("");
   const [noteSaving, setNoteSaving] = useState(false);
 
@@ -81,7 +91,7 @@ export default function CustomerDetailPage() {
     fetch(`/api/admin/customers/${encodeURIComponent(email)}/stats`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data) setStats(data); })
-      .catch(() => {});
+      .catch(() => { setStatsError(t("admin.customerDetail.statsError")); });
   }, [email]);
 
   // Fetch customer notes
@@ -89,7 +99,7 @@ export default function CustomerDetailPage() {
     fetch(`/api/admin/customers/${encodeURIComponent(email)}/notes`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data?.data) setNotes(data.data); })
-      .catch(() => {});
+      .catch(() => { setNotesError(t("admin.customerDetail.notesError")); });
   }, [email]);
 
   useEffect(() => { fetchNotes(); }, [fetchNotes]);
@@ -108,7 +118,7 @@ export default function CustomerDetailPage() {
         fetchNotes();
       }
     } catch {
-      // ignore
+      setNotesError(t("admin.customerDetail.notesError"));
     } finally {
       setNoteSaving(false);
     }
@@ -150,9 +160,16 @@ export default function CustomerDetailPage() {
           {customer.name || email}
         </h1>
         <p className="mt-0.5 text-sm text-[#999]">
-          {customer.name ? `${email} · ` : ""}{t("admin.customerDetail.subtitle")}
+          {customer.name ? `${email} - ` : ""}{t("admin.customerDetail.subtitle")}
         </p>
       </div>
+
+      {/* Stats error */}
+      {statsError && !stats && (
+        <div className="rounded-[3px] border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+          {statsError}
+        </div>
+      )}
 
       {/* Customer Intelligence Card */}
       {stats && (
@@ -179,7 +196,7 @@ export default function CustomerDetailPage() {
             <div>
               <p className="text-[11px] text-[#999]">{t("admin.customerDetail.lastOrdered")}</p>
               <p className="mt-0.5 text-sm font-semibold text-black">
-                {stats.daysSinceLastOrder != null ? `${stats.daysSinceLastOrder} ${t("admin.customerDetail.daysAgo")}` : "\u2014"}
+                {stats.daysSinceLastOrder != null ? `${stats.daysSinceLastOrder} ${t("admin.customerDetail.daysAgo")}` : "-"}
               </p>
             </div>
             <div>
@@ -217,7 +234,7 @@ export default function CustomerDetailPage() {
           <div>
             <p className="text-xs text-[#999]">{t("admin.customers.name")}</p>
             <p className="mt-0.5 text-sm font-medium text-black">
-              {customer.name || "\u2014"}
+              {customer.name || "-"}
             </p>
           </div>
           <div>
@@ -240,7 +257,7 @@ export default function CustomerDetailPage() {
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-black">{t("admin.customerDetail.b2bProfile")}</h2>
-            <Link href={buildCustomerCenterHref("b2b")} className="text-[11px] text-[#666] underline hover:no-underline">
+            <Link href={buildCustomerWorkspaceHref("b2b", email)} className="text-[11px] text-[#666] underline hover:no-underline">
               {t("admin.customers.openWorkspace")}
             </Link>
           </div>
@@ -248,18 +265,18 @@ export default function CustomerDetailPage() {
             <div className="space-y-2 text-sm">
               <div>
                 <p className="text-[11px] text-[#999]">{t("admin.customerDetail.accountType")}</p>
-                <p className="font-medium text-black">{customer.b2bProfile.accountType || "\u2014"}</p>
+                <p className="font-medium text-black">{customer.b2bProfile.accountType || "-"}</p>
               </div>
               <div>
                 <p className="text-[11px] text-[#999]">{t("admin.customerDetail.companyName")}</p>
-                <p className="font-medium text-black">{customer.b2bProfile.companyName || "\u2014"}</p>
+                <p className="font-medium text-black">{customer.b2bProfile.companyName || "-"}</p>
               </div>
               <div className="flex flex-wrap gap-2 text-[11px]">
                 <span className={`rounded-[2px] px-2 py-0.5 font-semibold ${customer.b2bProfile.approved ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                   {customer.b2bProfile.approved ? t("admin.customers.approved") : t("admin.customers.pendingApproval")}
                 </span>
                 <span className="rounded-[2px] bg-[#f3f4f6] px-2 py-0.5 text-[#555]">
-                  {t("admin.customerDetail.partnerTier")}: {customer.b2bProfile.tier || "\u2014"}
+                  {t("admin.customerDetail.partnerTier")}: {customer.b2bProfile.tier ? t(TIER_LABEL_KEYS[customer.b2bProfile.tier] || customer.b2bProfile.tier) : "-"}
                 </span>
                 <span className="rounded-[2px] bg-[#f9fafb] px-2 py-0.5 text-[#555]">
                   {t("admin.customerDetail.partnerDiscount")}: {customer.b2bProfile.discount || 0}%
@@ -274,7 +291,7 @@ export default function CustomerDetailPage() {
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-black">{t("admin.customerDetail.conversations")}</h2>
-            <Link href={buildCustomerCenterHref("messages")} className="text-[11px] text-[#666] underline hover:no-underline">
+            <Link href={buildCustomerWorkspaceHref("messages", email)} className="text-[11px] text-[#666] underline hover:no-underline">
               {t("admin.customers.openWorkspace")}
             </Link>
           </div>
@@ -283,7 +300,7 @@ export default function CustomerDetailPage() {
               {customer.conversations.map((conversation) => (
                 <Link
                   key={conversation.id}
-                  href={`/admin/customers/messages?conv=${conversation.id}`}
+                  href={`/admin/customers/messages?email=${encodeURIComponent(email)}&conv=${conversation.id}`}
                   className="block rounded-[3px] border border-[#f0f0f0] bg-[#fafafa] p-3 transition-colors hover:bg-white"
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -294,8 +311,8 @@ export default function CustomerDetailPage() {
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-[#666]">{conversation.lastMessage || "\u2014"}</p>
-                  <p className="mt-1 text-[10px] text-[#999]">{new Date(conversation.lastMessageAt).toLocaleString()}</p>
+                  <p className="mt-1 text-xs text-[#666]">{conversation.lastMessage || "-"}</p>
+                  <p className="mt-1 text-[10px] text-[#999]">{new Date(conversation.lastMessageAt).toLocaleString(dateLocale)}</p>
                 </Link>
               ))}
             </div>
@@ -307,7 +324,7 @@ export default function CustomerDetailPage() {
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-black">{t("admin.customerDetail.supportTickets")}</h2>
-            <Link href={buildCustomerCenterHref("support")} className="text-[11px] text-[#666] underline hover:no-underline">
+            <Link href={buildCustomerWorkspaceHref("support", email)} className="text-[11px] text-[#666] underline hover:no-underline">
               {t("admin.customers.openWorkspace")}
             </Link>
           </div>
@@ -326,7 +343,7 @@ export default function CustomerDetailPage() {
                     </span>
                   </div>
                   <p className="mt-1 text-[11px] text-[#999]">
-                    {t(TICKET_PRIORITY_KEYS[ticket.priority] || ticket.priority)} · {ticket._count?.messages || 0} {t("admin.customers.messagesCount")}
+                    {t(TICKET_PRIORITY_KEYS[ticket.priority] || ticket.priority)} - {ticket._count?.messages || 0} {t("admin.customers.messagesCount")}
                   </p>
                 </Link>
               ))}
@@ -406,7 +423,7 @@ export default function CustomerDetailPage() {
                           {formatCad(order.totalAmount)}
                         </td>
                         <td className="px-4 py-3 text-xs text-[#999]">
-                          {new Date(order.createdAt).toLocaleDateString()}
+                          {new Date(order.createdAt).toLocaleDateString(dateLocale)}
                         </td>
                         <td className="px-4 py-3">
                           <Link
@@ -460,7 +477,7 @@ export default function CustomerDetailPage() {
                         {t(PRODUCTION_STATUS_KEYS[order.productionStatus] || order.productionStatus)}
                       </span>
                       <span className="text-xs text-[#999]">
-                        {new Date(order.createdAt).toLocaleDateString()}
+                        {new Date(order.createdAt).toLocaleDateString(dateLocale)}
                       </span>
                     </div>
                   </Link>
@@ -480,6 +497,12 @@ export default function CustomerDetailPage() {
         <h2 className="mb-3 text-sm font-semibold text-black">
           {t("admin.customerDetail.notesTitle")} ({notes.length})
         </h2>
+
+        {notesError && (
+          <div className="mb-3 rounded-[3px] border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+            {notesError}
+          </div>
+        )}
 
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
           {/* Add note form */}
@@ -511,7 +534,7 @@ export default function CustomerDetailPage() {
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="text-xs font-semibold text-black">{note.authorName}</span>
                     <span className="shrink-0 text-[10px] text-[#bbb]">
-                      {new Date(note.createdAt).toLocaleString()}
+                      {new Date(note.createdAt).toLocaleString(dateLocale)}
                     </span>
                   </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-[#444]">{note.content}</p>

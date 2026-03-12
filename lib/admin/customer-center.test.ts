@@ -5,11 +5,13 @@
  *   C1: buildCustomerDetailHref — URL generation and encoding
  *   C2: buildCustomerCenterHref — workspace URL generation
  *   C3: CUSTOMER_CENTER_VIEWS — view model completeness
+ *   C4: buildCustomerWorkspaceHref — customer-scoped deep workspace URLs
  */
 
 import {
   buildCustomerDetailHref,
   buildCustomerCenterHref,
+  buildCustomerWorkspaceHref,
   getCustomerCenterView,
   CUSTOMER_CENTER_VIEWS,
 } from "@/lib/admin-centers";
@@ -119,5 +121,56 @@ describe("C3: CUSTOMER_CENTER_VIEWS", () => {
     expect(getCustomerCenterView("nonexistent").id).toBe("customers");
     expect(getCustomerCenterView(null).id).toBe("customers");
     expect(getCustomerCenterView(undefined).id).toBe("customers");
+  });
+});
+
+// ── C4: buildCustomerWorkspaceHref ──────────────────────────────────────────
+
+describe("C4: buildCustomerWorkspaceHref", () => {
+  it("returns messages workspace with email scope", () => {
+    expect(buildCustomerWorkspaceHref("messages", "jay@lunarprint.ca")).toBe(
+      "/admin/customers/messages?email=jay%40lunarprint.ca"
+    );
+  });
+
+  it("returns support workspace with email scope", () => {
+    expect(buildCustomerWorkspaceHref("support", "jay@lunarprint.ca")).toBe(
+      "/admin/customers/support?email=jay%40lunarprint.ca"
+    );
+  });
+
+  it("returns b2b workspace with email scope", () => {
+    expect(buildCustomerWorkspaceHref("b2b", "jay@lunarprint.ca")).toBe(
+      "/admin/customers/b2b?email=jay%40lunarprint.ca"
+    );
+  });
+
+  it("returns global workspace when email is null", () => {
+    expect(buildCustomerWorkspaceHref("messages", null)).toBe("/admin/customers/messages");
+    expect(buildCustomerWorkspaceHref("support", null)).toBe("/admin/customers/support");
+    expect(buildCustomerWorkspaceHref("b2b", null)).toBe("/admin/customers/b2b");
+  });
+
+  it("returns global workspace when email is empty", () => {
+    expect(buildCustomerWorkspaceHref("messages", "")).toBe("/admin/customers/messages");
+  });
+
+  it("returns /admin/customers for unknown workspace", () => {
+    // @ts-expect-error — testing fallback for invalid workspace
+    expect(buildCustomerWorkspaceHref("unknown", "test@example.com")).toBe("/admin/customers");
+    // @ts-expect-error — testing fallback for invalid workspace
+    expect(buildCustomerWorkspaceHref("unknown")).toBe("/admin/customers");
+  });
+
+  it("encodes special characters in email", () => {
+    const href = buildCustomerWorkspaceHref("messages", "user+tag@example.com");
+    expect(href).toBe("/admin/customers/messages?email=user%2Btag%40example.com");
+  });
+
+  it("email is decodable from generated URL", () => {
+    const email = "test@example.com";
+    const href = buildCustomerWorkspaceHref("support", email);
+    const url = new URL(href, "http://localhost");
+    expect(url.searchParams.get("email")).toBe(email);
   });
 });

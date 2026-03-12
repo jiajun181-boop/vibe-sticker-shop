@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { statusColor } from "@/lib/admin/status-labels";
-import { buildCustomerCenterHref, buildCustomerDetailHref } from "@/lib/admin-centers";
+import { buildCustomerCenterHref, buildCustomerDetailHref, buildCustomerWorkspaceHref } from "@/lib/admin-centers";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const STATUSES = ["open", "in_progress", "waiting_customer", "resolved", "closed"];
@@ -26,7 +26,8 @@ const PRIORITY_LABEL_KEYS = {
 };
 
 export default function AdminTicketDetailPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const { id } = useParams();
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -125,8 +126,16 @@ export default function AdminTicketDetailPage() {
           <Link href={buildCustomerCenterHref()} className="underline hover:text-black hover:no-underline">
             {t("admin.customers.title")}
           </Link>
+          {ticket?.email && (
+            <>
+              <span className="mx-1">/</span>
+              <Link href={buildCustomerDetailHref(ticket.email)} className="underline hover:text-black hover:no-underline">
+                {ticket.email}
+              </Link>
+            </>
+          )}
           <span className="mx-1">/</span>
-          <Link href="/admin/customers/support" className="underline hover:text-black hover:no-underline">
+          <Link href={buildCustomerWorkspaceHref("support", ticket?.email)} className="underline hover:text-black hover:no-underline">
             {t("admin.customers.viewSupport")}
           </Link>
         </div>
@@ -134,11 +143,11 @@ export default function AdminTicketDetailPage() {
           <div>
             <h1 className="text-xl font-semibold text-black">{ticket?.subject}</h1>
             <p className="mt-0.5 text-xs text-[#999]">
-              #{ticket?.id.slice(0, 8)} &bull;{" "}
+              #{ticket?.id.slice(0, 8)} -{" "}
               <Link href={buildCustomerDetailHref(ticket?.email)} className="underline hover:text-black hover:no-underline">
                 {ticket?.email}
               </Link>
-              {" "}&bull; {ticket?.createdAt && new Date(ticket.createdAt).toLocaleDateString("en-CA")}
+              {" "}- {ticket?.createdAt && new Date(ticket.createdAt).toLocaleDateString(dateLocale)}
             </p>
           </div>
           <span
@@ -206,7 +215,7 @@ export default function AdminTicketDetailPage() {
                   </span>
                 </div>
                 <span className="text-[10px] text-gray-400">
-                  {new Date(msg.createdAt).toLocaleDateString("en-CA", {
+                  {new Date(msg.createdAt).toLocaleDateString(dateLocale, {
                     month: "short",
                     day: "numeric",
                     hour: "2-digit",

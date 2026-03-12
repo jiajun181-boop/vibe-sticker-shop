@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CATALOG_DEFAULTS } from "@/lib/catalogConfig";
 import { resizeImageFile } from "@/lib/client-image-resize";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { ProductCenterBreadcrumb } from "@/components/admin/ProductCenterHeader";
 
 const categoryMeta = CATALOG_DEFAULTS.categoryMeta;
 const CATEGORY_ORDER = [
@@ -169,7 +170,11 @@ export default function ImageDashboardPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <h1 className="text-lg font-bold text-[#111]">{t("admin.imageDashboard.title")}</h1>
+        <div>
+          <ProductCenterBreadcrumb deepId="image-dashboard" />
+          <h1 className="text-xl font-semibold text-black">{t("admin.imageDashboard.title")}</h1>
+          <p className="mt-0.5 text-sm text-[#999]">{t("admin.imageDashboard.subtitle")}</p>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-20 animate-pulse rounded-[2px] border border-[#e0e0e0] bg-white" />
@@ -185,7 +190,11 @@ export default function ImageDashboardPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-bold text-[#111]">{t("admin.imageDashboard.title")}</h1>
+      <div>
+        <ProductCenterBreadcrumb deepId="image-dashboard" />
+        <h1 className="text-xl font-semibold text-black">{t("admin.imageDashboard.title")}</h1>
+        <p className="mt-0.5 text-sm text-[#999]">{t("admin.imageDashboard.subtitle")}</p>
+      </div>
 
       {/* Stats bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

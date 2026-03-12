@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "@/lib/order-config";
+import { SETTINGS_CENTER_VIEWS } from "@/lib/admin-centers";
 
 const DEFAULTS = {
   "store.name": "La Lunar Printing Inc.",
@@ -132,6 +134,23 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-semibold text-gray-900">{t("admin.settings.title")}</h1>
+
+      {/* Settings Center view strip */}
+      <div className="flex flex-wrap gap-1.5">
+        {Object.values(SETTINGS_CENTER_VIEWS).map((view) => (
+          <Link
+            key={view.id}
+            href={view.route}
+            className={`rounded-[3px] px-3 py-1.5 text-[11px] font-medium transition-colors ${
+              view.id === "system"
+                ? "bg-black text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {t(view.labelKey)}
+          </Link>
+        ))}
+      </div>
 
       {message && (
         <div

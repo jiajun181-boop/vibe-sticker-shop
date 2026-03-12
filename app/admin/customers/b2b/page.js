@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { buildCustomerCenterHref, buildCustomerDetailHref } from "@/lib/admin-centers";
 
@@ -19,7 +20,10 @@ const TIER_KEYS = [
 ];
 
 export default function AdminB2BPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
+  const searchParams = useSearchParams();
+  const scopedEmail = searchParams.get("email");
   const [tab, setTab] = useState("accounts"); // "accounts" | "invites"
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
@@ -42,13 +46,15 @@ export default function AdminB2BPage() {
 
   function loadUsers() {
     setLoading(true);
-    fetch(`/api/admin/b2b?filter=${filter}`)
+    const params = new URLSearchParams({ filter });
+    if (scopedEmail) params.set("email", scopedEmail);
+    fetch(`/api/admin/b2b?${params}`)
       .then((r) => r.json())
       .then((data) => {
         setUsers(data.users || []);
         setTotal(data.total || 0);
       })
-      .catch(() => {})
+      .catch(() => { setMessage({ type: "error", text: t("admin.b2b.loadFailed") }); })
       .finally(() => setLoading(false));
   }
 
@@ -57,7 +63,7 @@ export default function AdminB2BPage() {
     fetch("/api/admin/b2b/invites")
       .then((r) => r.json())
       .then((data) => setInvites(data.invites || []))
-      .catch(() => {})
+      .catch(() => { setMessage({ type: "error", text: t("admin.b2b.loadFailed") }); })
       .finally(() => setInvitesLoading(false));
   }
 
@@ -65,7 +71,7 @@ export default function AdminB2BPage() {
     const user = users.find((u) => u.id === userId);
     const label = user?.companyName || user?.name || user?.email || userId;
     const verb = action === "approve" ? t("admin.b2b.approve") : t("admin.b2b.reject");
-    if (!confirm(`${verb} B2B — "${label}"?`)) return;
+    if (!confirm(`${verb} B2B - "${label}"?`)) return;
 
     setActionLoading(userId);
     try {
@@ -125,22 +131,44 @@ export default function AdminB2BPage() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link
-            href={buildCustomerCenterHref()}
-            className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
-          >
-            {t("admin.customers.title")}
-          </Link>
+          {scopedEmail ? (
+            <div className="mb-1 text-[11px] text-[#666]">
+              <Link href={buildCustomerCenterHref()} className="underline hover:text-black hover:no-underline">
+                {t("admin.customers.title")}
+              </Link>
+              <span className="mx-1">/</span>
+              <Link href={buildCustomerDetailHref(scopedEmail)} className="underline hover:text-black hover:no-underline">
+                {scopedEmail}
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href={buildCustomerCenterHref()}
+              className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
+            >
+              {t("admin.customers.title")}
+            </Link>
+          )}
           <h1 className="text-xl font-semibold text-black">{t("admin.b2b.title")}</h1>
-          <p className="text-sm text-[#999]">{t("admin.b2b.description")}</p>
+          <p className="text-sm text-[#999]">{scopedEmail ? scopedEmail : t("admin.b2b.description")}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => { setShowInviteForm(true); setTab("invites"); }}
-          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
-        >
-          {t("admin.b2b.invitePartner")}
-        </button>
+        <div className="flex items-center gap-2">
+          {scopedEmail && (
+            <Link
+              href="/admin/customers/b2b"
+              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-[11px] font-medium text-[#666] hover:border-black hover:text-black"
+            >
+              {t("admin.b2b.viewAll") || "View all"}
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => { setShowInviteForm(true); setTab("invites"); }}
+            className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
+          >
+            {t("admin.b2b.invitePartner")}
+          </button>
+        </div>
       </div>
 
       {message && (
@@ -217,7 +245,7 @@ export default function AdminB2BPage() {
                     {users.map((user) => (
                       <tr key={user.id} className="hover:bg-[#fafafa]">
                         <td className="px-4 py-3">
-                          <p className="font-medium text-black">{user.companyName || "—"}</p>
+                          <p className="font-medium text-black">{user.companyName || "-"}</p>
                           <p className="text-xs text-[#999]">{user.name} {user.companyRole ? `(${user.companyRole})` : ""}</p>
                         </td>
                         <td className="px-4 py-3">
@@ -229,11 +257,11 @@ export default function AdminB2BPage() {
                           {user.partnerTier ? (
                             <TierBadge tier={user.partnerTier} />
                           ) : (
-                            <span className="text-xs text-[#ccc]">—</span>
+                            <span className="text-xs text-[#ccc]">{"-"}</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-[#666]">
-                          {user.partnerDiscount > 0 ? `${user.partnerDiscount}%` : "—"}
+                          {user.partnerDiscount > 0 ? `${user.partnerDiscount}%` : "-"}
                         </td>
                         <td className="px-4 py-3 text-[#666]">{user._count?.orders || 0}</td>
                         <td className="px-4 py-3">
@@ -243,7 +271,7 @@ export default function AdminB2BPage() {
                             <span className="rounded-[2px] bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">{t("admin.b2b.pending")}</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-xs text-[#999]">{new Date(user.createdAt).toLocaleDateString("en-CA")}</td>
+                        <td className="px-4 py-3 text-xs text-[#999]">{new Date(user.createdAt).toLocaleDateString(dateLocale)}</td>
                         <td className="px-4 py-3">
                           {!user.b2bApproved && (
                             <div className="flex gap-2">
@@ -263,7 +291,7 @@ export default function AdminB2BPage() {
                   <div key={user.id} className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="font-medium text-black">{user.companyName || "—"}</p>
+                        <p className="font-medium text-black">{user.companyName || "-"}</p>
                         <p className="text-xs text-[#999]">{user.name} {user.companyRole ? `(${user.companyRole})` : ""}</p>
                         <Link href={buildCustomerDetailHref(user.email)} className="mt-1 block truncate text-xs text-[#666] hover:text-[#4f46e5] hover:underline">
                           {user.email}
@@ -280,7 +308,7 @@ export default function AdminB2BPage() {
                     </div>
                     <div className="mt-2 flex items-center justify-between text-xs text-[#999]">
                       <span>{user.partnerDiscount > 0 ? t("admin.b2b.ordersWithDiscount").replace("{count}", user._count?.orders || 0).replace("{discount}", user.partnerDiscount) : t("admin.b2b.ordersOnly").replace("{count}", user._count?.orders || 0)}</span>
-                      <span>{new Date(user.createdAt).toLocaleDateString("en-CA")}</span>
+                      <span>{new Date(user.createdAt).toLocaleDateString(dateLocale)}</span>
                     </div>
                     {!user.b2bApproved && (
                       <div className="mt-3 flex gap-2">
@@ -404,9 +432,9 @@ export default function AdminB2BPage() {
                     return (
                       <tr key={inv.id} className="hover:bg-[#fafafa]">
                         <td className="px-4 py-3 font-medium text-black">{inv.email}</td>
-                        <td className="px-4 py-3 text-[#666]">{inv.companyName || "—"}</td>
+                        <td className="px-4 py-3 text-[#666]">{inv.companyName || "-"}</td>
                         <td className="px-4 py-3"><TierBadge tier={inv.tier} /></td>
-                        <td className="px-4 py-3 text-[#666]">{inv.discount > 0 ? `${inv.discount}%` : "—"}</td>
+                        <td className="px-4 py-3 text-[#666]">{inv.discount > 0 ? `${inv.discount}%` : "-"}</td>
                         <td className="px-4 py-3">
                           {accepted ? (
                             <span className="rounded-[2px] bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">{t("admin.b2b.accepted")}</span>
@@ -416,7 +444,7 @@ export default function AdminB2BPage() {
                             <span className="rounded-[2px] bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">{t("admin.b2b.pending")}</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-xs text-[#999]">{new Date(inv.createdAt).toLocaleDateString("en-CA")}</td>
+                        <td className="px-4 py-3 text-xs text-[#999]">{new Date(inv.createdAt).toLocaleDateString(dateLocale)}</td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
                             {!accepted && !expired && (

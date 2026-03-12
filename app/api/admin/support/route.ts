@@ -16,12 +16,15 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20")));
 
     const search = searchParams.get("search");
+    const email = searchParams.get("email");
 
     const where: Record<string, unknown> = {};
     if (status && status !== "all") {
       where.status = status;
     }
-    if (search) {
+    if (email) {
+      where.email = email;
+    } else if (search) {
       where.OR = [
         { subject: { contains: search, mode: "insensitive" } },
         { email: { contains: search, mode: "insensitive" } },

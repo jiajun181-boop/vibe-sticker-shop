@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { buildSettingsCenterHref } from "@/lib/admin-centers";
 
 export default function AdminApiKeysPage() {
   const { t } = useTranslation();
@@ -77,6 +79,12 @@ export default function AdminApiKeysPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
+          <Link
+            href={buildSettingsCenterHref()}
+            className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
+          >
+            {t("admin.settings.title")}
+          </Link>
           <h1 className="text-lg font-semibold">{t("admin.apiKeys.title")}</h1>
           <p className="text-[10px] text-gray-400">{t("admin.apiKeys.subtitle")}</p>
         </div>

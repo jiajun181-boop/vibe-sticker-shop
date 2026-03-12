@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { ALL_ROLES, ROLE_LABELS, PERMISSION_MATRIX } from "@/lib/admin-permissions";
+import { buildSettingsCenterHref } from "@/lib/admin-centers";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -33,7 +35,15 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-black">Admin Users</h1>
+        <div>
+          <Link
+            href={buildSettingsCenterHref()}
+            className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
+          >
+            Settings
+          </Link>
+          <h1 className="text-xl font-semibold text-black">Admin Users</h1>
+        </div>
         <button
           type="button"
           onClick={() => { setShowCreate(true); setEditId(null); }}

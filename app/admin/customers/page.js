@@ -46,7 +46,8 @@ export default function CustomersPage() {
 function CustomersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const activeView = getCustomerCenterView(searchParams.get("view"));
 
   const [customers, setCustomers] = useState([]);
@@ -256,11 +257,11 @@ function CustomersContent() {
                       {customers.map((customer) => (
                         <tr key={customer.email} className="hover:bg-[#fafafa]">
                           <td className="px-4 py-3"><span className="font-medium text-black">{customer.email}</span></td>
-                          <td className="px-4 py-3 text-[#666]">{customer.name || "\u2014"}</td>
+                          <td className="px-4 py-3 text-[#666]">{customer.name || "-"}</td>
                           <td className="px-4 py-3"><span className="inline-block rounded-xl bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">{customer.orderCount}</span></td>
                           <td className="px-4 py-3 font-semibold text-black">{formatCad(customer.totalSpent)}</td>
-                          <td className="px-4 py-3 text-xs text-[#999]">{new Date(customer.firstOrder).toLocaleDateString()}</td>
-                          <td className="px-4 py-3 text-xs text-[#999]">{new Date(customer.lastOrder).toLocaleDateString()}</td>
+                          <td className="px-4 py-3 text-xs text-[#999]">{new Date(customer.firstOrder).toLocaleDateString(dateLocale)}</td>
+                          <td className="px-4 py-3 text-xs text-[#999]">{new Date(customer.lastOrder).toLocaleDateString(dateLocale)}</td>
                           <td className="px-4 py-3">
                             <Link href={`/admin/customers/${encodeURIComponent(customer.email)}`} className="text-xs font-medium text-black underline hover:no-underline">
                               {t("admin.customers.view")}
@@ -291,7 +292,7 @@ function CustomersContent() {
                           {customer.orderCount} {customer.orderCount === 1 ? t("admin.customers.order") : t("admin.customers.ordersPlural")}
                         </span>
                         <span className="text-xs text-[#999]">
-                          {t("admin.customers.last")} {new Date(customer.lastOrder).toLocaleDateString()}
+                          {t("admin.customers.last")} {new Date(customer.lastOrder).toLocaleDateString(dateLocale)}
                         </span>
                       </div>
                     </Link>
@@ -339,12 +340,12 @@ function CustomersContent() {
           renderRow={(conversation) => (
             <div key={conversation.id} className="flex items-start justify-between gap-3 rounded-[3px] border border-[#ececec] bg-white p-4">
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-black">{conversation.customerName || conversation.customerEmail || "\u2014"}</p>
+                <p className="text-sm font-semibold text-black">{conversation.customerName || conversation.customerEmail || "-"}</p>
                 <p className="mt-0.5 text-xs text-[#999]">{conversation.customerEmail || t("admin.customers.noEmail")}</p>
                 <p className="mt-2 truncate text-sm text-[#444]">{conversation.lastMessage || t("admin.customers.noMessagePreview")}</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-[10px] text-[#999]">{new Date(conversation.lastMessageAt).toLocaleString()}</p>
+                <p className="text-[10px] text-[#999]">{new Date(conversation.lastMessageAt).toLocaleString(dateLocale)}</p>
                 {conversation.unreadCount > 0 && (
                   <span className="mt-2 inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">
                     {conversation.unreadCount} {t("admin.customers.unread")}
@@ -375,7 +376,7 @@ function CustomersContent() {
                   <span>{ticket._count?.messages || 0} {t("admin.customers.messagesCount")}</span>
                 </div>
               </div>
-              <p className="shrink-0 text-[10px] text-[#999]">{new Date(ticket.updatedAt).toLocaleString()}</p>
+              <p className="shrink-0 text-[10px] text-[#999]">{new Date(ticket.updatedAt).toLocaleString(dateLocale)}</p>
             </div>
           )}
         />
