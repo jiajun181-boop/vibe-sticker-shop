@@ -9,6 +9,7 @@ import { detectProductFamily } from "@/lib/preflight";
 import { applyAssignmentRules } from "@/lib/assignment-rules";
 import { syncOrderProductionStatus } from "@/lib/production-sync";
 import { releaseReserve } from "@/lib/inventory";
+import { computeOrderCostSignals } from "@/lib/pricing/production-cost-signal";
 
 async function loadShipmentState(orderId: string) {
   const shipments = await prisma.shipment.findMany({
@@ -33,12 +34,61 @@ async function loadShipmentState(orderId: string) {
   };
 }
 
-async function formatOrderForAdmin(order: Record<string, unknown> & { id: string; user?: { addresses?: unknown[] } | null }) {
+async function formatOrderForAdmin(order: Record<string, unknown> & {
+  id: string;
+  status: string;
+  productionStatus: string;
+  items: Array<{
+    id: string;
+    productName: string;
+    totalPrice: number;
+    materialCostCents: number;
+    estimatedCostCents: number;
+    actualCostCents: number;
+    vendorCostCents: number;
+    [key: string]: unknown;
+  }>;
+  user?: { addresses?: unknown[] } | null;
+}) {
   const shippingAddress = order.user?.addresses?.[0] || null;
-  const shipmentState = await loadShipmentState(order.id);
+  const [shipmentState, sourceQuote] = await Promise.all([
+    loadShipmentState(order.id),
+    // Reverse-lookup: was this order created from a quote?
+    prisma.quoteRequest.findFirst({
+      where: { convertedOrderId: order.id },
+      select: { id: true, reference: true, quotedAmountCents: true, quotedAt: true, quotedBy: true },
+    }),
+  ]);
+
+  // Compute cost signal per item + aggregate for the order
+  const costSignals = computeOrderCostSignals(
+    order.items.map((item) => ({
+      id: item.id,
+      productName: item.productName || "",
+      totalPrice: item.totalPrice || 0,
+      materialCostCents: item.materialCostCents || 0,
+      estimatedCostCents: item.estimatedCostCents || 0,
+      actualCostCents: item.actualCostCents || 0,
+      vendorCostCents: item.vendorCostCents || 0,
+    })),
+    order.id,
+    order.status,
+    order.productionStatus,
+    { returnTo: `/admin/orders/${order.id}`, source: "order-detail" }
+  );
+
+  // Attach per-item signal to each item (keyed by item id)
+  const perItemMap = new Map(costSignals.perItem.map((s) => [s.itemId, s]));
+  const itemsWithSignals = order.items.map((item) => ({
+    ...item,
+    costSignal: perItemMap.get(item.id) || null,
+  }));
 
   return {
     ...order,
+    items: itemsWithSignals,
+    costSignal: costSignals.aggregate,
+    sourceQuote: sourceQuote || null,
     shippingAddress,
     ...shipmentState,
   };
@@ -63,6 +113,8 @@ export async function GET(
               select: { id: true, status: true, priority: true, factoryId: true, assignedTo: true, dueAt: true, startedAt: true, completedAt: true },
             },
           },
+          // Cost fields needed for cost signal computation
+          // (schema includes these by default; explicit note for clarity)
         },
         notes: { orderBy: { createdAt: "desc" } },
         files: true,

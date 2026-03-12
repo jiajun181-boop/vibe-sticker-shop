@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { alertTypeToAction } from "@/lib/pricing/ops-action";
 
 /**
  * GET /api/admin/pricing/cost-completeness?days=30
@@ -20,16 +21,24 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const days = Math.min(Math.max(parseInt(searchParams.get("days") || "30") || 30, 1), 365);
+    const targetOrderId = searchParams.get("orderId") || undefined;
+    const targetItemId = searchParams.get("itemId") || undefined;
 
     const since = new Date();
     since.setDate(since.getDate() - days);
 
-    // ── Query recent orders with items ─────────────────────────────
+    // ── Build query — optionally scoped to exact order ────────────
+    const orderWhere: Record<string, unknown> = {
+      status: { notIn: ["draft", "canceled", "refunded"] },
+    };
+    if (targetOrderId) {
+      orderWhere.id = targetOrderId;
+    } else {
+      orderWhere.createdAt = { gte: since };
+    }
+
     const orders = await prisma.order.findMany({
-      where: {
-        createdAt: { gte: since },
-        status: { notIn: ["draft", "canceled", "refunded"] },
-      },
+      where: orderWhere,
       select: {
         id: true,
         createdAt: true,
@@ -88,12 +97,35 @@ export async function GET(request: NextRequest) {
       ? Math.round((withActualCost / totalItems) * 10000) / 100
       : 0;
 
-    // ── Return top 20 recent missing items ─────────────────────────
-    // Already sorted by order.createdAt desc, so take first 20
-    const recentMissing = missingItems.slice(0, 20);
+    // ── Return recent missing items with action hints ────────────────
+    // When targeting a specific item, return only that item
+    const filteredMissing = targetItemId
+      ? missingItems.filter((i) => i.itemId === targetItemId)
+      : missingItems.slice(0, 20);
+
+    const recentMissing = filteredMissing.map((item) => ({
+      ...item,
+      actionHint: alertTypeToAction("missing_actual_cost", {
+        orderId: item.orderId,
+        orderItemId: item.itemId,
+      }),
+    }));
+
+    // In focused mode (exact item/order target), flag it so the UI
+    // knows it got a scoped response, not a broad list.
+    const focused = !!(targetOrderId || targetItemId);
 
     return NextResponse.json({
       days,
+      focused,
+      ...(focused && {
+        focusParams: {
+          orderId: targetOrderId || undefined,
+          itemId: targetItemId || undefined,
+        },
+        // In focused mode, primaryRecord is the first matching item (if any)
+        primaryRecord: recentMissing[0] || null,
+      }),
       totalOrders: orders.length,
       totalItems,
       withActualCost,

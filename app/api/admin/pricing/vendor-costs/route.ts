@@ -21,8 +21,20 @@ export async function GET(request: NextRequest) {
     const page = Number(searchParams.get("page")) || 1;
     const limit = Number(searchParams.get("limit")) || 50;
 
+    const focused = !!(productSlug || vendorName);
     const result = await listVendorCosts({ vendorName, productSlug, page, limit });
-    return NextResponse.json(result);
+    const items = (result as Record<string, unknown>).vendorCosts as unknown[] | undefined;
+    return NextResponse.json({
+      ...result,
+      focused,
+      ...(focused && {
+        focusParams: {
+          productSlug: productSlug || undefined,
+          vendorName: vendorName || undefined,
+        },
+        primaryRecord: items?.[0] || null,
+      }),
+    });
   } catch (err) {
     console.error("[vendor-costs] GET failed:", err);
     return NextResponse.json({ error: "Failed to list vendor costs" }, { status: 500 });
@@ -110,7 +122,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ cost, floorWarnings });
+    return NextResponse.json({
+      cost,
+      floorWarnings,
+      refreshHint: { invalidates: ["missingVendorCost"] },
+    });
   } catch (err) {
     console.error("[vendor-costs] POST failed:", err);
     return NextResponse.json({ error: "Failed to save vendor cost" }, { status: 500 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { computeCostSignal, type ProductionCostSignal } from "@/lib/pricing/production-cost-signal";
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, "production", "view");
@@ -59,6 +60,8 @@ export async function GET(request: NextRequest) {
                   id: true,
                   customerEmail: true,
                   customerName: true,
+                  status: true,
+                  productionStatus: true,
                 },
               },
             },
@@ -74,10 +77,29 @@ export async function GET(request: NextRequest) {
       prisma.productionJob.count({ where }),
     ]);
 
+    // Batch lookup: which of these orders came from quotes?
+    const orderIds = [...new Set(jobs.map((j) => j.orderItem.order.id))];
+    const quoteRows = orderIds.length > 0
+      ? await prisma.quoteRequest.findMany({
+          where: { convertedOrderId: { in: orderIds } },
+          select: { convertedOrderId: true, id: true, reference: true, status: true, quotedAmountCents: true },
+        })
+      : [];
+    const quoteByOrderId = new Map(
+      quoteRows.map((q) => [q.convertedOrderId, {
+        id: q.id,
+        reference: q.reference,
+        status: q.status,
+        quotedAmountCents: q.quotedAmountCents,
+      }])
+    );
+
     const formatted = jobs.map((job) => {
       const itemMeta = job.orderItem.meta && typeof job.orderItem.meta === "object"
         ? job.orderItem.meta as Record<string, unknown>
         : {};
+
+      const orderId = job.orderItem.order.id;
 
       return {
         id: job.id,
@@ -89,7 +111,7 @@ export async function GET(request: NextRequest) {
         completedAt: job.completedAt,
         createdAt: job.createdAt,
         orderItemId: job.orderItemId,
-        orderId: job.orderItem.order.id,
+        orderId,
         customerEmail: job.orderItem.order.customerEmail,
         customerName: job.orderItem.order.customerName,
         factoryId: job.factoryId,
@@ -109,6 +131,26 @@ export async function GET(request: NextRequest) {
         artworkUrl: job.artworkUrl || job.orderItem.fileUrl || (typeof itemMeta.artworkUrl === "string" ? itemMeta.artworkUrl : null),
         isTwoSided: job.isTwoSided,
         isRush: job.isRush,
+
+        // Pricing health signal — lets operators spot jobs that need pricing review
+        costSignal: computeCostSignal(
+          {
+            id: job.orderItem.id,
+            productName: job.productName || job.orderItem.productName,
+            totalPrice: job.orderItem.totalPrice || 0,
+            materialCostCents: job.orderItem.materialCostCents || 0,
+            estimatedCostCents: job.orderItem.estimatedCostCents || 0,
+            actualCostCents: job.orderItem.actualCostCents || 0,
+            vendorCostCents: job.orderItem.vendorCostCents || 0,
+          },
+          orderId,
+          job.orderItem.order.status,
+          job.orderItem.order.productionStatus,
+          { returnTo: `/admin/production/${job.id}`, source: "production" }
+        ),
+
+        // Quote provenance — compact reference if this order came from a quote
+        sourceQuote: quoteByOrderId.get(orderId) || null,
       };
     });
 

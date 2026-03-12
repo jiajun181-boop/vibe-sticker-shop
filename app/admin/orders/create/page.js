@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCad } from "@/lib/admin/format-cad";
 import { DESIGN_HELP_CENTS } from "@/lib/order-config";
@@ -52,13 +52,28 @@ function emptyItem() {
 
 export default function CreateOrderPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+
+  // Quote provenance — if creating an order from a quote
+  const fromQuoteId = searchParams.get("fromQuote") || null;
 
   // Customer
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+
+  // Pre-fill from quote query params
+  useEffect(() => {
+    if (!fromQuoteId) return;
+    const email = searchParams.get("email");
+    const name = searchParams.get("name");
+    const phone = searchParams.get("phone");
+    if (email) setCustomerEmail(email);
+    if (name) setCustomerName(name);
+    if (phone) setCustomerPhone(phone);
+  }, [fromQuoteId, searchParams]);
 
   // Items
   const [items, setItems] = useState([emptyItem()]);
@@ -228,6 +243,21 @@ export default function CreateOrderPage() {
       }
 
       const { order } = await res.json();
+
+      // If this order was created from a quote, link them
+      if (fromQuoteId) {
+        try {
+          await fetch(`/api/admin/quotes/${fromQuoteId}/convert`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId: order.id }),
+          });
+        } catch {
+          // Non-blocking — order was created, quote link is best-effort
+          console.warn("[CreateOrder] Failed to link quote", fromQuoteId);
+        }
+      }
+
       router.push(`/admin/orders/${order.id}`);
     } catch (err) {
       setError(err.message);
@@ -244,12 +274,21 @@ export default function CreateOrderPage() {
           <h1 className="text-xl font-bold text-black">
             New Order 新建订单
           </h1>
-          <p className="text-sm text-[#999]">
-            Create a manual order for walk-in or phone customers.{" "}
-            <Link href="/admin/pricing-dashboard" className="text-black underline hover:no-underline">
-              Check product prices
-            </Link>
-          </p>
+          {fromQuoteId ? (
+            <p className="text-sm text-indigo-600">
+              Converting from quote — order will be linked automatically.{" "}
+              <Link href={`/admin/quotes`} className="underline hover:no-underline">
+                Back to quotes
+              </Link>
+            </p>
+          ) : (
+            <p className="text-sm text-[#999]">
+              Create a manual order for walk-in or phone customers.{" "}
+              <Link href="/admin/pricing-dashboard" className="text-black underline hover:no-underline">
+                Check product prices
+              </Link>
+            </p>
+          )}
         </div>
         <Link
           href="/admin/orders"

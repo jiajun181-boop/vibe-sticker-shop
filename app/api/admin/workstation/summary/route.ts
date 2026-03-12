@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { computeOrderCostSignals } from "@/lib/pricing/production-cost-signal";
 
 /**
  * GET /api/admin/workstation/summary
@@ -148,6 +149,11 @@ async function fetchNeedsAttention() {
           specsJson: true,
           fileUrl: true,
           fileName: true,
+          totalPrice: true,
+          materialCostCents: true,
+          estimatedCostCents: true,
+          actualCostCents: true,
+          vendorCostCents: true,
           productionJob: {
             select: { id: true, status: true, priority: true, dueAt: true },
           },
@@ -161,7 +167,31 @@ async function fetchNeedsAttention() {
     take: 20,
   });
 
-  return orders;
+  // Attach aggregate cost signal per order so the workstation can show pricing risk
+  return orders.map((order) => {
+    const costItems = order.items.map((item) => ({
+      id: item.id,
+      productName: item.productName || "",
+      totalPrice: item.totalPrice || 0,
+      materialCostCents: item.materialCostCents || 0,
+      estimatedCostCents: item.estimatedCostCents || 0,
+      actualCostCents: item.actualCostCents || 0,
+      vendorCostCents: item.vendorCostCents || 0,
+    }));
+
+    const { aggregate } = computeOrderCostSignals(
+      costItems,
+      order.id,
+      order.status,
+      order.productionStatus,
+      { returnTo: "/admin/workstation", source: "workstation" }
+    );
+
+    return {
+      ...order,
+      costSignal: aggregate,
+    };
+  });
 }
 
 // ─── Pending proofs ─────────────────────────────────────────────────────────

@@ -115,7 +115,7 @@ export async function PATCH(
       note: "owner-bypass",
     });
 
-    return NextResponse.json({ cost });
+    return NextResponse.json({ cost, refreshHint: { invalidates: ["missingVendorCost"] } });
   } catch (err) {
     console.error("[vendor-costs] PATCH failed:", err);
     return NextResponse.json(
@@ -187,7 +187,7 @@ export async function DELETE(
       note: "owner-bypass",
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, refreshHint: { invalidates: ["missingVendorCost"] } });
   } catch (err) {
     console.error("[vendor-costs] DELETE failed:", err);
     return NextResponse.json(

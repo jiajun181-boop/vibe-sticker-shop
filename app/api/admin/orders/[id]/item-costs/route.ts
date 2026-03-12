@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { logActivity } from "@/lib/activity-log";
 import { computeOrderProfit } from "@/lib/pricing/profit-tracking";
+import { computeOrderCostSignals } from "@/lib/pricing/production-cost-signal";
 
 /**
  * PATCH /api/admin/orders/[id]/item-costs
@@ -155,10 +156,58 @@ export async function PATCH(
       },
     });
 
+    // Recompute cost signal so the originating surface knows the issue is resolved.
+    let costSignal = undefined;
+    try {
+      const freshOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: {
+          status: true,
+          productionStatus: true,
+          items: {
+            select: {
+              id: true,
+              productName: true,
+              totalPrice: true,
+              materialCostCents: true,
+              estimatedCostCents: true,
+              actualCostCents: true,
+              vendorCostCents: true,
+            },
+          },
+        },
+      });
+      if (freshOrder) {
+        const signals = computeOrderCostSignals(
+          freshOrder.items.map((i) => ({
+            id: i.id,
+            productName: i.productName || "",
+            totalPrice: i.totalPrice || 0,
+            materialCostCents: i.materialCostCents || 0,
+            estimatedCostCents: i.estimatedCostCents || 0,
+            actualCostCents: i.actualCostCents || 0,
+            vendorCostCents: i.vendorCostCents || 0,
+          })),
+          orderId,
+          freshOrder.status,
+          freshOrder.productionStatus,
+          { returnTo: `/admin/orders/${orderId}`, source: "item-costs" }
+        );
+        costSignal = {
+          aggregate: signals.aggregate,
+          perItem: signals.perItem,
+        };
+      }
+    } catch (_e) {
+      // Non-critical
+    }
+
     return NextResponse.json({
       updated: updatedItems.length,
       items: updatedItems,
       orderProfit,
+      costSignal,
+      refreshHint: { invalidates: ["missingActualCost", "profitAlerts"] },
     });
   } catch (err) {
     console.error("[admin/orders/item-costs] PATCH error:", err);

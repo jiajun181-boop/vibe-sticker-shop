@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const MODEL_LABELS = {
-  AREA_TIERED: "Area Tiered ($/sqft)",
-  QTY_TIERED: "Qty Tiered ($/ea)",
-  QTY_OPTIONS: "Qty + Options",
+  AREA_TIERED: "admin.pc.modelAreaTiered",
+  QTY_TIERED: "admin.pc.modelQtyTiered",
+  QTY_OPTIONS: "admin.pc.modelQtyOptions",
 };
 const MODEL_ORDER = ["QTY_OPTIONS", "QTY_TIERED", "AREA_TIERED"];
 const DEFAULT_ADJUST_FLAGS = {
@@ -192,12 +192,12 @@ export default function PresetsPanel() {
   const groupedPresets = useMemo(() => {
     const groups = MODEL_ORDER.map((model) => ({
       model,
-      label: MODEL_LABELS[model] || model,
+      label: model,
       items: presets.filter((p) => p.model === model),
     })).filter((g) => g.items.length);
     const leftovers = presets.filter((p) => !MODEL_ORDER.includes(p.model));
     if (leftovers.length) {
-      groups.push({ model: "OTHER", label: "Other", items: leftovers });
+      groups.push({ model: "OTHER", label: "OTHER", items: leftovers });
     }
     return groups;
   }, [presets]);
@@ -226,7 +226,7 @@ export default function PresetsPanel() {
     } catch (err) {
       console.error("Failed to load presets:", err);
       setPresets([]);
-      setMessage({ type: "error", text: "Failed to load presets" });
+      setMessage({ type: "error", text: t("admin.pc.failedLoadPresets") });
     } finally {
       setLoading(false);
     }
@@ -294,7 +294,7 @@ export default function PresetsPanel() {
     try {
       parsed = JSON.parse(editJson);
     } catch {
-      setMessage({ type: "error", text: "Invalid JSON" });
+      setMessage({ type: "error", text: t("admin.pc.invalidJson") });
       return;
     }
 
@@ -310,7 +310,7 @@ export default function PresetsPanel() {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Save failed");
       }
-      setMessage({ type: "success", text: "Saved!" });
+      setMessage({ type: "success", text: t("admin.pc.presetSaved") });
       setEditing(null);
       fetchPresets();
     } catch (err) {
@@ -331,18 +331,18 @@ export default function PresetsPanel() {
       fetchPresets();
     } catch (err) {
       console.error("Toggle failed:", err);
-      setMessage({ type: "error", text: "Failed to toggle preset" });
+      setMessage({ type: "error", text: t("admin.pc.failedToggle") });
     }
   }
 
   async function runBulk(mode) {
     if (!bulkCategory) {
-      setBulkMessage({ type: "error", text: "Please select a category." });
+      setBulkMessage({ type: "error", text: t("admin.pc.selectCategoryFirst") });
       return;
     }
     const percent = Number(bulkPercent);
     if (!Number.isFinite(percent) || percent <= -95 || percent > 500) {
-      setBulkMessage({ type: "error", text: "Percent must be between -95 and 500." });
+      setBulkMessage({ type: "error", text: t("admin.pc.percentRange") });
       return;
     }
 
@@ -368,17 +368,17 @@ export default function PresetsPanel() {
       if (mode === "apply") {
         setBulkMessage({
           type: "success",
-          text: `Applied to ${data.applied || 0} preset(s).`,
+          text: t("admin.pc.bulkApplied", { count: data.applied || 0 }),
         });
         await Promise.all([fetchPresets(), fetchAnomalies(), fetchRollbackLogs()]);
       } else {
         setBulkMessage({
           type: "success",
-          text: `Preview ready: ${data.results?.length || 0} preset(s) analyzed.`,
+          text: t("admin.pc.previewReady", { count: data.results?.length || 0 }),
         });
       }
     } catch (err) {
-      setBulkMessage({ type: "error", text: err.message || "Bulk operation failed" });
+      setBulkMessage({ type: "error", text: err.message || t("admin.pc.bulkFailed") });
     } finally {
       setBulkLoading(false);
     }
@@ -386,7 +386,7 @@ export default function PresetsPanel() {
 
   async function handleQuickAssign() {
     if (!bulkCategory || !quickPresetId) {
-      setQuickAssignMsg({ type: "error", text: "Choose category and preset first." });
+      setQuickAssignMsg({ type: "error", text: t("admin.pc.chooseCatPreset") });
       return;
     }
     setQuickAssignLoading(true);
@@ -406,11 +406,11 @@ export default function PresetsPanel() {
       if (!res.ok) throw new Error(data?.error || "Quick assign failed");
       setQuickAssignMsg({
         type: "success",
-        text: `Assigned preset to ${data.updated} products in ${data.category}.`,
+        text: t("admin.pc.assignedPreset", { updated: data.updated, category: data.category }),
       });
       await fetchCategories();
     } catch (err) {
-      setQuickAssignMsg({ type: "error", text: err.message || "Quick assign failed" });
+      setQuickAssignMsg({ type: "error", text: err.message || t("admin.pc.quickAssignFailed") });
     } finally {
       setQuickAssignLoading(false);
     }
@@ -418,7 +418,7 @@ export default function PresetsPanel() {
 
   async function handleRollback() {
     if (!rollbackTarget) {
-      setRollbackMsg({ type: "error", text: "Select a rollback entry first." });
+      setRollbackMsg({ type: "error", text: t("admin.pc.selectRollbackFirst") });
       return;
     }
     setRollbackLoading(true);
@@ -431,10 +431,10 @@ export default function PresetsPanel() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Rollback failed");
-      setRollbackMsg({ type: "success", text: `Rollback done. Restored ${data.restoredPresets} presets.` });
+      setRollbackMsg({ type: "success", text: t("admin.pc.rollbackDone", { count: data.restoredPresets }) });
       await Promise.all([fetchPresets(), fetchAnomalies(), fetchRollbackLogs()]);
     } catch (err) {
-      setRollbackMsg({ type: "error", text: err.message || "Rollback failed" });
+      setRollbackMsg({ type: "error", text: err.message || t("admin.pc.rollbackFailed") });
     } finally {
       setRollbackLoading(false);
     }
@@ -446,7 +446,7 @@ export default function PresetsPanel() {
 
   if (loading) {
     return (
-      <div className="p-8 text-[#999] text-sm">Loading pricing presets...</div>
+      <div className="p-8 text-[#999] text-sm">{t("admin.pc.loadingPresets")}</div>
     );
   }
 
@@ -454,13 +454,13 @@ export default function PresetsPanel() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Pricing Presets</h1>
+          <h1 className="text-2xl font-bold">{t("admin.pc.pricingPresets")}</h1>
           <p className="text-sm text-[#999] mt-1">
-            Edit pricing rules. Changes affect all products linked to each preset.
+            {t("admin.pc.presetsEditDesc")}
           </p>
         </div>
         <span className="bg-[#f5f5f5] px-3 py-1 rounded-[2px] text-xs font-bold text-[#666]">
-          {presets.length} presets
+          {t("admin.pc.nPresetsCount", { n: presets.length })}
         </span>
       </div>
 
@@ -478,43 +478,43 @@ export default function PresetsPanel() {
 
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-black">Pricing Integrity</h2>
+          <h2 className="text-sm font-semibold text-black">{t("admin.pc.pricingIntegrity")}</h2>
           <button
             type="button"
             onClick={fetchAnomalies}
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
           >
-            {anomalyLoading ? "Checking..." : "Re-check"}
+            {anomalyLoading ? t("admin.pc.checking") : t("admin.pc.recheck")}
           </button>
         </div>
         {anomalyReport ? (
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-              <p className="text-[11px] text-[#666]">Preset anomalies</p>
+              <p className="text-[11px] text-[#666]">{t("admin.pc.presetAnomalies")}</p>
               <p className="text-base font-semibold text-black">{anomalyReport.summary?.presetAnomalies ?? 0}</p>
             </div>
             <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-              <p className="text-[11px] text-[#666]">Products missing price</p>
+              <p className="text-[11px] text-[#666]">{t("admin.pc.productsMissingPrice")}</p>
               <p className="text-base font-semibold text-black">{anomalyReport.summary?.productsMissingPrice ?? 0}</p>
             </div>
             <div className="rounded-[3px] border border-[#e0e0e0] p-2.5">
-              <p className="text-[11px] text-[#666]">Presets checked</p>
+              <p className="text-[11px] text-[#666]">{t("admin.pc.presetsChecked")}</p>
               <p className="text-base font-semibold text-black">{anomalyReport.summary?.totalPresetsChecked ?? 0}</p>
             </div>
           </div>
         ) : (
-          <p className="text-xs text-[#999]">No report loaded yet.</p>
+          <p className="text-xs text-[#999]">{t("admin.pc.noReportYet")}</p>
         )}
 
         <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#666]">Rollback Last Bulk Change</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#666]">{t("admin.pc.rollbackLastBulk")}</p>
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={rollbackTarget}
               onChange={(e) => setRollbackTarget(e.target.value)}
               className="rounded border border-[#d0d0d0] bg-white px-2 py-1 text-xs"
             >
-              <option value="">Select bulk-adjust log</option>
+              <option value="">{t("admin.pc.selectBulkLog")}</option>
               {rollbackLogs.map((l) => (
                 <option key={l.id} value={l.id}>
                   {new Date(l.createdAt).toLocaleString()} | {l.category} | {l.percent}% | {l.applied}
@@ -526,7 +526,7 @@ export default function PresetsPanel() {
               disabled={!rollbackTarget || rollbackLoading}
               className="rounded bg-black px-3 py-1.5 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
             >
-              {rollbackLoading ? "Rolling back..." : "Rollback"}
+              {rollbackLoading ? t("admin.pc.rollingBack") : t("admin.pc.rollbackLabel")}
             </button>
           </div>
           {rollbackMsg && (
@@ -538,7 +538,7 @@ export default function PresetsPanel() {
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5 space-y-4">
         <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#666]">Quick Assign Preset</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#666]">{t("admin.pc.quickAssignPreset")}</span>
             <select
               value={quickPresetId}
               onChange={(e) => setQuickPresetId(e.target.value)}
@@ -555,7 +555,7 @@ export default function PresetsPanel() {
               disabled={quickAssignLoading || !quickPresetId || !bulkCategory}
               className="rounded bg-black px-3 py-1.5 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
             >
-              {quickAssignLoading ? "Applying..." : "Apply to Category"}
+              {quickAssignLoading ? t("admin.pc.applying") : t("admin.pc.applyToCategory")}
             </button>
             <label className="inline-flex items-center gap-1 text-xs text-[#666]">
               <input
@@ -563,7 +563,7 @@ export default function PresetsPanel() {
                 checked={quickOverwrite}
                 onChange={(e) => setQuickOverwrite(e.target.checked)}
               />
-              Overwrite existing preset links
+              {t("admin.pc.overwriteLinks")}
             </label>
           </div>
           {quickAssignMsg && (
@@ -575,19 +575,19 @@ export default function PresetsPanel() {
 
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-black">Bulk Price Adjustment</h2>
+            <h2 className="text-base font-bold text-black">{t("admin.pc.bulkPriceAdj")}</h2>
             <p className="text-xs text-[#999] mt-1">
-              Adjust an entire category by percentage. Run preview first, then apply.
+              {t("admin.pc.bulkPriceAdjDesc")}
             </p>
           </div>
           <span className="rounded-[2px] bg-[#f5f5f5] px-3 py-1 text-[11px] font-semibold text-[#666]">
-            Safe mode: shared presets protected
+            {t("admin.pc.safeMode")}
           </span>
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
           <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#999]">Category</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#999]">{t("admin.pc.categoryLabel")}</span>
             <select
               value={bulkCategory}
               onChange={(e) => setBulkCategory(e.target.value)}
@@ -602,7 +602,7 @@ export default function PresetsPanel() {
           </label>
 
           <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#999]">Percent Change</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#999]">{t("admin.pc.percentChange")}</span>
             <div className="mt-1 flex items-center rounded-[3px] border border-[#d0d0d0] px-3 py-2">
               <input
                 type="number"
@@ -624,7 +624,7 @@ export default function PresetsPanel() {
                 onChange={(e) => setIncludeShared(e.target.checked)}
                 className="rounded border-[#d0d0d0]"
               />
-              Also adjust shared presets (cross-category)
+              {t("admin.pc.alsoShared")}
             </label>
           </div>
         </div>
@@ -632,23 +632,23 @@ export default function PresetsPanel() {
         <div className="flex flex-wrap items-center gap-3 text-xs text-black">
           <label className="inline-flex items-center gap-2">
             <input type="checkbox" checked={adjustFlags.tiers} onChange={(e) => updateAdjustFlag("tiers", e.target.checked)} />
-            Tier prices
+            {t("admin.pc.tierPrices")}
           </label>
           <label className="inline-flex items-center gap-2">
             <input type="checkbox" checked={adjustFlags.addons} onChange={(e) => updateAdjustFlag("addons", e.target.checked)} />
-            Add-ons
+            {t("admin.pc.addOns")}
           </label>
           <label className="inline-flex items-center gap-2">
             <input type="checkbox" checked={adjustFlags.finishings} onChange={(e) => updateAdjustFlag("finishings", e.target.checked)} />
-            Finishings
+            {t("admin.pc.finishingsFlag")}
           </label>
           <label className="inline-flex items-center gap-2">
             <input type="checkbox" checked={adjustFlags.minimumPrice} onChange={(e) => updateAdjustFlag("minimumPrice", e.target.checked)} />
-            Minimum price
+            {t("admin.pc.minimumPrice")}
           </label>
           <label className="inline-flex items-center gap-2">
             <input type="checkbox" checked={adjustFlags.fileFee} onChange={(e) => updateAdjustFlag("fileFee", e.target.checked)} />
-            File fee
+            {t("admin.pc.fileFee")}
           </label>
         </div>
 
@@ -658,14 +658,14 @@ export default function PresetsPanel() {
             disabled={bulkLoading}
             className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-xs font-semibold text-black hover:bg-[#fafafa] disabled:opacity-50"
           >
-            {bulkLoading ? "Running..." : "Preview"}
+            {bulkLoading ? t("admin.pc.running") : t("admin.pc.previewLabel")}
           </button>
           <button
             onClick={() => runBulk("apply")}
             disabled={bulkLoading || !bulkPreview}
             className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
           >
-            {bulkLoading ? "Applying..." : "Apply"}
+            {bulkLoading ? t("admin.pc.applying") : t("admin.pc.applyLabel")}
           </button>
         </div>
 
@@ -678,20 +678,20 @@ export default function PresetsPanel() {
         {bulkPreview && (
           <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
             <div className="flex flex-wrap gap-3 text-xs text-[#666]">
-              <span>Touched presets: {bulkPreview.touchedPresets}</span>
-              <span>Touched products: {bulkPreview.touchedProducts}</span>
-              <span>Applied: {bulkPreview.applied || 0}</span>
-              <span>Skipped shared: {bulkPreview.skippedShared}</span>
-              <span>Invalid: {bulkPreview.invalidConfigs}</span>
+              <span>{t("admin.pc.touchedPresets", { n: bulkPreview.touchedPresets })}</span>
+              <span>{t("admin.pc.touchedProducts", { n: bulkPreview.touchedProducts })}</span>
+              <span>{t("admin.pc.appliedCount", { n: bulkPreview.applied || 0 })}</span>
+              <span>{t("admin.pc.skippedShared", { n: bulkPreview.skippedShared })}</span>
+              <span>{t("admin.pc.invalidCount", { n: bulkPreview.invalidConfigs })}</span>
             </div>
             {!!bulkPreview.results?.length && (
               <div className="mt-3 max-h-40 overflow-auto rounded border border-[#e0e0e0] bg-white">
                 <table className="w-full text-xs">
                   <thead className="bg-[#fafafa] text-[#999]">
                     <tr>
-                      <th className="px-2 py-1 text-left">Preset</th>
-                      <th className="px-2 py-1 text-left">Status</th>
-                      <th className="px-2 py-1 text-left">Sample</th>
+                      <th className="px-2 py-1 text-left">{t("admin.pc.colPreset")}</th>
+                      <th className="px-2 py-1 text-left">{t("admin.pc.colStatus")}</th>
+                      <th className="px-2 py-1 text-left">{t("admin.pc.colSampleLabel")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -700,7 +700,7 @@ export default function PresetsPanel() {
                         <td className="px-2 py-1.5 font-mono">{r.key}</td>
                         <td className="px-2 py-1.5">{r.status}</td>
                         <td className="px-2 py-1.5">
-                          {r.sample ? `${r.sample.field}: ${r.sample.before} → ${r.sample.after}` : "—"}
+                          {r.sample ? `${r.sample.field}: ${r.sample.before} \u2192 ${r.sample.after}` : "\u2014"}
                         </td>
                       </tr>
                     ))}
@@ -716,9 +716,9 @@ export default function PresetsPanel() {
         {groupedPresets.map((group) => (
           <section key={group.model} className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-black">{group.label}</h2>
+              <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-black">{t(MODEL_LABELS[group.model] || "admin.pc.modelOther")}</h2>
               <span className="rounded-[2px] bg-[#f5f5f5] px-2.5 py-1 text-[10px] font-semibold text-[#666]">
-                {group.items.length} preset{group.items.length !== 1 ? "s" : ""}
+                {t("admin.pc.nPresetsCount", { n: group.items.length })}
               </span>
             </div>
             {group.items.map((preset) => {
@@ -742,15 +742,15 @@ export default function PresetsPanel() {
                           : "bg-[#f5f5f5] text-[#999]"
                       }`}
                     >
-                      {preset.isActive ? "Active" : "Inactive"}
+                      {preset.isActive ? t("admin.pc.active") : t("admin.pc.inactive")}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-[#999]">
                     <span className="font-mono bg-[#fafafa] px-2 py-0.5 rounded">
                       {preset.key}
                     </span>
-                    <span>{MODEL_LABELS[preset.model] || preset.model}</span>
-                    <span>{productCount} product{productCount !== 1 ? "s" : ""}</span>
+                    <span>{t(MODEL_LABELS[preset.model] || "admin.pc.modelOther")}</span>
+                    <span>{t("admin.pc.nProductsCount", { n: productCount })}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -758,21 +758,21 @@ export default function PresetsPanel() {
                     onClick={() => toggleActive(preset)}
                     className="px-3 py-1.5 text-xs font-medium rounded-[3px] border border-[#e0e0e0] hover:bg-[#fafafa]"
                   >
-                    {preset.isActive ? "Deactivate" : "Activate"}
+                    {preset.isActive ? t("admin.pc.deactivate") : t("admin.pc.activate")}
                   </button>
                   {isEditing ? (
                     <button
                       onClick={cancelEdit}
                       className="px-3 py-1.5 text-xs font-medium rounded-[3px] border border-[#e0e0e0] hover:bg-[#fafafa]"
                     >
-                      Cancel
+                      {t("admin.pc.cancel")}
                     </button>
                   ) : (
                     <button
                       onClick={() => startEdit(preset)}
                       className="px-3 py-1.5 text-xs font-medium rounded-[3px] bg-black text-[#fff] hover:bg-[#222]"
                     >
-                      Edit Config
+                      {t("admin.pc.editConfig")}
                     </button>
                   )}
                 </div>
@@ -783,7 +783,7 @@ export default function PresetsPanel() {
                 <div className="border-t border-[#e0e0e0] px-5 py-4 space-y-4 bg-[#fafafa]">
                   <label className="block">
                     <span className="text-xs font-semibold text-[#666] uppercase tracking-[0.14em]">
-                      Preset Name
+                      {t("admin.pc.presetNameLabel")}
                     </span>
                     <input
                       type="text"
@@ -812,7 +812,7 @@ export default function PresetsPanel() {
 
                   <label className="block">
                     <span className="text-xs font-semibold text-[#666] uppercase tracking-[0.14em]">
-                      Config JSON
+                      {t("admin.pc.configJson")}
                     </span>
                     <textarea
                       value={editJson}
@@ -828,7 +828,7 @@ export default function PresetsPanel() {
                       disabled={saving}
                       className="px-5 py-2 rounded-[3px] bg-black text-[#fff] text-xs font-bold uppercase tracking-[0.14em] hover:bg-[#222] disabled:bg-[#999]"
                     >
-                      {saving ? "Saving..." : "Save Changes"}
+                      {saving ? t("admin.pc.saving") : t("admin.pc.saveChanges")}
                     </button>
                   </div>
                 </div>
@@ -850,9 +850,9 @@ export default function PresetsPanel() {
 
         {presets.length === 0 && (
           <div className="text-center py-12 text-[#999]">
-            <p className="text-lg font-semibold">No pricing presets found.</p>
+            <p className="text-lg font-semibold">{t("admin.pc.noPresetsFound")}</p>
             <p className="text-sm mt-1">
-              Run the seed script to create default presets.
+              {t("admin.pc.runSeedScript")}
             </p>
           </div>
         )}

@@ -10,6 +10,7 @@ import { categorizeForTaskQueue, getExecutableAction, assessItem, READINESS } fr
 import ItemProductionPanel from "@/components/admin/ItemProductionPanel";
 import { formatCad } from "@/lib/product-helpers";
 import { isProductionItem } from "@/lib/order-item-utils";
+import CostSignalBadge from "@/components/admin/CostSignalBadge";
 
 // ─── Single summary API fetch ────────────────────────────────────────────────
 
@@ -460,6 +461,7 @@ function TaskQueueView({ orders, t }) {
                       {o.paymentStatus === "unpaid" && (
                         <StatusBadge status="unpaid" t={t} />
                       )}
+                      {o.costSignal && <CostSignalBadge signal={o.costSignal} size="sm" />}
                       <span className="text-sm font-medium text-[#111] truncate">#{o.id.slice(-8)}</span>
                       <span className="hidden text-xs text-[#666] truncate sm:inline">
                         {o.customerName || o.customerEmail}

@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { buildAuditReport } from "@/lib/pricing/audit";
 import { MissingFieldCode } from "@/lib/pricing/audit-types";
+import { reminderToAction } from "@/lib/pricing/ops-action";
+import { buildPricingUrl } from "@/lib/pricing/focus";
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, "pricing", "view");
@@ -148,52 +150,66 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    // First slug for each reminder type — gives the action hint a concrete entity to target
+    const firstDisplaySlug = missingDisplayPrice[0];
+    const firstFloorSlug = missingFloorPolicy[0];
+    const firstVendorSlug = missingVendorCost[0];
+    const firstStaleSlug = staleVendorCostSlugs[0];
+
     const reminders = {
       missingDisplayPrice: {
         count: missingDisplayPrice.length,
         slugs: missingDisplayPrice,
         severity: missingDisplayPrice.length > 0 ? "warning" : "ok",
-        drilldownUrl: "/admin/pricing?tab=ops&section=reminders",
+        drilldownUrl: buildPricingUrl({ tab: "ops", section: "reminders" }),
+        actionHint: reminderToAction("missingDisplayPrice", firstDisplaySlug ? { productSlug: firstDisplaySlug } : undefined),
       },
       missingFloorPolicy: {
         count: missingFloorPolicy.length,
         slugs: missingFloorPolicy,
         severity: missingFloorPolicy.length > 0 ? "warning" : "ok",
-        drilldownUrl: "/admin/pricing?tab=ops&section=reminders",
+        drilldownUrl: buildPricingUrl({ tab: "ops", section: "reminders" }),
+        actionHint: reminderToAction("missingFloorPolicy", firstFloorSlug ? { productSlug: firstFloorSlug } : undefined),
       },
       placeholderMaterials: {
         count: placeholderMaterials.length,
         names: placeholderMaterials,
         severity: placeholderMaterials.length > 0 ? "critical" : "ok",
         drilldownUrl: "/admin/materials?filter=placeholder",
+        actionHint: reminderToAction("placeholderMaterials"),
       },
       suspiciousHardware: {
         count: suspiciousHardware.length,
         items: suspiciousHardware,
         severity: suspiciousHardware.length > 0 ? "warning" : "ok",
         drilldownUrl: "/admin/materials?tab=hardware&filter=suspicious",
+        actionHint: reminderToAction("suspiciousHardware"),
       },
       missingVendorCost: {
         count: missingVendorCost.length,
         slugs: missingVendorCost,
         severity: missingVendorCost.length > 0 ? "warning" : "ok",
-        drilldownUrl: "/admin/pricing?tab=governance&section=vendor",
+        drilldownUrl: buildPricingUrl({ tab: "governance", section: "vendor" }),
+        actionHint: reminderToAction("missingVendorCost", firstVendorSlug ? { productSlug: firstVendorSlug } : undefined),
       },
       staleVendorCosts: {
         count: staleVendorCostSlugs.length,
         slugs: staleVendorCostSlugs,
         severity: staleVendorCostSlugs.length > 5 ? "critical" : staleVendorCostSlugs.length > 0 ? "warning" : "ok",
-        drilldownUrl: "/admin/pricing?tab=governance&section=vendor",
+        drilldownUrl: buildPricingUrl({ tab: "governance", section: "vendor" }),
+        actionHint: reminderToAction("staleVendorCosts", firstStaleSlug ? { productSlug: firstStaleSlug } : undefined),
       },
       highDriftChanges: {
         count: highDriftCount,
         severity: highDriftCount > 0 ? "critical" : "ok",
-        drilldownUrl: "/admin/pricing?tab=governance&section=changelog",
+        drilldownUrl: buildPricingUrl({ tab: "governance", section: "changelog" }),
+        actionHint: reminderToAction("highDriftChanges"),
       },
       pendingApprovals: {
         count: pendingApprovalCount,
         severity: pendingApprovalCount > 0 ? "warning" : "ok",
-        drilldownUrl: "/admin/pricing?tab=governance&section=approvals",
+        drilldownUrl: buildPricingUrl({ tab: "governance", section: "approvals" }),
+        actionHint: reminderToAction("pendingApprovals"),
       },
     };
 

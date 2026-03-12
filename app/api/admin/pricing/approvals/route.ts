@@ -12,6 +12,7 @@ import {
   rejectRequest,
   listPendingApprovals,
   getApprovalSummary,
+  listApprovalHistory,
 } from "@/lib/pricing/approval";
 import { canEditPricing, canApprovePricing } from "@/lib/pricing/pricing-permissions";
 
@@ -29,8 +30,46 @@ export async function GET(request: NextRequest) {
     }
 
     const limit = Number(searchParams.get("limit")) || 50;
+    const status = searchParams.get("status") || undefined;
+    const approvalId = searchParams.get("approvalId") || undefined;
+    const targetSlug = searchParams.get("slug") || undefined;
+
+    // Exact-target: fetch single approval by ID
+    if (approvalId) {
+      const { prisma } = await import("@/lib/prisma");
+      const approval = await prisma.pricingApproval.findUnique({ where: { id: approvalId } });
+      if (!approval) {
+        return NextResponse.json({ error: "Approval not found" }, { status: 404 });
+      }
+      return NextResponse.json({
+        approvals: [approval],
+        total: 1,
+        focused: true,
+        focusParams: { approvalId },
+        primaryRecord: approval,
+      });
+    }
+
+    // Filtered list: by status and/or target slug
+    if (status || targetSlug) {
+      const history = await listApprovalHistory({ status, page: 1, limit });
+      // Further filter by targetSlug if provided
+      const filtered = targetSlug
+        ? history.approvals.filter((a: any) => a.targetSlug === targetSlug)
+        : history.approvals;
+      return NextResponse.json({
+        approvals: filtered,
+        total: filtered.length,
+        focused: !!(targetSlug),
+        ...(targetSlug && {
+          focusParams: { slug: targetSlug },
+          primaryRecord: filtered[0] || null,
+        }),
+      });
+    }
+
     const approvals = await listPendingApprovals(limit);
-    return NextResponse.json({ approvals });
+    return NextResponse.json({ approvals, focused: false });
   } catch (err) {
     console.error("[approvals] GET failed:", err);
     return NextResponse.json({ error: "Failed to list approvals" }, { status: 500 });
@@ -115,7 +154,26 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true });
+    // Return updated approval state + remaining count so the UI can
+    // immediately reflect the resolution without re-fetching.
+    let updatedApproval = null;
+    let pendingCount = 0;
+    try {
+      const { prisma } = await import("@/lib/prisma");
+      [updatedApproval, pendingCount] = await Promise.all([
+        prisma.pricingApproval.findUnique({ where: { id: approvalId } }),
+        prisma.pricingApproval.count({ where: { status: "pending" } }),
+      ]);
+    } catch (_e) {
+      // Non-critical: base success response is sufficient
+    }
+
+    return NextResponse.json({
+      success: true,
+      approval: updatedApproval,
+      remainingPending: pendingCount,
+      refreshHint: { invalidates: ["pendingApprovals"] },
+    });
   } catch (err) {
     console.error("[approvals] PATCH failed:", err);
     return NextResponse.json({ error: "Failed to process approval" }, { status: 500 });

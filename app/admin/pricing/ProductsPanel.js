@@ -87,10 +87,10 @@ export default function ProductsPanel() {
     <div className="space-y-5">
       {/* Stats cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Active Products" value={stats.total} color="text-gray-900" />
-        <StatCard label="With Cost Data" value={stats.withCost} color="text-blue-600" />
-        <StatCard label="Below Floor" value={stats.belowFloor} color={stats.belowFloor > 0 ? "text-red-600" : "text-green-600"} />
-        <StatCard label="Avg Completeness" value={`${stats.avgCompleteness}%`} color="text-gray-600" />
+        <StatCard label={t("admin.pc.activeProducts")} value={stats.total} color="text-gray-900" />
+        <StatCard label={t("admin.pc.withCostData")} value={stats.withCost} color="text-blue-600" />
+        <StatCard label={t("admin.pc.belowFloor")} value={stats.belowFloor} color={stats.belowFloor > 0 ? "text-red-600" : "text-green-600"} />
+        <StatCard label={t("admin.pc.avgCompleteness")} value={`${stats.avgCompleteness}%`} color="text-gray-600" />
       </div>
 
       {/* Search + filter */}
@@ -131,14 +131,14 @@ export default function ProductsPanel() {
         <div className="rounded-[3px] border border-red-200 bg-red-50 p-6 text-center">
           <p className="text-sm text-red-700">{error}</p>
           <button onClick={fetchBatch} className="mt-3 rounded-[3px] bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
-            Retry
+            {t("admin.pc.retry")}
           </button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-12 text-center text-sm text-[#999]">{t("admin.priceDash.noProducts")}</div>
       ) : (
         <div className="space-y-1">
-          <p className="text-xs text-[#999]">{filtered.length} products</p>
+          <p className="text-xs text-[#999]">{t("admin.pc.productsCount", { count: filtered.length })}</p>
 
           {/* Desktop table */}
           <div className="hidden sm:block overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
@@ -146,14 +146,14 @@ export default function ProductsPanel() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#666]">Product</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#666]">Source</th>
-                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#666]">Sell Price</th>
-                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#666]">Total Cost</th>
-                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#666]">Profit</th>
-                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#666]">Margin</th>
-                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#666]">Floor</th>
-                    <th className="px-3 py-2.5 text-center text-xs font-semibold text-[#666]">Score</th>
+                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#666]">{t("admin.pc.colProduct")}</th>
+                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#666]">{t("admin.pc.colSource")}</th>
+                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#666]">{t("admin.pc.colSellPrice")}</th>
+                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#666]">{t("admin.pc.colTotalCost")}</th>
+                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#666]">{t("admin.pc.colProfit")}</th>
+                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#666]">{t("admin.pc.colMargin")}</th>
+                    <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#666]">{t("admin.pc.colFloor")}</th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold text-[#666]">{t("admin.pc.colScore")}</th>
                     <th className="px-3 py-2.5 text-right text-xs font-semibold text-[#666]"></th>
                   </tr>
                 </thead>
@@ -206,7 +206,7 @@ export default function ProductsPanel() {
                             href={pricingQuotePath(product.slug)}
                             className="inline-flex items-center gap-1 rounded-[3px] bg-black px-3 py-1.5 text-xs font-medium text-white hover:bg-[#222]"
                           >
-                            Quote
+                            {t("admin.pc.quote")}
                             <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                             </svg>
@@ -240,15 +240,15 @@ export default function ProductsPanel() {
                     }`}>{product.completenessScore}%</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div><span className="text-[#999]">Sell</span><br/><span className="font-mono font-medium">{fmt(product.sellPriceCents)}</span></div>
-                    <div><span className="text-[#999]">Cost</span><br/><span className="font-mono">{product.totalCostCents > 0 ? fmt(product.totalCostCents) : "--"}</span></div>
-                    <div><span className="text-[#999]">Margin</span><br/><span className={`font-medium ${profitColor}`}>{product.totalCostCents > 0 ? pct(product.profitRate) : "--"}</span></div>
+                    <div><span className="text-[#999]">{t("admin.pc.sell")}</span><br/><span className="font-mono font-medium">{fmt(product.sellPriceCents)}</span></div>
+                    <div><span className="text-[#999]">{t("admin.pc.cost")}</span><br/><span className="font-mono">{product.totalCostCents > 0 ? fmt(product.totalCostCents) : "--"}</span></div>
+                    <div><span className="text-[#999]">{t("admin.pc.margin")}</span><br/><span className={`font-medium ${profitColor}`}>{product.totalCostCents > 0 ? pct(product.profitRate) : "--"}</span></div>
                   </div>
                   <Link
                     href={pricingQuotePath(product.slug)}
                     className="block w-full rounded-[3px] bg-black py-2.5 text-center text-xs font-medium text-white hover:bg-[#222]"
                   >
-                    Open Quote
+                    {t("admin.pc.openQuote")}
                   </Link>
                 </div>
               );

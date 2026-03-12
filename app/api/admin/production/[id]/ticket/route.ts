@@ -3,6 +3,7 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { computeCostSignal, type CostSignalLevel } from "@/lib/pricing/production-cost-signal";
+import { createT, LOCALES, DEFAULT_LOCALE } from "@/lib/i18n";
 
 /**
  * GET /api/admin/production/[id]/ticket
@@ -20,6 +21,12 @@ export async function GET(
   try {
     const { id } = await params;
     const format = request.nextUrl.searchParams.get("format");
+
+    // Detect operator locale from cookie
+    const localeCookie = request.cookies.get("locale")?.value;
+    const locale = localeCookie && LOCALES.includes(localeCookie) ? localeCookie : DEFAULT_LOCALE;
+    const t = createT(locale);
+    const dateLoc = locale === "zh" ? "zh-CN" : "en-CA";
 
     const job = await prisma.productionJob.findUnique({
       where: { id },
@@ -82,8 +89,8 @@ export async function GET(
       order.productionStatus
     );
     const sizeStr = (job.widthIn || job.orderItem.widthIn) && (job.heightIn || job.orderItem.heightIn)
-      ? `${job.widthIn || job.orderItem.widthIn}" × ${job.heightIn || job.orderItem.heightIn}"`
-      : "—";
+      ? `${job.widthIn || job.orderItem.widthIn}\u2033 \u00D7 ${job.heightIn || job.orderItem.heightIn}\u2033`
+      : "\u2014";
 
     // ─── PDF format ───
     if (format === "pdf") {
@@ -98,16 +105,18 @@ export async function GET(
         family: job.family || null,
         quantity: job.quantity || job.orderItem.quantity,
         sizeStr,
-        material: job.materialLabel || job.material || job.orderItem.material || "—",
-        finishing: job.finishingLabel || job.finishing || job.orderItem.finishing || "—",
+        material: job.materialLabel || job.material || job.orderItem.material || "\u2014",
+        finishing: job.finishingLabel || job.finishing || job.orderItem.finishing || "\u2014",
         orderId: order.id,
         customerName: order.customerName || order.customerEmail,
-        factoryName: job.factory?.name || "Unassigned",
-        operator: job.assignedTo || "—",
+        factoryName: job.factory?.name || t("admin.ticket.unassigned"),
+        operator: job.assignedTo || "\u2014",
         artworkUrl: artworkUrl || null,
         notes: job.notes || null,
         costSignalLevel: costSignal.level,
         costSignalReason: costSignal.reason,
+        t,
+        dateLoc,
       });
 
       return new NextResponse(Buffer.from(pdfBytes), {
@@ -122,7 +131,7 @@ export async function GET(
     const html = `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
-<title>Job Ticket — ${job.id.slice(0, 8)}</title>
+<title>${t("admin.ticket.jobTicket")} \u2014 ${job.id.slice(0, 8)}</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; padding: 16px; }
@@ -162,94 +171,94 @@ export async function GET(
 <div class="ticket">
   <div class="header">
     <div>
-      <h1>JOB TICKET</h1>
+      <h1>${t("admin.ticket.jobTicket")}</h1>
       <div class="id">${job.id.slice(0, 8)}</div>
     </div>
     <div style="text-align:right">
       <div class="priority priority-${job.priority}">${job.priority}</div>
-      <div style="font-size:10px;color:#666;margin-top:4px">${new Date(job.createdAt).toLocaleDateString("en-CA")}</div>
-      ${job.dueAt ? `<div style="font-size:10px;font-weight:700;color:#dc2626">DUE: ${new Date(job.dueAt).toLocaleDateString("en-CA")}</div>` : ""}
-      ${costSignal.level !== "normal" ? `<div class="cost-signal cost-${costSignal.level}">${costSignal.level === "needs-review" ? "PRICING REVIEW" : "MISSING COST"}</div>` : ""}
+      <div style="font-size:10px;color:#666;margin-top:4px">${new Date(job.createdAt).toLocaleDateString(dateLoc)}</div>
+      ${job.dueAt ? `<div style="font-size:10px;font-weight:700;color:#dc2626">${t("admin.ticket.due", { date: new Date(job.dueAt).toLocaleDateString(dateLoc) })}</div>` : ""}
+      ${costSignal.level !== "normal" ? `<div class="cost-signal cost-${costSignal.level}">${costSignal.level === "needs-review" ? t("admin.ticket.pricingReview") : t("admin.ticket.missingCost")}</div>` : ""}
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Product</div>
+    <div class="section-title">${t("admin.ticket.product")}</div>
     <div class="field">
       <div class="field-value large">${job.productName || job.orderItem.productName}</div>
     </div>
     <div class="badges">
-      ${job.isRush ? '<span class="badge" style="border-color:#d97706;color:#d97706">RUSH</span>' : ""}
-      ${job.isTwoSided ? '<span class="badge" style="border-color:#4f46e5;color:#4f46e5">2-SIDED</span>' : ""}
+      ${job.isRush ? `<span class="badge" style="border-color:#d97706;color:#d97706">${t("admin.ticket.rush")}</span>` : ""}
+      ${job.isTwoSided ? `<span class="badge" style="border-color:#4f46e5;color:#4f46e5">${t("admin.ticket.twoSided")}</span>` : ""}
       ${job.family ? `<span class="badge" style="border-color:#666;color:#666">${job.family}</span>` : ""}
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Specifications</div>
+    <div class="section-title">${t("admin.ticket.specifications")}</div>
     <div class="grid">
       <div class="field">
-        <div class="field-label">Quantity</div>
+        <div class="field-label">${t("admin.ticket.quantity")}</div>
         <div class="field-value large">${job.quantity || job.orderItem.quantity}</div>
       </div>
       <div class="field">
-        <div class="field-label">Size</div>
+        <div class="field-label">${t("admin.ticket.size")}</div>
         <div class="field-value large">${sizeStr}</div>
       </div>
       <div class="field">
-        <div class="field-label">Material</div>
-        <div class="field-value">${job.materialLabel || job.material || job.orderItem.material || "—"}</div>
+        <div class="field-label">${t("admin.ticket.material")}</div>
+        <div class="field-value">${job.materialLabel || job.material || job.orderItem.material || "\u2014"}</div>
       </div>
       <div class="field">
-        <div class="field-label">Finishing</div>
-        <div class="field-value">${job.finishingLabel || job.finishing || job.orderItem.finishing || "—"}</div>
+        <div class="field-label">${t("admin.ticket.finishing")}</div>
+        <div class="field-value">${job.finishingLabel || job.finishing || job.orderItem.finishing || "\u2014"}</div>
       </div>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Order & Customer</div>
+    <div class="section-title">${t("admin.ticket.orderCustomer")}</div>
     <div class="grid">
       <div class="field">
-        <div class="field-label">Order</div>
+        <div class="field-label">${t("admin.ticket.order")}</div>
         <div class="field-value">#${order.id.slice(0, 8)}</div>
       </div>
       <div class="field">
-        <div class="field-label">Customer</div>
+        <div class="field-label">${t("admin.ticket.customer")}</div>
         <div class="field-value">${order.customerName || order.customerEmail}</div>
       </div>
       <div class="field">
-        <div class="field-label">Factory</div>
-        <div class="field-value">${job.factory?.name || "Unassigned"}</div>
+        <div class="field-label">${t("admin.ticket.factory")}</div>
+        <div class="field-value">${job.factory?.name || t("admin.ticket.unassigned")}</div>
       </div>
       <div class="field">
-        <div class="field-label">Operator</div>
-        <div class="field-value">${job.assignedTo || "—"}</div>
+        <div class="field-label">${t("admin.ticket.operator")}</div>
+        <div class="field-value">${job.assignedTo || "\u2014"}</div>
       </div>
     </div>
   </div>
 
   ${artworkUrl ? `
   <div class="section">
-    <div class="section-title">Artwork</div>
+    <div class="section-title">${t("admin.ticket.artwork")}</div>
     <div class="artwork-note">${artworkUrl}</div>
   </div>` : `
   <div class="section">
-    <div class="section-title">Artwork</div>
-    <div style="color:#dc2626;font-weight:700;font-size:11px">NO ARTWORK ON FILE</div>
+    <div class="section-title">${t("admin.ticket.artwork")}</div>
+    <div style="color:#dc2626;font-weight:700;font-size:11px">${t("admin.ticket.noArtwork")}</div>
   </div>`}
 
-  ${job.notes ? `<div class="notes-box"><strong>Notes:</strong> ${job.notes}</div>` : ""}
+  ${job.notes ? `<div class="notes-box"><strong>${t("admin.ticket.notes")}</strong> ${job.notes}</div>` : ""}
 
   <div class="barcode">
     <div class="barcode-text">${job.id}</div>
-    <div style="font-size:9px;color:#999;margin-top:2px">Scan or enter job ID to look up this ticket</div>
+    <div style="font-size:9px;color:#999;margin-top:2px">${t("admin.ticket.scanHint")}</div>
   </div>
 </div>
 
 <div class="no-print" style="text-align:center;margin-top:16px;display:flex;gap:8px;justify-content:center">
-<button class="print-btn" onclick="window.print()" style="margin:0">Print</button>
-<a href="?format=pdf" class="print-btn" style="margin:0;text-decoration:none;display:inline-block;text-align:center;line-height:1">Download PDF</a>
+<button class="print-btn" onclick="window.print()" style="margin:0">${t("admin.ticket.print")}</button>
+<a href="?format=pdf" class="print-btn" style="margin:0;text-decoration:none;display:inline-block;text-align:center;line-height:1">${t("admin.ticket.downloadPdf")}</a>
 </div>
 </body></html>`;
 
@@ -287,6 +296,8 @@ interface TicketData {
   notes: string | null;
   costSignalLevel: CostSignalLevel;
   costSignalReason: string;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  dateLoc: string;
 }
 
 async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
@@ -360,8 +371,10 @@ async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
     return yPos - 14;
   }
 
+  const tt = data.t;
+
   // ═══ HEADER ═══
-  drawText("JOB TICKET", margin, y, { font: fontBold, size: 18 });
+  drawText(tt("admin.ticket.jobTicket"), margin, y, { font: fontBold, size: 18 });
   drawText(data.jobId.slice(0, 8), margin, y - 16, { font: fontMonoBold, size: 12 });
 
   // Priority badge (right side)
@@ -382,7 +395,7 @@ async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
 
   // Cost signal badge (only for non-normal signals)
   if (data.costSignalLevel !== "normal") {
-    const csLabel = data.costSignalLevel === "needs-review" ? "PRICING REVIEW" : "MISSING COST";
+    const csLabel = data.costSignalLevel === "needs-review" ? tt("admin.ticket.pricingReview") : tt("admin.ticket.missingCost");
     const csColor = data.costSignalLevel === "needs-review" ? red : amber;
     const csWidth = fontBold.widthOfTextAtSize(csLabel, 7) + 10;
     const csX = width - margin - csWidth;
@@ -400,13 +413,13 @@ async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
   }
 
   // Date + due
-  const dateStr = new Date(data.createdAt).toLocaleDateString("en-CA");
+  const dateStr = new Date(data.createdAt).toLocaleDateString(data.dateLoc);
   drawText(dateStr, width - margin - fontRegular.widthOfTextAtSize(dateStr, 8), y - 28, {
     size: 8,
     color: gray,
   });
   if (data.dueAt) {
-    const dueStr = `DUE: ${new Date(data.dueAt).toLocaleDateString("en-CA")}`;
+    const dueStr = tt("admin.ticket.due", { date: new Date(data.dueAt).toLocaleDateString(data.dateLoc) });
     drawText(dueStr, width - margin - fontBold.widthOfTextAtSize(dueStr, 8), y - 38, {
       font: fontBold,
       size: 8,
@@ -419,7 +432,7 @@ async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
   y -= 16;
 
   // ═══ PRODUCT ═══
-  y = sectionTitle("PRODUCT", y);
+  y = sectionTitle(tt("admin.ticket.product").toUpperCase(), y);
   drawText(data.productName, margin, y, {
     font: fontBold,
     size: 14,
@@ -430,8 +443,8 @@ async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
   // Badges
   let badgeX = margin;
   const badges: Array<{ label: string; color: typeof black }> = [];
-  if (data.isRush) badges.push({ label: "RUSH", color: amber });
-  if (data.isTwoSided) badges.push({ label: "2-SIDED", color: rgb(0.31, 0.27, 0.9) });
+  if (data.isRush) badges.push({ label: tt("admin.ticket.rush"), color: amber });
+  if (data.isTwoSided) badges.push({ label: tt("admin.ticket.twoSided"), color: rgb(0.31, 0.27, 0.9) });
   if (data.family) badges.push({ label: data.family, color: gray });
 
   for (const badge of badges) {
@@ -453,20 +466,20 @@ async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
   y -= 8;
 
   // ═══ SPECIFICATIONS ═══
-  y = sectionTitle("SPECIFICATIONS", y);
+  y = sectionTitle(tt("admin.ticket.specifications").toUpperCase(), y);
   const col2X = margin + (width - 2 * margin) / 2;
 
   // Row 1: Quantity + Size
-  drawText("QUANTITY", margin, y, { font: fontBold, size: 6, color: lightGray });
-  drawText("SIZE", col2X, y, { font: fontBold, size: 6, color: lightGray });
+  drawText(tt("admin.ticket.quantity").toUpperCase(), margin, y, { font: fontBold, size: 6, color: lightGray });
+  drawText(tt("admin.ticket.size").toUpperCase(), col2X, y, { font: fontBold, size: 6, color: lightGray });
   y -= 12;
   drawText(String(data.quantity), margin, y, { font: fontBold, size: 14 });
   drawText(data.sizeStr, col2X, y, { font: fontBold, size: 14 });
   y -= 18;
 
   // Row 2: Material + Finishing
-  drawText("MATERIAL", margin, y, { font: fontBold, size: 6, color: lightGray });
-  drawText("FINISHING", col2X, y, { font: fontBold, size: 6, color: lightGray });
+  drawText(tt("admin.ticket.material").toUpperCase(), margin, y, { font: fontBold, size: 6, color: lightGray });
+  drawText(tt("admin.ticket.finishing").toUpperCase(), col2X, y, { font: fontBold, size: 6, color: lightGray });
   y -= 12;
   drawText(data.material, margin, y, {
     font: fontBold,
@@ -481,10 +494,10 @@ async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
   y -= 18;
 
   // ═══ ORDER & CUSTOMER ═══
-  y = sectionTitle("ORDER & CUSTOMER", y);
+  y = sectionTitle(tt("admin.ticket.orderCustomer").toUpperCase(), y);
 
-  drawText("ORDER", margin, y, { font: fontBold, size: 6, color: lightGray });
-  drawText("CUSTOMER", col2X, y, { font: fontBold, size: 6, color: lightGray });
+  drawText(tt("admin.ticket.order").toUpperCase(), margin, y, { font: fontBold, size: 6, color: lightGray });
+  drawText(tt("admin.ticket.customer").toUpperCase(), col2X, y, { font: fontBold, size: 6, color: lightGray });
   y -= 12;
   drawText(`#${data.orderId.slice(0, 8)}`, margin, y, { font: fontBold, size: 10 });
   drawText(data.customerName, col2X, y, {
@@ -494,15 +507,15 @@ async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
   });
   y -= 16;
 
-  drawText("FACTORY", margin, y, { font: fontBold, size: 6, color: lightGray });
-  drawText("OPERATOR", col2X, y, { font: fontBold, size: 6, color: lightGray });
+  drawText(tt("admin.ticket.factory").toUpperCase(), margin, y, { font: fontBold, size: 6, color: lightGray });
+  drawText(tt("admin.ticket.operator").toUpperCase(), col2X, y, { font: fontBold, size: 6, color: lightGray });
   y -= 12;
   drawText(data.factoryName, margin, y, { font: fontBold, size: 10 });
   drawText(data.operator, col2X, y, { font: fontBold, size: 10 });
   y -= 18;
 
   // ═══ ARTWORK ═══
-  y = sectionTitle("ARTWORK", y);
+  y = sectionTitle(tt("admin.ticket.artwork").toUpperCase(), y);
   if (data.artworkUrl) {
     // Truncate long URLs across lines
     const url = data.artworkUrl;
@@ -512,14 +525,14 @@ async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
       y -= 10;
     }
   } else {
-    drawText("NO ARTWORK ON FILE", margin, y, { font: fontBold, size: 10, color: red });
+    drawText(tt("admin.ticket.noArtwork"), margin, y, { font: fontBold, size: 10, color: red });
     y -= 14;
   }
 
   // ═══ NOTES ═══
   if (data.notes) {
     y -= 4;
-    y = sectionTitle("NOTES", y);
+    y = sectionTitle(tt("admin.ticket.notes").toUpperCase().replace(/[：:]$/, ""), y);
     // Word-wrap notes
     const words = data.notes.split(/\s+/);
     let line = "";
@@ -548,7 +561,7 @@ async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
   const idWidth = fontMonoBold.widthOfTextAtSize(idText, 12);
   drawText(idText, (width - idWidth) / 2, y, { font: fontMonoBold, size: 12 });
   y -= 12;
-  const hint = "Scan or enter job ID to look up this ticket";
+  const hint = tt("admin.ticket.scanHint");
   const hintWidth = fontRegular.widthOfTextAtSize(hint, 7);
   drawText(hint, (width - hintWidth) / 2, y, { size: 7, color: lightGray });
 

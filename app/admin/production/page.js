@@ -7,6 +7,8 @@ import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
 import { statusColor, priorityColor } from "@/lib/admin/status-labels";
+import { CostSignalInline } from "@/components/admin/CostSignalBadge";
+import CostSignalBadge from "@/components/admin/CostSignalBadge";
 
 const statusOptions = [
   { value: "all", label: "All" },
@@ -610,6 +612,7 @@ function ProductionContent() {
                           ) : (
                             <span className="text-amber-500">No artwork</span>
                           )}
+                          <CostSignalInline signal={job.costSignal} />
                         </div>
                       </td>
 
@@ -793,6 +796,8 @@ function ProductionContent() {
                     >
                       {job.priority}
                     </span>
+
+                    <CostSignalBadge signal={job.costSignal} size="md" />
 
                     {/* Inline factory select */}
                     <select

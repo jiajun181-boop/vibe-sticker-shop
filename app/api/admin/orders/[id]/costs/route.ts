@@ -106,6 +106,7 @@ export async function PATCH(
         profit,
         marginPercent,
       },
+      refreshHint: { invalidates: ["missingActualCost", "profitAlerts"] },
     });
   } catch (err) {
     console.error("[Order Costs PATCH] Error:", err);

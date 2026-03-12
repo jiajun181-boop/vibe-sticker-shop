@@ -69,26 +69,46 @@ export async function GET(
     // This tells operators whether the job is financially safe, needs pricing
     // review, or is missing cost data — without exposing raw dollar amounts.
     let costSignal = undefined;
+    let sourceQuote = undefined;
     if (includeCost && job.orderItem) {
       const oi = job.orderItem as any;
       const order = oi.order;
-      costSignal = computeCostSignal(
-        {
-          id: oi.id,
-          productName: oi.productName || job.productName || "",
-          totalPrice: oi.totalPrice || 0,
-          materialCostCents: oi.materialCostCents || 0,
-          estimatedCostCents: oi.estimatedCostCents || 0,
-          actualCostCents: oi.actualCostCents || 0,
-          vendorCostCents: oi.vendorCostCents || 0,
-        },
-        order?.id || "",
-        order?.status || "",
-        order?.productionStatus || ""
-      );
+      const orderId = order?.id || "";
+
+      const [signal, quote] = await Promise.all([
+        Promise.resolve(computeCostSignal(
+          {
+            id: oi.id,
+            productName: oi.productName || job.productName || "",
+            totalPrice: oi.totalPrice || 0,
+            materialCostCents: oi.materialCostCents || 0,
+            estimatedCostCents: oi.estimatedCostCents || 0,
+            actualCostCents: oi.actualCostCents || 0,
+            vendorCostCents: oi.vendorCostCents || 0,
+          },
+          orderId,
+          order?.status || "",
+          order?.productionStatus || "",
+          { returnTo: `/admin/production/${id}`, source: "production-detail" }
+        )),
+        // Quote provenance: was this job's order created from a quote?
+        orderId
+          ? prisma.quoteRequest.findFirst({
+              where: { convertedOrderId: orderId },
+              select: { id: true, reference: true, status: true, quotedAmountCents: true, quotedAt: true },
+            })
+          : Promise.resolve(null),
+      ]);
+
+      costSignal = signal;
+      sourceQuote = quote || undefined;
     }
 
-    return NextResponse.json({ ...job, ...(costSignal && { costSignal }) });
+    return NextResponse.json({
+      ...job,
+      ...(costSignal && { costSignal }),
+      ...(sourceQuote && { sourceQuote }),
+    });
   } catch (error) {
     console.error("[ProductionJob GET] Error:", error);
     return NextResponse.json(

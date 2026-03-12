@@ -10,6 +10,7 @@
  */
 
 import { computeItemProfit, detectProfitAlerts, detectMissingCostAlerts } from "./profit-tracking";
+import { alertTypeToAction, type OpsActionHint } from "./ops-action";
 
 // ── Types ───────────────────────────────────────────────────────
 
@@ -28,6 +29,8 @@ export interface ProductionCostSignal {
   isNegativeMargin: boolean;
   /** Number of pricing alerts (for badge count in UI) */
   alertCount: number;
+  /** Exact next action to resolve this issue — null when level is "normal" */
+  nextAction: OpsActionHint | null;
 }
 
 // ── Compute ─────────────────────────────────────────────────────
@@ -56,7 +59,8 @@ export function computeCostSignal(
   },
   orderId: string,
   orderStatus: string,
-  productionStatus: string
+  productionStatus: string,
+  routingContext?: { returnTo?: string; source?: string }
 ): ProductionCostSignal {
   // Detect margin alerts
   const marginAlerts = detectProfitAlerts(orderId, [item]);
@@ -67,19 +71,33 @@ export function computeCostSignal(
   const isBelowFloor = marginAlerts.some(a => a.alertType === "below_floor");
   const hasMissingCost = missingAlerts.length > 0;
 
-  // Determine level
+  // Determine level and next action
   let level: CostSignalLevel;
   let reason: string;
+  let nextAction: OpsActionHint | null = null;
+
+  // Build structured context for precise action routing with resolve-and-return
+  const actionCtx = {
+    orderId,
+    orderItemId: item.id,
+    returnTo: routingContext?.returnTo,
+    source: routingContext?.source,
+  };
 
   if (isNegativeMargin) {
     level = "needs-review";
     reason = "Margin alert: this job may be losing money";
+    const primary = marginAlerts.find(a => a.alertType === "negative_margin" || a.alertType === "cost_exceeds_revenue");
+    nextAction = alertTypeToAction(primary?.alertType || "negative_margin", actionCtx);
   } else if (isBelowFloor) {
     level = "needs-review";
     reason = "Margin below floor — pricing review recommended";
+    nextAction = alertTypeToAction("below_floor", actionCtx);
   } else if (hasMissingCost) {
     level = "missing-cost";
     reason = missingAlerts[0]?.message || "Cost data incomplete";
+    const primary = missingAlerts[0];
+    nextAction = alertTypeToAction(primary?.alertType || "missing_actual_cost", actionCtx);
   } else {
     level = "normal";
     reason = "Pricing OK";
@@ -92,6 +110,7 @@ export function computeCostSignal(
     isBelowFloor,
     isNegativeMargin,
     alertCount: allAlerts.length,
+    nextAction,
   };
 }
 
@@ -111,14 +130,16 @@ export function computeOrderCostSignals(
   }>,
   orderId: string,
   orderStatus: string,
-  productionStatus: string
+  productionStatus: string,
+  routingContext?: { returnTo?: string; source?: string }
 ): {
   aggregate: ProductionCostSignal;
-  perItem: ProductionCostSignal[];
+  perItem: Array<ProductionCostSignal & { itemId: string }>;
 } {
-  const perItem = items.map(item =>
-    computeCostSignal(item, orderId, orderStatus, productionStatus)
-  );
+  const perItem = items.map(item => ({
+    ...computeCostSignal(item, orderId, orderStatus, productionStatus, routingContext),
+    itemId: item.id,
+  }));
 
   // Aggregate: worst level wins
   const hasNeedsReview = perItem.some(s => s.level === "needs-review");
@@ -141,6 +162,10 @@ export function computeOrderCostSignals(
     reason = "All items priced normally";
   }
 
+  // Aggregate nextAction: pick the most urgent item's action
+  const worstItem = perItem.find(s => s.level === "needs-review")
+    || perItem.find(s => s.level === "missing-cost");
+
   return {
     aggregate: {
       level,
@@ -149,6 +174,7 @@ export function computeOrderCostSignals(
       isBelowFloor: perItem.some(s => s.isBelowFloor),
       isNegativeMargin: perItem.some(s => s.isNegativeMargin),
       alertCount: totalAlerts,
+      nextAction: worstItem?.nextAction || null,
     },
     perItem,
   };

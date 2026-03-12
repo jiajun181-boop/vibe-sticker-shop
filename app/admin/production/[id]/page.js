@@ -7,6 +7,7 @@ import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
 import { statusColor, statusLabel, priorityColor } from "@/lib/admin/status-labels";
+import CostSignalBadge from "@/components/admin/CostSignalBadge";
 
 const JOB_STATUSES = [
   "queued",
@@ -101,7 +102,7 @@ export default function ProductionJobDetailPage() {
   const fetchJob = useCallback(async () => {
     try {
       setFetchError(null);
-      const res = await fetch(`/api/admin/production/${id}`);
+      const res = await fetch(`/api/admin/production/${id}?include=costSignal`);
       if (!res.ok) {
         setJob(null);
         setFetchError(res.status === 404 ? "Job not found" : `Failed to load (HTTP ${res.status})`);
@@ -443,6 +444,16 @@ export default function ProductionJobDetailPage() {
             >
               {job.priority}
             </span>
+            <CostSignalBadge signal={job.costSignal} size="md" />
+            {job.sourceQuote && (
+              <Link
+                href="/admin/quotes"
+                className="rounded-[2px] border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                title={`From quote ${job.sourceQuote.reference}`}
+              >
+                Quote {job.sourceQuote.reference}
+              </Link>
+            )}
           </div>
           {order && (
             <Link

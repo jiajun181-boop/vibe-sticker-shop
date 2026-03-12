@@ -1,6 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import { pricingOpsPath } from "@/lib/admin/pricing-routes";
 
 /**
  * CostEntryPanel — shows cost completeness stats and lets ops enter
@@ -9,7 +13,14 @@ import { useCallback, useEffect, useState } from "react";
  * Fetches from GET /api/admin/pricing/cost-completeness
  * Saves via PATCH /api/admin/orders/{orderId}/item-costs
  */
-export default function CostEntryPanel() {
+export default function CostEntryPanel({ returnTo }) {
+  const { t, locale } = useTranslation();
+  const searchParams = useSearchParams();
+  const targetOrderId = searchParams.get("orderId");
+  const targetItemId = searchParams.get("itemId");
+  const targetRef = useRef(null);
+  const [highlightedItemId, setHighlightedItemId] = useState(targetItemId);
+  const [highlightedOrderId, setHighlightedOrderId] = useState(targetItemId ? null : targetOrderId);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,13 +29,31 @@ export default function CostEntryPanel() {
   // Per-row editable state: { [itemId]: { value: string, saving: boolean, saved: boolean, error: string|null } }
   const [rowState, setRowState] = useState({});
 
+  // Focused mode: when orderId/itemId exist, scope the API query
+  const isFocused = !!(targetOrderId || targetItemId);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/pricing/cost-completeness?days=${days}`);
+      const params = new URLSearchParams({ days: String(days) });
+      if (targetOrderId) params.set("orderId", targetOrderId);
+      if (targetItemId) params.set("itemId", targetItemId);
+      const res = await fetch(`/api/admin/pricing/cost-completeness?${params}`);
       if (!res.ok) throw new Error("Failed to load cost completeness data");
       const json = await res.json();
+
+      // Sort targeted item to top when in focused mode
+      if (isFocused && json.recentMissing) {
+        json.recentMissing.sort((a, b) => {
+          const aMatch = (targetItemId && a.itemId === targetItemId) || (!targetItemId && a.orderId === targetOrderId);
+          const bMatch = (targetItemId && b.itemId === targetItemId) || (!targetItemId && b.orderId === targetOrderId);
+          if (aMatch && !bMatch) return -1;
+          if (!aMatch && bMatch) return 1;
+          return 0;
+        });
+      }
+
       setData(json);
       // Initialize row state for missing items
       const rs = {};
@@ -37,11 +66,26 @@ export default function CostEntryPanel() {
     } finally {
       setLoading(false);
     }
-  }, [days]);
+  }, [days, targetOrderId, targetItemId, isFocused]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Auto-scroll to target row after data loads
+  useEffect(() => {
+    if ((targetItemId || targetOrderId) && targetRef.current && !loading) {
+      targetRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [targetItemId, targetOrderId, loading]);
+
+  // Clear highlight after 5 seconds
+  useEffect(() => {
+    if (highlightedItemId || highlightedOrderId) {
+      const timer = setTimeout(() => { setHighlightedItemId(null); setHighlightedOrderId(null); }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedItemId, highlightedOrderId]);
 
   function updateRowValue(itemId, value) {
     setRowState((prev) => ({
@@ -58,7 +102,7 @@ export default function CostEntryPanel() {
     if (isNaN(cents) || cents < 0) {
       setRowState((prev) => ({
         ...prev,
-        [item.itemId]: { ...prev[item.itemId], error: "Enter a valid amount in cents" },
+        [item.itemId]: { ...prev[item.itemId], error: t("admin.pc.validAmountCents") },
       }));
       return;
     }
@@ -82,9 +126,26 @@ export default function CostEntryPanel() {
         throw new Error(errData.error || "Save failed");
       }
 
+      const resData = await res.json();
+
+      // Extract profit feedback from response
+      const profitFeedback = resData.orderProfit || null;
+      const marginAlert = profitFeedback?.actualMarginPct != null && profitFeedback.actualMarginPct < 15
+        ? profitFeedback.actualMarginPct < 0
+          ? "negative"   // losing money
+          : "below_floor" // below 15% floor
+        : null;
+
       setRowState((prev) => ({
         ...prev,
-        [item.itemId]: { ...prev[item.itemId], saving: false, saved: true, value: String(cents) },
+        [item.itemId]: {
+          ...prev[item.itemId],
+          saving: false,
+          saved: true,
+          value: String(cents),
+          marginAlert,
+          actualMarginPct: profitFeedback?.actualMarginPct ?? null,
+        },
       }));
 
       // Update stats and remove the saved item from the missing list
@@ -111,7 +172,7 @@ export default function CostEntryPanel() {
 
   function formatCents(cents) {
     if (cents == null || cents === 0) return "$0.00";
-    return new Intl.NumberFormat("en-CA", {
+    return new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-CA", {
       style: "currency",
       currency: "CAD",
     }).format(cents / 100);
@@ -133,7 +194,7 @@ export default function CostEntryPanel() {
       <div className="rounded-[3px] border border-red-200 bg-red-50 p-4 text-sm text-red-800">
         {error}
         <button onClick={fetchData} className="ml-3 underline hover:no-underline">
-          Retry
+          {t("admin.pc.retry")}
         </button>
       </div>
     );
@@ -145,10 +206,10 @@ export default function CostEntryPanel() {
 
   // ── Stat cards ─────────────────────────────────────────────────
   const stats = [
-    { label: "Total Items", value: totalItems, color: "text-[#111]" },
-    { label: "With Actual Cost", value: withActualCost, color: "text-green-700" },
-    { label: "Missing Cost", value: withoutActualCost, color: withoutActualCost > 0 ? "text-amber-700" : "text-[#111]" },
-    { label: "Completion Rate", value: `${completionRate}%`, color: completionRate >= 80 ? "text-green-700" : completionRate >= 50 ? "text-amber-700" : "text-red-700" },
+    { label: t("admin.pc.totalItems"), value: totalItems, color: "text-[#111]" },
+    { label: t("admin.pc.withActualCost"), value: withActualCost, color: "text-green-700" },
+    { label: t("admin.pc.missingCost"), value: withoutActualCost, color: withoutActualCost > 0 ? "text-amber-700" : "text-[#111]" },
+    { label: t("admin.pc.completionRate"), value: `${completionRate}%`, color: completionRate >= 80 ? "text-green-700" : completionRate >= 50 ? "text-amber-700" : "text-red-700" },
   ];
 
   return (
@@ -156,22 +217,39 @@ export default function CostEntryPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-[#111]">Cost Entry</h2>
+          <h2 className="text-base font-bold text-[#111]">{t("admin.pc.costEntry")}</h2>
           <p className="mt-0.5 text-xs text-[#999]">
-            Enter actual production costs for completed order items
+            {isFocused
+              ? t("admin.pc.costEntryFocused")
+              : t("admin.pc.costEntryDesc")}
           </p>
         </div>
-        <select
-          value={days}
-          onChange={(e) => setDays(parseInt(e.target.value))}
-          className="rounded-[3px] border border-[#e0e0e0] bg-white px-3 py-1.5 text-xs text-[#111]"
-        >
-          <option value={7}>Last 7 days</option>
-          <option value={14}>Last 14 days</option>
-          <option value={30}>Last 30 days</option>
-          <option value={60}>Last 60 days</option>
-          <option value={90}>Last 90 days</option>
-        </select>
+        <div className="flex items-center gap-2">
+          {isFocused && (
+            <button
+              onClick={() => {
+                // Clear focus — reload broad view
+                const url = new URL(window.location.href);
+                url.searchParams.delete("orderId");
+                url.searchParams.delete("itemId");
+                window.history.replaceState(null, "", url.toString());
+                window.location.reload();
+              }}
+              className="rounded-[3px] border border-[#e0e0e0] bg-white px-2.5 py-1.5 text-xs text-[#666] hover:border-black hover:text-[#111]"
+            >
+              {t("admin.pc.showAll")}
+            </button>
+          )}
+          <select
+            value={days}
+            onChange={(e) => setDays(parseInt(e.target.value))}
+            className="rounded-[3px] border border-[#e0e0e0] bg-white px-3 py-1.5 text-xs text-[#111]"
+          >
+            {[7, 14, 30, 60, 90].map((d) => (
+              <option key={d} value={d}>{t("admin.pc.lastNDays", { n: d })}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Stat cards */}
@@ -191,36 +269,80 @@ export default function CostEntryPanel() {
         ))}
       </div>
 
+      {/* Margin alert banner — shows when saved items have margin issues */}
+      {(() => {
+        const alertRows = Object.values(rowState).filter((r) => r.saved && r.marginAlert);
+        if (alertRows.length === 0) return null;
+        const negCount = alertRows.filter((r) => r.marginAlert === "negative").length;
+        const floorCount = alertRows.filter((r) => r.marginAlert === "below_floor").length;
+        return (
+          <div className="flex items-center justify-between rounded-[3px] border border-red-200 bg-red-50 px-4 py-3">
+            <div className="text-sm text-red-800">
+              {negCount > 0 && <span className="font-semibold">{t("admin.pc.negMarginCount", { n: negCount })}</span>}
+              {negCount > 0 && floorCount > 0 && ", "}
+              {floorCount > 0 && <span className="font-medium">{t("admin.pc.belowFloorCount", { n: floorCount })}</span>}
+              {" "}{t("admin.pc.detectedAfterCost")}
+            </div>
+            <Link
+              href={pricingOpsPath("alerts", undefined, returnTo || undefined)}
+              className="whitespace-nowrap rounded-[3px] bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
+            >
+              {t("admin.pc.viewProfitAlerts")}
+            </Link>
+          </div>
+        );
+      })()}
+
+      {/* Focused-mode completion banner — all targeted items saved */}
+      {isFocused && returnTo && recentMissing.length === 0 && (
+        <div className="flex items-center justify-between rounded-[3px] border border-green-200 bg-green-50 px-4 py-3">
+          <span className="text-sm font-medium text-green-800">{t("admin.pc.targetFixed")}</span>
+          <Link
+            href={returnTo}
+            className="rounded-[3px] bg-green-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-800"
+          >
+            {t("admin.pc.returnAfterFix")} &rarr;
+          </Link>
+        </div>
+      )}
+
       {/* Missing items table */}
       {recentMissing.length === 0 ? (
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-8 text-center text-sm text-[#999]">
-          All tracked items have actual costs entered. Nice work!
+          {t("admin.pc.allCostsEntered")}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-[3px] border border-[#e0e0e0] bg-white">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#e0e0e0] text-left text-[11px] font-medium uppercase tracking-[0.12em] text-[#999]">
-                <th className="px-4 py-3">Order</th>
-                <th className="px-4 py-3">Product</th>
-                <th className="px-4 py-3 text-right">Sell Price</th>
-                <th className="px-4 py-3 text-right">Est. Cost</th>
-                <th className="px-4 py-3 text-right">Actual Cost</th>
+                <th className="px-4 py-3">{t("admin.pc.colOrder")}</th>
+                <th className="px-4 py-3">{t("admin.pc.colProduct")}</th>
+                <th className="px-4 py-3 text-right">{t("admin.pc.colSellPrice")}</th>
+                <th className="px-4 py-3 text-right">{t("admin.pc.colEstCost")}</th>
+                <th className="px-4 py-3 text-right">{t("admin.pc.colActualCost")}</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {recentMissing.map((item) => {
                 const row = rowState[item.itemId] || { value: "", saving: false, saved: false, error: null };
+                const isTarget = highlightedItemId
+                  ? item.itemId === highlightedItemId
+                  : (highlightedOrderId && item.orderId === highlightedOrderId);
                 return (
                   <tr
                     key={item.itemId}
+                    ref={isTarget && !targetRef.current ? (el) => { targetRef.current = el; } : undefined}
                     className={`border-b border-[#f0f0f0] last:border-b-0 ${
                       row.saved ? "bg-green-50" : ""
-                    }`}
+                    } ${isTarget ? "border-l-[3px] border-l-amber-400 bg-amber-50/30" : ""}`}
+                    onClick={() => { setHighlightedItemId(null); setHighlightedOrderId(null); }}
                   >
-                    <td className="px-4 py-3 font-mono text-xs text-[#666]">
-                      {item.orderId.slice(0, 8)}
+                    <td className="px-4 py-3 font-mono text-xs">
+                      <Link href={`/admin/orders/${item.orderId}`} className="text-[#666] hover:text-[#111] hover:underline">
+                        {item.orderId.slice(0, 8)}
+                      </Link>
                     </td>
                     <td className="px-4 py-3 text-[#111]">
                       <div className="max-w-[200px] truncate">{item.productName}</div>
@@ -240,10 +362,11 @@ export default function CostEntryPanel() {
                         <div className="flex items-center justify-end gap-1">
                           <span className="text-[11px] text-[#999]">$</span>
                           <input
+                            ref={isTarget ? (el) => { if (el && isFocused) el.focus(); } : undefined}
                             type="number"
                             min="0"
                             step="1"
-                            placeholder="cents"
+                            placeholder={t("admin.pc.centsPlaceholder")}
                             value={row.value}
                             onChange={(e) => updateRowValue(item.itemId, e.target.value)}
                             onKeyDown={(e) => {
@@ -259,14 +382,39 @@ export default function CostEntryPanel() {
                     </td>
                     <td className="px-4 py-3">
                       {row.saved ? (
-                        <span className="text-xs text-green-700">Saved</span>
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span className="text-xs text-green-700">{t("admin.pc.saved")}</span>
+                          {row.actualMarginPct != null && (
+                            <span className={`text-[10px] font-medium ${
+                              row.marginAlert === "negative"
+                                ? "text-red-700"
+                                : row.marginAlert === "below_floor"
+                                  ? "text-amber-700"
+                                  : "text-green-700"
+                            }`}>
+                              {row.marginAlert === "negative"
+                                ? `${t("admin.pc.margin")} ${row.actualMarginPct.toFixed(1)}%`
+                                : row.marginAlert === "below_floor"
+                                  ? `${t("admin.pc.margin")} ${row.actualMarginPct.toFixed(1)}%`
+                                  : `${row.actualMarginPct.toFixed(1)}%`}
+                            </span>
+                          )}
+                          {returnTo && (item.itemId === targetItemId || item.orderId === targetOrderId) && (
+                            <Link
+                              href={returnTo}
+                              className="mt-0.5 inline-flex items-center gap-1 rounded-[3px] bg-green-700 px-2.5 py-1 text-[10px] font-medium text-white hover:bg-green-800"
+                            >
+                              {t("admin.pc.returnAfterFix")} &rarr;
+                            </Link>
+                          )}
+                        </div>
                       ) : (
                         <button
                           onClick={() => saveRow(item)}
                           disabled={row.saving || !row.value}
                           className="rounded-[3px] border border-[#e0e0e0] bg-white px-3 py-1 text-xs font-medium text-[#111] transition-colors hover:border-black disabled:cursor-not-allowed disabled:opacity-40"
                         >
-                          {row.saving ? "..." : "Save"}
+                          {row.saving ? "..." : t("admin.pc.save")}
                         </button>
                       )}
                     </td>

@@ -20,6 +20,7 @@ import {
   updateOrderActualCosts,
   isValidVarianceReason,
 } from "@/lib/pricing/actual-cost";
+import { computeOrderCostSignals } from "@/lib/pricing/production-cost-signal";
 
 // ── GET: estimated vs actual side-by-side ───────────────────────
 
@@ -207,6 +208,53 @@ export async function PATCH(
       operatorName: auth.user?.name || auth.user?.email || "admin",
     });
 
+    // Recompute cost signal after the update so the UI can immediately
+    // reflect the resolution (e.g., "missing-cost" → "normal").
+    let costSignal = undefined;
+    try {
+      const freshOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: {
+          status: true,
+          productionStatus: true,
+          items: {
+            select: {
+              id: true,
+              productName: true,
+              totalPrice: true,
+              materialCostCents: true,
+              estimatedCostCents: true,
+              actualCostCents: true,
+              vendorCostCents: true,
+            },
+          },
+        },
+      });
+      if (freshOrder) {
+        const signals = computeOrderCostSignals(
+          freshOrder.items.map((i) => ({
+            id: i.id,
+            productName: i.productName || "",
+            totalPrice: i.totalPrice || 0,
+            materialCostCents: i.materialCostCents || 0,
+            estimatedCostCents: i.estimatedCostCents || 0,
+            actualCostCents: i.actualCostCents || 0,
+            vendorCostCents: i.vendorCostCents || 0,
+          })),
+          orderId,
+          freshOrder.status,
+          freshOrder.productionStatus,
+          { returnTo: `/admin/orders/${orderId}`, source: "actual-cost" }
+        );
+        costSignal = {
+          aggregate: signals.aggregate,
+          perItem: signals.perItem,
+        };
+      }
+    } catch (_e) {
+      // Non-critical: cost signal recomputation failure shouldn't block the response
+    }
+
     return NextResponse.json({
       success: true,
       orderId: result.orderId,
@@ -216,6 +264,9 @@ export async function PATCH(
       estimatedCostCents: result.estimatedCostCents,
       actualCostCents: result.actualCostCents,
       orderVariance: result.orderVariance,
+      costSignal,
+      // Tell the UI which home-summary sections this mutation affects
+      refreshHint: { invalidates: ["missingActualCost", "profitAlerts"] },
       items: result.items.map((item) => ({
         itemId: item.itemId,
         productName: item.productName,

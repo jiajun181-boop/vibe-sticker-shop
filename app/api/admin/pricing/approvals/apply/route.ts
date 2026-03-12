@@ -333,7 +333,26 @@ export async function POST(request: NextRequest) {
       note: `Applied approved change (approval ${approvalId})`,
     });
 
-    return NextResponse.json({ success: true, result });
+    // Fetch final approval state so the UI can immediately reflect the applied status
+    let updatedApproval = null;
+    try {
+      updatedApproval = await prisma.pricingApproval.findUnique({ where: { id: approvalId } });
+    } catch (_e) {
+      // Non-critical
+    }
+
+    // Map changeType to which home-summary sections are affected
+    const invalidates: string[] = ["pendingApprovals"];
+    if (changeType?.startsWith("vendor_cost")) invalidates.push("missingVendorCost");
+    if (changeType?.startsWith("material")) invalidates.push("missingVendorCost");
+    if (changeType?.startsWith("preset")) invalidates.push("profitAlerts");
+
+    return NextResponse.json({
+      success: true,
+      result,
+      approval: updatedApproval,
+      refreshHint: { invalidates },
+    });
   } catch (err) {
     console.error("[approvals/apply] POST failed:", err);
     return NextResponse.json(

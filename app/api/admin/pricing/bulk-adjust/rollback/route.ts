@@ -139,7 +139,11 @@ export async function POST(request: NextRequest) {
       note: "owner-bypass",
     }).catch(() => {});
 
-    return NextResponse.json({ ok: true, restoredPresets: validSnapshots.length });
+    return NextResponse.json({
+      ok: true,
+      restoredPresets: validSnapshots.length,
+      refreshHint: { invalidates: ["profitAlerts", "highDrift"] },
+    });
   } catch (err) {
     console.error("[Pricing rollback] POST failed:", err);
     return NextResponse.json({ error: "Failed to rollback bulk adjustment" }, { status: 500 });

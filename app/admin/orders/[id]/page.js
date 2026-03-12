@@ -17,6 +17,7 @@ import { buildOrderCenterHref } from "@/lib/admin-centers";
 import OrderReadinessSummary from "@/components/admin/OrderReadinessSummary";
 import ItemProductionPanel from "@/components/admin/ItemProductionPanel";
 import { getOrderFulfillment, getShipmentStatusColor, getTrackingUrl } from "@/lib/admin/order-shipping";
+import CostSignalBadge from "@/components/admin/CostSignalBadge";
 
 const statusOptions = ["draft", "pending", "paid", "canceled", "refunded"];
 const paymentOptions = ["unpaid", "paid", "failed", "refunded", "partially_refunded"];
@@ -373,6 +374,16 @@ export default function OrderDetailPage() {
           >
             {order.status}
           </span>
+          {order.costSignal && <CostSignalBadge signal={order.costSignal} size="md" />}
+          {order.sourceQuote && (
+            <Link
+              href="/admin/quotes"
+              className="rounded-[2px] border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+              title={`Converted from quote ${order.sourceQuote.reference}`}
+            >
+              Quote {order.sourceQuote.reference}
+            </Link>
+          )}
         </div>
 
         {/* Action feedback banner */}
@@ -506,6 +517,7 @@ export default function OrderDetailPage() {
                               )}
                             </Link>
                           )}
+                          {item.costSignal && <CostSignalBadge signal={item.costSignal} size="sm" />}
                         </div>
                       </div>
                     </div>

@@ -390,6 +390,9 @@ export async function POST(request: NextRequest) {
       applied,
       minPriceRefreshed,
       results,
+      ...(mode === "apply" && applied > 0 && {
+        refreshHint: { invalidates: ["profitAlerts", "highDrift"] },
+      }),
     });
   } catch (err) {
     console.error("[Pricing bulk-adjust] POST failed:", err);

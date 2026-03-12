@@ -1,54 +1,58 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
-import { pricingGovernancePath, pricingOpsPath, pricingQuotePath } from "@/lib/admin/pricing-routes";
+import { pricingGovernancePath, pricingOpsPath, pricingQuotePath, pricingCostsPath } from "@/lib/admin/pricing-routes";
 
 // ── Sub-tab definitions ──────────────────────────────────────────
-const SUB_TABS = [
-  { id: "alerts", label: "Profit Alerts" },
-  { id: "reminders", label: "Ops Reminders" },
-];
+const SUB_TAB_IDS = ["alerts", "reminders"];
+const SUB_TAB_LABEL_KEYS = {
+  alerts: "admin.pc.profitAlerts",
+  reminders: "admin.pc.opsReminders",
+};
 
-export default function OpsPanel() {
+export default function OpsPanel({ returnTo }) {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const sectionParam = searchParams.get("section") || "alerts";
   const [activeSection, setActiveSection] = useState(sectionParam);
 
   useEffect(() => {
-    if (sectionParam && SUB_TABS.some((t) => t.id === sectionParam)) {
+    if (sectionParam && SUB_TAB_IDS.includes(sectionParam)) {
       setActiveSection(sectionParam);
     }
   }, [sectionParam]);
 
   function switchSection(id) {
     setActiveSection(id);
-    router.push(pricingOpsPath(id), { scroll: false });
+    // Preserve returnTo across sub-tab switches
+    router.push(pricingOpsPath(id, undefined, returnTo || undefined), { scroll: false });
   }
 
   return (
     <div className="space-y-5">
       {/* Sub-tab bar */}
       <div className="flex flex-wrap gap-1">
-        {SUB_TABS.map((tab) => (
+        {SUB_TAB_IDS.map((id) => (
           <button
-            key={tab.id}
-            onClick={() => switchSection(tab.id)}
+            key={id}
+            onClick={() => switchSection(id)}
             className={`rounded-[3px] px-3.5 py-2 text-xs font-medium transition-colors ${
-              activeSection === tab.id
+              activeSection === id
                 ? "bg-black text-white"
                 : "bg-[#f0f0f0] text-[#666] hover:bg-[#e0e0e0] hover:text-[#111]"
             }`}
           >
-            {tab.label}
+            {t(SUB_TAB_LABEL_KEYS[id])}
           </button>
         ))}
       </div>
 
-      {activeSection === "alerts" && <ProfitAlertsSection />}
+      {activeSection === "alerts" && <ProfitAlertsSection returnTo={returnTo} />}
       {activeSection === "reminders" && <OpsRemindersSection />}
     </div>
   );
@@ -61,38 +65,51 @@ export default function OpsPanel() {
 const DAYS_OPTIONS = [7, 14, 30, 60, 90];
 
 const ALERT_TYPE_CONFIG = {
-  negative_margin: { label: "Negative Margin", bg: "bg-red-100", text: "text-red-800", border: "border-red-200" },
-  cost_exceeds_revenue: { label: "Cost > Revenue", bg: "bg-red-100", text: "text-red-800", border: "border-red-200" },
-  below_floor: { label: "Below Floor", bg: "bg-orange-100", text: "text-orange-800", border: "border-orange-200" },
-  below_target: { label: "Below Target", bg: "bg-amber-100", text: "text-amber-800", border: "border-amber-200" },
-  missing_actual_cost: { label: "Missing Actual Cost", bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200" },
-  missing_vendor_cost: { label: "Missing Vendor Cost", bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200" },
+  negative_margin: { key: "admin.pc.alertNegativeMargin", bg: "bg-red-100", text: "text-red-800", border: "border-red-200" },
+  cost_exceeds_revenue: { key: "admin.pc.alertCostExceedsRevenue", bg: "bg-red-100", text: "text-red-800", border: "border-red-200" },
+  below_floor: { key: "admin.pc.alertBelowFloor", bg: "bg-orange-100", text: "text-orange-800", border: "border-orange-200" },
+  below_target: { key: "admin.pc.alertBelowTarget", bg: "bg-amber-100", text: "text-amber-800", border: "border-amber-200" },
+  missing_actual_cost: { key: "admin.pc.alertMissingActualCost", bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200" },
+  missing_vendor_cost: { key: "admin.pc.alertMissingVendorCost", bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200" },
 };
 
 function AlertBadge({ type }) {
-  const cfg = ALERT_TYPE_CONFIG[type] || { label: type, bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-200" };
+  const { t } = useTranslation();
+  const cfg = ALERT_TYPE_CONFIG[type] || { key: null, bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-200" };
   return (
     <span className={`inline-flex items-center rounded-[3px] border px-2 py-0.5 text-xs font-medium ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-      {cfg.label}
+      {cfg.key ? t(cfg.key) : type}
     </span>
   );
 }
 
-function ProfitAlertsSection() {
+function ProfitAlertsSection({ returnTo }) {
+  const { t, locale } = useTranslation();
+  const searchParams = useSearchParams();
+  const targetOrderId = searchParams.get("orderId");
+  const targetAlertType = searchParams.get("alertType");
+  const targetRef = useRef(null);
+  const [highlightedOrderId, setHighlightedOrderId] = useState(targetOrderId);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [days, setDays] = useState(30);
   const [floor, setFloor] = useState(15);
   const [limit, setLimit] = useState(50);
-  const [expandedOrder, setExpandedOrder] = useState(null);
+  const [expandedOrder, setExpandedOrder] = useState(targetOrderId);
+
+  // Focused mode: pass orderId/alertType to API so it scopes the query
+  const isFocused = !!(targetOrderId || targetAlertType);
 
   const fetchAlerts = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/pricing/profit-alerts?days=${days}&floor=${floor}&limit=${limit}`);
-      if (!res.ok) throw new Error("Failed to load profit alerts");
+      const params = new URLSearchParams({ days: String(days), floor: String(floor), limit: String(limit) });
+      if (targetOrderId) params.set("orderId", targetOrderId);
+      if (targetAlertType) params.set("alertType", targetAlertType);
+      const res = await fetch(`/api/admin/pricing/profit-alerts?${params}`);
+      if (!res.ok) throw new Error("failedLoadAlerts");
       const json = await res.json();
       setData(json);
     } catch (err) {
@@ -100,9 +117,24 @@ function ProfitAlertsSection() {
     } finally {
       setLoading(false);
     }
-  }, [days, floor, limit]);
+  }, [days, floor, limit, targetOrderId, targetAlertType]);
 
   useEffect(() => { fetchAlerts(); }, [fetchAlerts]);
+
+  // Auto-scroll to target order row after data loads
+  useEffect(() => {
+    if (targetOrderId && targetRef.current && !loading) {
+      targetRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [targetOrderId, loading]);
+
+  // Clear highlight after 5 seconds
+  useEffect(() => {
+    if (highlightedOrderId) {
+      const timer = setTimeout(() => setHighlightedOrderId(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedOrderId]);
 
   const alertBreakdown = {};
   if (data?.alerts) {
@@ -115,109 +147,143 @@ function ProfitAlertsSection() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-sm font-bold text-[#111]">Profit Alerts</h3>
-        <p className="mt-0.5 text-xs text-[#999]">Orders with margin warnings, missing costs, or profitability issues.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-bold text-[#111]">{t("admin.pc.profitAlerts")}</h3>
+          <p className="mt-0.5 text-xs text-[#999]">
+            {isFocused ? t("admin.pc.focusedView") : t("admin.pc.profitAlertsDesc")}
+          </p>
+        </div>
+        {isFocused && (
+          <button
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("orderId");
+              url.searchParams.delete("alertType");
+              window.history.replaceState(null, "", url.toString());
+              window.location.reload();
+            }}
+            className="rounded-[3px] border border-[#e0e0e0] bg-white px-2.5 py-1.5 text-xs text-[#666] hover:border-black hover:text-[#111]"
+          >
+            {t("admin.pc.showAll")}
+          </button>
+        )}
       </div>
 
       {/* Controls */}
       <div className="flex flex-wrap items-end gap-4 rounded-[3px] border border-[#e0e0e0] bg-white p-4">
         <div>
-          <label className="block text-[10px] font-medium text-[#666]">Date Range</label>
+          <label className="block text-[10px] font-medium text-[#666]">{t("admin.pc.dateRange")}</label>
           <select
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
             className="mt-0.5 rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-sm text-[#111] focus:border-black focus:outline-none"
           >
-            {DAYS_OPTIONS.map((d) => <option key={d} value={d}>Last {d} days</option>)}
+            {DAYS_OPTIONS.map((d) => <option key={d} value={d}>{t("admin.pc.lastNDays", { n: d })}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-[10px] font-medium text-[#666]">Floor Margin: {floor}%</label>
+          <label className="block text-[10px] font-medium text-[#666]">{t("admin.pc.floorMarginSlider", { pct: floor })}</label>
           <input type="range" min={0} max={50} step={1} value={floor} onChange={(e) => setFloor(Number(e.target.value))} className="mt-0.5 w-36" />
         </div>
         <div>
-          <label className="block text-[10px] font-medium text-[#666]">Limit</label>
+          <label className="block text-[10px] font-medium text-[#666]">{t("admin.pc.limitLabel")}</label>
           <select
             value={limit}
             onChange={(e) => setLimit(Number(e.target.value))}
             className="mt-0.5 rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-sm text-[#111] focus:border-black focus:outline-none"
           >
-            {[25, 50, 100].map((l) => <option key={l} value={l}>{l} orders</option>)}
+            {[25, 50, 100].map((l) => <option key={l} value={l}>{t("admin.pc.nOrders", { n: l })}</option>)}
           </select>
         </div>
       </div>
 
       {loading ? (
-        <div className="py-8 text-center text-sm text-[#999]">Loading profit alerts...</div>
+        <div className="py-8 text-center text-sm text-[#999]">{t("admin.pc.loading")}</div>
       ) : error ? (
         <div className="rounded-[3px] border border-red-200 bg-red-50 p-4 text-center">
-          <p className="text-sm text-red-700">{error}</p>
-          <button onClick={fetchAlerts} className="mt-2 rounded-[3px] bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700">Retry</button>
+          <p className="text-sm text-red-700">{t(`admin.pc.${error}`)}</p>
+          <button onClick={fetchAlerts} className="mt-2 rounded-[3px] bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700">{t("admin.pc.retry")}</button>
         </div>
       ) : (
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <SummaryCard label="Orders with Alerts" value={data?.ordersWithAlerts || 0} sub={`of last ${days} days`} />
-            <SummaryCard label="Total Alerts" value={data?.totalAlerts || 0} />
+            <SummaryCard label={t("admin.pc.ordersWithAlerts")} value={data?.ordersWithAlerts || 0} sub={t("admin.pc.ofLastNDays", { n: days })} />
+            <SummaryCard label={t("admin.pc.totalAlerts")} value={data?.totalAlerts || 0} />
             <SummaryCard
-              label="Most Common"
+              label={t("admin.pc.mostCommon")}
               value={
                 Object.keys(alertBreakdown).length > 0
-                  ? (ALERT_TYPE_CONFIG[Object.entries(alertBreakdown).sort((a, b) => b[1] - a[1])[0][0]]?.label || "None")
-                  : "None"
+                  ? (t(ALERT_TYPE_CONFIG[Object.entries(alertBreakdown).sort((a, b) => b[1] - a[1])[0][0]]?.key) || t("admin.pc.none"))
+                  : t("admin.pc.none")
               }
               sub={Object.keys(alertBreakdown).length > 0
-                ? `${Object.entries(alertBreakdown).sort((a, b) => b[1] - a[1])[0][1]} alerts` : undefined}
+                ? t("admin.pc.nAlerts", { n: Object.entries(alertBreakdown).sort((a, b) => b[1] - a[1])[0][1] }) : undefined}
             />
             <SummaryCard
-              label="Critical"
+              label={t("admin.pc.critical")}
               value={(alertBreakdown.negative_margin || 0) + (alertBreakdown.cost_exceeds_revenue || 0)}
-              sub="Negative margin / cost overruns"
+              sub={t("admin.pc.negMarginCostOverruns")}
             />
           </div>
 
           {/* Alert type breakdown */}
           {Object.keys(alertBreakdown).length > 0 && (
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {Object.entries(alertBreakdown).sort((a, b) => b[1] - a[1]).map(([type, count]) => (
                 <div key={type} className="flex items-center gap-2">
                   <AlertBadge type={type} />
                   <span className="text-sm font-medium text-[#666]">{count}</span>
                 </div>
               ))}
+              {/* Cross-link: enter missing costs to close the loop */}
+              {(alertBreakdown.missing_actual_cost > 0 || alertBreakdown.missing_vendor_cost > 0) && (
+                <Link
+                  href={pricingCostsPath(undefined, returnTo || undefined)}
+                  className="ml-auto rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-[#111] transition-colors hover:border-black"
+                >
+                  {t("admin.pc.enterMissingCosts")} &rarr;
+                </Link>
+              )}
             </div>
           )}
 
           {/* Orders table */}
           {(!data?.alerts || data.alerts.length === 0) ? (
             <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-8 text-center">
-              <p className="text-sm text-[#999]">No profit alerts found for the selected criteria.</p>
+              <p className="text-sm text-[#999]">{t("admin.pc.noAlerts")}</p>
             </div>
           ) : (
             <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-[#999]">Order</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-[#999]">Customer</th>
-                    <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase text-[#999]">Total</th>
-                    <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase text-[#999]">Est. Margin</th>
-                    <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase text-[#999]">Act. Margin</th>
-                    <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase text-[#999]">Alerts</th>
-                    <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase text-[#999]">Details</th>
+                    <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-[#999]">{t("admin.pc.colOrderId")}</th>
+                    <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-[#999]">{t("admin.pc.colCustomer")}</th>
+                    <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase text-[#999]">{t("admin.pc.colTotal")}</th>
+                    <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase text-[#999]">{t("admin.pc.colEstMargin")}</th>
+                    <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase text-[#999]">{t("admin.pc.colActMargin")}</th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase text-[#999]">{t("admin.pc.colAlerts")}</th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase text-[#999]">{t("admin.pc.colDetails")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.alerts.map((row) => (
-                    <OrderAlertRow
-                      key={row.orderId}
-                      row={row}
-                      isExpanded={expandedOrder === row.orderId}
-                      onToggle={() => setExpandedOrder((prev) => (prev === row.orderId ? null : row.orderId))}
-                    />
-                  ))}
+                  {data.alerts.map((row) => {
+                    const isTarget = highlightedOrderId && row.orderId === highlightedOrderId;
+                    return (
+                      <OrderAlertRow
+                        key={row.orderId}
+                        row={row}
+                        isExpanded={expandedOrder === row.orderId}
+                        onToggle={() => setExpandedOrder((prev) => (prev === row.orderId ? null : row.orderId))}
+                        isTarget={isTarget}
+                        targetRef={isTarget ? targetRef : undefined}
+                        targetAlertType={isTarget ? targetAlertType : null}
+                        returnTo={returnTo}
+                      />
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -228,16 +294,20 @@ function ProfitAlertsSection() {
   );
 }
 
-function OrderAlertRow({ row, isExpanded, onToggle }) {
+function OrderAlertRow({ row, isExpanded, onToggle, isTarget, targetRef, targetAlertType, returnTo }) {
+  const { t } = useTranslation();
   const estMargin = row.profit?.estimatedMarginPct;
   const actMargin = row.profit?.actualMarginPct;
 
   return (
     <>
-      <tr className="border-b border-[#f0f0f0] hover:bg-[#fafafa]">
+      <tr
+        ref={targetRef}
+        className={`border-b border-[#f0f0f0] hover:bg-[#fafafa] ${isTarget ? "border-l-[3px] border-l-amber-400 bg-amber-50/30" : ""}`}
+      >
         <td className="px-3 py-2.5">
           <Link href={`/admin/orders/${row.orderId}`} className="text-sm font-medium text-[#111] hover:underline">
-            {row.orderId.slice(0, 8)}...
+            {row.orderId.slice(0, 8)}{"\u2026"}
           </Link>
         </td>
         <td className="px-3 py-2.5 text-sm text-[#666]">{row.customerEmail}</td>
@@ -253,7 +323,7 @@ function OrderAlertRow({ row, isExpanded, onToggle }) {
         </td>
         <td className="px-3 py-2.5 text-center">
           <button onClick={onToggle} className="rounded-[3px] border border-[#e0e0e0] px-2.5 py-1 text-xs font-medium text-[#666] hover:border-black hover:text-black">
-            {isExpanded ? "Hide" : "View"}
+            {isExpanded ? t("admin.pc.hide") : t("admin.pc.view")}
           </button>
         </td>
       </tr>
@@ -261,28 +331,42 @@ function OrderAlertRow({ row, isExpanded, onToggle }) {
         <tr>
           <td colSpan={7} className="bg-[#f8f8f8] px-4 py-3">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase text-[#999]">Per-Item Alerts ({row.alerts.length})</p>
+              <p className="text-xs font-semibold uppercase text-[#999]">{t("admin.pc.perItemAlerts", { n: row.alerts.length })}</p>
               <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
-                      <th className="px-3 py-1.5 text-left text-xs font-medium text-[#999]">Product</th>
-                      <th className="px-3 py-1.5 text-right text-xs font-medium text-[#999]">Sell</th>
-                      <th className="px-3 py-1.5 text-right text-xs font-medium text-[#999]">Cost</th>
-                      <th className="px-3 py-1.5 text-left text-xs font-medium text-[#999]">Alert</th>
-                      <th className="px-3 py-1.5 text-left text-xs font-medium text-[#999]">Message</th>
+                      <th className="px-3 py-1.5 text-left text-xs font-medium text-[#999]">{t("admin.pc.colProduct")}</th>
+                      <th className="px-3 py-1.5 text-right text-xs font-medium text-[#999]">{t("admin.pc.sell")}</th>
+                      <th className="px-3 py-1.5 text-right text-xs font-medium text-[#999]">{t("admin.pc.cost")}</th>
+                      <th className="px-3 py-1.5 text-left text-xs font-medium text-[#999]">{t("admin.pc.colAlert")}</th>
+                      <th className="px-3 py-1.5 text-left text-xs font-medium text-[#999]">{t("admin.pc.colMessage")}</th>
+                      <th className="px-3 py-1.5" />
                     </tr>
                   </thead>
                   <tbody>
-                    {row.alerts.map((alert, idx) => (
-                      <tr key={idx} className="border-b border-[#f0f0f0] last:border-0">
+                    {row.alerts.map((alert, idx) => {
+                      const isAlertTarget = targetAlertType && alert.alertType === targetAlertType;
+                      return (
+                      <tr key={idx} className={`border-b border-[#f0f0f0] last:border-0 ${isAlertTarget ? "bg-amber-50 border-l-[3px] border-l-amber-400" : ""}`}>
                         <td className="px-3 py-1.5 text-sm text-[#111]">{alert.productName}</td>
                         <td className="px-3 py-1.5 text-right text-sm text-[#111]">{formatCad(alert.sellPriceCents)}</td>
                         <td className="px-3 py-1.5 text-right text-sm text-[#111]">{formatCad(alert.costCents)}</td>
                         <td className="px-3 py-1.5"><AlertBadge type={alert.alertType} /></td>
                         <td className="px-3 py-1.5 text-xs text-[#666]">{alert.message}</td>
+                        <td className="px-3 py-1.5">
+                          {(alert.alertType === "missing_actual_cost" || alert.alertType === "missing_vendor_cost") && (
+                            <Link
+                              href={pricingCostsPath(row.orderId, returnTo || undefined, alert.itemId)}
+                              className="whitespace-nowrap rounded-[3px] border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-medium text-[#111] hover:border-black"
+                            >
+                              {t("admin.pc.fix")} &rarr;
+                            </Link>
+                          )}
+                        </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -314,6 +398,7 @@ const SEVERITY_STYLES = {
 };
 
 function OpsRemindersSection() {
+  const { t, locale } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -323,7 +408,7 @@ function OpsRemindersSection() {
     setError(null);
     try {
       const res = await fetch("/api/admin/pricing/ops-reminders");
-      if (!res.ok) throw new Error("Failed to load ops reminders");
+      if (!res.ok) throw new Error("failedLoadReminders");
       const json = await res.json();
       setData(json);
     } catch (err) {
@@ -344,129 +429,129 @@ function OpsRemindersSection() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-bold text-[#111]">Pricing Ops Reminders</h3>
-        <p className="mt-0.5 text-xs text-[#999]">Automated health checks for pricing data completeness, drift alerts, and pending actions.</p>
+        <h3 className="text-sm font-bold text-[#111]">{t("admin.pc.opsReminders")}</h3>
+        <p className="mt-0.5 text-xs text-[#999]">{t("admin.pc.opsRemindersDesc")}</p>
       </div>
 
       {loading ? (
-        <div className="py-8 text-center text-sm text-[#999]">Running pricing health checks...</div>
+        <div className="py-8 text-center text-sm text-[#999]">{t("admin.pc.runningHealthChecks")}</div>
       ) : error ? (
         <div className="rounded-[3px] border border-red-200 bg-red-50 p-4 text-center">
-          <p className="text-sm text-red-700">{error}</p>
-          <button onClick={fetchReminders} className="mt-2 rounded-[3px] bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700">Retry</button>
+          <p className="text-sm text-red-700">{t(`admin.pc.${error}`)}</p>
+          <button onClick={fetchReminders} className="mt-2 rounded-[3px] bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700">{t("admin.pc.retry")}</button>
         </div>
       ) : !r ? (
-        <div className="py-8 text-center text-sm text-[#999]">No data available.</div>
+        <div className="py-8 text-center text-sm text-[#999]">{t("admin.pc.noDataAvailable")}</div>
       ) : (
         <>
           {/* Summary bar */}
           <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-[#666]">
-                {totalIssues === 0 ? "All pricing checks passed." : `${totalIssues} issue${totalIssues !== 1 ? "s" : ""} detected`}
+                {totalIssues === 0 ? t("admin.pc.allChecksPassed") : t("admin.pc.issuesDetected", { count: totalIssues })}
               </span>
               <span className="text-xs text-[#999]">
-                Generated {data.generatedAt ? new Date(data.generatedAt).toLocaleTimeString("en-CA") : ""}
+                {data.generatedAt ? new Date(data.generatedAt).toLocaleTimeString(locale === "zh" ? "zh-CN" : "en-CA") : ""}
               </span>
             </div>
           </div>
 
           <div className="space-y-2">
             <ReminderCard
-              title="Missing Display Price"
+              title={t("admin.pc.reminderMissingDisplayPrice")}
               severity={r.missingDisplayPrice.severity}
               count={r.missingDisplayPrice.count}
               defaultExpanded={r.missingDisplayPrice.count > 0 && r.missingDisplayPrice.count <= 10}
             >
-              <p className="mb-2 text-xs text-[#999]">Products without a &quot;From $X&quot; display price.</p>
+              <p className="mb-2 text-xs text-[#999]">{t("admin.pc.reminderMissingDisplayPriceDesc")}</p>
               <SlugList slugs={r.missingDisplayPrice.slugs} />
             </ReminderCard>
 
             <ReminderCard
-              title="Missing Floor Policy"
+              title={t("admin.pc.reminderMissingFloorPolicy")}
               severity={r.missingFloorPolicy.severity}
               count={r.missingFloorPolicy.count}
               defaultExpanded={r.missingFloorPolicy.count > 0 && r.missingFloorPolicy.count <= 10}
             >
-              <p className="mb-2 text-xs text-[#999]">Products without a minimum price (floor) set.</p>
+              <p className="mb-2 text-xs text-[#999]">{t("admin.pc.reminderMissingFloorPolicyDesc")}</p>
               <SlugList slugs={r.missingFloorPolicy.slugs} />
             </ReminderCard>
 
             <ReminderCard
-              title="Placeholder Materials"
+              title={t("admin.pc.reminderPlaceholderMaterials")}
               severity={r.placeholderMaterials.severity}
               count={r.placeholderMaterials.count}
               defaultExpanded={r.placeholderMaterials.count > 0}
             >
-              <p className="mb-2 text-xs text-[#999]">Active materials still named &quot;New Material&quot; or with empty names.</p>
+              <p className="mb-2 text-xs text-[#999]">{t("admin.pc.reminderPlaceholderMaterialsDesc")}</p>
               {r.placeholderMaterials.names?.length > 0 ? (
                 <ul className="space-y-1">
                   {r.placeholderMaterials.names.map((name, i) => <li key={i} className="text-xs text-[#666]">{name}</li>)}
                 </ul>
-              ) : <p className="text-xs text-[#999]">None found.</p>}
+              ) : <p className="text-xs text-[#999]">{t("admin.pc.noneFound")}</p>}
             </ReminderCard>
 
             <ReminderCard
-              title="Suspicious Hardware Prices"
+              title={t("admin.pc.reminderSuspiciousHardware")}
               severity={r.suspiciousHardware.severity}
               count={r.suspiciousHardware.count}
               defaultExpanded={r.suspiciousHardware.count > 0}
             >
-              <p className="mb-2 text-xs text-[#999]">Hardware items with zero or suspiciously low prices.</p>
+              <p className="mb-2 text-xs text-[#999]">{t("admin.pc.reminderSuspiciousHardwareDesc")}</p>
               {r.suspiciousHardware.items?.length > 0 ? (
                 <ul className="space-y-1">
                   {r.suspiciousHardware.items.map((item) => (
                     <li key={item.slug} className="text-xs text-[#666]">
                       <span className="font-medium">{item.name}</span>
                       <span className="ml-2 text-[#999]">
-                        ({item.issue === "zero_price" ? "$0.00" : `$${(item.priceCents / 100).toFixed(2)}`})
+                        ({formatCad(item.issue === "zero_price" ? 0 : item.priceCents)})
                       </span>
                     </li>
                   ))}
                 </ul>
-              ) : <p className="text-xs text-[#999]">None found.</p>}
+              ) : <p className="text-xs text-[#999]">{t("admin.pc.noneFound")}</p>}
             </ReminderCard>
 
             <ReminderCard
-              title="Missing Vendor Cost"
+              title={t("admin.pc.reminderMissingVendorCost")}
               severity={r.missingVendorCost.severity}
               count={r.missingVendorCost.count}
               defaultExpanded={r.missingVendorCost.count > 0 && r.missingVendorCost.count <= 10}
             >
-              <p className="mb-2 text-xs text-[#999]">Fixed-price products without vendor cost data.</p>
+              <p className="mb-2 text-xs text-[#999]">{t("admin.pc.reminderMissingVendorCostDesc")}</p>
               <SlugList slugs={r.missingVendorCost.slugs} />
             </ReminderCard>
 
             <ReminderCard
-              title="High Drift Changes (Last 7 Days)"
+              title={t("admin.pc.reminderHighDrift")}
               severity={r.highDriftChanges.severity}
               count={r.highDriftChanges.count}
             >
-              <p className="mb-2 text-xs text-[#999]">Price changes with &gt;20% drift. May need review.</p>
+              <p className="mb-2 text-xs text-[#999]">{t("admin.pc.reminderHighDriftDesc")}</p>
               {r.highDriftChanges.count > 0 ? (
                 <Link
                   href={pricingGovernancePath("changelog")}
                   className="inline-flex items-center gap-1 text-xs text-[#111] underline hover:no-underline"
                 >
-                  View in Change Log
+                  {t("admin.pc.viewInChangeLog")}
                 </Link>
-              ) : <p className="text-xs text-[#999]">No high-drift changes.</p>}
+              ) : <p className="text-xs text-[#999]">{t("admin.pc.noHighDrift")}</p>}
             </ReminderCard>
 
             <ReminderCard
-              title="Pending Approvals"
+              title={t("admin.pc.reminderPendingApprovals")}
               severity={r.pendingApprovals.severity}
               count={r.pendingApprovals.count}
             >
-              <p className="mb-2 text-xs text-[#999]">Pricing changes awaiting review and approval.</p>
+              <p className="mb-2 text-xs text-[#999]">{t("admin.pc.reminderPendingApprovalsDesc")}</p>
               {r.pendingApprovals.count > 0 ? (
                 <Link
                   href={pricingGovernancePath("approvals")}
                   className="inline-flex items-center gap-1 text-xs text-[#111] underline hover:no-underline"
                 >
-                  Review Approvals
+                  {t("admin.pc.reviewApprovals")}
                 </Link>
-              ) : <p className="text-xs text-[#999]">No pending approvals.</p>}
+              ) : <p className="text-xs text-[#999]">{t("admin.pc.noPendingApprovals")}</p>}
             </ReminderCard>
           </div>
         </>
@@ -519,7 +604,8 @@ function ReminderCard({ title, severity, count, children, defaultExpanded }) {
 }
 
 function SlugList({ slugs }) {
-  if (!slugs || slugs.length === 0) return <p className="text-xs text-[#999]">None found.</p>;
+  const { t } = useTranslation();
+  if (!slugs || slugs.length === 0) return <p className="text-xs text-[#999]">{t("admin.pc.noneFound")}</p>;
   return (
     <ul className="space-y-0.5">
       {slugs.map((slug) => (

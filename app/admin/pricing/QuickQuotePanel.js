@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 /**
  * Standalone Quick Quote / Cost Calculator.
@@ -9,6 +10,7 @@ import { useSearchParams } from "next/navigation";
  * Admin selects a product, adjusts inputs, and gets full cost/profit/floor breakdown.
  */
 export default function QuickQuotePanel() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const requestedSlug = searchParams.get("slug") || "";
   const [products, setProducts] = useState([]);
@@ -210,13 +212,13 @@ export default function QuickQuotePanel() {
     <div className="space-y-5">
       {/* Input controls */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-        <h2 className="text-base font-bold text-[#111]">Quick Quote Calculator</h2>
-        <p className="mt-1 text-xs text-[#999]">Select a product and adjust inputs to see the full pricing breakdown.</p>
+        <h2 className="text-base font-bold text-[#111]">{t("admin.pc.quickQuoteTitle")}</h2>
+        <p className="mt-1 text-xs text-[#999]">{t("admin.pc.quickQuoteDesc")}</p>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {/* Product selector */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <label className="block text-xs font-medium text-[#666]">Find Product</label>
+            <label className="block text-xs font-medium text-[#666]">{t("admin.pc.findProduct")}</label>
             <input
               type="text"
               value={productQuery}
@@ -251,7 +253,7 @@ export default function QuickQuotePanel() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#666]">Quantity</label>
+            <label className="block text-xs font-medium text-[#666]">{t("admin.pc.quantity")}</label>
             <input
               type="number" min={1} value={quantity}
               onChange={e => setQuantity(Math.max(1, Number(e.target.value) || 1))}
@@ -261,7 +263,7 @@ export default function QuickQuotePanel() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#666]">Width (in)</label>
+            <label className="block text-xs font-medium text-[#666]">{t("admin.pc.widthIn")}</label>
             <input
               type="number" min={0.5} step={0.5} value={widthIn}
               onChange={e => setWidthIn(Number(e.target.value) || 1)}
@@ -271,7 +273,7 @@ export default function QuickQuotePanel() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#666]">Height (in)</label>
+            <label className="block text-xs font-medium text-[#666]">{t("admin.pc.heightIn")}</label>
             <input
               type="number" min={0.5} step={0.5} value={heightIn}
               onChange={e => setHeightIn(Number(e.target.value) || 1)}
@@ -281,7 +283,7 @@ export default function QuickQuotePanel() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#666]">Material</label>
+            <label className="block text-xs font-medium text-[#666]">{t("admin.pc.material")}</label>
             <input
               type="text" value={material}
               onChange={e => setMaterial(e.target.value)}
@@ -295,7 +297,7 @@ export default function QuickQuotePanel() {
         {/* Row 2: sizeLabel + finishing + toggles */}
         <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div>
-            <label className="block text-xs font-medium text-[#666]">Size Label</label>
+            <label className="block text-xs font-medium text-[#666]">{t("admin.pc.sizeLabel")}</label>
             <input
               type="text" value={sizeLabel}
               onChange={e => setSizeLabel(e.target.value)}
@@ -305,7 +307,7 @@ export default function QuickQuotePanel() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#666]">Finishing</label>
+            <label className="block text-xs font-medium text-[#666]">{t("admin.pc.finishing")}</label>
             <input
               type="text" value={finishing}
               onChange={e => setFinishing(e.target.value)}
@@ -315,9 +317,9 @@ export default function QuickQuotePanel() {
             />
           </div>
           <div className="flex items-end gap-4 sm:col-span-2 lg:col-span-3">
-            <ToggleChip label="Rush" checked={rush} onChange={setRush} />
-            <ToggleChip label="Design Help" checked={designHelp} onChange={setDesignHelp} />
-            <ToggleChip label="Double Sided" checked={doubleSided} onChange={setDoubleSided} />
+            <ToggleChip label={t("admin.pc.rush")} checked={rush} onChange={setRush} />
+            <ToggleChip label={t("admin.pc.designHelp")} checked={designHelp} onChange={setDesignHelp} />
+            <ToggleChip label={t("admin.pc.doubleSided")} checked={doubleSided} onChange={setDoubleSided} />
           </div>
         </div>
 
@@ -329,7 +331,7 @@ export default function QuickQuotePanel() {
             className="flex items-center gap-1.5 text-xs font-medium text-[#666] hover:text-[#111]"
           >
             <span className={`inline-block transition-transform ${b2bOpen ? "rotate-90" : ""}`}>&#9654;</span>
-            B2B Simulation
+            {t("admin.pc.b2bSimulation")}
             {(b2bUserId || b2bCompanyName || b2bPartnerTier) && (
               <span className="ml-1 rounded-[2px] bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">ACTIVE</span>
             )}
@@ -381,14 +383,14 @@ export default function QuickQuotePanel() {
           className="mt-4 rounded-[3px] bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-[#222] disabled:opacity-50"
           style={{ minHeight: 48 }}
         >
-          {loading ? "Calculating..." : "Calculate Quote"}
+          {loading ? t("admin.pc.calculating") : t("admin.pc.calculateQuote")}
         </button>
       </div>
 
       {/* Error */}
       {error && (
         <div className="rounded-[3px] border border-red-200 bg-red-50 p-4">
-          <p className="text-sm font-semibold text-red-700">Quote Error</p>
+          <p className="text-sm font-semibold text-red-700">{t("admin.pc.quoteError")}</p>
           <p className="mt-1 text-xs text-red-600">{error}</p>
         </div>
       )}
@@ -408,28 +410,28 @@ export default function QuickQuotePanel() {
 
           {/* Key metrics */}
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <MetricCard label="Sell Price" value={fmt(sell)} sub={`Unit: ${fmt(c.sellPrice?.unitCents)}`} />
-            <MetricCard label="Total Cost" value={totalCost > 0 ? fmt(totalCost) : "--"} sub={`${nonZeroBuckets.length} buckets`} />
+            <MetricCard label={t("admin.pc.sellPrice")} value={fmt(sell)} sub={`Unit: ${fmt(c.sellPrice?.unitCents)}`} />
+            <MetricCard label={t("admin.pc.totalCost")} value={totalCost > 0 ? fmt(totalCost) : "--"} sub={`${nonZeroBuckets.length} buckets`} />
             <MetricCard
-              label="Profit"
+              label={t("admin.pc.profit")}
               value={totalCost > 0 ? fmt(profit.amountCents) : "--"}
-              sub={totalCost > 0 ? `Margin: ${pct(profit.rate)}` : "No cost data"}
+              sub={totalCost > 0 ? `${t("admin.pc.colMargin")}: ${pct(profit.rate)}` : t("admin.pc.noCostData")}
               color={profit.rate >= 0.25 ? "text-green-700" : profit.rate >= 0.10 ? "text-amber-700" : "text-red-600"}
             />
             <MetricCard
-              label="Floor Price"
+              label={t("admin.pc.floorPrice")}
               value={floor.priceCents > 0 ? fmt(floor.priceCents) : "--"}
               sub={floor.policySource || "n/a"}
               color={sell >= (floor.priceCents || 0) ? "text-green-700" : "text-red-600"}
             />
             <MetricCard
-              label="Completeness"
+              label={t("admin.pc.completeness")}
               value={`${completeness.score ?? 0}%`}
               sub={`${(completeness.missing || []).length} missing`}
               color={completeness.score >= 90 ? "text-green-700" : completeness.score >= 70 ? "text-amber-700" : "text-red-600"}
             />
             <MetricCard
-              label="Source"
+              label={t("admin.pc.source")}
               value={c.source?.kind?.replace(/_/g, " ") || "unknown"}
               sub={c.source?.template || c.source?.presetModel || ""}
             />
@@ -438,7 +440,7 @@ export default function QuickQuotePanel() {
           {/* B2B Adjusted Price card */}
           {c.b2bAdjustment && (
             <div className="rounded-[3px] border border-amber-300 bg-amber-50 p-5">
-              <h3 className="text-sm font-bold text-amber-900">B2B Adjusted Price</h3>
+              <h3 className="text-sm font-bold text-amber-900">{t("admin.pc.b2bAdjusted")}</h3>
               <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                   <p className="text-[10px] font-medium uppercase text-amber-700">Adjusted Price</p>
@@ -482,7 +484,7 @@ export default function QuickQuotePanel() {
           {/* Cost breakdown */}
           {nonZeroBuckets.length > 0 && totalCost > 0 && (
             <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-              <h3 className="text-sm font-bold text-[#111]">Cost Breakdown</h3>
+              <h3 className="text-sm font-bold text-[#111]">{t("admin.pc.costBreakdown")}</h3>
               <div className="mt-3 flex h-6 overflow-hidden rounded-[3px]">
                 {nonZeroBuckets.map(([bucket, cents]) => {
                   const widthPct = Math.max((cents / totalCost) * 100, 3);
@@ -515,13 +517,13 @@ export default function QuickQuotePanel() {
           {/* Floor policy detail */}
           {floor.policyDetail && (
             <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-              <h3 className="text-sm font-bold text-[#111]">Floor Price Policy</h3>
+              <h3 className="text-sm font-bold text-[#111]">{t("admin.pc.floorPolicy")}</h3>
               <p className="mt-1 text-xs text-[#666]">{floor.policyDetail}</p>
               <div className="mt-2 flex items-center gap-2">
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                   sell >= (floor.priceCents || 0) ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                 }`}>
-                  {sell >= (floor.priceCents || 0) ? "ABOVE FLOOR" : "BELOW FLOOR"}
+                  {sell >= (floor.priceCents || 0) ? t("admin.pc.aboveFloor") : t("admin.pc.belowFloorLabel")}
                 </span>
                 <span className="text-[10px] text-[#999]">
                   Source: {floor.policySource} | Floor: {fmt(floor.priceCents)} | Sell: {fmt(sell)}
@@ -533,7 +535,7 @@ export default function QuickQuotePanel() {
           {/* Option impacts */}
           {c.optionImpacts && c.optionImpacts.length > 0 && (
             <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-              <h3 className="text-sm font-bold text-[#111]">Option Impact Map</h3>
+              <h3 className="text-sm font-bold text-[#111]">{t("admin.pc.optionImpact")}</h3>
               <div className="mt-2 overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
@@ -574,7 +576,7 @@ export default function QuickQuotePanel() {
           {/* Inheritance */}
           {c.inheritance && (
             <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-              <h3 className="text-sm font-bold text-[#111]">Inheritance Chain</h3>
+              <h3 className="text-sm font-bold text-[#111]">{t("admin.pc.inheritanceChain")}</h3>
               <div className="mt-2 space-y-1 text-xs text-[#666]">
                 {c.inheritance.templateName && (
                   <p>Template: <span className="font-medium text-[#111]">{c.inheritance.templateName}</span></p>
@@ -595,7 +597,7 @@ export default function QuickQuotePanel() {
           {/* Explanation (sectioned) */}
           {c.explanation && (
             <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-4">
-              <h3 className="text-sm font-bold text-[#111] mb-2">Pricing Explanation</h3>
+              <h3 className="text-sm font-bold text-[#111] mb-2">{t("admin.pc.pricingExplanation")}</h3>
               <div className="space-y-1">
                 {c.explanation.split(/(?=\[(?:Path|Costs|Missing|Warnings|Floor|Modifiers|Confidence)\])/).filter(Boolean).map((section, i) => {
                   const tagMatch = section.match(/^\[(Path|Costs|Missing|Warnings|Floor|Modifiers|Confidence)\]\s*/);
@@ -625,7 +627,7 @@ export default function QuickQuotePanel() {
               {/* Sales-Ready Summary */}
               <details className="mt-2 rounded-[3px] border border-[#e0e0e0] bg-white">
                 <summary className="cursor-pointer px-4 py-2 text-xs font-medium text-[#666] hover:bg-[#fafafa]">
-                  Sales-Ready Summary
+                  {t("admin.pc.salesSummary")}
                 </summary>
                 <div className="border-t border-[#e0e0e0] px-4 py-3 text-xs text-[#666] space-y-1">
                   {c.salesExplanation ? (
@@ -686,8 +688,8 @@ export default function QuickQuotePanel() {
 
           {/* Save Quote Snapshot */}
           <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-            <h3 className="text-sm font-bold text-[#111]">Save Quote Snapshot</h3>
-            <p className="mt-1 text-xs text-[#999]">Save this quote for audit trail and future reference.</p>
+            <h3 className="text-sm font-bold text-[#111]">{t("admin.pc.saveSnapshot")}</h3>
+            <p className="mt-1 text-xs text-[#999]">{t("admin.pc.saveSnapshotDesc")}</p>
             <textarea
               value={saveNote}
               onChange={e => setSaveNote(e.target.value)}
@@ -701,7 +703,7 @@ export default function QuickQuotePanel() {
                 disabled={saving}
                 className="rounded-[3px] bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-[#222] disabled:opacity-50"
               >
-                {saving ? "Saving..." : "Save Quote Snapshot"}
+                {saving ? t("admin.pc.saving") : t("admin.pc.saveSnapshot")}
               </button>
               {saveResult && (
                 <span className={`text-xs font-medium ${saveResult.ok ? "text-green-700" : "text-red-600"}`}>
@@ -714,7 +716,7 @@ export default function QuickQuotePanel() {
           {/* Raw contract (collapsible) */}
           <details className="rounded-[3px] border border-[#e0e0e0] bg-white">
             <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-[#666] hover:bg-[#fafafa]">
-              Raw Contract JSON
+              {t("admin.pc.rawContract")}
             </summary>
             <div className="border-t border-[#e0e0e0] px-4 py-3">
               <pre className="overflow-x-auto whitespace-pre-wrap text-[11px] text-[#666] font-mono">
