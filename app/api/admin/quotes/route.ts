@@ -6,7 +6,9 @@ import { requirePermission } from "@/lib/admin-auth";
  * GET /api/admin/quotes — list quote requests with search, status filter, pagination
  */
 export async function GET(request: NextRequest) {
-  const auth = await requirePermission(request, "orders", "view");
+  // Quotes are pricing-center-owned: quote requests require pricing knowledge
+  // to set quotedAmountCents, and the pricing center has the quote simulator.
+  const auth = await requirePermission(request, "pricing", "view");
   if (!auth.authenticated) return auth.response;
 
   try {

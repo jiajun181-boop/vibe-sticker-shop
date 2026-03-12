@@ -12,7 +12,9 @@ import { requirePermission } from "@/lib/admin-auth";
  * }
  */
 export async function GET(request: NextRequest) {
-  const auth = await requirePermission(request, "analytics", "view");
+  // Cost completeness is pricing-center-owned: it tracks vendor cost data quality
+  // for pricing operations, not general analytics.
+  const auth = await requirePermission(request, "pricing", "view");
   if (!auth.authenticated) return auth.response;
 
   try {

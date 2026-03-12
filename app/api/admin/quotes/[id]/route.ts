@@ -10,7 +10,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requirePermission(request, "orders", "view");
+  // Quotes are pricing-center-owned (see /api/admin/quotes/route.ts).
+  const auth = await requirePermission(request, "pricing", "view");
   if (!auth.authenticated) return auth.response;
 
   try {
@@ -33,7 +34,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requirePermission(request, "orders", "edit");
+  const auth = await requirePermission(request, "pricing", "edit");
   if (!auth.authenticated) return auth.response;
 
   try {

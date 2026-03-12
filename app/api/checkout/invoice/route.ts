@@ -8,8 +8,8 @@ import { getUserFromRequest } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildInvoiceConfirmationHtml } from "@/lib/email/templates/invoice-confirmation";
 import { checkAndReserveStock } from "@/lib/inventory";
-import { DESIGN_HELP_CENTS, MAX_ITEM_QUANTITY } from "@/lib/order-config";
-import { resolveB2BPrice } from "@/lib/pricing/b2b-rules";
+import { MAX_ITEM_QUANTITY } from "@/lib/order-config";
+import { findActiveProduct, validateCoupon, resolveB2BDiscount } from "@/lib/checkout-shared";
 import { applyAutoTags } from "@/lib/auto-tag";
 
 const MetaSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
@@ -42,18 +42,6 @@ const InvoiceCheckoutSchema = z.object({
 
 type CartItem = z.infer<typeof CartItemSchema>;
 
-async function findActiveProduct(item: CartItem) {
-  const byId = await prisma.product.findFirst({
-    where: { id: item.productId, isActive: true },
-    include: { pricingPreset: true },
-  });
-  if (byId) return byId;
-  return prisma.product.findFirst({
-    where: { slug: item.slug, isActive: true },
-    include: { pricingPreset: true },
-  });
-}
-
 export async function POST(req: NextRequest) {
   try {
     const ip = getClientIp(req);
@@ -81,7 +69,7 @@ export async function POST(req: NextRequest) {
     // repriceItem() handles base pricing + rush surcharge via RUSH_MULTIPLIER.
     const pricedItems = await Promise.all(
       items.map(async (item) => {
-        const product = await findActiveProduct(item);
+        const product = await findActiveProduct({ productId: item.productId, slug: item.slug });
         if (!product) throw new Error(`Product unavailable: ${item.name}`);
 
         const cartItem = {
@@ -126,83 +114,24 @@ export async function POST(req: NextRequest) {
     const itemsSubtotal = pricedItems.reduce((sum, p) => sum + p.repriced.lineTotal, 0);
     const subtotalAmount = itemsSubtotal + designHelpTotal;
 
-    // Coupon validation (same logic as Stripe checkout)
-    let couponData: { id: string; code: string; discountAmount: number } | null = null;
-    if (promoCode) {
-      const coupon = await prisma.coupon.findUnique({
-        where: { code: promoCode.toUpperCase() },
-      });
-      if (!coupon || !coupon.isActive) {
-        return NextResponse.json(
-          { error: "Invalid or inactive promo code", code: "COUPON_INVALID" },
-          { status: 422 }
-        );
-      }
-      const now = new Date();
-      const isValid = (!coupon.validFrom || now >= coupon.validFrom) && (!coupon.validTo || now <= coupon.validTo);
-      const hasUsesLeft = !coupon.maxUses || coupon.usedCount < coupon.maxUses;
-      const meetsMinimum = !coupon.minAmount || subtotalAmount >= coupon.minAmount;
-
-      if (!isValid) {
-        return NextResponse.json({ error: "Promo code has expired", code: "COUPON_INVALID" }, { status: 422 });
-      } else if (!hasUsesLeft) {
-        return NextResponse.json({ error: "Promo code usage limit reached", code: "COUPON_INVALID" }, { status: 422 });
-      } else if (!meetsMinimum) {
-        return NextResponse.json(
-          { error: `Minimum order of $${((coupon.minAmount || 0) / 100).toFixed(2)} required for this promo code`, code: "COUPON_INVALID" },
-          { status: 422 }
-        );
-      } else {
-        const discountAmt = coupon.type === "percentage"
-          ? Math.round(subtotalAmount * (coupon.value / 10000))
-          : Math.min(coupon.value, subtotalAmount);
-
-        couponData = { id: coupon.id, code: coupon.code, discountAmount: discountAmt };
-      }
+    // Coupon validation: shared resolution (validates against subtotal incl. design help)
+    const { couponData, rejectionReason: couponRejectionReason } = await validateCoupon(promoCode, subtotalAmount);
+    if (promoCode && couponRejectionReason) {
+      return NextResponse.json(
+        { error: couponRejectionReason, code: "COUPON_INVALID" },
+        { status: 422 }
+      );
     }
 
-    // B2B discount: resolve per-item rules for authenticated B2B users
-    let partnerDiscount = 0;
-    let isB2B = false;
-    if (user?.id) {
-      const b2bUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { id: true, accountType: true, b2bApproved: true, partnerDiscount: true, companyName: true, partnerTier: true },
-      });
-      if (b2bUser?.accountType === "B2B" && b2bUser.b2bApproved) {
-        isB2B = true;
-
-        // Flat partner discount from user profile
-        const flatDiscount = b2bUser.partnerDiscount > 0
-          ? Math.round(subtotalAmount * (b2bUser.partnerDiscount / 100))
-          : 0;
-
-        // Per-item B2B rules discount
-        let rulesDiscount = 0;
-        try {
-          const ruleResults = await Promise.all(
-            pricedItems.map((p) =>
-              resolveB2BPrice({
-                userId: b2bUser.id,
-                companyName: b2bUser.companyName || undefined,
-                partnerTier: b2bUser.partnerTier || undefined,
-                productId: p.product!.id,
-                productSlug: p.product!.slug,
-                quantity: p.repriced.quantity,
-                retailPriceCents: p.repriced.lineTotal,
-              })
-            )
-          );
-          for (const r of ruleResults) {
-            if (r && r.discountCents > 0) rulesDiscount += r.discountCents;
-          }
-        } catch {
-          // Non-critical: if rules lookup fails, fall back to flat discount
-        }
-
-        partnerDiscount = Math.max(flatDiscount, rulesDiscount);
-      }
-    }
+    // B2B discount: shared resolution (flat % vs per-item rules, picks larger)
+    const b2bItems = pricedItems.map(p => ({
+      productId: p.product!.id,
+      slug: p.product!.slug,
+      quantity: p.repriced.quantity,
+      lineTotal: p.repriced.lineTotal,
+    }));
+    const b2bResult = await resolveB2BDiscount(user?.id, subtotalAmount, b2bItems);
+    const { isB2B, partnerDiscount } = b2bResult;
 
     // Settlement: shared computation across Stripe/Invoice/Interac
     // Fix: pickup was not getting free shipping in old invoice code

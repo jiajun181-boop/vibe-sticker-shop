@@ -4,6 +4,7 @@ import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
 import { syncOrderProductionStatus } from "@/lib/production-sync";
 import { VALID_JOB_TRANSITIONS } from "@/lib/order-config";
+import { computeCostSignal } from "@/lib/pricing/production-cost-signal";
 
 const JOB_INCLUDE = {
   orderItem: {
@@ -32,10 +33,29 @@ export async function GET(
 
   try {
     const { id } = await params;
+    const includeCost = request.nextUrl.searchParams.get("include") === "costSignal";
 
     const job = await prisma.productionJob.findUnique({
       where: { id },
-      include: JOB_INCLUDE,
+      include: {
+        ...JOB_INCLUDE,
+        // Include cost fields from orderItem when costSignal is requested
+        ...(includeCost && {
+          orderItem: {
+            include: {
+              order: {
+                select: {
+                  id: true,
+                  customerEmail: true,
+                  customerName: true,
+                  status: true,
+                  productionStatus: true,
+                },
+              },
+            },
+          },
+        }),
+      },
     });
 
     if (!job) {
@@ -45,7 +65,30 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(job);
+    // Optionally compute pricing health signal for the production job.
+    // This tells operators whether the job is financially safe, needs pricing
+    // review, or is missing cost data — without exposing raw dollar amounts.
+    let costSignal = undefined;
+    if (includeCost && job.orderItem) {
+      const oi = job.orderItem as any;
+      const order = oi.order;
+      costSignal = computeCostSignal(
+        {
+          id: oi.id,
+          productName: oi.productName || job.productName || "",
+          totalPrice: oi.totalPrice || 0,
+          materialCostCents: oi.materialCostCents || 0,
+          estimatedCostCents: oi.estimatedCostCents || 0,
+          actualCostCents: oi.actualCostCents || 0,
+          vendorCostCents: oi.vendorCostCents || 0,
+        },
+        order?.id || "",
+        order?.status || "",
+        order?.productionStatus || ""
+      );
+    }
+
+    return NextResponse.json({ ...job, ...(costSignal && { costSignal }) });
   } catch (error) {
     console.error("[ProductionJob GET] Error:", error);
     return NextResponse.json(

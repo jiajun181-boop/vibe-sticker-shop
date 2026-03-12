@@ -2,6 +2,11 @@
 // B2B price rule CRUD API.
 // GET: list rules
 // POST: create rule (with floor price enforcement)
+//
+// OWNERSHIP: Intentionally uses "b2b" permission module (not "pricing").
+// Sales team owns B2B customer relationships and needs to manage rules
+// without full pricing center access. Governance is enforced via
+// approval gates + floor compliance checks regardless of module.
 
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission } from "@/lib/admin-auth";

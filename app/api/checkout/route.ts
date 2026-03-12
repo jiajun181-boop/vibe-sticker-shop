@@ -13,10 +13,9 @@ import {
 import { getSessionFromRequest } from "@/lib/auth";
 import { checkAndReserveStock } from "@/lib/inventory";
 import {
-  HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST,
-  RUSH_MULTIPLIER, DESIGN_HELP_CENTS, MAX_ITEM_QUANTITY,
+  DESIGN_HELP_CENTS, MAX_ITEM_QUANTITY,
 } from "@/lib/order-config";
-import { resolveB2BPrice } from "@/lib/pricing/b2b-rules";
+import { findActiveProduct, validateCoupon, resolveB2BDiscount } from "@/lib/checkout-shared";
 
 let _stripe: Stripe | null = null;
 function getStripe() {
@@ -48,23 +47,8 @@ const CheckoutSchema = z.object({
 });
 
 // ProductWithPricingPreset type moved to lib/checkout-reprice.ts
-
 // Meta parsing and repricing helpers are in lib/checkout-reprice.ts
-
-async function findActiveProduct(item: z.infer<typeof CartItemSchema>) {
-  const byId = await prisma.product.findFirst({
-    where: { id: item.productId, isActive: true },
-    include: { pricingPreset: true },
-  });
-  if (byId) return byId;
-
-  return prisma.product.findFirst({
-    where: { slug: item.slug, isActive: true },
-    include: { pricingPreset: true },
-  });
-}
-
-// repriceSingleItem is now repriceItem() from lib/checkout-reprice.ts
+// findActiveProduct is in lib/checkout-shared.ts
 
 export async function POST(req: Request) {
   try {
@@ -111,7 +95,7 @@ export async function POST(req: Request) {
 
     const pricedItems = await Promise.all(
       items.map(async (item) => {
-        const product = await findActiveProduct(item);
+        const product = await findActiveProduct({ productId: item.productId, slug: item.slug });
         if (!product) {
           throw new Error(`Product unavailable: ${item.name}`);
         }
@@ -179,112 +163,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // Partner discount — auto-applied for B2B partners
-    // Two sources: (1) flat user.partnerDiscount %, (2) B2B price rules per product.
-    // Uses whichever yields the larger discount for the customer.
-    let partnerDiscount = 0;
-    let partnerUserId: string | null = null;
-    let isB2B = false;
-    let b2bSource: "flat" | "rules" | null = null;
+    // B2B discount: shared resolution (flat % vs per-item rules, picks larger)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const session = getSessionFromRequest(req as any);
-    if (session?.userId) {
-      const user = await prisma.user.findUnique({
-        where: { id: session.userId },
-        select: { id: true, accountType: true, b2bApproved: true, partnerDiscount: true, companyName: true, partnerTier: true },
-      });
-      if (user?.accountType === "B2B" && user.b2bApproved) {
-        isB2B = true;
-        partnerUserId = user.id;
+    const b2bResult = await resolveB2BDiscount(session?.userId, subtotal, pricedItems);
+    const { isB2B, partnerDiscount, partnerUserId, b2bSource } = b2bResult;
 
-        // (1) Flat partner discount from user profile
-        const flatDiscount = user.partnerDiscount > 0
-          ? Math.round(subtotal * (user.partnerDiscount / 100))
-          : 0;
-
-        // (2) Per-item B2B rules discount
-        let rulesDiscount = 0;
-        try {
-          const ruleResults = await Promise.all(
-            pricedItems.map((item) =>
-              resolveB2BPrice({
-                userId: user.id,
-                companyName: user.companyName || undefined,
-                partnerTier: user.partnerTier || undefined,
-                productId: item.productId,
-                productSlug: item.slug,
-                quantity: item.quantity,
-                retailPriceCents: item.lineTotal,
-              })
-            )
-          );
-          for (const r of ruleResults) {
-            if (r && r.discountCents > 0) rulesDiscount += r.discountCents;
-          }
-        } catch {
-          // Non-critical: if rules lookup fails, fall back to flat discount
-        }
-
-        // Use whichever is larger for the customer
-        if (rulesDiscount > flatDiscount) {
-          partnerDiscount = rulesDiscount;
-          b2bSource = "rules";
-        } else if (flatDiscount > 0) {
-          partnerDiscount = flatDiscount;
-          b2bSource = "flat";
-        }
-      }
-    }
-
-    // Validate coupon server-side and create Stripe discount
-    let couponData: { id: string; code: string; discountAmount: number; stripeCouponId?: string } | null = null;
-    let couponRejectionReason: string | null = null;
-    if (promoCode) {
-      const coupon = await prisma.coupon.findUnique({
-        where: { code: promoCode.toUpperCase() },
-      });
-      if (!coupon || !coupon.isActive) {
-        couponRejectionReason = "Invalid or inactive promo code";
-      } else {
-        const now = new Date();
-        const isValid = (!coupon.validFrom || now >= coupon.validFrom) && (!coupon.validTo || now <= coupon.validTo);
-        const hasUsesLeft = !coupon.maxUses || coupon.usedCount < coupon.maxUses;
-        const meetsMinimum = !coupon.minAmount || subtotal >= coupon.minAmount;
-
-        if (!isValid) {
-          couponRejectionReason = "Promo code has expired";
-        } else if (!hasUsesLeft) {
-          couponRejectionReason = "Promo code usage limit reached";
-        } else if (!meetsMinimum) {
-          couponRejectionReason = `Minimum order of $${((coupon.minAmount || 0) / 100).toFixed(2)} required for this promo code`;
-        } else {
-          const discountAmount = coupon.type === "percentage"
-            ? Math.round(subtotal * (coupon.value / 10000))
-            : Math.min(coupon.value, subtotal);
-
-          // Create a one-time Stripe coupon for this checkout
-          const stripeCoupon = coupon.type === "percentage"
-            ? await getStripe().coupons.create({
-                percent_off: coupon.value / 100,
-                duration: "once",
-                name: coupon.code,
-              })
-            : await getStripe().coupons.create({
-                amount_off: discountAmount,
-                currency: process.env.STRIPE_CURRENCY || "cad",
-                duration: "once",
-                name: coupon.code,
-              });
-
-          couponData = {
-            id: coupon.id,
-            code: coupon.code,
-            discountAmount,
-            stripeCouponId: stripeCoupon.id,
-          };
-        }
-      }
-    }
+    // Coupon validation: shared resolution (validates against subtotal incl. design help)
+    const { couponData: baseCouponData, rejectionReason: couponRejectionReason } = await validateCoupon(promoCode, subtotal);
 
     // If coupon was provided but rejected, return error to client
     if (promoCode && couponRejectionReason) {
@@ -292,6 +178,31 @@ export async function POST(req: Request) {
         { error: couponRejectionReason, code: "COUPON_INVALID" },
         { status: 422 }
       );
+    }
+
+    // Create Stripe coupon object for validated coupons
+    let couponData: { id: string; code: string; discountAmount: number; stripeCouponId?: string } | null = null;
+    if (baseCouponData) {
+      const coupon = await prisma.coupon.findUnique({
+        where: { code: baseCouponData.code },
+      });
+      const stripeCoupon = coupon?.type === "percentage"
+        ? await getStripe().coupons.create({
+            percent_off: coupon.value / 100,
+            duration: "once",
+            name: baseCouponData.code,
+          })
+        : await getStripe().coupons.create({
+            amount_off: baseCouponData.discountAmount,
+            currency: process.env.STRIPE_CURRENCY || "cad",
+            duration: "once",
+            name: baseCouponData.code,
+          });
+
+      couponData = {
+        ...baseCouponData,
+        stripeCouponId: stripeCoupon.id,
+      };
     }
 
     // Settlement: shared computation across Stripe/Invoice/Interac

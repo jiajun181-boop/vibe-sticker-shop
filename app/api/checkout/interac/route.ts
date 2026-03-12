@@ -8,11 +8,8 @@ import { checkAndReserveStock } from "@/lib/inventory";
 import { repriceItem, calculateDesignHelpFee } from "@/lib/checkout-reprice";
 import { settleOrder, normalizeDeliveryMethod } from "@/lib/settlement";
 import { checkoutLimiter, getClientIp } from "@/lib/rate-limit";
-import {
-  DESIGN_HELP_CENTS,
-  MAX_ITEM_QUANTITY,
-} from "@/lib/order-config";
-import { resolveB2BPrice } from "@/lib/pricing/b2b-rules";
+import { MAX_ITEM_QUANTITY } from "@/lib/order-config";
+import { findActiveProduct, validateCoupon, resolveB2BDiscount } from "@/lib/checkout-shared";
 import { applyAutoTags } from "@/lib/auto-tag";
 
 const InteracSchema = z.object({
@@ -58,17 +55,7 @@ export async function POST(req: Request) {
     // Server-side repricing: same logic as Stripe/Invoice checkout.
     const pricedItems = await Promise.all(
       items.map(async (item) => {
-        // findActiveProduct: by ID first, then by slug — same pattern as Stripe/Invoice
-        let product = await prisma.product.findFirst({
-          where: { id: item.productId, isActive: true },
-          include: { pricingPreset: true },
-        });
-        if (!product && item.slug) {
-          product = await prisma.product.findFirst({
-            where: { slug: item.slug, isActive: true },
-            include: { pricingPreset: true },
-          });
-        }
+        const product = await findActiveProduct({ productId: item.productId, slug: item.slug });
         if (!product) {
           throw new Error(`Product unavailable: ${item.name}`);
         }
@@ -100,85 +87,25 @@ export async function POST(req: Request) {
     // Get user session early for B2B discount + order linking
     const session = getSessionFromRequest(req as any);
 
-    // B2B discount: resolve per-item rules for authenticated B2B users
-    let partnerDiscount = 0;
-    let isB2B = false;
-    if (session?.userId) {
-      const b2bUser = await prisma.user.findUnique({
-        where: { id: session.userId },
-        select: { id: true, accountType: true, b2bApproved: true, partnerDiscount: true, companyName: true, partnerTier: true },
-      });
-      if (b2bUser?.accountType === "B2B" && b2bUser.b2bApproved) {
-        isB2B = true;
-        const itemsSubtotal = pricedItems.reduce((sum, p) => sum + p.lineTotal, 0);
-
-        const flatDiscount = b2bUser.partnerDiscount > 0
-          ? Math.round(itemsSubtotal * (b2bUser.partnerDiscount / 100))
-          : 0;
-
-        let rulesDiscount = 0;
-        try {
-          const ruleResults = await Promise.all(
-            pricedItems.map((p) =>
-              resolveB2BPrice({
-                userId: b2bUser.id,
-                companyName: b2bUser.companyName || undefined,
-                partnerTier: b2bUser.partnerTier || undefined,
-                productId: p.productId,
-                productSlug: p.slug,
-                quantity: p.quantity,
-                retailPriceCents: p.lineTotal,
-              })
-            )
-          );
-          for (const r of ruleResults) {
-            if (r && r.discountCents > 0) rulesDiscount += r.discountCents;
-          }
-        } catch {
-          // Non-critical
-        }
-
-        partnerDiscount = Math.max(flatDiscount, rulesDiscount);
-      }
-    }
-
-    // Coupon validation (same logic as Stripe/Invoice checkout)
+    // Design help + subtotal (needed for coupon/B2B discount base)
+    const { totalCents: designHelpTotal } = calculateDesignHelpFee(pricedItems);
     const itemsSubtotal = pricedItems.reduce((sum, p) => sum + p.lineTotal, 0);
-    let couponData: { id: string; code: string; discountAmount: number } | null = null;
-    if (promoCode) {
-      const coupon = await prisma.coupon.findUnique({
-        where: { code: promoCode.toUpperCase() },
-      });
-      if (!coupon || !coupon.isActive) {
-        return NextResponse.json(
-          { error: "Invalid or inactive promo code", code: "COUPON_INVALID" },
-          { status: 422 }
-        );
-      }
-      const now = new Date();
-      const isValid = (!coupon.validFrom || now >= coupon.validFrom) && (!coupon.validTo || now <= coupon.validTo);
-      const hasUsesLeft = !coupon.maxUses || coupon.usedCount < coupon.maxUses;
-      const meetsMinimum = !coupon.minAmount || itemsSubtotal >= coupon.minAmount;
+    const subtotal = itemsSubtotal + designHelpTotal;
 
-      if (!isValid) {
-        return NextResponse.json({ error: "Promo code has expired", code: "COUPON_INVALID" }, { status: 422 });
-      } else if (!hasUsesLeft) {
-        return NextResponse.json({ error: "Promo code usage limit reached", code: "COUPON_INVALID" }, { status: 422 });
-      } else if (!meetsMinimum) {
-        return NextResponse.json(
-          { error: `Minimum order of $${((coupon.minAmount || 0) / 100).toFixed(2)} required for this promo code`, code: "COUPON_INVALID" },
-          { status: 422 }
-        );
-      } else {
-        const discountAmt = coupon.type === "percentage"
-          ? Math.round(itemsSubtotal * (coupon.value / 10000))
-          : Math.min(coupon.value, itemsSubtotal);
-        couponData = { id: coupon.id, code: coupon.code, discountAmount: discountAmt };
-      }
+    // B2B discount: shared resolution (flat % vs per-item rules, picks larger)
+    const b2bResult = await resolveB2BDiscount(session?.userId, subtotal, pricedItems);
+    const { isB2B, partnerDiscount } = b2bResult;
+
+    // Coupon validation: shared resolution (validates against subtotal incl. design help)
+    const { couponData, rejectionReason: couponRejectionReason } = await validateCoupon(promoCode, subtotal);
+    if (promoCode && couponRejectionReason) {
+      return NextResponse.json(
+        { error: couponRejectionReason, code: "COUPON_INVALID" },
+        { status: 422 }
+      );
     }
 
     // Settlement: shared computation across Stripe/Invoice/Interac
-    const { totalCents: designHelpTotal } = calculateDesignHelpFee(pricedItems);
     const settlement = settleOrder({
       items: pricedItems,
       deliveryMethod: normalizeDeliveryMethod(deliveryMethod),
@@ -187,7 +114,7 @@ export async function POST(req: Request) {
       isB2B,
     });
 
-    const subtotal = settlement.subtotal;
+    const settledSubtotal = settlement.subtotal;
     const discountAmount = settlement.totalDiscount;
     const shippingAmount = settlement.shippingAmount;
     const taxAmount = settlement.taxAmount;
@@ -250,7 +177,7 @@ export async function POST(req: Request) {
         shippingCity: shippingCity || null,
         shippingProvince: shippingProvince || null,
         shippingPostal: shippingPostal || null,
-        subtotalAmount: subtotal,
+        subtotalAmount: settledSubtotal,
         discountAmount,
         taxAmount,
         shippingAmount,
@@ -262,7 +189,7 @@ export async function POST(req: Request) {
         tags: [
           "interac_checkout",
           ...(pricedItems.some(p => p.rushApplied) ? ["rush"] : []),
-          ...(designHelpTotal > 0 ? ["design_help"] : []),
+          ...(designHelpTotal > 0 ? ["design-help"] : []),
           ...(couponData ? ["has_coupon"] : []),
         ],
         items: { create: orderItemsData },

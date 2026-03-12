@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { computeCostSignal, type CostSignalLevel } from "@/lib/pricing/production-cost-signal";
 
 /**
  * GET /api/admin/production/[id]/ticket
@@ -25,6 +26,7 @@ export async function GET(
       include: {
         orderItem: {
           select: {
+            id: true,
             productName: true,
             quantity: true,
             material: true,
@@ -34,6 +36,11 @@ export async function GET(
             fileUrl: true,
             fileName: true,
             meta: true,
+            totalPrice: true,
+            materialCostCents: true,
+            estimatedCostCents: true,
+            actualCostCents: true,
+            vendorCostCents: true,
             order: {
               select: {
                 id: true,
@@ -41,6 +48,8 @@ export async function GET(
                 customerName: true,
                 createdAt: true,
                 deliveryMethod: true,
+                status: true,
+                productionStatus: true,
               },
             },
           },
@@ -55,6 +64,23 @@ export async function GET(
 
     const order = job.orderItem.order;
     const artworkUrl = job.artworkUrl || job.orderItem.fileUrl;
+
+    // Compute pricing health signal for this job
+    const oi = job.orderItem;
+    const costSignal = computeCostSignal(
+      {
+        id: oi.id,
+        productName: oi.productName || job.productName || "",
+        totalPrice: oi.totalPrice || 0,
+        materialCostCents: oi.materialCostCents || 0,
+        estimatedCostCents: oi.estimatedCostCents || 0,
+        actualCostCents: oi.actualCostCents || 0,
+        vendorCostCents: oi.vendorCostCents || 0,
+      },
+      order.id,
+      order.status,
+      order.productionStatus
+    );
     const sizeStr = (job.widthIn || job.orderItem.widthIn) && (job.heightIn || job.orderItem.heightIn)
       ? `${job.widthIn || job.orderItem.widthIn}" × ${job.heightIn || job.orderItem.heightIn}"`
       : "—";
@@ -80,6 +106,8 @@ export async function GET(
         operator: job.assignedTo || "—",
         artworkUrl: artworkUrl || null,
         notes: job.notes || null,
+        costSignalLevel: costSignal.level,
+        costSignalReason: costSignal.reason,
       });
 
       return new NextResponse(Buffer.from(pdfBytes), {
@@ -123,6 +151,10 @@ export async function GET(
   .badges { display: flex; gap: 6px; margin-top: 6px; }
   .badge { font-size: 10px; font-weight: 800; padding: 1px 6px; border: 1.5px solid; text-transform: uppercase; }
   .notes-box { margin-top: 12px; border: 1px solid #ddd; padding: 8px; min-height: 48px; font-size: 11px; color: #333; }
+  .cost-signal { display: inline-block; font-size: 9px; font-weight: 800; padding: 2px 6px; border: 1.5px solid; text-transform: uppercase; margin-top: 4px; }
+  .cost-normal { border-color: #16a34a; color: #16a34a; }
+  .cost-needs-review { border-color: #dc2626; color: #dc2626; background: #fef2f2; }
+  .cost-missing-cost { border-color: #d97706; color: #d97706; background: #fef3c7; }
   .print-btn { display: block; margin: 16px auto; padding: 10px 32px; font-size: 14px; font-weight: 700; background: #000; color: #fff; border: none; cursor: pointer; }
 </style>
 </head>
@@ -137,6 +169,7 @@ export async function GET(
       <div class="priority priority-${job.priority}">${job.priority}</div>
       <div style="font-size:10px;color:#666;margin-top:4px">${new Date(job.createdAt).toLocaleDateString("en-CA")}</div>
       ${job.dueAt ? `<div style="font-size:10px;font-weight:700;color:#dc2626">DUE: ${new Date(job.dueAt).toLocaleDateString("en-CA")}</div>` : ""}
+      ${costSignal.level !== "normal" ? `<div class="cost-signal cost-${costSignal.level}">${costSignal.level === "needs-review" ? "PRICING REVIEW" : "MISSING COST"}</div>` : ""}
     </div>
   </div>
 
@@ -252,6 +285,8 @@ interface TicketData {
   operator: string;
   artworkUrl: string | null;
   notes: string | null;
+  costSignalLevel: CostSignalLevel;
+  costSignalReason: string;
 }
 
 async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
@@ -344,6 +379,25 @@ async function generateTicketPdf(data: TicketData): Promise<Uint8Array> {
     color: rgb(1, 1, 1),
   });
   drawText(priorityText, prX + 6, y - 8, { font: fontBold, size: 9, color: prColor });
+
+  // Cost signal badge (only for non-normal signals)
+  if (data.costSignalLevel !== "normal") {
+    const csLabel = data.costSignalLevel === "needs-review" ? "PRICING REVIEW" : "MISSING COST";
+    const csColor = data.costSignalLevel === "needs-review" ? red : amber;
+    const csWidth = fontBold.widthOfTextAtSize(csLabel, 7) + 10;
+    const csX = width - margin - csWidth;
+    page.drawRectangle({
+      x: csX,
+      y: y + 4,
+      width: csWidth,
+      height: 12,
+      borderColor: csColor,
+      borderWidth: 1,
+      color: rgb(1, 1, 1),
+    });
+    drawText(csLabel, csX + 5, y + 7, { font: fontBold, size: 7, color: csColor });
+    y -= 6;
+  }
 
   // Date + due
   const dateStr = new Date(data.createdAt).toLocaleDateString("en-CA");
