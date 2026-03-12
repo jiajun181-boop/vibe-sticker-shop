@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { logActivity } from "@/lib/activity-log";
+import { gateWithApproval } from "@/lib/pricing/approval";
+import { logPriceChange } from "@/lib/pricing/change-log";
 
 export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, "pricing", "view");
@@ -78,6 +80,47 @@ export async function PATCH(req: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+
+    // Gate price changes through approval
+    if (updates.priceCents !== undefined) {
+      const existing = await prisma.hardwareItem.findUnique({ where: { id }, select: { id: true, slug: true, name: true, priceCents: true } });
+      if (existing) {
+        const oldPrice = existing.priceCents || 0;
+        const newPrice = Number(updates.priceCents) || 0;
+        const driftPct = oldPrice > 0 ? ((newPrice - oldPrice) / oldPrice) * 100 : null;
+
+        const gate = await gateWithApproval({
+          operatorRole: auth.user?.role || "unknown",
+          operator: { id: auth.user?.id || "", name: auth.user?.name || auth.user?.email || "admin", role: auth.user?.role || "unknown" },
+          changeType: "hardware_price_edit",
+          scope: "product",
+          targetId: id,
+          targetSlug: existing.slug,
+          targetName: existing.name,
+          description: `Hardware price change: ${existing.name}`,
+          changeDiff: { before: { priceCents: oldPrice }, after: { priceCents: newPrice } },
+          driftPct: driftPct ?? undefined,
+        });
+        if (gate.needsApproval) {
+          return NextResponse.json({ requiresApproval: true, approvalId: gate.approvalId, reason: gate.reason }, { status: 202 });
+        }
+
+        logPriceChange({
+          productSlug: existing.slug,
+          productName: existing.name,
+          scope: "product",
+          field: `hardware.${existing.slug}.priceCents`,
+          labelBefore: `$${(oldPrice / 100).toFixed(2)}`,
+          labelAfter: `$${(newPrice / 100).toFixed(2)}`,
+          valueBefore: oldPrice,
+          valueAfter: newPrice,
+          driftPct,
+          operatorId: auth.user?.id || null,
+          operatorName: auth.user?.name || auth.user?.email || "admin",
+          note: "owner-bypass",
+        }).catch(() => {});
+      }
     }
 
     const item = await prisma.hardwareItem.update({

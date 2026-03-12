@@ -6,11 +6,14 @@ import { buildInteracInstructionsHtml } from "@/lib/email/templates/interac-inst
 import { getSessionFromRequest } from "@/lib/auth";
 import { checkAndReserveStock } from "@/lib/inventory";
 import { repriceItem, calculateDesignHelpFee } from "@/lib/checkout-reprice";
+import { settleOrder, normalizeDeliveryMethod } from "@/lib/settlement";
 import { checkoutLimiter, getClientIp } from "@/lib/rate-limit";
 import {
-  HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST, DESIGN_HELP_CENTS,
+  DESIGN_HELP_CENTS,
   MAX_ITEM_QUANTITY,
 } from "@/lib/order-config";
+import { resolveB2BPrice } from "@/lib/pricing/b2b-rules";
+import { applyAutoTags } from "@/lib/auto-tag";
 
 const InteracSchema = z.object({
   items: z.array(z.object({
@@ -24,6 +27,7 @@ const InteracSchema = z.object({
   email: z.string().email(),
   name: z.string().min(1),
   phone: z.string().optional(),
+  promoCode: z.string().max(50).nullable().optional(),
   deliveryMethod: z.enum(["shipping", "pickup"]).default("shipping"),
   shippingAddress: z.string().optional(),
   shippingCity: z.string().optional(),
@@ -49,7 +53,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Validation error", details: result.error.flatten() }, { status: 400 });
     }
 
-    const { items, email, name, phone, deliveryMethod, shippingAddress, shippingCity, shippingProvince, shippingPostal } = result.data;
+    const { items, email, name, phone, promoCode, deliveryMethod, shippingAddress, shippingCity, shippingProvince, shippingPostal } = result.data;
 
     // Server-side repricing: same logic as Stripe/Invoice checkout.
     const pricedItems = await Promise.all(
@@ -93,16 +97,101 @@ export async function POST(req: Request) {
       })
     );
 
-    // Design help as flat fee (same logic as Stripe checkout)
-    const { totalCents: designHelpTotal } = calculateDesignHelpFee(pricedItems);
+    // Get user session early for B2B discount + order linking
+    const session = getSessionFromRequest(req as any);
 
-    const subtotal = pricedItems.reduce((sum, item) => sum + item.lineTotal, 0) + designHelpTotal;
-    const isPickup = deliveryMethod === "pickup";
-    // Pickup = free, free shipping threshold applies to subtotal (no coupon discount for Interac)
-    const isFreeShipping = isPickup || subtotal >= FREE_SHIPPING_THRESHOLD;
-    const shippingAmount = isFreeShipping ? 0 : SHIPPING_COST;
-    const taxAmount = Math.round((subtotal + shippingAmount) * HST_RATE);
-    const totalAmount = subtotal + shippingAmount + taxAmount;
+    // B2B discount: resolve per-item rules for authenticated B2B users
+    let partnerDiscount = 0;
+    let isB2B = false;
+    if (session?.userId) {
+      const b2bUser = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { id: true, accountType: true, b2bApproved: true, partnerDiscount: true, companyName: true, partnerTier: true },
+      });
+      if (b2bUser?.accountType === "B2B" && b2bUser.b2bApproved) {
+        isB2B = true;
+        const itemsSubtotal = pricedItems.reduce((sum, p) => sum + p.lineTotal, 0);
+
+        const flatDiscount = b2bUser.partnerDiscount > 0
+          ? Math.round(itemsSubtotal * (b2bUser.partnerDiscount / 100))
+          : 0;
+
+        let rulesDiscount = 0;
+        try {
+          const ruleResults = await Promise.all(
+            pricedItems.map((p) =>
+              resolveB2BPrice({
+                userId: b2bUser.id,
+                companyName: b2bUser.companyName || undefined,
+                partnerTier: b2bUser.partnerTier || undefined,
+                productId: p.productId,
+                productSlug: p.slug,
+                quantity: p.quantity,
+                retailPriceCents: p.lineTotal,
+              })
+            )
+          );
+          for (const r of ruleResults) {
+            if (r && r.discountCents > 0) rulesDiscount += r.discountCents;
+          }
+        } catch {
+          // Non-critical
+        }
+
+        partnerDiscount = Math.max(flatDiscount, rulesDiscount);
+      }
+    }
+
+    // Coupon validation (same logic as Stripe/Invoice checkout)
+    const itemsSubtotal = pricedItems.reduce((sum, p) => sum + p.lineTotal, 0);
+    let couponData: { id: string; code: string; discountAmount: number } | null = null;
+    if (promoCode) {
+      const coupon = await prisma.coupon.findUnique({
+        where: { code: promoCode.toUpperCase() },
+      });
+      if (!coupon || !coupon.isActive) {
+        return NextResponse.json(
+          { error: "Invalid or inactive promo code", code: "COUPON_INVALID" },
+          { status: 422 }
+        );
+      }
+      const now = new Date();
+      const isValid = (!coupon.validFrom || now >= coupon.validFrom) && (!coupon.validTo || now <= coupon.validTo);
+      const hasUsesLeft = !coupon.maxUses || coupon.usedCount < coupon.maxUses;
+      const meetsMinimum = !coupon.minAmount || itemsSubtotal >= coupon.minAmount;
+
+      if (!isValid) {
+        return NextResponse.json({ error: "Promo code has expired", code: "COUPON_INVALID" }, { status: 422 });
+      } else if (!hasUsesLeft) {
+        return NextResponse.json({ error: "Promo code usage limit reached", code: "COUPON_INVALID" }, { status: 422 });
+      } else if (!meetsMinimum) {
+        return NextResponse.json(
+          { error: `Minimum order of $${((coupon.minAmount || 0) / 100).toFixed(2)} required for this promo code`, code: "COUPON_INVALID" },
+          { status: 422 }
+        );
+      } else {
+        const discountAmt = coupon.type === "percentage"
+          ? Math.round(itemsSubtotal * (coupon.value / 10000))
+          : Math.min(coupon.value, itemsSubtotal);
+        couponData = { id: coupon.id, code: coupon.code, discountAmount: discountAmt };
+      }
+    }
+
+    // Settlement: shared computation across Stripe/Invoice/Interac
+    const { totalCents: designHelpTotal } = calculateDesignHelpFee(pricedItems);
+    const settlement = settleOrder({
+      items: pricedItems,
+      deliveryMethod: normalizeDeliveryMethod(deliveryMethod),
+      couponDiscount: couponData?.discountAmount || 0,
+      partnerDiscount,
+      isB2B,
+    });
+
+    const subtotal = settlement.subtotal;
+    const discountAmount = settlement.totalDiscount;
+    const shippingAmount = settlement.shippingAmount;
+    const taxAmount = settlement.taxAmount;
+    const totalAmount = settlement.totalAmount;
 
     // Atomic stock check + reservation (prevents overselling)
     const stockResult = await checkAndReserveStock(
@@ -119,8 +208,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get user if logged in
-    const session = getSessionFromRequest(req as any);
     const userId = session?.userId || null;
 
     // Build order items data
@@ -147,6 +234,10 @@ export async function POST(req: Request) {
       });
     }
 
+    // NOTE: Coupon usage is NOT incremented here.
+    // Interac orders are unpaid at creation — coupon is only consumed when
+    // the order status transitions to "paid" (handled in order PATCH API).
+
     // Create draft order
     const order = await prisma.order.create({
       data: {
@@ -154,29 +245,32 @@ export async function POST(req: Request) {
         customerName: name,
         customerPhone: phone || null,
         userId,
-        deliveryMethod: deliveryMethod || "shipping",
+        deliveryMethod: normalizeDeliveryMethod(deliveryMethod),
         shippingAddress: shippingAddress || null,
         shippingCity: shippingCity || null,
         shippingProvince: shippingProvince || null,
         shippingPostal: shippingPostal || null,
         subtotalAmount: subtotal,
+        discountAmount,
         taxAmount,
         shippingAmount,
         totalAmount,
         status: "pending",
         paymentStatus: "unpaid",
         productionStatus: "not_started",
+        ...(couponData && { couponId: couponData.id }),
         tags: [
           "interac_checkout",
           ...(pricedItems.some(p => p.rushApplied) ? ["rush"] : []),
           ...(designHelpTotal > 0 ? ["design_help"] : []),
+          ...(couponData ? ["has_coupon"] : []),
         ],
         items: { create: orderItemsData },
         notes: {
           create: {
             authorType: "system",
             isInternal: true,
-            message: "Order created via Interac e-Transfer \u2014 awaiting payment",
+            message: `Order created via Interac e-Transfer \u2014 awaiting payment${couponData ? ` | Coupon: ${couponData.code} (-$${(couponData.discountAmount / 100).toFixed(2)})` : ""}`,
           },
         },
         timeline: {
@@ -188,6 +282,9 @@ export async function POST(req: Request) {
         },
       },
     });
+
+    // Auto-tag order (non-blocking — same as Stripe webhook path)
+    applyAutoTags(order.id, prisma).catch(() => {});
 
     // Link ProofData records to this order (if saved before checkout)
     for (const item of items) {
@@ -226,15 +323,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ orderId: order.id, totalAmount });
   } catch (err) {
     console.error("[Interac Checkout] Error:", err);
-    if (err instanceof Error && err.message.includes("Product not found")) {
-      return NextResponse.json({ error: err.message }, { status: 400 });
-    }
-    if (err instanceof Error && err.message.includes("Unable to price")) {
-      return NextResponse.json(
-        { error: `${err.message}. Please refresh and try again.` },
-        { status: 422 }
-      );
-    }
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Failed to submit order";
+    const status = message.includes("Product unavailable") || message.includes("Product not found") ? 409
+      : message.includes("Unable to price") || message.includes("has changed significantly") ? 422
+      : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

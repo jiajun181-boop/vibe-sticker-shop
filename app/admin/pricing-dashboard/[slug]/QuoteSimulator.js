@@ -63,9 +63,39 @@ export default function QuoteSimulator({ product }) {
     return () => clearTimeout(timer);
   }, [fetchQuote]);
 
+  // ── Contract fetch (parallel to quote) ──
+  const [contract, setContract] = useState(null);
+
+  const fetchContract = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const body = { slug, quantity, widthIn, heightIn };
+      if (material) body.material = material;
+      const res = await fetch("/api/admin/pricing-contract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        setContract(await res.json());
+      }
+    } catch { /* non-critical */ }
+  }, [slug, quantity, widthIn, heightIn, material]);
+
+  useEffect(() => {
+    const timer = setTimeout(fetchContract, 600);
+    return () => clearTimeout(timer);
+  }, [fetchContract]);
+
   const ledger = quote?.quoteLedger;
 
   return (
+    <div className="space-y-6">
+    {/* Contract Summary */}
+    {contract && !contract.error && (
+      <ContractSummary contract={contract} />
+    )}
+
     <div className="grid gap-6 lg:grid-cols-2">
       {/* Left: Live Quote Simulator */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5 sm:p-6">
@@ -221,6 +251,217 @@ export default function QuoteSimulator({ product }) {
           </div>
         )}
       </div>
+    </div>
+    </div>
+  );
+}
+
+// ── Contract Summary (cost visualization from canonical pricing contract) ──
+function ContractSummary({ contract }) {
+  const c = contract;
+  const fmt = (cents) => "$" + ((cents || 0) / 100).toFixed(2);
+  const pct = (rate) => (rate * 100).toFixed(1) + "%";
+
+  const costBuckets = c.cost || {};
+  const nonZeroBuckets = Object.entries(costBuckets).filter(([, v]) => v > 0);
+  const totalCost = c.totalCost || 0;
+  const sell = c.sellPrice?.totalCents || 0;
+  const profit = c.profit || {};
+  const floor = c.floor || {};
+  const completeness = c.completeness || {};
+
+  // Color for profit rate
+  const profitColor = profit.rate >= 0.25 ? "text-green-700"
+    : profit.rate >= 0.10 ? "text-amber-700" : "text-red-700";
+
+  // Floor status
+  const aboveFloor = sell >= (floor.priceCents || 0);
+
+  return (
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5 sm:p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-bold text-[#111]">Pricing Contract</h2>
+          <p className="mt-0.5 text-xs text-[#999]">
+            Source: <span className="font-medium text-[#666]">{c.source?.kind || "unknown"}</span>
+            {c.source?.template && <span> / {c.source.template}</span>}
+            {c.source?.presetModel && <span> / {c.source.presetModel}</span>}
+          </p>
+        </div>
+        {/* Completeness badge */}
+        <div className={`rounded-full px-3 py-1 text-xs font-bold ${
+          completeness.score >= 90 ? "bg-green-100 text-green-800"
+            : completeness.score >= 70 ? "bg-amber-100 text-amber-800"
+            : "bg-red-100 text-red-800"
+        }`}>
+          {completeness.score ?? "?"}%
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Sell price */}
+        <div className="rounded-[3px] bg-[#fafafa] p-3">
+          <p className="text-[10px] font-medium uppercase text-[#999]">Sell Price</p>
+          <p className="mt-1 text-lg font-bold text-[#111]">{fmt(sell)}</p>
+          <p className="text-[10px] text-[#999]">Unit: {fmt(c.sellPrice?.unitCents)}</p>
+        </div>
+
+        {/* Total cost */}
+        <div className="rounded-[3px] bg-[#fafafa] p-3">
+          <p className="text-[10px] font-medium uppercase text-[#999]">Total Cost</p>
+          <p className="mt-1 text-lg font-bold text-[#111]">{fmt(totalCost)}</p>
+          <p className="text-[10px] text-[#999]">
+            {nonZeroBuckets.length} cost bucket{nonZeroBuckets.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+
+        {/* Profit */}
+        <div className="rounded-[3px] bg-[#fafafa] p-3">
+          <p className="text-[10px] font-medium uppercase text-[#999]">Profit</p>
+          <p className={`mt-1 text-lg font-bold ${profitColor}`}>{fmt(profit.amountCents)}</p>
+          <p className={`text-[10px] ${profitColor}`}>Margin: {pct(profit.rate || 0)}</p>
+        </div>
+
+        {/* Floor price */}
+        <div className="rounded-[3px] bg-[#fafafa] p-3">
+          <p className="text-[10px] font-medium uppercase text-[#999]">Floor Price</p>
+          <p className="mt-1 text-lg font-bold text-[#111]">{fmt(floor.priceCents)}</p>
+          <p className={`text-[10px] ${aboveFloor ? "text-green-600" : "text-red-600"}`}>
+            {aboveFloor ? "Above floor" : "BELOW FLOOR"} ({floor.policySource || "n/a"})
+          </p>
+        </div>
+      </div>
+
+      {/* Cost breakdown bar */}
+      {nonZeroBuckets.length > 0 && totalCost > 0 && (
+        <div className="mt-4">
+          <p className="text-[10px] font-medium uppercase text-[#999]">Cost Breakdown</p>
+          <div className="mt-1.5 flex h-5 overflow-hidden rounded-[3px]">
+            {nonZeroBuckets.map(([bucket, cents]) => {
+              const widthPct = Math.max((cents / totalCost) * 100, 2);
+              const colors = {
+                material: "bg-blue-400", print: "bg-cyan-400", labor: "bg-amber-400",
+                finishing: "bg-purple-400", waste: "bg-red-300", setup: "bg-gray-400",
+                outsourcing: "bg-pink-400", transfer: "bg-teal-400", other: "bg-gray-300",
+              };
+              return (
+                <div
+                  key={bucket}
+                  className={`${colors[bucket] || "bg-gray-300"} relative`}
+                  style={{ width: `${widthPct}%` }}
+                  title={`${bucket}: ${fmt(cents)}`}
+                />
+              );
+            })}
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+            {nonZeroBuckets.map(([bucket, cents]) => (
+              <span key={bucket} className="text-[10px] text-[#666]">
+                <span className="font-medium">{bucket}</span>: {fmt(cents)}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Floor Policy Chain (3-layer) */}
+      {c.inheritance?.floorPolicyChain?.length > 0 && (
+        <div className="mt-4">
+          <p className="text-[10px] font-medium uppercase text-[#999]">Floor Policy Chain</p>
+          <div className="mt-1.5 space-y-1">
+            {c.inheritance.floorPolicyChain.map((layer, i) => (
+              <div key={i} className={`flex items-center gap-2 rounded-[3px] px-3 py-1.5 text-xs ${
+                layer.active ? "bg-blue-50 border border-blue-200" : "bg-[#fafafa] border border-[#e0e0e0]"
+              }`}>
+                <span className={`inline-block h-2 w-2 rounded-full ${layer.active ? "bg-blue-500" : "bg-[#ccc]"}`} />
+                <span className={`font-medium ${layer.active ? "text-blue-800" : "text-[#999]"}`}>{layer.label}</span>
+                {layer.policy ? (
+                  <span className="text-[10px] text-[#666]">
+                    profit ${((layer.policy.minFixedProfitCents || 0) / 100).toFixed(2)} | margin {((layer.policy.minMarginRate || 0) * 100).toFixed(0)}%
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-[#ccc]">not configured</span>
+                )}
+                {layer.active && <span className="ml-auto text-[10px] font-bold text-blue-600">ACTIVE</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Inheritance */}
+      {(c.inheritance?.templateName || c.inheritance?.presetKey || c.inheritance?.productOverrides?.length > 0) && (
+        <div className="mt-4">
+          <p className="text-[10px] font-medium uppercase text-[#999]">Inheritance</p>
+          <div className="mt-1.5 flex flex-wrap gap-2 text-xs">
+            {c.inheritance.templateName && (
+              <span className="rounded-[3px] bg-purple-50 px-2 py-0.5 text-purple-700 border border-purple-200">
+                Template: {c.inheritance.templateName}
+              </span>
+            )}
+            {c.inheritance.presetKey && (
+              <span className="rounded-[3px] bg-blue-50 px-2 py-0.5 text-blue-700 border border-blue-200">
+                Preset: {c.inheritance.presetKey} ({c.inheritance.presetModel})
+              </span>
+            )}
+            {c.inheritance.productOverrides?.map((o, i) => (
+              <span key={i} className="rounded-[3px] bg-amber-50 px-2 py-0.5 text-amber-700 border border-amber-200">
+                Override: {o}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Option Impacts */}
+      {c.optionImpacts?.length > 0 && (
+        <details className="mt-4">
+          <summary className="cursor-pointer text-[10px] font-medium uppercase text-[#999] hover:text-[#666]">
+            Option Impact Map ({c.optionImpacts.length} options)
+          </summary>
+          <div className="mt-1.5 overflow-x-auto">
+            <table className="w-full text-[11px]">
+              <thead>
+                <tr className="bg-[#fafafa]">
+                  <th className="px-2 py-1.5 text-left font-semibold text-[#666]">Option</th>
+                  <th className="px-2 py-1.5 text-left font-semibold text-[#666]">Bucket</th>
+                  <th className="px-2 py-1.5 text-left font-semibold text-[#666]">Impact</th>
+                  <th className="px-2 py-1.5 text-center font-semibold text-[#666]">OK</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#ececec]">
+                {c.optionImpacts.map((opt, i) => (
+                  <tr key={i}>
+                    <td className="px-2 py-1 font-medium text-[#111]">{opt.option}</td>
+                    <td className="px-2 py-1 text-[#666]">{opt.costBucket}</td>
+                    <td className="px-2 py-1 text-[#666]">{opt.impact}</td>
+                    <td className="px-2 py-1 text-center">
+                      <span className={opt.mapped ? "text-green-600" : "text-red-500"}>{opt.mapped ? "Y" : "N"}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
+
+      {/* Warnings + Missing */}
+      {(completeness.warnings?.length > 0 || completeness.missing?.length > 0) && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {completeness.missing?.map((m, i) => (
+            <span key={`m-${i}`} className="rounded-[3px] bg-red-50 px-2 py-0.5 text-[10px] text-red-700 border border-red-200">{m}</span>
+          ))}
+          {completeness.warnings?.map((w, i) => (
+            <span key={`w-${i}`} className="rounded-[3px] bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700 border border-amber-200">{w}</span>
+          ))}
+        </div>
+      )}
+
+      {/* Explanation */}
+      {c.explanation && (
+        <p className="mt-3 text-[10px] text-[#999]">{c.explanation}</p>
+      )}
     </div>
   );
 }

@@ -6,4 +6,7 @@ module.exports = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
+  transform: {
+    "^.+\\.[tj]sx?$": ["ts-jest", { tsconfig: { allowJs: true } }],
+  },
 };

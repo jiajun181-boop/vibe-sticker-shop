@@ -37,7 +37,7 @@ const navGroups = [
     labelKey: "admin.navGroup.products",
     items: [
       { key: "admin.nav.catalogOps", href: "/admin/catalog-ops", icon: "catalog", sub: "Products, catalog, pricing models" },
-      { key: "admin.nav.pricingDashboard", href: "/admin/pricing-dashboard", icon: "pricing", sub: "Formula health check" },
+      { key: "admin.nav.pricingDashboard", href: "/admin/pricing", icon: "pricing", sub: "Pricing Center" },
       { key: "admin.nav.imageDashboard", href: "/admin/image-dashboard", icon: "image", sub: "Quick image upload" },
       { key: "admin.nav.materials", href: "/admin/materials", icon: "package", sub: "Material & hardware costs" },
       { key: "admin.nav.materialsHandbook", href: "/admin/materials-handbook", icon: "document", sub: "Material specs (read-only)" },
@@ -68,6 +68,7 @@ const navGroups = [
       { key: "admin.nav.analytics", href: "/admin/analytics", icon: "chart" },
       { key: "admin.nav.finance", href: "/admin/finance", icon: "pricing", sub: "Revenue & expenses" },
       { key: "admin.nav.funnel", href: "/admin/funnel", icon: "funnel", sub: "Conversion tracking" },
+      { key: "admin.nav.governanceHub", href: "/admin/pricing?tab=governance", icon: "shield", sub: "Pricing health & audit" },
       { key: "admin.nav.salesReport", href: "/admin/reports/sales", icon: "report" },
       { key: "admin.nav.productionReport", href: "/admin/reports/production", icon: "report" },
     ],

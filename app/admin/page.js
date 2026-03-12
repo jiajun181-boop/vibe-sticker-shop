@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
 import { statusColor } from "@/lib/admin/status-labels";
@@ -36,13 +37,31 @@ const TOOLS = [
   {
     title: "admin.dashboard.toolPricing",
     desc: "admin.dashboard.toolPricingDesc",
-    href: "/admin/pricing-dashboard",
+    href: "/admin/pricing",
     type: "tool",
   },
   {
     title: "admin.dashboard.toolWorkstation",
     desc: "admin.dashboard.toolWorkstationDesc",
     href: "/admin/workstation",
+    type: "tool",
+  },
+  {
+    title: "admin.dashboard.toolQuickQuote",
+    desc: "admin.dashboard.toolQuickQuoteDesc",
+    href: "/admin/pricing?tab=quote",
+    type: "tool",
+  },
+  {
+    title: "admin.dashboard.toolCostEntry",
+    desc: "admin.dashboard.toolCostEntryDesc",
+    href: "/admin/pricing?tab=costs",
+    type: "tool",
+  },
+  {
+    title: "admin.dashboard.toolProfitAlerts",
+    desc: "admin.dashboard.toolProfitAlertsDesc",
+    href: "/admin/pricing?tab=ops&section=alerts",
     type: "tool",
   },
 ];
@@ -131,17 +150,23 @@ export default function AdminDashboard() {
   const [lastRefresh, setLastRefresh] = useState(null);
   const refreshTimer = useRef(null);
 
+  const [error, setError] = useState(null);
+  const router = useRouter();
+
   const fetchStats = useCallback(() => {
     fetch("/api/admin/stats")
       .then((r) => {
-        if (r.status === 401 || r.status === 403) { window.location.href = "/admin/login"; return null; }
+        if (r.status === 401 || r.status === 403) { router.push("/admin/login"); return null; }
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
-      .then((data) => { if (data) { setStats(data); setLastRefresh(new Date()); } })
-      .catch(console.error)
+      .then((data) => { if (data) { setStats(data); setLastRefresh(new Date()); setError(null); } })
+      .catch((err) => {
+        console.error("[Dashboard] Failed to fetch stats:", err);
+        setError(t("admin.common.loadError"));
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [router, t]);
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
 
@@ -154,8 +179,9 @@ export default function AdminDashboard() {
 
   if (!stats) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <p className="text-sm text-red-500">{t("admin.dashboard.loadFailed")}</p>
+      <div className="flex h-64 flex-col items-center justify-center gap-2">
+        <p className="text-sm text-red-500">{error || t("admin.dashboard.loadFailed")}</p>
+        <button onClick={fetchStats} className="text-xs text-blue-600 hover:underline">{t("admin.common.retry")}</button>
       </div>
     );
   }

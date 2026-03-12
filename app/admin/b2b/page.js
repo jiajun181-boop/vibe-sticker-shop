@@ -41,21 +41,33 @@ export default function AdminB2BPage() {
   function loadUsers() {
     setLoading(true);
     fetch(`/api/admin/b2b?filter=${filter}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         setUsers(data.users || []);
         setTotal(data.total || 0);
       })
-      .catch((err) => console.error("[B2B] Load users failed:", err))
+      .catch((err) => {
+        console.error("[B2B] Load users failed:", err);
+        setMessage({ type: "error", text: t("admin.b2b.networkError") });
+      })
       .finally(() => setLoading(false));
   }
 
   function loadInvites() {
     setInvitesLoading(true);
     fetch("/api/admin/b2b/invites")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => setInvites(data.invites || []))
-      .catch((err) => console.error("[B2B] Load invites failed:", err))
+      .catch((err) => {
+        console.error("[B2B] Load invites failed:", err);
+        setMessage({ type: "error", text: t("admin.b2b.networkError") });
+      })
       .finally(() => setInvitesLoading(false));
   }
 
@@ -106,8 +118,14 @@ export default function AdminB2BPage() {
 
   async function handleRevokeInvite(id) {
     if (!confirm(t("admin.b2b.revokeConfirm"))) return;
-    await fetch(`/api/admin/b2b/invites?id=${id}`, { method: "DELETE" });
-    loadInvites();
+    try {
+      const res = await fetch(`/api/admin/b2b/invites?id=${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      loadInvites();
+    } catch (err) {
+      console.error("[B2B] Revoke invite failed:", err);
+      setMessage({ type: "error", text: t("admin.b2b.networkError") });
+    }
   }
 
   function copyInviteLink(token) {

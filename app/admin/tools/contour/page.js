@@ -102,8 +102,8 @@ function ContourToolPage() {
         const data = await res.json();
         setJobs(data.jobs || []);
       }
-    } catch {
-      // Ignore admin helper fetch errors.
+    } catch (err) {
+      console.error("[Contour] Failed to fetch jobs:", err);
     } finally {
       setLoadingJobs(false);
     }
@@ -154,7 +154,7 @@ function ContourToolPage() {
         if (item && !cancelled) {
           setItemContext({ productName: item.productName, quantity: item.quantity });
         }
-      } catch { /* non-critical */ }
+      } catch (err) { console.error("[Contour] Failed to load item context:", err); }
     })();
     return () => { cancelled = true; };
   }, [orderId, itemId]);
@@ -219,12 +219,16 @@ function ContourToolPage() {
     setProgressHuman(t("admin.tools.contour.progressLoading"));
 
     try {
+      await new Promise((resolve) => requestAnimationFrame(() => resolve()));
       const { generateContour } = await import("@/lib/contour/generate-contour");
       setProgressHuman(t("admin.tools.contour.progressTracing"));
       const result = await generateContour(url, {
         bleedMm,
         // On mobile, skip background removal (too memory-intensive)
         skipBgRemoval: isMobile,
+        // Bias toward the fast foreground-mask path in admin so common JPG uploads do not lock the tab.
+        preferFastMode: true,
+        maxProcessingDim: isMobile ? 320 : 384,
         onProgress: (stage) => {
           setProgress(stage);
           const key = PROGRESS_LABELS[stage];
@@ -1093,7 +1097,7 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate, reo
         job.notes = notesValue; // update in-place for immediate UI
         setEditingNotes(false);
       }
-    } catch { /* ignore */ } finally {
+    } catch (err) { console.error("[Contour] Failed to save notes:", err); } finally {
       setNotesSaving(false);
     }
   }
@@ -1241,7 +1245,7 @@ function ContourDetailModal({ job, t, onClose, onReopen, onDuplicate, reopening,
         setEditingNotes(false);
         if (fetchJobs) fetchJobs();
       }
-    } catch { /* ignore */ } finally {
+    } catch (err) { console.error("[Contour] Failed to save notes:", err); } finally {
       setNotesSaving(false);
     }
   }

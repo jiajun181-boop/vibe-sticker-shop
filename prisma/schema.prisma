@@ -283,6 +283,8 @@ model Order {
   materialCost          Int              @default(0)  // total material cost cents
   laborCost             Int              @default(0)  // total labor cost cents
   shippingCost          Int              @default(0)  // actual shipping cost to us
+  estimatedMarginPct    Float?                        // estimated margin % at checkout
+  actualMarginPct       Float?                        // actual margin % after production
 
   // Status
   status                OrderStatus      @default(pending)
@@ -339,6 +341,9 @@ model OrderItem {
   specsJson   Json?
   materialCostCents Int   @default(0)  // material cost for this item
   laborMinutes      Int   @default(0)  // labor time in minutes
+  estimatedCostCents Int  @default(0)  // total estimated cost at checkout (material+ink+labor+waste)
+  actualCostCents    Int  @default(0)  // actual cost entered post-production
+  vendorCostCents    Int  @default(0)  // outsourced/vendor cost if applicable
   fileKey     String?
   fileUrl     String?
   fileName    String?
@@ -1031,7 +1036,7 @@ model PriceChangeLog {
   productId    String?
   productSlug  String?
   productName  String?
-  scope        String   @default("product") // "product" | "material" | "setting" | "preset"
+  scope        String   @default("product") // "product" | "material" | "setting" | "preset" | "b2b"
   field        String                        // e.g. "material.white_vinyl.costPerSqft", "optionsConfig.addons[0].surcharge"
   labelBefore  String?                       // human-readable old value
   labelAfter   String?                       // human-readable new value
@@ -1291,4 +1296,161 @@ model QuoteRequest {
   @@index([customerEmail])
   @@index([createdAt])
   @@index([reference])
+}
+
+// ── Admin Quote Snapshot (内部报价记录) ──
+// Records every admin pricing simulation / quick quote for audit trail.
+// Internal only — NOT customer-facing quotes (those use QuoteRequest).
+
+model AdminQuoteSnapshot {
+  id             String   @id @default(cuid())
+
+  // What was quoted
+  productId      String?
+  productSlug    String?
+  productName    String?
+  category       String?
+  configInput    Json     // full config: size, material, qty, options
+  pricingSource  String   // PRESET | FIXED | TEMPLATE | LEGACY | QUOTE_ONLY
+
+  // Results (cents)
+  sellPriceCents   Int     @default(0)
+  totalCostCents   Int     @default(0) // estimated cost
+  floorPriceCents  Int     @default(0) // minimum allowed price
+  profitCents      Int     @default(0) // sell - cost
+  marginPct        Float   @default(0) // profit / sell * 100
+
+  // Ledger snapshot
+  quoteLedger    Json?    // full Quote Ledger JSON if available
+
+  // Operator
+  operatorId     String?
+  operatorName   String?
+  note           String?
+
+  createdAt      DateTime @default(now())
+
+  @@index([productSlug, createdAt])
+  @@index([operatorId, createdAt])
+  @@index([createdAt])
+}
+
+// ── Pricing Approval Request (价格审批) ──
+// Tracks approval-pending pricing changes for sensitive operations.
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+  expired
+}
+
+model PricingApproval {
+  id             String         @id @default(cuid())
+  status         ApprovalStatus @default(pending)
+
+  // What change is proposed
+  changeType     String         // preset_create | preset_config_edit | preset_delete | preset_assign | material_create | material_delete | material_cost_edit | b2b_discount | b2b_delete | b2b_floor_override | vendor_cost_create | vendor_cost_update | vendor_cost_delete | bulk_price_update
+  scope          String         @default("product") // "product" | "material" | "setting" | "preset" | "b2b"
+  targetId       String?        // product/preset/material id
+  targetSlug     String?
+  targetName     String?
+  description    String         @db.Text
+  changeDiff     Json?          // { field, before, after } structured diff
+  driftPct       Float?         // percentage impact
+  affectedCount  Int            @default(1)
+
+  // Requester
+  requesterId    String
+  requesterName  String
+  requesterRole  String         // AdminRole value
+
+  // Reviewer
+  reviewerId     String?
+  reviewerName   String?
+  reviewerRole   String?
+  reviewNote     String?
+  reviewedAt     DateTime?
+
+  // Link to PriceChangeLog when approved & applied
+  priceChangeLogId String?
+
+  createdAt      DateTime       @default(now())
+  expiresAt      DateTime?      // auto-expire after N days if not reviewed
+
+  @@index([status])
+  @@index([requesterId])
+  @@index([reviewerId])
+  @@index([changeType, status])
+  @@index([createdAt])
+}
+
+// ── B2B Price Rule (B2B 特殊价格规则) ──
+// Per-customer or per-account special pricing overrides.
+
+model B2BPriceRule {
+  id             String   @id @default(cuid())
+
+  // Target scope
+  userId         String?  // specific customer
+  companyName    String?  // company-level match
+  partnerTier    String?  // tier-level match (bronze/silver/gold/platinum)
+
+  // What it affects
+  productId      String?  // specific product override
+  productSlug    String?
+  category       String?  // category-wide discount
+  templateKey    String?  // template-level (e.g. "vinyl_print")
+
+  // Rule
+  ruleType       String   // "pct_discount" | "fixed_price" | "cost_plus_override" | "margin_override"
+  value          Float    @default(0) // pct (0-100) or cents depending on ruleType
+  minQty         Int?     // minimum quantity for rule to apply
+  maxQty         Int?     // maximum quantity (optional cap)
+
+  // Metadata
+  note           String?
+  isActive       Boolean  @default(true)
+  validFrom      DateTime?
+  validUntil     DateTime?
+  createdBy      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([productId])
+  @@index([category])
+  @@index([partnerTier])
+  @@index([isActive])
+}
+
+// ── Vendor Cost (外协成本) ──
+// Tracks outsourced / vendor cost for fixedPrices products.
+
+model VendorCost {
+  id             String   @id @default(cuid())
+
+  productId      String?
+  productSlug    String?
+  productName    String?
+
+  vendorName     String   // supplier name
+  vendorSku      String?  // supplier's SKU
+  sizeKey        String?  // e.g. "11x17", "3.5x2"
+  qtyTier        Int?     // minimum qty for this cost
+
+  unitCostCents  Int      @default(0)
+  setupFeeCents  Int      @default(0)
+  shippingCents  Int      @default(0) // vendor shipping to us
+  leadTimeDays   Int?
+  note           String?
+
+  isActive       Boolean  @default(true)
+  lastVerified   DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([productSlug])
+  @@index([vendorName])
+  @@index([isActive])
 }

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { logActivity } from "@/lib/activity-log";
+import { gateWithApproval } from "@/lib/pricing/approval";
+import { logMaterialChange, logPriceChange } from "@/lib/pricing/change-log";
 
 export async function GET(req: NextRequest) {
   const auth = await requirePermission(req, "pricing", "view");
@@ -44,6 +46,20 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
+    // Gate material creation through approval
+    const gate = await gateWithApproval({
+      operatorRole: auth.user?.role || "unknown",
+      operator: { id: auth.user?.id || "", name: auth.user?.name || auth.user?.email || "admin", role: auth.user?.role || "unknown" },
+      changeType: "material_create",
+      scope: "material",
+      targetName: body.name || "New Material",
+      description: `Create material: ${body.name || "New Material"} (${body.type || "Adhesive Vinyl"})`,
+      changeDiff: { name: body.name, type: body.type, rollCost: body.rollCost, costPerSqft: body.costPerSqft },
+    });
+    if (gate.needsApproval) {
+      return NextResponse.json({ requiresApproval: true, approvalId: gate.approvalId, reason: gate.reason }, { status: 202 });
+    }
+
     const material = await prisma.material.create({
       data: {
         sortOrder: body.sortOrder ?? 0,
@@ -75,6 +91,18 @@ export async function POST(req: NextRequest) {
       details: { name: body.name, type: body.type },
     });
 
+    // Log to pricing change log
+    logPriceChange({
+      scope: "material",
+      field: "material.create",
+      productName: body.name || "New Material",
+      valueBefore: null,
+      valueAfter: { name: body.name, type: body.type, rollCost: body.rollCost, costPerSqft: body.costPerSqft },
+      operatorId: auth.user?.id || null,
+      operatorName: auth.user?.name || auth.user?.email || "admin",
+      note: "owner-bypass",
+    }).catch(() => {});
+
     return NextResponse.json({ material });
   } catch (err) {
     console.error("[Materials POST]", err);
@@ -105,6 +133,45 @@ export async function PATCH(req: NextRequest) {
       updates.costPerSqm = Number((updates.costPerSqft * 10.7639).toFixed(2));
     }
 
+    // Gate material cost changes through approval
+    const isCostChange = updates.costPerSqft !== undefined || updates.rollCost !== undefined || updates.costPerSqm !== undefined;
+    if (isCostChange) {
+      const existing = await prisma.material.findUnique({ where: { id }, select: { id: true, name: true, costPerSqft: true, rollCost: true } });
+      if (existing) {
+        const oldCost = existing.costPerSqft || 0;
+        const newCost = updates.costPerSqft ?? oldCost;
+        const driftPct = oldCost > 0 ? ((newCost - oldCost) / oldCost) * 100 : null;
+
+        const gate = await gateWithApproval({
+          operatorRole: auth.user?.role || "unknown",
+          operator: { id: auth.user?.id || "", name: auth.user?.name || auth.user?.email || "admin", role: auth.user?.role || "unknown" },
+          changeType: "material_cost_edit",
+          scope: "material",
+          targetId: id,
+          targetName: existing.name,
+          description: `Material cost change: ${existing.name}`,
+          changeDiff: { before: { costPerSqft: existing.costPerSqft, rollCost: existing.rollCost }, after: { costPerSqft: updates.costPerSqft, rollCost: updates.rollCost } },
+          driftPct: driftPct ?? undefined,
+        });
+        if (gate.needsApproval) {
+          return NextResponse.json({ requiresApproval: true, approvalId: gate.approvalId, reason: gate.reason }, { status: 202 });
+        }
+
+        // Log cost change
+        if (updates.costPerSqft !== undefined && updates.costPerSqft !== existing.costPerSqft) {
+          logMaterialChange({
+            materialId: id,
+            materialName: existing.name,
+            field: "costPerSqft",
+            before: existing.costPerSqft,
+            after: updates.costPerSqft,
+            operator: { id: auth.user?.id || "", name: auth.user?.name || auth.user?.email || "admin" },
+            note: "owner-bypass",
+          }).catch(() => {});
+        }
+      }
+    }
+
     const material = await prisma.material.update({
       where: { id },
       data: updates,
@@ -133,6 +200,24 @@ export async function DELETE(req: NextRequest) {
     const id = url.searchParams.get("id");
     if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
 
+    const existing = await prisma.material.findUnique({ where: { id }, select: { id: true, name: true, type: true } });
+    if (!existing) return NextResponse.json({ error: "Material not found" }, { status: 404 });
+
+    // Gate material deactivation through approval
+    const gate = await gateWithApproval({
+      operatorRole: auth.user?.role || "unknown",
+      operator: { id: auth.user?.id || "", name: auth.user?.name || auth.user?.email || "admin", role: auth.user?.role || "unknown" },
+      changeType: "material_delete",
+      scope: "material",
+      targetId: id,
+      targetName: existing.name,
+      description: `Deactivate material: ${existing.name}`,
+      changeDiff: { name: existing.name, type: existing.type },
+    });
+    if (gate.needsApproval) {
+      return NextResponse.json({ requiresApproval: true, approvalId: gate.approvalId, reason: gate.reason }, { status: 202 });
+    }
+
     // Soft-delete: deactivate instead of hard-delete to preserve historical references
     await prisma.material.update({
       where: { id },
@@ -145,6 +230,18 @@ export async function DELETE(req: NextRequest) {
       entityId: id,
       actor: auth.user?.name || auth.user?.email || "admin",
     });
+
+    // Log to pricing change log
+    logPriceChange({
+      scope: "material",
+      field: "material.deactivate",
+      productName: existing.name,
+      valueBefore: { active: true },
+      valueAfter: { active: false },
+      operatorId: auth.user?.id || null,
+      operatorName: auth.user?.name || auth.user?.email || "admin",
+      note: "owner-bypass",
+    }).catch(() => {});
 
     return NextResponse.json({ ok: true });
   } catch (err) {

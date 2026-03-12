@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { timeAgo } from "@/lib/admin/time-ago";
 import StatusBadge from "@/components/admin/StatusBadge";
@@ -20,19 +21,20 @@ function useSummary() {
   const [loading, setLoading] = useState(true);
   const timer = useRef(null);
 
+  const router = useRouter();
   const refetch = useCallback(() => {
     setLoading(true);
     setError(null);
     fetch("/api/admin/workstation/summary")
       .then((r) => {
-        if (r.status === 401) { window.location.href = "/admin/login"; return null; }
+        if (r.status === 401) { router.push("/admin/login"); return null; }
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((d) => { if (d) setData(d); })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [router]);
 
   useEffect(() => { refetch(); }, [refetch]);
 
@@ -235,7 +237,7 @@ export default function WorkstationPage() {
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <QuickAction href="/admin/orders/create" icon={I.plus} label={t("admin.workstation.actionNewOrder")} sub={t("admin.workstation.actionNewOrderSub")} />
           <QuickAction href="/admin/orders" icon={I.orders} label={t("admin.workstation.actionOrders")} sub={t("admin.workstation.actionOrdersSub")} />
-          <QuickAction href="/admin/pricing-dashboard" icon={I.pricing} label={t("admin.workstation.actionPricing")} sub={t("admin.workstation.actionPricingSub")} />
+          <QuickAction href="/admin/pricing" icon={I.pricing} label={t("admin.workstation.actionPricing")} sub={t("admin.workstation.actionPricingSub")} />
           <QuickAction href="/admin/tools/contour" icon={I.contour} label={t("admin.workstation.actionContour")} sub={t("admin.workstation.actionContourSub")} />
           <QuickAction href="/admin/tools/proof" icon={I.proof} label={t("admin.workstation.actionProof")} sub={t("admin.workstation.actionProofSub")} />
           <QuickAction href="/admin/tools/stamp-studio" icon={I.stamp} label={t("admin.workstation.actionStamp")} sub={t("admin.workstation.actionStampSub")} />

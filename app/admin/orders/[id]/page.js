@@ -11,14 +11,14 @@ import { hasArtworkUrl, getArtworkStatus } from "@/lib/artwork-detection";
 import { assessItem, assessOrder, assessOrderPackage, READINESS, READINESS_COLORS, READINESS_LABEL_KEYS } from "@/lib/admin/production-readiness";
 import { getActionLabel } from "@/lib/timeline-labels";
 import { formatCad } from "@/lib/admin/format-cad";
-import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS, VALID_STATUS_TRANSITIONS, VALID_PAYMENT_TRANSITIONS, VALID_PRODUCTION_TRANSITIONS } from "@/lib/order-config";
 import { statusColor, paymentColor, productionColor } from "@/lib/admin/status-labels";
 import OrderReadinessSummary from "@/components/admin/OrderReadinessSummary";
 import ItemProductionPanel from "@/components/admin/ItemProductionPanel";
 
-const statusOptions = ["draft", "pending", "paid", "canceled", "refunded"];
-const paymentOptions = ["unpaid", "paid", "failed", "refunded", "partially_refunded"];
-const productionOptions = [
+const ALL_STATUS_OPTIONS = ["draft", "pending", "paid", "canceled", "refunded"];
+const ALL_PAYMENT_OPTIONS = ["unpaid", "paid", "failed", "refunded", "partially_refunded"];
+const ALL_PRODUCTION_OPTIONS = [
   "not_started",
   "preflight",
   "in_production",
@@ -28,6 +28,13 @@ const productionOptions = [
   "on_hold",
   "canceled",
 ];
+
+/** Return [current, ...valid next states] so dropdown always includes current value */
+function validOptions(current, transitionMap, allOptions) {
+  const allowed = transitionMap[current];
+  if (!allowed) return allOptions; // unknown state — show all
+  return [current, ...allowed];
+}
 
 const priorityLabelKeys = ["admin.orderDetail.priorityNormal", "admin.orderDetail.priorityHigh", "admin.orderDetail.priorityUrgent"];
 const priorityColors = [
@@ -116,15 +123,21 @@ export default function OrderDetailPage() {
     try {
       const res = await fetch(`/api/admin/orders/${id}/emails`);
       if (res.ok) setEmailLogs(await res.json());
-    } catch { /* silent */ }
+    } catch (err) {
+      console.error("[OrderDetail] Failed to fetch email logs:", err);
+    }
   }, [id]);
 
   const fetchOrder = useCallback(() => {
     fetch(`/api/admin/orders/${id}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         if (data.error) {
           setOrder(null);
+          showMsg(data.error, true);
         } else {
           setOrder(data);
           setStatus(data.status);
@@ -145,7 +158,10 @@ export default function OrderDetailPage() {
           }
         }
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error("[OrderDetail] Failed to fetch order:", err);
+        showMsg(t("admin.orderDetail.updateFailed"), true);
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -655,21 +671,21 @@ export default function OrderDetailPage() {
                   hint={t("admin.orderDetail.orderStatusHint")}
                   value={status}
                   onChange={setStatus}
-                  options={statusOptions}
+                  options={validOptions(order?.status, VALID_STATUS_TRANSITIONS, ALL_STATUS_OPTIONS)}
                 />
                 <SelectField
                   label={t("admin.orderDetail.paymentStatus")}
                   hint={t("admin.orderDetail.paymentStatusHint")}
                   value={paymentStatus}
                   onChange={setPaymentStatus}
-                  options={paymentOptions}
+                  options={validOptions(order?.paymentStatus, VALID_PAYMENT_TRANSITIONS, ALL_PAYMENT_OPTIONS)}
                 />
                 <SelectField
                   label={t("admin.orderDetail.productionStatus")}
                   hint={t("admin.orderDetail.productionStatusHint")}
                   value={productionStatus}
                   onChange={setProductionStatus}
-                  options={productionOptions}
+                  options={validOptions(order?.productionStatus, VALID_PRODUCTION_TRANSITIONS, ALL_PRODUCTION_OPTIONS)}
                 />
 
                 {message && (

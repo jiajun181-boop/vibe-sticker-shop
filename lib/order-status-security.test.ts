@@ -4,8 +4,8 @@ import {
 } from "@/lib/order-status-security";
 
 describe("order-status security", () => {
-  it("authorizes legacy sessions without expected token", () => {
-    expect(isStatusTokenAuthorized(null, "")).toBe(true);
+  it("rejects sessions without expected token (no legacy bypass)", () => {
+    expect(isStatusTokenAuthorized(null, "")).toBe(false);
   });
 
   it("rejects mismatched status token", () => {

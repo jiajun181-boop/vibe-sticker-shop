@@ -3,11 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
 import { sendOrderNotification } from "@/lib/notifications/order-notifications";
-import { VALID_STATUS_TRANSITIONS } from "@/lib/order-config";
+import { VALID_STATUS_TRANSITIONS, VALID_PAYMENT_TRANSITIONS, VALID_PRODUCTION_TRANSITIONS } from "@/lib/order-config";
 import { isProductionItem } from "@/lib/order-item-utils";
 import { detectProductFamily } from "@/lib/preflight";
 import { applyAssignmentRules } from "@/lib/assignment-rules";
 import { syncOrderProductionStatus } from "@/lib/production-sync";
+import { releaseReserve } from "@/lib/inventory";
 
 export async function GET(
   request: NextRequest,
@@ -96,7 +97,10 @@ export async function PATCH(
     }
 
     // Fetch current order for validation
-    const current = await prisma.order.findUnique({ where: { id }, select: { status: true, paidAt: true } });
+    const current = await prisma.order.findUnique({
+      where: { id },
+      select: { status: true, paymentStatus: true, productionStatus: true, paidAt: true },
+    });
     if (!current) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
@@ -107,6 +111,28 @@ export async function PATCH(
       if (allowed && !allowed.includes(data.status as string)) {
         return NextResponse.json(
           { error: `Cannot transition from "${current.status}" to "${data.status}"` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate payment status transitions
+    if (data.paymentStatus && typeof data.paymentStatus === "string") {
+      const allowed = VALID_PAYMENT_TRANSITIONS[current.paymentStatus as keyof typeof VALID_PAYMENT_TRANSITIONS];
+      if (allowed && !allowed.includes(data.paymentStatus as string)) {
+        return NextResponse.json(
+          { error: `Cannot transition payment from "${current.paymentStatus}" to "${data.paymentStatus}"` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate production status transitions
+    if (data.productionStatus && typeof data.productionStatus === "string") {
+      const allowed = VALID_PRODUCTION_TRANSITIONS[current.productionStatus as keyof typeof VALID_PRODUCTION_TRANSITIONS];
+      if (allowed && !allowed.includes(data.productionStatus as string)) {
+        return NextResponse.json(
+          { error: `Cannot transition production from "${current.productionStatus}" to "${data.productionStatus}"` },
           { status: 400 }
         );
       }
@@ -151,8 +177,17 @@ export async function PATCH(
       details: data as Record<string, unknown>,
     });
 
-    // Auto-create production jobs when payment is first confirmed (invoice/interac orders)
+    // When payment is first confirmed (invoice/interac orders):
+    // 1. Increment coupon usage (was deferred from invoice creation)
+    // 2. Auto-create production jobs
     if (data.paymentStatus === "paid" && !current.paidAt) {
+      // Consume coupon usage now that payment is confirmed
+      if (order.couponId) {
+        prisma.coupon.update({
+          where: { id: order.couponId },
+          data: { usedCount: { increment: 1 } },
+        }).catch((err) => console.error("[Order PATCH] Failed to increment coupon usage:", err));
+      }
       try {
         const orderItems = await prisma.orderItem.findMany({
           where: { orderId: id },
@@ -198,7 +233,7 @@ export async function PATCH(
       }
     }
 
-    // When order is canceled, cancel all production jobs + notify customer
+    // When order is canceled, cancel all production jobs + release stock + notify customer
     if (data.status === "canceled") {
       prisma.productionJob.updateMany({
         where: {
@@ -207,6 +242,21 @@ export async function PATCH(
         },
         data: { status: "on_hold" },
       }).catch((err) => console.error("[Order PATCH] Failed to hold production jobs:", err));
+
+      // Release reserved stock for all items in this order
+      try {
+        const orderItems = await prisma.orderItem.findMany({
+          where: { orderId: id },
+          select: { productId: true, quantity: true },
+        });
+        if (orderItems.length > 0) {
+          await releaseReserve(
+            orderItems.map((item) => ({ productId: item.productId, quantity: item.quantity }))
+          );
+        }
+      } catch (stockErr) {
+        console.error("[Order PATCH] Failed to release reserved stock on cancel:", stockErr);
+      }
 
       sendOrderNotification(id, "order_canceled", {
         reason: (data.cancelReason as string) || undefined,

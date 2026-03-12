@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
-import { VALID_INVOICE_STATUSES } from "@/lib/order-config";
+import { VALID_INVOICE_STATUSES, VALID_INVOICE_TRANSITIONS } from "@/lib/order-config";
 
 export async function GET(
   request: NextRequest,
@@ -61,11 +61,18 @@ export async function PATCH(
 
     const data: Record<string, unknown> = {};
 
-    // Status change
+    // Status change with transition validation
     if (body.status !== undefined) {
       if (!VALID_INVOICE_STATUSES.includes(body.status)) {
         return NextResponse.json(
           { error: "Invalid invoice status" },
+          { status: 400 }
+        );
+      }
+      const allowed = VALID_INVOICE_TRANSITIONS[existing.status as keyof typeof VALID_INVOICE_TRANSITIONS];
+      if (allowed && !allowed.includes(body.status)) {
+        return NextResponse.json(
+          { error: `Cannot transition invoice from "${existing.status}" to "${body.status}"` },
           { status: 400 }
         );
       }

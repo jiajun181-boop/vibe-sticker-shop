@@ -1319,11 +1319,11 @@ function InvoicesTab({ showMsg }) {
                       <td className="px-4 py-3">
                         <span
                           className={`inline-block rounded-[2px] px-2.5 py-0.5 text-xs font-medium capitalize ${
-                            INVOICE_STATUS_STYLES[inv.status] ||
+                            INVOICE_STATUS_STYLES[inv.displayStatus || inv.status] ||
                             "bg-gray-100 text-gray-700"
                           }`}
                         >
-                          {inv.status}
+                          {inv.displayStatus || inv.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-xs text-[#666]">

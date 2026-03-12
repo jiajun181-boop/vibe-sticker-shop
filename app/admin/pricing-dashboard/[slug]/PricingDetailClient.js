@@ -21,8 +21,8 @@ export default function PricingDetailClient({ product }) {
     <div className="mx-auto max-w-6xl space-y-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-[#999]">
-        <Link href="/admin/pricing-dashboard" className="text-[#4f46e5] hover:underline">
-          {t("admin.priceDash.title")}
+        <Link href="/admin/pricing?tab=products" className="text-[#4f46e5] hover:underline">
+          Pricing Center
         </Link>
         <span>/</span>
         <span className="text-[#666]">{product?.name}</span>

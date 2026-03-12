@@ -30,7 +30,10 @@ export default function CustomerDetailPage() {
 
   useEffect(() => {
     fetch(`/api/admin/customers/${encodeURIComponent(email)}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         if (data.error) {
           setCustomer(null);
@@ -38,7 +41,10 @@ export default function CustomerDetailPage() {
           setCustomer(data);
         }
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error("[Customer Detail] Load failed:", err);
+        setCustomer(null);
+      })
       .finally(() => setLoading(false));
   }, [email]);
 
@@ -73,8 +79,8 @@ export default function CustomerDetailPage() {
         setNoteContent("");
         fetchNotes();
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error("[Customer Notes] Add note failed:", err);
     } finally {
       setNoteSaving(false);
     }

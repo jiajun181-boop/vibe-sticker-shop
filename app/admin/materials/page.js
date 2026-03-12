@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import QuoteSimulatorCard from "@/components/admin/QuoteSimulatorCard";
 import HardwarePricingTable from "@/components/admin/HardwarePricingTable";
+import PricingAuditTab from "@/components/admin/PricingAuditTab";
 
 // ── Tab definitions ──────────────────────────────────────────────
 const TABS = [
@@ -13,6 +14,7 @@ const TABS = [
   { id: "stamps", label: "Stamps", labelZh: "印章" },
   { id: "banner", label: "Banner", labelZh: "横幅" },
   { id: "hardware", label: "Hardware", labelZh: "配件" },
+  { id: "audit", label: "Audit", labelZh: "审计" },
 ];
 
 // ── Shared helpers ───────────────────────────────────────────────
@@ -1059,6 +1061,7 @@ export default function MaterialsPage() {
       {activeTab === "stamps" && <StampsTab />}
       {activeTab === "banner" && <BannerTab />}
       {activeTab === "hardware" && <HardwarePricingTable />}
+      {activeTab === "audit" && <PricingAuditTab />}
     </div>
   );
 }

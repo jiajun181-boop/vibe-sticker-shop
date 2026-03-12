@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { logActivity } from "@/lib/activity-log";
+import { gateWithApproval } from "@/lib/pricing/approval";
+import { logPriceChange } from "@/lib/pricing/change-log";
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, "pricing", "view");
@@ -92,6 +94,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "None of the referenced pricing presets exist" }, { status: 400 });
     }
 
+    // Gate rollback through approval
+    const gate = await gateWithApproval({
+      operatorRole: auth.user?.role || "unknown",
+      operator: { id: auth.user?.id || "", name: auth.user?.name || auth.user?.email || "admin", role: auth.user?.role || "unknown" },
+      changeType: "bulk_rollback",
+      scope: "preset",
+      targetName: `Rollback bulk-adjust (${validSnapshots.length} presets)`,
+      description: `Rollback ${validSnapshots.length} presets from bulk-adjust log ${logId}`,
+      changeDiff: { sourceLogId: logId, presetCount: validSnapshots.length },
+      affectedCount: validSnapshots.length,
+    });
+    if (gate.needsApproval) {
+      return NextResponse.json({ requiresApproval: true, approvalId: gate.approvalId, reason: gate.reason }, { status: 202 });
+    }
+
     await prisma.$transaction(
       validSnapshots.map((s: any) =>
         prisma.pricingPreset.update({
@@ -110,6 +127,17 @@ export async function POST(request: NextRequest) {
         restoredPresets: validSnapshots.length,
       },
     });
+
+    logPriceChange({
+      scope: "preset",
+      field: "bulk_rollback",
+      valueBefore: { logId },
+      valueAfter: { restoredPresets: validSnapshots.length },
+      affectedCount: validSnapshots.length,
+      operatorId: auth.user?.id || null,
+      operatorName: auth.user?.name || auth.user?.email || "admin",
+      note: "owner-bypass",
+    }).catch(() => {});
 
     return NextResponse.json({ ok: true, restoredPresets: validSnapshots.length });
   } catch (err) {

@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { repriceItem, calculateDesignHelpFee } from "@/lib/checkout-reprice";
+import { settleOrder, normalizeDeliveryMethod } from "@/lib/settlement";
 import { checkoutLimiter, getClientIp } from "@/lib/rate-limit";
 import {
   buildBaseOriginFromHeaders,
@@ -15,6 +16,7 @@ import {
   HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST,
   RUSH_MULTIPLIER, DESIGN_HELP_CENTS, MAX_ITEM_QUANTITY,
 } from "@/lib/order-config";
+import { resolveB2BPrice } from "@/lib/pricing/b2b-rules";
 
 let _stripe: Stripe | null = null;
 function getStripe() {
@@ -159,7 +161,8 @@ export async function POST(req: Request) {
     // so it appears clearly on the receipt and tax is calculated correctly.
     const { count: designHelpCount, totalCents: designHelpTotal } = calculateDesignHelpFee(pricedItems);
 
-    const subtotal = pricedItems.reduce((sum, item) => sum + item.lineTotal, 0) + designHelpTotal;
+    const itemsSubtotal = pricedItems.reduce((sum, item) => sum + item.lineTotal, 0);
+    const subtotal = itemsSubtotal + designHelpTotal;
 
     // Atomic stock check + reservation (prevents TOCTOU race conditions)
     const stockResult = await checkAndReserveStock(
@@ -177,18 +180,59 @@ export async function POST(req: Request) {
     }
 
     // Partner discount — auto-applied for B2B partners
+    // Two sources: (1) flat user.partnerDiscount %, (2) B2B price rules per product.
+    // Uses whichever yields the larger discount for the customer.
     let partnerDiscount = 0;
     let partnerUserId: string | null = null;
+    let isB2B = false;
+    let b2bSource: "flat" | "rules" | null = null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const session = getSessionFromRequest(req as any);
     if (session?.userId) {
       const user = await prisma.user.findUnique({
         where: { id: session.userId },
-        select: { id: true, accountType: true, b2bApproved: true, partnerDiscount: true },
+        select: { id: true, accountType: true, b2bApproved: true, partnerDiscount: true, companyName: true, partnerTier: true },
       });
-      if (user?.accountType === "B2B" && user.b2bApproved && user.partnerDiscount > 0) {
-        partnerDiscount = Math.round(subtotal * (user.partnerDiscount / 100));
+      if (user?.accountType === "B2B" && user.b2bApproved) {
+        isB2B = true;
         partnerUserId = user.id;
+
+        // (1) Flat partner discount from user profile
+        const flatDiscount = user.partnerDiscount > 0
+          ? Math.round(subtotal * (user.partnerDiscount / 100))
+          : 0;
+
+        // (2) Per-item B2B rules discount
+        let rulesDiscount = 0;
+        try {
+          const ruleResults = await Promise.all(
+            pricedItems.map((item) =>
+              resolveB2BPrice({
+                userId: user.id,
+                companyName: user.companyName || undefined,
+                partnerTier: user.partnerTier || undefined,
+                productId: item.productId,
+                productSlug: item.slug,
+                quantity: item.quantity,
+                retailPriceCents: item.lineTotal,
+              })
+            )
+          );
+          for (const r of ruleResults) {
+            if (r && r.discountCents > 0) rulesDiscount += r.discountCents;
+          }
+        } catch {
+          // Non-critical: if rules lookup fails, fall back to flat discount
+        }
+
+        // Use whichever is larger for the customer
+        if (rulesDiscount > flatDiscount) {
+          partnerDiscount = rulesDiscount;
+          b2bSource = "rules";
+        } else if (flatDiscount > 0) {
+          partnerDiscount = flatDiscount;
+          b2bSource = "flat";
+        }
       }
     }
 
@@ -250,18 +294,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const couponDiscount = couponData?.discountAmount || 0;
-    // Cap total discount at subtotal to prevent negative amounts
-    const discountAmount = Math.min(couponDiscount + partnerDiscount, subtotal);
-    const afterDiscount = subtotal - discountAmount;
+    // Settlement: shared computation across Stripe/Invoice/Interac
+    const deliveryMethod = normalizeDeliveryMethod(shippingMethod);
+    const settlement = settleOrder({
+      items: pricedItems,
+      deliveryMethod,
+      couponDiscount: couponData?.discountAmount || 0,
+      partnerDiscount,
+      isB2B,
+    });
 
-    const isFreeShipping = isPickup || afterDiscount >= FREE_SHIPPING_THRESHOLD;
-    const shippingCost = isFreeShipping ? 0 : SHIPPING_COST;
-
+    const discountAmount = settlement.totalDiscount;
+    const shippingCost = settlement.shippingAmount;
+    const isFreeShipping = shippingCost === 0;
     // Tax is calculated by Stripe's automatic_tax; this estimate is for metadata only
-    const taxableAmount = afterDiscount + shippingCost;
-    const estimatedTax = Math.round(taxableAmount * HST_RATE);
-    const estimatedTotal = afterDiscount + shippingCost + estimatedTax;
+    const estimatedTax = settlement.taxAmount;
+    const estimatedTotal = settlement.totalAmount;
 
     // Keys that can exceed Stripe's 500-char metadata value limit
     const LARGE_META_KEYS = new Set([
@@ -491,6 +539,7 @@ export async function POST(req: Request) {
         ...(partnerUserId && {
           partnerUserId,
           partnerDiscount: partnerDiscount.toString(),
+          ...(b2bSource && { b2bDiscountSource: b2bSource }),
         }),
       },
     });

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { computeFromPrice } from "@/lib/pricing/from-price";
+import { gateWithApproval } from "@/lib/pricing/approval";
+import { logPriceChange } from "@/lib/pricing/change-log";
 
 export async function POST(request: NextRequest) {
   const auth = await requirePermission(request, "pricing", "edit");
@@ -30,6 +32,24 @@ export async function POST(request: NextRequest) {
     if (activeOnly) where.isActive = true;
     if (!overwriteExisting) where.pricingPresetId = null;
 
+    // Count affected products before gating
+    const affectedCount = await prisma.product.count({ where });
+
+    const gate = await gateWithApproval({
+      operatorRole: auth.user?.role || "unknown",
+      operator: { id: auth.user?.id || "", name: auth.user?.name || auth.user?.email || "admin", role: auth.user?.role || "unknown" },
+      changeType: "preset_assign",
+      scope: "preset",
+      targetSlug: category,
+      targetName: `Assign ${preset.name} → ${category}`,
+      description: `Assign preset "${preset.name}" to ${affectedCount} products in ${category}`,
+      changeDiff: { presetId, category, overwriteExisting },
+      affectedCount,
+    });
+    if (gate.needsApproval) {
+      return NextResponse.json({ requiresApproval: true, approvalId: gate.approvalId, reason: gate.reason }, { status: 202 });
+    }
+
     const result = await prisma.product.updateMany({
       where,
       data: { pricingPresetId: presetId },
@@ -52,6 +72,18 @@ export async function POST(request: NextRequest) {
     } catch {
       // Non-critical
     }
+
+    logPriceChange({
+      productSlug: category,
+      productName: `Assign: ${preset.name} → ${category}`,
+      scope: "preset",
+      field: "preset.assign",
+      valueAfter: { presetId, presetKey: preset.key },
+      affectedCount: result.count,
+      operatorId: auth.user?.id || null,
+      operatorName: auth.user?.name || auth.user?.email || "admin",
+      note: "owner-bypass",
+    }).catch(() => {});
 
     return NextResponse.json({
       category,

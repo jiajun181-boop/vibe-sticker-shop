@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { validatePresetConfig } from "@/lib/pricing/validate-config";
 import { computeFromPrice } from "@/lib/pricing/from-price";
+import { gateWithApproval } from "@/lib/pricing/approval";
+import { logPriceChange } from "@/lib/pricing/change-log";
 
 // GET /api/admin/pricing/[id] — single preset with products
 export async function GET(
@@ -59,16 +61,34 @@ export async function PUT(
     }
 
     // Validate config if it's being updated
+    const existing = await prisma.pricingPreset.findUnique({ where: { id }, select: { id: true, key: true, name: true, model: true, config: true } });
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     if (config !== undefined) {
-      const existing = await prisma.pricingPreset.findUnique({ where: { id }, select: { model: true } });
-      if (existing) {
-        const validation = validatePresetConfig(existing.model, config);
-        if (!validation.valid) {
-          return NextResponse.json(
-            { error: "Invalid pricing config", errors: validation.errors },
-            { status: 400 }
-          );
-        }
+      const validation = validatePresetConfig(existing.model, config);
+      if (!validation.valid) {
+        return NextResponse.json(
+          { error: "Invalid pricing config", errors: validation.errors },
+          { status: 400 }
+        );
+      }
+
+      // Gate config changes through approval
+      const gate = await gateWithApproval({
+        operatorRole: auth.user?.role || "unknown",
+        operator: { id: auth.user?.id || "", name: auth.user?.name || auth.user?.email || "admin", role: auth.user?.role || "unknown" },
+        changeType: "preset_config_edit",
+        scope: "preset",
+        targetId: id,
+        targetSlug: existing.key,
+        targetName: existing.name,
+        description: `Edit preset config: ${existing.name}`,
+        changeDiff: { before: existing.config, after: config },
+      });
+      if (gate.needsApproval) {
+        return NextResponse.json({ requiresApproval: true, approvalId: gate.approvalId, reason: gate.reason }, { status: 202 });
       }
     }
 
@@ -76,6 +96,22 @@ export async function PUT(
       where: { id },
       data,
     });
+
+    // Log config change to PriceChangeLog
+    if (config !== undefined) {
+      logPriceChange({
+        productId: id,
+        productSlug: existing.key,
+        productName: existing.name,
+        scope: "preset",
+        field: `preset.${existing.key}.config`,
+        valueBefore: existing.config,
+        valueAfter: config,
+        operatorId: auth.user?.id || null,
+        operatorName: auth.user?.name || auth.user?.email || "admin",
+        note: "owner-bypass",
+      }).catch(() => {});
+    }
 
     // Auto-refresh minPrice for all products using this preset
     let minPriceRefreshed = 0;
@@ -121,6 +157,30 @@ export async function DELETE(
   try {
     const { id } = await params;
 
+    const existing = await prisma.pricingPreset.findUnique({ where: { id }, select: { id: true, key: true, name: true } });
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Count affected products
+    const affectedCount = await prisma.product.count({ where: { pricingPresetId: id } });
+
+    const gate = await gateWithApproval({
+      operatorRole: auth.user?.role || "unknown",
+      operator: { id: auth.user?.id || "", name: auth.user?.name || auth.user?.email || "admin", role: auth.user?.role || "unknown" },
+      changeType: "preset_delete",
+      scope: "preset",
+      targetId: id,
+      targetSlug: existing.key,
+      targetName: existing.name,
+      description: `Delete preset: ${existing.name} (affects ${affectedCount} products)`,
+      changeDiff: { preset: existing, affectedProducts: affectedCount },
+      affectedCount,
+    });
+    if (gate.needsApproval) {
+      return NextResponse.json({ requiresApproval: true, approvalId: gate.approvalId, reason: gate.reason }, { status: 202 });
+    }
+
     // Nullify product references and clear cached minPrice
     await prisma.product.updateMany({
       where: { pricingPresetId: id },
@@ -128,6 +188,20 @@ export async function DELETE(
     });
 
     await prisma.pricingPreset.delete({ where: { id } });
+
+    logPriceChange({
+      productId: id,
+      productSlug: existing.key,
+      productName: existing.name,
+      scope: "preset",
+      field: "preset.delete",
+      valueBefore: existing,
+      valueAfter: null,
+      affectedCount,
+      operatorId: auth.user?.id || null,
+      operatorName: auth.user?.name || auth.user?.email || "admin",
+      note: "owner-bypass",
+    }).catch(() => {});
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {

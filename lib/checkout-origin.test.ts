@@ -8,7 +8,7 @@ describe("checkout origin security", () => {
   it("prefers site url env origin when provided", () => {
     const headers = new Headers({ origin: "https://evil.example" });
     expect(buildBaseOriginFromHeaders(headers, "https://lunarprint.ca/path")).toBe(
-      "https://www.lunarprint.ca"
+      "https://lunarprint.ca"
     );
   });
 

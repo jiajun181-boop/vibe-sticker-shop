@@ -75,10 +75,12 @@ function ProductionContent() {
   const fetchFactories = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/factories");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setFactories(data.factories || data || []);
     } catch (err) {
       console.error("Failed to load factories:", err);
+      showActionError("Failed to load factories");
     }
   }, []);
 
@@ -94,11 +96,13 @@ function ProductionContent() {
 
     try {
       const res = await fetch(`/api/admin/production?${params}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setJobs(data.jobs || []);
       setPagination(data.pagination || null);
     } catch (err) {
       console.error("Failed to load production jobs:", err);
+      showActionError("Failed to load production jobs");
     } finally {
       setLoading(false);
       setLastRefresh(new Date());
@@ -872,7 +876,9 @@ function ReadinessSummary() {
     fetch("/api/admin/production/readiness")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setData(d))
-      .catch((err) => console.error("[Production Readiness] Load failed:", err))
+      .catch((err) => {
+        console.error("[Production Readiness] Load failed:", err);
+      })
       .finally(() => setLoading(false));
   }, []);
 

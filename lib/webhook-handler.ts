@@ -10,42 +10,17 @@ import { applyAutoTags } from "./auto-tag";
 import { syncOrderProductionStatus } from "./production-sync";
 import { detectProductFamily } from "./preflight";
 import { isProductionItem } from "./order-item-utils";
-
-function toNumberOrNull(v: unknown) {
-  if (typeof v === "number" && Number.isFinite(v)) return v;
-  if (typeof v === "string") {
-    const n = Number(v);
-    if (Number.isFinite(n)) return n;
-  }
-  return null;
-}
-
-function parseSizeRows(meta: Record<string, unknown> | null) {
-  if (!meta) return null;
-  const raw = meta.sizeRows;
-  let rows: unknown = raw;
-  if (typeof raw === "string") {
-    try {
-      rows = JSON.parse(raw);
-    } catch {
-      rows = null;
-    }
-  }
-  if (!Array.isArray(rows)) return null;
-  const normalized = rows
-    .map((row) => {
-      if (!row || typeof row !== "object") return null;
-      const r = row as Record<string, unknown>;
-      const width = toNumberOrNull(r.width ?? r.widthIn);
-      const height = toNumberOrNull(r.height ?? r.heightIn);
-      const quantity = toNumberOrNull(r.quantity);
-      if (width == null || height == null || quantity == null) return null;
-      if (width <= 0 || height <= 0 || quantity <= 0) return null;
-      return { width, height, quantity };
-    })
-    .filter(Boolean) as Array<{ width: number; height: number; quantity: number }>;
-  return normalized.length ? normalized : null;
-}
+import {
+  toNumberOrNull,
+  parseSizeRows,
+  parseMetadataItems,
+  shapeOrderItem,
+  shapeProductionJob,
+  buildOrderCreatedTimeline,
+  buildSystemNote,
+  shouldAutoCreateProof,
+  getProofImageUrl,
+} from "./webhook-helpers";
 
 export async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session
@@ -67,18 +42,14 @@ export async function handleCheckoutCompleted(
     throw new Error("Missing customer email");
   }
 
-  // 3. Parse metadata
+  // 3. Parse metadata (using extracted helper for testability)
   const metadata = session.metadata;
-  if (!metadata || !metadata.items) {
-    throw new Error("Missing metadata");
-  }
-
   let items: any[];
   try {
-    items = JSON.parse(metadata.items);
+    items = parseMetadataItems(metadata as Record<string, string> | null);
   } catch (parseErr) {
     console.error("[Webhook] CRITICAL: Failed to parse metadata.items for session:", sessionId, parseErr);
-    throw new Error("Corrupted metadata: unable to parse order items");
+    throw parseErr;
   }
 
   // 4. Amount reconciliation
@@ -114,55 +85,13 @@ export async function handleCheckoutCompleted(
       },
     });
 
-    // Create order items
+    // Create order items (using extracted shapeOrderItem for testability)
     for (const item of items) {
-      const meta = item?.meta && typeof item.meta === "object" ? item.meta : null;
-      const widthIn = toNumberOrNull(meta?.width);
-      const heightIn = toNumberOrNull(meta?.height);
-      const sizeRows = parseSizeRows(meta);
-      const sizeMode = meta?.sizeMode === "multi" ? "multi" : "single";
-
-      const fileUrl = meta?.artworkUrl || meta?.fileUrl || null;
-      const fileKey = meta?.artworkKey || meta?.fileKey || null;
-      const fileName = meta?.artworkName || meta?.fileName || null;
-
-      const specs: Record<string, unknown> = {};
-      if (meta?.editorType === "text") {
-        specs.editor = {
-          type: "text",
-          text: meta?.editorText || "",
-          font: meta?.editorFont || "",
-          color: meta?.editorColor || "",
-          widthIn,
-          heightIn,
-        };
-      }
-      if (sizeRows && sizeMode === "multi") {
-        specs.sizeMode = "multi";
-        specs.sizeRows = sizeRows;
-      }
-      const specsJson = Object.keys(specs).length > 0 ? specs : null;
-
+      const shaped = shapeOrderItem(item);
       await tx.orderItem.create({
         data: {
           orderId: newOrder.id,
-          productId: item.productId || null,
-          productName: item.name || item.productName || "Item",
-          productType: item.productType || "custom",
-          quantity: item.quantity,
-          unitPrice: item.unitAmount,
-          totalPrice: item.unitAmount * item.quantity,
-          widthIn,
-          heightIn,
-          material: meta?.material || null,
-          finishing: Array.isArray(meta?.finishings)
-            ? meta.finishings.join(", ")
-            : (meta?.finishing || null),
-          meta,
-          specsJson,
-          fileKey,
-          fileUrl,
-          fileName,
+          ...shaped,
         },
       });
     }
@@ -170,11 +99,9 @@ export async function handleCheckoutCompleted(
     // Create auto-generated proofs for items with confirmed die-cut contours
     for (const item of items) {
       const meta = item?.meta && typeof item.meta === "object" ? item.meta : null;
-      const proofConfirmed = meta?.proofConfirmed === true || meta?.proofConfirmed === "true";
-      if (!proofConfirmed) continue;
+      if (!shouldAutoCreateProof(meta)) continue;
 
-      const proofImageUrl = meta?.processedImageUrl || meta?.artworkUrl || meta?.fileUrl;
-      if (!proofImageUrl) continue;
+      const proofImageUrl = getProofImageUrl(meta!);
 
       // Link ProofData record to this order (if saved server-side before checkout)
       const proofDataId = meta?.proofDataId;
@@ -225,23 +152,19 @@ export async function handleCheckoutCompleted(
       }
     }
 
-    // Create timeline entry
+    // Create timeline entry (using extracted helper)
     await tx.orderTimeline.create({
       data: {
         orderId: newOrder.id,
-        action: "order_created",
-        details: `Paid via Stripe (${session.payment_intent})`,
-        actor: "system",
+        ...buildOrderCreatedTimeline(session.payment_intent as string),
       },
     });
 
-    // Create system note
+    // Create system note (using extracted helper)
     await tx.orderNote.create({
       data: {
         orderId: newOrder.id,
-        authorType: "system",
-        isInternal: true,
-        message: `Order created via Stripe webhook: ${sessionId}`,
+        ...buildSystemNote(sessionId),
       },
     });
 
@@ -318,58 +241,29 @@ export async function handleCheckoutCompleted(
       // Skip non-production items (service fees like design help)
       if (!isProductionItem(item)) continue;
 
-      // Extract metadata for production-critical fields
-      const itemMeta = item.meta && typeof item.meta === "object" ? item.meta as Record<string, unknown> : {};
-      const isRush = itemMeta.rushProduction === true || itemMeta.rushProduction === "true";
-      const isTwoSided = itemMeta.sides === "double" || itemMeta.sides === "2" ||
-        itemMeta.doubleSided === true || itemMeta.doubleSided === "true";
-
-      // Detect product family (sticker, sign, banner, label, etc.)
+      // Shape production job fields (using extracted helper for testability)
+      const jobShape = shapeProductionJob(item);
       const family = detectProductFamily(item);
-
-      // Artwork URL: check item-level fields first, then meta
-      const artworkUrl = item.fileUrl
-        || (typeof itemMeta.artworkUrl === "string" ? itemMeta.artworkUrl : null)
-        || (typeof itemMeta.fileUrl === "string" ? itemMeta.fileUrl : null)
-        || (typeof itemMeta.frontArtworkUrl === "string" ? itemMeta.frontArtworkUrl : null)
-        || null;
-      const artworkKey = item.fileKey
-        || (typeof itemMeta.artworkKey === "string" ? itemMeta.artworkKey : null)
-        || (typeof itemMeta.fileKey === "string" ? itemMeta.fileKey : null)
-        || null;
-
-      // Material labels from meta
-      const materialLabel = typeof itemMeta.materialLabel === "string" ? itemMeta.materialLabel
-        : typeof itemMeta.stockLabel === "string" ? itemMeta.stockLabel
-        : null;
-      const finishingLabel = typeof itemMeta.finishingLabel === "string" ? itemMeta.finishingLabel
-        : typeof itemMeta.laminationLabel === "string" ? itemMeta.laminationLabel
-        : null;
-
-      // Calculate due date: rush = 24h, standard = 3 business days
-      const dueAt = new Date();
-      dueAt.setDate(dueAt.getDate() + (isRush ? 1 : 3));
 
       const newJob = await prisma.productionJob.create({
         data: {
           orderItemId: item.id,
           status: "queued",
-          priority: isRush ? "urgent" : "normal",
-          dueAt,
-          // Production-critical fields
+          priority: jobShape.isRush ? "urgent" : "normal",
+          dueAt: jobShape.dueAt,
           productName: item.productName || null,
           family,
           quantity: item.quantity,
-          widthIn: item.widthIn || toNumberOrNull(itemMeta.width) || null,
-          heightIn: item.heightIn || toNumberOrNull(itemMeta.height) || null,
-          material: item.material || (typeof itemMeta.material === "string" ? itemMeta.material : null),
-          materialLabel,
-          finishing: item.finishing || (typeof itemMeta.finishing === "string" ? itemMeta.finishing : null),
-          finishingLabel,
-          artworkUrl,
-          artworkKey,
-          isTwoSided,
-          isRush,
+          widthIn: jobShape.widthIn,
+          heightIn: jobShape.heightIn,
+          material: jobShape.material,
+          materialLabel: jobShape.materialLabel,
+          finishing: jobShape.finishing,
+          finishingLabel: jobShape.finishingLabel,
+          artworkUrl: jobShape.artworkUrl,
+          artworkKey: jobShape.artworkKey,
+          isTwoSided: jobShape.isTwoSided,
+          isRush: jobShape.isRush,
         },
       });
 

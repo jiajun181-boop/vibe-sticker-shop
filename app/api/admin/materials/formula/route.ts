@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { logActivity } from "@/lib/activity-log";
+import { gateWithApproval } from "@/lib/pricing/approval";
+import { logPriceChange } from "@/lib/pricing/change-log";
 
 // GET: Read current COST_PLUS formula parameters
 export async function GET(req: NextRequest) {
@@ -51,7 +53,25 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "COST_PLUS preset not found" }, { status: 404 });
     }
 
-    const config = { ...(preset.config as Record<string, any>) };
+    const oldConfig = { ...(preset.config as Record<string, any>) };
+
+    // Gate formula edits through approval
+    const gate = await gateWithApproval({
+      operatorRole: auth.user?.role || "unknown",
+      operator: { id: auth.user?.id || "", name: auth.user?.name || auth.user?.email || "admin", role: auth.user?.role || "unknown" },
+      changeType: "formula_edit",
+      scope: "preset",
+      targetId: preset.id,
+      targetSlug: "window_film_costplus",
+      targetName: "COST_PLUS Formula",
+      description: `Formula edit: ${Object.keys(body).filter((k) => body[k] !== undefined).join(", ")}`,
+      changeDiff: { before: oldConfig, after: body },
+    });
+    if (gate.needsApproval) {
+      return NextResponse.json({ requiresApproval: true, approvalId: gate.approvalId, reason: gate.reason }, { status: 202 });
+    }
+
+    const config = { ...oldConfig };
 
     // Update only provided fields
     if (body.markup) config.markup = body.markup;
@@ -75,6 +95,19 @@ export async function PUT(req: NextRequest) {
       actor: auth.user?.name || auth.user?.email || "admin",
       details: { updatedFields: Object.keys(body).filter((k) => body[k] !== undefined) },
     });
+
+    logPriceChange({
+      productId: preset.id,
+      productSlug: "window_film_costplus",
+      productName: "COST_PLUS Formula",
+      scope: "preset",
+      field: "preset.formula.config",
+      valueBefore: oldConfig,
+      valueAfter: config,
+      operatorId: auth.user?.id || null,
+      operatorName: auth.user?.name || auth.user?.email || "admin",
+      note: "owner-bypass",
+    }).catch(() => {});
 
     return NextResponse.json({ ok: true, config });
   } catch (err) {

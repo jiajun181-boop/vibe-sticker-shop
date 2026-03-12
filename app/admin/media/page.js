@@ -97,11 +97,13 @@ function MediaContent() {
 
     try {
       const res = await fetch(`/api/admin/assets?${params}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setAssets(data.assets || []);
       setPagination(data.pagination || null);
     } catch (err) {
       console.error("Failed to load assets:", err);
+      showMsg(t("admin.media.loadFailed") || "Failed to load assets", true);
     } finally {
       setLoading(false);
     }
@@ -117,11 +119,13 @@ function MediaContent() {
 
     try {
       const res = await fetch(`/api/admin/media?${params}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setLegacyImages(data.images || []);
       setPagination(data.pagination || null);
     } catch (err) {
       console.error("Failed to load legacy images:", err);
+      showMsg(t("admin.media.loadFailed") || "Failed to load images", true);
     } finally {
       setLoading(false);
     }
@@ -350,7 +354,7 @@ function MediaContent() {
             setUploadProductId(product.id);
             setUploadProductQuery(product.name);
           }
-        }).catch(() => {});
+        }).catch((err) => console.error("[Media] Auto-match product failed:", err));
       }
     }
   }
@@ -407,7 +411,7 @@ function MediaContent() {
         }
 
         if (uploadProductId) {
-          try { await linkAssetToProduct(data.asset, uploadProductId); } catch {}
+          try { await linkAssetToProduct(data.asset, uploadProductId); } catch (err) { console.error("[Media] Link asset failed:", err); }
         }
 
         setUploadFiles((prev) => prev.map((f) => f.id === entry.id ? { ...f, status: "done" } : f));

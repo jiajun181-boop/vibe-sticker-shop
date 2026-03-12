@@ -79,8 +79,17 @@ export async function GET(request: NextRequest) {
       prisma.invoice.count({ where }),
     ]);
 
+    // Auto-detect overdue: "sent" invoices past due date get displayStatus "overdue"
+    const now = new Date();
+    const enriched = invoices.map((inv: any) => ({
+      ...inv,
+      displayStatus: inv.status === "sent" && inv.dueAt && new Date(inv.dueAt) < now
+        ? "overdue"
+        : inv.status,
+    }));
+
     return NextResponse.json({
-      data: invoices,
+      data: enriched,
       pagination: {
         page,
         limit,

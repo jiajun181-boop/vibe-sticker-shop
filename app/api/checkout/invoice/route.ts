@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { repriceItem, calculateDesignHelpFee } from "@/lib/checkout-reprice";
+import { settleOrder, normalizeDeliveryMethod } from "@/lib/settlement";
 import { checkoutLimiter, getClientIp } from "@/lib/rate-limit";
 import { getUserFromRequest } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildInvoiceConfirmationHtml } from "@/lib/email/templates/invoice-confirmation";
 import { checkAndReserveStock } from "@/lib/inventory";
-import { HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST, DESIGN_HELP_CENTS, MAX_ITEM_QUANTITY } from "@/lib/order-config";
+import { DESIGN_HELP_CENTS, MAX_ITEM_QUANTITY } from "@/lib/order-config";
+import { resolveB2BPrice } from "@/lib/pricing/b2b-rules";
+import { applyAutoTags } from "@/lib/auto-tag";
 
 const MetaSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
 
@@ -150,20 +153,72 @@ export async function POST(req: NextRequest) {
           { status: 422 }
         );
       } else {
-        const discountAmount = coupon.type === "percentage"
+        const discountAmt = coupon.type === "percentage"
           ? Math.round(subtotalAmount * (coupon.value / 10000))
           : Math.min(coupon.value, subtotalAmount);
 
-        couponData = { id: coupon.id, code: coupon.code, discountAmount };
+        couponData = { id: coupon.id, code: coupon.code, discountAmount: discountAmt };
       }
     }
 
-    // Cap discount at subtotal to prevent negative amounts
-    const discountAmount = Math.min(couponData?.discountAmount || 0, subtotalAmount);
-    const afterDiscount = subtotalAmount - discountAmount;
-    const shippingAmount = afterDiscount >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-    const taxAmount = Math.round((afterDiscount + shippingAmount) * HST_RATE);
-    const totalAmount = afterDiscount + shippingAmount + taxAmount;
+    // B2B discount: resolve per-item rules for authenticated B2B users
+    let partnerDiscount = 0;
+    let isB2B = false;
+    if (user?.id) {
+      const b2bUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { id: true, accountType: true, b2bApproved: true, partnerDiscount: true, companyName: true, partnerTier: true },
+      });
+      if (b2bUser?.accountType === "B2B" && b2bUser.b2bApproved) {
+        isB2B = true;
+
+        // Flat partner discount from user profile
+        const flatDiscount = b2bUser.partnerDiscount > 0
+          ? Math.round(subtotalAmount * (b2bUser.partnerDiscount / 100))
+          : 0;
+
+        // Per-item B2B rules discount
+        let rulesDiscount = 0;
+        try {
+          const ruleResults = await Promise.all(
+            pricedItems.map((p) =>
+              resolveB2BPrice({
+                userId: b2bUser.id,
+                companyName: b2bUser.companyName || undefined,
+                partnerTier: b2bUser.partnerTier || undefined,
+                productId: p.product!.id,
+                productSlug: p.product!.slug,
+                quantity: p.repriced.quantity,
+                retailPriceCents: p.repriced.lineTotal,
+              })
+            )
+          );
+          for (const r of ruleResults) {
+            if (r && r.discountCents > 0) rulesDiscount += r.discountCents;
+          }
+        } catch {
+          // Non-critical: if rules lookup fails, fall back to flat discount
+        }
+
+        partnerDiscount = Math.max(flatDiscount, rulesDiscount);
+      }
+    }
+
+    // Settlement: shared computation across Stripe/Invoice/Interac
+    // Fix: pickup was not getting free shipping in old invoice code
+    const settlement = settleOrder({
+      items: pricedItems.map(p => ({ lineTotal: p.repriced.lineTotal, meta: p.meta })),
+      deliveryMethod: normalizeDeliveryMethod(deliveryMethod),
+      couponDiscount: couponData?.discountAmount || 0,
+      partnerDiscount,
+      isB2B,
+    });
+
+    const subtotalAmountSettled = settlement.subtotal;
+    const discountAmount = settlement.totalDiscount;
+    const shippingAmount = settlement.shippingAmount;
+    const taxAmount = settlement.taxAmount;
+    const totalAmount = settlement.totalAmount;
 
     // Atomic stock check + reservation (prevents overselling)
     const stockResult = await checkAndReserveStock(
@@ -209,27 +264,23 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Increment coupon usage if applicable
-    if (couponData) {
-      await prisma.coupon.update({
-        where: { id: couponData.id },
-        data: { usedCount: { increment: 1 } },
-      });
-    }
+    // NOTE: Coupon usage is NOT incremented here.
+    // Invoice orders are unpaid at creation — coupon is only consumed when
+    // the order status transitions to "paid" (handled in order PATCH API).
+    // This prevents unused coupons from being consumed by unpaid invoices.
 
-    const isPickup = deliveryMethod === "pickup";
     const created = await prisma.order.create({
       data: {
         customerEmail: email,
         customerName: contactName,
         customerPhone: phone || null,
         userId: user?.id || null,
-        deliveryMethod: deliveryMethod || "shipping",
+        deliveryMethod: normalizeDeliveryMethod(deliveryMethod),
         shippingAddress: shippingAddress || null,
         shippingCity: shippingCity || null,
         shippingProvince: shippingProvince || null,
         shippingPostal: shippingPostal || null,
-        subtotalAmount,
+        subtotalAmount: subtotalAmountSettled,
         discountAmount,
         taxAmount,
         shippingAmount,
@@ -274,6 +325,9 @@ export async function POST(req: NextRequest) {
       },
       select: { id: true, customerEmail: true, totalAmount: true },
     });
+
+    // Auto-tag order (non-blocking — same as Stripe webhook path)
+    applyAutoTags(created.id, prisma).catch(() => {});
 
     // Send confirmation email (non-blocking)
     try {

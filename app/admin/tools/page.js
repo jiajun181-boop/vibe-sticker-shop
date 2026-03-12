@@ -52,7 +52,7 @@ const TOOLS = [
   {
     titleKey: "admin.tools.pricingTitle",
     descKey: "admin.tools.pricingDesc",
-    href: "/admin/pricing-dashboard",
+    href: "/admin/pricing",
     toolType: null,
     actions: [],
     icon: (

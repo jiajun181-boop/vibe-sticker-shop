@@ -5,6 +5,8 @@ import { requirePermission } from "@/lib/admin-auth";
 import { validatePresetConfig } from "@/lib/pricing/validate-config";
 import { logActivity } from "@/lib/activity-log";
 import { computeFromPrice } from "@/lib/pricing/from-price";
+import { gateWithApproval } from "@/lib/pricing/approval";
+import { logPriceChange } from "@/lib/pricing/change-log";
 
 type AdjustFlags = {
   tiers: boolean;
@@ -296,6 +298,32 @@ export async function POST(request: NextRequest) {
     let applied = 0;
     let minPriceRefreshed = 0;
     if (mode === "apply" && updates.length) {
+      // Approval gate for bulk pricing adjustment
+      const gate = await gateWithApproval({
+        operatorRole: auth.user?.role || "unknown",
+        operator: { id: auth.user?.id || "", name: auth.user?.name || auth.user?.email || "admin", role: auth.user?.role || "unknown" },
+        changeType: "bulk_adjust",
+        scope: "preset",
+        targetSlug: category,
+        targetName: `Bulk ${percent > 0 ? "+" : ""}${percent}% in ${category}`,
+        description: `Bulk adjust ${updates.length} presets by ${percent}% in ${category}`,
+        changeDiff: { category, percent, flags, presetCount: updates.length },
+        driftPct: Math.abs(percent),
+        affectedCount: categoryProducts.length,
+      });
+      if (gate.needsApproval) {
+        return NextResponse.json({
+          requiresApproval: true,
+          approvalId: gate.approvalId,
+          reason: gate.reason,
+          mode: "deferred",
+          category,
+          percent,
+          affectedPresets: updates.length,
+          affectedProducts: categoryProducts.length,
+        }, { status: 202 });
+      }
+
       await prisma.$transaction(updates);
       applied = updates.length;
       await logActivity({
@@ -313,6 +341,21 @@ export async function POST(request: NextRequest) {
           snapshots,
         },
       });
+
+      // Log to PriceChangeLog for governance trail
+      logPriceChange({
+        scope: "preset",
+        field: "bulk_adjust",
+        productSlug: category,
+        productName: `Bulk adjust: ${category}`,
+        valueBefore: { percent: 0 },
+        valueAfter: { percent, flags },
+        driftPct: Math.abs(percent),
+        affectedCount: applied,
+        operatorId: auth.user?.id || null,
+        operatorName: auth.user?.name || auth.user?.email || "admin",
+        note: gate.needsApproval === false ? "owner-bypass" : undefined,
+      }).catch(() => {});
 
       // Refresh minPrice for affected products
       try {
