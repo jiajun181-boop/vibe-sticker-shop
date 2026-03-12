@@ -13,9 +13,12 @@ export async function GET(request: Request) {
     const limit = 20;
     const skip = (page - 1) * limit;
 
+    const email = searchParams.get("email");
+
     const where: any = { accountType: "B2B" };
     if (filter === "pending") where.b2bApproved = false;
     if (filter === "approved") where.b2bApproved = true;
+    if (email) where.email = email;
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({

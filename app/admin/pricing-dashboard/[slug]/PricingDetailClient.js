@@ -8,7 +8,7 @@ import QuoteSimulator from "./QuoteSimulator";
  * Client wrapper for pricing detail page.
  * Product data is pre-loaded by the server component — no loading state needed.
  */
-export default function PricingDetailClient({ product }) {
+export default function PricingDetailClient({ product, pricingTemplate, productMaterials, materialSource }) {
   const { t } = useTranslation();
 
   const pricingConfig = (() => {
@@ -68,7 +68,7 @@ export default function PricingDetailClient({ product }) {
       </div>
 
       {/* Quote Simulator + Ledger */}
-      <QuoteSimulator product={product} />
+      <QuoteSimulator product={product} pricingTemplate={pricingTemplate} productMaterials={productMaterials} materialSource={materialSource} />
     </div>
   );
 }

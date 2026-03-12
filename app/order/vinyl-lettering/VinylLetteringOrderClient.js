@@ -12,6 +12,7 @@ import { useConfiguratorCart } from "@/components/configurator";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 import { formatCad } from "@/lib/product-helpers";
+import { RUSH_MULTIPLIER } from "@/lib/order-config";
 
 const DEBOUNCE_MS = 300;
 
@@ -75,7 +76,7 @@ const FONTS = [
 
 const TURNAROUND_OPTIONS = [
   { id: "standard", multiplier: 1.0 },
-  { id: "rush", multiplier: 1.5 },
+  { id: "rush", multiplier: RUSH_MULTIPLIER },
 ];
 
 // ─── Main Component ───
@@ -704,7 +705,7 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
                   <Row label="Full color print" value={`+ ${formatCad(printedVinylSurcharge)}`} />
                 )}
                 {turnaroundId === "rush" && (
-                  <Row label="Rush surcharge" value="+50%" />
+                  <Row label="Rush surcharge" value={`+${Math.round((RUSH_MULTIPLIER - 1) * 100)}%`} />
                 )}
                 <Row label={t("vl.subtotal")} value={formatCad(adjustedSubtotal)} />
                 <div className="flex justify-between border-t border-gray-100 pt-2">

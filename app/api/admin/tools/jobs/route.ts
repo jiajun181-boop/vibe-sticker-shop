@@ -123,12 +123,15 @@ async function writebackToolResults(
   let patch: Record<string, unknown> = {};
 
   if (toolType === "contour") {
-    // Write contour SVG URL + bleed info back to the item
+    // Write contour SVG URL + quality metadata back to the item
     patch = {
       contourSvg: outputData?.svgFileUrl || outputFileUrl || null,
       bleedMm: outputData?.bleedPath ? (outputData?.bleedMm ?? 3) : undefined,
       processedImageUrl: outputData?.processedFileUrl || null,
       contourConfidence: outputData?.contourConfidence || null,
+      contourShapeType: outputData?.contourShapeType || null,
+      // Set both field names so readiness checks work regardless of which name is used
+      contourAppliedAt: new Date().toISOString(),
       contourToolJobAt: new Date().toISOString(),
     };
   } else if (toolType === "stamp-studio") {

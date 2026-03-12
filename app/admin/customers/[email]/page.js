@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
 import { statusColor, productionColor } from "@/lib/admin/status-labels";
+import { buildCustomerCenterHref, buildCustomerWorkspaceHref } from "@/lib/admin-centers";
 
 const segmentStyles = {
   VIP: "bg-amber-100 text-amber-800 border-amber-300",
@@ -15,25 +16,65 @@ const segmentStyles = {
 };
 
 
+const TICKET_STATUS_KEYS = {
+  open: "admin.support.statusOpen",
+  in_progress: "admin.support.statusInProgress",
+  waiting_customer: "admin.support.statusWaiting",
+  resolved: "admin.support.statusResolved",
+  closed: "admin.support.statusClosed",
+};
+
+const TICKET_PRIORITY_KEYS = {
+  low: "admin.support.priorityLow",
+  normal: "admin.support.priorityNormal",
+  high: "admin.support.priorityHigh",
+  urgent: "admin.support.priorityUrgent",
+};
+
+const ORDER_STATUS_KEYS = {
+  draft: "admin.orders.statusDraft",
+  pending: "admin.orders.statusPending",
+  paid: "admin.orders.statusPaid",
+  canceled: "admin.orders.statusCanceled",
+  refunded: "admin.orders.statusRefunded",
+};
+
+const TIER_LABEL_KEYS = {
+  bronze: "admin.b2b.bronze",
+  silver: "admin.b2b.silver",
+  gold: "admin.b2b.gold",
+  platinum: "admin.b2b.platinum",
+};
+
+const PRODUCTION_STATUS_KEYS = {
+  not_started: "admin.orders.productionNotStarted",
+  preflight: "admin.orders.productionNotStarted",
+  in_production: "admin.orders.productionInProgress",
+  ready_to_ship: "admin.orders.productionReady",
+  shipped: "admin.orders.productionShipped",
+  delivered: "admin.orders.productionDelivered",
+  completed: "admin.orders.productionDelivered",
+  on_hold: "admin.orders.productionOnHold",
+};
+
 export default function CustomerDetailPage() {
   const { email: rawEmail } = useParams();
-  const router = useRouter();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const email = decodeURIComponent(rawEmail);
 
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
+  const [statsError, setStatsError] = useState("");
   const [notes, setNotes] = useState([]);
+  const [notesError, setNotesError] = useState("");
   const [noteContent, setNoteContent] = useState("");
   const [noteSaving, setNoteSaving] = useState(false);
 
   useEffect(() => {
     fetch(`/api/admin/customers/${encodeURIComponent(email)}`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
+      .then((r) => r.json())
       .then((data) => {
         if (data.error) {
           setCustomer(null);
@@ -41,10 +82,7 @@ export default function CustomerDetailPage() {
           setCustomer(data);
         }
       })
-      .catch((err) => {
-        console.error("[Customer Detail] Load failed:", err);
-        setCustomer(null);
-      })
+      .catch(console.error)
       .finally(() => setLoading(false));
   }, [email]);
 
@@ -53,7 +91,7 @@ export default function CustomerDetailPage() {
     fetch(`/api/admin/customers/${encodeURIComponent(email)}/stats`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data) setStats(data); })
-      .catch((err) => console.error("[Customer Stats] Load failed:", err));
+      .catch(() => { setStatsError(t("admin.customerDetail.statsError")); });
   }, [email]);
 
   // Fetch customer notes
@@ -61,7 +99,7 @@ export default function CustomerDetailPage() {
     fetch(`/api/admin/customers/${encodeURIComponent(email)}/notes`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data?.data) setNotes(data.data); })
-      .catch((err) => console.error("[Customer Notes] Load failed:", err));
+      .catch(() => { setNotesError(t("admin.customerDetail.notesError")); });
   }, [email]);
 
   useEffect(() => { fetchNotes(); }, [fetchNotes]);
@@ -79,8 +117,8 @@ export default function CustomerDetailPage() {
         setNoteContent("");
         fetchNotes();
       }
-    } catch (err) {
-      console.error("[Customer Notes] Add note failed:", err);
+    } catch {
+      setNotesError(t("admin.customerDetail.notesError"));
     } finally {
       setNoteSaving(false);
     }
@@ -99,7 +137,7 @@ export default function CustomerDetailPage() {
       <div className="flex h-64 flex-col items-center justify-center gap-2">
         <p className="text-sm text-[#999]">{t("admin.customerDetail.customerNotFound")}</p>
         <Link
-          href="/admin/customers"
+          href={buildCustomerCenterHref()}
           className="text-sm text-black underline hover:no-underline"
         >
           {t("admin.customerDetail.backToCustomers")}
@@ -112,54 +150,63 @@ export default function CustomerDetailPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <button
-          type="button"
-          onClick={() => router.push("/admin/customers")}
-          className="mb-1 text-xs text-[#999] hover:text-black"
+        <Link
+          href={buildCustomerCenterHref()}
+          className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
         >
-          &larr; {t("admin.customerDetail.backToCustomers")}
-        </button>
+          {t("admin.customers.title")}
+        </Link>
         <h1 className="text-xl font-semibold text-black">
-          {t("admin.customerDetail.title")}
+          {customer.name || email}
         </h1>
+        <p className="mt-0.5 text-sm text-[#999]">
+          {customer.name ? `${email} - ` : ""}{t("admin.customerDetail.subtitle")}
+        </p>
       </div>
+
+      {/* Stats error */}
+      {statsError && !stats && (
+        <div className="rounded-[3px] border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+          {statsError}
+        </div>
+      )}
 
       {/* Customer Intelligence Card */}
       {stats && (
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
           <div className="mb-4 flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-black">Customer Intelligence</h2>
+            <h2 className="text-sm font-semibold text-black">{t("admin.customerDetail.customerIntelligence")}</h2>
             <span className={`rounded-[2px] border px-2.5 py-0.5 text-xs font-bold ${segmentStyles[stats.segment] || "bg-[#f5f5f5] text-[#666]"}`}>
               {stats.segment}
             </span>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div>
-              <p className="text-[11px] text-[#999]">Lifetime Value</p>
+              <p className="text-[11px] text-[#999]">{t("admin.customerDetail.lifetimeValue")}</p>
               <p className="mt-0.5 text-sm font-bold text-black">{formatCad(stats.lifetimeSpend)}</p>
             </div>
             <div>
-              <p className="text-[11px] text-[#999]">Avg Order Value</p>
+              <p className="text-[11px] text-[#999]">{t("admin.customerDetail.avgOrderValue")}</p>
               <p className="mt-0.5 text-sm font-semibold text-black">{formatCad(stats.avgOrderValue)}</p>
             </div>
             <div>
-              <p className="text-[11px] text-[#999]">Total Orders</p>
+              <p className="text-[11px] text-[#999]">{t("admin.customerDetail.totalOrders")}</p>
               <p className="mt-0.5 text-sm font-semibold text-black">{stats.totalOrders}</p>
             </div>
             <div>
-              <p className="text-[11px] text-[#999]">Last Ordered</p>
+              <p className="text-[11px] text-[#999]">{t("admin.customerDetail.lastOrdered")}</p>
               <p className="mt-0.5 text-sm font-semibold text-black">
-                {stats.daysSinceLastOrder != null ? `${stats.daysSinceLastOrder} days ago` : "\u2014"}
+                {stats.daysSinceLastOrder != null ? `${stats.daysSinceLastOrder} ${t("admin.customerDetail.daysAgo")}` : "-"}
               </p>
             </div>
             <div>
-              <p className="text-[11px] text-[#999]">Order Frequency</p>
-              <p className="mt-0.5 text-sm font-semibold text-black">{stats.orderFrequency}/mo</p>
+              <p className="text-[11px] text-[#999]">{t("admin.customerDetail.orderFrequency")}</p>
+              <p className="mt-0.5 text-sm font-semibold text-black">{stats.orderFrequency}{t("admin.customerDetail.perMonth")}</p>
             </div>
           </div>
           {stats.topProducts && stats.topProducts.length > 0 && (
             <div className="mt-4">
-              <p className="mb-1.5 text-[11px] text-[#999]">Top Products</p>
+              <p className="mb-1.5 text-[11px] text-[#999]">{t("admin.customerDetail.topProducts")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {stats.topProducts.map((p) => (
                   <span
@@ -187,7 +234,7 @@ export default function CustomerDetailPage() {
           <div>
             <p className="text-xs text-[#999]">{t("admin.customers.name")}</p>
             <p className="mt-0.5 text-sm font-medium text-black">
-              {customer.name || "\u2014"}
+              {customer.name || "-"}
             </p>
           </div>
           <div>
@@ -202,6 +249,108 @@ export default function CustomerDetailPage() {
               {formatCad(customer.totalSpent)}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Relationship center */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-black">{t("admin.customerDetail.b2bProfile")}</h2>
+            <Link href={buildCustomerWorkspaceHref("b2b", email)} className="text-[11px] text-[#666] underline hover:no-underline">
+              {t("admin.customers.openWorkspace")}
+            </Link>
+          </div>
+          {customer.b2bProfile ? (
+            <div className="space-y-2 text-sm">
+              <div>
+                <p className="text-[11px] text-[#999]">{t("admin.customerDetail.accountType")}</p>
+                <p className="font-medium text-black">{customer.b2bProfile.accountType || "-"}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-[#999]">{t("admin.customerDetail.companyName")}</p>
+                <p className="font-medium text-black">{customer.b2bProfile.companyName || "-"}</p>
+              </div>
+              <div className="flex flex-wrap gap-2 text-[11px]">
+                <span className={`rounded-[2px] px-2 py-0.5 font-semibold ${customer.b2bProfile.approved ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                  {customer.b2bProfile.approved ? t("admin.customers.approved") : t("admin.customers.pendingApproval")}
+                </span>
+                <span className="rounded-[2px] bg-[#f3f4f6] px-2 py-0.5 text-[#555]">
+                  {t("admin.customerDetail.partnerTier")}: {customer.b2bProfile.tier ? t(TIER_LABEL_KEYS[customer.b2bProfile.tier] || customer.b2bProfile.tier) : "-"}
+                </span>
+                <span className="rounded-[2px] bg-[#f9fafb] px-2 py-0.5 text-[#555]">
+                  {t("admin.customerDetail.partnerDiscount")}: {customer.b2bProfile.discount || 0}%
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-[#999]">{t("admin.customerDetail.noB2BProfile")}</p>
+          )}
+        </div>
+
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-black">{t("admin.customerDetail.conversations")}</h2>
+            <Link href={buildCustomerWorkspaceHref("messages", email)} className="text-[11px] text-[#666] underline hover:no-underline">
+              {t("admin.customers.openWorkspace")}
+            </Link>
+          </div>
+          {customer.conversations?.length ? (
+            <div className="space-y-2">
+              {customer.conversations.map((conversation) => (
+                <Link
+                  key={conversation.id}
+                  href={`/admin/customers/messages?email=${encodeURIComponent(email)}&conv=${conversation.id}`}
+                  className="block rounded-[3px] border border-[#f0f0f0] bg-[#fafafa] p-3 transition-colors hover:bg-white"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium text-black">{conversation.subject || t("admin.customerDetail.generalConversation")}</p>
+                    {conversation.unreadCount > 0 && (
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">
+                        {conversation.unreadCount} {t("admin.customers.unread")}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-[#666]">{conversation.lastMessage || "-"}</p>
+                  <p className="mt-1 text-[10px] text-[#999]">{new Date(conversation.lastMessageAt).toLocaleString(dateLocale)}</p>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[#999]">{t("admin.customerDetail.noConversations")}</p>
+          )}
+        </div>
+
+        <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-black">{t("admin.customerDetail.supportTickets")}</h2>
+            <Link href={buildCustomerWorkspaceHref("support", email)} className="text-[11px] text-[#666] underline hover:no-underline">
+              {t("admin.customers.openWorkspace")}
+            </Link>
+          </div>
+          {customer.supportTickets?.length ? (
+            <div className="space-y-2">
+              {customer.supportTickets.map((ticket) => (
+                <Link
+                  key={ticket.id}
+                  href={`/admin/customers/support/${ticket.id}`}
+                  className="block rounded-[3px] border border-[#f0f0f0] bg-[#fafafa] p-3 transition-colors hover:bg-white"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium text-black">{ticket.subject}</p>
+                    <span className="rounded-[2px] bg-[#f3f4f6] px-2 py-0.5 text-[10px] font-semibold text-[#555]">
+                      {t(TICKET_STATUS_KEYS[ticket.status] || ticket.status)}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-[#999]">
+                    {t(TICKET_PRIORITY_KEYS[ticket.priority] || ticket.priority)} - {ticket._count?.messages || 0} {t("admin.customers.messagesCount")}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[#999]">{t("admin.customerDetail.noSupportTickets")}</p>
+          )}
         </div>
       </div>
 
@@ -254,7 +403,7 @@ export default function CustomerDetailPage() {
                               statusColor(order.status)
                             }`}
                           >
-                            {order.status}
+                            {t(ORDER_STATUS_KEYS[order.status] || order.status)}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -263,7 +412,7 @@ export default function CustomerDetailPage() {
                               productionColor(order.productionStatus)
                             }`}
                           >
-                            {order.productionStatus?.replace(/_/g, " ")}
+                            {t(PRODUCTION_STATUS_KEYS[order.productionStatus] || order.productionStatus)}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-xs text-[#666]">
@@ -274,7 +423,7 @@ export default function CustomerDetailPage() {
                           {formatCad(order.totalAmount)}
                         </td>
                         <td className="px-4 py-3 text-xs text-[#999]">
-                          {new Date(order.createdAt).toLocaleDateString()}
+                          {new Date(order.createdAt).toLocaleDateString(dateLocale)}
                         </td>
                         <td className="px-4 py-3">
                           <Link
@@ -318,17 +467,17 @@ export default function CustomerDetailPage() {
                           statusColor(order.status)
                         }`}
                       >
-                        {order.status}
+                        {t(ORDER_STATUS_KEYS[order.status] || order.status)}
                       </span>
                       <span
                         className={`rounded-[2px] px-2 py-0.5 text-xs font-medium ${
                           productionColor(order.productionStatus)
                         }`}
                       >
-                        {order.productionStatus?.replace(/_/g, " ")}
+                        {t(PRODUCTION_STATUS_KEYS[order.productionStatus] || order.productionStatus)}
                       </span>
                       <span className="text-xs text-[#999]">
-                        {new Date(order.createdAt).toLocaleDateString()}
+                        {new Date(order.createdAt).toLocaleDateString(dateLocale)}
                       </span>
                     </div>
                   </Link>
@@ -346,8 +495,14 @@ export default function CustomerDetailPage() {
       {/* Notes Section */}
       <div>
         <h2 className="mb-3 text-sm font-semibold text-black">
-          Notes ({notes.length})
+          {t("admin.customerDetail.notesTitle")} ({notes.length})
         </h2>
+
+        {notesError && (
+          <div className="mb-3 rounded-[3px] border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+            {notesError}
+          </div>
+        )}
 
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4">
           {/* Add note form */}
@@ -355,7 +510,7 @@ export default function CustomerDetailPage() {
             <textarea
               value={noteContent}
               onChange={(e) => setNoteContent(e.target.value)}
-              placeholder="Add a note about this customer..."
+              placeholder={t("admin.customerDetail.notesPlaceholder")}
               className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none placeholder:text-[#999] focus:border-black"
               rows={3}
             />
@@ -366,7 +521,7 @@ export default function CustomerDetailPage() {
                 disabled={noteSaving || !noteContent.trim()}
                 className="rounded-[3px] bg-black px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#222] disabled:opacity-40"
               >
-                {noteSaving ? "Saving..." : "Add Note"}
+                {noteSaving ? t("admin.customerDetail.notesSaving") : t("admin.customerDetail.addNote")}
               </button>
             </div>
           </div>
@@ -379,7 +534,7 @@ export default function CustomerDetailPage() {
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="text-xs font-semibold text-black">{note.authorName}</span>
                     <span className="shrink-0 text-[10px] text-[#bbb]">
-                      {new Date(note.createdAt).toLocaleString()}
+                      {new Date(note.createdAt).toLocaleString(dateLocale)}
                     </span>
                   </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-[#444]">{note.content}</p>
@@ -387,7 +542,7 @@ export default function CustomerDetailPage() {
               ))}
             </div>
           ) : (
-            <p className="py-4 text-center text-xs text-[#999]">No notes yet</p>
+            <p className="py-4 text-center text-xs text-[#999]">{t("admin.customerDetail.noNotes")}</p>
           )}
         </div>
       </div>

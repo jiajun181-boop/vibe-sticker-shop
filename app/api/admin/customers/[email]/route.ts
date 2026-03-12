@@ -13,7 +13,7 @@ export async function GET(
   const email = decodeURIComponent(rawEmail);
 
   try {
-    const [aggregate, orders] = await Promise.all([
+    const [aggregate, orders, user, supportTickets, conversations] = await Promise.all([
       prisma.order.aggregate({
         where: { customerEmail: email },
         _sum: { totalAmount: true },
@@ -23,6 +23,47 @@ export async function GET(
         where: { customerEmail: email },
         include: { items: true },
         orderBy: { createdAt: "desc" },
+      }),
+      prisma.user.findFirst({
+        where: {
+          email: { equals: email, mode: "insensitive" },
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          accountType: true,
+          companyName: true,
+          companyRole: true,
+          b2bApproved: true,
+          b2bApprovedAt: true,
+          partnerTier: true,
+          partnerDiscount: true,
+        },
+      }),
+      prisma.supportTicket.findMany({
+        where: {
+          email: { equals: email, mode: "insensitive" },
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+        include: {
+          _count: { select: { messages: true } },
+        },
+      }),
+      prisma.conversation.findMany({
+        where: {
+          customerEmail: { equals: email, mode: "insensitive" },
+        },
+        orderBy: { lastMessageAt: "desc" },
+        take: 5,
+        include: {
+          messages: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+          _count: { select: { messages: true } },
+        },
       }),
     ]);
 
@@ -34,7 +75,7 @@ export async function GET(
     }
 
     // Extract name from most recent order
-    const name = orders[0]?.customerName || null;
+    const name = orders[0]?.customerName || user?.name || null;
 
     return NextResponse.json({
       email,
@@ -42,6 +83,26 @@ export async function GET(
       orderCount: aggregate._count.id,
       totalSpent: aggregate._sum.totalAmount || 0,
       orders,
+      b2bProfile: user
+        ? {
+            accountType: user.accountType,
+            companyName: user.companyName,
+            companyRole: user.companyRole,
+            approved: user.b2bApproved,
+            approvedAt: user.b2bApprovedAt,
+            tier: user.partnerTier,
+            discount: user.partnerDiscount,
+          }
+        : null,
+      supportTickets,
+      conversations: conversations.map((conversation) => ({
+        id: conversation.id,
+        subject: conversation.subject,
+        status: conversation.status,
+        lastMessageAt: conversation.lastMessageAt,
+        lastMessage: conversation.messages[0]?.content || null,
+        unreadCount: conversation._count.messages,
+      })),
     });
   } catch (error) {
     console.error("Failed to fetch customer:", error);

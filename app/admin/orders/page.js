@@ -8,6 +8,7 @@ import { detectProductFamily } from "@/lib/preflight";
 import { getArtworkStatus, scanOrderArtwork as scanArtwork } from "@/lib/artwork-detection";
 import { formatCad } from "@/lib/admin/format-cad";
 import { statusColor, paymentColor, productionColor } from "@/lib/admin/status-labels";
+import { ORDER_CENTER_VIEWS, buildOrderCenterHref, getOrderCenterView } from "@/lib/admin-centers";
 
 const statuses = ["all", "pending", "paid", "draft", "canceled", "refunded"];
 const productionStatuses = ["all", "not_started", "preflight", "in_production", "ready_to_ship", "shipped", "on_hold"];
@@ -22,6 +23,7 @@ function scanOrderArtwork(items) {
   const result = {
     hasUploadLater: art.flags.has("UPLOAD_LATER"),
     hasDesignHelp:  art.flags.has("DESIGN"),
+    hasProvided:    art.flags.has("PROVIDED"),
     hasMissingArt:  false,
     hasFileNameOnly: art.flags.has("FILE_NAME_ONLY"),
     needsContour: false,
@@ -32,9 +34,11 @@ function scanOrderArtwork(items) {
   };
   if (!items || items.length === 0) return result;
 
-  // hasMissingArt = at least one item has status "missing" (no URL, no intent, no fileName).
-  // The shared flags set NO_ART for file-name-only and upload-later too, so we check per-item.
+  // hasMissingArt = at least one producible item has status "missing" (no URL, no intent, no fileName).
+  // Service-fee rows are financial line items — exclude from artwork checks.
   for (const item of items) {
+    const m = item.meta && typeof item.meta === "object" ? item.meta : {};
+    if (m.isServiceFee === "true") continue;
     if (getArtworkStatus(item) === "missing") {
       result.hasMissingArt = true;
       break;
@@ -42,6 +46,8 @@ function scanOrderArtwork(items) {
   }
 
   for (const item of items) {
+    const m = item.meta && typeof item.meta === "object" ? item.meta : {};
+    if (m.isServiceFee === "true") continue;
     const family = detectProductFamily(item);
     result.families.push(family);
     if (family === "sticker" || family === "label") result.needsContour = true;
@@ -54,7 +60,7 @@ function scanOrderArtwork(items) {
 
 export default function OrdersPage() {
   return (
-    <Suspense fallback={<div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading...</div>}>
+    <Suspense fallback={<div className="flex h-48 items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-[#e0e0e0] border-t-black" /></div>}>
       <OrdersContent />
     </Suspense>
   );
@@ -67,33 +73,48 @@ function OrdersContent() {
   const searchParams = useSearchParams();
   const { t } = useTranslation();
   const refreshTimer = useRef(null);
+  const centerView = getOrderCenterView(searchParams.get("view"));
 
   const [orders, setOrders] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [lastRefresh, setLastRefresh] = useState(null);
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState(
-    searchParams.get("status") || "all"
+    searchParams.get("status") || centerView.params.status || "all"
   );
   const [prodFilter, setProdFilter] = useState(
-    searchParams.get("production") || "all"
+    searchParams.get("production") || centerView.params.production || "all"
   );
   const page = parseInt(searchParams.get("page") || "1");
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
-  const [artworkFilter, setArtworkFilter] = useState("all");
-  const [sortMode, setSortMode] = useState("newest");
-  const [actionError, setActionError] = useState(null);
+  const [artworkFilter, setArtworkFilter] = useState(
+    searchParams.get("artwork") || centerView.params.artwork || "all"
+  );
+  const [sortMode, setSortMode] = useState(
+    searchParams.get("sort") || centerView.params.sort || "newest"
+  );
 
   const statusLabel = (s) => t(`admin.orders.${s}`, s);
   const productionLabel = (s) => {
-    const map = { not_started: t("admin.orders.productionNotStarted"), preflight: t("admin.orders.productionNotStarted"), in_production: t("admin.orders.productionInProgress"), ready_to_ship: t("admin.orders.productionReady"), shipped: t("admin.orders.productionShipped"), completed: t("admin.orders.productionDelivered") };
+    const map = { not_started: t("admin.orders.productionNotStarted"), preflight: t("admin.orders.productionNotStarted"), in_production: t("admin.orders.productionInProgress"), ready_to_ship: t("admin.orders.productionReady"), shipped: t("admin.orders.productionShipped"), completed: t("admin.orders.productionDelivered"), on_hold: t("admin.orders.productionOnHold") };
     return map[s] || (s ? s.replace(/_/g, " ") : "");
   };
 
+  useEffect(() => {
+    setSearch(searchParams.get("search") || "");
+    setStatusFilter(searchParams.get("status") || centerView.params.status || "all");
+    setProdFilter(searchParams.get("production") || centerView.params.production || "all");
+    setArtworkFilter(searchParams.get("artwork") || centerView.params.artwork || "all");
+    setSortMode(searchParams.get("sort") || centerView.params.sort || "newest");
+    setSelectedOrders([]);
+  }, [searchParams, centerView.id, centerView.params.artwork, centerView.params.production, centerView.params.sort, centerView.params.status]);
+
   const fetchOrders = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     const params = new URLSearchParams();
     params.set("page", String(page));
     params.set("limit", "20");
@@ -108,8 +129,7 @@ function OrdersContent() {
       const text = await res.text();
       if (!res.ok) {
         console.error("Orders API error:", res.status, text);
-        setOrders([]);
-        setPagination(null);
+        setLoadError(t("admin.orders.loadErrorApi").replace("{code}", res.status));
         return;
       }
       let data;
@@ -117,16 +137,14 @@ function OrdersContent() {
         data = JSON.parse(text);
       } catch {
         console.error("Orders API returned invalid JSON:", text.slice(0, 200));
-        setOrders([]);
-        setPagination(null);
+        setLoadError(t("admin.orders.loadErrorJson"));
         return;
       }
       setOrders(data.orders || []);
       setPagination(data.pagination || null);
     } catch (err) {
       console.error("Failed to load orders:", err);
-      setOrders([]);
-      setPagination(null);
+      setLoadError(t("admin.orders.loadErrorNetwork"));
     } finally {
       setLoading(false);
       setLastRefresh(new Date());
@@ -154,7 +172,7 @@ function OrdersContent() {
 
   function handleSearch(e) {
     e.preventDefault();
-    updateParams({ search: search || null, page: "1" });
+    updateParams({ search: search || null, page: "1", view: null });
   }
 
   function toggleSelectOrder(orderId) {
@@ -173,27 +191,20 @@ function OrdersContent() {
 
   async function handleBulkUpdateStatus(status) {
     if (!status || selectedOrders.length === 0) return;
-    const confirmed = confirm(`Update ${selectedOrders.length} orders to status: ${status}?`);
+    const confirmed = confirm(t("admin.orders.bulkConfirmStatus").replace("{count}", selectedOrders.length).replace("{status}", status));
     if (!confirmed) return;
 
     setBulkUpdating(true);
-    setActionError(null);
     try {
-      const res = await fetch('/api/admin/orders/bulk-update', {
+      await fetch('/api/admin/orders/bulk-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: selectedOrders, updates: { status } })
       });
-      if (res.ok) {
-        setSelectedOrders([]);
-        await fetchOrders();
-      } else {
-        setActionError("Bulk status update failed");
-        setTimeout(() => setActionError(null), 5000);
-      }
-    } catch {
-      setActionError("Network error — bulk update failed");
-      setTimeout(() => setActionError(null), 5000);
+      setSelectedOrders([]);
+      await fetchOrders();
+    } catch (err) {
+      console.error('Bulk update failed:', err);
     } finally {
       setBulkUpdating(false);
     }
@@ -201,27 +212,20 @@ function OrdersContent() {
 
   async function handleBulkUpdateProduction(productionStatus) {
     if (!productionStatus || selectedOrders.length === 0) return;
-    const confirmed = confirm(`Update ${selectedOrders.length} orders to production: ${productionStatus.replace(/_/g, " ")}?`);
+    const confirmed = confirm(t("admin.orders.bulkConfirmProd").replace("{count}", selectedOrders.length).replace("{status}", productionStatus.replace(/_/g, " ")));
     if (!confirmed) return;
 
     setBulkUpdating(true);
-    setActionError(null);
     try {
-      const res = await fetch('/api/admin/orders/bulk-update', {
+      await fetch('/api/admin/orders/bulk-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: selectedOrders, updates: { productionStatus } })
       });
-      if (res.ok) {
-        setSelectedOrders([]);
-        await fetchOrders();
-      } else {
-        setActionError("Bulk production update failed");
-        setTimeout(() => setActionError(null), 5000);
-      }
-    } catch {
-      setActionError("Network error — bulk production update failed");
-      setTimeout(() => setActionError(null), 5000);
+      setSelectedOrders([]);
+      await fetchOrders();
+    } catch (err) {
+      console.error('Bulk production update failed:', err);
     } finally {
       setBulkUpdating(false);
     }
@@ -229,28 +233,21 @@ function OrdersContent() {
 
   async function handleBulkExport() {
     if (selectedOrders.length === 0) return;
-    setActionError(null);
     try {
       const res = await fetch('/api/admin/orders/bulk-export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: selectedOrders })
       });
-      if (!res.ok) {
-        setActionError("CSV export failed — server returned an error");
-        setTimeout(() => setActionError(null), 5000);
-        return;
-      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'orders-export.csv';
+      a.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch {
-      setActionError("CSV export failed — network error");
-      setTimeout(() => setActionError(null), 5000);
+    } catch (err) {
+      console.error('Export failed:', err);
     }
   }
 
@@ -271,10 +268,21 @@ function OrdersContent() {
             return scan.hasDesignHelp;
           case "upload_later":
             return scan.hasUploadLater;
+          case "provided":
+            return scan.hasProvided;
           default:
             return true;
         }
       });
+    }
+
+    if (centerView.id === "exceptions") {
+      filtered = filtered.filter(
+        (order) =>
+          order.productionStatus === "on_hold" ||
+          order.status === "canceled" ||
+          order.status === "refunded"
+      );
     }
 
     // Sort
@@ -283,13 +291,14 @@ function OrdersContent() {
         (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
       );
     } else if (sortMode === "priority") {
-      // Priority ranking: NO_ART (missing/fileName) > DESIGN > UPLOAD_LATER > complete
+      // Priority ranking: NO_ART (missing/fileName) > DESIGN > UPLOAD_LATER > PROVIDED > complete
       const priorityScore = (order) => {
         const scan = scanOrderArtwork(order.items || []);
         if (scan.hasMissingArt || scan.hasFileNameOnly) return 0; // highest priority
         if (scan.hasDesignHelp) return 1;
         if (scan.hasUploadLater) return 2;
-        return 3; // no issues — lowest priority
+        if (scan.hasProvided) return 3; // provided = low priority, artwork confirmed off-platform
+        return 4; // no issues — lowest priority
       };
       filtered = [...filtered].sort((a, b) => {
         const diff = priorityScore(a) - priorityScore(b);
@@ -301,89 +310,151 @@ function OrdersContent() {
     // "newest" is the default API order (createdAt desc) — no re-sort needed
 
     return filtered;
-  }, [orders, artworkFilter, sortMode]);
+  }, [orders, artworkFilter, sortMode, centerView.id]);
+
+  // Artwork summary counts across all loaded orders (not filtered)
+  const artworkSummary = useMemo(() => {
+    let missing = 0, design = 0, uploadLater = 0, provided = 0;
+    for (const order of orders) {
+      const scan = scanOrderArtwork(order.items || []);
+      if (scan.hasMissingArt || scan.hasFileNameOnly) missing++;
+      if (scan.hasDesignHelp) design++;
+      if (scan.hasUploadLater) uploadLater++;
+      if (scan.hasProvided) provided++;
+    }
+    return { missing, design, uploadLater, provided };
+  }, [orders]);
+
+  // ── Orders Center view strip ──────────────────────────────────────────────
+  const viewCounts = useMemo(() => {
+    let pending = 0, inProd = 0, readyShip = 0, shipped = 0, exceptions = 0;
+    for (const order of orders) {
+      if (order.status === "pending") pending++;
+      if (order.productionStatus === "in_production") inProd++;
+      if (order.productionStatus === "ready_to_ship") readyShip++;
+      if (order.productionStatus === "shipped") shipped++;
+      if (order.productionStatus === "on_hold") exceptions++;
+    }
+    return { pending, missingArt: artworkSummary.missing, inProd, readyShip, shipped, exceptions };
+  }, [orders, artworkSummary]);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-black">Orders</h1>
-        <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-black">{t("admin.orders.title")}</h1>
+          <p className="mt-0.5 text-xs text-[#999]">{t("admin.orders.subtitle")}</p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          {lastRefresh && (
+            <span className="text-[10px] text-[#bbb]">
+              {t("admin.orders.updated")} {lastRefresh.toLocaleTimeString()}
+            </span>
+          )}
           <button
             type="button"
             onClick={() => fetchOrders()}
             disabled={loading}
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-50"
-            title={lastRefresh ? `Last refresh: ${lastRefresh.toLocaleTimeString()}` : ""}
           >
-            {loading ? "..." : "Refresh"}
+            {loading ? "..." : t("admin.orders.refresh")}
           </button>
           <Link
             href="/admin/orders/create"
             className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
-            + New Order 新建订单
+            {t("admin.orders.newOrder")}
           </Link>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {/* Status tabs */}
-        <div className="flex flex-wrap gap-1">
-          {statuses.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => {
-                setStatusFilter(s);
-                updateParams({ status: s === "all" ? null : s, page: "1" });
-              }}
+      {/* Orders Center view strip — primary workflow navigation */}
+      <div className="flex flex-wrap gap-1.5">
+        {Object.values(ORDER_CENTER_VIEWS).map((view) => {
+          const count = {
+            pending: viewCounts.pending,
+            missing_artwork: viewCounts.missingArt,
+            in_production: viewCounts.inProd,
+            ready_to_ship: viewCounts.readyShip,
+            shipped: viewCounts.shipped,
+            exceptions: viewCounts.exceptions,
+          }[view.id] || null;
+
+          return (
+            <Link
+              key={view.id}
+              href={buildOrderCenterHref(view.id)}
               className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
-                statusFilter === s
-                  ? "bg-black text-[#fff]"
+                centerView.id === view.id
+                  ? "bg-black text-white"
                   : "bg-white text-[#666] border border-[#e0e0e0] hover:border-black hover:text-black"
               }`}
             >
-              {statusLabel(s)}
-            </button>
+              {t(view.labelKey)}
+              {count > 0 && (
+                <span className={`ml-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full text-[9px] font-bold ${
+                  centerView.id === view.id ? "bg-white/20 text-white" : (view.badgeColor || "")
+                }`}>
+                  {count}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* Payment status filter */}
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            updateParams({ status: e.target.value === "all" ? null : e.target.value, page: "1", view: null });
+          }}
+          className="rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-[#666]"
+        >
+          {statuses.map((s) => (
+            <option key={s} value={s}>{s === "all" ? t("admin.orders.allStatuses") : statusLabel(s)}</option>
           ))}
-        </div>
+        </select>
 
         {/* Production filter */}
         <select
           value={prodFilter}
           onChange={(e) => {
             setProdFilter(e.target.value);
-            updateParams({ production: e.target.value === "all" ? null : e.target.value, page: "1" });
+            updateParams({ production: e.target.value === "all" ? null : e.target.value, page: "1", view: null });
           }}
           className="rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-[#666]"
         >
           {productionStatuses.map((s) => (
-            <option key={s} value={s}>{s === "all" ? "All Production" : s.replace(/_/g, " ")}</option>
+            <option key={s} value={s}>{s === "all" ? t("admin.orders.allProduction") : productionLabel(s)}</option>
           ))}
         </select>
 
         {/* Artwork status filter (client-side) */}
         <select
           value={artworkFilter}
-          onChange={(e) => { setArtworkFilter(e.target.value); setSelectedOrders([]); }}
+          onChange={(e) => updateParams({ artwork: e.target.value === "all" ? null : e.target.value, page: "1", view: null })}
           className="rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-[#666]"
         >
-          <option value="all">All Artwork</option>
-          <option value="missing">Missing Art</option>
-          <option value="design">Design Help</option>
-          <option value="upload_later">Upload Later</option>
+          <option value="all">{t("admin.orders.allArtwork")}</option>
+          <option value="missing">{t("admin.orders.artMissing")}</option>
+          <option value="design">{t("admin.orders.artDesignHelp")}</option>
+          <option value="upload_later">{t("admin.orders.artUploadLater")}</option>
+          <option value="provided">{t("admin.orders.artProviderFilter")}</option>
         </select>
 
         {/* Sort mode (client-side) */}
         <select
           value={sortMode}
-          onChange={(e) => setSortMode(e.target.value)}
+          onChange={(e) => updateParams({ sort: e.target.value === "newest" ? null : e.target.value, page: "1", view: null })}
           className="rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-[#666]"
         >
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-          <option value="priority">Priority (issues first)</option>
+          <option value="newest">{t("admin.orders.sortNewest")}</option>
+          <option value="oldest">{t("admin.orders.sortOldest")}</option>
+          <option value="priority">{t("admin.orders.sortPriority")}</option>
         </select>
 
         {/* Search */}
@@ -403,14 +474,6 @@ function OrdersContent() {
           </button>
         </form>
       </div>
-
-      {/* Action error banner */}
-      {actionError && (
-        <div className="flex items-center justify-between rounded-[3px] border border-red-300 bg-red-50 px-4 py-3">
-          <span className="text-sm font-medium text-red-800">{actionError}</span>
-          <button type="button" onClick={() => setActionError(null)} className="text-xs font-medium text-red-600 hover:text-red-900">Dismiss</button>
-        </div>
-      )}
 
       {/* Bulk Action Bar */}
       {selectedOrders.length > 0 && (
@@ -438,12 +501,12 @@ function OrdersContent() {
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs text-black"
                 defaultValue=""
               >
-                <option value="" disabled>Production Status</option>
-                <option value="not_started">Not Started</option>
-                <option value="preflight">Preflight</option>
-                <option value="in_production">In Production</option>
-                <option value="ready_to_ship">Ready to Ship</option>
-                <option value="on_hold">On Hold</option>
+                <option value="" disabled>{t("admin.orders.productionStatusLabel")}</option>
+                <option value="not_started">{t("admin.orders.prodNotStarted")}</option>
+                <option value="preflight">{t("admin.orders.prodPreflight")}</option>
+                <option value="in_production">{t("admin.orders.prodInProduction")}</option>
+                <option value="ready_to_ship">{t("admin.orders.prodReadyToShip")}</option>
+                <option value="on_hold">{t("admin.orders.prodOnHold")}</option>
               </select>
               <button
                 onClick={handleBulkExport}
@@ -469,16 +532,27 @@ function OrdersContent() {
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
             {t("admin.common.loading")}
           </div>
+        ) : loadError ? (
+          <div className="flex h-48 flex-col items-center justify-center gap-3 text-sm">
+            <p className="text-red-600">{loadError}</p>
+            <button
+              type="button"
+              onClick={() => fetchOrders()}
+              className="rounded-[3px] bg-black px-4 py-2 text-xs font-medium text-[#fff] hover:bg-[#222]"
+            >
+              {t("admin.orders.retry")}
+            </button>
+          </div>
         ) : displayOrders.length === 0 ? (
           <div className="flex h-48 flex-col items-center justify-center gap-1 text-sm text-[#999]">
-            <span>{artworkFilter !== "all" ? "No orders match this artwork filter" : t("admin.orders.noOrders")}</span>
+            <span>{artworkFilter !== "all" ? t("admin.orders.noArtworkMatch") : t("admin.orders.noOrders")}</span>
             {artworkFilter !== "all" && (
               <button
                 type="button"
                 onClick={() => { setArtworkFilter("all"); setSelectedOrders([]); }}
                 className="text-xs text-black underline hover:no-underline"
               >
-                Clear filter
+                {t("admin.orders.clearFilter")}
               </button>
             )}
           </div>
@@ -498,7 +572,7 @@ function OrdersContent() {
                       />
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      {t("admin.orders.title", "Order")}
+                      {t("admin.orders.colOrder")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       {t("admin.orders.customer")}
@@ -510,7 +584,7 @@ function OrdersContent() {
                       {t("admin.orders.status")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      {t("admin.orders.status", "Payment")}
+                      {t("admin.orders.colPayment")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       {t("admin.orders.production")}
@@ -532,13 +606,14 @@ function OrdersContent() {
                     }) || order.priority > 0;
                     const showNoArt = scan.hasUploadLater || scan.hasMissingArt || scan.hasFileNameOnly;
                     const showDesign = scan.hasDesignHelp;
+                    const showProvided = scan.hasProvided && !showNoArt; // only show if no worse issue
                     const hasArtworkIssue = showNoArt || showDesign;
                     const tags = order.tags || [];
                     const itemCount = order._count?.items || 0;
                     // Tool links: show contour if any item needs contour, stamp if any needs stamp
                     const toolLinks = [];
-                    if (scan.needsContour) toolLinks.push({ href: `/admin/tools/contour?orderId=${order.id}`, label: "Contour" });
-                    if (scan.needsStamp) toolLinks.push({ href: `/admin/tools/stamp-studio?orderId=${order.id}`, label: "Stamp" });
+                    if (scan.needsContour) toolLinks.push({ href: `/admin/tools/contour?orderId=${order.id}`, label: t("admin.orders.toolContour") });
+                    if (scan.needsStamp) toolLinks.push({ href: `/admin/tools/stamp-studio?orderId=${order.id}`, label: t("admin.orders.toolStamp") });
                     return (
                     <tr key={order.id} className={`hover:bg-[#fafafa]${hasArtworkIssue ? " bg-amber-50/40" : ""}`}>
                       <td className="px-4 py-3">
@@ -558,6 +633,7 @@ function OrdersContent() {
                           {isRush && <span className="rounded bg-red-100 px-1 py-0.5 text-[8px] font-bold text-red-700">RUSH</span>}
                           {showDesign && <span className="rounded bg-indigo-100 px-1 py-0.5 text-[8px] font-bold text-indigo-700">DESIGN</span>}
                           {showNoArt && <span className="rounded bg-amber-100 px-1 py-0.5 text-[8px] font-bold text-amber-700">NO ART</span>}
+                          {showProvided && <span className="rounded bg-cyan-100 px-1 py-0.5 text-[8px] font-bold text-cyan-700">PROVIDED</span>}
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -572,8 +648,8 @@ function OrdersContent() {
                           )}
                           {firstItem?.productName && (
                             <p className="text-[10px] text-[#999] truncate max-w-[200px]">
-                              {firstItem.productName}{itemCount > 1 ? ` +${itemCount - 1} more` : ""}
-                              {itemCount > 0 && <span className="ml-1 text-[#bbb]">({itemCount} {itemCount === 1 ? "item" : "items"})</span>}
+                              {firstItem.productName}{itemCount > 1 ? ` ${t("admin.orders.nMore").replace("{n}", itemCount - 1)}` : ""}
+                              {itemCount > 0 && <span className="ml-1 text-[#bbb]">({itemCount} {t("admin.orders.items")})</span>}
                             </p>
                           )}
                         </div>
@@ -656,11 +732,12 @@ function OrdersContent() {
                 }) || order.priority > 0;
                 const showNoArt = scan.hasUploadLater || scan.hasMissingArt || scan.hasFileNameOnly;
                 const showDesign = scan.hasDesignHelp;
+                const showProvided = scan.hasProvided && !showNoArt;
                 const hasArtworkIssue = showNoArt || showDesign;
                 const itemCount = order._count?.items || 0;
                 const toolLinks = [];
-                if (scan.needsContour) toolLinks.push({ href: `/admin/tools/contour?orderId=${order.id}`, label: "Contour" });
-                if (scan.needsStamp) toolLinks.push({ href: `/admin/tools/stamp-studio?orderId=${order.id}`, label: "Stamp" });
+                if (scan.needsContour) toolLinks.push({ href: `/admin/tools/contour?orderId=${order.id}`, label: t("admin.orders.toolContour") });
+                if (scan.needsStamp) toolLinks.push({ href: `/admin/tools/stamp-studio?orderId=${order.id}`, label: t("admin.orders.toolStamp") });
                 return (
                 <div
                   key={order.id}
@@ -690,10 +767,11 @@ function OrdersContent() {
                             {isRush && <span className="rounded bg-red-100 px-1 py-0.5 text-[8px] font-bold text-red-700">RUSH</span>}
                             {showDesign && <span className="rounded bg-indigo-100 px-1 py-0.5 text-[8px] font-bold text-indigo-700">DESIGN</span>}
                             {showNoArt && <span className="rounded bg-amber-100 px-1 py-0.5 text-[8px] font-bold text-amber-700">NO ART</span>}
+                            {showProvided && <span className="rounded bg-cyan-100 px-1 py-0.5 text-[8px] font-bold text-cyan-700">PROVIDED</span>}
                           </div>
                           {firstItem?.productName && (
                             <p className="mt-0.5 text-[10px] text-[#999] truncate max-w-[200px]">
-                              {firstItem.productName}{itemCount > 1 ? ` +${itemCount - 1} more` : ""}
+                              {firstItem.productName}{itemCount > 1 ? ` ${t("admin.orders.nMore").replace("{n}", itemCount - 1)}` : ""}
                               {itemCount > 0 && <span className="ml-1 text-[#bbb]">({itemCount})</span>}
                             </p>
                           )}
@@ -737,7 +815,7 @@ function OrdersContent() {
                             href={tool.href}
                             className="inline-block rounded-[2px] border border-[#d0d0d0] px-2 py-0.5 text-[10px] font-medium text-[#666] hover:border-black hover:text-black"
                           >
-                            Open {tool.label} Tool
+                            {t("admin.orders.openTool").replace("{tool}", tool.label)}
                           </Link>
                         ))}
                       </div>

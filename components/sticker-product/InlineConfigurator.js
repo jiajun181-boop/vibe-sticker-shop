@@ -936,7 +936,7 @@ export default function InlineConfigurator({ cuttingTypeId }) {
                 selected={turnaroundId === opt.id}
                 onSelect={() => { setTurnaroundId(opt.id); advanceStep("step-turnaround"); }}
                 recommended={opt.id === RECOMMENDED.turnaround}
-                badge={opt.id === "rush" ? <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">+50%</span> : undefined}
+                badge={opt.id === "rush" ? <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">+{Math.round((opt.multiplier - 1) * 100)}%</span> : undefined}
                 detailRows={det ? [
                   { label: t("option.price"), text: t(`option.priceDiff.${det.priceKey}`) },
                   { label: t("option.useCase"), text: t(`option.useCase.${det.useKey}`) },

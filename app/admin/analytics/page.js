@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback, Suspense } from "react";
+import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { formatCad } from "@/lib/admin/format-cad";
+import { buildSettingsCenterHref } from "@/lib/admin-centers";
 
 const formatCompact = (cents) => {
   const dollars = cents / 100;
@@ -79,7 +81,15 @@ function AnalyticsContent() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-semibold text-black">Analytics</h1>
+        <div>
+          <Link
+            href={buildSettingsCenterHref()}
+            className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
+          >
+            Settings
+          </Link>
+          <h1 className="text-xl font-semibold text-black">Analytics</h1>
+        </div>
 
         {/* Period selector */}
         <div className="flex flex-wrap gap-1">

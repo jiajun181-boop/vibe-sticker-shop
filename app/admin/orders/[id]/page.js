@@ -7,18 +7,20 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { timeAgo as sharedTimeAgo } from "@/lib/admin/time-ago";
 import { buildContourSvg } from "@/lib/contour/svg-path";
 import { preflightOrder, detectProductFamily, buildSpecsSummary } from "@/lib/preflight";
-import { hasArtworkUrl, getArtworkStatus } from "@/lib/artwork-detection";
+import { hasArtworkUrl, getArtworkStatus, itemNeedsArtwork } from "@/lib/artwork-detection";
 import { assessItem, assessOrder, assessOrderPackage, READINESS, READINESS_COLORS, READINESS_LABEL_KEYS } from "@/lib/admin/production-readiness";
 import { getActionLabel } from "@/lib/timeline-labels";
 import { formatCad } from "@/lib/admin/format-cad";
-import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS, VALID_STATUS_TRANSITIONS, VALID_PAYMENT_TRANSITIONS, VALID_PRODUCTION_TRANSITIONS } from "@/lib/order-config";
+import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
 import { statusColor, paymentColor, productionColor } from "@/lib/admin/status-labels";
+import { buildOrderCenterHref } from "@/lib/admin-centers";
 import OrderReadinessSummary from "@/components/admin/OrderReadinessSummary";
 import ItemProductionPanel from "@/components/admin/ItemProductionPanel";
+import { getOrderFulfillment, getShipmentStatusColor, getTrackingUrl } from "@/lib/admin/order-shipping";
 
-const ALL_STATUS_OPTIONS = ["draft", "pending", "paid", "canceled", "refunded"];
-const ALL_PAYMENT_OPTIONS = ["unpaid", "paid", "failed", "refunded", "partially_refunded"];
-const ALL_PRODUCTION_OPTIONS = [
+const statusOptions = ["draft", "pending", "paid", "canceled", "refunded"];
+const paymentOptions = ["unpaid", "paid", "failed", "refunded", "partially_refunded"];
+const productionOptions = [
   "not_started",
   "preflight",
   "in_production",
@@ -28,13 +30,6 @@ const ALL_PRODUCTION_OPTIONS = [
   "on_hold",
   "canceled",
 ];
-
-/** Return [current, ...valid next states] so dropdown always includes current value */
-function validOptions(current, transitionMap, allOptions) {
-  const allowed = transitionMap[current];
-  if (!allowed) return allOptions; // unknown state — show all
-  return [current, ...allowed];
-}
 
 const priorityLabelKeys = ["admin.orderDetail.priorityNormal", "admin.orderDetail.priorityHigh", "admin.orderDetail.priorityUrgent"];
 const priorityColors = [
@@ -87,6 +82,7 @@ export default function OrderDetailPage() {
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [isInternalNote, setIsInternalNote] = useState(true);
@@ -94,7 +90,11 @@ export default function OrderDetailPage() {
   const [message, setMessage] = useState("");
   const [messageIsError, setMessageIsError] = useState(false);
   const [timeline, setTimeline] = useState([]);
-  const [emailLogs, setEmailLogs] = useState([]);
+  const [actionFeedback, setActionFeedback] = useState(null); // { text, isError }
+  const [sendingReminder, setSendingReminder] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState(null);
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
   // Editable status fields
   const [status, setStatus] = useState("");
@@ -119,67 +119,61 @@ export default function OrderDetailPage() {
     }
   }, [id]);
 
-  const fetchEmailLogs = useCallback(async () => {
+  const fetchOrder = useCallback(async () => {
+    setLoadError("");
     try {
-      const res = await fetch(`/api/admin/orders/${id}/emails`);
-      if (res.ok) setEmailLogs(await res.json());
-    } catch (err) {
-      console.error("[OrderDetail] Failed to fetch email logs:", err);
-    }
-  }, [id]);
-
-  const fetchOrder = useCallback(() => {
-    fetch(`/api/admin/orders/${id}`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => {
-        if (data.error) {
+      const r = await fetch(`/api/admin/orders/${id}`);
+      if (!r.ok) {
+        if (r.status === 404) {
           setOrder(null);
-          showMsg(data.error, true);
         } else {
-          setOrder(data);
-          setStatus(data.status);
-          setPaymentStatus(data.paymentStatus);
-          setProductionStatus(data.productionStatus);
-          setTagsInput(
-            Array.isArray(data.tags) ? data.tags.join(", ") : data.tags || ""
-          );
-          setPriority(data.priority || 0);
-          setIsArchived(data.isArchived || false);
-          setEstimatedCompletion(
-            data.estimatedCompletion
-              ? data.estimatedCompletion.slice(0, 10)
-              : ""
-          );
-          if (data.timeline) {
-            setTimeline(data.timeline);
-          }
+          setLoadError(`Failed to load order (${r.status})`);
         }
-      })
-      .catch((err) => {
-        console.error("[OrderDetail] Failed to fetch order:", err);
-        showMsg(t("admin.orderDetail.updateFailed"), true);
-      })
-      .finally(() => setLoading(false));
+        return;
+      }
+      const data = await r.json();
+      if (data.error) {
+        setOrder(null);
+      } else {
+        setOrder(data);
+        setStatus(data.status);
+        setPaymentStatus(data.paymentStatus);
+        setProductionStatus(data.productionStatus);
+        setTagsInput(
+          Array.isArray(data.tags) ? data.tags.join(", ") : data.tags || ""
+        );
+        setPriority(data.priority || 0);
+        setIsArchived(data.isArchived || false);
+        setEstimatedCompletion(
+          data.estimatedCompletion
+            ? data.estimatedCompletion.slice(0, 10)
+            : ""
+        );
+        if (data.timeline) {
+          setTimeline(data.timeline);
+        }
+        setLastRefreshed(new Date());
+      }
+    } catch {
+      setLoadError("Network error — could not reach server");
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
   useEffect(() => {
     fetchOrder();
     fetchTimeline();
-    fetchEmailLogs();
-  }, [fetchOrder, fetchTimeline, fetchEmailLogs]);
+  }, [fetchOrder, fetchTimeline]);
 
   // Auto-refresh every 30s
   useEffect(() => {
     refreshTimer.current = setInterval(() => {
       fetchOrder();
       fetchTimeline();
-      fetchEmailLogs();
     }, AUTO_REFRESH_MS);
     return () => clearInterval(refreshTimer.current);
-  }, [fetchOrder, fetchTimeline, fetchEmailLogs]);
+  }, [fetchOrder, fetchTimeline]);
 
   function showMsg(text, isError = false) {
     setMessage(text);
@@ -291,6 +285,24 @@ export default function OrderDetailPage() {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center gap-3">
+        <p className="text-sm text-red-600">{loadError}</p>
+        <button
+          type="button"
+          onClick={() => { setLoading(true); fetchOrder(); fetchTimeline(); }}
+          className="rounded-[3px] bg-black px-4 py-2 text-xs font-medium text-[#fff] hover:bg-[#222]"
+        >
+          Retry
+        </button>
+        <Link href="/admin/orders" className="text-xs text-[#999] hover:text-black">
+          {t("admin.orderDetail.backToOrders")}
+        </Link>
+      </div>
+    );
+  }
+
   if (!order) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-2">
@@ -333,7 +345,26 @@ export default function OrderDetailPage() {
             <h1 className="text-xl font-semibold text-black">
               {t("admin.orderDetail.title")}
             </h1>
-            <p className="mt-0.5 font-mono text-xs text-[#999]">{order.id}</p>
+            <div className="mt-0.5 flex items-center gap-2">
+              <p className="font-mono text-xs text-[#999]">{order.id}</p>
+              <button
+                type="button"
+                disabled={manualRefreshing}
+                onClick={async () => {
+                  setManualRefreshing(true);
+                  await Promise.all([fetchOrder(), fetchTimeline()]);
+                  setManualRefreshing(false);
+                }}
+                className="text-[10px] font-medium text-[#999] hover:text-black disabled:opacity-50"
+              >
+                {manualRefreshing ? "Refreshing..." : "Refresh"}
+              </button>
+              {lastRefreshed && (
+                <span className="text-[10px] text-[#bbb]">
+                  Updated {lastRefreshed.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
           </div>
           <span
             className={`rounded-[2px] px-3 py-1 text-xs font-semibold ${
@@ -343,6 +374,52 @@ export default function OrderDetailPage() {
             {order.status}
           </span>
         </div>
+
+        {/* Action feedback banner */}
+        {actionFeedback && (
+          <div className={`rounded-[3px] px-4 py-2.5 text-xs font-medium ${actionFeedback.isError ? "border border-red-200 bg-red-50 text-red-700" : "border border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
+            {actionFeedback.text}
+          </div>
+        )}
+
+        {/* Contextual action tray — quick artwork + production shortcuts */}
+        <ContextualActionTray
+          order={order}
+          orderId={id}
+          sendingReminder={sendingReminder}
+          copiedLink={copiedLink}
+          onSendReminder={async () => {
+            setSendingReminder(true);
+            setActionFeedback(null);
+            try {
+              const res = await fetch(`/api/admin/orders/${id}/remind-artwork`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({}),
+              });
+              const d = await res.json();
+              if (res.ok) {
+                setActionFeedback({ text: "Artwork reminder sent to customer", isError: false });
+                fetchOrder();
+                fetchTimeline();
+              } else {
+                setActionFeedback({ text: d.error || "Failed to send reminder", isError: true });
+              }
+            } catch {
+              setActionFeedback({ text: "Failed to send reminder", isError: true });
+            } finally {
+              setSendingReminder(false);
+              setTimeout(() => setActionFeedback(null), 5000);
+            }
+          }}
+          onCopyLink={() => {
+            const uploadUrl = `https://lunarprint.ca/track-order?order=${id}`;
+            navigator.clipboard.writeText(uploadUrl).then(() => {
+              setCopiedLink(true);
+              setTimeout(() => setCopiedLink(false), 2000);
+            });
+          }}
+        />
 
         {/* Unified readiness summary — single source of truth from assessOrder() */}
         <OrderReadinessSummary order={order} />
@@ -374,6 +451,8 @@ export default function OrderDetailPage() {
               )}
             </Section>
 
+            {/* Shipment / Fulfillment summary — order-first view of shipping state */}
+
             {/* Customer Summary — plain-language overview for CS reps */}
             <CustomerSummarySection order={order} />
 
@@ -404,38 +483,28 @@ export default function OrderDetailPage() {
                             {formatCad(item.unitPrice)} {t("admin.orderDetail.each")}
                           </p>
                           {item.productionJob && (
-                            <div className="mt-1.5 flex flex-col items-end gap-0.5">
-                              <Link href={`/admin/production/${item.productionJob.id}`} className="flex flex-col items-end gap-0.5 hover:opacity-80">
-                                <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
-                                  item.productionJob.status === "shipped" || item.productionJob.status === "finished" ? "bg-green-100 text-green-700" :
-                                  item.productionJob.status === "printing" || item.productionJob.status === "quality_check" ? "bg-indigo-100 text-indigo-700" :
-                                  item.productionJob.status === "assigned" ? "bg-blue-100 text-blue-700" :
-                                  item.productionJob.status === "on_hold" ? "bg-red-100 text-red-700" :
-                                  "bg-gray-100 text-gray-600"
-                                }`}>
-                                  {item.productionJob.status.replace(/_/g, " ")}
+                            <Link href={`/admin/production/${item.productionJob.id}`} className="mt-1.5 flex flex-col items-end gap-0.5 hover:opacity-80">
+                              <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+                                item.productionJob.status === "shipped" || item.productionJob.status === "finished" ? "bg-green-100 text-green-700" :
+                                item.productionJob.status === "printing" || item.productionJob.status === "quality_check" ? "bg-indigo-100 text-indigo-700" :
+                                item.productionJob.status === "assigned" ? "bg-blue-100 text-blue-700" :
+                                item.productionJob.status === "on_hold" ? "bg-red-100 text-red-700" :
+                                "bg-gray-100 text-gray-600"
+                              }`}>
+                                {item.productionJob.status.replace(/_/g, " ")}
+                              </span>
+                              {item.productionJob.priority === "urgent" && (
+                                <span className="rounded bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-700">URGENT</span>
+                              )}
+                              {item.productionJob.dueAt && (
+                                <span className={`text-[9px] ${new Date(item.productionJob.dueAt) < new Date() ? "font-bold text-red-600" : "text-[#999]"}`}>
+                                  Due: {new Date(item.productionJob.dueAt).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
                                 </span>
-                                {item.productionJob.priority === "urgent" && (
-                                  <span className="rounded bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-700">URGENT</span>
-                                )}
-                                {item.productionJob.dueAt && (
-                                  <span className={`text-[9px] ${new Date(item.productionJob.dueAt) < new Date() ? "font-bold text-red-600" : "text-[#999]"}`}>
-                                    Due: {new Date(item.productionJob.dueAt).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
-                                  </span>
-                                )}
-                                {item.productionJob.assignedTo && (
-                                  <span className="text-[9px] text-[#999]">{item.productionJob.assignedTo}</span>
-                                )}
-                              </Link>
-                              <a
-                                href={`/api/admin/production/${item.productionJob.id}/ticket?format=pdf`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[9px] text-blue-600 hover:underline"
-                              >
-                                {t("admin.orderDetail.printTicket") || "Print Ticket"}
-                              </a>
-                            </div>
+                              )}
+                              {item.productionJob.assignedTo && (
+                                <span className="text-[9px] text-[#999]">{item.productionJob.assignedTo}</span>
+                              )}
+                            </Link>
                           )}
                         </div>
                       </div>
@@ -599,7 +668,7 @@ export default function OrderDetailPage() {
             </Section>
 
             {/* Order Timeline */}
-            <Section title={t("admin.orderDetail.timeline")} collapsible>
+            <Section title={t("admin.orderDetail.timeline")}>
               {timeline.length > 0 ? (
                 <div className="relative pl-6 border-l-2 border-[#e0e0e0]">
                   {timeline.map((event, idx) => {
@@ -636,29 +705,6 @@ export default function OrderDetailPage() {
                 <p className="text-xs text-[#999]">{t("admin.orderDetail.noTimeline")}</p>
               )}
             </Section>
-
-            {/* Email Log */}
-            {emailLogs.length > 0 && (
-              <Section title={t("admin.orderDetail.emailLog") || "Email Log"} collapsible>
-                <div className="space-y-2">
-                  {emailLogs.map((log) => (
-                    <div key={log.id} className="flex items-start gap-2 rounded-lg border border-[#e5e5e5] px-3 py-2">
-                      <span className={`mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full ${log.status === "sent" ? "bg-green-500" : "bg-red-500"}`} />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-black truncate">{log.subject}</p>
-                        <p className="text-[10px] text-[#999]">
-                          {log.template} → {log.to}
-                        </p>
-                        {log.status === "failed" && log.error && (
-                          <p className="mt-0.5 text-[10px] text-red-600 truncate">{log.error}</p>
-                        )}
-                        <p className="text-[10px] text-[#bbb]">{new Date(log.createdAt).toLocaleString()}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Section>
-            )}
           </div>
 
           {/* Right column - status & meta */}
@@ -671,21 +717,21 @@ export default function OrderDetailPage() {
                   hint={t("admin.orderDetail.orderStatusHint")}
                   value={status}
                   onChange={setStatus}
-                  options={validOptions(order?.status, VALID_STATUS_TRANSITIONS, ALL_STATUS_OPTIONS)}
+                  options={statusOptions}
                 />
                 <SelectField
                   label={t("admin.orderDetail.paymentStatus")}
                   hint={t("admin.orderDetail.paymentStatusHint")}
                   value={paymentStatus}
                   onChange={setPaymentStatus}
-                  options={validOptions(order?.paymentStatus, VALID_PAYMENT_TRANSITIONS, ALL_PAYMENT_OPTIONS)}
+                  options={paymentOptions}
                 />
                 <SelectField
                   label={t("admin.orderDetail.productionStatus")}
                   hint={t("admin.orderDetail.productionStatusHint")}
                   value={productionStatus}
                   onChange={setProductionStatus}
-                  options={validOptions(order?.productionStatus, VALID_PRODUCTION_TRANSITIONS, ALL_PRODUCTION_OPTIONS)}
+                  options={productionOptions}
                 />
 
                 {message && (
@@ -702,6 +748,8 @@ export default function OrderDetailPage() {
                 </button>
               </div>
             </Section>
+
+            <ShipmentSummarySection order={order} />
 
             {/* Tags, Priority, Archive */}
             <Section title={t("admin.orderDetail.tagsPriority")}>
@@ -829,7 +877,7 @@ export default function OrderDetailPage() {
 
             {/* Files with Preflight Review */}
             {order.files && order.files.length > 0 && (
-              <Section title={`${t("admin.orderDetail.files")} (${order.files.length})`}>
+              <Section title={`${t("admin.orderDetail.files")} (${order.files.length})`} dataSection="files">
                 <div className="space-y-2">
                   {order.files.map((file) => {
                     const sizeBytes = file.sizeBytes ? Number(file.sizeBytes) : 0;
@@ -892,7 +940,9 @@ export default function OrderDetailPage() {
             )}
 
             {/* Proof Management */}
-            <ProofSection orderId={id} />
+            <div data-section="proofs">
+              <ProofSection orderId={id} />
+            </div>
 
             {/* Contour / Proof Data (from customer configurator) */}
             {order.proofData && order.proofData.length > 0 && (
@@ -915,20 +965,22 @@ export default function OrderDetailPage() {
             <PreflightSection order={order} />
 
             {/* Actions: Ship & Refund */}
-            <OrderActions
-              order={order}
-              onUpdate={() => {
-                fetch(`/api/admin/orders/${id}`).then(r => r.json()).then(data => {
-                  if (!data.error) {
-                    setOrder(data);
-                    setStatus(data.status);
-                    setPaymentStatus(data.paymentStatus);
-                    setProductionStatus(data.productionStatus);
-                    fetchTimeline();
-                  }
-                });
-              }}
-            />
+            <div data-section="actions">
+              <OrderActions
+                order={order}
+                onUpdate={() => {
+                  fetch(`/api/admin/orders/${id}`).then(r => r.json()).then(data => {
+                    if (!data.error) {
+                      setOrder(data);
+                      setStatus(data.status);
+                      setPaymentStatus(data.paymentStatus);
+                      setProductionStatus(data.productionStatus);
+                      fetchTimeline();
+                    }
+                  });
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -1057,23 +1109,11 @@ function PrintInvoice({ order }) {
 }
 
 /* ========== Reusable Components ========== */
-function Section({ title, children, collapsible = false, defaultOpen = true }) {
-  const [open, setOpen] = useState(defaultOpen);
+function Section({ title, children, dataSection }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      {collapsible ? (
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="flex w-full items-center justify-between text-left"
-        >
-          <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
-          <span className={`text-xs text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}>&#9660;</span>
-        </button>
-      ) : (
-        <h2 className="mb-3 text-sm font-semibold text-gray-900">{title}</h2>
-      )}
-      {(!collapsible || open) && <div className={collapsible ? "mt-3" : ""}>{children}</div>}
+    <div className="rounded-xl border border-gray-200 bg-white p-5" {...(dataSection ? { "data-section": dataSection } : {})}>
+      <h2 className="mb-3 text-sm font-semibold text-gray-900">{title}</h2>
+      {children}
     </div>
   );
 }
@@ -1109,31 +1149,152 @@ function SelectField({ label, value, onChange, options, hint }) {
   );
 }
 
+/* ========== Contextual Action Tray ========== */
+function ContextualActionTray({ order, orderId, sendingReminder, copiedLink, onSendReminder, onCopyLink }) {
+  // Determine order state for contextual actions
+  const itemsNeedingArt = (order.items || []).filter((item) => itemNeedsArtwork(item));
+  const pendingPreflightFiles = (order.files || []).filter((f) => f.preflightStatus === "pending");
+  const hasPendingPreflight = pendingPreflightFiles.length > 0;
+  const hasProofData = order.proofData && order.proofData.length > 0;
+
+  // Production-stage awareness
+  const ps = order.productionStatus;
+  const isPreProduction = ["not_started", "preflight"].includes(ps);
+  const isInProduction = ps === "in_production";
+  const isReadyToShip = ps === "ready_to_ship";
+  const isTerminal = ["shipped", "completed", "canceled"].includes(ps);
+
+  // Nothing to promote on terminal orders
+  if (isTerminal) return null;
+
+  // Check if there's at least one thing to show
+  const hasAnything = itemsNeedingArt.length > 0 || hasPendingPreflight || isPreProduction || isInProduction || isReadyToShip;
+  if (!hasAnything) return null;
+
+  const uploadUrl = `https://lunarprint.ca/track-order?order=${orderId}`;
+
+  return (
+    <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] px-4 py-3 space-y-2">
+      {/* Artwork actions */}
+      {itemsNeedingArt.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-amber-700 font-medium">
+            {itemsNeedingArt.length} item{itemsNeedingArt.length > 1 ? "s" : ""} missing artwork
+          </span>
+          <button
+            type="button"
+            disabled={sendingReminder}
+            onClick={onSendReminder}
+            className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-medium text-[#fff] hover:bg-[#222] disabled:opacity-50"
+          >
+            {sendingReminder ? "Sending..." : "Send Reminder"}
+          </button>
+          <button
+            type="button"
+            onClick={onCopyLink}
+            className="text-[10px] font-medium text-[#999] hover:text-black"
+          >
+            {copiedLink ? "Copied!" : "Copy upload link"}
+          </button>
+          <a
+            href={uploadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] font-medium text-[#999] hover:text-black"
+          >
+            Open upload page
+          </a>
+        </div>
+      )}
+
+      {/* Operational next-step shortcuts */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Pending file review */}
+        {hasPendingPreflight && (
+          <a
+            href="#files-section"
+            onClick={(e) => {
+              e.preventDefault();
+              document.querySelector("[data-section='files']")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="rounded-[2px] bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 hover:bg-amber-200"
+          >
+            {pendingPreflightFiles.length} file{pendingPreflightFiles.length > 1 ? "s" : ""} awaiting review
+          </a>
+        )}
+
+        {/* Pre-production: promote proof upload */}
+        {isPreProduction && (
+          <a
+            href="#proof-section"
+            onClick={(e) => {
+              e.preventDefault();
+              document.querySelector("[data-section='proofs']")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="rounded-[2px] bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 hover:bg-blue-100"
+          >
+            {hasProofData ? "View proofs" : "Upload proof"}
+          </a>
+        )}
+
+        {/* In production or ready to ship: promote packing slip / manifest */}
+        {(isInProduction || isReadyToShip) && (
+          <>
+            <a
+              href={`/api/admin/orders/${orderId}/manifest`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-[2px] bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 hover:bg-indigo-100"
+            >
+              Manifest
+            </a>
+            <a
+              href={`/api/admin/orders/${orderId}/packing-slip`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-[2px] bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 hover:bg-indigo-100"
+            >
+              Packing slip
+            </a>
+          </>
+        )}
+
+        {/* Ready to ship: promote shipping action */}
+        {isReadyToShip && (
+          <a
+            href="#actions-section"
+            onClick={(e) => {
+              e.preventDefault();
+              document.querySelector("[data-section='actions']")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="rounded-[2px] bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 hover:bg-emerald-100"
+          >
+            Ship order
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ========== Preflight Review Actions ========== */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
   const { t } = useTranslation();
   const [acting, setActing] = useState(false);
   const [notes, setNotes] = useState("");
-  const [reviewError, setReviewError] = useState("");
 
   async function handleReview(status) {
     setActing(true);
-    setReviewError("");
     try {
       const res = await fetch(`/api/admin/orders/${orderId}/preflight`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fileId, status, notes: notes || undefined }),
       });
-      if (res.ok) {
-        onUpdate();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setReviewError(data.error || `Failed to ${status} file`);
-      }
+      if (res.ok) onUpdate();
     } catch {
-      setReviewError("Network error — review action failed");
+      console.error("Preflight review failed");
     } finally {
       setActing(false);
     }
@@ -1164,7 +1325,6 @@ function PreflightActions({ orderId, fileId, fileName, onUpdate }) {
       >
         {t("admin.orderDetail.reject")}
       </button>
-      {reviewError && <p className="text-[10px] font-medium text-red-600">{reviewError}</p>}
     </div>
   );
 }
@@ -1182,7 +1342,6 @@ function ProofSection({ orderId }) {
   const [proofs, setProofs] = useState([]);
   const [loadingProofs, setLoadingProofs] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [uploadError, setUploadError] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [fileName, setFileName] = useState("");
   const [notes, setNotes] = useState("");
@@ -1208,7 +1367,6 @@ function ProofSection({ orderId }) {
   async function handleUploadProof() {
     if (!imageUrl.trim()) return;
     setSubmitting(true);
-    setUploadError("");
     try {
       const res = await fetch(`/api/admin/orders/${orderId}/proofs`, {
         method: "POST",
@@ -1224,12 +1382,9 @@ function ProofSection({ orderId }) {
         setFileName("");
         setNotes("");
         fetchProofs();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setUploadError(data.error || "Failed to upload proof — please try again");
       }
     } catch {
-      setUploadError("Network error — proof upload failed");
+      console.error("Failed to upload proof");
     } finally {
       setSubmitting(false);
     }
@@ -1269,9 +1424,6 @@ function ProofSection({ orderId }) {
           >
             {submitting ? t("admin.orderDetail.uploading") : t("admin.orderDetail.uploadProof")}
           </button>
-          {uploadError && (
-            <p className="text-xs font-medium text-red-600">{uploadError}</p>
-          )}
         </div>
 
         {/* Proof list */}
@@ -1391,7 +1543,7 @@ function ContourDataSection({ proofData, toolJobs }) {
   }
 
   return (
-    <Section title={`Contour / Proof Data (${(proofData || []).length})`} collapsible defaultOpen={false}>
+    <Section title={`Contour / Proof Data (${(proofData || []).length})`}>
       <div className="space-y-3">
         {(proofData || []).map((pd) => (
           <div key={pd.id} className="rounded-[3px] border border-[#e0e0e0] p-3 space-y-2">
@@ -1591,12 +1743,146 @@ const FAMILY_LABELS = {
   "standard-print": "Print", "other": "Custom",
 };
 
+/* ========== Shipment / Fulfillment Summary ========== */
+function ShipmentSummarySection({ order }) {
+  const { t } = useTranslation();
+  const shipments = order.shipments || [];
+  const fulfillment = getOrderFulfillment(shipments);
+  const latestShipment = order.latestShipment || shipments[0] || fulfillment.latestShipment;
+  const ps = order.productionStatus;
+  const isReadyToShip = ps === "ready_to_ship";
+  const isShipped = ["shipped", "completed"].includes(ps);
+  const carrierLabels = {
+    canada_post: t("admin.orderDetail.carrierCanadaPost"),
+    purolator: t("admin.orderDetail.carrierPurolator"),
+    ups: t("admin.orderDetail.carrierUps"),
+    fedex: t("admin.orderDetail.carrierFedex"),
+    pickup: t("admin.orderDetail.carrierPickup"),
+    other: t("admin.orderDetail.carrierOther"),
+  };
+  const shipmentStatusLabels = {
+    pending: t("admin.orderDetail.shipmentPending"),
+    label_created: t("admin.orderDetail.shipmentLabelCreated"),
+    picked_up: t("admin.orderDetail.shipmentPickedUp"),
+    in_transit: t("admin.orderDetail.shipmentInTransit"),
+    delivered: t("admin.orderDetail.shipmentDelivered"),
+    returned: t("admin.orderDetail.shipmentReturned"),
+    exception: t("admin.orderDetail.shipmentException"),
+    unfulfilled: t("admin.orderDetail.noShipmentRecord"),
+  };
+  const shippingWorkspaceHref = `/admin/orders/shipping?search=${order.id}`;
+  const primaryTrackingUrl = latestShipment?.trackingNumber
+    ? getTrackingUrl(latestShipment.carrier, latestShipment.trackingNumber)
+    : null;
+
+  // Only show when there are shipments, or the order is ready/shipped
+  if (shipments.length === 0 && !isReadyToShip && !isShipped) return null;
+
+  return (
+    <Section title={`${t("admin.orderDetail.fulfillment")}${order.shipmentSummary?.count ? ` (${order.shipmentSummary.count})` : ""}`}>
+      <div className="space-y-3">
+        {/* Fulfillment state badge */}
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${fulfillment.color}`}>
+            {shipmentStatusLabels[fulfillment.state] || fulfillment.label}
+          </span>
+          {shipments.length > 0 && (
+            <span className="text-[10px] text-[#999]">
+              {t("admin.orderDetail.shipmentRecords").replace("{count}", String(shipments.length))}
+            </span>
+          )}
+        </div>
+
+        {/* Shipment rows */}
+        {shipments.map((shipment) => (
+          <div key={shipment.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[3px] border border-[#e8e8e8] bg-[#fafafa] px-3 py-2">
+            <span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-bold ${getShipmentStatusColor(shipment.status)}`}>
+              {shipmentStatusLabels[shipment.status] || shipment.status}
+            </span>
+            <span className="text-[11px] font-medium text-[#444]">
+              {carrierLabels[shipment.carrier] || shipment.carrier || "\u2014"}
+            </span>
+            {shipment.trackingNumber && (
+              <>
+                {getTrackingUrl(shipment.carrier, shipment.trackingNumber) ? (
+                  <a
+                    href={getTrackingUrl(shipment.carrier, shipment.trackingNumber)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-medium text-[#4f46e5] hover:underline"
+                  >
+                    {shipment.trackingNumber}
+                  </a>
+                ) : (
+                  <span className="text-[11px] text-[#666]">{shipment.trackingNumber}</span>
+                )}
+              </>
+            )}
+            {shipment.shippedAt && (
+              <span className="text-[10px] text-[#999]">
+                {new Date(shipment.shippedAt).toLocaleDateString("en-CA")}
+              </span>
+            )}
+          </div>
+        ))}
+
+        {/* No shipments yet — prompt action */}
+        {shipments.length === 0 && (isReadyToShip || isShipped) && (
+          <p className={`text-[11px] ${isShipped ? "text-amber-700" : "text-emerald-700"}`}>
+            {isShipped
+              ? t("admin.orderDetail.shipmentMissingAfterShip")
+              : t("admin.orderDetail.shipmentReadyHint")}{" "}
+            <a
+              href="#actions-section"
+              onClick={(e) => {
+                e.preventDefault();
+                document.querySelector("[data-section='actions']")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="font-medium text-[#4f46e5] hover:underline"
+            >
+              {t("admin.orderDetail.markAsShipped")}
+            </a>
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={shippingWorkspaceHref}
+            className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
+          >
+            {t("admin.orderDetail.openShippingWorkspace")}
+          </Link>
+          {primaryTrackingUrl && (
+            <a
+              href={primaryTrackingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-[3px] border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+            >
+              {t("admin.orderDetail.openTracking")}
+            </a>
+          )}
+          {isReadyToShip && (
+            <Link
+              href={buildOrderCenterHref("ready_to_ship")}
+              className="rounded-[3px] border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
+            >
+              {t("admin.orderDetail.readyToShipQueue")}
+            </Link>
+          )}
+        </div>
+
+      </div>
+    </Section>
+  );
+}
+
 function CustomerSummarySection({ order }) {
   const items = order.items || [];
   if (items.length === 0) return null;
 
   return (
-    <Section title="Order Summary (Plain Language)" collapsible>
+    <Section title="Order Summary (Plain Language)">
       <div className="space-y-3">
         {items.map((item) => {
           const meta = {
@@ -1727,10 +2013,18 @@ function CustomerSummarySection({ order }) {
                 {meta.vehicleType && (
                   <span>Type: <span className="font-semibold text-black">{meta.vehicleType}</span></span>
                 )}
-                {/* Contour status */}
-                {meta.contourAppliedAt && (
-                  <span>Contour: <span className="font-semibold text-green-700">Applied {new Date(meta.contourAppliedAt).toLocaleDateString()}</span></span>
-                )}
+                {/* Contour status — quality-aware */}
+                {(meta.contourAppliedAt || meta.contourToolJobAt) && (() => {
+                  const appliedDate = meta.contourAppliedAt || meta.contourToolJobAt;
+                  const conf = meta.contourConfidence;
+                  const needsReview = conf === "low" || conf === "rectangular" ||
+                    meta.contourShapeType === "rectangular" || meta.contourShapeType === "near-rectangular";
+                  return (
+                    <span>Contour: <span className={`font-semibold ${needsReview ? "text-amber-600" : "text-green-700"}`}>
+                      {needsReview ? "Needs Review" : "Ready"} {new Date(appliedDate).toLocaleDateString()}
+                    </span></span>
+                  );
+                })()}
               </div>
 
               {/* Size rows if present */}
@@ -1798,6 +2092,12 @@ function PackageCompletenessSection({ order }) {
   const { t } = useTranslation();
   const pkg = assessOrderPackage(order);
   if (pkg.items.length === 0) return null;
+
+  const statusColors = {
+    complete: { bg: "bg-green-50", border: "border-green-300", text: "text-green-800", dot: "bg-green-500" },
+    partial: { bg: "bg-amber-50", border: "border-amber-300", text: "text-amber-800", dot: "bg-amber-400" },
+    blocked: { bg: "bg-red-50", border: "border-red-300", text: "text-red-800", dot: "bg-red-500" },
+  };
 
   const statusLabelKeys = {
     complete: "admin.package.complete",
@@ -1964,7 +2264,7 @@ function ProductionFilesSection({ order }) {
   const downloadableFiles = files.filter((f) => f.url);
 
   return (
-    <Section title={`Production Files (${downloadableFiles.length})`} collapsible>
+    <Section title={`Production Files (${downloadableFiles.length})`}>
       <div className="space-y-1.5">
         {files.map((f, i) => (
           <div key={i} className="flex items-center justify-between py-1">
@@ -2053,7 +2353,7 @@ function PreflightSection({ order }) {
   ].filter(Boolean).join(", ");
 
   return (
-    <Section title={`Preflight (${severitySummary})`} collapsible defaultOpen={false}>
+    <Section title={`Preflight (${severitySummary})`}>
       <div className="space-y-2">
         {results.map((r, i) => (
           <div key={i} className="space-y-1">
@@ -2089,7 +2389,7 @@ function OrderActions({ order, onUpdate }) {
 
   // Ship state
   const [trackingNumber, setTrackingNumber] = useState("");
-  const [carrier, setCarrier] = useState("Canada Post");
+  const [carrier, setCarrier] = useState("canada_post");
   const [estimatedDelivery, setEstimatedDelivery] = useState("");
 
   // Refund state
@@ -2136,12 +2436,6 @@ function OrderActions({ order, onUpdate }) {
     const amountCents = Math.round(parseFloat(refundAmount) * 100);
     if (!amountCents || amountCents <= 0) {
       setActionMsg(t("admin.orderDetail.enterValidAmount"));
-      setActing(false);
-      return;
-    }
-    // Safety confirmation — refunds are irreversible
-    const confirmMsg = `Refund $${(amountCents / 100).toFixed(2)} to ${order.customerEmail}?\n\nThis action cannot be undone.`;
-    if (!window.confirm(confirmMsg)) {
       setActing(false);
       return;
     }
@@ -2203,11 +2497,12 @@ function OrderActions({ order, onUpdate }) {
               onChange={(e) => setCarrier(e.target.value)}
               className="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs outline-none"
             >
-              <option>Canada Post</option>
-              <option>UPS</option>
-              <option>Purolator</option>
-              <option>FedEx</option>
-              <option>Other</option>
+              <option value="canada_post">{t("admin.orderDetail.carrierCanadaPost")}</option>
+              <option value="ups">{t("admin.orderDetail.carrierUps")}</option>
+              <option value="purolator">{t("admin.orderDetail.carrierPurolator")}</option>
+              <option value="fedex">{t("admin.orderDetail.carrierFedex")}</option>
+              <option value="pickup">{t("admin.orderDetail.carrierPickup")}</option>
+              <option value="other">{t("admin.orderDetail.carrierOther")}</option>
             </select>
             <input
               type="date"

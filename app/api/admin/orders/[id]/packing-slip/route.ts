@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { isProductionItem } from "@/lib/order-item-utils";
+import { getArtworkStatus } from "@/lib/artwork-detection";
 
 /**
  * GET /api/admin/orders/[id]/packing-slip
@@ -46,19 +47,24 @@ export async function GET(
 
     const shippingAddr = order.user?.addresses?.[0];
     const productionItems = order.items.filter(isProductionItem);
-    const isRush = order.priority === 0 || (order.tags as string[] || []).includes("rush");
+    const orderTags = (order.tags as string[]) || [];
+    const isRush = order.priority === 0 || orderTags.includes("rush");
+    const isManualOrder = orderTags.includes("admin_manual");
 
     const html = buildPackingSlipHtml({
       orderId: order.id,
       orderDate: order.createdAt,
       customerName: order.customerName || "",
       customerEmail: order.customerEmail || "",
+      isManualOrder,
       items: productionItems.map((item) => {
         const meta = item.meta && typeof item.meta === "object" ? item.meta as Record<string, unknown> : {};
+        const artStatus = getArtworkStatus(item as Record<string, unknown>);
         return {
           name: item.productName || "Item",
           quantity: item.quantity,
           specs: buildSpecsLine(item, meta),
+          artworkNote: buildArtworkNote(artStatus, meta),
         };
       }),
       shippingAddress: shippingAddr
@@ -83,6 +89,25 @@ export async function GET(
   }
 }
 
+/** Build a short artwork status note for production staff. Only returns text for non-obvious states. */
+function buildArtworkNote(artStatus: string, meta: Record<string, unknown>): string | null {
+  switch (artStatus) {
+    case "design-help":
+      return "Awaiting design";
+    case "upload-later":
+      return "Awaiting artwork upload";
+    case "provided":
+      return "Artwork provided off-platform";
+    case "missing":
+      return "No artwork";
+    case "file-name-only":
+      return "File referenced but not uploaded";
+    // "uploaded" — no note needed, this is the normal state
+    default:
+      return null;
+  }
+}
+
 function buildSpecsLine(item: any, meta: Record<string, unknown>): string {
   const parts: string[] = [];
   const w = item.widthIn || meta.width;
@@ -103,7 +128,8 @@ function buildPackingSlipHtml(data: {
   orderDate: Date;
   customerName: string;
   customerEmail: string;
-  items: Array<{ name: string; quantity: number; specs: string }>;
+  isManualOrder: boolean;
+  items: Array<{ name: string; quantity: number; specs: string; artworkNote: string | null }>;
   shippingAddress: string | null;
   notes: string[];
   isRush: boolean;
@@ -118,7 +144,9 @@ function buildPackingSlipHtml(data: {
     .map(
       (item, i) => `
     <tr style="${i % 2 === 1 ? "background:#fafafa;" : ""}">
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;">${escapeHtml(item.name)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;">
+        ${escapeHtml(item.name)}${item.artworkNote ? `<br/><span style="font-size:11px;color:#b45309;">⚠ ${escapeHtml(item.artworkNote)}</span>` : ""}
+      </td>
       <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;font-weight:600;">${item.quantity}</td>
       <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#666;font-size:12px;">${escapeHtml(item.specs)}</td>
     </tr>`
@@ -126,7 +154,11 @@ function buildPackingSlipHtml(data: {
     .join("");
 
   const rushBanner = data.isRush
-    ? `<div style="background:#fee2e2;color:#991b1b;padding:8px 16px;font-weight:700;font-size:14px;text-align:center;border-radius:6px;margin-bottom:16px;">⚡ RUSH ORDER</div>`
+    ? `<div style="background:#fee2e2;color:#991b1b;padding:8px 16px;font-weight:700;font-size:14px;text-align:center;border-radius:6px;margin-bottom:16px;">RUSH ORDER</div>`
+    : "";
+
+  const manualBanner = data.isManualOrder
+    ? `<div style="background:#e0f2fe;color:#0c4a6e;padding:6px 16px;font-weight:600;font-size:12px;text-align:center;border-radius:6px;margin-bottom:16px;">MANUAL ORDER</div>`
     : "";
 
   const addressBlock = data.shippingAddress
@@ -167,6 +199,7 @@ function buildPackingSlipHtml(data: {
   </div>
 
   ${rushBanner}
+  ${manualBanner}
 
   <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #ddd;padding-bottom:12px;margin-bottom:16px;">
     <div>

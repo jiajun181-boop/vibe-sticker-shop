@@ -5,98 +5,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Inter } from "next/font/google";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { getAllowedNavHrefs, ROLE_LABELS } from "@/lib/admin-permissions";
+import { canAccessAdminPage, getAllowedNavHrefs, ROLE_LABELS } from "@/lib/admin-permissions";
+import { flattenAdminNavigation, getAdminExperience, getAdminNavigation, isAdminPathActive } from "@/lib/admin-navigation";
 import CommandPalette from "@/components/admin/CommandPalette";
 import NotificationBell from "@/components/admin/NotificationBell";
+import { stripLocalePrefix } from "@/lib/route-path";
 
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-admin",
 });
-
-const navGroups = [
-  {
-    labelKey: "admin.navGroup.overview",
-    items: [
-      { key: "admin.nav.dashboard", href: "/admin", icon: "grid" },
-      { key: "admin.nav.workstation", href: "/admin/workstation", icon: "grid", sub: "Daily mission control" },
-    ],
-  },
-  {
-    labelKey: "admin.navGroup.orders",
-    items: [
-      { key: "admin.nav.orders", href: "/admin/orders", icon: "package" },
-      { key: "admin.nav.missingArtwork", href: "/admin/orders/missing-artwork", icon: "image", sub: "Artwork reminders" },
-      { key: "admin.nav.quotes", href: "/admin/quotes", icon: "tag", sub: "Quote requests" },
-      { key: "admin.nav.customers", href: "/admin/customers", icon: "users" },
-      { key: "admin.nav.b2b", href: "/admin/b2b", icon: "briefcase" },
-    ],
-  },
-  {
-    labelKey: "admin.navGroup.products",
-    items: [
-      { key: "admin.nav.catalogOps", href: "/admin/catalog-ops", icon: "catalog", sub: "Products, catalog, pricing models" },
-      { key: "admin.nav.pricingDashboard", href: "/admin/pricing", icon: "pricing", sub: "Pricing Center" },
-      { key: "admin.nav.imageDashboard", href: "/admin/image-dashboard", icon: "image", sub: "Quick image upload" },
-      { key: "admin.nav.materials", href: "/admin/materials", icon: "package", sub: "Material & hardware costs" },
-      { key: "admin.nav.materialsHandbook", href: "/admin/materials-handbook", icon: "document", sub: "Material specs (read-only)" },
-    ],
-  },
-  {
-    labelKey: "admin.navGroup.tools",
-    items: [
-      { key: "admin.nav.toolsHub", href: "/admin/tools", icon: "grid", sub: "All tools" },
-      { key: "admin.nav.contour", href: "/admin/tools/contour", icon: "image", sub: "Die-cut contour" },
-      { key: "admin.nav.proof", href: "/admin/tools/proof", icon: "shield", sub: "Proof manager" },
-      { key: "admin.nav.stampStudio", href: "/admin/tools/stamp-studio", icon: "printer", sub: "Stamp preview" },
-    ],
-  },
-  {
-    labelKey: "admin.navGroup.fulfillment",
-    items: [
-      { key: "admin.nav.production", href: "/admin/production", icon: "printer" },
-      { key: "admin.nav.factories", href: "/admin/factories", icon: "factory" },
-      { key: "admin.nav.shipping", href: "/admin/shipping", icon: "package", sub: "Shipment tracking" },
-      { key: "admin.nav.qc", href: "/admin/qc", icon: "shield", sub: "Quality checks" },
-      { key: "admin.nav.inventory", href: "/admin/inventory", icon: "package", sub: "Stock levels" },
-    ],
-  },
-  {
-    labelKey: "admin.navGroup.insights",
-    items: [
-      { key: "admin.nav.analytics", href: "/admin/analytics", icon: "chart" },
-      { key: "admin.nav.finance", href: "/admin/finance", icon: "pricing", sub: "Revenue & expenses" },
-      { key: "admin.nav.funnel", href: "/admin/funnel", icon: "funnel", sub: "Conversion tracking" },
-      { key: "admin.nav.governanceHub", href: "/admin/pricing?tab=governance", icon: "shield", sub: "Pricing health & audit" },
-      { key: "admin.nav.salesReport", href: "/admin/reports/sales", icon: "report" },
-      { key: "admin.nav.productionReport", href: "/admin/reports/production", icon: "report" },
-    ],
-  },
-  {
-    labelKey: "admin.navGroup.marketing",
-    items: [
-      { key: "admin.nav.content", href: "/admin/content", icon: "document", sub: "Pages & banners" },
-      { key: "admin.nav.coupons", href: "/admin/coupons", icon: "ticket" },
-      { key: "admin.nav.reviews", href: "/admin/reviews", icon: "chat", sub: "Customer reviews" },
-      { key: "admin.nav.marketingCalendar", href: "/admin/marketing-calendar", icon: "calendar" },
-    ],
-  },
-  {
-    labelKey: "admin.navGroup.system",
-    items: [
-      { key: "admin.nav.media", href: "/admin/media", icon: "image" },
-      { key: "admin.nav.users", href: "/admin/users", icon: "users" },
-      { key: "admin.nav.messages", href: "/admin/messages", icon: "chat", sub: "Live chat" },
-      { key: "admin.nav.support", href: "/admin/support", icon: "ticket", sub: "Customer tickets" },
-      { key: "admin.nav.apiKeys", href: "/admin/api-keys", icon: "cog", sub: "B2B API access" },
-      { key: "admin.nav.activityLog", href: "/admin/logs", icon: "clock", sub: "Change history" },
-      { key: "admin.nav.settings", href: "/admin/settings", icon: "cog" },
-    ],
-  },
-];
-
-const allNav = navGroups.flatMap((g) => g.items);
 
 function NavIcon({ name, className }) {
   const icons = {
@@ -207,11 +126,11 @@ function NavIcon({ name, className }) {
 }
 
 export default function AdminLayout({ children }) {
-  const pathname = usePathname();
+  const pathname = stripLocalePrefix(usePathname() || "");
   const router = useRouter();
   const { t, locale, setLocale, hydrated } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState(undefined);
   const [pwModal, setPwModal] = useState(false);
   const [pwCurrent, setPwCurrent] = useState("");
   const [pwNew, setPwNew] = useState("");
@@ -227,10 +146,10 @@ export default function AdminLayout({ children }) {
         const data = await res.json();
         setSession(data.user);
       } else if (res.status === 401) {
-        window.location.href = `/admin/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        window.location.href = `/admin/login?redirect=${encodeURIComponent(stripLocalePrefix(window.location.pathname) || "/admin")}`;
       }
     } catch {
-      // Ignore — network errors shouldn't force logout
+      // Ignore - network errors shouldn't force logout
     }
   }, []);
 
@@ -241,6 +160,20 @@ export default function AdminLayout({ children }) {
     }, 0);
     return () => clearTimeout(timer);
   }, [pathname, fetchSession]);
+
+  useEffect(() => {
+    if (pathname !== "/admin" || !session?.role) return;
+    if (session.role !== "admin") {
+      router.replace("/admin/workstation");
+    }
+  }, [pathname, router, session]);
+
+  useEffect(() => {
+    if (!session?.role || pathname === "/admin/login" || pathname === "/admin") return;
+    if (!canAccessAdminPage(session.role, pathname)) {
+      router.replace("/admin/workstation");
+    }
+  }, [pathname, router, session]);
 
   if (pathname === "/admin/login") {
     return children;
@@ -276,36 +209,28 @@ export default function AdminLayout({ children }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setPwError(data.error || "Failed to change password");
+        setPwError(data.error || t("admin.common.error"));
         return;
       }
-      setPwMsg("Password changed successfully");
+      setPwMsg(t("admin.password.success"));
       setPwCurrent("");
       setPwNew("");
       setPwConfirm("");
       setTimeout(() => setPwModal(false), 1500);
     } catch {
-      setPwError("Network error");
+      setPwError(t("admin.common.error"));
     } finally {
       setPwSaving(false);
     }
   }
 
   // Role-based nav filtering
+  const isSessionLoading = session === undefined;
   const allowedHrefs = session?.role ? getAllowedNavHrefs(session.role) : null;
-  const filteredNavGroups = allowedHrefs
-    ? navGroups
-        .map((g) => ({
-          ...g,
-          items: g.items.filter((item) => allowedHrefs.has(item.href)),
-        }))
-        .filter((g) => g.items.length > 0)
-    : navGroups; // Legacy sessions see everything
-
-  const isActive = (href) => {
-    if (href === "/admin") return pathname === "/admin";
-    return pathname.startsWith(href);
-  };
+  const navSections = isSessionLoading ? [] : getAdminNavigation(session?.role || "admin", allowedHrefs);
+  const allNav = flattenAdminNavigation(navSections);
+  const experience = getAdminExperience(session?.role || "admin");
+  const showPersonalHeading = experience !== "admin";
 
   return (
     <div className={`admin-shell ${inter.variable} flex h-screen bg-[#f6f6f7]`} style={{ fontFamily: "var(--font-admin, system-ui)" }}>
@@ -314,7 +239,7 @@ export default function AdminLayout({ children }) {
           type="button"
           className="fixed inset-0 z-40 bg-black/60 lg:hidden"
           onClick={() => setSidebarOpen(false)}
-          aria-label="Close sidebar"
+          aria-label={t("admin.shell.closeSidebar")}
         />
       )}
 
@@ -330,7 +255,7 @@ export default function AdminLayout({ children }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          {filteredNavGroups.map((group, gi) => (
+          {navSections.map((group, gi) => (
             <div key={group.labelKey}>
               <p className={`px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a8a8a] ${gi === 0 ? "pt-0" : "pt-5"}`}>
                 {t(group.labelKey)}
@@ -342,7 +267,7 @@ export default function AdminLayout({ children }) {
                     href={item.href}
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2 text-[13px] transition-colors ${
-                      isActive(item.href)
+                      isAdminPathActive(item, pathname)
                         ? "border-l-2 border-l-[#4f46e5] bg-[#eef2ff] text-[#1f2937] font-semibold"
                         : "border-l-2 border-l-transparent text-[#4b5563] font-medium hover:bg-[#f4f4f5] hover:text-[#111827]"
                     }`}
@@ -367,6 +292,11 @@ export default function AdminLayout({ children }) {
                 {ROLE_LABELS[session.role]?.[locale] || session.role}
               </p>
             </div>
+          )}
+          {showPersonalHeading && (
+            <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a8a8a]">
+              {t("admin.navGroup.personal")}
+            </p>
           )}
           <button
             type="button"
@@ -397,7 +327,7 @@ export default function AdminLayout({ children }) {
             type="button"
             onClick={() => setSidebarOpen(true)}
             className="p-2 text-[#999] hover:text-black lg:hidden"
-            aria-label="Open sidebar"
+            aria-label={t("admin.shell.openSidebar")}
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -405,7 +335,7 @@ export default function AdminLayout({ children }) {
           </button>
 
           <div className="hidden text-xs font-medium text-[#999] uppercase tracking-wide lg:block">
-            {(() => { const found = allNav.find((item) => isActive(item.href)); return found ? t(found.key) : ""; })()}
+            {(() => { const found = allNav.find((item) => isAdminPathActive(item, pathname)); return found ? t(found.key) : ""; })()}
           </div>
 
           <div className="flex items-center gap-3">

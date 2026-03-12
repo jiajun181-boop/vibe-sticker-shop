@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { stripLocalePrefix } from "@/lib/route-path";
 
 /* â”€â”€ Icons (inline SVG for zero deps) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
@@ -192,7 +193,7 @@ function SearchIcon({ className }) {
 
 export default function MobileBottomNav({ catalogConfig }) {
   const { departments = [], departmentMeta = {}, categoryMeta = {} } = catalogConfig || {};
-  const pathname = usePathname();
+  const pathname = stripLocalePrefix(usePathname() || "");
   const { t } = useTranslation();
   const storeCount = useCartStore((s) => s.getCartCount());
   const openCart = useCartStore((s) => s.openCart);

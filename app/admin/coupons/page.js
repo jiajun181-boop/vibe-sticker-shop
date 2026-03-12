@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
+import { ProductCenterBreadcrumb, ProductCenterViewStrip } from "@/components/admin/ProductCenterHeader";
 
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString("en-CA");
@@ -192,16 +193,23 @@ function CouponsContent() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-black">{t("admin.coupons.title")}</h1>
-        <button
-          type="button"
-          onClick={() => setShowForm(true)}
-          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
-        >
-          {t("admin.coupons.create")}
-        </button>
+      <div>
+        <ProductCenterBreadcrumb />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-black">{t("admin.coupons.title")}</h1>
+            <p className="mt-0.5 text-sm text-[#999]">{t("admin.coupons.subtitle")}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="self-start rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] sm:self-auto"
+          >
+            {t("admin.coupons.create")}
+          </button>
+        </div>
       </div>
+      <ProductCenterViewStrip activeView="coupons" />
 
       {/* Toast */}
       {message && (

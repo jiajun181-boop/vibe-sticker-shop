@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import QuoteSimulatorCard from "@/components/admin/QuoteSimulatorCard";
 import HardwarePricingTable from "@/components/admin/HardwarePricingTable";
-import PricingAuditTab from "@/components/admin/PricingAuditTab";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import { ProductCenterBreadcrumb, ProductCenterViewStrip } from "@/components/admin/ProductCenterHeader";
 
 // ── Tab definitions ──────────────────────────────────────────────
 const TABS = [
@@ -14,7 +16,6 @@ const TABS = [
   { id: "stamps", label: "Stamps", labelZh: "印章" },
   { id: "banner", label: "Banner", labelZh: "横幅" },
   { id: "hardware", label: "Hardware", labelZh: "配件" },
-  { id: "audit", label: "Audit", labelZh: "审计" },
 ];
 
 // ── Shared helpers ───────────────────────────────────────────────
@@ -101,7 +102,7 @@ function PricingParamCard({ title, titleZh, color = "blue", params }) {
         }
         setValues(merged);
       })
-      .catch((err) => console.error("[Materials Config] Load failed:", err))
+      .catch(() => {})
       .finally(() => setLoaded(true));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -905,6 +906,7 @@ function PricingBreakdownSimulator({ presets = SIMULATOR_PRESETS }) {
 // ═══════════════════════════════════════════════════════════════════
 
 export default function MaterialsPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("materials");
   const [materials, setMaterials] = useState([]);
   const [inkSettings, setInkSettings] = useState({ inkCostPerLiter: 234, inkMlPerSqft: 1, inkCostPerSqft: 0.234 });
@@ -1007,9 +1009,11 @@ export default function MaterialsPage() {
     <div className="space-y-6 p-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-black text-gray-900">Materials & Pricing</h1>
-        <p className="text-sm text-gray-500">Manage materials, costs, and pricing parameters by product type</p>
+        <ProductCenterBreadcrumb />
+        <h1 className="text-xl font-semibold text-black">{t("admin.materials.title")}</h1>
+        <p className="mt-0.5 text-sm text-[#999]">{t("admin.materials.subtitle")}</p>
       </div>
+      <ProductCenterViewStrip activeView="materials" />
 
       {/* Tab Navigation */}
       <div className="flex gap-1 overflow-x-auto border-b border-gray-200 pb-px">
@@ -1061,7 +1065,6 @@ export default function MaterialsPage() {
       {activeTab === "stamps" && <StampsTab />}
       {activeTab === "banner" && <BannerTab />}
       {activeTab === "hardware" && <HardwarePricingTable />}
-      {activeTab === "audit" && <PricingAuditTab />}
     </div>
   );
 }

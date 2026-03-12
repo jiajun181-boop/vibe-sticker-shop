@@ -48,6 +48,11 @@ function CompactView({ item, assessment, execAction, colors, readinessLabel, ord
           {t("admin.readiness.printAndCut")}
         </span>
       )}
+      {assessment.manualReviewRequired && (
+        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[8px] font-bold text-amber-700 shrink-0">
+          {t("admin.readiness.manualReview")}
+        </span>
+      )}
       {worstReason && (
         <span className={`text-[10px] truncate max-w-[200px] ${
           worstReason.severity === "blocker" ? "text-red-700" : "text-amber-700"
@@ -123,6 +128,8 @@ function FullView({ item, assessment, execAction, colors, readinessLabel, orderI
         {/* Artwork status */}
         {hasRealUrl ? (
           <span className="rounded bg-green-50 px-1.5 py-0.5 text-[9px] font-medium text-green-700">Artwork: Uploaded</span>
+        ) : artStatus === "provided" ? (
+          <span className="rounded bg-cyan-100 px-1.5 py-0.5 text-[9px] font-bold text-cyan-700">Artwork: Provided (off-platform)</span>
         ) : artStatus === "file-name-only" ? (
           <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">Artwork: URL Missing</span>
         ) : artStatus === "upload-later" ? (

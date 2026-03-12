@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback, Suspense } from "react";
+import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { buildSettingsCenterHref } from "@/lib/admin-centers";
 
 const ACTION_COLORS = {
   created: "bg-green-50 text-green-700",
@@ -160,7 +162,15 @@ function LogsContent() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-gray-900">{t("admin.logs.title")}</h1>
+      <div>
+        <Link
+          href={buildSettingsCenterHref()}
+          className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
+        >
+          {t("admin.settings.title")}
+        </Link>
+        <h1 className="text-xl font-semibold text-gray-900">{t("admin.logs.title")}</h1>
+      </div>
 
       {/* Filters */}
       <div className="rounded-xl border border-gray-200 bg-white p-4">

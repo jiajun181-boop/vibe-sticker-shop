@@ -294,7 +294,7 @@ export async function POST(req: NextRequest) {
           paymentTerms,
           ...(poNumber ? ["has_po"] : []),
           ...(pricedItems.some(p => p.repriced.rushApplied) ? ["rush"] : []),
-          ...(designHelpTotal > 0 ? ["design_help"] : []),
+          ...(designHelpTotal > 0 ? ["design-help"] : []),
         ],
         notes: {
           create: [

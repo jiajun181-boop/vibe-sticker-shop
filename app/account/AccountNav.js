@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { stripLocalePrefix } from "@/lib/route-path";
 
 const navItems = [
   { key: "account.nav.dashboard", href: "/account" },
@@ -16,7 +17,7 @@ const navItems = [
 ];
 
 export default function AccountNav() {
-  const pathname = usePathname();
+  const pathname = stripLocalePrefix(usePathname() || "");
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const { t } = useTranslation();

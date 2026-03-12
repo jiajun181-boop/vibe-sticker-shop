@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createRateLimiter, getClientIp } from "@/lib/rate-limit";
+import { itemNeedsArtwork } from "@/lib/artwork-detection";
 
 const trackLimiter = createRateLimiter({ windowMs: 60_000, max: 10 });
 
@@ -112,14 +113,9 @@ export async function POST(req: Request) {
       }
     }
 
-    // Detect items that need artwork (same logic as account/orders/[id]/files)
+    // Detect items that need artwork (shared detection from lib/artwork-detection)
     const itemsNeedingArtwork = order.items
-      .filter((item) => {
-        const meta = item.meta && typeof item.meta === "object" ? item.meta as Record<string, unknown> : {};
-        const hasFile = !!(item.fileUrl || meta.artworkUrl || meta.fileUrl);
-        const isDesignHelp = meta.artworkIntent === "design-help" || meta.designHelp === true;
-        return !hasFile && !isDesignHelp;
-      })
+      .filter((item) => itemNeedsArtwork(item))
       .map((item) => ({ id: item.id, productName: item.productName }));
 
     return NextResponse.json({

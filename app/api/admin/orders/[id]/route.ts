@@ -10,6 +10,40 @@ import { applyAssignmentRules } from "@/lib/assignment-rules";
 import { syncOrderProductionStatus } from "@/lib/production-sync";
 import { releaseReserve } from "@/lib/inventory";
 
+async function loadShipmentState(orderId: string) {
+  const shipments = await prisma.shipment.findMany({
+    where: { orderId },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+  });
+
+  const latestShipment = shipments[0] || null;
+
+  return {
+    shipments,
+    latestShipment,
+    shipmentSummary: {
+      count: shipments.length,
+      latestStatus: latestShipment?.status || null,
+      hasTracking: Boolean(latestShipment?.trackingNumber),
+      hasException: shipments.some(
+        (shipment) => shipment.status === "exception" || shipment.status === "returned"
+      ),
+    },
+  };
+}
+
+async function formatOrderForAdmin(order: Record<string, unknown> & { id: string; user?: { addresses?: unknown[] } | null }) {
+  const shippingAddress = order.user?.addresses?.[0] || null;
+  const shipmentState = await loadShipmentState(order.id);
+
+  return {
+    ...order,
+    shippingAddress,
+    ...shipmentState,
+  };
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -52,9 +86,8 @@ export async function GET(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Flatten default shipping address onto order for admin display
-    const shippingAddress = order.user?.addresses?.[0] || null;
-    return NextResponse.json({ ...order, shippingAddress });
+    // Shipments for this order (soft link via orderId — no FK relation)
+    return NextResponse.json(await formatOrderForAdmin(order));
   } catch (error) {
     console.error("[Order GET] Error:", error);
     return NextResponse.json(
@@ -154,6 +187,15 @@ export async function PATCH(
         coupon: true,
         proofData: true,
         toolJobs: { orderBy: { createdAt: "desc" } },
+        user: {
+          select: {
+            id: true,
+            addresses: {
+              where: { isDefaultShipping: true },
+              take: 1,
+            },
+          },
+        },
       },
     });
 
@@ -275,7 +317,7 @@ export async function PATCH(
       }
     }
 
-    return NextResponse.json(order);
+    return NextResponse.json(await formatOrderForAdmin(order));
   } catch (error) {
     console.error("[Order PATCH] Error:", error);
     return NextResponse.json(

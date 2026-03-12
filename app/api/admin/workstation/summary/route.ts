@@ -18,7 +18,7 @@ import { requirePermission } from "@/lib/admin-auth";
  * Each sub-query is wrapped in try/catch so one failure doesn't kill the whole page.
  */
 export async function GET(request: NextRequest) {
-  const auth = await requirePermission(request, "tools", "view");
+  const auth = await requirePermission(request, "dashboard", "view");
   if (!auth.authenticated) return auth.response;
 
   // Run all queries in parallel; each catches its own errors
