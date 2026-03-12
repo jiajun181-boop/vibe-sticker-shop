@@ -2,6 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
+import {
+  getOrderProductionStatusForShipmentStatus,
+  normalizeCarrierCode,
+  shipmentStatusMarksOrderShipped,
+} from "@/lib/admin/order-shipping";
+
+function formatShipmentForAdmin(shipment: any) {
+  return {
+    ...shipment,
+    orderSummary: shipment.order
+      ? {
+          id: shipment.order.id,
+          customerEmail: shipment.order.customerEmail,
+          customerName: shipment.order.customerName,
+          customerPhone: shipment.order.customerPhone,
+          status: shipment.order.status,
+          paymentStatus: shipment.order.paymentStatus,
+          productionStatus: shipment.order.productionStatus,
+        }
+      : null,
+  };
+}
 
 export async function GET(
   request: NextRequest,
@@ -15,6 +37,19 @@ export async function GET(
 
     const shipment = await prisma.shipment.findUnique({
       where: { id },
+      include: {
+        order: {
+          select: {
+            id: true,
+            customerEmail: true,
+            customerName: true,
+            customerPhone: true,
+            status: true,
+            paymentStatus: true,
+            productionStatus: true,
+          },
+        },
+      },
     });
 
     if (!shipment) {
@@ -24,7 +59,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ data: shipment });
+    return NextResponse.json({ data: formatShipmentForAdmin(shipment) });
   } catch (err) {
     console.error("[Shipping GET] Error:", err);
     return NextResponse.json(
@@ -47,6 +82,19 @@ export async function PATCH(
 
     const existing = await prisma.shipment.findUnique({
       where: { id },
+      include: {
+        order: {
+          select: {
+            id: true,
+            productionStatus: true,
+            customerEmail: true,
+            customerName: true,
+            customerPhone: true,
+            status: true,
+            paymentStatus: true,
+          },
+        },
+      },
     });
 
     if (!existing) {
@@ -72,6 +120,10 @@ export async function PATCH(
       if (body[field] !== undefined) {
         data[field] = body[field];
       }
+    }
+
+    if (data.carrier) {
+      data.carrier = normalizeCarrierCode(data.carrier as string);
     }
 
     // Parse numeric fields
@@ -109,9 +161,86 @@ export async function PATCH(
       );
     }
 
-    const shipment = await prisma.shipment.update({
-      where: { id },
-      data,
+    const nextStatus = typeof data.status === "string" ? data.status : existing.status;
+    const nextOrderProductionStatus =
+      getOrderProductionStatusForShipmentStatus(nextStatus);
+    const shouldPromoteOrderToShipped =
+      nextOrderProductionStatus &&
+      existing.order?.productionStatus !== nextOrderProductionStatus &&
+      (!existing.status || !shipmentStatusMarksOrderShipped(existing.status)) &&
+      shipmentStatusMarksOrderShipped(nextStatus);
+    const trackingChanged =
+      typeof data.trackingNumber === "string" &&
+      data.trackingNumber &&
+      data.trackingNumber !== existing.trackingNumber;
+
+    const shipment = await prisma.$transaction(async (tx) => {
+      const updatedShipment = await tx.shipment.update({
+        where: { id },
+        data,
+        include: {
+          order: {
+            select: {
+              id: true,
+              customerEmail: true,
+              customerName: true,
+              customerPhone: true,
+              status: true,
+              paymentStatus: true,
+              productionStatus: true,
+            },
+          },
+        },
+      });
+
+      if (shouldPromoteOrderToShipped && existing.orderId) {
+        await tx.order.update({
+          where: { id: existing.orderId },
+          data: { productionStatus: nextOrderProductionStatus },
+        });
+
+        await tx.productionJob.updateMany({
+          where: {
+            orderItem: { orderId: existing.orderId },
+            status: { notIn: ["shipped"] },
+          },
+          data: { status: "shipped", completedAt: new Date() },
+        });
+
+        await tx.orderTimeline.create({
+          data: {
+            orderId: existing.orderId,
+            action: "shipped",
+            details: JSON.stringify({
+              source: "shipping_workspace",
+              shipmentId: updatedShipment.id,
+              carrier: updatedShipment.carrier,
+              trackingNumber: updatedShipment.trackingNumber || null,
+            }),
+            actor: auth.user?.email || auth.user?.name || "admin",
+          },
+        });
+
+        if (updatedShipment.order) {
+          updatedShipment.order.productionStatus = nextOrderProductionStatus;
+        }
+      } else if (trackingChanged && existing.orderId) {
+        await tx.orderTimeline.create({
+          data: {
+            orderId: existing.orderId,
+            action: "tracking_added",
+            details: JSON.stringify({
+              source: "shipping_workspace",
+              shipmentId: updatedShipment.id,
+              carrier: updatedShipment.carrier,
+              trackingNumber: updatedShipment.trackingNumber || null,
+            }),
+            actor: auth.user?.email || auth.user?.name || "admin",
+          },
+        });
+      }
+
+      return updatedShipment;
     });
 
     logActivity({
@@ -125,7 +254,7 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json({ data: shipment });
+    return NextResponse.json({ data: formatShipmentForAdmin(shipment) });
   } catch (err) {
     console.error("[Shipping PATCH] Error:", err);
     return NextResponse.json(

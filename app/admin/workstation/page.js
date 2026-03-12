@@ -9,15 +9,39 @@ import { categorizeForTaskQueue, getExecutableAction, assessItem, READINESS } fr
 import ItemProductionPanel from "@/components/admin/ItemProductionPanel";
 import { formatCad } from "@/lib/product-helpers";
 import { isProductionItem } from "@/lib/order-item-utils";
+import { getAllowedNavHrefs } from "@/lib/admin-permissions";
+import { buildOrderCenterHref } from "@/lib/admin-centers";
 
 // ─── Single summary API fetch ────────────────────────────────────────────────
 
 const AUTO_REFRESH_MS = 30_000;
 
+function getRoleFocusKeys(role) {
+  switch (role) {
+    case "cs":
+      return ["admin.nav.missingArtwork", "admin.nav.messages", "admin.nav.support"];
+    case "sales":
+      return ["admin.nav.orders", "admin.nav.customers", "admin.nav.b2b"];
+    case "design":
+      return ["admin.workstation.actionProof", "admin.workstation.actionContour", "admin.nav.orders"];
+    case "production":
+      return ["admin.nav.production", "admin.nav.shipping", "admin.nav.qc"];
+    case "qa":
+      return ["admin.nav.qc", "admin.nav.production", "admin.nav.shipping"];
+    case "merch_ops":
+      return ["admin.nav.catalogOps", "admin.nav.pricingDashboard", "admin.nav.media"];
+    case "finance":
+      return ["admin.nav.orders", "admin.nav.finance", "admin.nav.analyticsReports"];
+    default:
+      return ["admin.nav.orders", "admin.nav.workstation", "admin.nav.production"];
+  }
+}
+
 function useSummary() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastRefreshed, setLastRefreshed] = useState(null);
   const timer = useRef(null);
 
   const refetch = useCallback(() => {
@@ -29,7 +53,7 @@ function useSummary() {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
-      .then((d) => { if (d) setData(d); })
+      .then((d) => { if (d) { setData(d); setLastRefreshed(new Date()); } })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
@@ -42,7 +66,7 @@ function useSummary() {
     return () => clearInterval(timer.current);
   }, [refetch]);
 
-  return { data, error, loading, refetch };
+  return { data, error, loading, refetch, lastRefreshed };
 }
 
 // ─── Section wrapper ─────────────────────────────────────────────────────────
@@ -61,16 +85,17 @@ function Section({ title, children, action }) {
 
 // ─── Stat Card ───────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, loading, error, href, t }) {
+function StatCard({ label, value, loading, error, href, t, urgent }) {
+  const isHot = urgent && value > 0;
   const inner = (
-    <div className="rounded-[3px] border border-[#e3e3e3] bg-white p-4 transition-shadow hover:shadow-sm">
+    <div className={`rounded-[3px] border p-4 transition-shadow hover:shadow-sm ${isHot ? "border-amber-300 bg-amber-50" : "border-[#e3e3e3] bg-white"}`}>
       <p className="text-[11px] font-semibold uppercase tracking-wider text-[#999]">{label}</p>
       {loading ? (
         <div className="mt-2 h-8 w-16 animate-pulse rounded bg-[#f0f0f0]" />
       ) : error ? (
         <p className="mt-2 text-xs text-red-500">{t?.("admin.common.error") || "Error"}</p>
       ) : (
-        <p className="mt-1 text-2xl font-bold text-[#111]">{value ?? 0}</p>
+        <p className={`mt-1 text-2xl font-bold ${isHot ? "text-amber-700" : "text-[#111]"}`}>{value ?? 0}</p>
       )}
     </div>
   );
@@ -173,13 +198,31 @@ const I = {
 
 export default function WorkstationPage() {
   const { t } = useTranslation();
-  const { data, error, loading, refetch } = useSummary();
+  const { data, error, loading, refetch, lastRefreshed } = useSummary();
+  const [sessionRole, setSessionRole] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/admin/session")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => {
+        if (payload?.user?.role) setSessionRole(payload.user.role);
+      })
+      .catch(() => {});
+  }, []);
 
   const stats = data?.stats;
   const needsAttention = data?.needsAttention || [];
   const pendingProofs = data?.pendingProofs || [];
   const recentJobs = data?.recentJobs || [];
   const prodSummary = data?.productionSummary;
+  const allowedHrefs = sessionRole ? getAllowedNavHrefs(sessionRole) : null;
+  const canAccess = (href) => {
+    if (!allowedHrefs) return true;
+    const normalized = href.split("?")[0];
+    return allowedHrefs.has(href) || allowedHrefs.has(normalized);
+  };
+  const canCreateOrder = ["admin", "sales", "merch_ops", "cs"].includes(sessionRole || "");
+  const focusKeys = getRoleFocusKeys(sessionRole);
 
   const prodColumns = [
     { key: "queued", label: t("admin.workstation.prodQueued") },
@@ -188,6 +231,31 @@ export default function WorkstationPage() {
     { key: "quality_check", label: t("admin.workstation.prodQC") },
     { key: "on_hold", label: t("admin.workstation.prodOnHold") },
   ];
+  const quickActions = [
+    ...(canCreateOrder ? [{ href: "/admin/orders/create", icon: I.plus, label: t("admin.workstation.actionNewOrder"), sub: t("admin.workstation.actionNewOrderSub2") }] : []),
+    { href: "/admin/orders", icon: I.orders, label: t("admin.workstation.actionOrders"), sub: t("admin.workstation.actionOrdersSub") },
+    { href: "/admin/pricing-dashboard", icon: I.pricing, label: t("admin.workstation.actionPricing"), sub: t("admin.workstation.actionPricingSub2") },
+    { href: "/admin/tools/contour", icon: I.contour, label: t("admin.workstation.actionContour"), sub: t("admin.workstation.actionContourSub") },
+    {
+      href: "/admin/tools/proof",
+      icon: I.proof,
+      label: t("admin.workstation.actionProof"),
+      sub: stats?.pendingProofsCount ? t("admin.workstation.proofPending").replace("{count}", stats.pendingProofsCount) : t("admin.workstation.actionProofSub"),
+    },
+    { href: "/admin/tools/stamp-studio", icon: I.stamp, label: t("admin.workstation.actionStamp"), sub: t("admin.workstation.actionStampSub") },
+    {
+      href: "/admin/production/board",
+      icon: I.production,
+      label: t("admin.workstation.actionProduction"),
+      sub: stats?.inProductionCount ? t("admin.workstation.prodActive").replace("{count}", stats.inProductionCount) : t("admin.workstation.actionProductionSub"),
+    },
+    { href: "/admin/production/schedule", icon: I.orders, label: t("admin.workstation.actionSchedule"), sub: t("admin.workstation.actionScheduleSub") },
+    { href: buildOrderCenterHref("missing_artwork"), icon: I.contour, label: t("admin.workstation.actionMissingArt"), sub: t("admin.workstation.actionMissingArtSub") },
+    { href: buildOrderCenterHref("ready_to_ship"), icon: I.orders, label: t("admin.workstation.actionReadyToShip"), sub: t("admin.workstation.actionReadyToShipSub") },
+  ].filter((action) => canAccess(action.href));
+  const showProofQueue = canAccess("/admin/tools/proof");
+  const showRecentJobs = canAccess("/admin/tools");
+  const showProductionSummary = canAccess("/admin/production/board") || canAccess("/admin/production/schedule");
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -201,16 +269,40 @@ export default function WorkstationPage() {
           </div>
           <h1 className="text-lg font-bold text-[#111]">{t("admin.workstation.title")}</h1>
           <p className="text-xs text-[#999]">{t("admin.workstation.subtitle")}</p>
-          <p className="mt-1 text-[11px] text-[#bbb]">{t("admin.workstation.guidance")}</p>
+          <p className="mt-1 text-[11px] text-[#bbb]">
+            {t("admin.workstation.guidance")}
+            {stats?.needsAttentionCount > 0 && (
+              <span className="ml-2 text-amber-600 font-medium">
+                {t("admin.workstation.ordersNeedAttention").replace("{count}", stats.needsAttentionCount)}
+              </span>
+            )}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9ca3af]">
+              {t("admin.workstation.todayFocus")}
+            </span>
+            {focusKeys.map((key) => (
+              <span key={key} className="rounded-full border border-[#e5e7eb] bg-white px-2.5 py-1 text-[10px] font-medium text-[#4b5563]">
+                {t(key)}
+              </span>
+            ))}
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={refetch}
-          className="flex items-center gap-1.5 rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-[#111] hover:text-[#111]"
-        >
-          {I.refresh}
-          {t("admin.workstation.refresh")}
-        </button>
+        <div className="flex items-center gap-2">
+          {lastRefreshed && (
+            <span className="text-[10px] text-[#bbb]">
+              {t("admin.workstation.updated")} {lastRefreshed.toLocaleTimeString()}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={refetch}
+            className="flex items-center gap-1.5 rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-[#111] hover:text-[#111]"
+          >
+            {I.refresh}
+            {t("admin.workstation.refresh")}
+          </button>
+        </div>
       </div>
 
       {/* Global error */}
@@ -224,7 +316,7 @@ export default function WorkstationPage() {
       {/* ── 1. Stats Cards ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <StatCard label={t("admin.workstation.statOrders")} value={stats?.totalOrders} loading={loading} error={!stats && !loading} t={t} href="/admin/orders" />
-        <StatCard label={t("admin.workstation.statAttention")} value={stats?.needsAttentionCount} loading={loading} error={!stats && !loading} t={t} href="/admin/orders" />
+        <StatCard label={t("admin.workstation.statAttention")} value={stats?.needsAttentionCount} loading={loading} error={!stats && !loading} t={t} href="/admin/orders" urgent />
         <StatCard label={t("admin.workstation.statProofs")} value={stats?.pendingProofsCount} loading={loading} error={!stats && !loading} t={t} href="/admin/tools/proof" />
         <StatCard label={t("admin.workstation.statJobs")} value={stats?.recentJobsCount} loading={loading} error={!stats && !loading} t={t} href="/admin/tools" />
         <StatCard label={t("admin.workstation.statProduction")} value={stats?.inProductionCount} loading={loading} error={!stats && !loading} t={t} href="/admin/production/board" />
@@ -233,15 +325,9 @@ export default function WorkstationPage() {
       {/* ── 2. Quick Actions ──────────────────────────────────────────── */}
       <Section title={t("admin.workstation.quickActions")}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <QuickAction href="/admin/orders/create" icon={I.plus} label={t("admin.workstation.actionNewOrder")} sub={t("admin.workstation.actionNewOrderSub")} />
-          <QuickAction href="/admin/orders" icon={I.orders} label={t("admin.workstation.actionOrders")} sub={t("admin.workstation.actionOrdersSub")} />
-          <QuickAction href="/admin/pricing-dashboard" icon={I.pricing} label={t("admin.workstation.actionPricing")} sub={t("admin.workstation.actionPricingSub")} />
-          <QuickAction href="/admin/tools/contour" icon={I.contour} label={t("admin.workstation.actionContour")} sub={t("admin.workstation.actionContourSub")} />
-          <QuickAction href="/admin/tools/proof" icon={I.proof} label={t("admin.workstation.actionProof")} sub={t("admin.workstation.actionProofSub")} />
-          <QuickAction href="/admin/tools/stamp-studio" icon={I.stamp} label={t("admin.workstation.actionStamp")} sub={t("admin.workstation.actionStampSub")} />
-          <QuickAction href="/admin/production/board" icon={I.production} label={t("admin.workstation.actionProduction")} sub={t("admin.workstation.actionProductionSub")} />
-          <QuickAction href="/admin/production/schedule" icon={I.orders} label="Schedule" sub="Due dates & workload" />
-          <QuickAction href="/admin/orders/missing-artwork" icon={I.contour} label="Missing Artwork" sub="Orders awaiting files" />
+          {quickActions.map((action) => (
+            <QuickAction key={action.href} href={action.href} icon={action.icon} label={action.label} sub={action.sub} />
+          ))}
         </div>
       </Section>
 
@@ -265,7 +351,7 @@ export default function WorkstationPage() {
       {/* ── 4 + 5. Proof Queue + Recent Jobs side-by-side ─────────── */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Proof Queue */}
-        <Section
+        {showProofQueue && <Section
           title={`${t("admin.workstation.proofQueue")}${stats?.pendingProofsCount ? ` (${stats.pendingProofsCount})` : ""}`}
           action={<Link href="/admin/tools/proof" className="text-xs font-medium text-[#4f46e5] hover:underline">{t("admin.workstation.viewAll")}</Link>}
         >
@@ -305,10 +391,10 @@ export default function WorkstationPage() {
               ))}
             </div>
           )}
-        </Section>
+        </Section>}
 
         {/* Recent Tool Jobs */}
-        <Section
+        {showRecentJobs && <Section
           title={`${t("admin.workstation.recentJobs")}${stats?.recentJobsCount ? ` (${stats.recentJobsCount})` : ""}`}
           action={<Link href="/admin/tools" className="text-xs font-medium text-[#4f46e5] hover:underline">{t("admin.workstation.viewAll")}</Link>}
         >
@@ -357,11 +443,11 @@ export default function WorkstationPage() {
               })}
             </div>
           )}
-        </Section>
+        </Section>}
       </div>
 
       {/* ── 6. Production Summary ─────────────────────────────────────── */}
-      <Section
+      {showProductionSummary && <Section
         title={t("admin.workstation.productionSummary")}
         action={<Link href="/admin/production/board" className="text-xs font-medium text-[#4f46e5] hover:underline">{t("admin.workstation.openBoard")}</Link>}
       >
@@ -386,7 +472,7 @@ export default function WorkstationPage() {
             ))}
           </div>
         )}
-      </Section>
+      </Section>}
     </div>
   );
 }

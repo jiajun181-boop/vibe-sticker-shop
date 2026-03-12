@@ -2,49 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
 import { statusColor } from "@/lib/admin/status-labels";
+import { buildOrderCenterHref } from "@/lib/admin-centers";
 
-// ── Capabilities: tools (clickable) vs system features (info-only) ──────────
+const AUTO_REFRESH_MS = 30_000;
 
 const TOOLS = [
-  {
-    title: "admin.dashboard.toolContour",
-    desc: "admin.dashboard.toolContourDesc",
-    href: "/admin/tools/contour",
-    type: "tool",
-  },
-  {
-    title: "admin.dashboard.toolProof",
-    desc: "admin.dashboard.toolProofDesc",
-    href: "/admin/tools/proof",
-    type: "tool",
-  },
-  {
-    title: "admin.dashboard.toolStamp",
-    desc: "admin.dashboard.toolStampDesc",
-    href: "/admin/tools/stamp-studio",
-    type: "tool",
-  },
-  {
-    title: "admin.dashboard.toolProduction",
-    desc: "admin.dashboard.toolProductionDesc",
-    href: "/admin/production/board",
-    type: "tool",
-  },
-  {
-    title: "admin.dashboard.toolPricing",
-    desc: "admin.dashboard.toolPricingDesc",
-    href: "/admin/pricing-dashboard",
-    type: "tool",
-  },
-  {
-    title: "admin.dashboard.toolWorkstation",
-    desc: "admin.dashboard.toolWorkstationDesc",
-    href: "/admin/workstation",
-    type: "tool",
-  },
+  { title: "admin.dashboard.toolContour", desc: "admin.dashboard.toolContourDesc", href: "/admin/tools/contour" },
+  { title: "admin.dashboard.toolProof", desc: "admin.dashboard.toolProofDesc", href: "/admin/tools/proof" },
+  { title: "admin.dashboard.toolStamp", desc: "admin.dashboard.toolStampDesc", href: "/admin/tools/stamp-studio" },
 ];
 
 const SYSTEM_CAPABILITIES = [
@@ -54,29 +23,31 @@ const SYSTEM_CAPABILITIES = [
   { title: "admin.dashboard.capCoupons", desc: "admin.dashboard.capCouponsDesc" },
 ];
 
-/* ── Mini sparkline (7 bars) ── */
 function Sparkline({ data }) {
-  if (!data || data.length === 0) return null;
+  if (!data?.length) return null;
   const max = Math.max(...data, 1);
   return (
-    <div className="flex items-end gap-[3px] h-8">
-      {data.map((v, i) => (
+    <div className="flex h-8 items-end gap-[3px]">
+      {data.map((value, index) => (
         <div
-          key={i}
+          key={index}
           className="w-[5px] bg-black transition-all duration-300"
-          style={{ height: `${Math.max(10, (v / max) * 100)}%`, opacity: i === data.length - 1 ? 1 : 0.3 }}
+          style={{ height: `${Math.max(10, (value / max) * 100)}%`, opacity: index === data.length - 1 ? 1 : 0.3 }}
         />
       ))}
     </div>
   );
 }
 
-/* ── % change badge ── */
 function Change({ current, previous }) {
   if (previous === 0 && current === 0) return null;
-  if (previous === 0) return <span className="mt-1 inline-block text-[10px] font-bold uppercase tracking-wider text-emerald-600">NEW</span>;
+  if (previous === 0) {
+    return <span className="mt-1 inline-block text-[10px] font-bold uppercase tracking-wider text-emerald-600">NEW</span>;
+  }
   const pct = Math.round(((current - previous) / previous) * 100);
-  if (pct === 0) return <span className="mt-1 inline-block text-[10px] text-[#999]">&mdash; vs prev</span>;
+  if (pct === 0) {
+    return <span className="mt-1 inline-block text-[10px] text-[#999]">-</span>;
+  }
   const up = pct > 0;
   return (
     <span className={`mt-1 inline-flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wider ${up ? "text-emerald-600" : "text-red-500"}`}>
@@ -88,7 +59,6 @@ function Change({ current, previous }) {
   );
 }
 
-/* ── Stat card ── */
 function StatCard({ label, subtitle, value, change, sparkline }) {
   return (
     <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
@@ -105,51 +75,75 @@ function StatCard({ label, subtitle, value, change, sparkline }) {
   );
 }
 
-/* ── Quick-action icon ── */
 function QIcon({ name, className }) {
-  const d = {
+  const paths = {
     orders: "M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z",
-    add: "M12 4.5v15m7.5-7.5h-15",
-    board: "M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6z",
-    chart: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z",
     workstation: "M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z",
+    users: "M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z",
+    product: "M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 01-1.125-1.125v-3.75zM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 01-1.125-1.125v-8.25zM2.25 16.125c0-.621.504-1.125 1.125-1.125h6c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 01-1.125-1.125v-2.25z",
   };
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d={d[name] || d.orders} />
+      <path strokeLinecap="round" strokeLinejoin="round" d={paths[name] || paths.orders} />
     </svg>
   );
 }
 
-const AUTO_REFRESH_MS = 30_000;
-
-/* ══════════════ MAIN DASHBOARD ══════════════ */
 export default function AdminDashboard() {
-  const { t } = useTranslation();
+  const router = useRouter();
+  const { t, locale } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
+  const [roleChecked, setRoleChecked] = useState(false);
+  const [sessionRole, setSessionRole] = useState(null);
   const refreshTimer = useRef(null);
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
 
   const fetchStats = useCallback(() => {
     fetch("/api/admin/stats")
-      .then((r) => {
-        if (r.status === 401 || r.status === 403) { window.location.href = "/admin/login"; return null; }
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
+      .then((res) => {
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = "/admin/login";
+          return null;
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
       })
-      .then((data) => { if (data) { setStats(data); setLastRefresh(new Date()); } })
-      .catch(console.error)
+      .then((data) => {
+        if (data) {
+          setStats(data);
+          setLastRefresh(new Date());
+        }
+      })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { fetchStats(); }, [fetchStats]);
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   useEffect(() => {
     refreshTimer.current = setInterval(fetchStats, AUTO_REFRESH_MS);
     return () => clearInterval(refreshTimer.current);
   }, [fetchStats]);
 
+  useEffect(() => {
+    fetch("/api/admin/session")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => {
+        const role = payload?.user?.role || null;
+        setSessionRole(role);
+        setRoleChecked(true);
+        if (role && role !== "admin") {
+          router.replace("/admin/workstation");
+        }
+      })
+      .catch(() => setRoleChecked(true));
+  }, [router]);
+
+  if (!roleChecked || (sessionRole && sessionRole !== "admin")) return <DashboardSkeleton />;
   if (loading) return <DashboardSkeleton />;
 
   if (!stats) {
@@ -161,10 +155,10 @@ export default function AdminDashboard() {
   }
 
   const actions = [
-    { label: t("admin.quick.viewOrders"), href: "/admin/orders", icon: "orders" },
-    { label: t("admin.quick.workstation"), href: "/admin/workstation", icon: "workstation" },
-    { label: t("admin.quick.production"), href: "/admin/production/board", icon: "board" },
-    { label: t("admin.quick.analytics"), href: "/admin/analytics", icon: "chart" },
+    { label: t("admin.nav.orders"), href: "/admin/orders", icon: "orders" },
+    { label: t("admin.dashboard.actionCustomers"), href: "/admin/customers", icon: "users" },
+    { label: t("admin.dashboard.actionProductOps"), href: "/admin/catalog-ops", icon: "product" },
+    { label: t("admin.nav.workstation"), href: "/admin/workstation", icon: "workstation" },
   ];
 
   return (
@@ -175,15 +169,15 @@ export default function AdminDashboard() {
           <button
             type="button"
             onClick={fetchStats}
-            title={lastRefresh ? `Last refresh: ${lastRefresh.toLocaleTimeString()}` : "Refresh"}
-            className="rounded-[3px] border border-[#d0d0d0] p-1.5 text-[#999] hover:bg-gray-50 hover:text-black transition-colors"
+            title={lastRefresh ? `${t("admin.orders.updated")} ${lastRefresh.toLocaleTimeString()}` : t("admin.dashboard.alertRetry")}
+            className="rounded-[3px] border border-[#d0d0d0] p-1.5 text-[#999] transition-colors hover:bg-gray-50 hover:text-black"
           >
             <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H4.757a.75.75 0 00-.75.75v3.475a.75.75 0 001.5 0v-1.836l.217.216a7 7 0 0011.712-3.138.75.75 0 00-1.124-.122zm-1.624-7.848a7 7 0 00-11.712 3.138.75.75 0 001.124.122 5.5 5.5 0 019.201-2.466l.312.311h-2.433a.75.75 0 000 1.5h3.475a.75.75 0 00.75-.75V2.88a.75.75 0 00-1.5 0v1.836l-.217-.216z" clipRule="evenodd" />
             </svg>
           </button>
           <p className="text-xs text-[#999]">
-            {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
+            {new Date().toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" })}
           </p>
         </div>
       </div>
@@ -207,22 +201,20 @@ export default function AdminDashboard() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        {actions.map((a) => (
+        {actions.map((action) => (
           <Link
-            key={a.href}
-            href={a.href}
+            key={action.href}
+            href={action.href}
             className="flex shrink-0 items-center gap-2 rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-2.5 text-sm font-semibold text-black transition-all hover:border-black hover:shadow-sm"
           >
-            <QIcon name={a.icon} className="h-4 w-4" />
-            {a.label}
+            <QIcon name={action.icon} className="h-4 w-4" />
+            {action.label}
           </Link>
         ))}
       </div>
 
-      {/* ── Production Alerts ── */}
       <ProductionAlerts />
 
-      {/* ── Internal Tools (clickable, real tools) ── */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="border-b border-[#e0e0e0] px-5 py-4">
           <h2 className="text-sm font-bold text-black">{t("admin.dashboard.internalTools")}</h2>
@@ -246,7 +238,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── System Capabilities (info-only, no separate tool page) ── */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="border-b border-[#e0e0e0] px-5 py-4">
           <h2 className="text-sm font-bold text-black">{t("admin.dashboard.systemCaps")}</h2>
@@ -263,7 +254,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── Recent Orders ── */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
         <div className="flex items-center justify-between border-b border-[#e0e0e0] px-5 py-4">
           <div>
@@ -294,13 +284,13 @@ export default function AdminDashboard() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-black">{order.customerEmail}</p>
                   <p className="text-xs text-[#999]">
-                    {order._count.items} item{order._count.items !== 1 && "s"} &middot;{" "}
-                    {new Date(order.createdAt).toLocaleDateString()}
+                    {t("admin.dashboard.itemCount").replace("{count}", order._count.items)} &middot;{" "}
+                    {new Date(order.createdAt).toLocaleDateString(dateLocale)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
                   <span className={`rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusColor(order.status)}`}>
-                    {order.status}
+                    {t(`admin.dashboard.status_${order.status}`) || order.status}
                   </span>
                   <span className="text-sm font-semibold tabular-nums text-black">{formatCad(order.totalAmount)}</span>
                 </div>
@@ -314,14 +304,54 @@ export default function AdminDashboard() {
 }
 
 function ProductionAlerts() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
+  const [loadError, setLoadError] = useState(false);
+  const [degraded, setDegraded] = useState(null);
+
+  const fetchAlerts = useCallback(async () => {
+    setLoadError(false);
+    setDegraded(null);
+    try {
+      const [artRes, schedRes] = await Promise.all([
+        fetch("/api/admin/orders/missing-artwork?limit=5"),
+        fetch("/api/admin/production/schedule"),
+      ]);
+
+      if (!artRes.ok && !schedRes.ok) {
+        setLoadError(true);
+        return;
+      }
+
+      if (!artRes.ok) setDegraded("artwork");
+      else if (!schedRes.ok) setDegraded("schedule");
+
+      const artwork = artRes.ok ? await artRes.json() : null;
+      const schedule = schedRes.ok ? await schedRes.json() : null;
+      setData({ artwork, schedule });
+    } catch {
+      setLoadError(true);
+    }
+  }, []);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/admin/orders/missing-artwork?limit=5").then((r) => (r.ok ? r.json() : null)),
-      fetch("/api/admin/production/schedule").then((r) => (r.ok ? r.json() : null)),
-    ]).then(([artwork, schedule]) => setData({ artwork, schedule })).catch(() => {});
-  }, []);
+    fetchAlerts();
+  }, [fetchAlerts]);
+
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-between rounded-[3px] border border-red-200 bg-red-50 p-3">
+        <p className="text-xs text-red-600">{t("admin.dashboard.alertsLoadFailed")}</p>
+        <button
+          type="button"
+          onClick={fetchAlerts}
+          className="rounded-[3px] bg-black px-3 py-1 text-xs font-medium text-[#fff] hover:bg-[#222]"
+        >
+          {t("admin.dashboard.alertRetry")}
+        </button>
+      </div>
+    );
+  }
 
   if (!data) return null;
 
@@ -330,29 +360,42 @@ function ProductionAlerts() {
   const overdueCount = data.schedule?.summary?.overdueCount || 0;
   const rushCount = data.schedule?.summary?.rushCount || 0;
 
-  if (artworkCount === 0 && overdueCount === 0) return null;
+  if (artworkCount === 0 && overdueCount === 0 && !degraded) return null;
 
   return (
-    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-      {artworkCount > 0 && (
-        <Link href="/admin/orders/missing-artwork" className="rounded-[3px] border border-amber-200 bg-amber-50 p-4 hover:bg-amber-100 transition-colors">
-          <p className="text-2xl font-bold text-amber-700">{artworkCount}</p>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Missing Artwork</p>
-          {staleCount > 0 && <p className="mt-0.5 text-[10px] text-red-600">{staleCount} stale (7+ days)</p>}
-        </Link>
+    <div className="space-y-1.5">
+      {degraded && (
+        <div className="flex items-center justify-between rounded-[3px] border border-amber-200 bg-amber-50 px-3 py-1.5">
+          <p className="text-[10px] text-amber-700">
+            {degraded === "artwork" ? t("admin.dashboard.artworkAlertsPartial") : t("admin.dashboard.scheduleAlertsPartial")}
+          </p>
+          <button type="button" onClick={fetchAlerts} className="text-[10px] font-medium text-amber-800 hover:underline">
+            {t("admin.dashboard.alertRetry")}
+          </button>
+        </div>
       )}
-      {overdueCount > 0 && (
-        <Link href="/admin/production/schedule" className="rounded-[3px] border border-red-200 bg-red-50 p-4 hover:bg-red-100 transition-colors">
-          <p className="text-2xl font-bold text-red-700">{overdueCount}</p>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-red-600">Overdue Jobs</p>
-        </Link>
-      )}
-      {rushCount > 0 && (
-        <Link href="/admin/production/schedule" className="rounded-[3px] border border-orange-200 bg-orange-50 p-4 hover:bg-orange-100 transition-colors">
-          <p className="text-2xl font-bold text-orange-700">{rushCount}</p>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-orange-600">Rush Jobs Active</p>
-        </Link>
-      )}
+
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {artworkCount > 0 && (
+          <Link href={buildOrderCenterHref("missing_artwork")} className="rounded-[3px] border border-amber-200 bg-amber-50 p-4 transition-colors hover:bg-amber-100">
+            <p className="text-2xl font-bold text-amber-700">{artworkCount}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">{t("admin.dashboard.alertMissingArtwork")}</p>
+            {staleCount > 0 && <p className="mt-0.5 text-[10px] text-red-600">{t("admin.dashboard.alertStale").replace("{count}", staleCount)}</p>}
+          </Link>
+        )}
+        {overdueCount > 0 && (
+          <Link href="/admin/production/schedule" className="rounded-[3px] border border-red-200 bg-red-50 p-4 transition-colors hover:bg-red-100">
+            <p className="text-2xl font-bold text-red-700">{overdueCount}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-red-600">{t("admin.dashboard.alertOverdueJobs")}</p>
+          </Link>
+        )}
+        {rushCount > 0 && (
+          <Link href="/admin/production/schedule" className="rounded-[3px] border border-orange-200 bg-orange-50 p-4 transition-colors hover:bg-orange-100">
+            <p className="text-2xl font-bold text-orange-700">{rushCount}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-orange-600">{t("admin.dashboard.alertRushJobs")}</p>
+          </Link>
+        )}
+      </div>
     </div>
   );
 }
@@ -365,8 +408,8 @@ function DashboardSkeleton() {
         <div className="h-4 w-40 rounded-[3px] bg-[#e8e8e8]" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
             <div className="h-3 w-20 rounded-[2px] bg-[#e8e8e8]" />
             <div className="mt-3 h-7 w-16 rounded-[2px] bg-[#e8e8e8]" />
             <div className="mt-2 h-3 w-12 rounded-[2px] bg-[#e8e8e8]" />
@@ -374,16 +417,24 @@ function DashboardSkeleton() {
         ))}
       </div>
       <div className="flex gap-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-10 w-32 rounded-[3px] border border-[#e0e0e0] bg-white" />
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="h-10 w-32 rounded-[3px] border border-[#e0e0e0] bg-white" />
         ))}
       </div>
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white">
-        <div className="border-b border-[#e0e0e0] px-5 py-4"><div className="h-4 w-28 rounded-[2px] bg-[#e8e8e8]" /></div>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between px-5 py-3.5">
-            <div><div className="h-4 w-44 rounded-[2px] bg-[#e8e8e8]" /><div className="mt-1.5 h-3 w-24 rounded-[2px] bg-[#e8e8e8]" /></div>
-            <div className="flex items-center gap-3"><div className="h-5 w-14 rounded-[2px] bg-[#e8e8e8]" /><div className="h-5 w-16 rounded-[2px] bg-[#e8e8e8]" /></div>
+        <div className="border-b border-[#e0e0e0] px-5 py-4">
+          <div className="h-4 w-28 rounded-[2px] bg-[#e8e8e8]" />
+        </div>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className="flex items-center justify-between px-5 py-3.5">
+            <div>
+              <div className="h-4 w-44 rounded-[2px] bg-[#e8e8e8]" />
+              <div className="mt-1.5 h-3 w-24 rounded-[2px] bg-[#e8e8e8]" />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-5 w-14 rounded-[2px] bg-[#e8e8e8]" />
+              <div className="h-5 w-16 rounded-[2px] bg-[#e8e8e8]" />
+            </div>
           </div>
         ))}
       </div>

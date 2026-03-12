@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { UploadButton } from "@/utils/uploadthing";
 
 const PREFLIGHT_COLORS = {
@@ -36,6 +36,17 @@ export default function OrderArtworkUpload({
 
   const hasItemsNeeding = itemsNeeding.length > 0;
 
+  // Resolve the effective itemId to send to the API:
+  // - exactly 1 item needing artwork → auto-link
+  // - multiple items → must have explicit selection
+  const effectiveItemId = useMemo(() => {
+    if (itemsNeeding.length === 1) return itemsNeeding[0].id;
+    return selectedItemId || "";
+  }, [itemsNeeding, selectedItemId]);
+
+  // Block upload when multiple items need artwork but none selected
+  const needsItemSelection = itemsNeeding.length > 1 && !selectedItemId;
+
   async function linkFileToOrder(file) {
     const payload = {
       fileUrl: file.ufsUrl || file.url,
@@ -43,7 +54,7 @@ export default function OrderArtworkUpload({
       storageKey: file.key,
       mimeType: file.type,
       sizeBytes: file.size,
-      itemId: selectedItemId || undefined,
+      itemId: effectiveItemId || undefined,
     };
 
     let res;
@@ -104,7 +115,7 @@ export default function OrderArtworkUpload({
           </div>
         )}
 
-        {/* Item selector (if multiple items need artwork) */}
+        {/* Item selector (if multiple items need artwork — selection required) */}
         {itemsNeeding.length > 1 && (
           <div>
             <label className="block text-xs font-medium text-[var(--color-gray-600)] mb-1">
@@ -112,61 +123,83 @@ export default function OrderArtworkUpload({
             </label>
             <select
               value={selectedItemId}
-              onChange={(e) => setSelectedItemId(e.target.value)}
-              className="w-full rounded-lg border border-[var(--color-gray-200)] bg-white px-3 py-2 text-sm text-[var(--color-gray-900)] focus:border-[var(--color-gray-400)] focus:outline-none"
+              onChange={(e) => {
+                setSelectedItemId(e.target.value);
+                setUploadError("");
+              }}
+              className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-[var(--color-gray-900)] focus:outline-none ${
+                needsItemSelection
+                  ? "border-amber-300 focus:border-amber-400"
+                  : "border-[var(--color-gray-200)] focus:border-[var(--color-gray-400)]"
+              }`}
             >
-              <option value="">All items / general artwork</option>
+              <option value="">— Select an item —</option>
               {itemsNeeding.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.productName}
                 </option>
               ))}
             </select>
+            {needsItemSelection && (
+              <p className="mt-1 text-xs text-amber-600">
+                Please select which item this artwork is for before uploading.
+              </p>
+            )}
           </div>
         )}
 
         {/* Upload button */}
         {hasItemsNeeding && (
           <div className="space-y-2">
-            <UploadButton
-              endpoint={isGuest ? "guestArtworkUploader" : "artworkUploader"}
-              onUploadBegin={() => {
-                setUploading(true);
-                setUploadError("");
-              }}
-              onClientUploadComplete={async (files) => {
-                try {
-                  for (const file of files) {
-                    await linkFileToOrder(file);
-                    setRecentUploads((prev) => [
-                      { name: file.name, status: "pending", date: new Date().toISOString() },
-                      ...prev,
-                    ]);
+            {needsItemSelection ? (
+              <button
+                type="button"
+                disabled
+                className="rounded-lg px-4 py-2.5 text-sm font-semibold bg-[var(--color-gray-200)] text-[var(--color-gray-500)] cursor-not-allowed"
+              >
+                Select an item first
+              </button>
+            ) : (
+              <UploadButton
+                endpoint={isGuest ? "guestArtworkUploader" : "artworkUploader"}
+                onUploadBegin={() => {
+                  setUploading(true);
+                  setUploadError("");
+                }}
+                onClientUploadComplete={async (files) => {
+                  try {
+                    for (const file of files) {
+                      await linkFileToOrder(file);
+                      setRecentUploads((prev) => [
+                        { name: file.name, status: "pending", date: new Date().toISOString() },
+                        ...prev,
+                      ]);
+                    }
+                    onUploadComplete?.();
+                  } catch (err) {
+                    setUploadError(err.message || "Upload failed");
+                  } finally {
+                    setUploading(false);
                   }
-                  onUploadComplete?.();
-                } catch (err) {
+                }}
+                onUploadError={(err) => {
                   setUploadError(err.message || "Upload failed");
-                } finally {
                   setUploading(false);
-                }
-              }}
-              onUploadError={(err) => {
-                setUploadError(err.message || "Upload failed");
-                setUploading(false);
-              }}
-              appearance={{
-                button: `rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
-                  uploading
-                    ? "bg-[var(--color-gray-200)] text-[var(--color-gray-500)] cursor-wait"
-                    : "bg-[var(--color-gray-900)] text-[#fff] hover:bg-black"
-                }`,
-                allowedContent: "text-xs text-[var(--color-gray-400)]",
-              }}
-              content={{
-                button: uploading ? "Uploading..." : "Upload Artwork",
-                allowedContent: "Images & PDFs up to 16MB",
-              }}
-            />
+                }}
+                appearance={{
+                  button: `rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
+                    uploading
+                      ? "bg-[var(--color-gray-200)] text-[var(--color-gray-500)] cursor-wait"
+                      : "bg-[var(--color-gray-900)] text-[#fff] hover:bg-black"
+                  }`,
+                  allowedContent: "text-xs text-[var(--color-gray-400)]",
+                }}
+                content={{
+                  button: uploading ? "Uploading..." : "Upload Artwork",
+                  allowedContent: "Images & PDFs up to 16MB",
+                }}
+              />
+            )}
             {uploadError && (
               <p className="text-xs text-red-600">{uploadError}</p>
             )}

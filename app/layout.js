@@ -1,12 +1,12 @@
 import "./globals.css";
 import { Poppins, Inter } from "next/font/google";
-import CartDrawer from "@/components/cart/CartDrawer";
 import { Toaster } from "@/components/Toast";
 import { getServerLocale } from "@/lib/i18n/server";
 import { getCatalogConfig } from "@/lib/catalogConfig";
 import Analytics from "@/components/Analytics";
 import SkipLink from "@/components/SkipLink";
 import AppChrome from "@/components/AppChrome";
+import RouteAwareStorefrontGlobals from "@/components/RouteAwareStorefrontGlobals";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -24,10 +24,7 @@ const inter = Inter({
 
 import AuthInit from "@/components/AuthInit";
 import ScrollToTop from "@/components/ScrollToTop";
-import TawkToWidget from "@/components/TawkToWidget";
-import ChatWidget from "@/components/chat/ChatWidget";
 import HreflangTags from "@/components/HreflangTags";
-import PushNotificationPrompt from "@/components/PushNotificationPrompt";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
 
@@ -82,15 +79,12 @@ export default async function RootLayout({ children }) {
         <AppChrome catalogConfig={catalogConfig} locale={locale}>
           {children}
         </AppChrome>
-        <CartDrawer />
+        <RouteAwareStorefrontGlobals />
         <Toaster />
         <ScrollToTop />
 
         <AuthInit />
         <Analytics />
-        <ChatWidget />
-        <TawkToWidget />
-        <PushNotificationPrompt />
       </body>
     </html>
   );

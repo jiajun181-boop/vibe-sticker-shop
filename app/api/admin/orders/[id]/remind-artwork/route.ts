@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 import { sendEmail } from "@/lib/email/resend";
 import { logActivity } from "@/lib/activity-log";
+import { itemNeedsArtwork } from "@/lib/artwork-detection";
 
 /**
  * POST /api/admin/orders/[id]/remind-artwork
@@ -50,13 +51,8 @@ export async function POST(
       return NextResponse.json({ error: "Cannot send reminder for canceled order" }, { status: 400 });
     }
 
-    // Find items missing artwork
-    const itemsMissing = order.items.filter((item) => {
-      const meta = item.meta && typeof item.meta === "object" ? item.meta as Record<string, unknown> : {};
-      const hasFile = !!(item.fileUrl || meta.artworkUrl || meta.fileUrl);
-      const isDesignHelp = meta.artworkIntent === "design-help" || meta.designHelp === true;
-      return !hasFile && !isDesignHelp;
-    });
+    // Find items missing artwork (shared detection)
+    const itemsMissing = order.items.filter((item) => itemNeedsArtwork(item));
 
     if (itemsMissing.length === 0) {
       return NextResponse.json({ error: "All items already have artwork" }, { status: 400 });

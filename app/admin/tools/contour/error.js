@@ -33,7 +33,10 @@ export default function ContourError({ error, reset }) {
           {error.message}
         </p>
       )}
-      <div className="mt-6 flex justify-center gap-3">
+      <p className="mt-4 text-xs text-[#999]">
+        Previously saved work is safe. Use &ldquo;Reload Tool&rdquo; to return to the contour tool with your recent jobs intact.
+      </p>
+      <div className="mt-4 flex justify-center gap-3">
         <button
           type="button"
           onClick={() => reset()}
@@ -42,8 +45,14 @@ export default function ContourError({ error, reset }) {
           {t("admin.tools.contour.errorBoundaryRetry")}
         </button>
         <a
-          href="/admin/tools"
+          href="/admin/tools/contour"
           className="rounded-[3px] border border-[#d0d0d0] px-5 py-2.5 text-sm font-medium text-[#666] hover:border-black hover:text-black"
+        >
+          Reload Tool
+        </a>
+        <a
+          href="/admin/tools"
+          className="rounded-[3px] border border-[#d0d0d0] px-5 py-2.5 text-sm font-medium text-[#999] hover:border-black hover:text-black"
         >
           {t("admin.tools.contour.errorBoundaryBack")}
         </a>

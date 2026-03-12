@@ -9,14 +9,14 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import FloatingContactButton from "@/components/FloatingContactButton";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { isAdminRoute, isDesignRoute, stripLocalePrefix } from "@/lib/route-path";
 
 export default function AppChrome({ children, catalogConfig, locale }) {
   const { t } = useTranslation();
-  const pathname = usePathname() || "";
-  const isAdminRoute = pathname.startsWith("/admin");
-  const isDesignRoute = pathname.startsWith("/design");
+  const pathname = stripLocalePrefix(usePathname() || "");
+  const isAdmin = isAdminRoute(pathname);
+  const isDesign = isDesignRoute(pathname);
   const isQuoteRoute = pathname.startsWith("/quote");
-  const isShopRoute = pathname.startsWith("/shop");
   const isProductDetailRoute = /^\/shop\/[^/]+\/[^/]+$/.test(pathname);
   const isOrderRoute = pathname.startsWith("/order");
   // Keep desktop floating quote CTA only on high-intent product detail pages.
@@ -26,7 +26,7 @@ export default function AppChrome({ children, catalogConfig, locale }) {
   const showFloatingContact = !isOrderRoute && !isProductDetailRoute;
 
   // Design studio is a full-screen editor — no header/footer/nav
-  if (isAdminRoute || isDesignRoute) {
+  if (isAdmin || isDesign) {
     return <div id="main-content" className="min-h-screen">{children}</div>;
   }
 

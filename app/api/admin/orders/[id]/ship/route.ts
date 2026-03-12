@@ -4,6 +4,31 @@ import { logActivity } from "@/lib/activity-log";
 import { requirePermission } from "@/lib/admin-auth";
 import { sendOrderNotification } from "@/lib/notifications/order-notifications";
 
+const CARRIER_CODES: Record<string, string> = {
+  "canada post": "canada_post",
+  "canada_post": "canada_post",
+  "canada-post": "canada_post",
+  ups: "ups",
+  purolator: "purolator",
+  fedex: "fedex",
+  pickup: "pickup",
+  other: "other",
+};
+
+const CARRIER_LABELS: Record<string, string> = {
+  canada_post: "Canada Post",
+  ups: "UPS",
+  purolator: "Purolator",
+  fedex: "FedEx",
+  pickup: "Pickup",
+  other: "Other",
+};
+
+function normalizeCarrier(carrier?: string | null) {
+  if (!carrier) return "canada_post";
+  return CARRIER_CODES[String(carrier).trim().toLowerCase()] || "other";
+}
+
 /**
  * POST /api/admin/orders/[id]/ship
  * Body: { trackingNumber?, carrier?, estimatedDelivery? }
@@ -21,6 +46,8 @@ export async function POST(
   try {
     const body = await request.json();
     const { trackingNumber, carrier, estimatedDelivery } = body;
+    const normalizedCarrier = normalizeCarrier(carrier);
+    const shippedAt = new Date();
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -31,37 +58,64 @@ export async function POST(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Update order production status + advance all production jobs to "shipped"
-    const updated = await prisma.order.update({
-      where: { id },
-      data: { productionStatus: "shipped" },
-    });
+    const [shipmentRecord, updated] = await prisma.$transaction(async (tx) => {
+      const existingShipment = await tx.shipment.findFirst({
+        where: {
+          orderId: id,
+          status: { in: ["pending", "label_created", "picked_up", "in_transit", "exception"] },
+        },
+        orderBy: { createdAt: "desc" },
+      });
 
-    // Advance all non-shipped jobs for this order to "shipped"
-    try {
-      await prisma.productionJob.updateMany({
+      const shipmentData = {
+        carrier: normalizedCarrier,
+        trackingNumber: trackingNumber || null,
+        status: "picked_up" as const,
+        shippedAt,
+        notes: existingShipment?.notes || null,
+      };
+
+      const shipment = existingShipment
+        ? await tx.shipment.update({
+            where: { id: existingShipment.id },
+            data: shipmentData,
+          })
+        : await tx.shipment.create({
+            data: {
+              orderId: id,
+              createdBy: auth.user?.id || null,
+              ...shipmentData,
+            },
+          });
+
+      const updatedOrder = await tx.order.update({
+        where: { id },
+        data: { productionStatus: "shipped" },
+      });
+
+      await tx.productionJob.updateMany({
         where: {
           orderItem: { orderId: id },
           status: { notIn: ["shipped"] },
         },
-        data: { status: "shipped", completedAt: new Date() },
+        data: { status: "shipped", completedAt: shippedAt },
       });
-    } catch (jobErr) {
-      console.error("[Ship] Failed to update production jobs:", jobErr);
-    }
 
-    // Timeline event
-    await prisma.orderTimeline.create({
-      data: {
-        orderId: id,
-        action: "shipped",
-        details: JSON.stringify({
-          trackingNumber: trackingNumber || null,
-          carrier: carrier || null,
-          estimatedDelivery: estimatedDelivery || null,
-        }),
-        actor: auth.user?.email || "admin",
-      },
+      await tx.orderTimeline.create({
+        data: {
+          orderId: id,
+          action: "shipped",
+          details: JSON.stringify({
+            trackingNumber: trackingNumber || null,
+            carrier: normalizedCarrier,
+            estimatedDelivery: estimatedDelivery || null,
+            shipmentId: shipment.id,
+          }),
+          actor: auth.user?.email || "admin",
+        },
+      });
+
+      return [shipment, updatedOrder] as const;
     });
 
     await logActivity({
@@ -69,13 +123,13 @@ export async function POST(
       entity: "order",
       entityId: id,
       actor: auth.user?.email || "admin",
-      details: { trackingNumber, carrier },
+      details: { trackingNumber, carrier: normalizedCarrier, shipmentId: shipmentRecord.id },
     });
 
     // Send shipped email + push notification via unified notification system
     sendOrderNotification(id, "order_shipped", {
       trackingNumber,
-      carrier,
+      carrier: CARRIER_LABELS[normalizedCarrier] || carrier,
       estimatedDelivery,
     }).catch((emailErr) => console.error("[Ship] Notification failed:", emailErr));
 

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { verifyAdminToken } from "@/lib/admin-auth";
+import { getProductTemplate } from "@/lib/pricing/template-resolver";
+import { getProductMaterials } from "@/lib/pricing/product-materials";
 import PricingDetailClient from "./PricingDetailClient";
 
 /**
@@ -56,5 +58,9 @@ export default async function ProductPricingDetailPage({ params }) {
     } : null,
   };
 
-  return <PricingDetailClient product={serialized} />;
+  const pricingTemplate = getProductTemplate(product) || null;
+  const productMaterials = getProductMaterials(slug) || null;
+  const materialSource = productMaterials?.source || "template";
+
+  return <PricingDetailClient product={serialized} pricingTemplate={pricingTemplate} productMaterials={productMaterials} materialSource={materialSource} />;
 }

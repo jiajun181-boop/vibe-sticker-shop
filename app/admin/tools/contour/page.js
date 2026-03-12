@@ -22,6 +22,61 @@ async function blobFromUrl(url) {
   return res.blob();
 }
 
+/**
+ * Determine how to restore a saved contour job without full reprocessing.
+ *
+ * Returns one of three strategies:
+ *   "reuse"       — full geometry exists, reconstruct directly
+ *   "reprocess"   — no saved geometry, must re-run pipeline
+ *
+ * The reconstructed contourResult includes saved safetyDecisions
+ * so operators can see what processing mode was originally used.
+ */
+function buildReopenResult(inputData, outputData) {
+  const data = inputData || {};
+  const out = outputData || {};
+
+  if (!out.cutPath || !out.bleedPath) {
+    return { strategy: "reprocess", result: null };
+  }
+
+  return {
+    strategy: "reuse",
+    result: {
+      cutPath: out.cutPath,
+      bleedPath: out.bleedPath,
+      contourPoints: out.contourPoints || null,
+      bleedPoints: null,
+      svgString: null,
+      imageWidth: data.imageWidth || out.imageBounds?.width || 0,
+      imageHeight: data.imageHeight || out.imageBounds?.height || 0,
+      bgRemoved: out.bgRemoved || false,
+      processedImageUrl: out.processedFileUrl || null,
+      extractionMode: out.extractionMode || "unknown",
+      extractionMeta: {
+        maskCoverage: out.maskCoverage || null,
+        componentCount: out.componentCount || null,
+      },
+      maskOverlayUrl: null,
+      quality: {
+        confidence: out.contourConfidence || null,
+        shapeType: out.contourShapeType || null,
+        warnings: out.contourWarnings || [],
+        suggestion: out.contourSuggestion || null,
+        areaCoverage: out.areaCoverage || null,
+        rectangularity: out.rectangularity || null,
+        pointCount: out.pointCount || null,
+        contourBounds: out.contourBounds || null,
+        imageBounds: out.imageBounds || null,
+        extractionMode: out.extractionMode || null,
+        extractionMeta: {},
+      },
+      // Preserve safety decisions from original processing
+      safetyDecisions: out.safetyDecisions || null,
+    },
+  };
+}
+
 /** Detect touch-only mobile device (no hover). */
 function useIsMobile() {
   const [mobile, setMobile] = useState(false);
@@ -54,7 +109,7 @@ function buildContourFileName(imageName, suffix, ext) {
 
 export default function ContourToolPageWrapper() {
   return (
-    <Suspense fallback={<div className="flex h-64 items-center justify-center text-sm text-[#999]">Loading…</div>}>
+    <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-[#e0e0e0] border-t-black" /></div>}>
       <ContourToolPage />
     </Suspense>
   );
@@ -87,8 +142,11 @@ function ContourToolPage() {
   const [detailJob, setDetailJob] = useState(null);
   const [reopening, setReopening] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [errorRetryable, setErrorRetryable] = useState(false); // true = show retry button
   const [previewMode, setPreviewMode] = useState("contour"); // "contour" | "mask" | "source"
   const [taskSource, setTaskSource] = useState(null); // "new" | "reopened" | "duplicated"
+  const [imageInfo, setImageInfo] = useState(null); // { sizeMb, width, height, megapixels }
+  const [processingFallback, setProcessingFallback] = useState(false); // true when using degraded path
   const fileInputRef = useRef(null);
   const prevObjectUrlRef = useRef(null);
   const processingRef = useRef(false);
@@ -187,18 +245,45 @@ function ContourToolPage() {
   function handleFile(file) {
     if (!file || !file.type.startsWith("image/")) {
       setErrorMsg(t("admin.tools.contour.errorNotImage"));
+      setErrorRetryable(false);
       return;
     }
-    // Guard: reject files > 25MB (mobile devices can OOM on large images)
-    if (file.size > 25 * 1024 * 1024) {
+    // Hard file-size cap: prevents browser OOM during image decode (before
+    // we can read dimensions). The primary quality gate is the 100MP check
+    // below, but a 50MB compressed file can crash the tab during decode.
+    if (file.size > 50 * 1024 * 1024) {
       setErrorMsg(t("admin.tools.contour.errorTooLarge"));
+      setErrorRetryable(false);
       return;
     }
     setErrorMsg("");
+    setErrorRetryable(false);
     setTaskSource("new");
     const objectUrl = URL.createObjectURL(file);
     resetPreviewState(objectUrl, file.name, file);
-    processContour(objectUrl);
+
+    // Read actual image dimensions before processing
+    const img = new Image();
+    img.onload = () => {
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      const mp = (w * h) / 1_000_000;
+      const sizeMb = Math.round(file.size / 1024 / 1024 * 10) / 10;
+      setImageInfo({ sizeMb, width: w, height: h, megapixels: Math.round(mp * 10) / 10 });
+
+      // Hard reject: algorithm rejects >100MP (primary safety gate)
+      if (mp > 100) {
+        setErrorMsg(t("admin.tools.contour.errorExceedsMp").replace("{mp}", Math.round(mp)).replace("{dims}", `${w}\u00d7${h}px`));
+        setErrorRetryable(false);
+        return;
+      }
+      processContour(objectUrl);
+    };
+    img.onerror = () => {
+      setErrorMsg(t("admin.tools.contour.errorCorrupt"));
+      setErrorRetryable(false);
+    };
+    img.src = objectUrl;
   }
 
   // Human-readable progress labels
@@ -215,16 +300,21 @@ function ContourToolPage() {
     if (processingRef.current) return;
     processingRef.current = true;
     setProcessing(true);
+    setProcessingFallback(false);
     setProgress("");
     setProgressHuman(t("admin.tools.contour.progressLoading"));
+    setErrorMsg("");
+    setErrorRetryable(false);
 
     try {
       const { generateContour } = await import("@/lib/contour/generate-contour");
+      const usingFallback = isMobile;
+      if (usingFallback) setProcessingFallback(true);
       setProgressHuman(t("admin.tools.contour.progressTracing"));
       const result = await generateContour(url, {
         bleedMm,
         // On mobile, skip background removal (too memory-intensive)
-        skipBgRemoval: isMobile,
+        skipBgRemoval: usingFallback,
         onProgress: (stage) => {
           setProgress(stage);
           const key = PROGRESS_LABELS[stage];
@@ -238,9 +328,11 @@ function ContourToolPage() {
       console.error("Contour error:", err);
       const msg = err instanceof Error ? err.message : t("admin.tools.contour.errorTrace");
       setErrorMsg(msg);
+      setErrorRetryable(true);
       setProgressHuman("");
     } finally {
       setProcessing(false);
+      setProcessingFallback(false);
       processingRef.current = false;
     }
   }
@@ -354,6 +446,7 @@ function ContourToolPage() {
             bleedMm,
             imageWidth: contourResult.imageWidth,
             imageHeight: contourResult.imageHeight,
+            inputMegapixels: contourResult.safetyDecisions?.inputMegapixels || null,
             ...(itemId ? { itemId } : {}),
           },
           outputFileUrl: uploadedSvg.url,
@@ -361,6 +454,8 @@ function ContourToolPage() {
           outputData: {
             cutPath: contourResult.cutPath,
             bleedPath: contourResult.bleedPath,
+            // Persist contourPoints so reopen can reconstruct without reprocessing
+            contourPoints: contourResult.contourPoints || null,
             bgRemoved: contourResult.bgRemoved,
             svgFileUrl: uploadedSvg.url,
             svgFileKey: uploadedSvg.key,
@@ -381,6 +476,8 @@ function ContourToolPage() {
             componentCount: contourResult.extractionMeta?.componentCount || null,
             selectedComponentArea: contourResult.extractionMeta?.selectedComponentArea || null,
             backgroundUniformity: contourResult.extractionMeta?.bgUniformity || null,
+            // Safety decisions — explain why processing chose the path it did
+            safetyDecisions: contourResult.safetyDecisions || null,
           },
           notes: notes || null,
           orderId: orderId || null,
@@ -417,6 +514,9 @@ function ContourToolPage() {
     setDetailJob(null);
     setTaskSource("reopened");
 
+    // Determine reopen strategy using the shared helper
+    const { strategy, result } = buildReopenResult(job.inputData, job.outputData);
+
     if (job.inputFileUrl) {
       setReopening(true);
       try {
@@ -435,7 +535,14 @@ function ContourToolPage() {
         const file = new File([blob], data.fileName || "artwork.png", { type: blob.type || "image/png" });
         const objectUrl = URL.createObjectURL(blob);
         resetPreviewState(objectUrl, data.fileName || "artwork.png", file);
-        processContour(objectUrl);
+
+        if (strategy === "reuse" && result) {
+          // Fast path: reconstruct from saved geometry — no reprocessing
+          setContourResult(result);
+        } else {
+          // Legacy job without saved geometry — full reprocessing required
+          processContour(objectUrl);
+        }
       } catch (err) {
         console.error("Failed to reopen contour job:", err);
         setErrorMsg(t("admin.tools.contour.errorReopenFetch"));
@@ -458,6 +565,8 @@ function ContourToolPage() {
     setDetailJob(null);
     setTaskSource("duplicated");
 
+    const { strategy, result } = buildReopenResult(job.inputData, job.outputData);
+
     if (job.inputFileUrl) {
       setReopening(true);
       try {
@@ -476,7 +585,12 @@ function ContourToolPage() {
         const file = new File([blob], data.fileName || "artwork.png", { type: blob.type || "image/png" });
         const objectUrl = URL.createObjectURL(blob);
         resetPreviewState(objectUrl, data.fileName || "artwork.png", file);
-        processContour(objectUrl);
+
+        if (strategy === "reuse" && result) {
+          setContourResult(result);
+        } else {
+          processContour(objectUrl);
+        }
       } catch (err) {
         console.error("Failed to duplicate contour job:", err);
         setErrorMsg(t("admin.tools.contour.errorReopenFetch"));
@@ -630,13 +744,72 @@ function ContourToolPage() {
         <p className="text-xs text-blue-700">{t("admin.tools.contour.guidanceBanner")}</p>
       </div>
 
-      {/* Error banner */}
+      {/* Pre-processing awareness — based on real algorithm thresholds */}
+      {imageInfo && imageUrl && !processing && !contourResult && (() => {
+        const mp = imageInfo.megapixels;
+        const willDownscale = mp > 0.26; // MAX_CANVAS_PIXELS ≈ 0.26MP → image will be downscaled
+        const willSkipBgRemoval = isMobile || mp > 0.5; // MAX_BGREMOVAL_MPIX = 0.5
+        const isLargeInput = mp > 25;
+        if (!willDownscale && !willSkipBgRemoval && !isLargeInput) return null;
+        return (
+          <div className="flex items-start gap-3 rounded-[3px] border border-amber-200 bg-amber-50 px-4 py-3">
+            <svg className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+            </svg>
+            <div>
+              <p className="text-xs font-semibold text-amber-800">
+                {imageInfo.width}&times;{imageInfo.height}px ({mp}MP{imageInfo.sizeMb >= 10 ? ` · ${imageInfo.sizeMb}MB` : ""})
+              </p>
+              <ul className="mt-0.5 space-y-0.5 text-xs text-amber-700">
+                {willDownscale && (
+                  <li>{t("admin.tools.contour.warnDownscale")}</li>
+                )}
+                {willSkipBgRemoval && (
+                  <li>{isMobile ? t("admin.tools.contour.warnBgSkipMobile") : t("admin.tools.contour.warnBgSkipLarge")}</li>
+                )}
+                {isLargeInput && (
+                  <li>{t("admin.tools.contour.warnSlowInput")}</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Error banner — with retry + recovery guidance */}
       {errorMsg && (
-        <div className="flex items-center justify-between rounded-[3px] border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-xs text-red-700">{errorMsg}</p>
-          <button type="button" onClick={() => setErrorMsg("")} className="ml-3 text-red-400 hover:text-red-700">
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
+        <div className="rounded-[3px] border border-red-200 bg-red-50 px-4 py-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-red-800">{t("admin.tools.contour.errorProcessingFailed")}</p>
+              <p className="mt-0.5 text-xs text-red-700">{errorMsg}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {errorRetryable && imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => processContour(imageUrl)}
+                    className="rounded-[3px] bg-red-600 px-3 py-1.5 text-[10px] font-semibold text-white hover:bg-red-700"
+                  >
+                    {t("admin.tools.contour.retrySameFile")}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { fileInputRef.current?.click(); }}
+                  className="rounded-[3px] border border-red-300 px-3 py-1.5 text-[10px] font-medium text-red-700 hover:bg-red-100"
+                >
+                  {t("admin.tools.contour.tryDifferentFile")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setErrorMsg(""); setErrorRetryable(false); }}
+                  className="text-[10px] text-red-400 hover:text-red-700"
+                >
+                  {t("admin.tools.contour.dismiss")}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -692,6 +865,16 @@ function ContourToolPage() {
             <div className="text-center">
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#e0e0e0] border-t-black" />
               <p className="mt-3 text-sm text-[#666]">{progressHuman || t("admin.common.processing")}</p>
+              {processingFallback && (
+                <p className="mt-1 text-[10px] text-amber-600 font-medium">
+                  {isMobile ? t("admin.tools.contour.simplifiedModeMobile") : t("admin.tools.contour.simplifiedMode")}
+                </p>
+              )}
+              {imageInfo && imageInfo.megapixels > 4 && !processingFallback && (
+                <p className="mt-1 text-[10px] text-[#999]">
+                  {t("admin.tools.contour.processingSlower").replace("{dims}", `${imageInfo.width}\u00d7${imageInfo.height}px`).replace("{mp}", imageInfo.megapixels)}
+                </p>
+              )}
               {isMobile && <p className="mt-1 text-[10px] text-[#999]">{t("admin.tools.contour.mobileSlower")}</p>}
             </div>
           ) : contourResult ? (
@@ -785,6 +968,18 @@ function ContourToolPage() {
               )}
               {contourResult.quality?.suggestion && (
                 <SuggestionBanner suggestion={contourResult.quality.suggestion} t={t} />
+              )}
+              {/* Processing mode transparency — shows what the algorithm actually did */}
+              {contourResult.safetyDecisions && contourResult.safetyDecisions.degradedMode && (
+                <div className="flex items-start gap-2 rounded-[3px] border border-amber-200 bg-amber-50 px-3 py-2">
+                  <svg className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+                  </svg>
+                  <div className="text-[10px] text-amber-700">
+                    <span className="font-semibold">{t("admin.tools.contour.simplifiedUsed")}</span>
+                    <SafetyReasonList decisions={contourResult.safetyDecisions} t={t} />
+                  </div>
+                </div>
               )}
             </div>
           ) : (
@@ -969,6 +1164,25 @@ function ContourToolPage() {
         <div className="border-b border-[#e0e0e0] px-5 py-3">
           <h2 className="text-sm font-bold text-black">{t("admin.tools.contour.recentTitle")}</h2>
           <p className="mt-0.5 text-[10px] text-[#999]">{t("admin.tools.contour.recentSubtitle")}</p>
+          {(() => {
+            const reviewCount = jobs.filter(j => j.status === "needs_review").length;
+            const failedCount = jobs.filter(j => j.status === "failed" || j.status === "error").length;
+            if (reviewCount === 0 && failedCount === 0) return null;
+            return (
+              <div className="mt-1.5 flex flex-wrap gap-2">
+                {reviewCount > 0 && (
+                  <span className="rounded-[2px] bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                    {reviewCount} needs review
+                  </span>
+                )}
+                {failedCount > 0 && (
+                  <span className="rounded-[2px] bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                    {failedCount} failed — reopen to retry
+                  </span>
+                )}
+              </div>
+            );
+          })()}
         </div>
         {loadingJobs ? (
           <div className="px-5 py-8 text-center text-sm text-[#999]">{t("admin.tools.loading")}</div>
@@ -1098,8 +1312,11 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate, reo
     }
   }
 
+  const isReview = job.status === "needs_review";
+  const isFailed = job.status === "failed" || job.status === "error";
+
   return (
-    <div className="flex flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className={`flex flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between ${isReview ? "bg-amber-50/50 border-l-2 border-l-amber-400" : isFailed ? "bg-red-50/30 border-l-2 border-l-red-300" : ""}`}>
       {/* Thumbnail */}
       <button type="button" onClick={() => onDetail(job)} className="h-12 w-12 shrink-0 overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] transition-opacity hover:opacity-80">
         {thumbUrl ? (
@@ -1164,7 +1381,7 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate, reo
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Actions — reopen (same order) is primary, duplicate (new job) is secondary */}
       <div className="flex flex-wrap items-center gap-1.5 shrink-0">
         {output.processedFileUrl && (
           <button
@@ -1186,7 +1403,8 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate, reo
           type="button"
           onClick={() => onReopen(job)}
           disabled={reopening}
-          className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black disabled:opacity-50"
+          title={output.cutPath && output.bleedPath ? t("admin.tools.contour.reopenRestores") : t("admin.tools.contour.reopenReprocesses")}
+          className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
         >
           {t("admin.tools.reopen")}
         </button>
@@ -1194,7 +1412,8 @@ function ContourJobRow({ job, t, onPreview, onDetail, onReopen, onDuplicate, reo
           type="button"
           onClick={() => onDuplicate(job)}
           disabled={reopening}
-          className="rounded-[3px] border border-[#e0e0e0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black disabled:opacity-50"
+          title={output.cutPath && output.bleedPath ? t("admin.tools.contour.dupRestores") : t("admin.tools.contour.dupReprocesses")}
+          className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black disabled:opacity-50"
         >
           {t("admin.tools.contour.duplicate")}
         </button>
@@ -1359,6 +1578,13 @@ function ContourDetailModal({ job, t, onClose, onReopen, onDuplicate, reopening,
               } />
             ) : null}
           </div>
+          {/* Safety decisions from original processing */}
+          {job.outputData?.safetyDecisions?.degradedMode && (
+            <div className="rounded-[3px] border border-amber-200 bg-amber-50 px-3 py-2">
+              <p className="text-[10px] font-semibold text-amber-700">{t("admin.tools.contour.simplifiedUsed")}</p>
+              <SafetyReasonList decisions={job.outputData.safetyDecisions} t={t} />
+            </div>
+          )}
           {/* Notes with inline edit */}
           <div>
             <div className="flex items-center gap-1.5">
@@ -1392,24 +1618,39 @@ function ContourDetailModal({ job, t, onClose, onReopen, onDuplicate, reopening,
               <p className="text-sm text-[#111]">{job.notes || "—"}</p>
             )}
           </div>
-          {/* Actions */}
+          {/* Actions — reopen keeps order link, duplicate starts fresh */}
+          {(() => {
+            const hasSavedGeometry = !!(job.outputData?.cutPath && job.outputData?.bleedPath);
+            const reopenHint = hasSavedGeometry
+              ? t("admin.tools.contour.reopenRestores")
+              : t("admin.tools.contour.reopenReprocesses");
+            const dupHint = hasSavedGeometry
+              ? t("admin.tools.contour.dupRestores")
+              : t("admin.tools.contour.dupReprocesses");
+            return (
           <div className="flex flex-wrap gap-2 border-t border-[#e0e0e0] pt-4">
-            <button
-              type="button"
-              onClick={() => onReopen(job)}
-              disabled={reopening}
-              className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
-            >
-              {reopening ? t("admin.tools.contour.loadingReopen") : t("admin.tools.contour.reopenEdit")}
-            </button>
-            <button
-              type="button"
-              onClick={() => onDuplicate(job)}
-              disabled={reopening}
-              className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black disabled:opacity-50"
-            >
-              {t("admin.tools.contour.duplicate")}
-            </button>
+            <div className="flex flex-col gap-0.5">
+              <button
+                type="button"
+                onClick={() => onReopen(job)}
+                disabled={reopening}
+                className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-white hover:bg-[#222] disabled:opacity-50"
+              >
+                {reopening ? t("admin.tools.contour.loadingReopen") : t("admin.tools.contour.reopenEdit")}
+              </button>
+              <span className="text-[9px] text-[#999]">{reopenHint}</span>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <button
+                type="button"
+                onClick={() => onDuplicate(job)}
+                disabled={reopening}
+                className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black disabled:opacity-50"
+              >
+                {t("admin.tools.contour.duplicate")}
+              </button>
+              <span className="text-[9px] text-[#999]">{dupHint}</span>
+            </div>
             {job.outputData?.svgFileUrl ? (
               <a href={job.outputData.svgFileUrl} download className="rounded-[3px] border border-[#e0e0e0] px-4 py-2 text-xs font-medium text-[#666] hover:border-black hover:text-black">
                 {t("admin.tools.downloadSvg")}
@@ -1426,6 +1667,8 @@ function ContourDetailModal({ job, t, onClose, onReopen, onDuplicate, reopening,
               </a>
             ) : null}
           </div>
+            );
+          })()}
         </div>
       </div>
     </div>
@@ -1553,6 +1796,41 @@ function QualityGatedSave({ confidence, saving, onSave, t }) {
     >
       {saving ? t("admin.tools.saving") : t("admin.tools.contour.saveFlag")}
     </button>
+  );
+}
+
+// ─── Safety Decisions Transparency ────────────────────────────────────────────
+
+const BG_SKIP_REASON_KEYS = {
+  too_large: "admin.tools.contour.safetyBgTooLarge",
+  skipped_by_config: "admin.tools.contour.safetyBgSkipConfig",
+  ml_runtime_error: "admin.tools.contour.safetyBgMlFailed",
+};
+
+function SafetyReasonList({ decisions, t }) {
+  if (!decisions) return null;
+  const reasons = [];
+  if (decisions.canvasLimitApplied) {
+    const proc = decisions.processingDimensions;
+    reasons.push(
+      (t ? t("admin.tools.contour.safetyDownscaled") : "Downscaled to {dims} for tracing")
+        .replace("{dims}", `${proc?.width || "?"}×${proc?.height || "?"}px`)
+    );
+  }
+  const bgReason = decisions.bgRemovalSkippedReason;
+  if (bgReason && bgReason !== "not_needed_has_alpha" && bgReason !== "not_needed_mask_usable") {
+    const key = BG_SKIP_REASON_KEYS[bgReason];
+    reasons.push(
+      key && t ? t(key)
+        : t ? t("admin.tools.contour.safetyBgSkipped").replace("{reason}", bgReason)
+        : `Background removal skipped: ${bgReason}`
+    );
+  }
+  if (reasons.length === 0) return null;
+  return (
+    <ul className="mt-0.5 list-disc pl-3.5 space-y-0.5">
+      {reasons.map((r, i) => <li key={i}>{r}</li>)}
+    </ul>
   );
 }
 

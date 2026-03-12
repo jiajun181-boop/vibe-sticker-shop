@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatCad } from "@/lib/admin/format-cad";
+import { DESIGN_HELP_CENTS } from "@/lib/order-config";
 
 // ── Product type presets for quick selection ──
 const PRODUCT_TYPES = [
@@ -22,6 +23,12 @@ const PRODUCT_TYPES = [
   { value: "other", label: "Other / Custom", labelZh: "其他" },
 ];
 
+const ARTWORK_INTENT_OPTIONS = [
+  { value: "provided", label: "Artwork provided", labelZh: "已提供文件" },
+  { value: "upload-later", label: "Upload later", labelZh: "稍后上传" },
+  { value: "design-help", label: "Design help ($45)", labelZh: "设计服务 ($45)" },
+];
+
 function emptyItem() {
   return {
     id: Date.now(),
@@ -34,6 +41,12 @@ function emptyItem() {
     material: "",
     finishing: "",
     notes: "",
+    artworkIntent: "provided",
+    rushProduction: false,
+    // Pricing provenance: "manual" | "calculated" | "overridden"
+    pricingSource: "manual",
+    calcSlug: null,           // slug used when price was calculated
+    calculatedUnitCents: null, // original calculated price (preserved if overridden)
   };
 }
 
@@ -58,6 +71,7 @@ export default function CreateOrderPage() {
 
   // Price calculation
   const [calculating, setCalculating] = useState({});
+  const [calcError, setCalcError] = useState({});
 
   const updateItem = (id, field, value) => {
     setItems((prev) =>
@@ -76,6 +90,7 @@ export default function CreateOrderPage() {
   const calculatePrice = async (item) => {
     if (!item.productName) return;
     setCalculating((prev) => ({ ...prev, [item.id]: true }));
+    setCalcError((prev) => ({ ...prev, [item.id]: null }));
 
     try {
       // Build a slug from product type
@@ -93,7 +108,10 @@ export default function CreateOrderPage() {
       };
 
       const slug = slugMap[item.productType];
-      if (!slug) return; // Can't auto-calculate for "other" or "stamp" types
+      if (!slug) {
+        setCalcError((prev) => ({ ...prev, [item.id]: "No pricing for this product type — enter price manually" }));
+        return;
+      }
 
       const body = {
         slug,
@@ -111,15 +129,26 @@ export default function CreateOrderPage() {
 
       if (res.ok) {
         const data = await res.json();
-        // Set unit price in dollars
-        updateItem(
-          item.id,
-          "unitPriceDollars",
-          (data.unitCents / 100).toFixed(2)
+        const calcDollars = (data.unitCents / 100).toFixed(2);
+        setItems((prev) =>
+          prev.map((it) =>
+            it.id === item.id
+              ? {
+                  ...it,
+                  unitPriceDollars: calcDollars,
+                  pricingSource: "calculated",
+                  calcSlug: slug,
+                  calculatedUnitCents: data.unitCents,
+                }
+              : it
+          )
         );
+      } else {
+        const data = await res.json().catch(() => null);
+        setCalcError((prev) => ({ ...prev, [item.id]: data?.error || "Pricing API error — enter price manually" }));
       }
     } catch {
-      // Silent fail — admin can enter price manually
+      setCalcError((prev) => ({ ...prev, [item.id]: "Network error — enter price manually" }));
     } finally {
       setCalculating((prev) => ({ ...prev, [item.id]: false }));
     }
@@ -130,10 +159,13 @@ export default function CreateOrderPage() {
     return Math.round(unitPrice * 100 * item.quantity);
   };
 
+  const designHelpCount = items.filter((i) => i.artworkIntent === "design-help").length;
+  const designHelpTotalCents = designHelpCount * DESIGN_HELP_CENTS;
+
   const orderTotalCents = items.reduce(
     (sum, item) => sum + getItemTotalCents(item),
     0
-  );
+  ) + designHelpTotalCents;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -166,7 +198,21 @@ export default function CreateOrderPage() {
           heightIn: parseFloat(item.heightIn) || null,
           material: item.material || null,
           finishing: item.finishing || null,
-          meta: item.notes ? { adminNotes: item.notes } : null,
+          artworkIntent: item.artworkIntent,
+          rushProduction: item.rushProduction,
+          meta: {
+            ...(item.notes ? { adminNotes: item.notes } : {}),
+            artworkIntent: item.artworkIntent,
+            rushProduction: item.rushProduction ? "true" : "false",
+            ...(item.artworkIntent === "design-help" ? { designHelp: "true", designHelpFee: String(DESIGN_HELP_CENTS) } : {}),
+            ...(item.artworkIntent === "upload-later" ? { artworkStatus: "pending" } : {}),
+            // Pricing provenance
+            pricingSource: item.pricingSource,
+            ...(item.calcSlug ? { pricingQuoteSlug: item.calcSlug } : {}),
+            ...(item.pricingSource === "overridden" && item.calculatedUnitCents
+              ? { calculatedUnitCents: item.calculatedUnitCents }
+              : {}),
+          },
         })),
       };
 
@@ -199,7 +245,10 @@ export default function CreateOrderPage() {
             New Order 新建订单
           </h1>
           <p className="text-sm text-[#999]">
-            Create a manual order for walk-in or phone customers
+            Create a manual order for walk-in or phone customers.{" "}
+            <Link href="/admin/pricing-dashboard" className="text-black underline hover:no-underline">
+              Check product prices
+            </Link>
           </p>
         </div>
         <Link
@@ -424,13 +473,18 @@ export default function CreateOrderPage() {
                         step="0.01"
                         min="0"
                         value={item.unitPriceDollars}
-                        onChange={(e) =>
-                          updateItem(
-                            item.id,
-                            "unitPriceDollars",
-                            e.target.value
-                          )
-                        }
+                        onChange={(e) => {
+                          const newVal = e.target.value;
+                          setItems((prev) =>
+                            prev.map((it) => {
+                              if (it.id !== item.id) return it;
+                              // If price was calculated and user changes it, mark as overridden
+                              const wasCalc = it.pricingSource === "calculated" || it.pricingSource === "overridden";
+                              const newSource = wasCalc ? "overridden" : "manual";
+                              return { ...it, unitPriceDollars: newVal, pricingSource: newSource };
+                            })
+                          );
+                        }}
                         placeholder="0.00"
                         className="w-full rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm font-mono outline-none focus:border-black"
                       />
@@ -444,6 +498,20 @@ export default function CreateOrderPage() {
                         {calculating[item.id] ? "..." : "Calc"}
                       </button>
                     </div>
+                    {calcError[item.id] && (
+                      <p className="mt-1 text-[11px] text-amber-600">{calcError[item.id]}</p>
+                    )}
+                    {item.pricingSource === "calculated" && (
+                      <p className="mt-1 text-[11px] text-emerald-600 font-medium">System-calculated price</p>
+                    )}
+                    {item.pricingSource === "overridden" && (
+                      <p className="mt-1 text-[11px] text-amber-600 font-medium">
+                        Overridden (was {formatCad(item.calculatedUnitCents || 0)}/ea)
+                      </p>
+                    )}
+                    {item.pricingSource === "manual" && item.unitPriceDollars && (
+                      <p className="mt-1 text-[11px] text-[#999]">Manual price</p>
+                    )}
                   </div>
                   <div className="flex items-end">
                     <div className="rounded-[3px] bg-[#f0f0f0] px-3 py-2 text-sm font-bold tabular-nums text-black">
@@ -452,7 +520,54 @@ export default function CreateOrderPage() {
                   </div>
                 </div>
 
-                {/* Row 4: Item notes */}
+                {/* Row 4: Artwork intent + Rush */}
+                <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs text-[#666] mb-1">
+                      Artwork 文件状态
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {ARTWORK_INTENT_OPTIONS.map((opt) => (
+                        <label key={opt.value} className="flex items-center gap-1.5">
+                          <input
+                            type="radio"
+                            name={`artworkIntent-${item.id}`}
+                            value={opt.value}
+                            checked={item.artworkIntent === opt.value}
+                            onChange={() => updateItem(item.id, "artworkIntent", opt.value)}
+                            className="h-3.5 w-3.5"
+                          />
+                          <span className={`text-xs ${item.artworkIntent === opt.value ? "font-semibold text-black" : "text-[#666]"}`}>
+                            {opt.label}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    {item.artworkIntent === "design-help" && (
+                      <p className="mt-1 text-[11px] text-indigo-600">
+                        +{formatCad(DESIGN_HELP_CENTS)} design-help fee will be added as a service line
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[#666] mb-1">
+                      Rush 加急
+                    </label>
+                    <label className="inline-flex items-center gap-2 rounded-[3px] border border-[#d0d0d0] px-3 py-2 cursor-pointer hover:border-black">
+                      <input
+                        type="checkbox"
+                        checked={item.rushProduction}
+                        onChange={(e) => updateItem(item.id, "rushProduction", e.target.checked)}
+                        className="h-4 w-4"
+                      />
+                      <span className={`text-xs ${item.rushProduction ? "font-semibold text-amber-700" : "text-[#666]"}`}>
+                        Rush production 加急生产
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Row 5: Item notes */}
                 <div>
                   <label className="block text-xs text-[#666] mb-1">
                     Item Notes 备注
@@ -524,6 +639,26 @@ export default function CreateOrderPage() {
             <div>
               <span className="text-sm text-[#666]">
                 {items.length} item{items.length > 1 ? "s" : ""}
+                {designHelpCount > 0 && (
+                  <span className="ml-2 text-indigo-600">
+                    + {designHelpCount} design-help fee{designHelpCount > 1 ? "s" : ""} ({formatCad(designHelpTotalCents)})
+                  </span>
+                )}
+                {items.some((i) => i.rushProduction) && (
+                  <span className="ml-2 text-amber-600">RUSH</span>
+                )}
+                {(() => {
+                  const calc = items.filter(i => i.pricingSource === "calculated").length;
+                  const over = items.filter(i => i.pricingSource === "overridden").length;
+                  const manual = items.filter(i => i.pricingSource === "manual" && i.unitPriceDollars).length;
+                  const parts = [];
+                  if (calc > 0) parts.push(`${calc} calc`);
+                  if (over > 0) parts.push(`${over} overridden`);
+                  if (manual > 0) parts.push(`${manual} manual`);
+                  return parts.length > 0 ? (
+                    <span className="ml-2 text-[#999]">({parts.join(", ")})</span>
+                  ) : null;
+                })()}
               </span>
               <span className="ml-4 text-lg font-bold tabular-nums text-black">
                 Order Total: {formatCad(orderTotalCents)}

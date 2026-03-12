@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
 import { refreshAutoTags } from "@/lib/auto-tag";
+import { itemNeedsArtwork } from "@/lib/artwork-detection";
 
 /**
  * GET /api/account/orders/[id]/files
@@ -65,15 +66,9 @@ export async function GET(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Check which items are missing artwork
+    // Check which items are missing artwork (shared detection)
     const itemsNeedingArtwork = order.items
-      .filter((item) => {
-        const meta = item.meta && typeof item.meta === "object" ? item.meta as Record<string, unknown> : {};
-        const hasFile = !!(item.fileUrl || meta.artworkUrl || meta.fileUrl);
-        const isUploadLater = meta.artworkIntent === "upload-later" || meta.intakeMode === "upload-later";
-        const isDesignHelp = meta.artworkIntent === "design-help" || meta.designHelp === true;
-        return !hasFile && !isDesignHelp; // Design-help items don't need customer upload
-      })
+      .filter((item) => itemNeedsArtwork(item))
       .map((item) => ({
         id: item.id,
         productName: item.productName,
@@ -96,6 +91,9 @@ export async function GET(
  * Link an uploaded file to an order as an OrderFile.
  * Customer calls this AFTER uploading via UploadThing.
  *
+ * Auto-links to the single remaining item when itemId is omitted.
+ * Returns 400 if multiple items still need artwork and no itemId provided.
+ *
  * Body: {
  *   fileUrl: string,     — UploadThing URL
  *   fileName: string,    — original file name
@@ -117,7 +115,8 @@ export async function POST(
 
     const { id } = await params;
     const body = await request.json();
-    const { fileUrl, fileName, storageKey, mimeType, sizeBytes, itemId } = body;
+    const { fileUrl, fileName, storageKey, mimeType, sizeBytes } = body;
+    let { itemId } = body;
 
     if (!fileUrl || !fileName) {
       return NextResponse.json(
@@ -129,7 +128,15 @@ export async function POST(
     // Verify order ownership
     const order = await prisma.order.findUnique({
       where: { id },
-      select: { id: true, userId: true, customerEmail: true, status: true },
+      select: {
+        id: true,
+        userId: true,
+        customerEmail: true,
+        status: true,
+        items: {
+          select: { id: true, productName: true, fileUrl: true, meta: true },
+        },
+      },
     });
 
     if (!order) {
@@ -144,6 +151,21 @@ export async function POST(
     if (["canceled", "refunded"].includes(order.status)) {
       return NextResponse.json(
         { error: "Cannot upload files for a canceled order" },
+        { status: 400 }
+      );
+    }
+
+    // Resolve itemId: auto-link if exactly one item needs artwork
+    const itemsStillNeeding = order.items.filter((item) => itemNeedsArtwork(item));
+
+    if (!itemId && itemsStillNeeding.length === 1) {
+      itemId = itemsStillNeeding[0].id;
+    } else if (!itemId && itemsStillNeeding.length > 1) {
+      return NextResponse.json(
+        {
+          error: "This order has multiple items that need artwork. Please select which item this file is for.",
+          itemsNeeding: itemsStillNeeding.map((i) => ({ id: i.id, productName: i.productName })),
+        },
         { status: 400 }
       );
     }
@@ -167,7 +189,7 @@ export async function POST(
       },
     });
 
-    // If itemId provided, also update the item's fileUrl
+    // Update the item's fileUrl so item-level detection sees the artwork
     if (itemId) {
       const item = await prisma.orderItem.findFirst({
         where: { id: itemId, orderId: id },

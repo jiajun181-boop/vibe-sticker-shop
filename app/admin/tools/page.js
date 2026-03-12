@@ -49,18 +49,6 @@ const TOOLS = [
       </svg>
     ),
   },
-  {
-    titleKey: "admin.tools.pricingTitle",
-    descKey: "admin.tools.pricingDesc",
-    href: "/admin/pricing-dashboard",
-    toolType: null,
-    actions: [],
-    icon: (
-      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
 ];
 
 
@@ -101,6 +89,13 @@ export default function ToolsHubPage() {
     fetchData();
   }, []);
 
+  // Compute status summary from recent jobs
+  const jobStatusSummary = recentJobs.reduce((acc, job) => {
+    if (job.status === "needs_review") acc.review++;
+    if (job.status === "failed") acc.failed++;
+    return acc;
+  }, { review: 0, failed: 0 });
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Breadcrumb */}
@@ -111,9 +106,28 @@ export default function ToolsHubPage() {
       </div>
 
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-        <h1 className="text-xl font-bold text-black">{t("admin.tools.hubTitle")}</h1>
-        <p className="mt-1 text-sm text-[#666]">{t("admin.tools.hubSubtitle")}</p>
-        <p className="mt-2 text-xs text-[#999]">{t("admin.tools.hubGuidance")}</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-black">{t("admin.tools.hubTitle")}</h1>
+            <p className="mt-1 text-sm text-[#666]">{t("admin.tools.hubSubtitle")}</p>
+            <p className="mt-2 text-xs text-[#999]">{t("admin.tools.hubGuidance")}</p>
+          </div>
+          {/* Status summary chips */}
+          {(jobStatusSummary.review > 0 || jobStatusSummary.failed > 0) && (
+            <div className="flex shrink-0 gap-1.5">
+              {jobStatusSummary.review > 0 && (
+                <span className="rounded-[3px] bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">
+                  {jobStatusSummary.review} {t("admin.tools.needsReview")}
+                </span>
+              )}
+              {jobStatusSummary.failed > 0 && (
+                <span className="rounded-[3px] bg-red-50 px-2 py-1 text-[10px] font-semibold text-red-700">
+                  {jobStatusSummary.failed} {t("admin.tools.failedJobs")}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tool Cards */}
@@ -192,15 +206,25 @@ export default function ToolsHubPage() {
             {recentJobs.map((job) => {
               const toolHrefs = { contour: "/admin/tools/contour", "stamp-studio": "/admin/tools/stamp-studio", proof: "/admin/tools/proof" };
               const href = job.orderId ? `/admin/orders/${job.orderId}` : toolHrefs[job.toolType] || "/admin/tools";
+              const fileName = job.inputData?.fileName;
+              // Next-step hint based on status
+              const statusHint = job.status === "needs_review" ? t("admin.tools.hintReview")
+                : job.status === "failed" ? t("admin.tools.hintRetry")
+                : null;
               return (
-                <div key={job.id} className="flex items-center justify-between px-5 py-3">
-                  <Link href={href} className="flex items-center gap-3 min-w-0 flex-1 transition-colors hover:text-[#4f46e5]">
-                    <span className="inline-block rounded-full bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-semibold text-[#666]">
-                      {TOOL_TYPE_LABELS[job.toolType] ? t(TOOL_TYPE_LABELS[job.toolType]) : job.toolType}
-                    </span>
-                    <span className="text-sm text-[#111] truncate">{job.operatorName || "—"}</span>
-                    <StatusBadge status={job.status} t={t} />
-                    <span className="text-xs text-[#999]">{timeAgo(job.createdAt, t)}</span>
+                <div key={job.id} className={`flex items-center justify-between px-5 py-3${job.status === "needs_review" ? " border-l-2 border-l-amber-400" : job.status === "failed" ? " border-l-2 border-l-red-400" : ""}`}>
+                  <Link href={href} className="flex flex-col gap-0.5 min-w-0 flex-1 transition-colors hover:text-[#4f46e5]">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-block rounded-full bg-[#f0f0f0] px-2 py-0.5 text-[10px] font-semibold text-[#666]">
+                        {TOOL_TYPE_LABELS[job.toolType] ? t(TOOL_TYPE_LABELS[job.toolType]) : job.toolType}
+                      </span>
+                      <span className="text-sm text-[#111] truncate">{fileName || job.operatorName || "—"}</span>
+                      <StatusBadge status={job.status} t={t} />
+                      <span className="text-xs text-[#999]">{timeAgo(job.createdAt, t)}</span>
+                    </div>
+                    {statusHint && (
+                      <span className="text-[10px] text-[#999] ml-0.5">{statusHint}</span>
+                    )}
                   </Link>
                   {job.outputFileUrl && (
                     <a

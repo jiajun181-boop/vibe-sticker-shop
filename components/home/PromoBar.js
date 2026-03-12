@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { stripLocalePrefix } from "@/lib/route-path";
 
 const STORAGE_KEY = "vibe-promo-dismissed";
 
 export default function PromoBar() {
   const { t } = useTranslation();
   const barRef = useRef(null);
-  const pathname = usePathname() || "";
+  const pathname = stripLocalePrefix(usePathname() || "");
   // Hide on mobile for product/configurator pages
   const isProductPage = pathname.startsWith("/order") || /^\/shop\/[^/]+\/[^/]+$/.test(pathname);
 

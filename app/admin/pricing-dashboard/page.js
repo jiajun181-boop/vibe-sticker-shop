@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { getProductMaterials } from "@/lib/pricing/product-materials";
 
 const CATEGORIES = [
   { value: "all", labelKey: "admin.priceDash.catAll" },
@@ -22,6 +23,7 @@ export default function PricingDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  const [coverageFilter, setCoverageFilter] = useState("all"); // all | covered | uncovered
   const [error, setError] = useState(null);
 
   const fetchProducts = useCallback(async () => {
@@ -62,8 +64,24 @@ export default function PricingDashboardPage() {
         (p.slug || "").toLowerCase().includes(q)
       );
     }
+    if (coverageFilter !== "all") {
+      list = list.filter(p => {
+        const pm = getProductMaterials(p.slug);
+        return coverageFilter === "covered" ? !!pm : !pm;
+      });
+    }
     return list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  }, [products, category, search]);
+  }, [products, category, search, coverageFilter]);
+
+  // Coverage stats for active products
+  const coverageStats = useMemo(() => {
+    const active = products.filter(p => p.isActive);
+    let covered = 0;
+    for (const p of active) {
+      if (getProductMaterials(p.slug)) covered++;
+    }
+    return { covered, uncovered: active.length - covered };
+  }, [products]);
 
   // Determine pricing model label
   function getPricingLabel(product) {
@@ -77,6 +95,14 @@ export default function PricingDashboardPage() {
     return { label: t("admin.priceDash.modelTemplate"), color: "bg-gray-100 text-gray-700" };
   }
 
+  // Material coverage status per product
+  function getCoverageLabel(slug) {
+    const pm = getProductMaterials(slug);
+    if (!pm) return { label: t("admin.priceDash.covFallback"), color: "bg-amber-50 text-amber-700 border border-amber-200", covered: false };
+    if (pm.type === "fixed") return { label: t("admin.priceDash.covFixed"), color: "bg-sky-50 text-sky-700 border border-sky-200", covered: true };
+    return { label: t("admin.priceDash.covMapped"), color: "bg-emerald-50 text-emerald-700 border border-emerald-200", covered: true };
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       {/* Page header */}
@@ -84,16 +110,23 @@ export default function PricingDashboardPage() {
         <div>
           <h1 className="text-xl font-bold text-gray-900">{t("admin.priceDash.title")}</h1>
           <p className="mt-1 text-sm text-gray-500">{t("admin.priceDash.subtitle")}</p>
+          <p className="mt-0.5 text-xs text-gray-400">
+            Click a product to view/edit its pricing tiers. Use
+            {" "}<Link href="/admin/orders/create" className="text-indigo-500 hover:underline">New Order</Link>{" "}
+            to create manual orders with auto-calculated prices.
+          </p>
         </div>
-        <Link
-          href="/admin/pricing-dashboard/log"
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
-        >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          {t("admin.priceDash.changeLog")}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/pricing-dashboard/log"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {t("admin.priceDash.changeLog")}
+          </Link>
+        </div>
       </div>
 
       {/* Stats cards */}
@@ -103,6 +136,36 @@ export default function PricingDashboardPage() {
         <StatCard label={t("admin.priceDash.statFixed")} value={stats.outsourced} color="text-green-600" />
         <StatCard label={t("admin.priceDash.statTemplate")} value={stats.templateBased} color="text-gray-600" />
       </div>
+
+      {/* Material coverage summary */}
+      {!loading && coverageStats.covered > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm">
+          <span className="font-medium text-gray-700">{t("admin.priceDash.materialCoverage")}</span>
+          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+            {coverageStats.covered} {t("admin.priceDash.covCovered")}
+          </span>
+          {coverageStats.uncovered > 0 && (
+            <button
+              onClick={() => setCoverageFilter(coverageFilter === "uncovered" ? "all" : "uncovered")}
+              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${
+                coverageFilter === "uncovered"
+                  ? "bg-amber-200 text-amber-900"
+                  : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+              }`}
+            >
+              {coverageStats.uncovered} {t("admin.priceDash.covUncovered")}
+            </button>
+          )}
+          {coverageFilter !== "all" && (
+            <button
+              onClick={() => setCoverageFilter("all")}
+              className="text-xs text-gray-400 hover:text-gray-600"
+            >
+              {t("admin.priceDash.covShowAll")}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Search + filter */}
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -153,6 +216,7 @@ export default function PricingDashboardPage() {
           <div className="space-y-2 sm:hidden">
             {filtered.map(product => {
               const pricing = getPricingLabel(product);
+              const coverage = getCoverageLabel(product.slug);
               return (
                 <div key={product.id} className="rounded-xl border border-gray-200 bg-white p-4">
                   <div className="flex items-start justify-between gap-3">
@@ -160,9 +224,14 @@ export default function PricingDashboardPage() {
                       <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
                       <p className="text-xs text-gray-400 truncate">{product.slug}</p>
                     </div>
-                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${pricing.color}`}>
-                      {pricing.label}
-                    </span>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${pricing.color}`}>
+                        {pricing.label}
+                      </span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${coverage.color}`}>
+                        {coverage.label}
+                      </span>
+                    </div>
                   </div>
                   <Link
                     href={`/admin/pricing-dashboard/${product.slug}`}
@@ -183,12 +252,14 @@ export default function PricingDashboardPage() {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">{t("admin.priceDash.colProduct")}</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">{t("admin.priceDash.colCategory")}</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">{t("admin.priceDash.colPricing")}</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">{t("admin.priceDash.colMaterial")}</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-gray-600">{t("admin.priceDash.colAction")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filtered.map(product => {
                   const pricing = getPricingLabel(product);
+                  const coverage = getCoverageLabel(product.slug);
                   return (
                     <tr key={product.id} className="transition-colors hover:bg-gray-50">
                       <td className="px-4 py-3">
@@ -203,6 +274,11 @@ export default function PricingDashboardPage() {
                       <td className="px-4 py-3">
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${pricing.color}`}>
                           {pricing.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${coverage.color}`}>
+                          {coverage.label}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">

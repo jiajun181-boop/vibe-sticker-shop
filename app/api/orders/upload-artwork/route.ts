@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getClientIp, uploadLimiter } from "@/lib/rate-limit";
 import { refreshAutoTags } from "@/lib/auto-tag";
+import { itemNeedsArtwork } from "@/lib/artwork-detection";
 
 /**
  * POST /api/orders/upload-artwork
  *
  * Guest-accessible artwork upload endpoint.
  * Verifies customer identity via email + order reference (same as track-order).
+ *
+ * Auto-links to the single remaining item when itemId is omitted.
+ * Returns 400 if multiple items still need artwork and no itemId provided.
  *
  * Body: {
  *   email: string,       — customer email for verification
@@ -36,7 +40,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, orderId, fileUrl, fileName, storageKey, mimeType, sizeBytes, itemId } = body;
+    const { email, orderId, fileUrl, fileName, storageKey, mimeType, sizeBytes } = body;
+    let { itemId } = body;
 
     if (!email || !orderId || !fileUrl || !fileName) {
       return NextResponse.json(
@@ -52,6 +57,9 @@ export async function POST(request: NextRequest) {
         id: true,
         customerEmail: true,
         status: true,
+        items: {
+          select: { id: true, productName: true, fileUrl: true, meta: true },
+        },
       },
     });
 
@@ -68,6 +76,21 @@ export async function POST(request: NextRequest) {
     if (["canceled", "refunded"].includes(order.status)) {
       return NextResponse.json(
         { error: "Cannot upload files for a canceled order" },
+        { status: 400 }
+      );
+    }
+
+    // Resolve itemId: auto-link if exactly one item needs artwork
+    const itemsStillNeeding = order.items.filter((item) => itemNeedsArtwork(item));
+
+    if (!itemId && itemsStillNeeding.length === 1) {
+      itemId = itemsStillNeeding[0].id;
+    } else if (!itemId && itemsStillNeeding.length > 1) {
+      return NextResponse.json(
+        {
+          error: "This order has multiple items that need artwork. Please select which item this file is for.",
+          itemsNeeding: itemsStillNeeding.map((i) => ({ id: i.id, productName: i.productName })),
+        },
         { status: 400 }
       );
     }
@@ -90,7 +113,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Link to specific item if provided
+    // Update the item's fileUrl so item-level detection sees the artwork
     if (itemId) {
       const item = await prisma.orderItem.findFirst({
         where: { id: itemId, orderId },

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
+import { itemHasArtwork, itemIsDesignHelp, itemIsArtworkProvided } from "@/lib/artwork-detection";
+import { isServiceFeeItem } from "@/lib/order-item-utils";
 
 /**
  * GET /api/admin/orders/missing-artwork
@@ -75,13 +77,17 @@ export async function GET(request: NextRequest) {
 
       for (const item of order.items) {
         const meta = item.meta && typeof item.meta === "object" ? item.meta as Record<string, unknown> : {};
-        const hasFile = !!(item.fileUrl || meta.artworkUrl || meta.fileUrl);
-        const isDesignHelp = meta.artworkIntent === "design-help" || meta.designHelp === true;
         const isUploadLater = meta.artworkIntent === "upload-later" || meta.intakeMode === "upload-later";
 
-        if (hasFile) continue;
+        // Service-fee rows are financial line items, not producible — skip
+        if (isServiceFeeItem(item as { meta?: unknown })) continue;
 
-        if (isDesignHelp) {
+        if (itemHasArtwork(item)) continue;
+
+        // Admin confirmed artwork exists off-platform — not missing
+        if (itemIsArtworkProvided(item)) continue;
+
+        if (itemIsDesignHelp(item)) {
           if (includeDesignHelp) {
             itemsMissing.push({ id: item.id, productName: item.productName, reason: "design-help" });
           }
