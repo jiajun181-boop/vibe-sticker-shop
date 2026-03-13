@@ -366,15 +366,22 @@ async function planFlagMissingVendorCost(): Promise<RemediationPlan> {
   }
 
   // Find which fixed products have vendor cost entries
-  const vendorCosts = await prisma.vendorCost.findMany({
-    where: { isActive: true },
-    select: { productSlug: true },
-    distinct: ["productSlug"],
-  });
-
-  const coveredSlugs = new Set(
-    vendorCosts.map((vc) => vc.productSlug).filter(Boolean)
-  );
+  // VendorCost model may not exist yet — gracefully handle
+  let coveredSlugs = new Set<string>();
+  try {
+    const vendorCosts = await (prisma as any).vendorCost?.findMany?.({
+      where: { isActive: true },
+      select: { productSlug: true },
+      distinct: ["productSlug"],
+    });
+    if (vendorCosts) {
+      coveredSlugs = new Set(
+        vendorCosts.map((vc: any) => vc.productSlug).filter(Boolean)
+      );
+    }
+  } catch {
+    // VendorCost model not in schema yet — all fixed products flagged as missing
+  }
 
   const items: RemediationItem[] = [];
 
