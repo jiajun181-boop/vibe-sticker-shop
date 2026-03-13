@@ -8,7 +8,7 @@ import { getUserFromRequest } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/resend";
 import { buildInvoiceConfirmationHtml } from "@/lib/email/templates/invoice-confirmation";
 import { checkAndReserveStock } from "@/lib/inventory";
-import { MAX_ITEM_QUANTITY } from "@/lib/order-config";
+import { MAX_ITEM_QUANTITY, DESIGN_HELP_CENTS } from "@/lib/order-config";
 import { findActiveProduct, validateCoupon, resolveB2BDiscount } from "@/lib/checkout-shared";
 import { applyAutoTags } from "@/lib/auto-tag";
 
@@ -186,8 +186,8 @@ export async function POST(req: NextRequest) {
           ? `Design Help Service (\u00d7${designHelpCount})`
           : "Design Help Service",
         productType: "service",
-        quantity: 1,
-        unitPrice: designHelpTotal,
+        quantity: designHelpCount,
+        unitPrice: DESIGN_HELP_CENTS,
         totalPrice: designHelpTotal,
         meta: { isServiceFee: "true", feeType: "design-help" } as any,
       });

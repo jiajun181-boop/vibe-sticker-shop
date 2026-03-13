@@ -362,7 +362,7 @@ export default function ProductionBoardPage() {
         </div>
       ) : (
         /* Kanban columns - horizontal scroll container */
-        <div className="flex gap-4 overflow-x-auto pb-4" style={{ minHeight: "calc(100vh - 280px)" }}>
+        <div className="flex flex-col gap-4 overflow-x-auto pb-4 sm:flex-row" style={{ minHeight: "calc(100vh - 280px)" }}>
           {visibleColumns.map((status) => {
             const jobs = columns[status] || [];
 
@@ -382,7 +382,7 @@ export default function ProductionBoardPage() {
                   setDraggedJob(null);
                   setDragOverColumn(null);
                 }}
-                className={`min-w-[300px] max-w-[300px] flex-shrink-0 rounded-[3px] bg-[#fafafa] border ${
+                className={`w-full sm:min-w-[300px] sm:max-w-[300px] sm:flex-shrink-0 rounded-[3px] bg-[#fafafa] border ${
                   dragOverColumn === status
                     ? "border-blue-400 border-2 border-dashed bg-blue-50/50"
                     : "border-[#e0e0e0]"
@@ -403,7 +403,7 @@ export default function ProductionBoardPage() {
                 </div>
 
                 {/* Scrollable card list */}
-                <div className="p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-280px)]">
+                <div className="p-3 space-y-3 overflow-y-auto max-h-[60vh] sm:max-h-[calc(100vh-280px)]">
                   {jobs.length === 0 ? (
                     <p className="py-8 text-center text-xs text-[#999]">
                       No jobs

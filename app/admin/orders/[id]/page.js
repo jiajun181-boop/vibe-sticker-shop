@@ -327,7 +327,7 @@ export default function OrderDetailPage() {
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="mb-1 flex flex-wrap items-center gap-3">
+            <div className="no-print mb-1 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => router.push("/admin/orders")}
@@ -341,6 +341,13 @@ export default function OrderDetailPage() {
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1 text-xs font-medium text-black hover:bg-[#fafafa]"
               >
                 {t("admin.orderDetail.printInvoice")}
+              </button>
+              <button
+                type="button"
+                onClick={() => window.open(`/api/admin/orders/${order.id}/packing-slip`, "_blank")}
+                className="rounded-[3px] border border-[#d0d0d0] px-3 py-1 text-xs font-medium text-black hover:bg-[#fafafa]"
+              >
+                {t("admin.orderDetail.printPackingSlip")}
               </button>
             </div>
             <h1 className="text-xl font-semibold text-black">

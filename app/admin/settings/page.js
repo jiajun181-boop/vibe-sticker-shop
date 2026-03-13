@@ -135,6 +135,22 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <h1 className="text-xl font-semibold text-gray-900">{t("admin.settings.title")}</h1>
 
+      {/* Quick links to sub-pages */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { href: "/admin/settings/email-templates", label: "Email Templates" },
+          { href: "/admin/settings/equipment", label: "Equipment" },
+        ].map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="rounded-md border border-[#e5e5e5] bg-white px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </div>
+
       {/* Settings Center view strip */}
       <div className="flex flex-wrap gap-1.5">
         {Object.values(SETTINGS_CENTER_VIEWS).map((view) => (

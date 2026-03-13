@@ -86,6 +86,7 @@ model User {
   apiKeys              ApiKey[]
   supportTickets       SupportTicket[]
   conversations        Conversation[]
+  savedDesigns         SavedDesign[]
 
   @@index([accountType, b2bApproved])
   @@index([inviteCode])
@@ -339,11 +340,12 @@ model OrderItem {
   finishing   String?
   meta        Json?
   specsJson   Json?
-  materialCostCents Int   @default(0)  // material cost for this item
-  laborMinutes      Int   @default(0)  // labor time in minutes
-  estimatedCostCents Int  @default(0)  // total estimated cost at checkout (material+ink+labor+waste)
-  actualCostCents    Int  @default(0)  // actual cost entered post-production
-  vendorCostCents    Int  @default(0)  // outsourced/vendor cost if applicable
+  materialCostCents  Int   @default(0)  // material cost for this item
+  laborMinutes       Int   @default(0)  // labor time in minutes
+  estimatedCostCents Int   @default(0)  // total estimated cost at checkout (material+ink+labor+waste)
+  actualCostCents    Int   @default(0)  // actual cost entered post-production
+  vendorCostCents    Int   @default(0)  // outsourced/vendor cost if applicable
+  costBreakdownJson  Json?             // detailed cost breakdown at checkout: {material, print, labor, finishing, waste, setup, outsourcing, transfer}
   fileKey     String?
   fileUrl     String?
   fileName    String?
@@ -1453,4 +1455,131 @@ model VendorCost {
   @@index([productSlug])
   @@index([vendorName])
   @@index([isActive])
+}
+
+// ── B2B Team Management ──
+
+model CompanyTeam {
+  id          String             @id @default(cuid())
+  companyName String
+  ownerId     String             @unique // The primary B2B account holder
+  maxMembers  Int                @default(5)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  members     CompanyTeamMember[]
+
+  @@index([ownerId])
+}
+
+model CompanyTeamMember {
+  id          String      @id @default(cuid())
+  teamId      String
+  team        CompanyTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId      String
+  role        String      @default("member") // "admin" | "member" | "viewer"
+  permissions Json?       // { canOrder: true, canApprove: false, spendLimit: 50000 }
+  invitedBy   String?
+  joinedAt    DateTime    @default(now())
+
+  @@unique([teamId, userId])
+  @@index([userId])
+  @@index([teamId])
+}
+
+// ── Loyalty Points ──
+
+model LoyaltyAccount {
+  id             String             @id @default(cuid())
+  userId         String             @unique
+  pointsBalance  Int                @default(0)
+  totalEarned    Int                @default(0)
+  totalRedeemed  Int                @default(0)
+  tier           String             @default("bronze") // bronze, silver, gold, platinum
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  transactions   LoyaltyTransaction[]
+
+  @@index([userId])
+  @@index([tier])
+}
+
+model LoyaltyTransaction {
+  id          String         @id @default(cuid())
+  accountId   String
+  account     LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  type        String         // "earn" | "redeem" | "expire" | "adjust" | "bonus"
+  points      Int            // positive for earn, negative for redeem
+  description String
+  orderId     String?
+  expiresAt   DateTime?
+  createdAt   DateTime       @default(now())
+
+  @@index([accountId, createdAt])
+  @@index([orderId])
+  @@index([expiresAt])
+}
+
+// ── Warranty Claims ──
+
+enum WarrantyStatus {
+  submitted
+  under_review
+  approved
+  denied
+  fulfilled
+}
+
+model WarrantyClaim {
+  id            String          @id @default(cuid())
+  claimNumber   String          @unique // e.g. WC-ABCD1234
+  orderId       String
+  orderItemId   String?
+  userId        String?
+  customerEmail String
+  customerName  String?
+
+  // Claim details
+  issueType     String          // "defective" | "damaged" | "wrong_item" | "quality" | "other"
+  description   String          @db.Text
+  photoUrls     String[]        @default([])
+
+  // Product info (denormalized)
+  productName   String?
+  quantity      Int             @default(1)
+
+  // Resolution
+  status        WarrantyStatus  @default(submitted)
+  resolution    String?         // "replace" | "refund" | "repair" | "credit"
+  resolutionNote String?
+  resolvedBy    String?
+  resolvedAt    DateTime?
+  refundAmount  Int?            // cents if partial refund
+  replacementOrderId String?    // new order if replacement
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@index([customerEmail])
+  @@index([createdAt])
+}
+
+// ── Saved Designs (customer design configurations) ──
+
+model SavedDesign {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  productSlug  String
+  config       Json
+  thumbnailUrl String?
+  shareToken   String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+  @@index([shareToken])
 }

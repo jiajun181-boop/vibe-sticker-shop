@@ -89,6 +89,8 @@ function ContourToolPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [previewMode, setPreviewMode] = useState("contour"); // "contour" | "mask" | "source"
   const [taskSource, setTaskSource] = useState(null); // "new" | "reopened" | "duplicated"
+  const [showShapePicker, setShowShapePicker] = useState(false); // shape fallback picker
+  const [shapePickerImageDims, setShapePickerImageDims] = useState(null); // { w, h } for shape gen
   const fileInputRef = useRef(null);
   const prevObjectUrlRef = useRef(null);
   const processingRef = useRef(false);
@@ -196,9 +198,51 @@ function ContourToolPage() {
     }
     setErrorMsg("");
     setTaskSource("new");
+    setShowShapePicker(false);
     const objectUrl = URL.createObjectURL(file);
     resetPreviewState(objectUrl, file.name, file);
+
+    // Capture image dimensions for shape picker fallback
+    const img = new Image();
+    img.onload = () => setShapePickerImageDims({ w: img.width, h: img.height });
+    img.src = objectUrl;
+
     processContour(objectUrl);
+  }
+
+  async function handleShapeSelect(shape) {
+    if (!imageUrl) return;
+    setProcessing(true);
+    setErrorMsg("");
+    setShowShapePicker(false);
+    setProgressHuman(t("admin.tools.contour.progressTracing"));
+    try {
+      // Get image dimensions
+      let w = shapePickerImageDims?.w;
+      let h = shapePickerImageDims?.h;
+      if (!w || !h) {
+        const img = await new Promise((resolve, reject) => {
+          const i = new Image();
+          i.crossOrigin = "anonymous";
+          i.onload = () => resolve(i);
+          i.onerror = reject;
+          i.src = imageUrl;
+        });
+        w = img.width;
+        h = img.height;
+      }
+
+      const { generateBasicShapeContour } = await import("@/lib/contour/generate-contour");
+      const result = generateBasicShapeContour(w, h, shape, { bleedMm });
+      setContourResult(result);
+      setProgressHuman("");
+    } catch (err) {
+      console.error("Shape generation error:", err);
+      setErrorMsg(err instanceof Error ? err.message : t("admin.tools.contour.errorTrace"));
+      setProgressHuman("");
+    } finally {
+      setProcessing(false);
+    }
   }
 
   // Human-readable progress labels
@@ -236,6 +280,7 @@ function ContourToolPage() {
         },
       });
       setContourResult(result);
+      setShowShapePicker(false);
       setProgress("");
       setProgressHuman("");
     } catch (err) {
@@ -243,6 +288,8 @@ function ContourToolPage() {
       const msg = err instanceof Error ? err.message : t("admin.tools.contour.errorTrace");
       setErrorMsg(msg);
       setProgressHuman("");
+      // Show shape picker as fallback — operator can manually pick a shape
+      setShowShapePicker(true);
     } finally {
       setProcessing(false);
       processingRef.current = false;
@@ -644,6 +691,11 @@ function ContourToolPage() {
         </div>
       )}
 
+      {/* Shape Preset Picker — shown when auto-detection fails or operator wants manual shape */}
+      {(showShapePicker || (imageUrl && !contourResult && !processing)) && imageUrl && (
+        <ShapePresetPicker onSelect={handleShapeSelect} t={t} />
+      )}
+
       <div className="max-w-xs">
         <label className="mb-1 block text-[11px] font-medium text-[#666]">{t("admin.tools.orderLabel")}</label>
         <input
@@ -796,6 +848,18 @@ function ContourToolPage() {
           )}
         </div>
       </div>
+
+      {/* Override shape — always available when there's a result */}
+      {contourResult && imageUrl && (
+        <details className="rounded-[3px] border border-[#e0e0e0] bg-white">
+          <summary className="cursor-pointer px-5 py-3 text-sm font-semibold text-[#666] hover:bg-[#fafafa]">
+            {t("admin.tools.contour.overrideShapeTitle") || "Use a basic shape instead"}
+          </summary>
+          <div className="border-t border-[#e0e0e0] px-5 py-4">
+            <ShapePresetPicker onSelect={handleShapeSelect} t={t} />
+          </div>
+        </details>
+      )}
 
       {contourResult ? (
         <>
@@ -1480,6 +1544,7 @@ const EXTRACTION_MODE_STYLES = {
   edge_gradient: "bg-purple-100 text-purple-700",
   bg_removal: "bg-violet-100 text-violet-700",
   hybrid: "bg-indigo-100 text-indigo-700",
+  manual_shape: "bg-amber-100 text-amber-700",
 };
 
 function ExtractionModeBadge({ mode, t }) {
@@ -1609,6 +1674,47 @@ function InputExamples({ t }) {
         <p className="text-[11px] text-[#999]">{t("admin.tools.contour.exTip")}</p>
       </div>
     </details>
+  );
+}
+
+// ─── Shape Preset Picker ──────────────────────────────────────────────────────
+
+const SHAPE_PRESETS = [
+  { key: "rectangle", icon: "M3 3h18v18H3z", label: "shapeRectangle" },
+  { key: "square", icon: "M5 5h14v14H5z", label: "shapeSquare" },
+  { key: "circle", icon: "M12 3a9 9 0 110 18 9 9 0 010-18z", label: "shapeCircle" },
+  { key: "oval", icon: "M12 4c4.418 0 8 3.582 8 8s-3.582 8-8 8-8-3.582-8-8 3.582-8 8-8z", label: "shapeOval" },
+];
+
+function ShapePresetPicker({ onSelect, t }) {
+  return (
+    <div className="rounded-[3px] border border-amber-200 bg-amber-50 p-4 space-y-3">
+      <div>
+        <p className="text-xs font-bold text-amber-800">
+          {t("admin.tools.contour.shapePickerTitle") || "Choose a basic shape"}
+        </p>
+        <p className="mt-0.5 text-[11px] text-amber-700">
+          {t("admin.tools.contour.shapePickerDesc") || "Auto-detection didn't work well? Pick a basic shape for the cut line."}
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {SHAPE_PRESETS.map((preset) => (
+          <button
+            key={preset.key}
+            type="button"
+            onClick={() => onSelect(preset.key)}
+            className="flex flex-col items-center gap-2 rounded-[3px] border border-amber-300 bg-white px-3 py-3 transition-colors hover:border-black hover:bg-[#fafafa]"
+          >
+            <svg className="h-10 w-10 text-[#666]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d={preset.icon} />
+            </svg>
+            <span className="text-xs font-semibold text-[#333]">
+              {t(`admin.tools.contour.${preset.label}`) || preset.key}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

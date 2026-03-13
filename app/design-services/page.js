@@ -129,6 +129,48 @@ export default async function DesignServicesPage() {
           </section>
         </div>
 
+        {/* How it works */}
+        <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
+          <h2 className="text-2xl font-semibold tracking-tight mb-6">
+            {isZh ? "设计流程" : "How It Works"}
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-3">
+            <div className="text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-gray-100)] text-lg font-bold text-[var(--color-gray-700)]">1</div>
+              <h3 className="mt-3 text-sm font-bold text-[var(--color-gray-900)]">
+                {isZh ? "告诉我们您的想法" : "Tell us your vision"}
+              </h3>
+              <p className="mt-1 text-xs text-[var(--color-gray-500)] leading-relaxed">
+                {isZh
+                  ? "下单时选择「设计服务」或直接联系我们，说明您的设计需求。"
+                  : "Select \"Design Help\" at checkout or contact us directly with your requirements."}
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-gray-100)] text-lg font-bold text-[var(--color-gray-700)]">2</div>
+              <h3 className="mt-3 text-sm font-bold text-[var(--color-gray-900)]">
+                {isZh ? "我们设计，您审批" : "We design, you approve"}
+              </h3>
+              <p className="mt-1 text-xs text-[var(--color-gray-500)] leading-relaxed">
+                {isZh
+                  ? "设计师在1个工作日内发送初稿。您可以要求修改直到满意。"
+                  : "Designer sends first draft within 1 business day. Request revisions until you're happy."}
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-gray-100)] text-lg font-bold text-[var(--color-gray-700)]">3</div>
+              <h3 className="mt-3 text-sm font-bold text-[var(--color-gray-900)]">
+                {isZh ? "印刷并送达" : "Print & deliver"}
+              </h3>
+              <p className="mt-1 text-xs text-[var(--color-gray-500)] leading-relaxed">
+                {isZh
+                  ? "设计审批后，我们立即安排生产和配送。"
+                  : "Once approved, we go straight to production and shipping."}
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Pricing table */}
         <section className="rounded-3xl border border-[var(--color-gray-200)] bg-white p-8 md:p-12">
           <h2 className="text-2xl font-semibold tracking-tight mb-6">
@@ -174,9 +216,16 @@ export default async function DesignServicesPage() {
               : "Email us your design brief or call to discuss your project. We typically respond within 24 hours."}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
+            <a
+              href="tel:+16477834728"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+              (647) 783-4728
+            </a>
             <Link
               href="/contact"
-              className="inline-block rounded-xl bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-900)] hover:bg-[var(--color-gray-100)] transition-colors"
+              className="inline-block rounded-xl border border-white/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#fff] hover:border-white/70 transition-colors"
             >
               {isZh ? "联系我们" : "Contact Us"}
             </Link>

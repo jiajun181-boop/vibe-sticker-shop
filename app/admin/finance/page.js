@@ -20,6 +20,7 @@ const TABS = [
   { key: "invoices", label: "Invoices" },
   { key: "suppliers", label: "Suppliers" },
   { key: "profitability", label: "Profitability" },
+  { key: "product-profit", label: "Product Profit" },
 ];
 
 const EXPENSE_CATEGORIES = [
@@ -125,6 +126,7 @@ export default function FinancePage() {
       {activeTab === "invoices" && <InvoicesTab showMsg={showMsg} />}
       {activeTab === "suppliers" && <SuppliersTab showMsg={showMsg} />}
       {activeTab === "profitability" && <ProfitabilityTab />}
+      {activeTab === "product-profit" && <ProductProfitTab />}
     </div>
   );
 }
@@ -2481,6 +2483,141 @@ function ProfitabilityTab() {
             </div>
           )}
         </>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════ */
+/*  TAB 6: PRODUCT PROFIT                        */
+/* ══════════════════════════════════════════════ */
+
+function ProductProfitTab() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState("30d");
+
+  const fetchData = useCallback(() => {
+    setLoading(true);
+    const now = new Date();
+    let from = "";
+    if (period === "7d") from = new Date(now.getTime() - 7 * 86400000).toISOString();
+    else if (period === "30d") from = new Date(now.getTime() - 30 * 86400000).toISOString();
+    else if (period === "90d") from = new Date(now.getTime() - 90 * 86400000).toISOString();
+    else if (period === "12m") from = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).toISOString();
+
+    const params = new URLSearchParams();
+    if (from) params.set("from", from);
+    params.set("limit", "50");
+
+    fetch(`/api/admin/finance/product-profit?${params}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d) setData(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [period]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  if (loading) return <div className="text-sm text-[#999] p-6">Loading product profitability...</div>;
+  if (!data) return <div className="text-sm text-red-500 p-6">Failed to load data</div>;
+
+  const { products, summary } = data;
+
+  return (
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-bold text-black">Product Profit Ranking</h3>
+        <div className="flex gap-1">
+          {[
+            { key: "7d", label: "7D" },
+            { key: "30d", label: "30D" },
+            { key: "90d", label: "90D" },
+            { key: "12m", label: "12M" },
+            { key: "all", label: "All" },
+          ].map((p) => (
+            <button
+              key={p.key}
+              onClick={() => setPeriod(p.key)}
+              className={`rounded px-3 py-1 text-xs font-semibold transition ${
+                period === p.key ? "bg-black text-white" : "bg-[#f0f0f0] text-[#666] hover:bg-[#e0e0e0]"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid gap-3 sm:grid-cols-4">
+        <div className="rounded border border-[#e0e0e0] bg-white p-4">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">Total Revenue</p>
+          <p className="mt-1 text-xl font-bold text-black">{formatCad(summary.totalRevenue)}</p>
+        </div>
+        <div className="rounded border border-[#e0e0e0] bg-white p-4">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">Total Cost</p>
+          <p className="mt-1 text-xl font-bold text-black">{formatCad(summary.totalCost)}</p>
+        </div>
+        <div className="rounded border border-[#e0e0e0] bg-white p-4">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">Total Profit</p>
+          <p className={`mt-1 text-xl font-bold ${summary.totalProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+            {formatCad(summary.totalProfit)}
+          </p>
+        </div>
+        <div className="rounded border border-[#e0e0e0] bg-white p-4">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">Avg Margin</p>
+          <p className={`mt-1 text-xl font-bold ${summary.avgMarginPct >= 30 ? "text-emerald-600" : summary.avgMarginPct >= 15 ? "text-amber-600" : "text-red-600"}`}>
+            {summary.avgMarginPct}%
+          </p>
+        </div>
+      </div>
+
+      {/* Product table */}
+      {products.length === 0 ? (
+        <p className="text-sm text-[#999] text-center py-8">No paid orders in this period</p>
+      ) : (
+        <div className="overflow-x-auto rounded border border-[#e0e0e0]">
+          <table className="w-full text-sm">
+            <thead className="bg-[#f5f5f5] text-[10px] font-bold uppercase tracking-wider text-[#999]">
+              <tr>
+                <th className="px-4 py-3 text-left">#</th>
+                <th className="px-4 py-3 text-left">Product</th>
+                <th className="px-4 py-3 text-right">Orders</th>
+                <th className="px-4 py-3 text-right">Qty</th>
+                <th className="px-4 py-3 text-right">Revenue</th>
+                <th className="px-4 py-3 text-right">Cost</th>
+                <th className="px-4 py-3 text-right">Profit</th>
+                <th className="px-4 py-3 text-right">Margin</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#e8e8e8]">
+              {products.map((p, i) => (
+                <tr key={p.productName} className="hover:bg-[#fafafa]">
+                  <td className="px-4 py-2.5 text-[#999]">{i + 1}</td>
+                  <td className="px-4 py-2.5 font-medium text-black">{p.productName}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">{p.orderCount}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">{p.totalQty.toLocaleString()}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">{formatCad(p.revenue)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-[#999]">{formatCad(p.costs.total)}</td>
+                  <td className={`px-4 py-2.5 text-right tabular-nums font-semibold ${p.profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                    {formatCad(p.profit)}
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <span className={`inline-block rounded px-2 py-0.5 text-xs font-bold ${
+                      p.marginPct >= 40 ? "bg-emerald-100 text-emerald-700" :
+                      p.marginPct >= 20 ? "bg-amber-100 text-amber-700" :
+                      p.marginPct >= 0 ? "bg-orange-100 text-orange-700" :
+                      "bg-red-100 text-red-700"
+                    }`}>
+                      {p.marginPct}%
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

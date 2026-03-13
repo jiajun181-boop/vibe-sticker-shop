@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = {
   title: "Return & Refund Policy",
   description: "La Lunar Printing's policy on returns, refunds, reprints, and quality guarantees for custom printing orders.",
@@ -8,6 +10,19 @@ export default function ReturnsPage() {
     <div className="mx-auto max-w-3xl px-4 py-16">
       <h1 className="text-3xl font-bold text-[var(--color-gray-900)]">Return &amp; Refund Policy</h1>
       <p className="mt-2 text-sm text-[var(--color-gray-500)]">Last updated: February 2026</p>
+
+      <div className="mt-6 rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-[var(--color-gray-900)]">Have a quality issue with your order?</p>
+          <p className="mt-1 text-xs text-[var(--color-gray-500)]">Submit a return or reprint request and our team will review it within 1-2 business days.</p>
+        </div>
+        <Link
+          href="/returns/request"
+          className="shrink-0 rounded-xl bg-[var(--color-gray-900)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#fff] hover:bg-black transition-colors"
+        >
+          Submit a Request
+        </Link>
+      </div>
 
       <div className="prose prose-gray mt-8 max-w-none text-sm leading-relaxed text-[var(--color-gray-700)] [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-[var(--color-gray-900)] [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_h3]:text-[var(--color-gray-900)] [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-1">
         <h2>Custom Products</h2>

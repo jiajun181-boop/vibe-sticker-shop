@@ -11,6 +11,8 @@ import { useSearchParams } from "next/navigation";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { SUB_PRODUCT_CONFIG } from "@/lib/subProductConfig";
 import { formatCad } from "@/lib/product-helpers";
+import SocialShare from "@/components/product/SocialShare";
+import ProductRecommendations from "@/components/product/ProductRecommendations";
 
 const safeText = (value, fallback) =>
   typeof value === "string" && value.trim() ? value : fallback;
@@ -978,6 +980,18 @@ export default function SubProductLandingClient({
           </div>
         </div>
       </div>
+
+        {/* Social Sharing */}
+        <div className="mt-8">
+          <SocialShare
+            url={`/shop/${category}/${parentSlug}`}
+            title={t(`${i18nBase}.title`)}
+            description={t(`${i18nBase}.subtitle`)}
+          />
+        </div>
+
+        {/* Recommendations */}
+        <ProductRecommendations slug={parentSlug} category={category} />
 
       {/* Quick Quote FAB */}
       <QuickQuoteFAB t={t} />

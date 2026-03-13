@@ -50,6 +50,18 @@ const TOOLS = [
     ),
   },
   {
+    titleKey: "admin.tools.unitConverterTitle",
+    descKey: "admin.tools.unitConverterDesc",
+    href: "/admin/tools/unit-converter",
+    toolType: null,
+    actions: [],
+    icon: (
+      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm2.25-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm2.25-2.25h.008v.008H15v-.008zm0 2.25h.008v.008H15v-.008zM5.25 21h13.5A2.25 2.25 0 0021 18.75V6.75A2.25 2.25 0 0018.75 4.5H15M5.25 21H3.75A1.5 1.5 0 012.25 19.5v-15A1.5 1.5 0 013.75 3h11.25" />
+      </svg>
+    ),
+  },
+  {
     titleKey: "admin.tools.pricingTitle",
     descKey: "admin.tools.pricingDesc",
     href: "/admin/pricing",

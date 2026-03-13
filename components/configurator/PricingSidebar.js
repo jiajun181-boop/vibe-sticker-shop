@@ -5,7 +5,7 @@ import EmailQuotePopover from "./EmailQuotePopover";
 import DeliveryEstimate from "./DeliveryEstimate";
 import useConfiguratorActions from "./useConfiguratorActions";
 import { PRODUCT_PRINT_SPECS } from "@/lib/design-studio/product-configs";
-import { RUSH_MULTIPLIER } from "@/lib/order-config";
+import { RUSH_MULTIPLIER, HST_RATE, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "@/lib/order-config";
 import { formatCad } from "@/lib/product-helpers";
 
 /**
@@ -28,6 +28,8 @@ import { formatCad } from "@/lib/product-helpers";
  *  - quoteOnly                         — if true, show "Request Quote" instead of ATC/Buy Now
  *  - onRequestQuote                    — handler for quote-only mode
  *  - productName                       — product display name for email quote
+ *  - quickQuantities: [number]         — common quantity presets (e.g. [50,100,250,500,1000])
+ *  - onQuantityChange: (qty) => void   — callback to set quantity from quick-select buttons
  */
 export default function PricingSidebar({
   summaryLines = [],
@@ -62,6 +64,8 @@ export default function PricingSidebar({
   artworkIntent,
   onArtworkIntentChange,
   hideRush,
+  quickQuantities,
+  onQuantityChange,
 }) {
   // ─── Shared configurator state (rush, artwork gating, ATC animation) ───
   const {
@@ -110,10 +114,47 @@ export default function PricingSidebar({
           {summaryLines.map((r) => (
             <div key={r.label} className="flex items-center justify-between text-sm">
               <dt className="text-gray-500">{r.label}</dt>
-              <dd className="font-semibold text-gray-800">{r.value}</dd>
+              <dd className="flex items-center gap-1.5 font-semibold text-gray-800">
+                {r.value}
+                {r.badge && (
+                  <span className="rounded-full bg-green-100 px-1.5 py-px text-[9px] font-bold text-green-700">
+                    {r.badge}
+                  </span>
+                )}
+                {r.priceHint && (
+                  <span className="text-[10px] font-semibold text-amber-600">
+                    {r.priceHint}
+                  </span>
+                )}
+              </dd>
             </div>
           ))}
         </dl>
+
+        {/* Quick quantity select */}
+        {quickQuantities && quickQuantities.length > 0 && onQuantityChange && (
+          <div>
+            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">
+              {t?.("configurator.popularQuantities") || "Popular quantities"}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {quickQuantities.map((qty) => (
+                <button
+                  key={qty}
+                  type="button"
+                  onClick={() => onQuantityChange(qty)}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                    quantity === qty
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-300 bg-white text-gray-600 hover:border-gray-900 hover:text-gray-900"
+                  }`}
+                >
+                  {qty.toLocaleString()}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <hr className="border-gray-100" />
 
@@ -188,7 +229,21 @@ export default function PricingSidebar({
               <span className="text-base font-black text-gray-900">{t?.("configurator.total") || "Total"}</span>
               <span className="text-2xl font-black text-gray-900">{formatCad(displaySubtotalWithFees)}</span>
             </div>
-            <p className="text-right text-[10px] text-gray-400">{t?.("configurator.beforeTax") || "Before tax"}</p>
+            {/* Estimated tax + shipping breakdown */}
+            <div className="mt-1 space-y-0.5 text-[11px] text-gray-400">
+              <div className="flex justify-between">
+                <span>{t?.("configurator.estHST") || "Est. HST (13%)"}</span>
+                <span>+ {formatCad(Math.round(displaySubtotalWithFees * HST_RATE))}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>{t?.("configurator.shipping") || "Shipping"}</span>
+                <span>{displaySubtotalWithFees >= FREE_SHIPPING_THRESHOLD ? (t?.("configurator.freeShipping") || "Free") : formatCad(SHIPPING_COST)}</span>
+              </div>
+              <div className="flex justify-between font-medium text-gray-500">
+                <span>{t?.("configurator.estTotal") || "Est. total"}</span>
+                <span>{formatCad(displaySubtotalWithFees + Math.round(displaySubtotalWithFees * HST_RATE) + (displaySubtotalWithFees >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST))}</span>
+              </div>
+            </div>
             {/* Prominent unit price callout */}
             {quantity > 1 && (
               <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-center">
@@ -285,6 +340,7 @@ export default function PricingSidebar({
             />
             <div className="flex-1">
               <span className="text-sm font-semibold text-gray-800">{t?.("configurator.rushProduction") || "24-Hour Rush Production"}</span>
+              <p className="text-[10px] text-gray-400 mt-0.5">{t?.("configurator.rushJustification") || "Prioritized queue, dedicated operator, shipped next business day (+30%)"}</p>
             </div>
           </label>
         )}
@@ -324,10 +380,36 @@ export default function PricingSidebar({
                 </button>
               </div>
               {artworkIntent === "upload-later" && (
-                <p className="text-[11px] text-gray-500">{t?.("configurator.uploadLaterNote") || "We'll email you for artwork after you order."}</p>
+                <div className="space-y-1.5">
+                  <div className="flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
+                    <svg className="h-4 w-4 flex-shrink-0 text-emerald-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="space-y-0.5">
+                      <p className="text-[11px] font-medium text-emerald-700">{t?.("configurator.uploadLaterReassurance") || "No worries! You can email your artwork to orders@lunarprint.ca after placing your order."}</p>
+                      <p className="text-[10px] text-emerald-600">{t?.("configurator.uploadLaterNote") || "We'll email you for artwork after you order."}</p>
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-white border border-gray-200 px-3 py-2 space-y-1">
+                    <p className="text-[10px] font-semibold text-gray-600">{t?.("configurator.fileAcceptLabel") || "When you're ready, we accept:"}</p>
+                    <p className="text-[10px] text-gray-400">{t?.("configurator.acceptedFormats") || "PDF, AI, PNG, JPG (300+ DPI recommended)"}</p>
+                  </div>
+                  <a
+                    href="/design-services"
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                  >
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                    </svg>
+                    {t?.("configurator.needDesignHelp") || "Need help? View our design services"}
+                  </a>
+                </div>
               )}
               {artworkIntent === "design-help" && (
-                <p className="text-[11px] text-indigo-600">{t?.("configurator.designHelpNote") || "Our designer will create your layout — $45 flat fee included."}</p>
+                <div className="space-y-1">
+                  <p className="text-[11px] text-indigo-600">{t?.("configurator.designHelpNote") || "Our designer will create your layout — $45 flat fee included."}</p>
+                  <p className="text-[10px] text-indigo-400">{t?.("configurator.designHelpTimeline") || "We'll contact you within 1 business day to get started."}</p>
+                </div>
               )}
             </div>
           )
@@ -474,6 +556,25 @@ export default function PricingSidebar({
           </p>
           <a href="/returns" className="inline-block text-[11px] font-semibold text-emerald-700 underline hover:text-emerald-900">
             {t?.("configurator.refundPolicy") || "Refund & Return Policy"}
+          </a>
+        </div>
+
+        {/* Need help? Contact CTA */}
+        <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-center space-y-1">
+          <p className="text-xs font-semibold text-gray-700">
+            {t?.("configurator.needHelpTitle") || "Not sure what to order?"}
+          </p>
+          <p className="text-[11px] text-gray-500">
+            {t?.("configurator.needHelpDesc") || "We'll help you pick the right product and options."}
+          </p>
+          <a
+            href="tel:+16477834728"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-gray-800"
+          >
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+            </svg>
+            {t?.("configurator.callUs") || "(647) 783-4728"}
           </a>
         </div>
       </div>

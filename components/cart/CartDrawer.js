@@ -13,7 +13,7 @@ import GuestEmailCapture from "@/components/cart/GuestEmailCapture";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { isOversizedProduct } from "@/lib/pickup-hints";
 
-import { HST_RATE, SHIPPING_COST, CHECKOUT_COOLDOWN_MS, DESIGN_HELP_CENTS } from "@/lib/order-config";
+import { HST_RATE, SHIPPING_COST, CHECKOUT_COOLDOWN_MS, DESIGN_HELP_CENTS, MAX_ITEM_QUANTITY } from "@/lib/order-config";
 
 function parseSizeRows(meta) {
   if (!meta || typeof meta !== "object") return [];
@@ -167,6 +167,7 @@ export default function CartDrawer() {
     notes: "",
   });
   const [invoiceSubmitting, setInvoiceSubmitting] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const checkoutInFlightRef = useRef(false);
   const lastCheckoutAtRef = useRef(0);
   const asideRef = useRef(null);
@@ -209,6 +210,11 @@ export default function CartDrawer() {
       const dhFee = (opts.designHelp === true || opts.designHelp === "true") ? DESIGN_HELP_CENTS : 0;
       return sum + lineTotal + dhFee;
     }, 0),
+    [cart]
+  );
+
+  const totalItemCount = useMemo(
+    () => cart.reduce((sum, item) => sum + item.quantity, 0),
     [cart]
   );
 
@@ -539,6 +545,15 @@ export default function CartDrawer() {
                           </div>
 
                           <div className="mt-2 flex items-center gap-3">
+                            {item.slug && (
+                              <a
+                                href={`/shop/${category || "stickers"}/${item.slug}`}
+                                onClick={closeCart}
+                                className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-gray-500)] transition-colors hover:text-[var(--color-gray-900)]"
+                              >
+                                {t("cart.editItem")}
+                              </a>
+                            )}
                             <button
                               type="button"
                               onClick={() =>
@@ -553,6 +568,10 @@ export default function CartDrawer() {
                               {t("cart.duplicate")}
                             </button>
                           </div>
+                          {/* Artwork pending warning */}
+                          {(rawMeta.artworkIntent === "upload-later" || rawMeta.artworkIntent === "design-help") && !rawMeta.fileName && (
+                            <p className="mt-1.5 text-[10px] text-amber-600">{t("cart.artworkPending")}</p>
+                          )}
 
                           <div className="mt-3 flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -568,7 +587,7 @@ export default function CartDrawer() {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item._cartId, item.quantity + 1)}
-                                disabled={item.quantity >= 999}
+                                disabled={item.quantity >= MAX_ITEM_QUANTITY}
                                 className="h-11 w-11 rounded-sm border border-[var(--color-gray-200)] text-sm font-semibold text-[var(--color-gray-700)] transition-colors duration-200 hover:border-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)] disabled:opacity-40 disabled:cursor-not-allowed"
                                 aria-label={t("cart.increaseQty")}
                               >
@@ -751,9 +770,58 @@ export default function CartDrawer() {
                 </button>
               </div>
 
+              {/* Collapsible order review summary */}
+              <div className="rounded-sm border border-[var(--color-gray-200)]">
+                <button
+                  type="button"
+                  onClick={() => setSummaryOpen(!summaryOpen)}
+                  className="flex w-full items-center justify-between px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-600)] transition-colors hover:bg-[var(--color-gray-50)]"
+                >
+                  <span>{t("cart.orderReview")} ({totalItemCount} {totalItemCount === 1 ? t("cart.orderReviewItem") : t("cart.orderReviewItems")})</span>
+                  <svg className={`h-3.5 w-3.5 transition-transform duration-200 ${summaryOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+                {summaryOpen && (
+                  <div className="space-y-2 border-t border-[var(--color-gray-200)] bg-[var(--color-gray-50)] px-3 py-3 text-xs text-[var(--color-gray-600)]">
+                    <div className="flex items-center justify-between">
+                      <span>{t("cart.orderReviewItemCount", { count: totalItemCount })}</span>
+                      <span className="font-semibold text-[var(--color-gray-800)]">{formatCad(subtotal)}</span>
+                    </div>
+                    {promoDiscount && (
+                      <div className="flex items-center justify-between text-emerald-600">
+                        <span>{t("cart.discount")} ({promoDiscount.code})</span>
+                        <span className="font-semibold">-{formatCad(discountAmount)}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span>{t("cart.orderReviewTax")}</span>
+                      <span className="font-semibold text-[var(--color-gray-800)]">{formatCad(tax)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>{t("cart.orderReviewShipping")}</span>
+                      <span className="font-semibold text-[var(--color-gray-800)]">
+                        {shippingMethod === "pickup" ? t("cart.pickup") : shipping === 0 ? t("cart.free") : formatCad(shipping)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-[var(--color-gray-300)] pt-2 text-sm font-semibold text-[var(--color-gray-900)]">
+                      <span>{t("cart.orderReviewEstTotal")}</span>
+                      <span>{formatCad(total)} CAD</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
             {checkoutMode === "invoice" && (
               <div className="space-y-2 rounded-sm border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)]">{t("cart.invoiceDetails")}</p>
+                <p className="text-[10px] text-[var(--color-gray-400)] leading-relaxed">{t("cart.invoiceExplain") || "We'll email you an invoice. Pay via Interac e-Transfer, cheque, or wire. Production starts after payment."}</p>
+                <div className="flex gap-3 text-[9px] text-[var(--color-gray-400)]">
+                  <span className="flex items-center gap-1"><span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--color-gray-300)] text-[7px] font-bold text-white">1</span> Submit</span>
+                  <span className="flex items-center gap-1"><span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--color-gray-300)] text-[7px] font-bold text-white">2</span> Receive Invoice</span>
+                  <span className="flex items-center gap-1"><span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--color-gray-300)] text-[7px] font-bold text-white">3</span> Pay</span>
+                  <span className="flex items-center gap-1"><span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--color-gray-300)] text-[7px] font-bold text-white">4</span> Production</span>
+                </div>
                 <input
                   value={invoiceForm.companyName}
                   onChange={(e) => setInvoiceForm((prev) => ({ ...prev, companyName: e.target.value }))}
@@ -801,14 +869,16 @@ export default function CartDrawer() {
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={handleCheckout}
-              disabled={loading || checkoutMode !== "stripe"}
-              className="btn-primary-pill w-full px-4 py-3 text-xs disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none disabled:shadow-none"
-            >
-              {loading ? t("cart.processing") : t("cart.checkout")}
-            </button>
+            {checkoutMode === "stripe" && (
+              <button
+                type="button"
+                onClick={handleCheckout}
+                disabled={loading}
+                className="btn-primary-pill w-full px-4 py-3 text-xs disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none disabled:shadow-none"
+              >
+                {loading ? t("cart.processing") : t("cart.checkout")}
+              </button>
+            )}
 
             {checkoutMode === "invoice" && (
               <button
@@ -833,6 +903,8 @@ export default function CartDrawer() {
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
                 <span className="font-medium">{t("cart.guarantee")}</span>
               </div>
+
+              <p className="text-center text-[10px] text-[var(--color-gray-400)]">{t("cart.needHelp")}</p>
 
               <PaymentBadges />
 

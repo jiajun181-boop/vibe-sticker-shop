@@ -63,6 +63,14 @@ export default function InteracCheckoutPage() {
         <p className="mb-6 text-gray-600">
           {t("interac.successMsg")}
         </p>
+        <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-left text-sm text-blue-800 space-y-2">
+          <p className="font-semibold">{t("interac.nextStepsTitle") || "What happens next:"}</p>
+          <ol className="list-decimal list-inside space-y-1 text-xs">
+            <li>{t("interac.nextStep1") || "Check your email for payment instructions"}</li>
+            <li>{t("interac.nextStep2") || "Send Interac e-Transfer to the email provided"}</li>
+            <li>{t("interac.nextStep3") || "We'll confirm receipt and start production"}</li>
+          </ol>
+        </div>
         <a
           href="/shop"
           className="inline-block rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-gray-800"
@@ -75,7 +83,8 @@ export default function InteracCheckoutPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
-      <h1 className="mb-6 text-2xl font-bold">{t("interac.title")}</h1>
+      <h1 className="mb-3 text-2xl font-bold">{t("interac.title")}</h1>
+      <p className="mb-6 text-sm text-gray-500">{t("interac.howItWorks") || "Place your order below. We'll email you payment instructions. Production starts once we receive your Interac e-Transfer."}</p>
 
       {cart.length === 0 ? (
         <div className="text-center">

@@ -65,6 +65,9 @@ export async function POST(req: NextRequest) {
     if (!Number.isFinite(qty) || qty <= 0) {
       return NextResponse.json({ error: "quantity must be a positive number" }, { status: 400 });
     }
+    if (qty > 1_000_000) {
+      return NextResponse.json({ error: "quantity exceeds maximum" }, { status: 400 });
+    }
 
     // Look up the product
     let product = await prisma.product.findUnique({
@@ -161,6 +164,13 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await calculatePrice(product, input);
+
+    // Strip sensitive cost data from public response (margins, COGS, material costs)
+    if (result.breakdown && typeof result.breakdown === "object" && !Array.isArray(result.breakdown)) {
+      const { profitMargin, subtotalCost, material, ink, cutting, waste, lamination, ...safeBreakdown } = result.breakdown as Record<string, unknown>;
+      return NextResponse.json({ ...result, breakdown: safeBreakdown });
+    }
+
     return NextResponse.json(result);
   } catch (err: any) {
     console.error("[/api/pricing/calculate]", err);

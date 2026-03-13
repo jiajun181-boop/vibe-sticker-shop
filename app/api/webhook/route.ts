@@ -3,6 +3,9 @@ import Stripe from "stripe";
 import { handleCheckoutCompleted } from "@/lib/webhook-handler";
 import { releaseReserve } from "@/lib/inventory";
 
+// Extend timeout for large orders — production job creation can make many DB calls
+export const maxDuration = 60;
+
 let _stripe: Stripe | null = null;
 function getStripe() {
   if (!_stripe) {

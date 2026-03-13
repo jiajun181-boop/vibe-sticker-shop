@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { formatCad } from "@/lib/admin/format-cad";
 import { buildSettingsCenterHref } from "@/lib/admin-centers";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const formatCompact = (cents) => {
   const dollars = cents / 100;
@@ -30,11 +31,12 @@ const statusColors = {
 };
 
 export default function AnalyticsPage() {
+  const { t } = useTranslation();
   return (
     <Suspense
       fallback={
         <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-          Loading...
+          {t("admin.common.loading")}
         </div>
       }
     >
@@ -46,6 +48,7 @@ export default function AnalyticsPage() {
 function AnalyticsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const activePeriod = searchParams.get("period") || "30d";
 
   const [data, setData] = useState(null);
@@ -110,9 +113,28 @@ function AnalyticsContent() {
         </div>
       </div>
 
+      {/* Sub-page navigation */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { href: "/admin/analytics", label: "Overview" },
+          { href: "/admin/analytics/customers", label: "Customers" },
+          { href: "/admin/analytics/production", label: "Production" },
+          { href: "/admin/analytics/marketing", label: "Marketing" },
+          { href: "/admin/analytics/shipping", label: "Shipping" },
+        ].map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="rounded-md border border-[#e5e5e5] bg-white px-3 py-1.5 text-xs font-medium text-[#666] transition-colors hover:border-black hover:text-black"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </div>
+
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="text-sm text-[#999]">Loading analytics...</div>
+          <div className="text-sm text-[#999]">{t("admin.common.loadingData", { what: "analytics" })}</div>
         </div>
       ) : error ? (
         <div className="flex h-64 items-center justify-center">

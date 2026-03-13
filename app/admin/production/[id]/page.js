@@ -188,7 +188,7 @@ export default function ProductionJobDetailPage() {
       if ((notes || "") !== (job.notes || "")) body.notes = notes || null;
 
       if (Object.keys(body).length === 0) {
-        setMessage("No changes to save");
+        setMessage(t("admin.common.noChanges"));
         setTimeout(() => setMessage(""), 3000);
         setSaving(false);
         return;
@@ -386,7 +386,7 @@ export default function ProductionJobDetailPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-gray-600">
-        Loading...
+        {t("admin.common.loading")}
       </div>
     );
   }
@@ -532,7 +532,7 @@ export default function ProductionJobDetailPage() {
                 <InfoField label="Sides" value="Double-sided" />
               )}
               {job.isRush && (
-                <InfoField label="Rush" value="Yes — 24h turnaround" />
+                <InfoField label="Rush" value={t("admin.common.rushTurnaround")} />
               )}
               {orderItem?.unitPrice != null && (
                 <InfoField

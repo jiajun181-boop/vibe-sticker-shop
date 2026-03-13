@@ -452,6 +452,7 @@ export async function POST(req: Request) {
           partnerDiscount: partnerDiscount.toString(),
           ...(b2bSource && { b2bDiscountSource: b2bSource }),
         }),
+        deliveryMethod,
       },
     });
 

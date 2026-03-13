@@ -6,6 +6,7 @@ import { OrganizationSchema, WebSiteSchema } from "@/components/JsonLd";
 import DualEntryHero from "@/components/home/DualEntryHero";
 import GoogleReviews from "@/components/home/GoogleReviews";
 import HomeScrollWrapper from "@/components/home/HomeScrollWrapper";
+import WelcomeBanner from "@/components/home/WelcomeBanner";
 import { getProductImage, isSvgImage } from "@/lib/product-image";
 import { formatCad } from "@/lib/product-helpers";
 
@@ -118,6 +119,9 @@ export default async function HomePage() {
       <div className="min-h-screen relative">
         <OrganizationSchema />
         <WebSiteSchema />
+
+        {/* 0. Welcome banner for first-time visitors */}
+        <WelcomeBanner />
 
         {/* 1. Hero */}
         <DualEntryHero totalCount={totalCount} />
@@ -290,6 +294,75 @@ export default async function HomePage() {
             </div>
           </section>
         )}
+
+        {/* 4a. Shop by Use Case — help customers who don't know which product */}
+        <section className="py-16 md:py-20 bg-white animate-on-scroll">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
+            <h2 className="heading-2 text-center mb-3">
+              {t("home.useCaseTitle")}
+            </h2>
+            <p className="text-center text-sm text-[var(--color-gray-500)] mb-10">
+              {t("home.useCaseSubtitle")}
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
+              {[
+                { icon: "M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605", titleKey: "home.useCase1Title", descKey: "home.useCase1Desc", href: "/shop/banners-displays" },
+                { icon: "M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z M6 6h.008v.008H6V6z", titleKey: "home.useCase2Title", descKey: "home.useCase2Desc", href: "/shop/stickers-labels-decals" },
+                { icon: "M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42", titleKey: "home.useCase3Title", descKey: "home.useCase3Desc", href: "/shop/stickers-labels-decals" },
+                { icon: "M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z", titleKey: "home.useCase4Title", descKey: "home.useCase4Desc", href: "/shop/marketing-business-print" },
+                { icon: "M3 8.25V18a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18V8.25m-18 0V6a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 6v2.25m-18 0h18M5.25 6h.008v.008H5.25V6zM7.5 6h.008v.008H7.5V6zm2.25 0h.008v.008H9.75V6z", titleKey: "home.useCase5Title", descKey: "home.useCase5Desc", href: "/shop/windows-walls-floors" },
+                { icon: "M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H18.75M3.375 14.25h3v3.75M3.375 14.25V3.375c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v10.875M18.75 14.25h-5.625", titleKey: "home.useCase6Title", descKey: "home.useCase6Desc", href: "/shop/vehicle-graphics-fleet" },
+              ].map((uc, i) => (
+                <Link
+                  key={i}
+                  href={uc.href}
+                  className="group flex flex-col items-center text-center rounded-2xl border border-[var(--color-gray-200)] bg-white p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--color-brand-50)] mb-3">
+                    <svg className="h-6 w-6 text-[var(--color-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={uc.icon} />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm font-bold text-[var(--color-gray-900)] group-hover:text-[var(--color-brand)]">{t(uc.titleKey)}</h3>
+                  <p className="mt-1 text-xs text-[var(--color-gray-500)] leading-relaxed">{t(uc.descKey)}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 4b. How It Works — reduce ordering pressure (audit #4, #15) */}
+        <section className="py-16 md:py-20 bg-white animate-on-scroll">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4">
+            <h2 className="heading-2 text-center mb-3">
+              {t("home.howItWorksTitle")}
+            </h2>
+            <p className="text-center text-sm text-[var(--color-gray-500)] mb-10">
+              {t("home.howItWorksSubtitle")}
+            </p>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { step: "1", icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z", title: t("home.step1Title"), desc: t("home.step1Desc") },
+                { step: "2", icon: "M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z", title: t("home.step2Title"), desc: t("home.step2Desc") },
+                { step: "3", icon: "M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5", title: t("home.step3Title"), desc: t("home.step3Desc") },
+                { step: "4", icon: "M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12", title: t("home.step4Title"), desc: t("home.step4Desc") },
+              ].map((s) => (
+                <div key={s.step} className="text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-gray-100)]">
+                    <svg className="h-6 w-6 text-[var(--color-gray-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={s.icon} />
+                    </svg>
+                  </div>
+                  <div className="mt-2 flex items-center justify-center">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-brand)] text-[10px] font-bold text-[#fff]">{s.step}</span>
+                  </div>
+                  <h3 className="mt-2 text-sm font-bold text-[var(--color-gray-900)]">{s.title}</h3>
+                  <p className="mt-1 text-xs text-[var(--color-gray-500)] leading-relaxed">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* 5. Trust Signals */}
         <section className="py-16 md:py-20 bg-white animate-on-scroll">

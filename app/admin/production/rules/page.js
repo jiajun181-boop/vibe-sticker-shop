@@ -283,7 +283,7 @@ export default function AssignmentRulesPage() {
       {/* Content */}
       {loading ? (
         <div className="flex h-48 items-center justify-center text-sm text-gray-600">
-          Loading...
+          {t("admin.common.loading")}
         </div>
       ) : rules.length === 0 ? (
         <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white text-center text-sm text-gray-600 shadow-sm">

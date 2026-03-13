@@ -140,29 +140,37 @@ export default function MobileBottomBar({
         )}
         {/* Compact artwork intent picker for mobile */}
         {needsArtworkDecision && hasQuote && !quoteOnly && artworkMode === "upload-optional" && (
-          <div className="mx-auto mb-2 flex max-w-lg gap-2">
-            <button
-              type="button"
-              onClick={() => onArtworkIntentChange?.(artworkIntent === "upload-later" ? null : "upload-later")}
-              className={`flex-1 rounded-lg px-2 py-1.5 text-[11px] font-semibold border transition-colors ${
-                artworkIntent === "upload-later"
-                  ? "border-gray-900 bg-gray-900 text-white"
-                  : "border-gray-300 bg-white text-gray-600"
-              }`}
-            >
-              {t?.("configurator.uploadLater") || "Upload Later"}
-            </button>
-            <button
-              type="button"
-              onClick={() => onArtworkIntentChange?.(artworkIntent === "design-help" ? null : "design-help")}
-              className={`flex-1 rounded-lg px-2 py-1.5 text-[11px] font-semibold border transition-colors ${
-                artworkIntent === "design-help"
-                  ? "border-indigo-600 bg-indigo-600 text-white"
-                  : "border-indigo-200 bg-indigo-50 text-indigo-700"
-              }`}
-            >
-              {t?.("configurator.designHelpOption") || "Design Help (+$45)"}
-            </button>
+          <div className="mx-auto mb-2 max-w-lg space-y-1">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => onArtworkIntentChange?.(artworkIntent === "upload-later" ? null : "upload-later")}
+                className={`flex-1 rounded-lg px-2 py-1.5 text-[11px] font-semibold border transition-colors ${
+                  artworkIntent === "upload-later"
+                    ? "border-gray-900 bg-gray-900 text-white"
+                    : "border-gray-300 bg-white text-gray-600"
+                }`}
+              >
+                {t?.("configurator.uploadLater") || "Upload Later"}
+              </button>
+              <button
+                type="button"
+                onClick={() => onArtworkIntentChange?.(artworkIntent === "design-help" ? null : "design-help")}
+                className={`flex-1 rounded-lg px-2 py-1.5 text-[11px] font-semibold border transition-colors ${
+                  artworkIntent === "design-help"
+                    ? "border-indigo-600 bg-indigo-600 text-white"
+                    : "border-indigo-200 bg-indigo-50 text-indigo-700"
+                }`}
+              >
+                {t?.("configurator.designHelpOption") || "Design Help (+$45)"}
+              </button>
+            </div>
+            {artworkIntent === "upload-later" && (
+              <p className="text-center text-[10px] text-gray-400">{t?.("configurator.uploadLaterReassurance") || "No worries — you can upload files after checkout"}</p>
+            )}
+            {artworkIntent === "design-help" && (
+              <p className="text-center text-[10px] text-indigo-500">{t?.("configurator.designHelpTimeline") || "We'll contact you within 1 business day"}</p>
+            )}
           </div>
         )}
         <div className="mx-auto flex max-w-lg items-center gap-3">

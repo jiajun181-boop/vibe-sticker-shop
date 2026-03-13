@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useConfiguratorCart } from "@/components/configurator";
+import { showErrorToast } from "@/components/Toast";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { ProofPreview } from "@/components/configurator";
@@ -14,6 +15,7 @@ import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 import { formatCad } from "@/lib/product-helpers";
+import useConfiguratorSave from "@/components/configurator/useConfiguratorSave";
 
 const DEBOUNCE_MS = 300;
 
@@ -62,6 +64,23 @@ export default function DieCutStickerOrderClient() {
   const [whiteInk, setWhiteInk] = useState({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null });
   const [artworkIntent, setArtworkIntent] = useState(null);
   const [rushProduction, setRushProduction] = useState(false);
+
+  // Persist selections to localStorage
+  const saveState = useMemo(() => ({ materialId, sizeIdx, finishId, quantity, customQty, rushProduction }), [materialId, sizeIdx, finishId, quantity, customQty, rushProduction]);
+  const { restore, clear: clearSaved } = useConfiguratorSave("die-cut-stickers", saveState);
+
+  // Restore saved selections on mount
+  useEffect(() => {
+    const saved = restore();
+    if (!saved) return;
+    if (saved.materialId && MATERIALS.some((m) => m.id === saved.materialId)) setMaterialId(saved.materialId);
+    if (typeof saved.sizeIdx === "number" && saved.sizeIdx >= 0 && saved.sizeIdx < SIZES.length) setSizeIdx(saved.sizeIdx);
+    if (saved.finishId && FINISHES.some((f) => f.id === saved.finishId)) setFinishId(saved.finishId);
+    if (typeof saved.quantity === "number" && saved.quantity > 0) setQuantity(saved.quantity);
+    if (saved.customQty !== undefined) setCustomQty(saved.customQty);
+    if (typeof saved.rushProduction === "boolean") setRushProduction(saved.rushProduction);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [quoteData, setQuoteData] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(true);
@@ -171,10 +190,13 @@ export default function DieCutStickerOrderClient() {
     };
   }, [quoteData, activeQty, t, size, totalCents, materialId, finishId, uploadedFile, proofConfirmed, proofDataId, contourData, whiteInk, artworkIntent]);
 
-  const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
+  const { handleAddToCart: _addToCart, handleBuyNow: _buyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
     successMessage: t("dc.addedToCart"),
   });
+
+  const handleAddToCart = useCallback((opts) => { _addToCart(opts); clearSaved(); }, [_addToCart, clearSaved]);
+  const handleBuyNow = useCallback((opts) => { _buyNow(opts); clearSaved(); }, [_buyNow, clearSaved]);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

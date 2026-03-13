@@ -29,15 +29,65 @@ const SEARCH_ALIASES: Record<string, string[]> = {
   reflective: ["refelctive", "reflctive"],
 };
 
+/**
+ * Synonym groups — when a customer searches one term, also search related terms.
+ * This handles natural language variations common in the print industry.
+ */
+const SYNONYMS: Record<string, string[]> = {
+  "business card": ["calling card", "name card", "visiting card"],
+  "calling card": ["business card"],
+  "name card": ["business card"],
+  sticker: ["label", "decal"],
+  label: ["sticker"],
+  decal: ["sticker", "vinyl"],
+  poster: ["flyer", "print"],
+  flyer: ["flier", "leaflet", "handout", "pamphlet"],
+  leaflet: ["flyer"],
+  pamphlet: ["brochure", "flyer"],
+  brochure: ["booklet", "pamphlet", "catalog"],
+  banner: ["sign", "display"],
+  sign: ["signage", "board"],
+  "yard sign": ["lawn sign", "coroplast sign", "election sign"],
+  "lawn sign": ["yard sign"],
+  wrap: ["vehicle wrap", "car wrap", "fleet wrap"],
+  "car wrap": ["vehicle wrap", "auto wrap"],
+  "vehicle wrap": ["car wrap", "fleet wrap", "truck wrap"],
+  canvas: ["canvas print", "gallery wrap"],
+  stamp: ["rubber stamp", "self-inking stamp"],
+  magnet: ["magnetic sign", "car magnet"],
+  lettering: ["vinyl lettering", "cut vinyl"],
+  window: ["window decal", "window cling", "window graphic"],
+  floor: ["floor decal", "floor graphic"],
+  wall: ["wall decal", "wall graphic", "wallpaper"],
+  "roll up": ["retractable banner", "pull up banner"],
+  "retractable": ["roll up banner"],
+  bookmark: ["bookmarks"],
+  notepad: ["notepads", "memo pad"],
+  receipt: ["receipt book", "invoice book", "ncr form"],
+  ncr: ["carbonless form", "receipt book", "duplicate form"],
+};
+
 /** Check if query matches any known typo and return the correct term */
 function expandTypos(query: string): string[] {
   const lower = query.toLowerCase();
   const terms = [lower];
+
+  // Expand typos
   for (const [correct, typos] of Object.entries(SEARCH_ALIASES)) {
     if (typos.some((t) => lower.includes(t))) {
       terms.push(lower.replace(new RegExp(typos.join("|"), "gi"), correct));
     }
   }
+
+  // Expand synonyms
+  for (const [term, syns] of Object.entries(SYNONYMS)) {
+    if (lower.includes(term)) {
+      for (const syn of syns) {
+        terms.push(lower.replace(term, syn));
+      }
+    }
+  }
+
   return [...new Set(terms)];
 }
 

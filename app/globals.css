@@ -460,3 +460,79 @@ html {
   border-color: #000 !important;
   box-shadow: 0 0 0 1px #000 !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PRINT STYLES — for work orders, quotes, invoices
+   ═══════════════════════════════════════════════════════════════ */
+
+@media print {
+  /* Hide non-printable elements */
+  .no-print,
+  .admin-shell > aside,
+  .admin-shell header,
+  .admin-shell [data-command-palette],
+  nav,
+  footer {
+    display: none !important;
+  }
+
+  /* Reset layout so main content fills the page */
+  .admin-shell {
+    display: block !important;
+    height: auto !important;
+    background: white !important;
+  }
+
+  .admin-shell main {
+    padding: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* Clean page setup */
+  body {
+    background: white !important;
+    color: #000 !important;
+    font-size: 12pt;
+    line-height: 1.4;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Remove shadows, rounded corners, and decorative borders in print */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Ensure links are readable without underlines */
+  a {
+    color: #000 !important;
+    text-decoration: none !important;
+  }
+
+  /* Prevent page breaks inside important elements */
+  table, figure, img, .print-no-break {
+    page-break-inside: avoid;
+  }
+
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+  }
+
+  /* Ensure tables print with borders */
+  table {
+    border-collapse: collapse;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 1.5cm;
+    size: letter;
+  }
+}

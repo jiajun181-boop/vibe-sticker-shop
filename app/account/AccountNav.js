@@ -12,6 +12,11 @@ const navItems = [
   { key: "account.nav.addresses", href: "/account/addresses" },
   { key: "account.nav.profile", href: "/account/profile", b2bOnly: true },
   { key: "account.nav.favorites", href: "/account/favorites" },
+  { key: "account.nav.designs", href: "/account/designs" },
+  { key: "account.nav.invoices", href: "/account/invoices", b2bOnly: true },
+  { key: "account.nav.team", href: "/account/team", b2bOnly: true },
+  { key: "account.nav.warranty", href: "/account/warranty" },
+  { key: "account.nav.rewards", href: "/account/loyalty" },
   { key: "account.nav.templates", href: "/account/templates", label: "Templates" },
   { key: "account.nav.support", href: "/account/support", label: "Support" },
 ];

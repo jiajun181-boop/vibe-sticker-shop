@@ -8,6 +8,7 @@ import { useCartStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { USE_CASES } from "@/lib/useCases";
+import { formatCad } from "@/lib/product-helpers";
 
 export default function Navbar({ catalogConfig }) {
   const { departments, departmentMeta, categoryMeta } = catalogConfig || {};
@@ -263,11 +264,17 @@ export default function Navbar({ catalogConfig }) {
                   <p className="text-sm font-semibold text-[var(--color-gray-800)] truncate">{item.name}</p>
                   <p className="text-xs text-[var(--color-gray-400)] truncate">{item.category}</p>
                 </div>
-                {item.price != null && (
-                  <span className="shrink-0 text-sm font-medium text-[var(--color-gray-700)]">
-                    ${(item.price / 100).toFixed(2)}
-                  </span>
-                )}
+                <span className="shrink-0 text-right">
+                  {item.price > 0 ? (
+                    <span className="text-xs font-semibold text-[var(--color-gray-700)]">
+                      {t("search.from") || "From"} {formatCad(item.price)}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-medium text-[var(--color-gray-400)]">
+                      {t("search.getQuote") || "Get Quote"}
+                    </span>
+                  )}
+                </span>
               </button>
             ))}
             <Link

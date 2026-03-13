@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const TABS = [
   { id: "promo", label: "Promo Bar" },
@@ -35,6 +36,7 @@ const SEO_DEFAULTS = {
 };
 
 export default function ContentCMSPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState("promo");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -77,7 +79,7 @@ export default function ContentCMSPage() {
       if (!res.ok) throw new Error();
       setMessage({ type: "success", text: "Saved successfully." });
     } catch {
-      setMessage({ type: "error", text: "Failed to save. Please try again." });
+      setMessage({ type: "error", text: t("admin.common.failedToSave") });
     } finally {
       setSaving(false);
     }

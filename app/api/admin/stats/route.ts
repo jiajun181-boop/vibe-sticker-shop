@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
     const [
       todayOrders,
       yesterdayOrders,
+      todayRevenueAgg,
+      yesterdayRevenueAgg,
       pendingOrders,
       monthRevenue,
       prevMonthRevenue,
@@ -46,6 +48,16 @@ export async function GET(request: NextRequest) {
     ] = await Promise.all([
       prisma.order.count({ where: { createdAt: { gte: startOfToday } } }),
       prisma.order.count({ where: { createdAt: { gte: startOfYesterday, lt: startOfToday } } }),
+      // Today's revenue (paid orders created today)
+      prisma.order.aggregate({
+        where: { createdAt: { gte: startOfToday }, paymentStatus: "paid" },
+        _sum: { totalAmount: true },
+      }),
+      // Yesterday's revenue
+      prisma.order.aggregate({
+        where: { createdAt: { gte: startOfYesterday, lt: startOfToday }, paymentStatus: "paid" },
+        _sum: { totalAmount: true },
+      }),
       prisma.order.count({ where: { status: "paid", productionStatus: "not_started" } }),
       prisma.order.aggregate({
         where: { createdAt: { gte: startOfMonth }, paymentStatus: "paid" },
@@ -103,6 +115,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       todayOrders,
       yesterdayOrders,
+      todayRevenue: todayRevenueAgg._sum.totalAmount || 0,
+      yesterdayRevenue: yesterdayRevenueAgg._sum.totalAmount || 0,
       pendingOrders,
       monthRevenue: monthRevenue._sum.totalAmount || 0,
       prevMonthRevenue: prevMonthRevenue._sum.totalAmount || 0,

@@ -82,6 +82,29 @@ function CategorySeoSchemas({ category, categoryName, description, products }) {
   );
 }
 
+function DeliveryBanner() {
+  return (
+    <div className="mx-auto max-w-[1600px] px-4 sm:px-6 2xl:px-4 pt-4">
+      <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800">
+        <svg
+          className="h-4 w-4 flex-shrink-0 text-emerald-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0H21M3.375 14.25V3.375c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v11.25m-18 0h18M15.375 14.25v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.398 0 .77.21.974.549l1.5 2.476a1.125 1.125 0 01.151.563v.912"
+          />
+        </svg>
+        <span className="font-medium">Most orders ship within 2&#8211;3 business days</span>
+      </div>
+    </div>
+  );
+}
+
 export const revalidate = 120;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.lunarprint.ca";
@@ -467,6 +490,7 @@ export default async function CategoryPage({ params }) {
         <>
           {seoSchemas}
           <CategoryFaqSchema category={decoded} />
+          <DeliveryBanner />
           <StickersCategoryClient products={toClientSafe(products)} />
         </>
       );
@@ -550,6 +574,7 @@ export default async function CategoryPage({ params }) {
       <>
         {seoSchemas}
       <CategoryFaqSchema category={decoded} />
+        <DeliveryBanner />
         <MarketingCategoryClient marketingPrices={marketingPrices} marketingImages={marketingImages} marketingImages2={marketingImages2} />
       </>
     );
@@ -594,6 +619,7 @@ export default async function CategoryPage({ params }) {
       <>
         {seoSchemas}
       <CategoryFaqSchema category={decoded} />
+        <DeliveryBanner />
         <BannersCategoryClient bannerPrices={bannerPrices} bannerImages={bannerImages} bannerImages2={bannerImages2} />
       </>
     );
@@ -616,6 +642,7 @@ export default async function CategoryPage({ params }) {
       <>
         {seoSchemas}
       <CategoryFaqSchema category={decoded} />
+        <DeliveryBanner />
         <SignsCategoryClient
           category={decoded}
           categoryTitle={meta?.title || "Signs & Display Boards"}
@@ -660,6 +687,7 @@ export default async function CategoryPage({ params }) {
       <>
         {seoSchemas}
       <CategoryFaqSchema category={decoded} />
+        <DeliveryBanner />
         <WindowsWallsFloorsCategoryClient wwfPrices={wwfPrices} wwfImages={wwfImages} wwfImages2={wwfImages2} />
       </>
     );
@@ -695,6 +723,7 @@ export default async function CategoryPage({ params }) {
       <>
         {seoSchemas}
       <CategoryFaqSchema category={decoded} />
+        <DeliveryBanner />
         <CanvasCategoryClient canvasPrices={canvasPrices} canvasImages={canvasImages} canvasImages2={canvasImages2} />
       </>
     );
@@ -773,6 +802,7 @@ export default async function CategoryPage({ params }) {
       <>
         {seoSchemas}
       <CategoryFaqSchema category={decoded} />
+        <DeliveryBanner />
         <VehicleCategoryClient vehiclePrices={vehiclePrices} vehicleImages={vehicleImages} vehicleImages2={vehicleImages2} />
       </>
     );
@@ -816,6 +846,7 @@ export default async function CategoryPage({ params }) {
         <>
           {seoSchemas}
       <CategoryFaqSchema category={decoded} />
+          <DeliveryBanner />
           <CategoryLandingClient
             category={decoded}
             categoryTitle={meta?.title || decoded}
@@ -922,6 +953,7 @@ export default async function CategoryPage({ params }) {
       <>
         {seoSchemas}
       <CategoryFaqSchema category={decoded} />
+        <DeliveryBanner />
         <SubGroupLandingClient
           category={decoded}
           categoryTitle={meta?.title || decoded}
@@ -970,6 +1002,7 @@ export default async function CategoryPage({ params }) {
     <>
       {seoSchemas}
       <CategoryFaqSchema category={decoded} />
+      <DeliveryBanner />
       <CategoryLandingClient
         category={decoded}
         categoryTitle={meta?.title || decoded}

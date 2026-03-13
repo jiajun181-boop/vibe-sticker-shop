@@ -297,12 +297,44 @@ export default function SuccessClient({ sessionId, statusToken }) {
           </div>
         </div>
 
+        {/* Upload artwork CTA — shown when order likely has pending artwork */}
+        {orderId && (
+          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <svg className="mt-0.5 h-5 w-5 shrink-0 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-sky-800">{t("success.uploadArtworkTitle")}</p>
+                <p className="mt-0.5 text-xs text-sky-700">{t("success.uploadArtworkDesc")}</p>
+                <Link
+                  href={`/account/orders/${orderId}`}
+                  className="mt-2 inline-block rounded-lg bg-sky-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-sky-700"
+                >
+                  {t("success.uploadArtworkCta")}
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Quality guarantee */}
         <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-700 mb-6">
           <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
           </svg>
           <span className="font-semibold">{t("success.qualityGuarantee")}</span>
+        </div>
+
+        {/* Need help? Contact section */}
+        <div className="rounded-2xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-4 mb-6">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gray-500)] mb-2">{t("success.needHelpTitle")}</h3>
+          <p className="text-xs text-[var(--color-gray-600)] mb-2">{t("success.needHelpDesc")}</p>
+          <div className="space-y-1 text-xs text-[var(--color-gray-700)]">
+            <p className="font-medium">{t("success.needHelpPhone")}</p>
+            <p>{t("success.needHelpEmail")}</p>
+            <p className="text-[var(--color-gray-500)]">{t("success.needHelpHours")}</p>
+          </div>
         </div>
 
         {/* Guest → Account conversion CTA */}

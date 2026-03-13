@@ -222,14 +222,19 @@ export default function AdminDashboard() {
           change={<Change current={stats.todayOrders} previous={stats.yesterdayOrders} />}
           sparkline={stats.dailyOrders}
         />
-        <StatCard label={t("admin.dashboard.pendingOrders")} subtitle={t("admin.dashboard.awaitingAction")} value={stats.pendingOrders} />
+        <StatCard
+          label={t("admin.dashboard.todayRevenue") || "Today's Revenue"}
+          subtitle={t("admin.dashboard.vsYesterday")}
+          value={formatCad(stats.todayRevenue || 0)}
+          change={<Change current={stats.todayRevenue || 0} previous={stats.yesterdayRevenue || 0} />}
+        />
         <StatCard
           label={t("admin.dashboard.monthRevenue")}
           subtitle={t("admin.dashboard.thisMonth")}
           value={formatCad(stats.monthRevenue)}
           change={<Change current={stats.monthRevenue} previous={stats.prevMonthRevenue} />}
         />
-        <StatCard label={t("admin.dashboard.totalOrders")} subtitle={t("admin.dashboard.allTime")} value={stats.totalOrders} sparkline={stats.dailyOrders} />
+        <StatCard label={t("admin.dashboard.pendingOrders")} subtitle={t("admin.dashboard.awaitingAction")} value={stats.pendingOrders} />
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -244,6 +249,26 @@ export default function AdminDashboard() {
           </Link>
         ))}
       </div>
+
+      {/* ── Production Pipeline ── */}
+      {stats.pipeline && (
+        <div className="grid gap-2 sm:grid-cols-4">
+          {[
+            { key: "preflight", label: t("admin.dashboard.pipePreflight") || "Preflight", color: "bg-blue-500" },
+            { key: "in_production", label: t("admin.dashboard.pipeProduction") || "In Production", color: "bg-amber-500" },
+            { key: "ready_to_ship", label: t("admin.dashboard.pipeReady") || "Ready to Ship", color: "bg-emerald-500" },
+            { key: "shipped_today", label: t("admin.dashboard.pipeShipped") || "Shipped Today", color: "bg-gray-400" },
+          ].map(({ key, label, color }) => (
+            <Link key={key} href={key === "shipped_today" ? "/admin/orders/shipping" : "/admin/production/board"} className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 hover:bg-[#fafafa] transition-colors">
+              <div className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${color}`} />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#999]">{label}</span>
+              </div>
+              <p className="mt-1 text-2xl font-bold text-black tabular-nums">{stats.pipeline[key] || 0}</p>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* ── Production Alerts ── */}
       <ProductionAlerts />

@@ -206,6 +206,28 @@ export default function TrackOrderClient() {
             </div>
           )}
 
+          {/* What's happening now — human-friendly status explanation */}
+          <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
+            <p className="text-sm font-semibold text-sky-800">
+              {order.productionStatus === "shipped" || order.productionStatus === "completed"
+                ? (t("track.nextShipped") || "Your order is on its way!")
+                : order.productionStatus === "ready_to_ship"
+                ? (t("track.nextReadyShip") || "Your order is packed and ready to ship.")
+                : order.productionStatus === "in_production"
+                ? (t("track.nextInProd") || "Your order is being printed right now.")
+                : order.productionStatus === "preflight"
+                ? (t("track.nextPreflight") || "We're reviewing your files before printing.")
+                : order.status === "paid"
+                ? (t("track.nextPaid") || "We've received your payment. File check begins shortly.")
+                : (t("track.nextPending") || "Complete payment to start your order.")}
+            </p>
+            {order.productionStatus !== "shipped" && order.productionStatus !== "completed" && (
+              <p className="mt-1 text-xs text-sky-600">
+                {t("track.nextHelpLine") || "Questions? Call (647) 783-4728 or email info@lunarprint.ca"}
+              </p>
+            )}
+          </div>
+
           {/* Estimated Completion */}
           {order.estimatedCompletion && order.productionStatus !== "shipped" && order.productionStatus !== "completed" && (
             <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">

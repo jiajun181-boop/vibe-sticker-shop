@@ -76,6 +76,14 @@ export default function QuoteFormClient({ preselectedProduct, categoryMeta = {},
             <p className="text-xs uppercase tracking-[0.14em] text-[var(--color-gray-400)]">{t("quote.success.reference")}</p>
             <p className="mt-1 text-xl font-bold text-[var(--color-gray-900)]">{reference}</p>
           </div>
+          <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-left">
+            <p className="text-xs font-semibold text-blue-800">{t("quote.success.nextSteps") || "What happens next:"}</p>
+            <ul className="mt-1.5 space-y-1 text-[11px] text-blue-700">
+              <li>{t("quote.success.step1") || "We'll review your request and respond within 24 hours by email"}</li>
+              <li>{t("quote.success.step2") || "Check your inbox (and spam folder) for our response"}</li>
+              <li>{t("quote.success.step3") || "Questions? Call us at (647) 783-4728"}</li>
+            </ul>
+          </div>
           <a
             href="/shop"
             className="mt-6 inline-block rounded-xl bg-[var(--color-gray-900)] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#fff] transition-colors hover:bg-black"

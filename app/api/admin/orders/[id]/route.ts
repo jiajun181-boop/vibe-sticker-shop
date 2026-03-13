@@ -10,6 +10,7 @@ import { applyAssignmentRules } from "@/lib/assignment-rules";
 import { syncOrderProductionStatus } from "@/lib/production-sync";
 import { releaseReserve } from "@/lib/inventory";
 import { computeOrderCostSignals } from "@/lib/pricing/production-cost-signal";
+import { populateItemCosts } from "@/lib/pricing/compute-item-cost";
 
 async function loadShipmentState(orderId: string) {
   const shipments = await prisma.shipment.findMany({
@@ -277,10 +278,14 @@ export async function PATCH(
     if (data.paymentStatus === "paid" && !current.paidAt) {
       // Consume coupon usage now that payment is confirmed
       if (order.couponId) {
-        prisma.coupon.update({
-          where: { id: order.couponId },
-          data: { usedCount: { increment: 1 } },
-        }).catch((err) => console.error("[Order PATCH] Failed to increment coupon usage:", err));
+        try {
+          await prisma.coupon.update({
+            where: { id: order.couponId },
+            data: { usedCount: { increment: 1 } },
+          });
+        } catch (err) {
+          console.error("[Order PATCH] Failed to increment coupon usage:", err);
+        }
       }
       try {
         const orderItems = await prisma.orderItem.findMany({
@@ -325,6 +330,11 @@ export async function PATCH(
       } catch (jobErr) {
         console.error("[Order PATCH] Failed to auto-create production jobs:", jobErr);
       }
+
+      // Populate cost breakdown for items (non-blocking)
+      populateItemCosts(id).catch((err) => {
+        console.error("[Order PATCH] Failed to populate item costs:", err);
+      });
     }
 
     // When order is canceled, cancel all production jobs + release stock + notify customer
@@ -350,6 +360,18 @@ export async function PATCH(
         }
       } catch (stockErr) {
         console.error("[Order PATCH] Failed to release reserved stock on cancel:", stockErr);
+      }
+
+      // Refund coupon usage if the order had been paid (coupon was consumed on payment)
+      if (order.couponId && current.paidAt) {
+        try {
+          await prisma.coupon.update({
+            where: { id: order.couponId },
+            data: { usedCount: { decrement: 1 } },
+          });
+        } catch (err) {
+          console.error("[Order PATCH] Failed to refund coupon usage on cancel:", err);
+        }
       }
 
       sendOrderNotification(id, "order_canceled", {

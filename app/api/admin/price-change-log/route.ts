@@ -1,21 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
-import { jwtVerify } from "jose";
-
-const JWT_SECRET = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET || "admin-secret-change-me");
-
-async function getAdmin(req: Request) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("admin_token")?.value;
-  if (!token) return null;
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as { id: string; email: string; role: string; name: string };
-  } catch {
-    return null;
-  }
-}
+import { getAdminSession } from "@/lib/admin-auth";
 
 /**
  * GET /api/admin/price-change-log
@@ -23,9 +8,9 @@ async function getAdmin(req: Request) {
  * Query params: page, limit, productSlug, scope
  */
 export async function GET(req: Request) {
-  const admin = await getAdmin(req);
-  if (!admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await getAdminSession(req);
+  if (!session.authenticated) {
+    return session.response || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const url = new URL(req.url);
@@ -61,10 +46,11 @@ export async function GET(req: Request) {
  * Create a new change log entry (when an admin edits pricing).
  */
 export async function POST(req: Request) {
-  const admin = await getAdmin(req);
-  if (!admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await getAdminSession(req);
+  if (!session.authenticated) {
+    return session.response || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const admin = session.user;
 
   try {
     const body = await req.json();

@@ -21,6 +21,11 @@ export default function ShippingPolicyPage() {
         <section>
           <h2 className="text-xl font-semibold text-[var(--color-gray-900)]">2. Estimated Delivery Times</h2>
           <p className="mt-2">Delivery times are estimated from the date of production completion:</p>
+          <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+            <p className="text-sm font-semibold text-blue-800">Total timeline = Production + Shipping</p>
+            <p className="mt-1 text-xs text-blue-700">Standard production takes 2–4 business days. Rush production (24-hour) is available for most products. The shipping times below begin after production is complete.</p>
+            <p className="mt-2 text-xs text-blue-600"><strong>Example:</strong> Standard production (2–4 days) + GTA shipping (2–4 days) = 4–8 business days total from order date.</p>
+          </div>
           <div className="mt-4 overflow-hidden rounded-lg border border-[var(--color-gray-200)]">
             <table className="w-full text-sm">
               <thead className="bg-[var(--color-gray-50)]">

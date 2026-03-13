@@ -43,6 +43,19 @@ export default function DualEntryHero({ totalCount }) {
         <p className="animate-on-scroll delay-4 text-sm text-[var(--color-gray-400)] mt-8">
           {t("home.productsAvailable", { count: totalCount })}
         </p>
+
+        {/* Secondary quick links — segment customers (B2B, rush, design help) */}
+        <div className="animate-on-scroll delay-4 mt-5 flex flex-wrap items-center justify-center gap-3 text-xs text-[var(--color-gray-500)]">
+          <Link href="/wholesale" className="inline-flex items-center gap-1 rounded-full border border-[var(--color-gray-200)] bg-white px-3 py-1.5 font-medium transition-colors hover:border-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]">
+            {t("home.linkB2B") || "B2B / Wholesale"}
+          </Link>
+          <Link href="/shop" className="inline-flex items-center gap-1 rounded-full border border-[var(--color-gray-200)] bg-white px-3 py-1.5 font-medium transition-colors hover:border-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]">
+            {t("home.linkRush") || "Rush Orders (24h)"}
+          </Link>
+          <Link href="/design-services" className="inline-flex items-center gap-1 rounded-full border border-[var(--color-gray-200)] bg-white px-3 py-1.5 font-medium transition-colors hover:border-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]">
+            {t("home.linkDesignHelp") || "Design Help"}
+          </Link>
+        </div>
       </div>
     </div>
   );

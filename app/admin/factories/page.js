@@ -3,8 +3,10 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { buildSettingsCenterHref } from "@/lib/admin-centers";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function FactoriesPage() {
+  const { t } = useTranslation();
   const [factories, setFactories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
@@ -214,7 +216,7 @@ export default function FactoriesPage() {
       {/* Content */}
       {loading ? (
         <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-          Loading...
+          {t("admin.common.loading")}
         </div>
       ) : factories.length === 0 ? (
         <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-[3px] border border-[#e0e0e0] bg-white text-sm text-[#999]">

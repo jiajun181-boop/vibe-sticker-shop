@@ -32,11 +32,12 @@ const priorityOptions = [
 const AUTO_REFRESH_MS = 30_000;
 
 export default function ProductionPage() {
+  const { t } = useTranslation();
   return (
     <Suspense
       fallback={
         <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-          Loading...
+          {t("admin.common.loading")}
         </div>
       }
     >
@@ -503,7 +504,7 @@ function ProductionContent() {
       <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white shadow-sm">
         {loading ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            Loading...
+            {t("admin.common.loading")}
           </div>
         ) : jobs.length === 0 ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">

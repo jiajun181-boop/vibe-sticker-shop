@@ -3,6 +3,22 @@
     {
       "path": "/api/cron/abandoned-carts",
       "schedule": "0 */1 * * *"
+    },
+    {
+      "path": "/api/cron/invoice-overdue",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/alerts",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/reorder-reminder",
+      "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/cron/daily-report",
+      "schedule": "0 0 * * *"
     }
   ]
 }

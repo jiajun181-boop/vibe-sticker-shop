@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const filterTabs = [
   { value: "all", label: "All" },
@@ -38,11 +39,12 @@ function formatDate(dateStr) {
 }
 
 export default function ReviewsPage() {
+  const { t } = useTranslation();
   return (
     <Suspense
       fallback={
         <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-          Loading...
+          {t("admin.common.loading")}
         </div>
       }
     >
@@ -54,6 +56,7 @@ export default function ReviewsPage() {
 function ReviewsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
   const [reviews, setReviews] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -191,7 +194,7 @@ function ReviewsContent() {
       <div className="space-y-3">
         {loading ? (
           <div className="flex h-48 items-center justify-center rounded-[3px] border border-[#e0e0e0] bg-white text-sm text-[#999]">
-            Loading...
+            {t("admin.common.loading")}
           </div>
         ) : reviews.length === 0 ? (
           <div className="flex h-48 flex-col items-center justify-center rounded-[3px] border border-[#e0e0e0] bg-white text-sm text-[#999]">

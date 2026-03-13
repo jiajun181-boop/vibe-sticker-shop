@@ -10,6 +10,8 @@ import { applyAutoTags } from "./auto-tag";
 import { syncOrderProductionStatus } from "./production-sync";
 import { detectProductFamily } from "./preflight";
 import { isProductionItem } from "./order-item-utils";
+import { populateItemCosts } from "./pricing/compute-item-cost";
+import { awardLoyaltyPoints } from "./loyalty";
 import {
   toNumberOrNull,
   parseSizeRows,
@@ -73,6 +75,7 @@ export async function handleCheckoutCompleted(
         customerEmail: session.customer_email!,
         customerName: session.customer_details?.name || null,
         customerPhone: session.customer_details?.phone || null,
+        deliveryMethod: metadata?.deliveryMethod || "shipping",
         subtotalAmount: parseInt(metadata!.subtotalAmount),
         discountAmount,
         taxAmount: parseInt(metadata!.taxAmount),
@@ -228,60 +231,86 @@ export async function handleCheckoutCompleted(
       await decrementStock(stockItems);
     }
   } catch (stockErr) {
-    console.error("[Webhook] Failed to decrement stock:", stockErr);
+    console.error(`[Webhook] CRITICAL: Failed to decrement stock for order ${order.id}:`, stockErr);
   }
 
-  // 8. Auto-create production jobs for each order item
+  // 8. Auto-create production jobs for each order item (per-item error handling)
   try {
     const orderItems = await prisma.orderItem.findMany({
       where: { orderId: order.id },
     });
 
+    let jobsCreated = 0;
     for (const item of orderItems) {
       // Skip non-production items (service fees like design help)
       if (!isProductionItem(item)) continue;
 
-      // Shape production job fields (using extracted helper for testability)
-      const jobShape = shapeProductionJob(item);
-      const family = detectProductFamily(item);
+      try {
+        // Shape production job fields (using extracted helper for testability)
+        const jobShape = shapeProductionJob(item);
+        const family = detectProductFamily(item);
 
-      const newJob = await prisma.productionJob.create({
-        data: {
-          orderItemId: item.id,
-          status: "queued",
-          priority: jobShape.isRush ? "urgent" : "normal",
-          dueAt: jobShape.dueAt,
-          productName: item.productName || null,
-          family,
-          quantity: item.quantity,
-          widthIn: jobShape.widthIn,
-          heightIn: jobShape.heightIn,
-          material: jobShape.material,
-          materialLabel: jobShape.materialLabel,
-          finishing: jobShape.finishing,
-          finishingLabel: jobShape.finishingLabel,
-          artworkUrl: jobShape.artworkUrl,
-          artworkKey: jobShape.artworkKey,
-          isTwoSided: jobShape.isTwoSided,
-          isRush: jobShape.isRush,
-        },
-      });
+        const newJob = await prisma.productionJob.create({
+          data: {
+            orderItemId: item.id,
+            status: "queued",
+            priority: jobShape.isRush ? "urgent" : "normal",
+            dueAt: jobShape.dueAt,
+            productName: item.productName || null,
+            family,
+            quantity: item.quantity,
+            widthIn: jobShape.widthIn,
+            heightIn: jobShape.heightIn,
+            material: jobShape.material,
+            materialLabel: jobShape.materialLabel,
+            finishing: jobShape.finishing,
+            finishingLabel: jobShape.finishingLabel,
+            artworkUrl: jobShape.artworkUrl,
+            artworkKey: jobShape.artworkKey,
+            isTwoSided: jobShape.isTwoSided,
+            isRush: jobShape.isRush,
+          },
+        });
+        jobsCreated++;
 
-      // Try to auto-assign via rules
-      await applyAssignmentRules(newJob.id);
+        // Try to auto-assign via rules (don't let failure stop other jobs)
+        try {
+          await applyAssignmentRules(newJob.id);
+        } catch (assignErr) {
+          console.error(`[Webhook] Assignment rules failed for job ${newJob.id}:`, assignErr);
+        }
+      } catch (itemJobErr) {
+        console.error(`[Webhook] Failed to create production job for item ${item.id}:`, itemJobErr);
+      }
     }
 
     // Sync order productionStatus after all jobs + assignments are created
-    await syncOrderProductionStatus(order.id);
+    if (jobsCreated > 0) {
+      try {
+        await syncOrderProductionStatus(order.id);
+      } catch (syncErr) {
+        console.error(`[Webhook] Failed to sync production status for order ${order.id}:`, syncErr);
+      }
+    }
 
   } catch (jobError) {
-    // Don't fail the webhook if job creation fails
+    // Don't fail the webhook if job query fails
     console.error(`[Webhook] Failed to create production jobs:`, jobError);
   }
 
   // 8b. Auto-tag order based on items, materials, quantities (non-blocking)
   applyAutoTags(order.id, prisma).catch((err) => {
     console.error("[Webhook] Failed to auto-tag order:", err);
+  });
+
+  // 8c. Compute cost breakdown for each item (non-blocking)
+  populateItemCosts(order.id).catch((err) => {
+    console.error("[Webhook] Failed to populate item costs:", err);
+  });
+
+  // 8d. Award loyalty points (non-blocking)
+  awardLoyaltyPoints(order.id, totalAmount).catch((err) => {
+    console.error("[Webhook] Failed to award loyalty points:", err);
   });
 
   // 9. Send order confirmation email (non-blocking)

@@ -15,6 +15,8 @@ export default function OptionCard({
   className = "",
   children,
   recommended = false,
+  recommendedLabel,
+  priceHint,
   disabled = false,
   disabledReason,
   detailRows,
@@ -45,7 +47,7 @@ export default function OptionCard({
       {/* Recommended pill — top-left */}
       {recommended && !disabled && (
         <span className="absolute left-1.5 top-1.5 rounded-full bg-green-100 px-1.5 py-px text-[9px] font-bold text-green-700">
-          {"\u2605"} Rec
+          {"\u2605"} {recommendedLabel || "Rec"}
         </span>
       )}
       {/* Teal checkmark — top-right */}
@@ -58,7 +60,12 @@ export default function OptionCard({
       )}
       {icon && <span className="shrink-0">{icon}</span>}
       <span className="min-w-0 flex-1">
-        <span className={`block text-xs font-bold ${recommended && !disabled ? "mt-3" : ""}`}>{label}</span>
+        <span className={`flex items-center gap-1.5 text-xs font-bold ${recommended && !disabled ? "mt-3" : ""}`}>
+          {label}
+          {priceHint && (
+            <span className="text-[10px] font-semibold text-amber-600">{priceHint}</span>
+          )}
+        </span>
         {description && (
           <span className={`block text-[10px] ${disabled ? "text-gray-300" : selected ? "text-teal-700" : "text-gray-400"}`}>
             {description}

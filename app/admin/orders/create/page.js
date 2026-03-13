@@ -284,7 +284,7 @@ export default function CreateOrderPage() {
           ) : (
             <p className="text-sm text-[#999]">
               Create a manual order for walk-in or phone customers.{" "}
-              <Link href="/admin/pricing-dashboard" className="text-black underline hover:no-underline">
+              <Link href="/admin/pricing" className="text-black underline hover:no-underline">
                 Check product prices
               </Link>
             </p>

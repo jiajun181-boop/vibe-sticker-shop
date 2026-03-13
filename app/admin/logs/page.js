@@ -26,11 +26,12 @@ function getEntityOptions(t) {
 }
 
 export default function LogsPage() {
+  const { t } = useTranslation();
   return (
     <Suspense
       fallback={
         <div className="flex h-48 items-center justify-center text-sm text-gray-600">
-          Loading...
+          {t("admin.common.loading")}
         </div>
       }
     >

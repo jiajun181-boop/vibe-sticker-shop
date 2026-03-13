@@ -8,7 +8,7 @@ import { checkAndReserveStock } from "@/lib/inventory";
 import { repriceItem, calculateDesignHelpFee } from "@/lib/checkout-reprice";
 import { settleOrder, normalizeDeliveryMethod } from "@/lib/settlement";
 import { checkoutLimiter, getClientIp } from "@/lib/rate-limit";
-import { MAX_ITEM_QUANTITY } from "@/lib/order-config";
+import { MAX_ITEM_QUANTITY, DESIGN_HELP_CENTS } from "@/lib/order-config";
 import { findActiveProduct, validateCoupon, resolveB2BDiscount } from "@/lib/checkout-shared";
 import { applyAutoTags } from "@/lib/auto-tag";
 
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     const session = getSessionFromRequest(req as any);
 
     // Design help + subtotal (needed for coupon/B2B discount base)
-    const { totalCents: designHelpTotal } = calculateDesignHelpFee(pricedItems);
+    const { count: designHelpCount, totalCents: designHelpTotal } = calculateDesignHelpFee(pricedItems);
     const itemsSubtotal = pricedItems.reduce((sum, p) => sum + p.lineTotal, 0);
     const subtotal = itemsSubtotal + designHelpTotal;
 
@@ -152,10 +152,12 @@ export async function POST(req: Request) {
     if (designHelpTotal > 0) {
       orderItemsData.push({
         productId: null,
-        productName: "Design Help Service",
+        productName: designHelpCount > 1
+          ? `Design Help Service (\u00d7${designHelpCount})`
+          : "Design Help Service",
         productType: "service",
-        quantity: 1,
-        unitPrice: designHelpTotal,
+        quantity: designHelpCount,
+        unitPrice: DESIGN_HELP_CENTS,
         totalPrice: designHelpTotal,
         meta: { isServiceFee: "true", feeType: "design-help" } as any,
       });

@@ -351,7 +351,7 @@ function TexturePattern({ pattern, baseColor, uid, width = "100%", height = 56 }
 
 // ─── Individual Swatch Card ──────────────────────────────────────────────────
 
-export function MaterialSwatch({ material, selected, onSelect, recommended = false, detailRows }) {
+export function MaterialSwatch({ material, selected, onSelect, recommended = false, recommendedLabel, priceHint, detailRows }) {
   const { id, label, name, subtitle, image } = material;
   const displayName = label || name || id;
   const meta = MATERIAL_META[id];
@@ -408,10 +408,10 @@ export function MaterialSwatch({ material, selected, onSelect, recommended = fal
           <TexturePattern pattern={pattern} baseColor={baseColor} uid={safeUid} />
         )}
 
-        {/* Recommended badge */}
+        {/* Recommended / Popular badge */}
         {recommended && (
           <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-green-100 px-1.5 py-px text-[9px] font-bold text-green-700 shadow-sm">
-            {"\u2605"} Rec
+            {"\u2605"} {recommendedLabel || "Rec"}
           </span>
         )}
         {/* Selected checkmark badge */}
@@ -426,7 +426,12 @@ export function MaterialSwatch({ material, selected, onSelect, recommended = fal
 
       {/* Label area */}
       <div className="flex flex-col gap-0.5 px-3 py-2">
-        <span className="text-xs font-bold leading-tight text-gray-900">{displayName}</span>
+        <span className="flex items-center gap-1.5 text-xs font-bold leading-tight text-gray-900">
+          {displayName}
+          {priceHint && (
+            <span className="text-[10px] font-semibold text-amber-600">{priceHint}</span>
+          )}
+        </span>
         {displaySubtitle && (
           <span className="text-[11px] leading-tight text-gray-400">{displaySubtitle}</span>
         )}
@@ -492,10 +497,14 @@ const GRID_COL_CLASSES = {
  * Material selection grid with visual SVG texture swatches.
  *
  * Props:
- *  - materials     — array of { id, label|name, subtitle?, image? }
+ *  - materials     — array of { id, label|name, subtitle?, image?, priceHint? }
  *  - selectedId    — currently selected material id
  *  - onSelect(id)  — selection callback
  *  - columns       — optional column count (default: 2 mobile, 4 desktop)
+ *  - recommendedId — id of the recommended material (shows badge)
+ *  - recommendedLabel — custom label for the recommended badge (default: "Rec")
+ *  - getPriceHint(id) — optional fn returning price hint string (e.g. "+$2.50")
+ *  - getDetailRows(id) — optional fn returning detail rows array
  */
 export default function MaterialSwatchGrid({
   materials = [],
@@ -503,6 +512,8 @@ export default function MaterialSwatchGrid({
   onSelect,
   columns,
   recommendedId,
+  recommendedLabel,
+  getPriceHint,
   getDetailRows,
 }) {
   // Resolve grid classes from static lookup (Tailwind-safe)
@@ -535,29 +546,41 @@ export default function MaterialSwatchGrid({
             selected={mat.id === selectedId}
             onSelect={onSelect}
             recommended={!!recommendedId && mat.id === recommendedId}
+            recommendedLabel={recommendedLabel}
+            priceHint={mat.priceHint || (getPriceHint ? getPriceHint(mat.id) : undefined)}
             detailRows={getDetailRows ? getDetailRows(mat.id) : undefined}
           />
         ))}
       </div>
 
-      {/* Confirmation strip */}
+      {/* Confirmation strip with description (visible on mobile where hover tooltips aren't) */}
       {selectedId && selectedMaterial && (
-        <div className="mt-3 flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-4 py-2.5">
-          <svg
-            className="h-4 w-4 shrink-0 text-teal-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
-          <p className="text-xs font-medium text-teal-800">
-            Selected: <span className="font-bold">{selectedName}</span>
-            {selectedSubtitle && (
-              <span className="text-teal-600"> &mdash; {selectedSubtitle}</span>
-            )}
-          </p>
+        <div className="mt-3 rounded-lg border border-teal-200 bg-teal-50 px-4 py-2.5">
+          <div className="flex items-center gap-2">
+            <svg
+              className="h-4 w-4 shrink-0 text-teal-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            <p className="text-xs font-medium text-teal-800">
+              Selected: <span className="font-bold">{selectedName}</span>
+              {selectedSubtitle && (
+                <span className="text-teal-600"> &mdash; {selectedSubtitle}</span>
+              )}
+            </p>
+          </div>
+          {selectedMeta && (selectedMeta.description || selectedMeta.durability) && (
+            <p className="mt-1 ml-6 text-[11px] text-teal-700">
+              {selectedMeta.description}
+              {selectedMeta.durability && (
+                <span className="ml-2 font-semibold">{selectedMeta.durability}</span>
+              )}
+            </p>
+          )}
         </div>
       )}
     </div>
