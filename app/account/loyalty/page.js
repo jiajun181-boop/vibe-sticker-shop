@@ -10,6 +10,13 @@ const TIER_COLORS = {
   platinum: "bg-purple-100 text-purple-800",
 };
 
+const TIER_LABEL_KEYS = {
+  bronze: "loyalty.tierBronze",
+  silver: "loyalty.tierSilver",
+  gold: "loyalty.tierGold",
+  platinum: "loyalty.tierPlatinum",
+};
+
 const TX_ICONS = {
   earn: "M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
   redeem: "M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z",
@@ -18,16 +25,20 @@ const TX_ICONS = {
   expire: "M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z",
 };
 
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString("en-CA", {
+function formatDate(dateStr, locale) {
+  return new Date(dateStr).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 }
 
+function getTierLabel(t, tier) {
+  return TIER_LABEL_KEYS[tier] ? t(TIER_LABEL_KEYS[tier]) : tier;
+}
+
 export default function LoyaltyPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -76,6 +87,8 @@ export default function LoyaltyPage() {
 
   const { account, transactions, nextTier, rules } = data;
   const tierColorClass = TIER_COLORS[account.tier] || TIER_COLORS.bronze;
+  const currentTierLabel = getTierLabel(t, account.tier);
+  const nextTierLabel = nextTier ? getTierLabel(t, nextTier.name) : "";
 
   // Progress bar calculation
   let progressPercent = 100;
@@ -110,11 +123,11 @@ export default function LoyaltyPage() {
             <span
               className={`inline-block rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${tierColorClass}`}
             >
-              {account.tier}
+              {currentTierLabel}
             </span>
             <p className="mt-1 text-xs text-[var(--color-gray-500)]">
               {t("loyalty.memberSince")}{" "}
-              {formatDate(account.createdAt)}
+              {formatDate(account.createdAt, locale)}
             </p>
           </div>
         </div>
@@ -123,8 +136,8 @@ export default function LoyaltyPage() {
         {nextTier && (
           <div className="mt-6">
             <div className="flex items-center justify-between text-xs text-[var(--color-gray-500)]">
-              <span className="capitalize">{account.tier}</span>
-              <span className="capitalize">{nextTier.name}</span>
+              <span>{currentTierLabel}</span>
+              <span>{nextTierLabel}</span>
             </div>
             <div className="mt-1.5 h-2 w-full rounded-full bg-[var(--color-gray-100)]">
               <div
@@ -133,8 +146,10 @@ export default function LoyaltyPage() {
               />
             </div>
             <p className="mt-1.5 text-xs text-[var(--color-gray-500)]">
-              {nextTier.pointsNeeded.toLocaleString()}{" "}
-              {t("loyalty.pointsToNext")}
+              {t("loyalty.pointsToNext", {
+                points: nextTier.pointsNeeded.toLocaleString(),
+                tier: nextTierLabel,
+              })}
             </p>
           </div>
         )}
@@ -318,13 +333,13 @@ export default function LoyaltyPage() {
                   }`}
                 >
                   <p
-                    className={`text-xs font-bold uppercase tracking-[0.12em] ${
-                      isActive
-                        ? "text-[var(--color-gray-900)]"
-                        : "text-[var(--color-gray-500)]"
-                    }`}
-                  >
-                    {name}
+                  className={`text-xs font-bold uppercase tracking-[0.12em] ${
+                    isActive
+                      ? "text-[var(--color-gray-900)]"
+                      : "text-[var(--color-gray-500)]"
+                  }`}
+                >
+                    {getTierLabel(t, name)}
                   </p>
                   <p className="mt-1 text-sm text-[var(--color-gray-600)]">
                     {threshold.toLocaleString()} {t("loyalty.pts")}
@@ -385,7 +400,7 @@ export default function LoyaltyPage() {
                       {tx.description}
                     </p>
                     <p className="text-xs text-[var(--color-gray-400)]">
-                      {formatDate(tx.createdAt)}
+                      {formatDate(tx.createdAt, locale)}
                     </p>
                   </div>
                   <span

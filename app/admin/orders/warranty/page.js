@@ -1,16 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback, Fragment } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
-const STATUS_TABS = [
-  { value: "all", label: "All" },
-  { value: "submitted", label: "Submitted" },
-  { value: "under_review", label: "Under Review" },
-  { value: "approved", label: "Approved" },
-  { value: "denied", label: "Denied" },
-  { value: "fulfilled", label: "Fulfilled" },
-];
+const STATUS_VALUES = ["all", "submitted", "under_review", "approved", "denied", "fulfilled"];
 
 const STATUS_COLORS = {
   submitted: "bg-blue-100 text-blue-800",
@@ -20,27 +14,51 @@ const STATUS_COLORS = {
   fulfilled: "bg-emerald-100 text-emerald-800",
 };
 
-const ISSUE_LABELS = {
-  defective: "Defective",
-  damaged: "Damaged in Shipping",
-  wrong_item: "Wrong Item",
-  quality: "Quality Issue",
-  other: "Other",
+const STATUS_LABEL_KEYS = {
+  submitted: "warranty.statusSubmitted",
+  under_review: "warranty.statusUnderReview",
+  approved: "warranty.statusApproved",
+  denied: "warranty.statusDenied",
+  fulfilled: "warranty.statusFulfilled",
 };
 
-const RESOLUTION_OPTIONS = [
-  { value: "", label: "Select resolution..." },
-  { value: "replace", label: "Replace" },
-  { value: "refund", label: "Refund" },
-  { value: "repair", label: "Repair" },
-  { value: "credit", label: "Store Credit" },
-];
+const ISSUE_LABEL_KEYS = {
+  defective: "warranty.issueDefective",
+  damaged: "warranty.issueDamaged",
+  wrong_item: "warranty.issueWrongItem",
+  quality: "warranty.issueQuality",
+  other: "warranty.issueOther",
+};
 
-function formatStatus(status) {
-  return (status || "").replace(/_/g, " ");
+const RESOLUTION_VALUES = ["", "replace", "refund", "repair", "credit"];
+
+const RESOLUTION_LABEL_KEYS = {
+  replace: "warranty.resolutionReplace",
+  refund: "warranty.resolutionRefund",
+  repair: "warranty.resolutionRepair",
+  credit: "warranty.resolutionCredit",
+};
+
+function formatDate(dateStr, locale) {
+  return new Date(dateStr).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA");
+}
+
+function getStatusLabel(t, value) {
+  if (value === "all") return t("admin.common.all");
+  return STATUS_LABEL_KEYS[value] ? t(STATUS_LABEL_KEYS[value]) : value.replace(/_/g, " ");
+}
+
+function getIssueLabel(t, value) {
+  return ISSUE_LABEL_KEYS[value] ? t(ISSUE_LABEL_KEYS[value]) : value;
+}
+
+function getResolutionLabel(t, value) {
+  if (!value) return t("admin.warranty.selectResolution");
+  return RESOLUTION_LABEL_KEYS[value] ? t(RESOLUTION_LABEL_KEYS[value]) : value;
 }
 
 export default function AdminWarrantyPage() {
+  const { t, locale } = useTranslation();
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState(null);
@@ -53,7 +71,6 @@ export default function AdminWarrantyPage() {
   const [updateError, setUpdateError] = useState("");
   const [updateSuccess, setUpdateSuccess] = useState("");
 
-  // Resolution form state (per expanded claim)
   const [editStatus, setEditStatus] = useState("");
   const [editResolution, setEditResolution] = useState("");
   const [editNote, setEditNote] = useState("");
@@ -69,31 +86,21 @@ export default function AdminWarrantyPage() {
       if (search) params.set("search", search);
 
       const res = await fetch(`/api/admin/warranty?${params}`);
-      if (!res.ok) throw new Error("Failed to load");
+      if (!res.ok) throw new Error("failed");
       const data = await res.json();
       setClaims(data.claims || []);
       setPagination(data.pagination || null);
     } catch {
       setClaims([]);
+      setPagination(null);
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, search]);
+  }, [page, search, statusFilter]);
 
   useEffect(() => {
     fetchClaims();
   }, [fetchClaims]);
-
-  function handleTabChange(tab) {
-    setStatusFilter(tab);
-    setPage(1);
-  }
-
-  function handleSearch(e) {
-    e.preventDefault();
-    setSearch(searchInput.trim());
-    setPage(1);
-  }
 
   function handleExpand(claim) {
     if (expandedId === claim.id) {
@@ -111,6 +118,12 @@ export default function AdminWarrantyPage() {
     setUpdateSuccess("");
   }
 
+  function handleSearch(e) {
+    e.preventDefault();
+    setSearch(searchInput.trim());
+    setPage(1);
+  }
+
   async function handleUpdate(claimId) {
     setUpdating(true);
     setUpdateError("");
@@ -118,12 +131,11 @@ export default function AdminWarrantyPage() {
 
     try {
       const body = { claimId, status: editStatus };
-
       if (editResolution) body.resolution = editResolution;
       if (editNote.trim()) body.resolutionNote = editNote.trim();
       if (editRefundAmount) {
         const cents = Math.round(parseFloat(editRefundAmount) * 100);
-        if (!isNaN(cents) && cents > 0) body.refundAmount = cents;
+        if (!Number.isNaN(cents) && cents > 0) body.refundAmount = cents;
       }
 
       const res = await fetch("/api/admin/warranty", {
@@ -133,19 +145,15 @@ export default function AdminWarrantyPage() {
       });
 
       const data = await res.json();
-
       if (!res.ok) {
-        setUpdateError(data.error || "Update failed");
+        setUpdateError(data.error || t("admin.warranty.updateFailed"));
         return;
       }
 
-      // Update the claim in the list
-      setClaims((prev) =>
-        prev.map((c) => (c.id === claimId ? data.claim : c))
-      );
-      setUpdateSuccess("Claim updated successfully.");
+      setClaims((prev) => prev.map((claim) => (claim.id === claimId ? data.claim : claim)));
+      setUpdateSuccess(t("admin.warranty.updatedSuccess"));
     } catch {
-      setUpdateError("Failed to update claim. Please try again.");
+      setUpdateError(t("admin.warranty.updateFailed"));
     } finally {
       setUpdating(false);
     }
@@ -153,54 +161,52 @@ export default function AdminWarrantyPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-black">Warranty Claims</h1>
-          <p className="mt-0.5 text-xs text-[#999]">
-            Manage customer warranty and quality claims
-          </p>
+          <h1 className="text-xl font-bold text-black">{t("admin.warranty.title")}</h1>
+          <p className="mt-0.5 text-xs text-[#999]">{t("admin.warranty.subtitle")}</p>
         </div>
         <Link
           href="/admin/orders"
           className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
         >
-          Back to Orders
+          {t("admin.warranty.backToOrders")}
         </Link>
       </div>
 
-      {/* Status Tabs */}
       <div className="flex flex-wrap gap-1.5">
-        {STATUS_TABS.map((tab) => (
+        {STATUS_VALUES.map((value) => (
           <button
-            key={tab.value}
+            key={value}
             type="button"
-            onClick={() => handleTabChange(tab.value)}
+            onClick={() => {
+              setStatusFilter(value);
+              setPage(1);
+            }}
             className={`rounded-[3px] px-3 py-1.5 text-xs font-medium transition-colors ${
-              statusFilter === tab.value
+              statusFilter === value
                 ? "bg-black text-white"
-                : "bg-white text-[#666] border border-[#e0e0e0] hover:border-black hover:text-black"
+                : "border border-[#e0e0e0] bg-white text-[#666] hover:border-black hover:text-black"
             }`}
           >
-            {tab.label}
+            {getStatusLabel(t, value)}
           </button>
         ))}
       </div>
 
-      {/* Search */}
       <form onSubmit={handleSearch} className="flex gap-2">
         <input
           type="text"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search by claim #, email, name, or order ID..."
+          placeholder={t("admin.warranty.searchPlaceholder")}
           className="w-full max-w-md rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
         />
         <button
           type="submit"
           className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
         >
-          Search
+          {t("admin.common.search")}
         </button>
         {search && (
           <button
@@ -211,45 +217,43 @@ export default function AdminWarrantyPage() {
             }}
             className="text-xs text-[#999] hover:text-black"
           >
-            Clear
+            {t("admin.common.clear")}
           </button>
         )}
       </form>
 
-      {/* Table */}
       <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            Loading...
+            {t("admin.common.loading")}
           </div>
         ) : claims.length === 0 ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            No warranty claims found.
+            {t("admin.warranty.empty")}
           </div>
         ) : (
           <>
-            {/* Desktop Table */}
             <div className="hidden overflow-x-auto lg:block">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#e0e0e0] bg-[#fafafa]">
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Claim #
+                      {t("warranty.claimNumber")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Customer
+                      {t("admin.orders.customer")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Order
+                      {t("admin.warranty.order")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Issue
+                      {t("warranty.issueType")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Status
+                      {t("admin.orders.status")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                      Date
+                      {t("admin.orders.date")}
                     </th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -258,7 +262,7 @@ export default function AdminWarrantyPage() {
                   {claims.map((claim) => (
                     <Fragment key={claim.id}>
                       <tr
-                        className={`hover:bg-[#fafafa] cursor-pointer ${
+                        className={`cursor-pointer hover:bg-[#fafafa] ${
                           expandedId === claim.id ? "bg-[#fafafa]" : ""
                         }`}
                         onClick={() => handleExpand(claim)}
@@ -269,13 +273,9 @@ export default function AdminWarrantyPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-medium text-black">
-                            {claim.customerEmail}
-                          </p>
+                          <p className="font-medium text-black">{claim.customerEmail}</p>
                           {claim.customerName && (
-                            <p className="text-xs text-[#999]">
-                              {claim.customerName}
-                            </p>
+                            <p className="text-xs text-[#999]">{claim.customerName}</p>
                           )}
                         </td>
                         <td className="px-4 py-3">
@@ -288,57 +288,57 @@ export default function AdminWarrantyPage() {
                           </Link>
                         </td>
                         <td className="px-4 py-3 text-xs text-[#666]">
-                          {ISSUE_LABELS[claim.issueType] || claim.issueType}
+                          {getIssueLabel(t, claim.issueType)}
                         </td>
                         <td className="px-4 py-3">
                           <span
                             className={`inline-block rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                              STATUS_COLORS[claim.status] ||
-                              "bg-gray-100 text-gray-600"
+                              STATUS_COLORS[claim.status] || "bg-gray-100 text-gray-600"
                             }`}
                           >
-                            {formatStatus(claim.status)}
+                            {getStatusLabel(t, claim.status)}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-xs text-[#999]">
-                          {new Date(claim.createdAt).toLocaleDateString(
-                            "en-CA"
-                          )}
+                          {formatDate(claim.createdAt, locale)}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <span className="text-xs text-[#999]">
-                            {expandedId === claim.id ? "Collapse" : "Expand"}
+                            {expandedId === claim.id
+                              ? t("admin.warranty.collapse")
+                              : t("admin.warranty.expand")}
                           </span>
                         </td>
                       </tr>
 
-                      {/* Expanded Detail Row */}
                       {expandedId === claim.id && (
-                        <tr key={`${claim.id}-detail`}>
+                        <tr>
                           <td colSpan={7} className="bg-[#fafafa] px-6 py-5">
                             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                              {/* Left: Claim Details */}
                               <div className="space-y-3">
                                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#999]">
-                                  Claim Details
+                                  {t("admin.warranty.claimDetails")}
                                 </h3>
 
                                 {claim.productName && (
                                   <div>
                                     <p className="text-[10px] font-medium uppercase tracking-wider text-[#999]">
-                                      Product
+                                      {t("admin.warranty.product")}
                                     </p>
                                     <p className="text-sm text-black">
-                                      {claim.productName} (qty: {claim.quantity})
+                                      {t("admin.warranty.productQuantity", {
+                                        product: claim.productName,
+                                        quantity: claim.quantity,
+                                      })}
                                     </p>
                                   </div>
                                 )}
 
                                 <div>
                                   <p className="text-[10px] font-medium uppercase tracking-wider text-[#999]">
-                                    Description
+                                    {t("warranty.description")}
                                   </p>
-                                  <p className="mt-0.5 text-sm text-[#333] whitespace-pre-wrap">
+                                  <p className="mt-0.5 whitespace-pre-wrap text-sm text-[#333]">
                                     {claim.description}
                                   </p>
                                 </div>
@@ -346,18 +346,20 @@ export default function AdminWarrantyPage() {
                                 {claim.photoUrls?.length > 0 && (
                                   <div>
                                     <p className="text-[10px] font-medium uppercase tracking-wider text-[#999]">
-                                      Photos ({claim.photoUrls.length})
+                                      {t("admin.warranty.photos", {
+                                        count: claim.photoUrls.length,
+                                      })}
                                     </p>
                                     <div className="mt-1 flex flex-wrap gap-2">
-                                      {claim.photoUrls.map((url, i) => (
+                                      {claim.photoUrls.map((url, index) => (
                                         <a
-                                          key={i}
+                                          key={index}
                                           href={url}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="rounded border border-[#d0d0d0] px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
                                         >
-                                          Photo {i + 1}
+                                          {t("admin.warranty.photo", { index: index + 1 })}
                                         </a>
                                       ))}
                                     </div>
@@ -367,53 +369,38 @@ export default function AdminWarrantyPage() {
                                 {claim.resolvedBy && (
                                   <div>
                                     <p className="text-[10px] font-medium uppercase tracking-wider text-[#999]">
-                                      Resolved By
+                                      {t("admin.warranty.resolvedBy")}
                                     </p>
                                     <p className="text-sm text-[#333]">
-                                      {claim.resolvedBy} &mdash;{" "}
-                                      {claim.resolvedAt
-                                        ? new Date(
-                                            claim.resolvedAt
-                                          ).toLocaleDateString("en-CA")
-                                        : ""}
+                                      {claim.resolvedBy}
+                                      {claim.resolvedAt ? ` - ${formatDate(claim.resolvedAt, locale)}` : ""}
                                     </p>
                                   </div>
                                 )}
                               </div>
 
-                              {/* Right: Update Form */}
                               <div className="space-y-3 rounded-[3px] border border-[#e0e0e0] bg-white p-4">
                                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#999]">
-                                  Update Claim
+                                  {t("admin.warranty.updateClaim")}
                                 </h3>
 
-                                {updateError && (
-                                  <p className="text-xs text-red-600">
-                                    {updateError}
-                                  </p>
-                                )}
+                                {updateError && <p className="text-xs text-red-600">{updateError}</p>}
                                 {updateSuccess && (
-                                  <p className="text-xs text-green-600">
-                                    {updateSuccess}
-                                  </p>
+                                  <p className="text-xs text-green-600">{updateSuccess}</p>
                                 )}
 
                                 <div>
                                   <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-[#999]">
-                                    Status
+                                    {t("admin.orders.status")}
                                   </label>
                                   <select
                                     value={editStatus}
-                                    onChange={(e) =>
-                                      setEditStatus(e.target.value)
-                                    }
+                                    onChange={(e) => setEditStatus(e.target.value)}
                                     className="w-full rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-black"
                                   >
-                                    {STATUS_TABS.filter(
-                                      (t) => t.value !== "all"
-                                    ).map((t) => (
-                                      <option key={t.value} value={t.value}>
-                                        {t.label}
+                                    {STATUS_VALUES.filter((value) => value !== "all").map((value) => (
+                                      <option key={value} value={value}>
+                                        {getStatusLabel(t, value)}
                                       </option>
                                     ))}
                                   </select>
@@ -421,21 +408,16 @@ export default function AdminWarrantyPage() {
 
                                 <div>
                                   <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-[#999]">
-                                    Resolution
+                                    {t("warranty.resolution")}
                                   </label>
                                   <select
                                     value={editResolution}
-                                    onChange={(e) =>
-                                      setEditResolution(e.target.value)
-                                    }
+                                    onChange={(e) => setEditResolution(e.target.value)}
                                     className="w-full rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-black"
                                   >
-                                    {RESOLUTION_OPTIONS.map((opt) => (
-                                      <option
-                                        key={opt.value}
-                                        value={opt.value}
-                                      >
-                                        {opt.label}
+                                    {RESOLUTION_VALUES.map((value) => (
+                                      <option key={value || "none"} value={value}>
+                                        {getResolutionLabel(t, value)}
                                       </option>
                                     ))}
                                   </select>
@@ -443,32 +425,28 @@ export default function AdminWarrantyPage() {
 
                                 <div>
                                   <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-[#999]">
-                                    Refund Amount (CAD, optional)
+                                    {t("admin.warranty.refundAmount")}
                                   </label>
                                   <input
                                     type="number"
                                     step="0.01"
                                     min="0"
                                     value={editRefundAmount}
-                                    onChange={(e) =>
-                                      setEditRefundAmount(e.target.value)
-                                    }
-                                    placeholder="0.00"
+                                    onChange={(e) => setEditRefundAmount(e.target.value)}
+                                    placeholder={t("admin.warranty.refundPlaceholder")}
                                     className="w-full rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-black"
                                   />
                                 </div>
 
                                 <div>
                                   <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-[#999]">
-                                    Notes
+                                    {t("admin.warranty.notes")}
                                   </label>
                                   <textarea
                                     value={editNote}
-                                    onChange={(e) =>
-                                      setEditNote(e.target.value)
-                                    }
+                                    onChange={(e) => setEditNote(e.target.value)}
                                     rows={3}
-                                    placeholder="Internal resolution notes..."
+                                    placeholder={t("admin.warranty.notesPlaceholder")}
                                     className="w-full rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-black"
                                   />
                                 </div>
@@ -479,9 +457,7 @@ export default function AdminWarrantyPage() {
                                   disabled={updating}
                                   className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
                                 >
-                                  {updating
-                                    ? "Updating..."
-                                    : "Update Claim"}
+                                  {updating ? t("admin.warranty.updating") : t("admin.warranty.updateClaim")}
                                 </button>
                               </div>
                             </div>
@@ -494,12 +470,11 @@ export default function AdminWarrantyPage() {
               </table>
             </div>
 
-            {/* Mobile Cards */}
             <div className="divide-y divide-[#e0e0e0] lg:hidden">
               {claims.map((claim) => (
                 <div key={claim.id}>
                   <div
-                    className={`px-4 py-3 cursor-pointer transition-colors hover:bg-[#fafafa] ${
+                    className={`cursor-pointer px-4 py-3 transition-colors hover:bg-[#fafafa] ${
                       expandedId === claim.id ? "bg-[#fafafa]" : ""
                     }`}
                     onClick={() => handleExpand(claim)}
@@ -509,99 +484,86 @@ export default function AdminWarrantyPage() {
                         <p className="font-mono text-xs font-semibold text-black">
                           {claim.claimNumber}
                         </p>
-                        <p className="mt-0.5 text-xs text-[#666]">
-                          {claim.customerEmail}
-                        </p>
+                        <p className="mt-0.5 text-xs text-[#666]">{claim.customerEmail}</p>
                         <p className="mt-0.5 text-xs text-[#999]">
-                          {ISSUE_LABELS[claim.issueType] || claim.issueType}
+                          {getIssueLabel(t, claim.issueType)}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <span
-                          className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                            STATUS_COLORS[claim.status] ||
-                            "bg-gray-100 text-gray-600"
+                          className={`inline-block rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                            STATUS_COLORS[claim.status] || "bg-gray-100 text-gray-600"
                           }`}
                         >
-                          {formatStatus(claim.status)}
+                          {getStatusLabel(t, claim.status)}
                         </span>
                         <span className="text-[10px] text-[#999]">
-                          {new Date(claim.createdAt).toLocaleDateString(
-                            "en-CA"
-                          )}
+                          {formatDate(claim.createdAt, locale)}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Expanded Mobile Detail */}
                   {expandedId === claim.id && (
-                    <div className="border-t border-[#e0e0e0] bg-[#fafafa] px-4 py-4 space-y-4">
-                      <div className="space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                          Description
+                    <div className="space-y-4 bg-[#fafafa] px-4 py-4">
+                      <div>
+                        <p className="text-[10px] font-medium uppercase tracking-wider text-[#999]">
+                          {t("warranty.description")}
                         </p>
-                        <p className="text-sm text-[#333] whitespace-pre-wrap">
-                          {claim.description}
-                        </p>
-
-                        {claim.productName && (
-                          <p className="text-xs text-[#666]">
-                            Product: {claim.productName} (qty: {claim.quantity})
-                          </p>
-                        )}
-
-                        <Link
-                          href={`/admin/orders/${claim.orderId}`}
-                          className="inline-block text-xs text-black underline hover:no-underline"
-                        >
-                          View Order #{claim.orderId?.slice(0, 8)}
-                        </Link>
-
-                        {claim.photoUrls?.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {claim.photoUrls.map((url, i) => (
-                              <a
-                                key={i}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="rounded border border-[#d0d0d0] px-2 py-0.5 text-xs text-blue-600"
-                              >
-                                Photo {i + 1}
-                              </a>
-                            ))}
-                          </div>
-                        )}
+                        <p className="mt-1 text-sm text-[#333]">{claim.description}</p>
                       </div>
 
-                      {/* Mobile Update Form */}
-                      <div className="space-y-3 rounded-[3px] border border-[#e0e0e0] bg-white p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">
-                          Update Claim
+                      {claim.productName && (
+                        <p className="text-xs text-[#666]">
+                          {t("admin.warranty.productQuantity", {
+                            product: claim.productName,
+                            quantity: claim.quantity,
+                          })}
                         </p>
+                      )}
 
-                        {updateError && (
-                          <p className="text-xs text-red-600">{updateError}</p>
-                        )}
-                        {updateSuccess && (
-                          <p className="text-xs text-green-600">
-                            {updateSuccess}
-                          </p>
-                        )}
+                      <Link
+                        href={`/admin/orders/${claim.orderId}`}
+                        className="inline-flex text-xs font-medium text-black underline"
+                      >
+                        {t("admin.warranty.viewOrder", {
+                          id: claim.orderId?.slice(0, 8),
+                        })}
+                      </Link>
+
+                      {claim.photoUrls?.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {claim.photoUrls.map((url, index) => (
+                            <a
+                              key={index}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="rounded border border-[#d0d0d0] px-2 py-1 text-xs text-blue-600"
+                            >
+                              {t("admin.warranty.photo", { index: index + 1 })}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="space-y-2 rounded-[3px] border border-[#e0e0e0] bg-white p-3">
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#999]">
+                          {t("admin.warranty.updateClaim")}
+                        </p>
+                        {updateError && <p className="text-xs text-red-600">{updateError}</p>}
+                        {updateSuccess && <p className="text-xs text-green-600">{updateSuccess}</p>}
 
                         <select
                           value={editStatus}
                           onChange={(e) => setEditStatus(e.target.value)}
                           className="w-full rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-black"
                         >
-                          {STATUS_TABS.filter((t) => t.value !== "all").map(
-                            (t) => (
-                              <option key={t.value} value={t.value}>
-                                {t.label}
-                              </option>
-                            )
-                          )}
+                          {STATUS_VALUES.filter((value) => value !== "all").map((value) => (
+                            <option key={value} value={value}>
+                              {getStatusLabel(t, value)}
+                            </option>
+                          ))}
                         </select>
 
                         <select
@@ -609,9 +571,9 @@ export default function AdminWarrantyPage() {
                           onChange={(e) => setEditResolution(e.target.value)}
                           className="w-full rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-black"
                         >
-                          {RESOLUTION_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
+                          {RESOLUTION_VALUES.map((value) => (
+                            <option key={value || "none"} value={value}>
+                              {getResolutionLabel(t, value)}
                             </option>
                           ))}
                         </select>
@@ -621,10 +583,8 @@ export default function AdminWarrantyPage() {
                           step="0.01"
                           min="0"
                           value={editRefundAmount}
-                          onChange={(e) =>
-                            setEditRefundAmount(e.target.value)
-                          }
-                          placeholder="Refund amount (CAD)"
+                          onChange={(e) => setEditRefundAmount(e.target.value)}
+                          placeholder={t("admin.warranty.refundPlaceholder")}
                           className="w-full rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-black"
                         />
 
@@ -632,7 +592,7 @@ export default function AdminWarrantyPage() {
                           value={editNote}
                           onChange={(e) => setEditNote(e.target.value)}
                           rows={2}
-                          placeholder="Resolution notes..."
+                          placeholder={t("admin.warranty.notesPlaceholder")}
                           className="w-full rounded-[3px] border border-[#d0d0d0] px-2 py-1.5 text-xs text-black"
                         />
 
@@ -640,9 +600,9 @@ export default function AdminWarrantyPage() {
                           type="button"
                           onClick={() => handleUpdate(claim.id)}
                           disabled={updating}
-                          className="w-full rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
+                          className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
                         >
-                          {updating ? "Updating..." : "Update Claim"}
+                          {updating ? t("admin.warranty.updating") : t("admin.warranty.updateClaim")}
                         </button>
                       </div>
                     </div>
@@ -654,30 +614,31 @@ export default function AdminWarrantyPage() {
         )}
       </div>
 
-      {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-[#999]">
-            Showing {(pagination.page - 1) * pagination.limit + 1}-
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
-            {pagination.total}
-          </p>
-          <div className="flex gap-1">
+        <div className="flex items-center justify-between text-xs text-[#999]">
+          <span>
+            {t("admin.warranty.showingRange", {
+              from: (pagination.page - 1) * pagination.limit + 1,
+              to: Math.min(pagination.page * pagination.limit, pagination.total),
+              total: pagination.total,
+            })}
+          </span>
+          <div className="flex gap-2">
             <button
               type="button"
               disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:border-black disabled:opacity-40"
+              onClick={() => setPage((current) => current - 1)}
+              className="rounded border border-[#d0d0d0] px-3 py-1 disabled:opacity-40"
             >
-              Previous
+              {t("admin.common.previous")}
             </button>
             <button
               type="button"
               disabled={page >= pagination.totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:border-black disabled:opacity-40"
+              onClick={() => setPage((current) => current + 1)}
+              className="rounded border border-[#d0d0d0] px-3 py-1 disabled:opacity-40"
             >
-              Next
+              {t("admin.common.next")}
             </button>
           </div>
         </div>

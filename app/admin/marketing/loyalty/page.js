@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const TIER_COLORS = {
   bronze: "bg-amber-100 text-amber-800",
@@ -9,23 +10,33 @@ const TIER_COLORS = {
   platinum: "bg-purple-100 text-purple-800",
 };
 
-const TABS = [
-  { id: "accounts", label: "Accounts" },
-  { id: "adjust", label: "Adjust Points" },
-  { id: "rules", label: "Rules" },
-];
+const TIER_LABEL_KEYS = {
+  bronze: "loyalty.tierBronze",
+  silver: "loyalty.tierSilver",
+  gold: "loyalty.tierGold",
+  platinum: "loyalty.tierPlatinum",
+};
 
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString("en-CA", {
+const TAB_IDS = ["accounts", "adjust", "rules"];
+
+function formatDate(dateStr, locale) {
+  return new Date(dateStr).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 }
 
-// ── Tab: Accounts ──
+function getTierLabel(t, tier) {
+  return TIER_LABEL_KEYS[tier] ? t(TIER_LABEL_KEYS[tier]) : tier;
+}
 
-function AccountsTab() {
+function SortArrow({ active, order }) {
+  if (!active) return null;
+  return <span className="ml-1 text-[10px]">{order === "asc" ? "\u25B2" : "\u25BC"}</span>;
+}
+
+function AccountsTab({ t, locale }) {
   const [accounts, setAccounts] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -49,11 +60,12 @@ function AccountsTab() {
       setAccounts(data.accounts || []);
       setPagination(data.pagination || null);
     } catch {
-      // silent
+      setAccounts([]);
+      setPagination(null);
     } finally {
       setLoading(false);
     }
-  }, [page, sort, order, search]);
+  }, [order, page, search, sort]);
 
   useEffect(() => {
     fetchAccounts();
@@ -61,7 +73,7 @@ function AccountsTab() {
 
   function handleSort(field) {
     if (sort === field) {
-      setOrder((o) => (o === "asc" ? "desc" : "asc"));
+      setOrder((current) => (current === "asc" ? "desc" : "asc"));
     } else {
       setSort(field);
       setOrder("desc");
@@ -69,18 +81,8 @@ function AccountsTab() {
     setPage(1);
   }
 
-  function SortArrow({ field }) {
-    if (sort !== field) return null;
-    return (
-      <span className="ml-1 text-[10px]">
-        {order === "asc" ? "\u25B2" : "\u25BC"}
-      </span>
-    );
-  }
-
   return (
     <div>
-      {/* Search */}
       <div className="mb-4">
         <input
           type="text"
@@ -89,23 +91,20 @@ function AccountsTab() {
             setSearch(e.target.value);
             setPage(1);
           }}
-          placeholder="Search by name or email..."
-          className="w-full max-w-sm rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none focus:border-[#333] transition-colors"
+          placeholder={t("admin.loyalty.searchPlaceholder")}
+          className="w-full max-w-sm rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none transition-colors focus:border-[#333]"
         />
       </div>
 
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="h-12 animate-pulse rounded-lg bg-[#f5f5f5]"
-            />
+            <div key={i} className="h-12 animate-pulse rounded-lg bg-[#f5f5f5]" />
           ))}
         </div>
       ) : accounts.length === 0 ? (
         <div className="rounded-lg border border-dashed border-[#ddd] p-10 text-center text-sm text-[#999]">
-          No loyalty accounts found.
+          {t("admin.loyalty.noAccounts")}
         </div>
       ) : (
         <>
@@ -114,31 +113,31 @@ function AccountsTab() {
               <thead>
                 <tr className="border-b border-[#e5e5e5] bg-[#fafafa]">
                   <th className="px-4 py-2.5 text-left font-semibold text-[#555]">
-                    User
+                    {t("admin.loyalty.tableUser")}
                   </th>
                   <th
                     className="cursor-pointer px-4 py-2.5 text-left font-semibold text-[#555] hover:text-[#111]"
                     onClick={() => handleSort("pointsBalance")}
                   >
-                    Balance
-                    <SortArrow field="pointsBalance" />
+                    {t("admin.loyalty.tableBalance")}
+                    <SortArrow active={sort === "pointsBalance"} order={order} />
                   </th>
                   <th
                     className="cursor-pointer px-4 py-2.5 text-left font-semibold text-[#555] hover:text-[#111]"
                     onClick={() => handleSort("totalEarned")}
                   >
-                    Total Earned
-                    <SortArrow field="totalEarned" />
+                    {t("admin.loyalty.tableTotalEarned")}
+                    <SortArrow active={sort === "totalEarned"} order={order} />
                   </th>
                   <th className="px-4 py-2.5 text-left font-semibold text-[#555]">
-                    Tier
+                    {t("admin.loyalty.tableTier")}
                   </th>
                   <th
                     className="cursor-pointer px-4 py-2.5 text-left font-semibold text-[#555] hover:text-[#111]"
                     onClick={() => handleSort("updatedAt")}
                   >
-                    Last Activity
-                    <SortArrow field="updatedAt" />
+                    {t("admin.loyalty.tableLastActivity")}
+                    <SortArrow active={sort === "updatedAt"} order={order} />
                   </th>
                 </tr>
               </thead>
@@ -149,9 +148,7 @@ function AccountsTab() {
                     className="border-b border-[#f0f0f0] last:border-0 hover:bg-[#fafafa]"
                   >
                     <td className="px-4 py-3">
-                      <p className="font-medium text-[#111]">
-                        {acct.name || "—"}
-                      </p>
+                      <p className="font-medium text-[#111]">{acct.name || "-"}</p>
                       <p className="text-xs text-[#999]">{acct.email}</p>
                     </td>
                     <td className="px-4 py-3 font-semibold text-[#111]">
@@ -166,11 +163,11 @@ function AccountsTab() {
                           TIER_COLORS[acct.tier] || "bg-gray-100 text-[#999]"
                         }`}
                       >
-                        {acct.tier}
+                        {getTierLabel(t, acct.tier)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-[#999]">
-                      {formatDate(acct.updatedAt)}
+                      {formatDate(acct.updatedAt, locale)}
                     </td>
                   </tr>
                 ))}
@@ -178,30 +175,33 @@ function AccountsTab() {
             </table>
           </div>
 
-          {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between text-sm text-[#999]">
               <span>
-                Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
+                {t("admin.loyalty.pageSummary", {
+                  page: pagination.page,
+                  totalPages: pagination.totalPages,
+                  total: pagination.total,
+                })}
               </span>
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
                   disabled={page <= 1}
-                  className="rounded-lg border border-[#e5e5e5] px-3 py-1.5 text-xs font-semibold hover:border-[#999] disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="rounded-lg border border-[#e5e5e5] px-3 py-1.5 text-xs font-semibold hover:border-[#999] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Previous
+                  {t("admin.common.previous")}
                 </button>
                 <button
                   type="button"
                   onClick={() =>
-                    setPage((p) => Math.min(pagination.totalPages, p + 1))
+                    setPage((current) => Math.min(pagination.totalPages, current + 1))
                   }
                   disabled={page >= pagination.totalPages}
-                  className="rounded-lg border border-[#e5e5e5] px-3 py-1.5 text-xs font-semibold hover:border-[#999] disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="rounded-lg border border-[#e5e5e5] px-3 py-1.5 text-xs font-semibold hover:border-[#999] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Next
+                  {t("admin.common.next")}
                 </button>
               </div>
             </div>
@@ -212,9 +212,7 @@ function AccountsTab() {
   );
 }
 
-// ── Tab: Adjust Points ──
-
-function AdjustTab() {
+function AdjustTab({ t }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -233,12 +231,12 @@ function AdjustTab() {
         `/api/admin/customers?search=${encodeURIComponent(searchQuery)}&limit=10`
       );
       const data = await res.json();
-      // Map customer rows (from order aggregation) into user-like objects
       setSearchResults(
-        (data.customers || []).map((c) => ({
-          id: null, // resolved server-side via email
-          email: c.email,
-          name: c.name,
+        (data.customers || []).map((customer, index) => ({
+          id: customer.id || `${customer.email || "user"}-${index}`,
+          email: customer.email,
+          name: customer.name,
+          userId: customer.userId || null,
         }))
       );
     } catch {
@@ -254,15 +252,15 @@ function AdjustTab() {
 
     setSubmitting(true);
     setMessage(null);
+
     try {
       const payload = {
-        points: parseInt(points),
+        points: parseInt(points, 10),
         type,
         description: reason.trim(),
       };
-      // Use userId if available, otherwise fall back to email
-      if (selectedUser.id) {
-        payload.userId = selectedUser.id;
+      if (selectedUser.userId) {
+        payload.userId = selectedUser.userId;
       } else {
         payload.email = selectedUser.email;
       }
@@ -273,15 +271,22 @@ function AdjustTab() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to adjust points");
+      if (!res.ok) {
+        throw new Error(data.error || t("admin.loyalty.adjustFailed"));
+      }
       setMessage({
         type: "success",
-        text: `Points adjusted. New balance: ${data.account.pointsBalance.toLocaleString()}`,
+        text: t("admin.loyalty.adjustedBalance", {
+          balance: data.account.pointsBalance.toLocaleString(),
+        }),
       });
       setPoints("");
       setReason("");
     } catch (err) {
-      setMessage({ type: "error", text: err.message });
+      setMessage({
+        type: "error",
+        text: err.message || t("admin.loyalty.adjustFailed"),
+      });
     } finally {
       setSubmitting(false);
     }
@@ -289,10 +294,9 @@ function AdjustTab() {
 
   return (
     <div className="max-w-lg">
-      {/* User Search */}
       <div className="mb-6">
-        <label className="block text-xs font-semibold uppercase tracking-wider text-[#555] mb-1.5">
-          Find User
+        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#555]">
+          {t("admin.loyalty.findUser")}
         </label>
         <div className="flex gap-2">
           <input
@@ -300,7 +304,7 @@ function AdjustTab() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && searchUsers()}
-            placeholder="Search by name or email..."
+            placeholder={t("admin.loyalty.searchUsersPlaceholder")}
             className="flex-1 rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none focus:border-[#333]"
           />
           <button
@@ -309,12 +313,12 @@ function AdjustTab() {
             disabled={searching}
             className="rounded-lg bg-[#111] px-4 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-50"
           >
-            {searching ? "..." : "Search"}
+            {searching ? t("admin.loyalty.searching") : t("admin.common.search")}
           </button>
         </div>
 
         {searchResults.length > 0 && !selectedUser && (
-          <div className="mt-2 rounded-lg border border-[#e5e5e5] divide-y divide-[#f0f0f0]">
+          <div className="mt-2 divide-y divide-[#f0f0f0] rounded-lg border border-[#e5e5e5]">
             {searchResults.map((user) => (
               <button
                 key={user.id}
@@ -329,9 +333,7 @@ function AdjustTab() {
                   {(user.name || user.email || "?")[0].toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-medium text-[#111]">
-                    {user.name || "—"}
-                  </p>
+                  <p className="font-medium text-[#111]">{user.name || "-"}</p>
                   <p className="text-xs text-[#999]">{user.email}</p>
                 </div>
               </button>
@@ -347,7 +349,7 @@ function AdjustTab() {
               </div>
               <div>
                 <p className="text-sm font-medium text-[#111]">
-                  {selectedUser.name || "—"}
+                  {selectedUser.name || "-"}
                 </p>
                 <p className="text-xs text-[#999]">{selectedUser.email}</p>
               </div>
@@ -357,7 +359,7 @@ function AdjustTab() {
               onClick={() => setSelectedUser(null)}
               className="text-xs text-[#999] hover:text-red-600"
             >
-              Change
+              {t("admin.loyalty.changeUser")}
             </button>
           </div>
         )}
@@ -365,10 +367,9 @@ function AdjustTab() {
 
       {selectedUser && (
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Type */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#555] mb-1.5">
-              Adjustment Type
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#555]">
+              {t("admin.loyalty.adjustmentType")}
             </label>
             <div className="flex gap-2">
               <button
@@ -380,7 +381,7 @@ function AdjustTab() {
                     : "border-[#e5e5e5] text-[#555] hover:border-[#999]"
                 }`}
               >
-                Bonus
+                {t("admin.loyalty.typeBonus")}
               </button>
               <button
                 type="button"
@@ -391,47 +392,45 @@ function AdjustTab() {
                     : "border-[#e5e5e5] text-[#555] hover:border-[#999]"
                 }`}
               >
-                Adjustment
+                {t("admin.loyalty.typeAdjust")}
               </button>
             </div>
           </div>
 
-          {/* Points */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#555] mb-1.5">
-              Points (negative to deduct)
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#555]">
+              {t("admin.loyalty.pointsLabel")}
             </label>
             <input
               type="number"
               value={points}
               onChange={(e) => setPoints(e.target.value)}
-              placeholder="e.g. 100 or -50"
+              placeholder={t("admin.loyalty.pointsPlaceholder")}
               required
               className="w-full rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none focus:border-[#333]"
             />
           </div>
 
-          {/* Reason */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#555] mb-1.5">
-              Reason
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#555]">
+              {t("admin.loyalty.reasonLabel")}
             </label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Why is this adjustment being made?"
+              placeholder={t("admin.loyalty.reasonPlaceholder")}
               required
               rows={3}
-              className="w-full rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none focus:border-[#333] resize-none"
+              className="w-full resize-none rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none focus:border-[#333]"
             />
           </div>
 
           {message && (
             <div
-              className={`rounded-lg px-3 py-2.5 text-sm ${
+              className={`rounded-lg border px-3 py-2.5 text-sm ${
                 message.type === "success"
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  : "bg-red-50 text-red-700 border border-red-200"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-red-200 bg-red-50 text-red-700"
               }`}
             >
               {message.text}
@@ -441,9 +440,9 @@ function AdjustTab() {
           <button
             type="submit"
             disabled={submitting || !points || !reason.trim()}
-            className="w-full rounded-lg bg-[#111] px-4 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-lg bg-[#111] px-4 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {submitting ? "Applying..." : "Apply Adjustment"}
+            {submitting ? t("admin.loyalty.applying") : t("admin.loyalty.applyAdjustment")}
           </button>
         </form>
       )}
@@ -451,15 +450,11 @@ function AdjustTab() {
   );
 }
 
-// ── Tab: Rules ──
-
-function RulesTab() {
-  const [rules, setRules] = useState(null);
+function RulesTab({ t }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
-  // Editable fields
   const [earnRate, setEarnRate] = useState("");
   const [redeemRate, setRedeemRate] = useState("");
   const [tierSilver, setTierSilver] = useState("");
@@ -473,20 +468,21 @@ function RulesTab() {
     fetch("/api/admin/loyalty/rules")
       .then((r) => r.json())
       .then((data) => {
-        const r = data.rules || {};
-        setRules(r);
-        setEarnRate(String(r.earnRate ?? 1));
-        setRedeemRate(String(r.redeemRate ?? 100));
-        setTierSilver(String(r.tiers?.silver ?? 1000));
-        setTierGold(String(r.tiers?.gold ?? 5000));
-        setTierPlatinum(String(r.tiers?.platinum ?? 20000));
-        setBonusFirstOrder(String(r.bonusEvents?.firstOrder ?? 100));
-        setBonusReferral(String(r.bonusEvents?.referral ?? 200));
-        setBonusReview(String(r.bonusEvents?.review ?? 50));
+        const rules = data.rules || {};
+        setEarnRate(String(rules.earnRate ?? 1));
+        setRedeemRate(String(rules.redeemRate ?? 100));
+        setTierSilver(String(rules.tiers?.silver ?? 1000));
+        setTierGold(String(rules.tiers?.gold ?? 5000));
+        setTierPlatinum(String(rules.tiers?.platinum ?? 20000));
+        setBonusFirstOrder(String(rules.bonusEvents?.firstOrder ?? 100));
+        setBonusReferral(String(rules.bonusEvents?.referral ?? 200));
+        setBonusReview(String(rules.bonusEvents?.review ?? 50));
       })
-      .catch(() => {})
+      .catch(() => {
+        setMessage({ type: "error", text: t("admin.loyalty.loadRulesFailed") });
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   async function handleSave(e) {
     e.preventDefault();
@@ -515,11 +511,12 @@ function RulesTab() {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save rules");
-      setRules(data.rules);
-      setMessage({ type: "success", text: "Loyalty rules saved." });
+      if (!res.ok) {
+        throw new Error(data.error || t("admin.loyalty.saveFailed"));
+      }
+      setMessage({ type: "success", text: t("admin.loyalty.rulesSaved") });
     } catch (err) {
-      setMessage({ type: "error", text: err.message });
+      setMessage({ type: "error", text: err.message || t("admin.loyalty.saveFailed") });
     } finally {
       setSaving(false);
     }
@@ -529,10 +526,7 @@ function RulesTab() {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-12 animate-pulse rounded-lg bg-[#f5f5f5]"
-          />
+          <div key={i} className="h-12 animate-pulse rounded-lg bg-[#f5f5f5]" />
         ))}
       </div>
     );
@@ -540,15 +534,14 @@ function RulesTab() {
 
   return (
     <form onSubmit={handleSave} className="max-w-lg space-y-6">
-      {/* Earn & Redeem Rates */}
       <div>
-        <h3 className="text-sm font-semibold text-[#111] mb-3">
-          Points Rates
+        <h3 className="mb-3 text-sm font-semibold text-[#111]">
+          {t("admin.loyalty.pointsRates")}
         </h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#555] mb-1.5">
-              Earn Rate (pts per $1)
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#555]">
+              {t("admin.loyalty.earnRateLabel")}
             </label>
             <input
               type="number"
@@ -561,8 +554,8 @@ function RulesTab() {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#555] mb-1.5">
-              Redeem Rate (cents per pt)
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#555]">
+              {t("admin.loyalty.redeemRateLabel")}
             </label>
             <input
               type="number"
@@ -576,15 +569,14 @@ function RulesTab() {
         </div>
       </div>
 
-      {/* Tier Thresholds */}
       <div>
-        <h3 className="text-sm font-semibold text-[#111] mb-3">
-          Tier Thresholds (total points earned)
+        <h3 className="mb-3 text-sm font-semibold text-[#111]">
+          {t("admin.loyalty.tierThresholds")}
         </h3>
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <span className="w-20 text-xs font-bold uppercase tracking-wider text-amber-700">
-              Bronze
+              {t("loyalty.tierBronze")}
             </span>
             <input
               type="number"
@@ -595,7 +587,7 @@ function RulesTab() {
           </div>
           <div className="flex items-center gap-3">
             <span className="w-20 text-xs font-bold uppercase tracking-wider text-gray-500">
-              Silver
+              {t("loyalty.tierSilver")}
             </span>
             <input
               type="number"
@@ -607,7 +599,7 @@ function RulesTab() {
           </div>
           <div className="flex items-center gap-3">
             <span className="w-20 text-xs font-bold uppercase tracking-wider text-yellow-700">
-              Gold
+              {t("loyalty.tierGold")}
             </span>
             <input
               type="number"
@@ -619,7 +611,7 @@ function RulesTab() {
           </div>
           <div className="flex items-center gap-3">
             <span className="w-20 text-xs font-bold uppercase tracking-wider text-purple-700">
-              Platinum
+              {t("loyalty.tierPlatinum")}
             </span>
             <input
               type="number"
@@ -632,15 +624,14 @@ function RulesTab() {
         </div>
       </div>
 
-      {/* Bonus Events */}
       <div>
-        <h3 className="text-sm font-semibold text-[#111] mb-3">
-          Bonus Events (points awarded)
+        <h3 className="mb-3 text-sm font-semibold text-[#111]">
+          {t("admin.loyalty.bonusEvents")}
         </h3>
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <span className="w-28 text-xs font-semibold text-[#555]">
-              First Order
+              {t("admin.loyalty.bonusFirstOrder")}
             </span>
             <input
               type="number"
@@ -652,7 +643,7 @@ function RulesTab() {
           </div>
           <div className="flex items-center gap-3">
             <span className="w-28 text-xs font-semibold text-[#555]">
-              Referral
+              {t("admin.loyalty.bonusReferral")}
             </span>
             <input
               type="number"
@@ -664,7 +655,7 @@ function RulesTab() {
           </div>
           <div className="flex items-center gap-3">
             <span className="w-28 text-xs font-semibold text-[#555]">
-              Review
+              {t("admin.loyalty.bonusReview")}
             </span>
             <input
               type="number"
@@ -679,10 +670,10 @@ function RulesTab() {
 
       {message && (
         <div
-          className={`rounded-lg px-3 py-2.5 text-sm ${
+          className={`rounded-lg border px-3 py-2.5 text-sm ${
             message.type === "success"
-              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-              : "bg-red-50 text-red-700 border border-red-200"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-red-200 bg-red-50 text-red-700"
           }`}
         >
           {message.text}
@@ -694,35 +685,36 @@ function RulesTab() {
         disabled={saving}
         className="w-full rounded-lg bg-[#111] px-4 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
       >
-        {saving ? "Saving..." : "Save Rules"}
+        {saving ? t("admin.common.saving") : t("admin.loyalty.saveRules")}
       </button>
     </form>
   );
 }
 
-// ── Main Page ──
-
 export default function AdminLoyaltyPage() {
+  const { t, locale } = useTranslation();
   const [activeTab, setActiveTab] = useState("accounts");
+
+  const tabs = [
+    { id: TAB_IDS[0], label: t("admin.loyalty.tabAccounts") },
+    { id: TAB_IDS[1], label: t("admin.loyalty.tabAdjust") },
+    { id: TAB_IDS[2], label: t("admin.loyalty.tabRules") },
+  ];
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[#111]">Loyalty Program</h1>
-        <p className="mt-1 text-sm text-[#999]">
-          Manage customer loyalty accounts, adjust points, and configure reward
-          rules.
-        </p>
+        <h1 className="text-xl font-bold text-[#111]">{t("admin.loyalty.title")}</h1>
+        <p className="mt-1 text-sm text-[#999]">{t("admin.loyalty.subtitle")}</p>
       </div>
 
-      {/* Tabs */}
       <div className="mb-6 flex gap-1 border-b border-[#e5e5e5]">
-        {TABS.map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? "border-[#111] text-[#111]"
                 : "border-transparent text-[#999] hover:text-[#555]"
@@ -733,10 +725,9 @@ export default function AdminLoyaltyPage() {
         ))}
       </div>
 
-      {/* Tab Content */}
-      {activeTab === "accounts" && <AccountsTab />}
-      {activeTab === "adjust" && <AdjustTab />}
-      {activeTab === "rules" && <RulesTab />}
+      {activeTab === "accounts" && <AccountsTab t={t} locale={locale} />}
+      {activeTab === "adjust" && <AdjustTab t={t} />}
+      {activeTab === "rules" && <RulesTab t={t} />}
     </div>
   );
 }

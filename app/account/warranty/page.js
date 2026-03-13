@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const STATUS_COLORS = {
   submitted: "bg-blue-50 text-blue-700",
@@ -10,19 +11,45 @@ const STATUS_COLORS = {
   fulfilled: "bg-emerald-50 text-emerald-700",
 };
 
-const ISSUE_TYPES = [
-  { value: "defective", label: "Defective Product" },
-  { value: "damaged", label: "Damaged in Shipping" },
-  { value: "wrong_item", label: "Wrong Item Received" },
-  { value: "quality", label: "Quality Issue" },
-  { value: "other", label: "Other" },
-];
+const ISSUE_VALUES = ["defective", "damaged", "wrong_item", "quality", "other"];
 
-function formatStatus(status) {
-  return (status || "").replace(/_/g, " ");
+const ISSUE_LABEL_KEYS = {
+  defective: "warranty.issueDefective",
+  damaged: "warranty.issueDamaged",
+  wrong_item: "warranty.issueWrongItem",
+  quality: "warranty.issueQuality",
+  other: "warranty.issueOther",
+};
+
+const STATUS_LABEL_KEYS = {
+  submitted: "warranty.statusSubmitted",
+  under_review: "warranty.statusUnderReview",
+  approved: "warranty.statusApproved",
+  denied: "warranty.statusDenied",
+  fulfilled: "warranty.statusFulfilled",
+};
+
+const RESOLUTION_LABEL_KEYS = {
+  replace: "warranty.resolutionReplace",
+  refund: "warranty.resolutionRefund",
+  repair: "warranty.resolutionRepair",
+  credit: "warranty.resolutionCredit",
+};
+
+function formatDate(dateStr, locale) {
+  return new Date(dateStr).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getMappedLabel(t, map, value) {
+  return map[value] ? t(map[value]) : (value || "").replace(/_/g, " ");
 }
 
 export default function WarrantyClaimsPage() {
+  const { t, locale } = useTranslation();
   const [claims, setClaims] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +58,6 @@ export default function WarrantyClaimsPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Form state
   const [orderId, setOrderId] = useState("");
   const [issueType, setIssueType] = useState("");
   const [description, setDescription] = useState("");
@@ -49,7 +75,7 @@ export default function WarrantyClaimsPage() {
       const data = await res.json();
       setClaims(data.claims || []);
     } catch {
-      // silent
+      setClaims([]);
     } finally {
       setLoading(false);
     }
@@ -61,7 +87,7 @@ export default function WarrantyClaimsPage() {
       const data = await res.json();
       setOrders(data.orders || []);
     } catch {
-      // silent
+      setOrders([]);
     }
   }
 
@@ -74,7 +100,7 @@ export default function WarrantyClaimsPage() {
   }
 
   function removePhoto(url) {
-    setPhotoUrls((prev) => prev.filter((u) => u !== url));
+    setPhotoUrls((prev) => prev.filter((value) => value !== url));
   }
 
   async function handleSubmit(e) {
@@ -100,7 +126,7 @@ export default function WarrantyClaimsPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Failed to submit claim");
+        setError(data.error || t("warranty.submitFailed"));
         return;
       }
 
@@ -111,9 +137,13 @@ export default function WarrantyClaimsPage() {
       setDescription("");
       setPhotoUrls([]);
       setPhotoUrl("");
-      setSuccess(`Warranty claim ${data.claim.claimNumber} submitted successfully.`);
+      setSuccess(
+        t("warranty.submittedWithNumber", {
+          claimNumber: data.claim.claimNumber,
+        })
+      );
     } catch {
-      setError("Failed to submit warranty claim. Please try again.");
+      setError(t("warranty.submitFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -123,7 +153,7 @@ export default function WarrantyClaimsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-[var(--color-gray-900)]">
-          Warranty Claims
+          {t("warranty.title")}
         </h1>
         <button
           type="button"
@@ -132,9 +162,9 @@ export default function WarrantyClaimsPage() {
             setError("");
             setSuccess("");
           }}
-          className="rounded-lg bg-[var(--color-gray-900)] px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-black transition-colors"
+          className="rounded-lg bg-[var(--color-gray-900)] px-4 py-2 text-sm font-semibold text-[#fff] transition-colors hover:bg-black"
         >
-          {showNew ? "Cancel" : "New Claim"}
+          {showNew ? t("warranty.cancel") : t("warranty.newClaim")}
         </button>
       </div>
 
@@ -144,7 +174,6 @@ export default function WarrantyClaimsPage() {
         </div>
       )}
 
-      {/* New Claim Form */}
       {showNew && (
         <form
           onSubmit={handleSubmit}
@@ -154,7 +183,7 @@ export default function WarrantyClaimsPage() {
 
           <div>
             <label className="mb-1 block text-xs font-medium text-[var(--color-gray-500)]">
-              Order
+              {t("warranty.selectOrder")}
             </label>
             <select
               value={orderId}
@@ -162,15 +191,10 @@ export default function WarrantyClaimsPage() {
               className="w-full rounded-lg border border-[var(--color-gray-200)] px-3 py-2 text-sm text-[var(--color-gray-900)] focus:border-[var(--color-gray-400)] focus:outline-none"
               required
             >
-              <option value="">Select an order...</option>
+              <option value="">{t("warranty.selectOrderPlaceholder")}</option>
               {orders.map((order) => (
                 <option key={order.id} value={order.id}>
-                  #{order.id.slice(0, 8)} &mdash;{" "}
-                  {new Date(order.createdAt).toLocaleDateString("en-CA", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                  #{order.id.slice(0, 8)} - {formatDate(order.createdAt, locale)}
                 </option>
               ))}
             </select>
@@ -178,7 +202,7 @@ export default function WarrantyClaimsPage() {
 
           <div>
             <label className="mb-1 block text-xs font-medium text-[var(--color-gray-500)]">
-              Issue Type
+              {t("warranty.issueType")}
             </label>
             <select
               value={issueType}
@@ -186,10 +210,10 @@ export default function WarrantyClaimsPage() {
               className="w-full rounded-lg border border-[var(--color-gray-200)] px-3 py-2 text-sm text-[var(--color-gray-900)] focus:border-[var(--color-gray-400)] focus:outline-none"
               required
             >
-              <option value="">Select issue type...</option>
-              {ISSUE_TYPES.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
+              <option value="">{t("warranty.issueTypePlaceholder")}</option>
+              {ISSUE_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {getMappedLabel(t, ISSUE_LABEL_KEYS, value)}
                 </option>
               ))}
             </select>
@@ -197,12 +221,12 @@ export default function WarrantyClaimsPage() {
 
           <div>
             <label className="mb-1 block text-xs font-medium text-[var(--color-gray-500)]">
-              Description
+              {t("warranty.description")}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Please describe the issue in detail..."
+              placeholder={t("warranty.descriptionPlaceholder")}
               rows={4}
               className="w-full rounded-lg border border-[var(--color-gray-200)] px-3 py-2 text-sm text-[var(--color-gray-900)] placeholder:text-[var(--color-gray-400)] focus:border-[var(--color-gray-400)] focus:outline-none"
               required
@@ -211,23 +235,23 @@ export default function WarrantyClaimsPage() {
 
           <div>
             <label className="mb-1 block text-xs font-medium text-[var(--color-gray-500)]">
-              Photo URLs (optional)
+              {t("warranty.photosOptional")}
             </label>
             <div className="flex gap-2">
               <input
                 type="url"
                 value={photoUrl}
                 onChange={(e) => setPhotoUrl(e.target.value)}
-                placeholder="https://example.com/photo.jpg"
+                placeholder={t("warranty.photoUrlPlaceholder")}
                 className="flex-1 rounded-lg border border-[var(--color-gray-200)] px-3 py-2 text-sm text-[var(--color-gray-900)] placeholder:text-[var(--color-gray-400)] focus:border-[var(--color-gray-400)] focus:outline-none"
               />
               <button
                 type="button"
                 onClick={addPhoto}
                 disabled={!photoUrl.trim()}
-                className="rounded-lg border border-[var(--color-gray-200)] px-3 py-2 text-sm font-medium text-[var(--color-gray-700)] hover:bg-[var(--color-gray-50)] disabled:opacity-40 transition-colors"
+                className="rounded-lg border border-[var(--color-gray-200)] px-3 py-2 text-sm font-medium text-[var(--color-gray-700)] transition-colors hover:bg-[var(--color-gray-50)] disabled:opacity-40"
               >
-                Add
+                {t("warranty.addPhoto")}
               </button>
             </div>
             {photoUrls.length > 0 && (
@@ -243,7 +267,7 @@ export default function WarrantyClaimsPage() {
                       onClick={() => removePhoto(url)}
                       className="shrink-0 text-red-500 hover:text-red-700"
                     >
-                      Remove
+                      {t("warranty.removePhoto")}
                     </button>
                   </div>
                 ))}
@@ -254,14 +278,13 @@ export default function WarrantyClaimsPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-[var(--color-gray-900)] px-6 py-2.5 text-sm font-semibold text-[#fff] hover:bg-black disabled:opacity-50 transition-colors"
+            className="rounded-lg bg-[var(--color-gray-900)] px-6 py-2.5 text-sm font-semibold text-[#fff] transition-colors hover:bg-black disabled:opacity-50"
           >
-            {submitting ? "Submitting..." : "Submit Claim"}
+            {submitting ? t("warranty.submitting") : t("warranty.submit")}
           </button>
         </form>
       )}
 
-      {/* Claims List */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -273,12 +296,9 @@ export default function WarrantyClaimsPage() {
         </div>
       ) : claims.length === 0 ? (
         <div className="rounded-xl border border-[var(--color-gray-200)] p-8 text-center">
-          <p className="text-sm text-[var(--color-gray-500)]">
-            No warranty claims yet.
-          </p>
+          <p className="text-sm text-[var(--color-gray-500)]">{t("warranty.empty")}</p>
           <p className="mt-1 text-xs text-[var(--color-gray-400)]">
-            If you received a defective or damaged product, click &ldquo;New
-            Claim&rdquo; above to submit a warranty claim.
+            {t("warranty.emptyHint")}
           </p>
         </div>
       ) : (
@@ -286,7 +306,7 @@ export default function WarrantyClaimsPage() {
           {claims.map((claim) => (
             <div
               key={claim.id}
-              className="px-4 py-4 hover:bg-[var(--color-gray-50)] transition-colors"
+              className="px-4 py-4 transition-colors hover:bg-[var(--color-gray-50)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
@@ -300,34 +320,31 @@ export default function WarrantyClaimsPage() {
                         "bg-[var(--color-gray-100)] text-[var(--color-gray-500)]"
                       }`}
                     >
-                      {formatStatus(claim.status)}
+                      {getMappedLabel(t, STATUS_LABEL_KEYS, claim.status)}
                     </span>
                   </div>
                   <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">
-                    Order #{claim.orderId?.slice(0, 8)} &bull;{" "}
-                    {ISSUE_TYPES.find((t) => t.value === claim.issueType)?.label ||
-                      claim.issueType}{" "}
-                    &bull;{" "}
-                    {new Date(claim.createdAt).toLocaleDateString("en-CA", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                    {t("warranty.orderShort", { id: claim.orderId?.slice(0, 8) || "-" })} &bull;{" "}
+                    {getMappedLabel(t, ISSUE_LABEL_KEYS, claim.issueType)} &bull;{" "}
+                    {formatDate(claim.createdAt, locale)}
                   </p>
-                  <p className="mt-1.5 text-sm text-[var(--color-gray-700)] line-clamp-2">
+                  <p className="mt-1.5 line-clamp-2 text-sm text-[var(--color-gray-700)]">
                     {claim.description}
                   </p>
 
                   {claim.photoUrls?.length > 0 && (
                     <p className="mt-1 text-xs text-[var(--color-gray-400)]">
-                      {claim.photoUrls.length} photo{claim.photoUrls.length !== 1 ? "s" : ""} attached
+                      {t("warranty.photoCount", { count: claim.photoUrls.length })}
                     </p>
                   )}
 
                   {claim.resolution && (
                     <div className="mt-2 rounded-lg bg-[var(--color-gray-50)] px-3 py-2">
                       <p className="text-xs font-medium text-[var(--color-gray-700)]">
-                        Resolution: <span className="capitalize">{claim.resolution}</span>
+                        {t("warranty.resolution")}:{" "}
+                        <span className="capitalize">
+                          {getMappedLabel(t, RESOLUTION_LABEL_KEYS, claim.resolution)}
+                        </span>
                       </p>
                       {claim.resolutionNote && (
                         <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">

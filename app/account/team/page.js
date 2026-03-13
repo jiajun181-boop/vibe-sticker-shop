@@ -23,8 +23,12 @@ function formatCurrency(cents) {
   }).format(cents / 100);
 }
 
+function formatDate(dateStr, locale) {
+  return new Date(dateStr).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA");
+}
+
 export default function TeamPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const isB2b = user?.accountType === "B2B" && user?.b2bApproved;
 
@@ -59,7 +63,7 @@ export default function TeamPage() {
       const res = await fetch("/api/account/team");
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Failed to load team");
+        setError(data.error || t("team.loadFailed"));
         return;
       }
       const data = await res.json();
@@ -67,11 +71,11 @@ export default function TeamPage() {
       setMembers(data.members);
       setIsOwner(data.isOwner);
     } catch {
-      setError("Failed to load team");
+      setError(t("team.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (isB2b) loadTeam();
@@ -92,15 +96,15 @@ export default function TeamPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setInviteError(data.error || "Failed to invite");
+        setInviteError(data.error || t("team.inviteFailed"));
         return;
       }
-      setInviteSuccess(`${data.member.email} has been added to the team`);
+      setInviteSuccess(t("team.invited", { email: data.member.email }));
       setInviteEmail("");
       setInviteRole("member");
       loadTeam();
     } catch {
-      setInviteError("Failed to invite member");
+      setInviteError(t("team.inviteFailed"));
     } finally {
       setInviting(false);
     }
@@ -141,13 +145,13 @@ export default function TeamPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Failed to update");
+        setError(data.error || t("team.updateFailed"));
         return;
       }
       setEditingId(null);
       loadTeam();
     } catch {
-      setError("Failed to update member");
+      setError(t("team.updateFailed"));
     } finally {
       setSaving(false);
     }
@@ -161,13 +165,13 @@ export default function TeamPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Failed to remove");
+        setError(data.error || t("team.removeFailed"));
         return;
       }
       setConfirmDeleteId(null);
       loadTeam();
     } catch {
-      setError("Failed to remove member");
+      setError(t("team.removeFailed"));
     } finally {
       setDeleting(false);
     }
@@ -238,7 +242,7 @@ export default function TeamPage() {
                 required
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="colleague@company.com"
+                placeholder={t("team.emailPlaceholder")}
                 className="mt-1 w-full rounded-lg border border-[var(--color-gray-300)] px-3 py-2 text-sm outline-none focus:border-[var(--color-gray-900)] focus:ring-1 focus:ring-[var(--color-gray-900)]"
               />
             </div>
@@ -339,7 +343,7 @@ export default function TeamPage() {
               {/* Joined date */}
               <p className="mt-2 text-[10px] text-[var(--color-gray-400)]">
                 {t("team.joined") || "Joined"}{" "}
-                {new Date(member.joinedAt).toLocaleDateString("en-CA")}
+                {formatDate(member.joinedAt, locale)}
               </p>
 
               {/* Edit/Delete actions — owner only */}
@@ -416,7 +420,7 @@ export default function TeamPage() {
                         step="1"
                         value={editSpendLimit}
                         onChange={(e) => setEditSpendLimit(e.target.value)}
-                        placeholder="0 = no limit"
+                        placeholder={t("team.noLimitPlaceholder")}
                         className="mt-1 w-full rounded-lg border border-[var(--color-gray-300)] px-3 py-1.5 text-sm outline-none"
                       />
                     </div>
