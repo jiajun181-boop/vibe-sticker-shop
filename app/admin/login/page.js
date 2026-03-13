@@ -126,14 +126,19 @@ function LoginContent() {
   const formRef = useRef(null);
 
   useEffect(() => {
+    // Timeout: if setup check takes >4s, just show login
+    const timeout = setTimeout(() => setMode("email"), 4000);
     fetch("/api/admin/setup")
       .then((r) => r.json())
       .then((data) => {
+        clearTimeout(timeout);
         setMode(data.needsSetup ? "setup" : "email");
       })
       .catch(() => {
+        clearTimeout(timeout);
         setMode("email");
       });
+    return () => clearTimeout(timeout);
   }, []);
 
   function triggerShake() {
