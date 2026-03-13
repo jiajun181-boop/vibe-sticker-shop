@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const STATUS_FLOW = ["queued", "assigned", "printing", "quality_check", "finished", "shipped"];
+
 const STATUS_COLORS = {
   queued: { bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-300" },
   assigned: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-300" },
@@ -14,31 +15,26 @@ const STATUS_COLORS = {
   on_hold: { bg: "bg-red-50", text: "text-red-700", border: "border-red-300" },
 };
 
-const STATUS_LABELS = {
-  queued: "排队中 Queued",
-  assigned: "已分配 Assigned",
-  printing: "印刷中 Printing",
-  quality_check: "质检 QC",
-  finished: "完成 Finished",
-  shipped: "已发货 Shipped",
-  on_hold: "暂停 On Hold",
+const STATUS_LABEL_KEYS = {
+  queued: "admin.production.statusQueued",
+  assigned: "admin.production.statusAssigned",
+  printing: "admin.production.statusPrinting",
+  quality_check: "admin.production.statusQC",
+  finished: "admin.production.statusFinished",
+  shipped: "admin.production.statusShipped",
+  on_hold: "admin.production.statusOnHold",
 };
 
-const PRIORITY_LABELS = {
-  urgent: { label: "加急 URGENT", cls: "bg-red-500 text-white" },
-  rush: { label: "加急 RUSH", cls: "bg-orange-100 text-orange-800" },
-  normal: { label: "", cls: "" },
-};
-
-const AUTO_REFRESH_MS = 15_000; // 15 seconds for production floor
+const AUTO_REFRESH_MS = 15_000;
 
 export default function MobileProductionPage() {
   const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState("active"); // active | all | queued | printing
-  const [updating, setUpdating] = useState(null); // job ID being updated
+  const [actionError, setActionError] = useState(null);
+  const [filter, setFilter] = useState("active");
+  const [updating, setUpdating] = useState(null);
 
   const fetchBoard = useCallback(async () => {
     try {
@@ -60,7 +56,11 @@ export default function MobileProductionPage() {
     return () => clearInterval(timer);
   }, [fetchBoard]);
 
-  // Advance job to next status
+  function showActionError(msg) {
+    setActionError(msg);
+    setTimeout(() => setActionError(null), 5000);
+  }
+
   const advanceJob = async (jobId, currentStatus) => {
     const idx = STATUS_FLOW.indexOf(currentStatus);
     if (idx < 0 || idx >= STATUS_FLOW.length - 1) return;
@@ -75,25 +75,23 @@ export default function MobileProductionPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(err.error || "Update failed");
+        showActionError(err.error || t("admin.production.mobile.updateFailed"));
         return;
       }
       await fetchBoard();
     } catch {
-      alert("Network error");
+      showActionError(t("admin.production.mobile.networkError"));
     } finally {
       setUpdating(null);
     }
   };
 
-  // Flatten all jobs from columns
   const allJobs = data
     ? Object.entries(data.columns).flatMap(([status, jobs]) =>
         jobs.map((j) => ({ ...j, status }))
       )
     : [];
 
-  // Filter
   const filteredJobs = allJobs.filter((j) => {
     if (filter === "active") return !["finished", "shipped", "canceled", "on_hold"].includes(j.status);
     if (filter === "queued") return j.status === "queued";
@@ -101,7 +99,6 @@ export default function MobileProductionPage() {
     return true;
   });
 
-  // Sort: urgent first, then by due date
   filteredJobs.sort((a, b) => {
     const pMap = { urgent: 0, rush: 1, normal: 2 };
     const pDiff = (pMap[a.priority] ?? 2) - (pMap[b.priority] ?? 2);
@@ -110,11 +107,12 @@ export default function MobileProductionPage() {
     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
   });
 
-  // Count by status for header badges
   const counts = {};
   for (const j of allJobs) {
     counts[j.status] = (counts[j.status] || 0) + 1;
   }
+
+  const activeCount = (counts.queued || 0) + (counts.assigned || 0) + (counts.printing || 0) + (counts.quality_check || 0);
 
   return (
     <div className="min-h-screen bg-[#f6f6f7] pb-24">
@@ -123,10 +121,10 @@ export default function MobileProductionPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-[#111]">
-              生产队列 Production
+              {t("admin.production.mobile.title")}
             </h1>
             <p className="text-xs text-[#888]">
-              {filteredJobs.length} jobs
+              {t("admin.production.mobile.jobs").replace("{count}", filteredJobs.length)}
               {data && ` · ${t("admin.systemHealth.lastChecked")}: ${new Date().toLocaleTimeString()}`}
             </p>
           </div>
@@ -135,17 +133,17 @@ export default function MobileProductionPage() {
             onClick={() => { setLoading(true); fetchBoard(); }}
             className="rounded-lg border border-[#d0d0d0] px-4 py-2 text-sm font-medium text-[#333] active:bg-[#eee]"
           >
-            {loading ? "..." : "刷新"}
+            {loading ? "..." : t("admin.production.mobile.refreshBtn")}
           </button>
         </div>
 
         {/* Filter tabs — large touch targets */}
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {[
-            { key: "active", label: `进行中 (${(counts.queued || 0) + (counts.assigned || 0) + (counts.printing || 0) + (counts.quality_check || 0)})` },
-            { key: "queued", label: `待排 (${counts.queued || 0})` },
-            { key: "printing", label: `印刷 (${(counts.assigned || 0) + (counts.printing || 0)})` },
-            { key: "all", label: "全部" },
+            { key: "active", label: t("admin.production.mobile.tabActive").replace("{count}", activeCount) },
+            { key: "queued", label: t("admin.production.mobile.tabQueued").replace("{count}", counts.queued || 0) },
+            { key: "printing", label: t("admin.production.mobile.tabPrinting").replace("{count}", (counts.assigned || 0) + (counts.printing || 0)) },
+            { key: "all", label: t("admin.production.mobile.tabAll") },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -162,6 +160,16 @@ export default function MobileProductionPage() {
           ))}
         </div>
       </header>
+
+      {/* Action error banner */}
+      {actionError && (
+        <div className="mx-4 mt-4 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-3">
+          <span className="text-sm font-medium text-red-800">{actionError}</span>
+          <button type="button" onClick={() => setActionError(null)} className="text-xs font-medium text-red-600">
+            {t("admin.production.dismiss")}
+          </button>
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -183,18 +191,19 @@ export default function MobileProductionPage() {
       <div className="p-4 space-y-3">
         {filteredJobs.length === 0 && !loading && (
           <div className="py-16 text-center">
-            <p className="text-base text-[#999]">没有任务</p>
-            <p className="mt-1 text-sm text-[#bbb]">No jobs in this view</p>
+            <p className="text-base text-[#999]">{t("admin.production.mobile.noJobs")}</p>
           </div>
         )}
 
         {filteredJobs.map((job) => {
           const colors = STATUS_COLORS[job.status] || STATUS_COLORS.queued;
-          const priority = PRIORITY_LABELS[job.priority] || PRIORITY_LABELS.normal;
+          const isUrgent = job.priority === "urgent";
+          const isRush = job.priority === "rush";
           const nextIdx = STATUS_FLOW.indexOf(job.status);
-          const nextStatus = nextIdx >= 0 && nextIdx < STATUS_FLOW.length - 1
-            ? STATUS_LABELS[STATUS_FLOW[nextIdx + 1]]
+          const nextStatusKey = nextIdx >= 0 && nextIdx < STATUS_FLOW.length - 1
+            ? STATUS_FLOW[nextIdx + 1]
             : null;
+          const nextStatusLabel = nextStatusKey ? t(STATUS_LABEL_KEYS[nextStatusKey]) : null;
           const isUpdating = updating === job.id;
           const isOverdue = job.dueAt && new Date(job.dueAt) < new Date();
 
@@ -207,56 +216,63 @@ export default function MobileProductionPage() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <h3 className="text-base font-bold text-[#111] leading-tight">
-                    {job.productName || "Unknown Product"}
+                    {job.productName || t("admin.production.mobile.unknownProduct")}
                   </h3>
                   <p className="mt-0.5 text-sm text-[#666]">
                     {job.customerName || job.customerEmail || "—"}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
-                  {priority.label && (
-                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${priority.cls}`}>
-                      {priority.label}
+                  {isUrgent && (
+                    <span className="rounded-full px-3 py-1 text-xs font-bold bg-red-500 text-white">
+                      {t("admin.production.priorityUrgent")}
+                    </span>
+                  )}
+                  {isRush && (
+                    <span className="rounded-full px-3 py-1 text-xs font-bold bg-orange-100 text-orange-800">
+                      {t("admin.production.priorityRush")}
                     </span>
                   )}
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${colors.bg} ${colors.text}`}>
-                    {STATUS_LABELS[job.status] || job.status}
+                    {t(STATUS_LABEL_KEYS[job.status] || "") || job.status}
                   </span>
                 </div>
               </div>
 
               {/* Details row */}
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#555]">
-                <span>数量: <strong>{job.quantity}</strong></span>
+                <span>{t("admin.production.mobile.quantity")}: <strong>{job.quantity}</strong></span>
                 {job.widthIn && job.heightIn && (
-                  <span>尺寸: <strong>{job.widthIn}"×{job.heightIn}"</strong></span>
+                  <span>{t("admin.production.mobile.size")}: <strong>{job.widthIn}"×{job.heightIn}"</strong></span>
                 )}
-                {job.material && <span>材料: <strong>{job.materialLabel || job.material}</strong></span>}
-                {job.isTwoSided && <span className="font-semibold text-blue-600">双面 2-sided</span>}
-                {job.finishing && <span>后加工: <strong>{job.finishing}</strong></span>}
+                {job.material && <span>{t("admin.production.mobile.material")}: <strong>{job.materialLabel || job.material}</strong></span>}
+                {job.isTwoSided && <span className="font-semibold text-blue-600">{t("admin.production.mobile.twoSided")}</span>}
+                {job.finishing && <span>{t("admin.production.mobile.finishing")}: <strong>{job.finishing}</strong></span>}
               </div>
 
               {/* Due date */}
               {job.dueAt && (
                 <p className={`mt-2 text-sm font-medium ${isOverdue ? "text-red-600" : "text-[#888]"}`}>
-                  {isOverdue ? "⚠ 超期 OVERDUE" : "截止"}: {new Date(job.dueAt).toLocaleDateString("en-CA")}
+                  {isOverdue ? `⚠ ${t("admin.production.mobile.overdue")}` : t("admin.production.mobile.dueDate")}: {new Date(job.dueAt).toLocaleDateString(undefined)}
                 </p>
               )}
 
               {/* Factory */}
               {job.factoryName && (
-                <p className="mt-1 text-xs text-[#aaa]">工厂: {job.factoryName}</p>
+                <p className="mt-1 text-xs text-[#aaa]">{t("admin.production.mobile.factoryLabel")}: {job.factoryName}</p>
               )}
 
               {/* Action button — large touch target */}
-              {nextStatus && (
+              {nextStatusLabel && (
                 <button
                   type="button"
                   disabled={isUpdating}
                   onClick={() => advanceJob(job.id, job.status)}
                   className="mt-4 w-full rounded-xl bg-black py-4 text-center text-base font-bold text-white active:bg-[#333] disabled:opacity-50"
                 >
-                  {isUpdating ? "更新中..." : `推进到 → ${nextStatus}`}
+                  {isUpdating
+                    ? t("admin.production.mobile.updating")
+                    : t("admin.production.mobile.advanceTo").replace("{status}", nextStatusLabel)}
                 </button>
               )}
 
@@ -268,7 +284,7 @@ export default function MobileProductionPage() {
                   rel="noopener noreferrer"
                   className="mt-2 block w-full rounded-xl border-2 border-[#e0e0e0] py-3 text-center text-sm font-semibold text-[#555] active:bg-[#f5f5f5]"
                 >
-                  查看文件 View Artwork
+                  {t("admin.production.mobile.viewArtwork")}
                 </a>
               )}
             </div>

@@ -13,7 +13,7 @@ const STATUS_STYLES = {
 };
 
 export default function InvoicesPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -79,17 +79,17 @@ export default function InvoicesPage() {
                 </span>
                 {inv.issuedAt && (
                   <span>
-                    {t("invoices.issued") || "Issued"}: {new Date(inv.issuedAt).toLocaleDateString("en-CA")}
+                    {t("invoices.issued") || "Issued"}: {new Date(inv.issuedAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA")}
                   </span>
                 )}
                 {inv.dueAt && (
                   <span>
-                    {t("invoices.due") || "Due"}: {new Date(inv.dueAt).toLocaleDateString("en-CA")}
+                    {t("invoices.due") || "Due"}: {new Date(inv.dueAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA")}
                   </span>
                 )}
                 {inv.paidAt && (
                   <span className="text-emerald-600">
-                    {t("invoices.paid") || "Paid"}: {new Date(inv.paidAt).toLocaleDateString("en-CA")}
+                    {t("invoices.paid") || "Paid"}: {new Date(inv.paidAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA")}
                   </span>
                 )}
               </div>

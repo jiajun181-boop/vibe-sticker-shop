@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatCad } from "@/lib/admin/format-cad";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const EQUIPMENT_TYPES = [
   { value: "printer", label: "Printer" },
@@ -20,6 +21,7 @@ const STATUS_STYLES = {
 };
 
 export default function EquipmentPage() {
+  const { t } = useTranslation();
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -68,7 +70,7 @@ export default function EquipmentPage() {
       setShowAdd(false);
       setAddForm({ name: "", type: "printer", model: "", serialNumber: "", location: "", notes: "" });
     } catch {
-      alert("Failed to add equipment");
+      alert(t("admin.equipment.addFailed"));
     } finally {
       setSaving(false);
     }
@@ -108,7 +110,7 @@ export default function EquipmentPage() {
         notes: "",
       });
     } catch {
-      alert("Failed to add maintenance record");
+      alert(t("admin.equipment.maintenanceFailed"));
     } finally {
       setSaving(false);
     }
@@ -125,7 +127,7 @@ export default function EquipmentPage() {
         prev.map((eq) => (eq.id === id ? { ...eq, status } : eq))
       );
     } catch {
-      alert("Failed to update status");
+      alert(t("admin.equipment.statusFailed"));
     }
   }
 

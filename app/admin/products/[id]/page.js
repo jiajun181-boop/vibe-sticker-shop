@@ -1393,7 +1393,7 @@ export default function ProductDetailPage() {
                             showMsg("No local/broken images found");
                             return;
                           }
-                          if (!confirm(`Delete ${broken.length} broken local image(s)? They point to files that no longer exist.`)) return;
+                          if (!confirm(t("admin.productEdit.deleteBrokenImagesConfirm").replace("{count}", broken.length))) return;
                           for (const img of broken) {
                             try {
                               await fetch(`/api/admin/products/${productId}/images?imageId=${img.id}`, { method: "DELETE" });

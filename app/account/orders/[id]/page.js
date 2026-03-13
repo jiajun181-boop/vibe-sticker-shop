@@ -54,7 +54,7 @@ function parseSizeRows(item) {
 
 export default function OrderDetailPage() {
   const { id } = useParams();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
   const [order, setOrder] = useState(null);
@@ -184,7 +184,7 @@ export default function OrderDetailPage() {
             {t("account.orders.orderNumber")} #{order.id.slice(0, 8)}
           </h1>
           <p className="mt-1 text-xs text-[var(--color-gray-500)]">
-            {new Date(order.createdAt).toLocaleDateString("en-CA", {
+            {new Date(order.createdAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
               year: "numeric",
               month: "long",
               day: "numeric",
@@ -548,7 +548,7 @@ export default function OrderDetailPage() {
                     {proof.reviewedAt && (
                       <p className="text-xs text-[var(--color-gray-400)]">
                         {t("account.orders.proofReviewedAt", {
-                          date: new Date(proof.reviewedAt).toLocaleDateString("en-CA", {
+                          date: new Date(proof.reviewedAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
                             month: "short",
                             day: "numeric",
                             hour: "2-digit",
@@ -600,7 +600,7 @@ export default function OrderDetailPage() {
                 <div>
                   <p className="text-sm text-[var(--color-gray-900)]">{getCustomerTimelineLabel(t, event.action)}</p>
                   <p className="text-xs text-[var(--color-gray-500)]">
-                    {new Date(event.createdAt).toLocaleDateString("en-CA", {
+                    {new Date(event.createdAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
                       month: "short",
                       day: "numeric",
                       hour: "2-digit",

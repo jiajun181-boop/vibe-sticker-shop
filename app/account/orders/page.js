@@ -28,7 +28,7 @@ function StatusBadge({ status, t }) {
 }
 
 export default function AccountOrdersPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -111,7 +111,7 @@ export default function AccountOrdersPage() {
                 <Link href={`/account/orders/${order.id}`} className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[var(--color-gray-900)]">#{order.id.slice(0, 8)}</p>
                   <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">
-                    {new Date(order.createdAt).toLocaleDateString("en-CA", {
+                    {new Date(order.createdAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",

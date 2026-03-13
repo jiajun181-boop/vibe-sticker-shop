@@ -983,7 +983,7 @@ export default function MaterialsPage() {
   };
 
   const handleDelete = async (id, name) => {
-    if (!confirm(`Delete "${name}"?`)) return;
+    if (!confirm(t("admin.materials.deleteConfirm").replace("{name}", name))) return;
     const res = await fetch(`/api/admin/materials?id=${id}`, { method: "DELETE" });
     if (res.ok) setMaterials((prev) => prev.filter((m) => m.id !== id));
   };

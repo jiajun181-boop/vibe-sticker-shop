@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { formatCad } from "@/lib/admin/format-cad";
 import { buildSettingsCenterHref } from "@/lib/admin-centers";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function formatDate(dateStr) {
   if (!dateStr) return "-";
@@ -14,25 +15,25 @@ function todayStr() {
   return new Date().toISOString().split("T")[0];
 }
 
-const TABS = [
-  { key: "overview", label: "Overview" },
-  { key: "expenses", label: "Expenses" },
-  { key: "invoices", label: "Invoices" },
-  { key: "suppliers", label: "Suppliers" },
-  { key: "profitability", label: "Profitability" },
-  { key: "product-profit", label: "Product Profit" },
+const TAB_KEYS = [
+  { key: "overview", i18nKey: "admin.finance.tabOverview" },
+  { key: "expenses", i18nKey: "admin.finance.tabExpenses" },
+  { key: "invoices", i18nKey: "admin.finance.tabInvoices" },
+  { key: "suppliers", i18nKey: "admin.finance.tabSuppliers" },
+  { key: "profitability", i18nKey: "admin.finance.tabProfitability" },
+  { key: "product-profit", i18nKey: "admin.finance.tabProductProfit" },
 ];
 
 const EXPENSE_CATEGORIES = [
-  { value: "material", label: "Material", color: "bg-blue-500" },
-  { value: "labor", label: "Labor", color: "bg-purple-500" },
-  { value: "shipping", label: "Shipping", color: "bg-amber-500" },
-  { value: "equipment", label: "Equipment", color: "bg-indigo-500" },
-  { value: "rent", label: "Rent", color: "bg-rose-500" },
-  { value: "utilities", label: "Utilities", color: "bg-cyan-500" },
-  { value: "software", label: "Software", color: "bg-teal-500" },
-  { value: "marketing", label: "Marketing", color: "bg-orange-500" },
-  { value: "other", label: "Other", color: "bg-gray-400" },
+  { value: "material", i18nKey: "admin.finance.catMaterial", color: "bg-blue-500" },
+  { value: "labor", i18nKey: "admin.finance.catLabor", color: "bg-purple-500" },
+  { value: "shipping", i18nKey: "admin.finance.catShipping", color: "bg-amber-500" },
+  { value: "equipment", i18nKey: "admin.finance.catEquipment", color: "bg-indigo-500" },
+  { value: "rent", i18nKey: "admin.finance.catRent", color: "bg-rose-500" },
+  { value: "utilities", i18nKey: "admin.finance.catUtilities", color: "bg-cyan-500" },
+  { value: "software", i18nKey: "admin.finance.catSoftware", color: "bg-teal-500" },
+  { value: "marketing", i18nKey: "admin.finance.catMarketing", color: "bg-orange-500" },
+  { value: "other", i18nKey: "admin.finance.catOther", color: "bg-gray-400" },
 ];
 
 const CATEGORY_MAP = Object.fromEntries(
@@ -59,6 +60,7 @@ const TERMS_LABELS = {
 /* ══════════════════════════════════════════════ */
 
 export default function FinancePage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("overview");
   const [message, setMessage] = useState(null);
 
@@ -76,9 +78,9 @@ export default function FinancePage() {
             href={buildSettingsCenterHref()}
             className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
           >
-            Settings
+            {t("admin.settings.title") || "Settings"}
           </Link>
-          <h1 className="text-xl font-semibold text-black">Finance</h1>
+          <h1 className="text-xl font-semibold text-black">{t("admin.finance.title")}</h1>
         </div>
         <p className="text-xs text-[#999]">
           {new Date().toLocaleDateString("en-CA", {
@@ -104,7 +106,7 @@ export default function FinancePage() {
 
       {/* Tab navigation */}
       <div className="flex flex-wrap gap-1 border-b border-[#e0e0e0] pb-0">
-        {TABS.map((tab) => (
+        {TAB_KEYS.map((tab) => (
           <button
             key={tab.key}
             type="button"
@@ -115,7 +117,7 @@ export default function FinancePage() {
                 : "text-[#666] hover:bg-[#fafafa] hover:text-black"
             }`}
           >
-            {tab.label}
+            {t(tab.i18nKey)}
           </button>
         ))}
       </div>
@@ -136,6 +138,7 @@ export default function FinancePage() {
 /* ══════════════════════════════════════════════ */
 
 function OverviewTab() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -375,7 +378,7 @@ function OverviewTab() {
                     <div key={exp.category}>
                       <div className="mb-1 flex items-center justify-between text-xs">
                         <span className="font-medium text-black">
-                          {cat.label}
+                          {cat.i18nKey ? t(cat.i18nKey) : cat.value}
                         </span>
                         <span className="text-[#666]">
                           {formatCad(exp.total)} ({pct}%)
@@ -462,6 +465,7 @@ function OverviewTab() {
 /* ══════════════════════════════════════════════ */
 
 function ExpensesTab({ showMsg }) {
+  const { t } = useTranslation();
   const [expenses, setExpenses] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -614,7 +618,7 @@ function ExpensesTab({ showMsg }) {
             <option value="">All Categories</option>
             {EXPENSE_CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>
-                {c.label}
+                {t(c.i18nKey)}
               </option>
             ))}
           </select>
@@ -742,7 +746,7 @@ function ExpensesTab({ showMsg }) {
                           <span
                             className={`inline-block rounded-[2px] px-2.5 py-0.5 text-xs font-medium text-white ${cat.color}`}
                           >
-                            {cat.label}
+                            {cat.i18nKey ? t(cat.i18nKey) : cat.value}
                           </span>
                         </td>
                         <td className="max-w-[200px] truncate px-4 py-3 text-sm text-black">
@@ -811,7 +815,7 @@ function ExpensesTab({ showMsg }) {
                           <span
                             className={`inline-block rounded-[2px] px-2 py-0.5 text-[10px] font-medium text-white ${cat.color}`}
                           >
-                            {cat.label}
+                            {cat.i18nKey ? t(cat.i18nKey) : cat.value}
                           </span>
                           <span className="text-xs text-[#999]">
                             {formatDate(exp.date)}
@@ -897,7 +901,7 @@ function ExpensesTab({ showMsg }) {
                   >
                     {EXPENSE_CATEGORIES.map((c) => (
                       <option key={c.value} value={c.value}>
-                        {c.label}
+                        {t(c.i18nKey)}
                       </option>
                     ))}
                   </select>
@@ -1035,6 +1039,7 @@ function ExpensesTab({ showMsg }) {
 /* ══════════════════════════════════════════════ */
 
 function InvoicesTab({ showMsg }) {
+  const { t } = useTranslation();
   const [invoices, setInvoices] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1696,6 +1701,7 @@ function InvoicesTab({ showMsg }) {
 /* ══════════════════════════════════════════════ */
 
 function SuppliersTab({ showMsg }) {
+  const { t } = useTranslation();
   const [suppliers, setSuppliers] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -2154,6 +2160,7 @@ function SuppliersTab({ showMsg }) {
 /* ══════════════════════════════════════════════ */
 
 function ProfitabilityTab() {
+  const { t } = useTranslation();
   const [data, setData] = useState([]);
   const [summary, setSummary] = useState(null);
   const [pagination, setPagination] = useState(null);
@@ -2493,6 +2500,7 @@ function ProfitabilityTab() {
 /* ══════════════════════════════════════════════ */
 
 function ProductProfitTab() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("30d");

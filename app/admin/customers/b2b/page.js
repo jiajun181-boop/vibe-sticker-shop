@@ -71,7 +71,7 @@ export default function AdminB2BPage() {
     const user = users.find((u) => u.id === userId);
     const label = user?.companyName || user?.name || user?.email || userId;
     const verb = action === "approve" ? t("admin.b2b.approve") : t("admin.b2b.reject");
-    if (!confirm(`${verb} B2B - "${label}"?`)) return;
+    if (!confirm(t("admin.b2b.actionConfirm").replace("{verb}", verb).replace("{label}", label))) return;
 
     setActionLoading(userId);
     try {

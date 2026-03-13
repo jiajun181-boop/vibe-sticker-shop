@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function EmailTemplatesPage() {
+  const { t } = useTranslation();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingKey, setEditingKey] = useState(null);
@@ -48,14 +50,14 @@ export default function EmailTemplatesPage() {
       );
       cancelEdit();
     } catch {
-      alert("Failed to save template");
+      alert(t("admin.emailTemplates.saveFailed"));
     } finally {
       setSaving(false);
     }
   }
 
   async function resetTemplate(key) {
-    if (!confirm("Reset this template to defaults?")) return;
+    if (!confirm(t("admin.emailTemplates.resetConfirm"))) return;
     try {
       const res = await fetch("/api/admin/email-templates", {
         method: "DELETE",
@@ -68,7 +70,7 @@ export default function EmailTemplatesPage() {
         prev.map((t) => (t.key === key ? updated : t))
       );
     } catch {
-      alert("Failed to reset template");
+      alert(t("admin.emailTemplates.resetFailed"));
     }
   }
 

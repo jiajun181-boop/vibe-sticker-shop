@@ -53,7 +53,7 @@ export default function AdminApiKeysPage() {
   };
 
   const handleRevoke = async (id, name) => {
-    if (!confirm(`Revoke API key "${name}"? This cannot be undone.`)) return;
+    if (!confirm(t("admin.apiKeys.revokeConfirm", { name }))) return;
     setRevoking(id);
     try {
       const res = await fetch("/api/admin/api-keys", {
@@ -66,7 +66,7 @@ export default function AdminApiKeysPage() {
         prev.map((k) => (k.id === id ? { ...k, isActive: false } : k))
       );
     } catch {
-      alert("Failed to revoke key");
+      alert(t("admin.apiKeys.revokeFailed"));
     } finally {
       setRevoking(null);
     }

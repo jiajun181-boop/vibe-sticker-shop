@@ -32,7 +32,7 @@ function StatusBadge({ status, t }) {
 export default function AccountDashboard() {
   const user = useAuthStore((s) => s.user);
   const authLoading = useAuthStore((s) => s.loading);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState({ total: 0, spent: 0 });
   const [loading, setLoading] = useState(true);
@@ -177,7 +177,7 @@ export default function AccountDashboard() {
                 <Link href={`/account/orders/${order.id}`} className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[var(--color-gray-900)]">#{order.id.slice(0, 8)}</p>
                   <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">
-                    {new Date(order.createdAt).toLocaleDateString("en-CA", {
+                    {new Date(order.createdAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",

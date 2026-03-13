@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const STATUS_COLORS = {
   open: "bg-blue-100 text-blue-700",
@@ -14,6 +15,7 @@ const STATUS_COLORS = {
 
 export default function TicketDetailPage() {
   const { id } = useParams();
+  const { t, locale } = useTranslation();
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState("");
@@ -91,7 +93,7 @@ export default function TicketDetailPage() {
             <h1 className="text-lg font-semibold text-[var(--color-gray-900)]">{ticket?.subject}</h1>
             <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">
               #{ticket?.id.slice(0, 8)} &bull;{" "}
-              {ticket?.createdAt && new Date(ticket.createdAt).toLocaleDateString("en-CA", {
+              {ticket?.createdAt && new Date(ticket.createdAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -126,7 +128,7 @@ export default function TicketDetailPage() {
                   {msg.authorName || (isAdmin ? "Support" : "You")}
                 </span>
                 <span className="text-[10px] text-[var(--color-gray-400)]">
-                  {new Date(msg.createdAt).toLocaleDateString("en-CA", {
+                  {new Date(msg.createdAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
                     month: "short",
                     day: "numeric",
                     hour: "2-digit",

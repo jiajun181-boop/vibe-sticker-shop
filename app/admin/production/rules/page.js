@@ -221,7 +221,7 @@ export default function AssignmentRulesPage() {
   }
 
   async function handleDelete(rule) {
-    if (!confirm(`Delete rule "${rule.name}"? This cannot be undone.`)) return;
+    if (!confirm(t("admin.production.deleteRuleConfirm").replace("{name}", rule.name))) return;
 
     try {
       const res = await fetch(`/api/admin/production/rules/${rule.id}`, {

@@ -9,7 +9,7 @@ export default function ProfilePage() {
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
   const authLoading = useAuthStore((s) => s.loading);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -111,7 +111,7 @@ export default function ProfilePage() {
         </span>
         <span className="text-xs text-[var(--color-gray-400)]">
           {t("account.profile.memberSince")}{" "}
-          {new Date(profile.createdAt).toLocaleDateString("en-CA", {
+          {new Date(profile.createdAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
             year: "numeric",
             month: "short",
             day: "numeric",

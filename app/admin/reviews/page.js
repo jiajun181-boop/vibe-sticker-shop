@@ -134,7 +134,7 @@ function ReviewsContent() {
   }
 
   function handleDelete(reviewId) {
-    if (!confirm("Delete this review? This cannot be undone.")) return;
+    if (!confirm(t("admin.reviews.deleteConfirm"))) return;
     handleAction(reviewId, "reject");
   }
 

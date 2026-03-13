@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const STATUS_COLORS = {
   open: "bg-blue-100 text-blue-700",
@@ -12,6 +13,7 @@ const STATUS_COLORS = {
 };
 
 export default function SupportPage() {
+  const { t, locale } = useTranslation();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
@@ -122,7 +124,7 @@ export default function SupportPage() {
                 <p className="truncate text-sm font-medium text-[var(--color-gray-900)]">{ticket.subject}</p>
                 <p className="mt-0.5 text-xs text-[var(--color-gray-500)]">
                   #{ticket.id.slice(0, 8)} &bull;{" "}
-                  {new Date(ticket.updatedAt).toLocaleDateString("en-CA", {
+                  {new Date(ticket.updatedAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
                     month: "short",
                     day: "numeric",
                   })}

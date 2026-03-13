@@ -10,24 +10,28 @@ import { statusColor, priorityColor } from "@/lib/admin/status-labels";
 import { CostSignalInline } from "@/components/admin/CostSignalBadge";
 import CostSignalBadge from "@/components/admin/CostSignalBadge";
 
-const statusOptions = [
-  { value: "all", label: "All" },
-  { value: "queued", label: "Queued" },
-  { value: "assigned", label: "Assigned" },
-  { value: "printing", label: "Printing" },
-  { value: "quality_check", label: "Quality Check" },
-  { value: "finished", label: "Finished" },
-  { value: "shipped", label: "Shipped" },
-  { value: "on_hold", label: "On Hold" },
-  { value: "canceled", label: "Canceled" },
-];
+function useStatusOptions(t) {
+  return [
+    { value: "all", label: t("admin.production.priorityAll") },
+    { value: "queued", label: t("admin.production.statusQueued") },
+    { value: "assigned", label: t("admin.production.statusAssigned") },
+    { value: "printing", label: t("admin.production.statusPrinting") },
+    { value: "quality_check", label: t("admin.production.statusQC") },
+    { value: "finished", label: t("admin.production.statusFinished") },
+    { value: "shipped", label: t("admin.production.statusShipped") },
+    { value: "on_hold", label: t("admin.production.statusOnHold") },
+    { value: "canceled", label: t("admin.production.statusCanceled") },
+  ];
+}
 
-const priorityOptions = [
-  { value: "all", label: "All" },
-  { value: "normal", label: "Normal" },
-  { value: "rush", label: "Rush" },
-  { value: "urgent", label: "Urgent" },
-];
+function usePriorityOptions(t) {
+  return [
+    { value: "all", label: t("admin.production.priorityAll") },
+    { value: "normal", label: t("admin.production.priorityNormal") },
+    { value: "rush", label: t("admin.production.priorityRush") },
+    { value: "urgent", label: t("admin.production.priorityUrgent") },
+  ];
+}
 
 const AUTO_REFRESH_MS = 30_000;
 
@@ -52,6 +56,9 @@ function ProductionContent() {
   const { t } = useTranslation();
   const timeAgo = (d) => sharedTimeAgo(d, t);
   const refreshTimer = useRef(null);
+
+  const statusOptions = useStatusOptions(t);
+  const priorityOptions = usePriorityOptions(t);
 
   const [jobs, setJobs] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -83,7 +90,7 @@ function ProductionContent() {
       setFactories(data.factories || data || []);
     } catch (err) {
       console.error("Failed to load factories:", err);
-      showActionError("Failed to load factories");
+      showActionError(t("admin.production.failedLoadFactories"));
     }
   }, []);
 
@@ -105,7 +112,7 @@ function ProductionContent() {
       setPagination(data.pagination || null);
     } catch (err) {
       console.error("Failed to load production jobs:", err);
-      showActionError("Failed to load production jobs");
+      showActionError(t("admin.production.failedLoadJobs"));
     } finally {
       setLoading(false);
       setLastRefresh(new Date());
@@ -158,10 +165,10 @@ function ProductionContent() {
         await fetchJobs();
       } else {
         const data = await res.json().catch(() => ({}));
-        showActionError(data.error || `Failed to change status to ${newStatus}`);
+        showActionError(data.error || t("admin.production.failedStatusChange"));
       }
     } catch {
-      showActionError("Network error — status change failed");
+      showActionError(t("admin.production.networkErrorStatus"));
     } finally {
       setUpdatingJob(null);
     }
@@ -180,10 +187,10 @@ function ProductionContent() {
         await fetchJobs();
       } else {
         const data = await res.json().catch(() => ({}));
-        showActionError(data.error || "Failed to assign factory");
+        showActionError(data.error || t("admin.production.failedAssignFactory"));
       }
     } catch {
-      showActionError("Network error — factory assignment failed");
+      showActionError(t("admin.production.networkErrorAssign"));
     } finally {
       setUpdatingJob(null);
     }
@@ -209,7 +216,12 @@ function ProductionContent() {
     const value = Object.values(updates)[0];
     if (!value) return;
 
-    const confirmed = confirm(`Update ${selectedJobs.length} jobs: set ${key} to "${value}"?`);
+    const confirmed = confirm(
+      t("admin.production.bulkConfirm")
+        .replace("{count}", selectedJobs.length)
+        .replace("{key}", key)
+        .replace("{value}", value)
+    );
     if (!confirmed) return;
 
     setBulkUpdating(true);
@@ -225,10 +237,10 @@ function ProductionContent() {
         await fetchJobs();
       } else {
         const data = await res.json().catch(() => ({}));
-        showActionError(data.error || `Bulk update failed for ${selectedJobs.length} jobs`);
+        showActionError(data.error || t("admin.production.failedBulkUpdate").replace("{count}", selectedJobs.length));
       }
     } catch {
-      showActionError("Network error — bulk update failed");
+      showActionError(t("admin.production.networkErrorBulk"));
     } finally {
       setBulkUpdating(false);
     }
@@ -265,7 +277,7 @@ function ProductionContent() {
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-xl font-semibold text-black">
-          Production Queue
+          {t("admin.production.queueTitle")}
         </h1>
         {pagination && (
           <span className="inline-flex items-center rounded-[2px] bg-black px-2.5 py-0.5 text-xs font-medium text-[#fff]">
@@ -278,33 +290,33 @@ function ProductionContent() {
             onClick={() => fetchJobs()}
             disabled={loading}
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-50"
-            title={lastRefresh ? `Last refresh: ${lastRefresh.toLocaleTimeString()}` : ""}
+            title={lastRefresh ? `${lastRefresh.toLocaleTimeString()}` : ""}
           >
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading ? t("admin.production.refreshing") : t("admin.production.refresh")}
           </button>
           <Link
             href="/admin/production/schedule"
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
           >
-            Schedule
+            {t("admin.production.schedule")}
           </Link>
           <Link
             href="/admin/production/board"
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
           >
-            Board View
+            {t("admin.production.boardView")}
           </Link>
           <Link
             href="/admin/production/rules"
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
           >
-            Rules
+            {t("admin.production.rules")}
           </Link>
           <Link
             href="/admin/reports/production"
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
           >
-            Analytics
+            {t("admin.production.analytics")}
           </Link>
         </div>
       </div>
@@ -312,13 +324,13 @@ function ProductionContent() {
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         {[
-          { label: "Queued", value: totalQueued, color: "text-gray-700 bg-gray-50 border-gray-200" },
-          { label: "Printing", value: inProduction, color: "text-yellow-700 bg-yellow-50 border-yellow-200" },
-          { label: "QC", value: qualityCheck, color: "text-purple-700 bg-purple-50 border-purple-200" },
-          { label: "Done Today", value: completedToday, color: "text-green-700 bg-green-50 border-green-200" },
-          { label: "Due Today", value: dueToday, color: dueToday > 0 ? "text-amber-700 bg-amber-50 border-amber-200" : "text-gray-600 bg-gray-50 border-gray-200" },
-          { label: "Overdue", value: overdue, color: overdue > 0 ? "text-red-700 bg-red-50 border-red-200" : "text-gray-600 bg-gray-50 border-gray-200" },
-          { label: "On Hold", value: onHold, color: onHold > 0 ? "text-red-700 bg-red-50 border-red-200" : "text-gray-600 bg-gray-50 border-gray-200" },
+          { label: t("admin.production.statQueued"), value: totalQueued, color: "text-gray-700 bg-gray-50 border-gray-200" },
+          { label: t("admin.production.statPrinting"), value: inProduction, color: "text-yellow-700 bg-yellow-50 border-yellow-200" },
+          { label: t("admin.production.statQC"), value: qualityCheck, color: "text-purple-700 bg-purple-50 border-purple-200" },
+          { label: t("admin.production.statDoneToday"), value: completedToday, color: "text-green-700 bg-green-50 border-green-200" },
+          { label: t("admin.production.statDueToday"), value: dueToday, color: dueToday > 0 ? "text-amber-700 bg-amber-50 border-amber-200" : "text-gray-600 bg-gray-50 border-gray-200" },
+          { label: t("admin.production.statOverdue"), value: overdue, color: overdue > 0 ? "text-red-700 bg-red-50 border-red-200" : "text-gray-600 bg-gray-50 border-gray-200" },
+          { label: t("admin.production.statOnHold"), value: onHold, color: onHold > 0 ? "text-red-700 bg-red-50 border-red-200" : "text-gray-600 bg-gray-50 border-gray-200" },
         ].map((stat) => (
           <div key={stat.label} className={`rounded-[3px] border px-3 py-2 text-center ${stat.color}`}>
             <p className="text-lg font-bold">{stat.value}</p>
@@ -335,7 +347,7 @@ function ProductionContent() {
             htmlFor="status-filter"
             className="text-xs font-medium text-[#999]"
           >
-            Status
+            {t("admin.production.filterStatus")}
           </label>
           <select
             id="status-filter"
@@ -363,7 +375,7 @@ function ProductionContent() {
             htmlFor="priority-filter"
             className="text-xs font-medium text-[#999]"
           >
-            Priority
+            {t("admin.production.filterPriority")}
           </label>
           <select
             id="priority-filter"
@@ -391,7 +403,7 @@ function ProductionContent() {
             htmlFor="factory-filter"
             className="text-xs font-medium text-[#999]"
           >
-            Factory
+            {t("admin.production.filterFactory")}
           </label>
           <select
             id="factory-filter"
@@ -405,7 +417,7 @@ function ProductionContent() {
             }}
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black outline-none focus:border-black"
           >
-            <option value="all">All Factories</option>
+            <option value="all">{t("admin.production.allFactories")}</option>
             {factories.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.name}
@@ -423,14 +435,14 @@ function ProductionContent() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search product or email..."
+            placeholder={t("admin.production.searchPlaceholder")}
             className="w-full sm:w-64 rounded-[3px] border border-[#d0d0d0] px-3 py-2 text-sm outline-none focus:border-black"
           />
           <button
             type="submit"
             className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
-            Search
+            {t("admin.common.search")}
           </button>
         </form>
       </div>
@@ -439,7 +451,7 @@ function ProductionContent() {
       {actionError && (
         <div className="flex items-center justify-between rounded-[3px] border border-red-300 bg-red-50 px-4 py-3">
           <span className="text-sm font-medium text-red-800">{actionError}</span>
-          <button type="button" onClick={() => setActionError(null)} className="text-xs font-medium text-red-600 hover:text-red-900">Dismiss</button>
+          <button type="button" onClick={() => setActionError(null)} className="text-xs font-medium text-red-600 hover:text-red-900">{t("admin.production.dismiss")}</button>
         </div>
       )}
 
@@ -451,7 +463,7 @@ function ProductionContent() {
         <div className="sticky top-0 z-10 rounded-[3px] border border-blue-200 bg-blue-50 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-sm font-medium text-blue-900">
-              {selectedJobs.length} job{selectedJobs.length > 1 ? "s" : ""} selected
+              {t("admin.production.jobsSelected").replace("{count}", selectedJobs.length)}
             </span>
             <div className="flex flex-wrap gap-2">
               <select
@@ -460,12 +472,12 @@ function ProductionContent() {
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs text-black"
                 defaultValue=""
               >
-                <option value="" disabled>Change Status...</option>
-                <option value="assigned">Mark as Assigned</option>
-                <option value="printing">Mark as Printing</option>
-                <option value="quality_check">Send to QC</option>
-                <option value="finished">Mark as Finished</option>
-                <option value="on_hold">Put on Hold</option>
+                <option value="" disabled>{t("admin.production.changeStatus")}</option>
+                <option value="assigned">{t("admin.production.markAssigned")}</option>
+                <option value="printing">{t("admin.production.markPrinting")}</option>
+                <option value="quality_check">{t("admin.production.sendToQC")}</option>
+                <option value="finished">{t("admin.production.markFinished")}</option>
+                <option value="on_hold">{t("admin.production.putOnHold")}</option>
               </select>
               <select
                 onChange={(e) => handleBulkUpdate({ factoryId: e.target.value })}
@@ -473,7 +485,7 @@ function ProductionContent() {
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs text-black"
                 defaultValue=""
               >
-                <option value="" disabled>Assign Factory...</option>
+                <option value="" disabled>{t("admin.production.assignFactory")}</option>
                 {factories.map(f => (
                   <option key={f.id} value={f.id}>{f.name}</option>
                 ))}
@@ -484,16 +496,16 @@ function ProductionContent() {
                 className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs text-black"
                 defaultValue=""
               >
-                <option value="" disabled>Set Priority...</option>
-                <option value="normal">Normal</option>
-                <option value="rush">Rush</option>
-                <option value="urgent">Urgent</option>
+                <option value="" disabled>{t("admin.production.setPriority")}</option>
+                <option value="normal">{t("admin.production.priorityNormal")}</option>
+                <option value="rush">{t("admin.production.priorityRush")}</option>
+                <option value="urgent">{t("admin.production.priorityUrgent")}</option>
               </select>
               <button
                 onClick={() => setSelectedJobs([])}
                 className="text-xs text-[#999] hover:text-black"
               >
-                Clear
+                {t("admin.common.clear")}
               </button>
             </div>
           </div>
@@ -508,7 +520,7 @@ function ProductionContent() {
           </div>
         ) : jobs.length === 0 ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            No production jobs found
+            {t("admin.production.noJobsFound")}
           </div>
         ) : (
           <>
@@ -526,31 +538,31 @@ function ProductionContent() {
                       />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Job ID
+                      {t("admin.production.jobId")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Product
+                      {t("admin.production.product")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Customer
+                      {t("admin.production.customer")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Status
+                      {t("admin.production.status")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Priority
+                      {t("admin.production.priority")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Factory
+                      {t("admin.production.factory")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Due
+                      {t("admin.production.due")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Created
+                      {t("admin.production.created")}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-[#999]">
-                      Actions
+                      {t("admin.common.actions")}
                     </th>
                   </tr>
                 </thead>
@@ -581,7 +593,7 @@ function ProductionContent() {
                       {/* Product + Specs */}
                       <td className="px-4 py-3">
                         <p className="max-w-[220px] truncate font-medium text-black">
-                          {job.productName || "Unknown"}
+                          {job.productName || t("admin.production.unknown")}
                         </p>
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                           <Link
@@ -603,15 +615,15 @@ function ProductionContent() {
                           )}
                         </div>
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-[#999]">
-                          {job.quantity > 0 && <span>Qty {job.quantity}</span>}
+                          {job.quantity > 0 && <span>{t("admin.production.qty")} {job.quantity}</span>}
                           {job.widthIn && job.heightIn && <span>{job.widthIn}&quot;×{job.heightIn}&quot;</span>}
                           {(job.materialLabel || job.material) && <span>{job.materialLabel || job.material}</span>}
                           {(job.finishingLabel || job.finishing) && <span>{job.finishingLabel || job.finishing}</span>}
-                          {job.isTwoSided && <span>2-sided</span>}
+                          {job.isTwoSided && <span>{t("admin.production.twoSided")}</span>}
                           {job.artworkUrl ? (
-                            <a href={job.artworkUrl} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">Artwork ✓</a>
+                            <a href={job.artworkUrl} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">{t("admin.production.artworkOk")}</a>
                           ) : (
-                            <span className="text-amber-500">No artwork</span>
+                            <span className="text-amber-500">{t("admin.production.noArtwork")}</span>
                           )}
                           <CostSignalInline signal={job.costSignal} />
                         </div>
@@ -667,7 +679,7 @@ function ProductionContent() {
                           disabled={updatingJob === job.id}
                           className="rounded-[3px] border border-[#e0e0e0] bg-white px-2 py-1 text-xs text-black outline-none cursor-pointer focus:border-black"
                         >
-                          <option value="">Unassigned</option>
+                          <option value="">{t("admin.production.unassigned")}</option>
                           {factories.map((f) => (
                             <option key={f.id} value={f.id}>
                               {f.name}
@@ -686,7 +698,7 @@ function ProductionContent() {
                           const isDueToday = !isTerminal && due.toDateString() === now.toDateString();
                           return (
                             <span className={isOverdue ? "font-semibold text-red-600" : isDueToday ? "font-semibold text-amber-600" : "text-[#999]"}>
-                              {due.toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+                              {due.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                             </span>
                           );
                         })() : <span className="text-[#ccc]">{"\u2014"}</span>}
@@ -703,7 +715,7 @@ function ProductionContent() {
                           href={`/admin/production/${job.id}`}
                           className="text-xs font-medium text-black underline hover:no-underline"
                         >
-                          View
+                          {t("admin.common.view")}
                         </Link>
                       </td>
                     </tr>
@@ -730,17 +742,17 @@ function ProductionContent() {
                     />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-black">
-                        {job.productName || "Unknown"}
+                        {job.productName || t("admin.production.unknown")}
                       </p>
                       {/* Specs row */}
                       <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-[#999]">
-                        {job.quantity > 0 && <span>Qty {job.quantity}</span>}
+                        {job.quantity > 0 && <span>{t("admin.production.qty")} {job.quantity}</span>}
                         {job.widthIn && job.heightIn && <span>{job.widthIn}&quot;×{job.heightIn}&quot;</span>}
                         {(job.materialLabel || job.material) && <span>{job.materialLabel || job.material}</span>}
                         {job.artworkUrl ? (
-                          <a href={job.artworkUrl} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">Artwork ✓</a>
+                          <a href={job.artworkUrl} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">{t("admin.production.artworkOk")}</a>
                         ) : (
-                          <span className="text-amber-500">No artwork</span>
+                          <span className="text-amber-500">{t("admin.production.noArtwork")}</span>
                         )}
                       </div>
                       <p className="mt-0.5 font-mono text-xs text-[#999]">
@@ -765,7 +777,7 @@ function ProductionContent() {
                       href={`/admin/production/${job.id}`}
                       className="ml-3 text-xs font-medium text-black underline hover:no-underline"
                     >
-                      View
+                      {t("admin.common.view")}
                     </Link>
                   </div>
 
@@ -809,7 +821,7 @@ function ProductionContent() {
                       disabled={updatingJob === job.id}
                       className="rounded-[3px] border border-[#e0e0e0] bg-white px-2 py-0.5 text-xs text-black outline-none cursor-pointer focus:border-black"
                     >
-                      <option value="">Unassigned</option>
+                      <option value="">{t("admin.production.unassigned")}</option>
                       {factories.map((f) => (
                         <option key={f.id} value={f.id}>
                           {f.name}
@@ -825,7 +837,7 @@ function ProductionContent() {
                       const isDueToday = !isTerminal && due.toDateString() === now.toDateString();
                       return (
                         <span className={`text-xs ${isOverdue ? "font-semibold text-red-600" : isDueToday ? "font-semibold text-amber-600" : "text-[#999]"}`}>
-                          Due {due.toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+                          {t("admin.production.due")} {due.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                         </span>
                       );
                     })()}
@@ -845,8 +857,8 @@ function ProductionContent() {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-[#999]">
-            Showing {(pagination.page - 1) * pagination.limit + 1}-
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+            {t("admin.common.showing")} {(pagination.page - 1) * pagination.limit + 1}-
+            {Math.min(pagination.page * pagination.limit, pagination.total)} {t("admin.common.of")}{" "}
             {pagination.total}
           </p>
           <div className="flex gap-1">
@@ -856,7 +868,7 @@ function ProductionContent() {
               onClick={() => updateParams({ page: String(page - 1) })}
               className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
-              Previous
+              {t("admin.common.previous")}
             </button>
             <button
               type="button"
@@ -864,7 +876,7 @@ function ProductionContent() {
               onClick={() => updateParams({ page: String(page + 1) })}
               className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa] disabled:opacity-40"
             >
-              Next
+              {t("admin.common.next")}
             </button>
           </div>
         </div>
@@ -875,6 +887,7 @@ function ProductionContent() {
 
 /* ─── Readiness Summary Widget ─── */
 function ReadinessSummary() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -899,39 +912,39 @@ function ReadinessSummary() {
         {/* Readiness bar */}
         <div className="flex-1 min-w-[200px]">
           <div className="flex items-center justify-between mb-1.5">
-            <p className="text-xs font-medium text-[#999] uppercase tracking-wide">Production Readiness</p>
-            <p className="text-xs font-semibold text-black">{readyPct}% Ready</p>
+            <p className="text-xs font-medium text-[#999] uppercase tracking-wide">{t("admin.production.readinessBar")}</p>
+            <p className="text-xs font-semibold text-black">{t("admin.production.readyPct").replace("{pct}", readyPct)}</p>
           </div>
           <div className="flex h-2.5 rounded-full overflow-hidden bg-gray-100">
             {(counts.done || 0) > 0 && (
-              <div className="bg-green-500" style={{ width: `${((counts.done || 0) / totalItems) * 100}%` }} title={`Done: ${counts.done}`} />
+              <div className="bg-green-500" style={{ width: `${((counts.done || 0) / totalItems) * 100}%` }} title={`${t("admin.production.done")}: ${counts.done}`} />
             )}
             {(counts.ready || 0) > 0 && (
-              <div className="bg-green-300" style={{ width: `${((counts.ready || 0) / totalItems) * 100}%` }} title={`Ready: ${counts.ready}`} />
+              <div className="bg-green-300" style={{ width: `${((counts.ready || 0) / totalItems) * 100}%` }} title={`${t("admin.production.ready")}: ${counts.ready}`} />
             )}
             {(counts["in-progress"] || 0) > 0 && (
-              <div className="bg-blue-400" style={{ width: `${((counts["in-progress"] || 0) / totalItems) * 100}%` }} title={`In Progress: ${counts["in-progress"]}`} />
+              <div className="bg-blue-400" style={{ width: `${((counts["in-progress"] || 0) / totalItems) * 100}%` }} title={`${t("admin.production.inProgress")}: ${counts["in-progress"]}`} />
             )}
             {(counts["needs-info"] || 0) > 0 && (
-              <div className="bg-amber-400" style={{ width: `${((counts["needs-info"] || 0) / totalItems) * 100}%` }} title={`Needs Info: ${counts["needs-info"]}`} />
+              <div className="bg-amber-400" style={{ width: `${((counts["needs-info"] || 0) / totalItems) * 100}%` }} title={`${t("admin.production.needsInfo")}: ${counts["needs-info"]}`} />
             )}
             {(counts.blocked || 0) > 0 && (
-              <div className="bg-red-500" style={{ width: `${((counts.blocked || 0) / totalItems) * 100}%` }} title={`Blocked: ${counts.blocked}`} />
+              <div className="bg-red-500" style={{ width: `${((counts.blocked || 0) / totalItems) * 100}%` }} title={`${t("admin.production.blocked")}: ${counts.blocked}`} />
             )}
           </div>
           <div className="mt-1.5 flex flex-wrap gap-3 text-[10px]">
-            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-green-500" />Done {counts.done || 0}</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-green-300" />Ready {counts.ready || 0}</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-blue-400" />In Progress {counts["in-progress"] || 0}</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-amber-400" />Needs Info {counts["needs-info"] || 0}</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-red-500" />Blocked {counts.blocked || 0}</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-green-500" />{t("admin.production.done")} {counts.done || 0}</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-green-300" />{t("admin.production.ready")} {counts.ready || 0}</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-blue-400" />{t("admin.production.inProgress")} {counts["in-progress"] || 0}</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-amber-400" />{t("admin.production.needsInfo")} {counts["needs-info"] || 0}</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-red-500" />{t("admin.production.blocked")} {counts.blocked || 0}</span>
           </div>
         </div>
 
         {/* Top blockers */}
         {topBlockers && topBlockers.length > 0 && (
           <div className="min-w-[200px]">
-            <p className="text-xs font-medium text-[#999] uppercase tracking-wide mb-1.5">Top Blockers</p>
+            <p className="text-xs font-medium text-[#999] uppercase tracking-wide mb-1.5">{t("admin.production.topBlockers")}</p>
             <div className="space-y-1">
               {topBlockers.slice(0, 5).map((b) => (
                 <div key={b.code} className="flex items-center justify-between gap-2 text-xs">

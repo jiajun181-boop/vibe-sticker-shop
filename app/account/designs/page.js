@@ -6,7 +6,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { showErrorToast, showSuccessToast } from "@/components/Toast";
 
 export default function SavedDesignsPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [designs, setDesigns] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -90,7 +90,7 @@ export default function SavedDesignsPage() {
                 {design.productSlug.replace(/-/g, " ")}
               </p>
               <p className="mt-1 text-[10px] text-[var(--color-gray-400)]">
-                {new Date(design.updatedAt).toLocaleDateString("en-CA")}
+                {new Date(design.updatedAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA")}
               </p>
               <div className="mt-3 flex gap-2">
                 <Link

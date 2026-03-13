@@ -16,18 +16,18 @@ const formatCompact = (cents) => {
 };
 
 const periods = [
-  { key: "7d", label: "7 Days" },
-  { key: "30d", label: "30 Days" },
-  { key: "90d", label: "90 Days" },
-  { key: "12m", label: "12 Months" },
+  { key: "7d", i18nKey: "admin.analytics.period7d" },
+  { key: "30d", i18nKey: "admin.analytics.period30d" },
+  { key: "90d", i18nKey: "admin.analytics.period90d" },
+  { key: "12m", i18nKey: "admin.analytics.period12m" },
 ];
 
 const statusColors = {
-  draft: { bg: "bg-gray-400", label: "Draft" },
-  pending: { bg: "bg-yellow-400", label: "Pending" },
-  paid: { bg: "bg-green-500", label: "Paid" },
-  canceled: { bg: "bg-red-400", label: "Canceled" },
-  refunded: { bg: "bg-purple-400", label: "Refunded" },
+  draft: { bg: "bg-gray-400", i18nKey: "admin.analytics.statusDraft" },
+  pending: { bg: "bg-yellow-400", i18nKey: "admin.analytics.statusPending" },
+  paid: { bg: "bg-green-500", i18nKey: "admin.analytics.statusPaid" },
+  canceled: { bg: "bg-red-400", i18nKey: "admin.analytics.statusCanceled" },
+  refunded: { bg: "bg-purple-400", i18nKey: "admin.analytics.statusRefunded" },
 };
 
 export default function AnalyticsPage() {
@@ -107,7 +107,7 @@ function AnalyticsContent() {
                   : "bg-white text-[#666] hover:bg-[#fafafa]"
               }`}
             >
-              {p.label}
+              {t(p.i18nKey)}
             </button>
           ))}
         </div>
@@ -116,11 +116,11 @@ function AnalyticsContent() {
       {/* Sub-page navigation */}
       <div className="flex flex-wrap gap-2">
         {[
-          { href: "/admin/analytics", label: "Overview" },
-          { href: "/admin/analytics/customers", label: "Customers" },
-          { href: "/admin/analytics/production", label: "Production" },
-          { href: "/admin/analytics/marketing", label: "Marketing" },
-          { href: "/admin/analytics/shipping", label: "Shipping" },
+          { href: "/admin/analytics", label: t("admin.analytics.tabOverview") },
+          { href: "/admin/analytics/customers", label: t("admin.analytics.tabCustomers") },
+          { href: "/admin/analytics/production", label: t("admin.analytics.tabProduction") },
+          { href: "/admin/analytics/marketing", label: t("admin.analytics.tabMarketing") },
+          { href: "/admin/analytics/shipping", label: t("admin.analytics.tabShipping") },
         ].map((link) => (
           <Link
             key={link.href}
@@ -470,7 +470,7 @@ function StatusBreakdown({ breakdown }) {
               key={s.status}
               className={`${colors.bg} relative transition-all`}
               style={{ width: `${percent}%` }}
-              title={`${colors.label}: ${s.count} (${Math.round(percent)}%)`}
+              title={`${t(colors.i18nKey)}: ${s.count} (${Math.round(percent)}%)`}
             />
           );
         })}
@@ -488,7 +488,7 @@ function StatusBreakdown({ breakdown }) {
             <div key={s.status} className="flex items-center gap-2">
               <div className={`h-3 w-3 rounded-sm ${colors.bg}`} />
               <span className="text-xs text-[#666]">
-                {colors.label}{" "}
+                {t(colors.i18nKey)}{" "}
                 <span className="font-medium text-black">
                   {s.count}
                 </span>{" "}

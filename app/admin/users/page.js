@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ALL_ROLES, ROLE_LABELS, PERMISSION_MATRIX } from "@/lib/admin-permissions";
 import { buildSettingsCenterHref } from "@/lib/admin-centers";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function AdminUsersPage() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -20,7 +22,7 @@ export default function AdminUsersPage() {
       const data = await res.json();
       setUsers(data.users);
     } catch {
-      setMessage({ type: "error", text: "Failed to load users. You may not have permission." });
+      setMessage({ type: "error", text: t("admin.users.loadFailed") });
     } finally {
       setLoading(false);
     }
@@ -29,7 +31,7 @@ export default function AdminUsersPage() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   if (loading) {
-    return <div className="flex h-48 items-center justify-center text-sm text-[#999]">Loading users...</div>;
+    return <div className="flex h-48 items-center justify-center text-sm text-[#999]">{t("admin.users.loading")}</div>;
   }
 
   return (
@@ -40,16 +42,16 @@ export default function AdminUsersPage() {
             href={buildSettingsCenterHref()}
             className="mb-1 inline-block text-[11px] text-[#666] underline hover:text-black hover:no-underline"
           >
-            Settings
+            {t("admin.settings.title") || "Settings"}
           </Link>
-          <h1 className="text-xl font-semibold text-black">Admin Users</h1>
+          <h1 className="text-xl font-semibold text-black">{t("admin.users.title")}</h1>
         </div>
         <button
           type="button"
           onClick={() => { setShowCreate(true); setEditId(null); }}
           className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-[#222]"
         >
-          + New User
+          {t("admin.users.newUser")}
         </button>
       </div>
 
@@ -61,8 +63,8 @@ export default function AdminUsersPage() {
 
       {/* Permission overview */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
-        <h2 className="mb-1 text-sm font-semibold text-black">Role Overview</h2>
-        <p className="mb-3 text-[10px] text-[#999]">Click a role to see its permissions</p>
+        <h2 className="mb-1 text-sm font-semibold text-black">{t("admin.users.roleOverview")}</h2>
+        <p className="mb-3 text-[10px] text-[#999]">{t("admin.users.roleOverviewHint")}</p>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {ALL_ROLES.map((role) => {
             const count = users.filter((u) => u.role === role && u.isActive).length;
@@ -95,12 +97,12 @@ export default function AdminUsersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#e0e0e0] text-left text-xs font-semibold uppercase tracking-wider text-[#999]">
-                <th className="px-5 py-3">Name</th>
-                <th className="px-5 py-3">Email</th>
-                <th className="px-5 py-3">Role</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3">Last Login</th>
-                <th className="px-5 py-3">Actions</th>
+                <th className="px-5 py-3">{t("admin.users.name")}</th>
+                <th className="px-5 py-3">{t("admin.users.email")}</th>
+                <th className="px-5 py-3">{t("admin.users.role")}</th>
+                <th className="px-5 py-3">{t("admin.users.statusCol")}</th>
+                <th className="px-5 py-3">{t("admin.users.lastLogin")}</th>
+                <th className="px-5 py-3">{t("admin.common.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -115,11 +117,11 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-5 py-3">
                     <span className={`inline-flex rounded-[2px] px-2.5 py-0.5 text-xs font-semibold ${user.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
-                      {user.isActive ? "Active" : "Inactive"}
+                      {user.isActive ? t("admin.users.active") : t("admin.users.inactive")}
                     </span>
                   </td>
                   <td className="px-5 py-3 text-[#999] text-xs">
-                    {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never"}
+                    {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : t("admin.users.never")}
                   </td>
                   <td className="px-5 py-3">
                     <button
@@ -127,7 +129,7 @@ export default function AdminUsersPage() {
                       onClick={() => { setEditId(user.id); setShowCreate(false); }}
                       className="text-xs font-semibold text-[#666] hover:text-black"
                     >
-                      Edit
+                      {t("admin.common.edit")}
                     </button>
                   </td>
                 </tr>
@@ -135,7 +137,7 @@ export default function AdminUsersPage() {
               {users.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-5 py-8 text-center text-[#999]">
-                    No admin users yet. Create one to get started.
+                    {t("admin.users.noUsers")}
                   </td>
                 </tr>
               )}
@@ -153,7 +155,7 @@ export default function AdminUsersPage() {
                 <p className="mt-0.5 truncate text-xs text-[#666]">{user.email}</p>
               </div>
               <span className={`shrink-0 rounded-[2px] px-2.5 py-0.5 text-xs font-semibold ${user.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
-                {user.isActive ? "Active" : "Inactive"}
+                {user.isActive ? t("admin.users.active") : t("admin.users.inactive")}
               </span>
             </div>
             <div className="mt-2 flex items-center justify-between">
@@ -169,7 +171,7 @@ export default function AdminUsersPage() {
               </button>
             </div>
             <p className="mt-2 text-[10px] text-[#999]">
-              Last login: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never"}
+              {t("admin.users.lastLogin")}: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : t("admin.users.never")}
             </p>
           </div>
         ))}
@@ -184,7 +186,7 @@ export default function AdminUsersPage() {
       {showCreate && (
         <CreateUserModal
           onClose={() => setShowCreate(false)}
-          onCreated={() => { setShowCreate(false); fetchUsers(); setMessage({ type: "success", text: "User created successfully." }); }}
+          onCreated={() => { setShowCreate(false); fetchUsers(); setMessage({ type: "success", text: t("admin.users.created") }); }}
         />
       )}
 
@@ -193,7 +195,7 @@ export default function AdminUsersPage() {
         <EditUserModal
           user={users.find((u) => u.id === editId)}
           onClose={() => setEditId(null)}
-          onUpdated={() => { setEditId(null); fetchUsers(); setMessage({ type: "success", text: "User updated." }); }}
+          onUpdated={() => { setEditId(null); fetchUsers(); setMessage({ type: "success", text: t("admin.users.updated") }); }}
         />
       )}
     </div>
@@ -201,6 +203,7 @@ export default function AdminUsersPage() {
 }
 
 function CreateUserModal({ onClose, onCreated }) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -231,16 +234,16 @@ function CreateUserModal({ onClose, onCreated }) {
   }
 
   return (
-    <Modal title="Create Admin User" onClose={onClose}>
+    <Modal title={t("admin.users.createTitle")} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label="Name" value={name} onChange={setName} required />
-        <Field label="Email" value={email} onChange={setEmail} type="email" required />
-        <Field label="Password" value={password} onChange={setPassword} type="password" required placeholder="Min 8 characters" />
+        <Field label={t("admin.users.name")} value={name} onChange={setName} required />
+        <Field label={t("admin.users.email")} value={email} onChange={setEmail} type="email" required />
+        <Field label={t("admin.users.role")} value={password} onChange={setPassword} type="password" required placeholder={t("admin.users.minPassword")} />
         <RoleSelect value={role} onChange={setRole} />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={onClose} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-sm font-medium text-black hover:bg-[#fafafa]">Cancel</button>
-          <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50">{saving ? "Creating..." : "Create User"}</button>
+          <button type="button" onClick={onClose} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-sm font-medium text-black hover:bg-[#fafafa]">{t("admin.common.cancel")}</button>
+          <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50">{saving ? t("admin.users.creating") : t("admin.users.createBtn")}</button>
         </div>
       </form>
     </Modal>
@@ -248,6 +251,7 @@ function CreateUserModal({ onClose, onCreated }) {
 }
 
 function EditUserModal({ user, onClose, onUpdated }) {
+  const { t } = useTranslation();
   const [name, setName] = useState(user?.name || "");
   const [role, setRole] = useState(user?.role || "cs");
   const [isActive, setIsActive] = useState(user?.isActive ?? true);
@@ -285,20 +289,20 @@ function EditUserModal({ user, onClose, onUpdated }) {
     <Modal title={`Edit: ${user.name}`} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="text-xs text-[#999]">{user.email}</div>
-        <Field label="Name" value={name} onChange={setName} required />
+        <Field label={t("admin.users.name")} value={name} onChange={setName} required />
         <RoleSelect value={role} onChange={setRole} />
-        <Field label="New Password (leave blank to keep)" value={password} onChange={setPassword} type="password" placeholder="Min 8 characters" />
+        <Field label={t("admin.users.newPassword")} value={password} onChange={setPassword} type="password" placeholder={t("admin.users.minPassword")} />
         <div className="flex items-center gap-3">
           <label className="relative inline-flex cursor-pointer items-center">
             <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="peer sr-only" />
             <div className="h-5 w-9 rounded-full bg-[#d0d0d0] after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-black peer-checked:after:translate-x-full" />
           </label>
-          <span className="text-sm text-black">{isActive ? "Active" : "Inactive"}</span>
+          <span className="text-sm text-black">{isActive ? t("admin.users.active") : t("admin.users.inactive")}</span>
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={onClose} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-sm font-medium text-black hover:bg-[#fafafa]">Cancel</button>
-          <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50">{saving ? "Saving..." : "Save Changes"}</button>
+          <button type="button" onClick={onClose} className="rounded-[3px] border border-[#d0d0d0] px-4 py-2 text-sm font-medium text-black hover:bg-[#fafafa]">{t("admin.common.cancel")}</button>
+          <button type="submit" disabled={saving} className="rounded-[3px] bg-black px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50">{saving ? t("admin.common.saving") : t("admin.users.saveChanges")}</button>
         </div>
       </form>
     </Modal>
@@ -374,7 +378,7 @@ function RolePermissionPreview({ role }) {
   return (
     <div className="rounded-[3px] border border-[#e0e0e0] bg-[#fafafa] p-3">
       <p className="mb-2 text-[11px] font-semibold text-[#666]">
-        This role can access {modules.length} module{modules.length !== 1 ? "s" : ""}:
+        {t("admin.users.roleAccess").replace("{count}", modules.length)}
       </p>
       <div className="flex flex-wrap gap-1.5">
         {modules.map(([mod, level]) => {

@@ -3,8 +3,10 @@
 import { useState, useTransition } from "react";
 import ProductForm from "./product-form";
 import { createProduct, updateProduct, toggleProductStatus, deleteProduct } from "./actions";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function ProductTable({ products }) {
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [message, setMessage] = useState(null);
@@ -40,7 +42,7 @@ export default function ProductTable({ products }) {
   }
 
   function handleDelete(product) {
-    if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
+    if (!confirm(t("admin.products.deleteConfirm").replace("{name}", product.name))) return;
     startTransition(async () => {
       const result = await deleteProduct(product.id);
       if (result?.error) showMessage(result.error, true);
