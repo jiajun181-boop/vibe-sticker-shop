@@ -31,10 +31,10 @@ function formatProduct(
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ category: string }> }
 ) {
   try {
-    const { slug } = await params;
+    const { category: slug } = await params;
 
     // 1. Look up the current product
     const product = await prisma.product.findFirst({
