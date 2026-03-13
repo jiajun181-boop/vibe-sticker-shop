@@ -1167,8 +1167,9 @@ model Invoice {
   terms         String        @default("net_30")
   issuedAt      DateTime?
   dueAt         DateTime?
-  paidAt        DateTime?
-  notes         String?
+  paidAt          DateTime?
+  reminderSentAt  DateTime?
+  notes           String?
   lineItems     Json?
   createdBy     String?
   createdAt     DateTime      @default(now())

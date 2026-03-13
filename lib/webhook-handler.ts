@@ -171,6 +171,14 @@ export async function handleCheckoutCompleted(
       },
     });
 
+    // 6. Atomic coupon usage increment (inside transaction for consistency)
+    if (couponId) {
+      await tx.coupon.update({
+        where: { id: couponId },
+        data: { usedCount: { increment: 1 } },
+      });
+    }
+
     return newOrder;
   });
   } catch (txErr: unknown) {
@@ -183,18 +191,6 @@ export async function handleCheckoutCompleted(
       if (duplicate) return duplicate;
     }
     throw txErr;
-  }
-
-  // 6. Atomic coupon usage increment
-  if (couponId) {
-    try {
-      await prisma.coupon.update({
-        where: { id: couponId },
-        data: { usedCount: { increment: 1 } },
-      });
-    } catch (couponErr) {
-      console.error("[Webhook] Failed to increment coupon usage:", couponErr);
-    }
   }
 
   // 7. Link order to existing user account (by email)
