@@ -1,5 +1,7 @@
+const sentryEnabled = process.env.ENABLE_SENTRY === "true" && process.env.SENTRY_DSN;
+
 export async function register() {
-  if (process.env.NEXT_RUNTIME === "nodejs" && process.env.SENTRY_DSN) {
+  if (process.env.NEXT_RUNTIME === "nodejs" && sentryEnabled) {
     const Sentry = await import("@sentry/nextjs");
     Sentry.init({
       dsn: process.env.SENTRY_DSN,
@@ -14,7 +16,7 @@ export async function onRequestError(
   request: { path: string; method: string; headers: Record<string, string> },
   context: { routerKind: string; routePath: string; routeType: string; renderSource: string },
 ) {
-  if (process.env.SENTRY_DSN) {
+  if (process.env.ENABLE_SENTRY === "true" && process.env.SENTRY_DSN) {
     const Sentry = await import("@sentry/nextjs");
     Sentry.captureException(error, {
       tags: {

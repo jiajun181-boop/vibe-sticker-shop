@@ -196,8 +196,10 @@ const nextConfig: NextConfig = {
   },
 };
 
+const sentryEnabled = process.env.ENABLE_SENTRY === "true" && process.env.SENTRY_DSN;
+
 // Wrap with Sentry only when DSN is configured — zero overhead otherwise
-export default process.env.SENTRY_DSN
+export default sentryEnabled
   ? withSentryConfig(nextConfig, {
       // Suppress source map upload warnings when no auth token is set
       silent: !process.env.SENTRY_AUTH_TOKEN,
