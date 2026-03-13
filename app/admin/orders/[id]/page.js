@@ -18,6 +18,11 @@ import OrderReadinessSummary from "@/components/admin/OrderReadinessSummary";
 import ItemProductionPanel from "@/components/admin/ItemProductionPanel";
 import { getOrderFulfillment, getShipmentStatusColor, getTrackingUrl } from "@/lib/admin/order-shipping";
 import CostSignalBadge from "@/components/admin/CostSignalBadge";
+import { useAdminRole } from "@/lib/useAdminSession";
+import { hasPermission } from "@/lib/admin-permissions";
+
+// Roles that should NOT see financial data
+const HIDE_FINANCIAL_ROLES = new Set(["production", "design"]);
 
 const statusOptions = ["draft", "pending", "paid", "canceled", "refunded"];
 const paymentOptions = ["unpaid", "paid", "failed", "refunded", "partially_refunded"];
@@ -80,6 +85,9 @@ export default function OrderDetailPage() {
   const { t } = useTranslation();
   const timeAgo = (d) => sharedTimeAgo(d, t);
   const refreshTimer = useRef(null);
+  const role = useAdminRole();
+  const showFinancial = !HIDE_FINANCIAL_ROLES.has(role);
+  const canPricing = !role || hasPermission(role, "pricing");
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -381,13 +389,15 @@ export default function OrderDetailPage() {
           >
             {order.status}
           </span>
-          {order.costSignal && <CostSignalBadge signal={order.costSignal} size="md" />}
+          {showFinancial && order.costSignal && <CostSignalBadge signal={order.costSignal} size="md" />}
+          {canPricing && (
           <Link
             href={`/admin/pricing?tab=costs&orderId=${order.id}&returnTo=${encodeURIComponent(`/admin/orders/${order.id}`)}`}
             className="rounded-[2px] border border-[#d0d0d0] px-2 py-0.5 text-xs font-medium text-[#666] hover:border-black hover:text-black"
           >
             {t("admin.orders.reviewCosts")}
           </Link>
+          )}
           {order.sourceQuote && (
             <Link
               href="/admin/quotes"
@@ -500,12 +510,16 @@ export default function OrderDetailPage() {
                           )}
                         </div>
                         <div className="text-right shrink-0">
+                          {showFinancial && (
+                          <>
                           <p className="text-sm font-semibold text-black">
                             {formatCad(item.totalPrice)}
                           </p>
                           <p className="text-xs text-[#999]">
                             {formatCad(item.unitPrice)} {t("admin.orderDetail.each")}
                           </p>
+                          </>
+                          )}
                           {item.productionJob && (
                             <Link href={`/admin/production/${item.productionJob.id}`} className="mt-1.5 flex flex-col items-end gap-0.5 hover:opacity-80">
                               <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
@@ -530,7 +544,7 @@ export default function OrderDetailPage() {
                               )}
                             </Link>
                           )}
-                          {item.costSignal && <CostSignalBadge signal={item.costSignal} size="sm" />}
+                          {showFinancial && item.costSignal && <CostSignalBadge signal={item.costSignal} size="sm" />}
                         </div>
                       </div>
                     </div>
@@ -541,8 +555,8 @@ export default function OrderDetailPage() {
               )}
             </Section>
 
-            {/* Amount breakdown */}
-            <Section title={t("admin.orderDetail.amount")}>
+            {/* Amount breakdown — hidden for non-financial roles */}
+            {showFinancial && <Section title={t("admin.orderDetail.amount")}>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-[#666]">{t("admin.orderDetail.subtotal")}</span>
@@ -633,7 +647,7 @@ export default function OrderDetailPage() {
                   <span>{formatCad(order.totalAmount)} CAD</span>
                 </div>
               </div>
-            </Section>
+            </Section>}
 
             {/* Notes */}
             <Section title={t("admin.orderDetail.notes")}>
@@ -744,6 +758,7 @@ export default function OrderDetailPage() {
                   onChange={setStatus}
                   options={statusOptions}
                 />
+                {showFinancial && (
                 <SelectField
                   label={t("admin.orderDetail.paymentStatus")}
                   hint={t("admin.orderDetail.paymentStatusHint")}
@@ -751,6 +766,7 @@ export default function OrderDetailPage() {
                   onChange={setPaymentStatus}
                   options={paymentOptions}
                 />
+                )}
                 <SelectField
                   label={t("admin.orderDetail.productionStatus")}
                   hint={t("admin.orderDetail.productionStatusHint")}
@@ -865,14 +881,17 @@ export default function OrderDetailPage() {
               </div>
             </Section>
 
-            {/* Metadata */}
+            {/* Metadata — financial details hidden for production/design roles */}
             <Section title={t("admin.orderDetail.details")}>
               <div className="space-y-2 text-xs">
-                <InfoField label={t("admin.orderDetail.currency")} value={order.currency?.toUpperCase()} />
+                {showFinancial && <InfoField label={t("admin.orderDetail.currency")} value={order.currency?.toUpperCase()} />}
+                {showFinancial && (
                 <InfoField
                   label={t("admin.orderDetail.stripeSession")}
                   value={order.stripeSessionId ? order.stripeSessionId.slice(0, 20) + "..." : "\u2014"}
                 />
+                )}
+                {showFinancial && (
                 <InfoField
                   label={t("admin.orderDetail.paymentIntent")}
                   value={
@@ -881,6 +900,8 @@ export default function OrderDetailPage() {
                       : "\u2014"
                   }
                 />
+                )}
+                {showFinancial && (
                 <InfoField
                   label={t("admin.orderDetail.paidAt")}
                   value={
@@ -889,6 +910,7 @@ export default function OrderDetailPage() {
                       : "\u2014"
                   }
                 />
+                )}
                 <InfoField
                   label={t("admin.orderDetail.created")}
                   value={new Date(order.createdAt).toLocaleString()}

@@ -35,7 +35,7 @@ export default function StampFamilyClient({ products = [], category }) {
       ]}
       heroCategory="stamps"
       heroTitle={t("stf.title")}
-      heroIcon="\uD83E\uDEAB"
+      heroIcon="\u2712\uFE0F"
       browseByNeed={{
         titleKey: "stf.browse.title",
         subtitleKey: "stf.browse.subtitle",

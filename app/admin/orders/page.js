@@ -9,6 +9,7 @@ import { getArtworkStatus, scanOrderArtwork as scanArtwork } from "@/lib/artwork
 import { formatCad } from "@/lib/admin/format-cad";
 import { statusColor, paymentColor, productionColor } from "@/lib/admin/status-labels";
 import { ORDER_CENTER_VIEWS, buildOrderCenterHref, getOrderCenterView } from "@/lib/admin-centers";
+import { useAdminRole } from "@/lib/useAdminSession";
 
 const statuses = ["all", "pending", "paid", "draft", "canceled", "refunded"];
 const productionStatuses = ["all", "not_started", "preflight", "in_production", "ready_to_ship", "shipped", "on_hold"];
@@ -68,12 +69,17 @@ export default function OrdersPage() {
 
 const AUTO_REFRESH_MS = 30_000;
 
+// Roles that should NOT see financial columns (Amount, Payment)
+const HIDE_FINANCIAL_ROLES = new Set(["production", "design"]);
+
 function OrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
   const refreshTimer = useRef(null);
   const centerView = getOrderCenterView(searchParams.get("view"));
+  const role = useAdminRole();
+  const showFinancial = !HIDE_FINANCIAL_ROLES.has(role);
 
   const [orders, setOrders] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -577,15 +583,19 @@ function OrdersContent() {
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       {t("admin.orders.customer")}
                     </th>
+                    {showFinancial && (
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       {t("admin.orders.amount")}
                     </th>
+                    )}
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       {t("admin.orders.status")}
                     </th>
+                    {showFinancial && (
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       {t("admin.orders.colPayment")}
                     </th>
+                    )}
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#999]">
                       {t("admin.orders.production")}
                     </th>
@@ -654,9 +664,11 @@ function OrdersContent() {
                           )}
                         </div>
                       </td>
+                      {showFinancial && (
                       <td className="px-4 py-3 font-semibold tabular-nums text-black">
                         {formatCad(order.totalAmount)}
                       </td>
+                      )}
                       <td className="px-4 py-3">
                         <span
                           className={`inline-block rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
@@ -666,6 +678,7 @@ function OrdersContent() {
                           {statusLabel(order.status)}
                         </span>
                       </td>
+                      {showFinancial && (
                       <td className="px-4 py-3">
                         <span
                           className={`inline-block rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
@@ -675,6 +688,7 @@ function OrdersContent() {
                           {order.paymentStatus}
                         </span>
                       </td>
+                      )}
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
                           <span
@@ -776,9 +790,11 @@ function OrdersContent() {
                             </p>
                           )}
                         </div>
+                        {showFinancial && (
                         <span className="ml-2 text-sm font-semibold tabular-nums text-black shrink-0">
                           {formatCad(order.totalAmount)}
                         </span>
+                        )}
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <span
@@ -788,6 +804,7 @@ function OrdersContent() {
                         >
                           {order.status}
                         </span>
+                        {showFinancial && (
                         <span
                           className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                             paymentColor(order.paymentStatus)
@@ -795,6 +812,7 @@ function OrdersContent() {
                         >
                           {order.paymentStatus}
                         </span>
+                        )}
                         <span
                           className={`rounded-[2px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                             productionColor(order.productionStatus)

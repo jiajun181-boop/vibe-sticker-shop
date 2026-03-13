@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
 import { statusColor, statusLabel } from "@/lib/admin/status-labels";
+import { useAdminRole } from "@/lib/useAdminSession";
+import { hasPermission } from "@/lib/admin-permissions";
 
 // ── Capabilities: tools (clickable) vs system features (info-only) ──────────
 
@@ -14,55 +16,55 @@ const TOOLS = [
     title: "admin.dashboard.toolContour",
     desc: "admin.dashboard.toolContourDesc",
     href: "/admin/tools/contour",
-    type: "tool",
+    module: "tools",
   },
   {
     title: "admin.dashboard.toolProof",
     desc: "admin.dashboard.toolProofDesc",
     href: "/admin/tools/proof",
-    type: "tool",
+    module: "tools",
   },
   {
     title: "admin.dashboard.toolStamp",
     desc: "admin.dashboard.toolStampDesc",
     href: "/admin/tools/stamp-studio",
-    type: "tool",
+    module: "tools",
   },
   {
     title: "admin.dashboard.toolProduction",
     desc: "admin.dashboard.toolProductionDesc",
     href: "/admin/production/board",
-    type: "tool",
+    module: "production",
   },
   {
     title: "admin.dashboard.toolPricing",
     desc: "admin.dashboard.toolPricingDesc",
     href: "/admin/pricing",
-    type: "tool",
+    module: "pricing",
   },
   {
     title: "admin.dashboard.toolWorkstation",
     desc: "admin.dashboard.toolWorkstationDesc",
     href: "/admin/workstation",
-    type: "tool",
+    module: "dashboard",
   },
   {
     title: "admin.dashboard.toolQuickQuote",
     desc: "admin.dashboard.toolQuickQuoteDesc",
     href: "/admin/pricing?tab=quote",
-    type: "tool",
+    module: "pricing",
   },
   {
     title: "admin.dashboard.toolCostEntry",
     desc: "admin.dashboard.toolCostEntryDesc",
     href: "/admin/pricing?tab=costs",
-    type: "tool",
+    module: "pricing",
   },
   {
     title: "admin.dashboard.toolProfitAlerts",
     desc: "admin.dashboard.toolProfitAlertsDesc",
     href: "/admin/pricing?tab=ops&section=alerts",
-    type: "tool",
+    module: "pricing",
   },
 ];
 
@@ -163,6 +165,9 @@ async function fetchJsonWithTimeout(url, timeoutMs = DASHBOARD_TIMEOUT_MS) {
   }
 }
 
+// Roles that should NOT see financial data (revenue, order amounts)
+const HIDE_FINANCIAL_ROLES = new Set(["production", "design"]);
+
 /* ══════════════ MAIN DASHBOARD ══════════════ */
 export default function AdminDashboard() {
   const { t, locale } = useTranslation();
@@ -174,6 +179,9 @@ export default function AdminDashboard() {
   const [error, setError] = useState(null);
   const router = useRouter();
   const uiLocale = locale === "zh" ? "zh-CN" : "en-CA";
+  const role = useAdminRole();
+  const can = (mod) => !role || hasPermission(role, mod);
+  const showFinancial = !HIDE_FINANCIAL_ROLES.has(role);
 
   const fetchStats = useCallback(() => {
     fetchJsonWithTimeout("/api/admin/stats")
@@ -209,12 +217,13 @@ export default function AdminDashboard() {
     );
   }
 
-  const actions = [
-    { label: t("admin.quick.viewOrders"), href: "/admin/orders", icon: "orders" },
-    { label: t("admin.quick.workstation"), href: "/admin/workstation", icon: "workstation" },
-    { label: t("admin.quick.production"), href: "/admin/production/board", icon: "board" },
-    { label: t("admin.quick.analytics"), href: "/admin/analytics", icon: "chart" },
+  const allActions = [
+    { label: t("admin.quick.viewOrders"), href: "/admin/orders", icon: "orders", module: "orders" },
+    { label: t("admin.quick.workstation"), href: "/admin/workstation", icon: "workstation", module: "dashboard" },
+    { label: t("admin.quick.production"), href: "/admin/production/board", icon: "board", module: "production" },
+    { label: t("admin.quick.analytics"), href: "/admin/analytics", icon: "chart", module: "analytics" },
   ];
+  const actions = allActions.filter((a) => can(a.module));
 
   return (
     <div className="space-y-6">
@@ -241,7 +250,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={`grid gap-4 sm:grid-cols-2 ${showFinancial ? "lg:grid-cols-4" : "lg:grid-cols-2"}`}>
         <StatCard
           label={t("admin.dashboard.todayOrders")}
           subtitle={t("admin.dashboard.vsYesterday")}
@@ -249,18 +258,22 @@ export default function AdminDashboard() {
           change={<Change current={stats.todayOrders} previous={stats.yesterdayOrders} t={t} />}
           sparkline={stats.dailyOrders}
         />
+        {showFinancial && (
         <StatCard
           label={t("admin.dashboard.todayRevenue")}
           subtitle={t("admin.dashboard.vsYesterday")}
           value={formatCad(stats.todayRevenue || 0)}
           change={<Change current={stats.todayRevenue || 0} previous={stats.yesterdayRevenue || 0} t={t} />}
         />
+        )}
+        {showFinancial && (
         <StatCard
           label={t("admin.dashboard.monthRevenue")}
           subtitle={t("admin.dashboard.thisMonth")}
           value={formatCad(stats.monthRevenue)}
           change={<Change current={stats.monthRevenue} previous={stats.prevMonthRevenue} t={t} />}
         />
+        )}
         <StatCard label={t("admin.dashboard.pendingOrders")} subtitle={t("admin.dashboard.awaitingAction")} value={stats.pendingOrders} />
       </div>
 
@@ -307,7 +320,7 @@ export default function AdminDashboard() {
           <p className="mt-0.5 text-[10px] text-[#999]">{t("admin.dashboard.internalToolsDesc")}</p>
         </div>
         <div className="grid gap-px bg-[#e0e0e0] sm:grid-cols-2 lg:grid-cols-3">
-          {TOOLS.map((tool) => (
+          {TOOLS.filter((tool) => can(tool.module)).map((tool) => (
             <Link key={tool.title} href={tool.href} className="group flex items-start gap-3 bg-white p-5 transition-colors hover:bg-[#fafafa]">
               <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-[#f0f0f0] text-[#666] transition-colors group-hover:bg-black group-hover:text-white">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -380,7 +393,7 @@ export default function AdminDashboard() {
                   <span className={`rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusColor(order.status)}`}>
                     {statusLabel(order.status, t)}
                   </span>
-                  <span className="text-sm font-semibold tabular-nums text-black">{formatCad(order.totalAmount)}</span>
+                  {showFinancial && <span className="text-sm font-semibold tabular-nums text-black">{formatCad(order.totalAmount)}</span>}
                 </div>
               </Link>
             ))}
