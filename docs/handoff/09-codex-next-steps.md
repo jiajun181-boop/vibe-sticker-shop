@@ -1,21 +1,21 @@
 # Document 9: Current Checkpoint & Next Codex Directions
 
 > Last updated: 2026-03-13
-> Latest commit: `8e8cd59`
+> Latest commit: `9f4cb1b`
 > For: next Codex / ChatGPT session
 
 ## Current checkpoint
 
 ### Verified state (2026-03-13)
 - **Tests**: `1111/1111` passing (`npx jest --no-coverage --runInBand`)
-- **tsc**: `.next/` cleaned; stale `debug-env` validator reference resolved
+- **tsc**: clean (`npx tsc --noEmit`)
 - **Build**: clean (run `npm run build` to verify route count after `.next/` cleanup)
 
-### Pending DB migration
+### Pending DB push
 ```bash
-npx prisma migrate dev --name add-cost-breakdown
+npx prisma db push
 ```
-`costBreakdownJson` field exists in `prisma/schema.prisma` (OrderItem model) but migration has not been run.
+Both `costBreakdownJson` (OrderItem) and `reminderSentAt` (Invoice) exist in `prisma/schema.prisma` but may not be applied to the Neon database yet. This project does NOT use `prisma migrate` — it uses `prisma db push`.
 
 ## Admin IA — Center Contract Status
 
@@ -31,25 +31,33 @@ All 5 centers now have canonical contracts with views, helpers, and regression t
 
 ## Legacy pricing-dashboard — Retired (2026-03-13)
 
-The 12 legacy `/admin/pricing-dashboard/*` page files have been **deleted**. All routes are now 301 redirects in `next.config.ts`:
+The 12 legacy `/admin/pricing-dashboard/*` page files have been **deleted**. All routes are now 301 redirects in `next.config.ts`.
+`LEGACY_REDIRECT_MAP` in `lib/admin/pricing-routes.js` retained for test validation only — not used at runtime.
 
-| Legacy path | Canonical destination |
-|-------------|----------------------|
-| `/admin/pricing-dashboard` | `/admin/pricing?tab=products` |
-| `/admin/pricing-dashboard/governance` | `/admin/pricing?tab=governance` |
-| `/admin/pricing-dashboard/approvals` | `/admin/pricing?tab=governance&section=approvals` |
-| `/admin/pricing-dashboard/b2b-rules` | `/admin/pricing?tab=governance&section=b2b` |
-| `/admin/pricing-dashboard/change-log` | `/admin/pricing?tab=governance&section=changelog` |
-| `/admin/pricing-dashboard/log` | `/admin/pricing?tab=governance&section=changelog` |
-| `/admin/pricing-dashboard/ops` | `/admin/pricing?tab=ops&section=reminders` |
-| `/admin/pricing-dashboard/profit-alerts` | `/admin/pricing?tab=ops&section=alerts` |
-| `/admin/pricing-dashboard/remediation` | `/admin/pricing?tab=ops&section=reminders` |
-| `/admin/pricing-dashboard/snapshots` | `/admin/pricing?tab=governance&section=snapshots` |
-| `/admin/pricing-dashboard/vendor-costs` | `/admin/pricing?tab=governance&section=vendor` |
-| `/admin/pricing-dashboard/:slug` | `/admin/pricing?tab=quote&slug=:slug` |
+## Role-specific UI — First Round Complete (2026-03-13)
 
-`PAGE_ACCESS_RULES` and `ADMIN_NAV_ITEMS.pricingRules.matches` cleaned — no more dual-path matching.
-`LEGACY_REDIRECT_MAP` in `lib/admin/pricing-routes.js` retained for reference but no longer used at runtime.
+Content filtering now applied to 4 key admin pages:
+
+| Page | What's filtered | Affected roles |
+|------|----------------|----------------|
+| `/admin/workstation` | Quick actions filtered by module permissions | All non-admin |
+| `/admin` (dashboard) | Revenue stats hidden, tools/actions filtered by role | production, design |
+| `/admin/orders` | Amount + Payment columns hidden | production, design |
+| `/admin/orders/[id]` | Financial breakdown, cost signals, Stripe metadata, payment dropdown hidden | production, design |
+
+Implementation pattern: `useAdminRole()` hook + `HIDE_FINANCIAL_ROLES` set + `hasPermission()` checks.
+
+Pages NOT needing content filtering (already API-gated):
+- `/admin/customers/[email]` — production/design can't access (no `customers` permission)
+- `/admin/production/[id]` — finance/cs/sales can't access (no `production` permission)
+
+## Operator regression pass — Complete (2026-03-13)
+
+Audited all 150+ admin API endpoints and pages. **No dead links, broken routes, or workflow blockers found.**
+
+Bugs found and fixed:
+- Bulk status/production update silently swallowed API errors → now checks `res.ok` + shows alerts
+- Bulk export downloaded broken files on error → now validates response before blob download
 
 ## What is real now
 
@@ -63,59 +71,54 @@ The 12 legacy `/admin/pricing-dashboard/*` page files have been **deleted**. All
 - Shared settlement helper across Stripe/invoice/Interac
 - Coupon semantics aligned, cancel releases stock
 - Invoice coupon timing: consumed on payment confirmation, not creation
+- Invoice dunning: 3-day-before-due reminders + overdue customer notices
+- Webhook: `charge.refunded` handler with full/partial refund detection
 
 ### Admin IA
 - 5 canonical centers (Orders, Customers, Settings, Products, Tools)
 - 106+ regression tests across all center contracts
 - RBAC permission matrix with 8 roles × 22 modules
 - Role-experience navigation (admin/service/ops/product/finance)
+- Role-specific content filtering on dashboard, orders list, order detail
+
+### Data remediation system
+- 6 remediation actions with dry-run/execute support (`lib/pricing/remediation.ts`)
+- Live audit reporting (`/api/admin/pricing/audit`)
+- Vendor cost tracking (`lib/pricing/vendor-cost.ts`)
+- Actual cost entry with variance tracking (`lib/pricing/actual-cost.ts`)
+- Floor-price enforcement with 4-level policy chain (`lib/pricing/floor-price.js`)
+- Missing materials seed script ready (`scripts/seed-missing-materials.mjs`)
+
+### Front-end product experience
+- ProofPreview in 6/10 configurators (correct — 4 remaining are flat/rigid products, not contour-based)
+- Stamp family landing complete (8 models, 3 presets, canvas editor, comparison table)
+- WWF family landing complete (9 products, 5 sections, inline configurators)
+- in/cm standardization complete (7 configurators use shared CustomDimensions)
+- Proof approval UX: success page explains proof step, Free Proof tooltip added
 
 ## What still needs work
 
-### 1. Admin operator regression pass
-- Manual click-through of: `/admin`, `/admin/workstation`, `/admin/pricing` tabs, Quick Quote → snapshot, approvals/vendor/B2B drilldowns, actual-cost entry, invoice/finance/order status edits, contour tool
-- Build/tests green ≠ smooth UX
+### 1. Jay action items (not code)
+- Run `npx prisma db push` to apply schema to Neon database
+- Run `node scripts/seed-missing-materials.mjs` (review costs first — marked TODO)
+- Set `CRON_SECRET` env var in Vercel (for invoice dunning cron)
+- Provide 28 product photos (currently placeholders)
+- Provide category cover images
+- Fix Vercel deploy link (Dashboard → Settings → Git → Disconnect → Reconnect)
+- Confirm hardware zero-cost items are intentional freemium pricing
 
-### 2. Data remediation
-- Missing vendor cost, missing actual cost, display/floor policy gaps
-- Placeholder/zero-cost materials, suspicious hardware values
-- Code entry points exist but operational discipline not established
+### 2. Data remediation (operational)
+- Enter vendor cost quotes for outsourced products via admin UI
+- Enter actual production costs on shipped orders via Pricing Center → Costs tab
+- Review and run remediation actions: `GET /api/admin/pricing/remediation?action=all`
 
-### 3. Transaction/state closure
-- ~~Invoice lifecycle automation~~ → dunning reminders + overdue notices added (2026-03-13)
+### 3. Remaining code work (P2-P3)
 - Reserve/release stock behavior — reserve at checkout, release on expire/cancel
-- ~~Coupon state integrity~~ → usedCount increment moved inside order creation transaction
-- ~~Webhook-side reconciliation~~ → `charge.refunded` handler + event ID logging added
-- Paid/cancelled/expired transition consistency
+- Paid/cancelled/expired transition consistency audit
+- Mobile production view flow optimization
+- Content assets: case studies, design template library
 
-### 4. Role-specific usability
-- UI separation for owner/sales/production/CS views not finished
-- RBAC matrix exists, but page content doesn't adapt per role yet
-
-### 5. Production workflow tightening
-- ~~Reduce back-and-forth~~ → Production detail + order detail now have returnTo-aware pricing quick-links
-- Mobile production view exists but flow optimization needed
-
-### 6. Front-end product experience
-- ProofPreview in 6/10 configurators (die-cut, kiss-cut, foam-board, sticker-sheets, roll-labels, vinyl-lettering)
-- ~~Proof approval UX~~ → success page/timeline now explain proof step; Free Proof tooltip added
-- ~~File quality guidance~~ → ArtworkUpload now bubbles image dimensions via onImageInfo callback
-- Stamp product line largely complete (8 models, canvas editor, family landing)
-- WWF family landing complete
-
-### 7. Content / assets (needs Jay)
-- 28 products with placeholder images
-- Category page cover images
-- Case studies / recent projects page
-- Design Studio template library
-
-### 8. Technical debt
-- `costBreakdownJson` migration pending
-- `reminderSentAt` migration pending (Invoice model)
-- `LEGACY_REDIRECT_MAP` in pricing-routes.js — only used in tests now, can be removed
-- ~~Webhook handler debugging~~ → event IDs now in all log lines
-
-## Not started — future roadmap
+### 4. Not started — future roadmap
 - Automated proof generation
 - Canada Post shipping integration
 - Review collection automation
@@ -133,3 +136,5 @@ The 12 legacy `/admin/pricing-dashboard/*` page files have been **deleted**. All
 - Preserve admin visual language unless UX issue requires change
 - Stay on Prisma 6 (Prisma 7 has breaking changes)
 - Do NOT use edge runtime with Prisma
+- Do NOT rebuild center contracts
+- ProofPreview is correct at 6/10 — do NOT add to banners/canvas/signs/marketing
