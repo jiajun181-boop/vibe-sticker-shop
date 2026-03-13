@@ -141,6 +141,19 @@ function QIcon({ name, className }) {
 }
 
 const AUTO_REFRESH_MS = 30_000;
+const DASHBOARD_TIMEOUT_MS = 8_000;
+
+async function fetchJsonWithTimeout(url, timeoutMs = DASHBOARD_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 /* ══════════════ MAIN DASHBOARD ══════════════ */
 export default function AdminDashboard() {
@@ -154,7 +167,7 @@ export default function AdminDashboard() {
   const router = useRouter();
 
   const fetchStats = useCallback(() => {
-    fetch("/api/admin/stats")
+    fetchJsonWithTimeout("/api/admin/stats")
       .then((r) => {
         if (r.status === 401 || r.status === 403) { router.push("/admin/login"); return null; }
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -163,7 +176,11 @@ export default function AdminDashboard() {
       .then((data) => { if (data) { setStats(data); setLastRefresh(new Date()); setError(null); } })
       .catch((err) => {
         console.error("[Dashboard] Failed to fetch stats:", err);
-        setError(t("admin.common.loadError"));
+        setError(
+          err?.name === "AbortError"
+            ? "Dashboard data timed out. Core admin navigation is still available."
+            : t("admin.common.loadError")
+        );
       })
       .finally(() => setLoading(false));
   }, [router, t]);
@@ -179,10 +196,7 @@ export default function AdminDashboard() {
 
   if (!stats) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-2">
-        <p className="text-sm text-red-500">{error || t("admin.dashboard.loadFailed")}</p>
-        <button onClick={fetchStats} className="text-xs text-blue-600 hover:underline">{t("admin.common.retry")}</button>
-      </div>
+      <DashboardUnavailable error={error || t("admin.dashboard.loadFailed")} onRetry={fetchStats} />
     );
   }
 
@@ -371,8 +385,8 @@ function ProductionAlerts() {
   function loadAlerts() {
     setLoadError(false);
     Promise.all([
-      fetch("/api/admin/orders/missing-artwork?limit=5").then((r) => (r.ok ? r.json() : null)),
-      fetch("/api/admin/production/schedule").then((r) => (r.ok ? r.json() : null)),
+      fetchJsonWithTimeout("/api/admin/orders/missing-artwork?limit=5", 5000).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetchJsonWithTimeout("/api/admin/production/schedule", 5000).then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ]).then(([artwork, schedule]) => {
       if (!artwork && !schedule) {
         setLoadError(true);
@@ -456,6 +470,39 @@ function DashboardSkeleton() {
             <div className="flex items-center gap-3"><div className="h-5 w-14 rounded-[2px] bg-[#e8e8e8]" /><div className="h-5 w-16 rounded-[2px] bg-[#e8e8e8]" /></div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function DashboardUnavailable({ error, onRetry }) {
+  return (
+    <div className="space-y-6">
+      <div className="rounded-[3px] border border-amber-300 bg-amber-50 px-5 py-4">
+        <p className="text-sm font-semibold text-amber-900">Dashboard data is unavailable</p>
+        <p className="mt-1 text-xs text-amber-800">{error}</p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-3 rounded-[3px] border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100"
+        >
+          Retry dashboard
+        </button>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <Link href="/admin/orders" className="rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-[#fafafa]">
+          Orders
+        </Link>
+        <Link href="/admin/workstation" className="rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-[#fafafa]">
+          Workstation
+        </Link>
+        <Link href="/admin/production/board" className="rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-[#fafafa]">
+          Production Board
+        </Link>
+        <Link href="/admin/pricing" className="rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-[#fafafa]">
+          Pricing
+        </Link>
       </div>
     </div>
   );
