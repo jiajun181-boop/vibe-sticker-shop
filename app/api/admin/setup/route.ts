@@ -5,6 +5,8 @@ import {
   isSetupTokenRequired,
 } from "@/lib/admin-setup-security";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Initial admin setup — only works when ZERO admin users exist.
  * Once the first admin is created, this endpoint is permanently disabled.

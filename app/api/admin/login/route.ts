@@ -8,6 +8,8 @@ import {
   matchesLegacyAdminPassword,
 } from "@/lib/admin-login";
 
+export const dynamic = "force-dynamic";
+
 function recordAdminLogin(ip: string, success: boolean) {
   recordLoginAttempt(ip, "admin-login", success).catch(() => {});
 }
