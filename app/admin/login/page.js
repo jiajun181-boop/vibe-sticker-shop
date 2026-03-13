@@ -114,7 +114,7 @@ function LoginContent() {
   // Prevent open redirect: only allow relative paths starting with /admin
   const redirectTo = rawRedirect.startsWith("/admin") && !rawRedirect.startsWith("//") ? rawRedirect : "/admin";
 
-  const [mode, setMode] = useState("loading"); // "loading" | "setup" | "email"
+  const [mode, setMode] = useState("email"); // "setup" | "email"
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -127,25 +127,27 @@ function LoginContent() {
   const formRef = useRef(null);
 
   useEffect(() => {
-    // Timeout: if setup check takes >4s, just show login
-    const timeout = setTimeout(() => setMode("email"), 4000);
-    fetch("/api/admin/setup")
-      .then(async (r) => ({ ok: r.ok, data: await r.json() }))
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1500);
+
+    fetch("/api/admin/setup", { signal: controller.signal })
+      .then(async (r) => ({ ok: r.ok, data: await r.json().catch(() => ({})) }))
       .then(({ ok, data }) => {
-        clearTimeout(timeout);
         if (!ok || data?.error) {
           setNotice("Account lookup is unavailable. Legacy admin password sign-in is still supported.");
-          setMode("email");
           return;
         }
         setMode(data.needsSetup ? "setup" : "email");
       })
       .catch(() => {
-        clearTimeout(timeout);
-        setMode("email");
         setNotice("Account lookup is unavailable. Legacy admin password sign-in is still supported.");
-      });
-    return () => clearTimeout(timeout);
+      })
+      .finally(() => clearTimeout(timeout));
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, []);
 
   function triggerShake() {
@@ -162,11 +164,14 @@ function LoginContent() {
 
   async function tryLegacyLogin(fallbackNotice) {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
       const res = await fetch("/api/admin/legacy-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({ password: password || "" }),
-      });
+      }).finally(() => clearTimeout(timeout));
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setNotice("");
@@ -219,6 +224,13 @@ function LoginContent() {
     setError("");
     setLoading(true);
     try {
+      if (!email.trim()) {
+        const recovered = await tryLegacyLogin();
+        if (recovered) return;
+        triggerShake();
+        return;
+      }
+
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 4000);
       const res = await fetch("/api/admin/login", {
@@ -256,23 +268,6 @@ function LoginContent() {
     } finally {
       setLoading(false);
     }
-  }
-
-  /* ── Loading state ── */
-  if (mode === "loading") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
-        <div className="flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-2 w-2 rounded-full bg-white/40"
-              style={{ animation: `adminDot 1.2s ${i * 0.2}s ease-in-out infinite` }}
-            />
-          ))}
-        </div>
-      </div>
-    );
   }
 
   const EyeToggle = () => (
