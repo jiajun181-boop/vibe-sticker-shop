@@ -1,5 +1,3 @@
-import crypto from "crypto";
-
 export const LEGACY_ADMIN_USER = {
   id: "legacy-password-admin",
   email: "admin@local",
@@ -18,15 +16,15 @@ export function matchesLegacyAdminPassword(
   adminPassword = process.env.ADMIN_PASSWORD || ""
 ): boolean {
   const expected = adminPassword.trim();
-  if (!expected) return false;
+  const actual = (inputPassword || "").trim();
+  if (!expected || actual.length !== expected.length) return false;
 
-  const inputBuf = Buffer.from((inputPassword || "").trim());
-  const expectedBuf = Buffer.from(expected);
+  let mismatch = 0;
+  for (let i = 0; i < expected.length; i += 1) {
+    mismatch |= expected.charCodeAt(i) ^ actual.charCodeAt(i);
+  }
 
-  return (
-    inputBuf.length === expectedBuf.length &&
-    crypto.timingSafeEqual(inputBuf, expectedBuf)
-  );
+  return mismatch === 0;
 }
 
 export function getAdminRuntimeFailure(err: unknown): {

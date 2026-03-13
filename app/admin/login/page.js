@@ -153,6 +153,41 @@ function LoginContent() {
     setTimeout(() => setShaking(false), 500);
   }
 
+  function completeLogin() {
+    setUnlocking(true);
+    setTimeout(() => {
+      window.location.href = redirectTo;
+    }, 600);
+  }
+
+  async function tryLegacyLogin(fallbackNotice) {
+    try {
+      const res = await fetch("/api/admin/legacy-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: password || "" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setNotice("");
+        completeLogin();
+        return true;
+      }
+
+      if (fallbackNotice) {
+        setNotice(fallbackNotice);
+      }
+      setError(data.error || "Login failed");
+      return false;
+    } catch {
+      if (fallbackNotice) {
+        setNotice(fallbackNotice);
+      }
+      setError("Network error");
+      return false;
+    }
+  }
+
   async function handleSetup(e) {
     e.preventDefault();
     setError("");
@@ -184,24 +219,39 @@ function LoginContent() {
     setError("");
     setLoading(true);
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           email: (email || "").trim().toLowerCase(),
           password: password || "",
         }),
-      });
-      const data = await res.json();
+      }).finally(() => clearTimeout(timeout));
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        setUnlocking(true);
-        setTimeout(() => { window.location.href = redirectTo; }, 600);
+        completeLogin();
         return;
       }
+
+      if (res.status >= 500 || data.error === "Admin database is unavailable.") {
+        const recovered = await tryLegacyLogin(
+          "Account lookup is unavailable. Retrying with legacy admin password sign-in."
+        );
+        if (recovered) return;
+      }
+
       setError(data.error || "Login failed");
       triggerShake();
-    } catch {
-      setError("Network error");
+    } catch (err) {
+      const recovered = await tryLegacyLogin(
+        err?.name === "AbortError"
+          ? "Primary admin login timed out. Retrying with legacy admin password sign-in."
+          : "Primary admin login is unavailable. Retrying with legacy admin password sign-in."
+      );
+      if (recovered) return;
       triggerShake();
     } finally {
       setLoading(false);

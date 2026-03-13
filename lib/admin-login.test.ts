@@ -14,6 +14,11 @@ const loginPagePath = path.resolve(
   __dirname,
   "../app/admin/login/page.js"
 );
+const legacyLoginRoutePath = path.resolve(
+  __dirname,
+  "../app/api/admin/legacy-login/route.ts"
+);
+const proxyPath = path.resolve(__dirname, "../proxy.ts");
 
 describe("admin login helpers", () => {
   test("recognizes configured legacy admin password", () => {
@@ -74,5 +79,18 @@ describe("admin login compatibility contract", () => {
       /\{mode === "email"[\s\S]*leave this blank to use the legacy admin password/
     );
     expect(src).toMatch(/\{mode === "setup"[\s\S]*placeholder="Email"[\s\S]*required/);
+    expect(src).toContain('/api/admin/legacy-login');
+  });
+
+  test("legacy login route stays edge-compatible for outage fallback", () => {
+    const src = fs.readFileSync(legacyLoginRoutePath, "utf-8");
+    expect(src).toContain('export const runtime = "edge"');
+    expect(src).toContain("matchesLegacyAdminPassword");
+    expect(src).toContain("createAdminToken");
+  });
+
+  test("proxy allows legacy login route without an admin session", () => {
+    const src = fs.readFileSync(proxyPath, "utf-8");
+    expect(src).toContain('/api/admin/legacy-login');
   });
 });

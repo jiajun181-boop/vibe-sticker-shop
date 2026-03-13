@@ -36,7 +36,11 @@ function detectLocale(request: NextRequest): string {
   return DEFAULT_LOCALE;
 }
 
-const PUBLIC_ADMIN_API_ROUTES = ["/api/admin/login", "/api/admin/setup"];
+const PUBLIC_ADMIN_API_ROUTES = [
+  "/api/admin/login",
+  "/api/admin/legacy-login",
+  "/api/admin/setup",
+];
 
 function setSecurityHeaders(response: NextResponse) {
   response.headers.set("X-Frame-Options", "DENY");
