@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
 import { categoryReorgRedirectsV1 } from "./lib/redirects/category-reorg-v1";
 import { codexUrlMappingRedirects } from "./lib/redirects/codex-url-mapping";
 import { seoShortUrlRedirects } from "./lib/redirects/seo-short-urls";
@@ -196,20 +195,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-const sentryEnabled = process.env.ENABLE_SENTRY === "true" && process.env.SENTRY_DSN;
-
-// Wrap with Sentry only when DSN is configured — zero overhead otherwise
-export default sentryEnabled
-  ? withSentryConfig(nextConfig, {
-      // Suppress source map upload warnings when no auth token is set
-      silent: !process.env.SENTRY_AUTH_TOKEN,
-      // Don't widen existing org/project config — set via env vars
-      org: process.env.SENTRY_ORG,
-      project: process.env.SENTRY_PROJECT,
-      // Upload source maps to Sentry but don't expose publicly
-      sourcemaps: {
-        deleteSourcemapsAfterUpload: true,
-      },
-      disableLogger: true,
-    })
-  : nextConfig;
+export default nextConfig;

@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { captureClientException } from "@/lib/sentry-client";
 
 export default function ErrorPage({ error, reset }) {
   const { t } = useTranslation();
 
   useEffect(() => {
-    Sentry.captureException(error);
+    void captureClientException(error);
   }, [error]);
 
   return (
