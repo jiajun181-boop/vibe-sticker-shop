@@ -1,7 +1,7 @@
 # Document 9: Current Checkpoint & Next Codex Directions
 
 > Last updated: 2026-03-13
-> Latest pushed commit: `a3ad460`
+> Latest commit: `8e8cd59`
 > For: next Codex / ChatGPT session
 
 ## Current checkpoint
@@ -82,10 +82,10 @@ The 12 legacy `/admin/pricing-dashboard/*` page files have been **deleted**. All
 - Code entry points exist but operational discipline not established
 
 ### 3. Transaction/state closure
-- Invoice lifecycle automation
-- Reserve/release stock behavior
-- Coupon state integrity
-- Webhook-side reconciliation
+- ~~Invoice lifecycle automation~~ → dunning reminders + overdue notices added (2026-03-13)
+- Reserve/release stock behavior — reserve at checkout, release on expire/cancel
+- ~~Coupon state integrity~~ → usedCount increment moved inside order creation transaction
+- ~~Webhook-side reconciliation~~ → `charge.refunded` handler + event ID logging added
 - Paid/cancelled/expired transition consistency
 
 ### 4. Role-specific usability
@@ -93,13 +93,13 @@ The 12 legacy `/admin/pricing-dashboard/*` page files have been **deleted**. All
 - RBAC matrix exists, but page content doesn't adapt per role yet
 
 ### 5. Production workflow tightening
-- Reduce back-and-forth between production board, order detail, and pricing review
+- ~~Reduce back-and-forth~~ → Production detail + order detail now have returnTo-aware pricing quick-links
 - Mobile production view exists but flow optimization needed
 
 ### 6. Front-end product experience
-- ProofPreview only in 3/10 configurators (die-cut, kiss-cut, foam-board)
-- Proof approval UX needs clearer customer explanation
-- File quality guidance for retail customers
+- ProofPreview in 6/10 configurators (die-cut, kiss-cut, foam-board, sticker-sheets, roll-labels, vinyl-lettering)
+- ~~Proof approval UX~~ → success page/timeline now explain proof step; Free Proof tooltip added
+- ~~File quality guidance~~ → ArtworkUpload now bubbles image dimensions via onImageInfo callback
 - Stamp product line largely complete (8 models, canvas editor, family landing)
 - WWF family landing complete
 
@@ -111,8 +111,9 @@ The 12 legacy `/admin/pricing-dashboard/*` page files have been **deleted**. All
 
 ### 8. Technical debt
 - `costBreakdownJson` migration pending
-- `LEGACY_REDIRECT_MAP` in pricing-routes.js can be removed once no code references it
-- Webhook handler still heavier than ideal for debugging
+- `reminderSentAt` migration pending (Invoice model)
+- `LEGACY_REDIRECT_MAP` in pricing-routes.js — only used in tests now, can be removed
+- ~~Webhook handler debugging~~ → event IDs now in all log lines
 
 ## Not started — future roadmap
 - Automated proof generation
