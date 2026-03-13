@@ -120,6 +120,7 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const [shaking, setShaking] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
@@ -129,14 +130,20 @@ function LoginContent() {
     // Timeout: if setup check takes >4s, just show login
     const timeout = setTimeout(() => setMode("email"), 4000);
     fetch("/api/admin/setup")
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => ({ ok: r.ok, data: await r.json() }))
+      .then(({ ok, data }) => {
         clearTimeout(timeout);
+        if (!ok || data?.error) {
+          setNotice("Account lookup is unavailable. Legacy admin password sign-in is still supported.");
+          setMode("email");
+          return;
+        }
         setMode(data.needsSetup ? "setup" : "email");
       })
       .catch(() => {
         clearTimeout(timeout);
         setMode("email");
+        setNotice("Account lookup is unavailable. Legacy admin password sign-in is still supported.");
       });
     return () => clearTimeout(timeout);
   }, []);
@@ -333,6 +340,14 @@ function LoginContent() {
                   {error}
                 </p>
               )}
+              {notice && !error && (
+                <p
+                  className="text-[11px] text-amber-300/90"
+                  style={{ animation: "adminFadeIn 0.3s ease" }}
+                >
+                  {notice}
+                </p>
+              )}
 
               <button
                 type="submit"
@@ -361,8 +376,7 @@ function LoginContent() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail((e.target.value || "").toLowerCase())}
-                placeholder="Email"
-                required
+                placeholder="Email (optional)"
                 autoFocus
                 autoCapitalize="none"
                 autoCorrect="off"
@@ -370,6 +384,9 @@ function LoginContent() {
                 spellCheck={false}
                 className={inputClass}
               />
+              <p className="text-[11px] text-[#fff]/35">
+                Use your admin email, or leave this blank to use the legacy admin password.
+              </p>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -390,6 +407,14 @@ function LoginContent() {
                   style={{ animation: "adminFadeIn 0.3s ease" }}
                 >
                   {error}
+                </p>
+              )}
+              {notice && !error && (
+                <p
+                  className="text-[11px] text-amber-300/90"
+                  style={{ animation: "adminFadeIn 0.3s ease" }}
+                >
+                  {notice}
                 </p>
               )}
 
