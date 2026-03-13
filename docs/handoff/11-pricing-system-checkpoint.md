@@ -132,17 +132,16 @@ Only reopen pricing if one of these happens:
 
 Shift attention away from pricing and back to a top-level admin object that still needs the same depth of closure.
 
-### Recommended next priority
-1. **Tools Center backbone**
-   - bring `/admin/tools`, contour, proof, stamp-studio under one canonical center contract
-   - reuse the same object-center pattern already established for Orders / Customers / Settings / Products
+### Recommended next priority (updated 2026-03-13)
+All three original priorities have been completed:
+1. ~~Tools Center backbone~~ ✅ — canonical contract with 5 views, 18 tests
+2. ~~Production workflow tightening~~ ✅ — returnTo-aware quick-links from production/order detail to pricing
+3. ~~Legacy route consolidation~~ ✅ — 12 pricing-dashboard pages deleted, 301 redirects in next.config.ts
 
-2. **Production workflow tightening**
-   - use the stronger pricing/provenance signals now available
-   - reduce page-hopping between production, order detail, and pricing review
-
-3. **Legacy route consolidation**
-   - only after confirming compatibility/redirect behavior carefully
+**Current focus should be**:
+1. **Data remediation** — zero-cost materials, missing vendor costs, floor policy gaps
+2. **Role-specific UI** — page content adaptation per role (owner/sales/production/CS)
+3. **Front-end product experience** — stamp entry page, WWF family landing, in/cm standardization
 
 ## Important constraints to preserve
 

@@ -11,6 +11,8 @@ import ItemProductionPanel from "@/components/admin/ItemProductionPanel";
 import { formatCad } from "@/lib/product-helpers";
 import { isProductionItem } from "@/lib/order-item-utils";
 import CostSignalBadge from "@/components/admin/CostSignalBadge";
+import { useAdminSession } from "@/lib/useAdminSession";
+import { hasPermission } from "@/lib/admin-permissions";
 
 // ─── Single summary API fetch ────────────────────────────────────────────────
 
@@ -174,9 +176,30 @@ const I = {
 // MAIN WORKSTATION PAGE — single summary API, real server-side counts
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// Quick actions with associated permission modules
+const QUICK_ACTIONS = [
+  { href: "/admin/orders/create", iconKey: "plus", labelKey: "admin.workstation.actionNewOrder", subKey: "admin.workstation.actionNewOrderSub", module: "orders", action: "edit" },
+  { href: "/admin/orders", iconKey: "orders", labelKey: "admin.workstation.actionOrders", subKey: "admin.workstation.actionOrdersSub", module: "orders" },
+  { href: "/admin/pricing", iconKey: "pricing", labelKey: "admin.workstation.actionPricing", subKey: "admin.workstation.actionPricingSub", module: "pricing" },
+  { href: "/admin/tools/contour", iconKey: "contour", labelKey: "admin.workstation.actionContour", subKey: "admin.workstation.actionContourSub", module: "tools" },
+  { href: "/admin/tools/proof", iconKey: "proof", labelKey: "admin.workstation.actionProof", subKey: "admin.workstation.actionProofSub", module: "tools" },
+  { href: "/admin/tools/stamp-studio", iconKey: "stamp", labelKey: "admin.workstation.actionStamp", subKey: "admin.workstation.actionStampSub", module: "tools" },
+  { href: "/admin/production/board", iconKey: "production", labelKey: "admin.workstation.actionProduction", subKey: "admin.workstation.actionProductionSub", module: "production" },
+  { href: "/admin/production/schedule", iconKey: "orders", labelKey: "admin.workstation.actionSchedule", subKey: "admin.workstation.actionScheduleSub", module: "production" },
+  { href: "/admin/orders/missing-artwork", iconKey: "contour", labelKey: "admin.workstation.actionMissingArtwork", subKey: "admin.workstation.actionMissingArtworkSub", module: "orders" },
+  { href: "/admin/tools/unit-converter", iconKey: "pricing", labelKey: "admin.unitConverter.title", subKey: "admin.workstation.actionUnitConverterSub", module: "tools" },
+  { href: "/admin/production/mobile", iconKey: "production", labelKey: "admin.workstation.actionMobileProd", subKey: "admin.workstation.actionMobileProdSub", module: "production" },
+];
+
 export default function WorkstationPage() {
   const { t } = useTranslation();
   const { data, error, loading, refetch } = useSummary();
+  const session = useAdminSession();
+  const role = session?.role || "admin";
+
+  // Filter quick actions by role permissions
+  const can = (mod, act = "view") => hasPermission(role, mod, act);
+  const visibleActions = QUICK_ACTIONS.filter((a) => can(a.module, a.action || "view"));
 
   const stats = data?.stats;
   const needsAttention = data?.needsAttention || [];
@@ -224,29 +247,21 @@ export default function WorkstationPage() {
         </div>
       )}
 
-      {/* ── 1. Stats Cards ────────────────────────────────────────────── */}
+      {/* ── 1. Stats Cards (role-filtered) ─────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <StatCard label={t("admin.workstation.statOrders")} value={stats?.totalOrders} loading={loading} error={!stats && !loading} t={t} href="/admin/orders" />
-        <StatCard label={t("admin.workstation.statAttention")} value={stats?.needsAttentionCount} loading={loading} error={!stats && !loading} t={t} href="/admin/orders" />
-        <StatCard label={t("admin.workstation.statProofs")} value={stats?.pendingProofsCount} loading={loading} error={!stats && !loading} t={t} href="/admin/tools/proof" />
-        <StatCard label={t("admin.workstation.statJobs")} value={stats?.recentJobsCount} loading={loading} error={!stats && !loading} t={t} href="/admin/tools" />
-        <StatCard label={t("admin.workstation.statProduction")} value={stats?.inProductionCount} loading={loading} error={!stats && !loading} t={t} href="/admin/production/board" />
+        {can("orders") && <StatCard label={t("admin.workstation.statOrders")} value={stats?.totalOrders} loading={loading} error={!stats && !loading} t={t} href="/admin/orders" />}
+        {can("orders") && <StatCard label={t("admin.workstation.statAttention")} value={stats?.needsAttentionCount} loading={loading} error={!stats && !loading} t={t} href="/admin/orders" />}
+        {can("tools") && <StatCard label={t("admin.workstation.statProofs")} value={stats?.pendingProofsCount} loading={loading} error={!stats && !loading} t={t} href="/admin/tools/proof" />}
+        {can("tools") && <StatCard label={t("admin.workstation.statJobs")} value={stats?.recentJobsCount} loading={loading} error={!stats && !loading} t={t} href="/admin/tools" />}
+        {can("production") && <StatCard label={t("admin.workstation.statProduction")} value={stats?.inProductionCount} loading={loading} error={!stats && !loading} t={t} href="/admin/production/board" />}
       </div>
 
-      {/* ── 2. Quick Actions ──────────────────────────────────────────── */}
+      {/* ── 2. Quick Actions (role-filtered) ──────────────────────── */}
       <Section title={t("admin.workstation.quickActions")}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <QuickAction href="/admin/orders/create" icon={I.plus} label={t("admin.workstation.actionNewOrder")} sub={t("admin.workstation.actionNewOrderSub")} />
-          <QuickAction href="/admin/orders" icon={I.orders} label={t("admin.workstation.actionOrders")} sub={t("admin.workstation.actionOrdersSub")} />
-          <QuickAction href="/admin/pricing" icon={I.pricing} label={t("admin.workstation.actionPricing")} sub={t("admin.workstation.actionPricingSub")} />
-          <QuickAction href="/admin/tools/contour" icon={I.contour} label={t("admin.workstation.actionContour")} sub={t("admin.workstation.actionContourSub")} />
-          <QuickAction href="/admin/tools/proof" icon={I.proof} label={t("admin.workstation.actionProof")} sub={t("admin.workstation.actionProofSub")} />
-          <QuickAction href="/admin/tools/stamp-studio" icon={I.stamp} label={t("admin.workstation.actionStamp")} sub={t("admin.workstation.actionStampSub")} />
-          <QuickAction href="/admin/production/board" icon={I.production} label={t("admin.workstation.actionProduction")} sub={t("admin.workstation.actionProductionSub")} />
-          <QuickAction href="/admin/production/schedule" icon={I.orders} label={t("admin.workstation.actionSchedule")} sub={t("admin.workstation.actionScheduleSub")} />
-          <QuickAction href="/admin/orders/missing-artwork" icon={I.contour} label={t("admin.workstation.actionMissingArtwork")} sub={t("admin.workstation.actionMissingArtworkSub")} />
-          <QuickAction href="/admin/tools/unit-converter" icon={I.pricing} label={t("admin.unitConverter.title")} sub={t("admin.workstation.actionUnitConverterSub")} />
-          <QuickAction href="/admin/production/mobile" icon={I.production} label={t("admin.workstation.actionMobileProd")} sub={t("admin.workstation.actionMobileProdSub")} />
+          {visibleActions.map((a) => (
+            <QuickAction key={a.href} href={a.href} icon={I[a.iconKey]} label={t(a.labelKey)} sub={t(a.subKey)} />
+          ))}
         </div>
       </Section>
 
@@ -267,8 +282,8 @@ export default function WorkstationPage() {
         )}
       </Section>
 
-      {/* ── 4 + 5. Proof Queue + Recent Jobs side-by-side ─────────── */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {/* ── 4 + 5. Proof Queue + Recent Jobs (tools roles only) ──── */}
+      {can("tools") && <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Proof Queue */}
         <Section
           title={`${t("admin.workstation.proofQueue")}${stats?.pendingProofsCount ? ` (${stats.pendingProofsCount})` : ""}`}
@@ -363,10 +378,10 @@ export default function WorkstationPage() {
             </div>
           )}
         </Section>
-      </div>
+      </div>}
 
-      {/* ── 6. Production Summary ─────────────────────────────────────── */}
-      <Section
+      {/* ── 6. Production Summary (production roles only) ──────────── */}
+      {can("production") && <Section
         title={t("admin.workstation.productionSummary")}
         action={<Link href="/admin/production/board" className="text-xs font-medium text-[#4f46e5] hover:underline">{t("admin.workstation.openBoard")}</Link>}
       >
@@ -391,7 +406,7 @@ export default function WorkstationPage() {
             ))}
           </div>
         )}
-      </Section>
+      </Section>}
     </div>
   );
 }
