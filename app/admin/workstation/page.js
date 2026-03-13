@@ -243,8 +243,8 @@ export default function WorkstationPage() {
           <QuickAction href="/admin/tools/proof" icon={I.proof} label={t("admin.workstation.actionProof")} sub={t("admin.workstation.actionProofSub")} />
           <QuickAction href="/admin/tools/stamp-studio" icon={I.stamp} label={t("admin.workstation.actionStamp")} sub={t("admin.workstation.actionStampSub")} />
           <QuickAction href="/admin/production/board" icon={I.production} label={t("admin.workstation.actionProduction")} sub={t("admin.workstation.actionProductionSub")} />
-          <QuickAction href="/admin/production/schedule" icon={I.orders} label="Schedule" sub="Due dates & workload" />
-          <QuickAction href="/admin/orders/missing-artwork" icon={I.contour} label="Missing Artwork" sub="Orders awaiting files" />
+          <QuickAction href="/admin/production/schedule" icon={I.orders} label={t("admin.workstation.actionSchedule")} sub={t("admin.workstation.actionScheduleSub")} />
+          <QuickAction href="/admin/orders/missing-artwork" icon={I.contour} label={t("admin.workstation.actionMissingArtwork")} sub={t("admin.workstation.actionMissingArtworkSub")} />
           <QuickAction href="/admin/tools/unit-converter" icon={I.pricing} label={t("admin.unitConverter.title")} sub={t("admin.workstation.actionUnitConverterSub")} />
           <QuickAction href="/admin/production/mobile" icon={I.production} label={t("admin.workstation.actionMobileProd")} sub={t("admin.workstation.actionMobileProdSub")} />
         </div>

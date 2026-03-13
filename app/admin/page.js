@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
-import { statusColor } from "@/lib/admin/status-labels";
+import { statusColor, statusLabel } from "@/lib/admin/status-labels";
 
 // ── Capabilities: tools (clickable) vs system features (info-only) ──────────
 
@@ -91,11 +91,19 @@ function Sparkline({ data }) {
 }
 
 /* ── % change badge ── */
-function Change({ current, previous }) {
+function Change({ current, previous, t }) {
   if (previous === 0 && current === 0) return null;
-  if (previous === 0) return <span className="mt-1 inline-block text-[10px] font-bold uppercase tracking-wider text-emerald-600">NEW</span>;
+  if (previous === 0) {
+    return (
+      <span className="mt-1 inline-block text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+        {t("admin.dashboard.changeNew")}
+      </span>
+    );
+  }
   const pct = Math.round(((current - previous) / previous) * 100);
-  if (pct === 0) return <span className="mt-1 inline-block text-[10px] text-[#999]">&mdash; vs prev</span>;
+  if (pct === 0) {
+    return <span className="mt-1 inline-block text-[10px] text-[#999]">{t("admin.dashboard.changeFlat")}</span>;
+  }
   const up = pct > 0;
   return (
     <span className={`mt-1 inline-flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wider ${up ? "text-emerald-600" : "text-red-500"}`}>
@@ -157,7 +165,7 @@ async function fetchJsonWithTimeout(url, timeoutMs = DASHBOARD_TIMEOUT_MS) {
 
 /* ══════════════ MAIN DASHBOARD ══════════════ */
 export default function AdminDashboard() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
@@ -165,6 +173,7 @@ export default function AdminDashboard() {
 
   const [error, setError] = useState(null);
   const router = useRouter();
+  const uiLocale = locale === "zh" ? "zh-CN" : "en-CA";
 
   const fetchStats = useCallback(() => {
     fetchJsonWithTimeout("/api/admin/stats")
@@ -178,7 +187,7 @@ export default function AdminDashboard() {
         console.error("[Dashboard] Failed to fetch stats:", err);
         setError(
           err?.name === "AbortError"
-            ? "Dashboard data timed out. Core admin navigation is still available."
+            ? t("admin.dashboard.timeoutError")
             : t("admin.common.loadError")
         );
       })
@@ -215,7 +224,11 @@ export default function AdminDashboard() {
           <button
             type="button"
             onClick={fetchStats}
-            title={lastRefresh ? `Last refresh: ${lastRefresh.toLocaleTimeString()}` : "Refresh"}
+            title={
+              lastRefresh
+                ? t("admin.dashboard.lastRefreshAt").replace("{time}", lastRefresh.toLocaleTimeString(uiLocale))
+                : t("admin.dashboard.refresh")
+            }
             className="rounded-[3px] border border-[#d0d0d0] p-1.5 text-[#999] hover:bg-gray-50 hover:text-black transition-colors"
           >
             <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -223,7 +236,7 @@ export default function AdminDashboard() {
             </svg>
           </button>
           <p className="text-xs text-[#999]">
-            {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
+            {new Date().toLocaleDateString(uiLocale, { weekday: "long", month: "long", day: "numeric" })}
           </p>
         </div>
       </div>
@@ -233,20 +246,20 @@ export default function AdminDashboard() {
           label={t("admin.dashboard.todayOrders")}
           subtitle={t("admin.dashboard.vsYesterday")}
           value={stats.todayOrders}
-          change={<Change current={stats.todayOrders} previous={stats.yesterdayOrders} />}
+          change={<Change current={stats.todayOrders} previous={stats.yesterdayOrders} t={t} />}
           sparkline={stats.dailyOrders}
         />
         <StatCard
-          label={t("admin.dashboard.todayRevenue") || "Today's Revenue"}
+          label={t("admin.dashboard.todayRevenue")}
           subtitle={t("admin.dashboard.vsYesterday")}
           value={formatCad(stats.todayRevenue || 0)}
-          change={<Change current={stats.todayRevenue || 0} previous={stats.yesterdayRevenue || 0} />}
+          change={<Change current={stats.todayRevenue || 0} previous={stats.yesterdayRevenue || 0} t={t} />}
         />
         <StatCard
           label={t("admin.dashboard.monthRevenue")}
           subtitle={t("admin.dashboard.thisMonth")}
           value={formatCad(stats.monthRevenue)}
-          change={<Change current={stats.monthRevenue} previous={stats.prevMonthRevenue} />}
+          change={<Change current={stats.monthRevenue} previous={stats.prevMonthRevenue} t={t} />}
         />
         <StatCard label={t("admin.dashboard.pendingOrders")} subtitle={t("admin.dashboard.awaitingAction")} value={stats.pendingOrders} />
       </div>
@@ -268,10 +281,10 @@ export default function AdminDashboard() {
       {stats.pipeline && (
         <div className="grid gap-2 sm:grid-cols-4">
           {[
-            { key: "preflight", label: t("admin.dashboard.pipePreflight") || "Preflight", color: "bg-blue-500" },
-            { key: "in_production", label: t("admin.dashboard.pipeProduction") || "In Production", color: "bg-amber-500" },
-            { key: "ready_to_ship", label: t("admin.dashboard.pipeReady") || "Ready to Ship", color: "bg-emerald-500" },
-            { key: "shipped_today", label: t("admin.dashboard.pipeShipped") || "Shipped Today", color: "bg-gray-400" },
+            { key: "preflight", label: t("admin.dashboard.pipePreflight"), color: "bg-blue-500" },
+            { key: "in_production", label: t("admin.dashboard.pipeProduction"), color: "bg-amber-500" },
+            { key: "ready_to_ship", label: t("admin.dashboard.pipeReady"), color: "bg-emerald-500" },
+            { key: "shipped_today", label: t("admin.dashboard.pipeShipped"), color: "bg-gray-400" },
           ].map(({ key, label, color }) => (
             <Link key={key} href={key === "shipped_today" ? "/admin/orders/shipping" : "/admin/production/board"} className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 hover:bg-[#fafafa] transition-colors">
               <div className="flex items-center gap-2">
@@ -359,13 +372,13 @@ export default function AdminDashboard() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-black">{order.customerEmail}</p>
                   <p className="text-xs text-[#999]">
-                    {order._count.items} item{order._count.items !== 1 && "s"} &middot;{" "}
-                    {new Date(order.createdAt).toLocaleDateString()}
+                    {t("admin.dashboard.itemCount").replace("{count}", order._count.items)} &middot;{" "}
+                    {new Date(order.createdAt).toLocaleDateString(uiLocale)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
                   <span className={`rounded-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusColor(order.status)}`}>
-                    {order.status}
+                    {statusLabel(order.status, t)}
                   </span>
                   <span className="text-sm font-semibold tabular-nums text-black">{formatCad(order.totalAmount)}</span>
                 </div>
@@ -379,6 +392,7 @@ export default function AdminDashboard() {
 }
 
 function ProductionAlerts() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loadError, setLoadError] = useState(false);
 
@@ -401,8 +415,8 @@ function ProductionAlerts() {
   if (loadError) {
     return (
       <div className="flex items-center justify-between rounded-[3px] border border-amber-300 bg-amber-50 px-4 py-3">
-        <span className="text-xs font-medium text-amber-800">Production alerts failed to load</span>
-        <button type="button" onClick={loadAlerts} className="rounded-[3px] border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100">Retry</button>
+        <span className="text-xs font-medium text-amber-800">{t("admin.dashboard.alertsLoadFailed")}</span>
+        <button type="button" onClick={loadAlerts} className="rounded-[3px] border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100">{t("admin.dashboard.alertRetry")}</button>
       </div>
     );
   }
@@ -421,20 +435,20 @@ function ProductionAlerts() {
       {artworkCount > 0 && (
         <Link href="/admin/orders/missing-artwork" className="rounded-[3px] border border-amber-200 bg-amber-50 p-4 hover:bg-amber-100 transition-colors">
           <p className="text-2xl font-bold text-amber-700">{artworkCount}</p>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Missing Artwork</p>
-          {staleCount > 0 && <p className="mt-0.5 text-[10px] text-red-600">{staleCount} stale (7+ days)</p>}
+          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">{t("admin.dashboard.alertMissingArtwork")}</p>
+          {staleCount > 0 && <p className="mt-0.5 text-[10px] text-red-600">{t("admin.dashboard.alertStale").replace("{count}", staleCount)}</p>}
         </Link>
       )}
       {overdueCount > 0 && (
         <Link href="/admin/production/schedule" className="rounded-[3px] border border-red-200 bg-red-50 p-4 hover:bg-red-100 transition-colors">
           <p className="text-2xl font-bold text-red-700">{overdueCount}</p>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-red-600">Overdue Jobs</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-red-600">{t("admin.dashboard.alertOverdueJobs")}</p>
         </Link>
       )}
       {rushCount > 0 && (
         <Link href="/admin/production/schedule" className="rounded-[3px] border border-orange-200 bg-orange-50 p-4 hover:bg-orange-100 transition-colors">
           <p className="text-2xl font-bold text-orange-700">{rushCount}</p>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-orange-600">Rush Jobs Active</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-orange-600">{t("admin.dashboard.alertRushJobs")}</p>
         </Link>
       )}
     </div>
@@ -476,32 +490,33 @@ function DashboardSkeleton() {
 }
 
 function DashboardUnavailable({ error, onRetry }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6">
       <div className="rounded-[3px] border border-amber-300 bg-amber-50 px-5 py-4">
-        <p className="text-sm font-semibold text-amber-900">Dashboard data is unavailable</p>
+        <p className="text-sm font-semibold text-amber-900">{t("admin.dashboard.unavailableTitle")}</p>
         <p className="mt-1 text-xs text-amber-800">{error}</p>
         <button
           type="button"
           onClick={onRetry}
           className="mt-3 rounded-[3px] border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100"
         >
-          Retry dashboard
+          {t("admin.dashboard.retryDashboard")}
         </button>
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <Link href="/admin/orders" className="rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-[#fafafa]">
-          Orders
+          {t("admin.quick.viewOrders")}
         </Link>
         <Link href="/admin/workstation" className="rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-[#fafafa]">
-          Workstation
+          {t("admin.quick.workstation")}
         </Link>
         <Link href="/admin/production/board" className="rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-[#fafafa]">
-          Production Board
+          {t("admin.quick.production")}
         </Link>
         <Link href="/admin/pricing" className="rounded-[3px] border border-[#e0e0e0] bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-[#fafafa]">
-          Pricing
+          {t("admin.quick.pricing")}
         </Link>
       </div>
     </div>
