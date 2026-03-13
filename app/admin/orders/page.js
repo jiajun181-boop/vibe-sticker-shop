@@ -202,15 +202,21 @@ function OrdersContent() {
 
     setBulkUpdating(true);
     try {
-      await fetch('/api/admin/orders/bulk-update', {
+      const res = await fetch('/api/admin/orders/bulk-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: selectedOrders, updates: { status } })
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || `Bulk update failed (${res.status})`);
+        return;
+      }
       setSelectedOrders([]);
       await fetchOrders();
     } catch (err) {
       console.error('Bulk update failed:', err);
+      alert('Bulk update failed — check your connection and try again.');
     } finally {
       setBulkUpdating(false);
     }
@@ -223,15 +229,21 @@ function OrdersContent() {
 
     setBulkUpdating(true);
     try {
-      await fetch('/api/admin/orders/bulk-update', {
+      const res = await fetch('/api/admin/orders/bulk-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: selectedOrders, updates: { productionStatus } })
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || `Bulk production update failed (${res.status})`);
+        return;
+      }
       setSelectedOrders([]);
       await fetchOrders();
     } catch (err) {
       console.error('Bulk production update failed:', err);
+      alert('Bulk production update failed — check your connection and try again.');
     } finally {
       setBulkUpdating(false);
     }
@@ -245,6 +257,10 @@ function OrdersContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: selectedOrders })
       });
+      if (!res.ok) {
+        alert(`Export failed (${res.status}) — try again or reduce selection.`);
+        return;
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
