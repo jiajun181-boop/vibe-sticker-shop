@@ -118,7 +118,5 @@ export const config = {
   matcher: [
     // Run on all page routes, exclude static/_next
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)",
-    // Also run on admin API routes for edge-level auth
-    "/api/admin/:path*",
   ],
 };
