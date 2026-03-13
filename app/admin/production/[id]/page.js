@@ -445,6 +445,22 @@ export default function ProductionJobDetailPage() {
               {job.priority}
             </span>
             <CostSignalBadge signal={job.costSignal} size="md" />
+            {orderItem?.productSlug && (
+              <Link
+                href={`/admin/pricing?tab=quote&slug=${encodeURIComponent(orderItem.productSlug)}&returnTo=${encodeURIComponent(`/admin/production/${id}`)}`}
+                className="rounded-[2px] border border-[#d0d0d0] px-2 py-0.5 text-xs font-medium text-[#666] hover:border-black hover:text-black"
+              >
+                {t("admin.production.reviewPricing")}
+              </Link>
+            )}
+            {order && (
+              <Link
+                href={`/admin/pricing?tab=costs&orderId=${order.id}&returnTo=${encodeURIComponent(`/admin/production/${id}`)}`}
+                className="rounded-[2px] border border-[#d0d0d0] px-2 py-0.5 text-xs font-medium text-[#666] hover:border-black hover:text-black"
+              >
+                {t("admin.production.enterCost")}
+              </Link>
+            )}
             {job.sourceQuote && (
               <Link
                 href="/admin/quotes"

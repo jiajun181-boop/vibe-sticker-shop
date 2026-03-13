@@ -15,7 +15,7 @@ function formatFileSize(bytes) {
 }
 
 /** File preflight info card — shows after upload */
-function FileInfoCard({ file, t }) {
+function FileInfoCard({ file, t, onImageInfo }) {
   const [imgInfo, setImgInfo] = useState(null);
 
   useEffect(() => {
@@ -33,9 +33,11 @@ function FileInfoCard({ file, t }) {
       const maxDim = Math.max(w, h);
       const estimatedDpi = maxDim > 3000 ? 300 : maxDim > 1500 ? 150 : maxDim > 750 ? 72 : 36;
       setImgInfo({ width: w, height: h, estimatedDpi });
+      // Bubble dimensions back so parent can save to cart metadata
+      if (onImageInfo) onImageInfo({ width: w, height: h, estimatedDpi });
     };
     img.src = file.url;
-  }, [file]);
+  }, [file, onImageInfo]);
 
   const ext = (file?.name || "").split(".").pop()?.toUpperCase();
   const isPdf = ext === "PDF" || ext === "AI" || ext === "EPS" || ext === "PSD";
@@ -184,6 +186,7 @@ export default function ArtworkUpload({
   uploadedFiles,
   onFileUploaded,
   onFileRemove,
+  onImageInfo,
   t,
 }) {
   const isMulti = Array.isArray(fileSlots) && fileSlots.length > 1;
@@ -293,7 +296,7 @@ export default function ArtworkUpload({
                           </svg>
                         </button>
                       </div>
-                      <FileInfoCard file={file} t={t} />
+                      <FileInfoCard file={file} t={t} onImageInfo={onImageInfo} />
                     </div>
                   ) : (
                     <div className="text-center">
@@ -356,7 +359,7 @@ export default function ArtworkUpload({
                     </svg>
                   </button>
                 </div>
-                <FileInfoCard file={uploadedFile} t={t} />
+                <FileInfoCard file={uploadedFile} t={t} onImageInfo={onImageInfo} />
               </div>
             ) : (
               <div className="space-y-3">

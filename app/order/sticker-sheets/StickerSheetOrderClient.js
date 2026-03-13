@@ -6,7 +6,8 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { UploadButton } from "@/utils/uploadthing";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import WhiteInkStep, { needsWhiteInk } from "@/components/configurator/WhiteInkStep";
-import { useConfiguratorCart } from "@/components/configurator";
+import { useConfiguratorCart, ProofPreview } from "@/components/configurator";
+import saveProofData from "@/lib/proof/saveProofData";
 import { RUSH_MULTIPLIER, DESIGN_HELP_CENTS } from "@/lib/order-config";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
@@ -114,6 +115,9 @@ export default function StickerSheetOrderClient() {
   const [quantity, setQuantity] = useState(50);
   const [customQty, setCustomQty] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [proofConfirmed, setProofConfirmed] = useState(false);
+  const [contourData, setContourData] = useState(null);
+  const [proofDataId, setProofDataId] = useState(null);
   const [whiteInk, setWhiteInk] = useState({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null });
   const [artworkIntent, setArtworkIntent] = useState(null);
   const [rushProduction, setRushProduction] = useState(false);
@@ -273,6 +277,11 @@ export default function StickerSheetOrderClient() {
         artworkUrl: uploadedFile?.url || null,
         artworkKey: uploadedFile?.key || null,
         artworkIntent: artworkIntent || null,
+        proofConfirmed: proofConfirmed || false,
+        contourSvg: contourData?.contourSvg || null,
+        bleedMm: contourData?.bleedMm ?? null,
+        processedImageUrl: contourData?.processedImageUrl || null,
+        proofDataId: proofDataId || null,
         whiteInkEnabled: needsWhiteInk(materialId) && whiteInk.enabled,
         whiteInkMode: needsWhiteInk(materialId) && whiteInk.enabled ? (whiteInk.mode || "auto") : null,
         whiteInkUrl: needsWhiteInk(materialId) && whiteInk.enabled ? (whiteInk.whiteInkUrl || null) : null,
@@ -282,7 +291,7 @@ export default function StickerSheetOrderClient() {
       },
       forceNewLine: true,
     };
-  }, [quoteData, activeQty, shapeId, stickerSizeLabel, sheetSize, adjustedSubtotal, stickerW, stickerH, sheetSizeId, materialId, cutStyleId, finishId, uploadedFile, artworkIntent, whiteInk, t]);
+  }, [quoteData, activeQty, shapeId, stickerSizeLabel, sheetSize, adjustedSubtotal, stickerW, stickerH, sheetSizeId, materialId, cutStyleId, finishId, uploadedFile, artworkIntent, whiteInk, proofConfirmed, contourData, proofDataId, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -555,12 +564,37 @@ export default function StickerSheetOrderClient() {
             </div>
           </Section>
 
+          {/* Proof Preview — contour visualization after upload */}
+          {uploadedFile && stickerW > 0 && stickerH > 0 && (
+            <ProofPreview
+              uploadedFile={uploadedFile}
+              widthIn={stickerW}
+              heightIn={stickerH}
+              cuttingId={cutStyleId}
+              materialId={materialId}
+              onConfirmProof={(data) => {
+                setContourData(data);
+                setProofConfirmed(true);
+                saveProofData({ productSlug: "sticker-sheets", uploadedFile, contourData: data })
+                  .then((id) => { if (id) setProofDataId(id); });
+              }}
+              onRejectProof={() => {
+                setUploadedFile(null);
+                setProofConfirmed(false);
+                setContourData(null);
+                setProofDataId(null);
+                setWhiteInk({ enabled: false, mode: null, whiteInkUrl: null, whiteInkKey: null, whiteInkWidth: null, whiteInkHeight: null });
+              }}
+              t={t}
+            />
+          )}
+
           {/* White Ink — shown when artwork uploaded on transparent material */}
           {uploadedFile && (
             <WhiteInkStep
               key={materialId}
               materialId={materialId}
-              artworkUrl={uploadedFile?.url}
+              artworkUrl={contourData?.processedImageUrl || uploadedFile?.url}
               onChange={setWhiteInk}
             />
           )}

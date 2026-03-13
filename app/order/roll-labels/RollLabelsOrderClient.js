@@ -12,8 +12,10 @@ import {
   PricingSidebar,
   MobileBottomBar,
   ArtworkUpload,
+  ProofPreview,
   useConfiguratorCart,
 } from "@/components/configurator";
+import saveProofData from "@/lib/proof/saveProofData";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
@@ -51,6 +53,9 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
   const [foodUse, setFoodUse] = useState(false);
   const [turnaroundId, setTurnaroundId] = useState("standard");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [proofConfirmed, setProofConfirmed] = useState(false);
+  const [contourData, setContourData] = useState(null);
+  const [proofDataId, setProofDataId] = useState(null);
   const [artworkIntent, setArtworkIntent] = useState(null);
 
   // ─── Derived ──────────────────────────────────────────────────────────────
@@ -155,10 +160,15 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
         fileName: uploadedFile?.name || null,
         artworkUrl: uploadedFile?.url || null,
         artworkKey: uploadedFile?.key || null,
+        proofConfirmed: proofConfirmed || false,
+        contourSvg: contourData?.contourSvg || null,
+        bleedMm: contourData?.bleedMm ?? null,
+        processedImageUrl: contourData?.processedImageUrl || null,
+        proofDataId: proofDataId || null,
       },
       forceNewLine: true,
     };
-  }, [typeId, shapeId, dim1, dim2, qty, stockId, inkId, finishId, windId, labelsPerRoll, customPerRoll, perforation, foodUse, turnaroundId, subtotalCents, uploadedFile, shape]);
+  }, [typeId, shapeId, dim1, dim2, qty, stockId, inkId, finishId, windId, labelsPerRoll, customPerRoll, perforation, foodUse, turnaroundId, subtotalCents, uploadedFile, shape, proofConfirmed, contourData, proofDataId]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -655,6 +665,30 @@ export default function RollLabelsOrderClient({ productImages = [] }) {
                 hint={t?.("rl.uploadHint") || "Upload your print-ready file (PDF, AI, PNG, JPG). You can also send it later."}
               />
             </StepCard>
+
+            {/* Proof Preview — contour visualization after upload */}
+            {uploadedFile && dim1 > 0 && dim2 > 0 && (
+              <ProofPreview
+                uploadedFile={uploadedFile}
+                widthIn={dim1}
+                heightIn={dim2}
+                cuttingId="die-cut"
+                materialId={stockId}
+                onConfirmProof={(data) => {
+                  setContourData(data);
+                  setProofConfirmed(true);
+                  saveProofData({ productSlug: "roll-labels", uploadedFile, contourData: data })
+                    .then((id) => { if (id) setProofDataId(id); });
+                }}
+                onRejectProof={() => {
+                  setUploadedFile(null);
+                  setProofConfirmed(false);
+                  setContourData(null);
+                  setProofDataId(null);
+                }}
+                t={t}
+              />
+            )}
           </div>
 
           {/* RIGHT COLUMN — Pricing Sidebar */}

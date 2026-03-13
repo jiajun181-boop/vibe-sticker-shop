@@ -8,7 +8,8 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import ImageGallery from "@/components/product/ImageGallery";
 import FaqAccordion from "@/components/sticker-product/FaqAccordion";
 import { getConfiguratorFaqs } from "@/lib/configurator-faqs";
-import { useConfiguratorCart } from "@/components/configurator";
+import { useConfiguratorCart, ProofPreview } from "@/components/configurator";
+import saveProofData from "@/lib/proof/saveProofData";
 import DeliveryEstimate from "@/components/configurator/DeliveryEstimate";
 import InlineTrustSignals from "@/components/configurator/InlineTrustSignals";
 import { formatCad } from "@/lib/product-helpers";
@@ -99,6 +100,9 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
   const [fontId, setFontId] = useState("arial");
   const [turnaroundId, setTurnaroundId] = useState("standard");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [proofConfirmed, setProofConfirmed] = useState(false);
+  const [contourData, setContourData] = useState(null);
+  const [proofDataId, setProofDataId] = useState(null);
   const [artworkIntent, setArtworkIntent] = useState(null);
   const [showAllFonts, setShowAllFonts] = useState(false);
 
@@ -238,11 +242,16 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
         fileName: uploadedFile?.name || null,
         artworkUrl: uploadedFile?.url || null,
         artworkKey: uploadedFile?.key || null,
+        proofConfirmed: proofConfirmed || false,
+        contourSvg: contourData?.contourSvg || null,
+        bleedMm: contourData?.bleedMm ?? null,
+        processedImageUrl: contourData?.processedImageUrl || null,
+        proofDataId: proofDataId || null,
       },
       forceNewLine: true,
     };
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  }, [quoteData, activeQty, adjustedSubtotal, type, logoMode, parsedLogoW, parsedLogoH, letteringText, letterHeight, heightId, fontId, color, material, application, turnaroundId, uploadedFile, t]);
+  }, [quoteData, activeQty, adjustedSubtotal, type, logoMode, parsedLogoW, parsedLogoH, letteringText, letterHeight, heightId, fontId, color, material, application, turnaroundId, uploadedFile, proofConfirmed, contourData, proofDataId, t]);
 
   const { handleAddToCart, handleBuyNow, buyNowLoading } = useConfiguratorCart({
     buildCartItem,
@@ -638,6 +647,30 @@ export default function VinylLetteringOrderClient({ productImages = [] }) {
               )}
             </div>
           </Section>
+
+          {/* Proof Preview — contour for logo mode uploads */}
+          {type === "logo" && uploadedFile && parsedLogoW > 0 && parsedLogoH > 0 && (
+            <ProofPreview
+              uploadedFile={uploadedFile}
+              widthIn={parsedLogoW}
+              heightIn={parsedLogoH}
+              cuttingId="die-cut"
+              materialId={material}
+              onConfirmProof={(data) => {
+                setContourData(data);
+                setProofConfirmed(true);
+                saveProofData({ productSlug: "vinyl-lettering", uploadedFile, contourData: data })
+                  .then((id) => { if (id) setProofDataId(id); });
+              }}
+              onRejectProof={() => {
+                setUploadedFile(null);
+                setProofConfirmed(false);
+                setContourData(null);
+                setProofDataId(null);
+              }}
+              t={t}
+            />
+          )}
         </div>
 
         {/* ── RIGHT: Summary ── */}

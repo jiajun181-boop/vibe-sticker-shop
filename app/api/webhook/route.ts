@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { prisma } from "@/lib/prisma";
 import { handleCheckoutCompleted } from "@/lib/webhook-handler";
 import { releaseReserve } from "@/lib/inventory";
 
@@ -40,11 +41,51 @@ export async function POST(request: NextRequest) {
 
   // Step 2: Process event — return 200 even on processing errors to prevent infinite retries
   try {
-    console.log(`[Webhook] Event: ${event.type}`);
+    console.log(`[Webhook] Event: ${event.type} (${event.id})`);
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       await handleCheckoutCompleted(session);
+    }
+
+    if (event.type === "charge.refunded") {
+      const charge = event.data.object as Stripe.Charge;
+      try {
+        const paymentIntentId =
+          typeof charge.payment_intent === "string"
+            ? charge.payment_intent
+            : charge.payment_intent?.id;
+
+        if (paymentIntentId) {
+          const order = await prisma.order.findFirst({
+            where: { stripePaymentIntentId: paymentIntentId },
+          });
+
+          if (order) {
+            const isFullRefund = charge.amount_captured === charge.amount_refunded;
+            await prisma.order.update({
+              where: { id: order.id },
+              data: {
+                status: isFullRefund ? "refunded" : order.status,
+                paymentStatus: isFullRefund ? "refunded" : "partially_refunded",
+              },
+            });
+            await prisma.orderTimeline.create({
+              data: {
+                orderId: order.id,
+                action: isFullRefund ? "order_refunded" : "order_partially_refunded",
+                details: `Stripe refund processed (${event.id}). Amount refunded: $${(charge.amount_refunded / 100).toFixed(2)} of $${(charge.amount_captured / 100).toFixed(2)}.`,
+                actor: "system",
+              },
+            });
+            console.log(`[Webhook] Refund processed for order ${order.id} (${event.id}), full=${isFullRefund}`);
+          } else {
+            console.warn(`[Webhook] No order found for payment_intent ${paymentIntentId} (${event.id})`);
+          }
+        }
+      } catch (refundErr) {
+        console.error(`[Webhook] Failed to process refund (${event.id}):`, refundErr);
+      }
     }
 
     if (event.type === "checkout.session.expired") {

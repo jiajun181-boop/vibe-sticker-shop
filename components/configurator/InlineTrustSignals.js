@@ -22,9 +22,12 @@ export default function InlineTrustSignals({ t }) {
           {t?.("configurator.madeInToronto") || "Made in Toronto"}
         </span>
         <span className="text-gray-300">|</span>
-        <span className="inline-flex items-center gap-1">
+        <span className="group relative inline-flex items-center gap-1 cursor-help">
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           {t?.("configurator.freeProof") || "Free Proof"}
+          <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-[11px] font-normal leading-relaxed text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+            {t?.("configurator.freeProofTooltip") || "We send a digital proof for your approval before printing. No surprises!"}
+          </span>
         </span>
       </div>
 

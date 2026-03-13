@@ -1,202 +1,134 @@
 # Document 9: Current Checkpoint & Next Codex Directions
 
-> Last updated: 2026-03-12
-> Latest pushed commit: `44bf7a4` (`Merge origin/main and finalize admin pricing stabilization`)
+> Last updated: 2026-03-13
+> Latest pushed commit: `a3ad460`
 > For: next Codex / ChatGPT session
->
-> ## Sprint 2 (2026-03-12) — 13 issues resolved from LunarPrint_网站系统问题总表
->
-> ### Code fixes applied (not yet committed):
-> 1. **i18n**: Added 175+ missing translation keys to `lib/i18n/en.js`
-> 2. **Design help bug**: Fixed invoice/interac checkout storing design help as qty:1 instead of qty:N
-> 3. **deliveryMethod**: Added to Stripe metadata + webhook order creation
-> 4. **Webhook resilience**: Added maxDuration=60, per-item error handling for production jobs
-> 5. **Mobile responsiveness**: Production kanban stacks vertically, filter wrapping, mobile search button
-> 6. **System health dashboard**: New `/admin/system-health` with 8 automated checks
-> 7. **Admin i18n**: Replaced hardcoded strings in 8 admin pages (analytics, content, factories, logs, production, reviews)
-> 8. **Coupon lifecycle**: Auto-refund (decrement usedCount) on order cancel when payment was confirmed
-> 9. **Invoice overdue cron**: `/api/cron/invoice-overdue` — daily at 9am, marks overdue + emails Jay
-> 10. **Alert system cron**: `/api/cron/alerts` — daily at 9am, checks 7 triggers, sends summary email
-> 11. **Print CSS**: Global `@media print` rules hide sidebar/nav, clean layout for work orders/quotes
-> 12. **Schema**: Added `costBreakdownJson` field to OrderItem (migration pending)
->
-> ### Pending DB migration:
-> ```bash
-> npx prisma migrate dev --name add-cost-breakdown
-> ```
->
-> ### Remaining items needing business decisions:
-> - B2B contract pricing system design
-> - Role-specific view customization (production mobile-first for dad, print-friendly CS for mom)
-> - Unit conversion calculator in Quick Quote tool
 
 ## Current checkpoint
 
-This repo is no longer at the "pricing logic is scattered and the admin is mostly a shell" stage.
+### Verified state (2026-03-13)
+- **Tests**: `1111/1111` passing (`npx jest --no-coverage --runInBand`)
+- **tsc**: `.next/` cleaned; stale `debug-env` validator reference resolved
+- **Build**: clean (run `npm run build` to verify route count after `.next/` cleanup)
 
-The current pushed state is a strong, usable checkpoint:
+### Pending DB migration
+```bash
+npx prisma migrate dev --name add-cost-breakdown
+```
+`costBreakdownJson` field exists in `prisma/schema.prisma` (OrderItem model) but migration has not been run.
 
-- admin pricing/governance tooling is landed
-- checkout/invoice/interac semantics are much closer to one truth path
-- approvals/B2B/vendor-cost/actual-cost workflows now exist in code
-- state-transition guardrails are enforced in more places
-- the merge from the remote admin IA work is already completed and pushed
+## Admin IA — Center Contract Status
 
-This is a real continuation point, not a speculative branch.
+| Center | Views | Helpers | Hub | Tests | Status |
+|--------|-------|---------|-----|-------|--------|
+| **Orders** | 7 views | `getOrderCenterView`, `buildOrderCenterHref` | `/admin/orders` | 23 tests (`admin-centers.test.ts`) | **Complete** |
+| **Customers** | 4 workspaces | `getCustomerCenterView`, `buildCustomerCenterHref`, `buildCustomerDetailHref`, `buildCustomerWorkspaceHref` | `/admin/customers` | 17 tests (`customer-center.test.ts`) | **Complete** |
+| **Settings** | 7 views | `getSettingsCenterView`, `buildSettingsCenterHref` | Independent pages | 24 tests (`settings-center.test.ts`) | **Complete** |
+| **Products** | 5 peer routes | `getProductCenterView`, `buildProductCenterHref`, `getProductCenterDeep` | `/admin/products` | 24 tests (`product-center.test.ts`) | **Complete** |
+| **Tools** | 5 views (hub, contour, proof, stamp-studio, unit-converter) | `getToolsCenterView`, `buildToolsCenterHref` | `/admin/tools` | 18 tests (`tools-center.test.ts`) | **Complete** |
 
-## Verified state
+All 5 centers now have canonical contracts with views, helpers, and regression tests in `lib/admin-centers.js`.
 
-### Build
-- `npm run build` passes clean
-- Current build generated `316` app routes successfully
+## Legacy pricing-dashboard — Retired (2026-03-13)
 
-### Type safety
-- `npx tsc --noEmit` passes clean
+The 12 legacy `/admin/pricing-dashboard/*` page files have been **deleted**. All routes are now 301 redirects in `next.config.ts`:
 
-### Tests
-- `npx jest --no-coverage --runInBand` result: `711/711` passing
+| Legacy path | Canonical destination |
+|-------------|----------------------|
+| `/admin/pricing-dashboard` | `/admin/pricing?tab=products` |
+| `/admin/pricing-dashboard/governance` | `/admin/pricing?tab=governance` |
+| `/admin/pricing-dashboard/approvals` | `/admin/pricing?tab=governance&section=approvals` |
+| `/admin/pricing-dashboard/b2b-rules` | `/admin/pricing?tab=governance&section=b2b` |
+| `/admin/pricing-dashboard/change-log` | `/admin/pricing?tab=governance&section=changelog` |
+| `/admin/pricing-dashboard/log` | `/admin/pricing?tab=governance&section=changelog` |
+| `/admin/pricing-dashboard/ops` | `/admin/pricing?tab=ops&section=reminders` |
+| `/admin/pricing-dashboard/profit-alerts` | `/admin/pricing?tab=ops&section=alerts` |
+| `/admin/pricing-dashboard/remediation` | `/admin/pricing?tab=ops&section=reminders` |
+| `/admin/pricing-dashboard/snapshots` | `/admin/pricing?tab=governance&section=snapshots` |
+| `/admin/pricing-dashboard/vendor-costs` | `/admin/pricing?tab=governance&section=vendor` |
+| `/admin/pricing-dashboard/:slug` | `/admin/pricing?tab=quote&slug=:slug` |
 
-## What is actually real now
+`PAGE_ACCESS_RULES` and `ADMIN_NAV_ITEMS.pricingRules.matches` cleaned — no more dual-path matching.
+`LEGACY_REDIRECT_MAP` in `lib/admin/pricing-routes.js` retained for reference but no longer used at runtime.
+
+## What is real now
 
 ### Pricing / quote system
-- Canonical pricing contract exists
-- Floor-price resolver exists
-- Pricing audit layer exists
-- `/admin/pricing` has become the main pricing center shell
-- Quick Quote, approvals, snapshots, vendor cost, B2B rules, profit alerts, and ops/governance surfaces all exist
+- Canonical pricing contract with 7-tab shell (`/admin/pricing`)
+- Floor-price resolver, pricing audit layer, Quick Quote
+- Approvals, snapshots, vendor cost, B2B rules, profit alerts, ops/governance
+- No legacy dual-entry — single canonical path only
 
 ### Transaction consistency
-- Shared settlement helper is in place
-- Stripe, invoice, and Interac now share more aligned subtotal/discount/shipping/tax behavior
-- Interac now supports coupon semantics
-- B2B pricing logic is wired into checkout paths
-- Invoice coupon timing was corrected so coupon usage is consumed on payment confirmation, not invoice creation
-- Cancel flow now releases reserved stock
+- Shared settlement helper across Stripe/invoice/Interac
+- Coupon semantics aligned, cancel releases stock
+- Invoice coupon timing: consumed on payment confirmation, not creation
 
-### Governance / operations
-- Approval routes and apply flow exist
-- Quote snapshot persistence exists
-- Vendor cost CRUD and pricing-contract integration exist
-- Actual-cost/profit-alert workflow exists
-- Change log / ops reminder / governance hub pages exist
+### Admin IA
+- 5 canonical centers (Orders, Customers, Settings, Products, Tools)
+- 106+ regression tests across all center contracts
+- RBAC permission matrix with 8 roles × 22 modules
+- Role-experience navigation (admin/service/ops/product/finance)
 
-### State lifecycle
-- Payment, production, and invoice transitions now have explicit validity maps
-- Admin PATCH routes enforce more legal state transitions instead of accepting arbitrary status moves
-
-### Admin IA / shared centers
-- Orders / Customers / Settings / Product framing work from the earlier IA push is already merged
-- Remote admin IA work from `origin/main` has already been integrated into the current branch history
-
-## What is improved but not "perfectly closed"
-
-This is not a broken system, but it is also not a "10/10 done forever" system.
-
-The main remaining truth is:
-
-- the system is code-green
-- the main backend/business loops are strong
-- but a final operator-grade closure still depends on more real-world UX cleanup, data cleanup, and workflow discipline
-
-### Not fully closed yet
-
-1. Admin manual UX still needs more real click-through validation
-- Build/tests being green does not prove every deep admin path feels smooth
-- Keep validating actual operator flows, not just APIs
-
-2. Legacy compatibility shells still exist
-- `/admin/pricing-dashboard/*` still exists for compatibility
-- Do not assume all legacy entry points are fully retired yet
-
-3. Data completeness is still uneven
-- Some products still have partial cost models
-- Vendor cost coverage is not automatically complete just because the workflow exists
-- Material/hardware anomalies and historical data debt still need cleanup
-
-4. Actual margin is implemented, but real operational discipline still matters
-- The workflow exists, but the business only benefits if actual costs are consistently entered and maintained
-
-5. Webhook/order fulfillment is functional but still heavier than ideal
-- It is safer than before, but there is still room to make reconciliation and fulfillment tracing easier to inspect
-
-## Immediate next priorities
-
-Do these in order. Do not sprawl.
+## What still needs work
 
 ### 1. Admin operator regression pass
-- Walk the real admin flows manually
-- Focus on:
-  - `/admin`
-  - `/admin/workstation`
-  - `/admin/pricing`
-  - Quick Quote -> save snapshot
-  - approvals / vendor / B2B / ops reminder drilldowns
-  - actual-cost entry flow
-  - invoice/finance/admin order status edits
-  - contour tool usability
-- Fix friction and dead ends before adding more capability
+- Manual click-through of: `/admin`, `/admin/workstation`, `/admin/pricing` tabs, Quick Quote → snapshot, approvals/vendor/B2B drilldowns, actual-cost entry, invoice/finance/order status edits, contour tool
+- Build/tests green ≠ smooth UX
 
-### 2. Legacy route retirement / compatibility cleanup
-- Audit remaining `/admin/pricing-dashboard/*` usage
-- Keep deep-link compatibility where needed
-- Prefer server redirects or thin compatibility shells
-- Do not leave old and new pricing workflows competing indefinitely
+### 2. Data remediation
+- Missing vendor cost, missing actual cost, display/floor policy gaps
+- Placeholder/zero-cost materials, suspicious hardware values
+- Code entry points exist but operational discipline not established
 
-### 3. Data remediation and operational completeness
-- Use the remediation/audit layer to reduce actual missing data, not just report it
-- Prioritize:
-  - missing vendor cost
-  - missing actual cost
-  - display/floor policy gaps
-  - placeholder/zero-cost materials
-  - suspicious hardware values
+### 3. Transaction/state closure
+- Invoice lifecycle automation
+- Reserve/release stock behavior
+- Coupon state integrity
+- Webhook-side reconciliation
+- Paid/cancelled/expired transition consistency
 
-### 4. Stronger transaction/state closure
-- Keep tightening:
-  - invoice lifecycle automation
-  - reserve/release stock behavior
-  - coupon state integrity
-  - webhook-side reconciliation
-  - consistency between paid/cancelled/expired transitions
+### 4. Role-specific usability
+- UI separation for owner/sales/production/CS views not finished
+- RBAC matrix exists, but page content doesn't adapt per role yet
 
-### 5. Role-specific usability
-- The system has more power now, but role-targeted simplicity is not finished
-- Continue separating what:
-  - owner/admin sees
-  - sales sees
-  - production sees
-  - customer service sees
+### 5. Production workflow tightening
+- Reduce back-and-forth between production board, order detail, and pricing review
+- Mobile production view exists but flow optimization needed
 
-## Important constraints to preserve
+### 6. Front-end product experience
+- ProofPreview only in 3/10 configurators (die-cut, kiss-cut, foam-board)
+- Proof approval UX needs clearer customer explanation
+- File quality guidance for retail customers
+- Stamp product line largely complete (8 models, canvas editor, family landing)
+- WWF family landing complete
 
+### 7. Content / assets (needs Jay)
+- 28 products with placeholder images
+- Category page cover images
+- Case studies / recent projects page
+- Design Studio template library
+
+### 8. Technical debt
+- `costBreakdownJson` migration pending
+- `LEGACY_REDIRECT_MAP` in pricing-routes.js can be removed once no code references it
+- Webhook handler still heavier than ideal for debugging
+
+## Not started — future roadmap
+- Automated proof generation
+- Canada Post shipping integration
+- Review collection automation
+- B2B bulk API v2
+- Inventory alerting system
+- Customer file library
+- Multi-location support
+- AI automation (product descriptions, i18n sync, server preflight, AI chat, smart materials, mockups, predictive pricing)
+
+## Important constraints
 - Do **not** rewrite pricing formulas casually
-- Do **not** create a parallel pricing admin entry again
+- Do **not** create parallel pricing admin entries
 - Keep server-side repricing as truth
-- Prefer adding workflow clarity over adding more raw features
-- Preserve the current admin visual language unless a UX issue truly requires change
-
-## Recommended next move
-
-If resuming immediately, start with:
-
-1. operator click-through regression on the admin surfaces
-2. cleanup of remaining legacy pricing-dashboard dependency
-3. remediation of the highest-value missing data paths
-
-That order matters more than adding new modules.
-
-## Notes for the next Codex
-
-- Treat the current repo as strong but not finished
-- The system is now real enough that careless new work can create regressions
-- Optimize for closure, not breadth
-- Prefer "make the existing flows truly reliable" over "invent another panel"
-- Build/tests are green; use that as a guardrail, not as a substitute for operator thinking
-
-## Local worktree note
-
-At the time this handoff was updated, there was also a separate local unstaged change in:
-
-- `lib/i18n/en.js`
-
-Do not overwrite or revert that blindly unless you inspect it first.
+- Prefer workflow clarity over new features
+- Preserve admin visual language unless UX issue requires change
+- Stay on Prisma 6 (Prisma 7 has breaking changes)
+- Do NOT use edge runtime with Prisma

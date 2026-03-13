@@ -382,6 +382,12 @@ export default function OrderDetailPage() {
             {order.status}
           </span>
           {order.costSignal && <CostSignalBadge signal={order.costSignal} size="md" />}
+          <Link
+            href={`/admin/pricing?tab=costs&orderId=${order.id}&returnTo=${encodeURIComponent(`/admin/orders/${order.id}`)}`}
+            className="rounded-[2px] border border-[#d0d0d0] px-2 py-0.5 text-xs font-medium text-[#666] hover:border-black hover:text-black"
+          >
+            {t("admin.orders.reviewCosts")}
+          </Link>
           {order.sourceQuote && (
             <Link
               href="/admin/quotes"

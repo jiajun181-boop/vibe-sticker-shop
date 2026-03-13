@@ -177,6 +177,20 @@ const nextConfig: NextConfig = {
       { source: "/shop/:cat/fleet-vehicle-inspection-book", destination: "/shop/vehicle-graphics-fleet/inspection-compliance", permanent: true },
       { source: "/shop/:cat/hours-of-service-log-holder", destination: "/shop/vehicle-graphics-fleet/inspection-compliance", permanent: true },
 
+      // ── Legacy /admin/pricing-dashboard → canonical /admin/pricing ──
+      { source: "/admin/pricing-dashboard", destination: "/admin/pricing?tab=products", permanent: true },
+      { source: "/admin/pricing-dashboard/governance", destination: "/admin/pricing?tab=governance", permanent: true },
+      { source: "/admin/pricing-dashboard/approvals", destination: "/admin/pricing?tab=governance&section=approvals", permanent: true },
+      { source: "/admin/pricing-dashboard/b2b-rules", destination: "/admin/pricing?tab=governance&section=b2b", permanent: true },
+      { source: "/admin/pricing-dashboard/change-log", destination: "/admin/pricing?tab=governance&section=changelog", permanent: true },
+      { source: "/admin/pricing-dashboard/log", destination: "/admin/pricing?tab=governance&section=changelog", permanent: true },
+      { source: "/admin/pricing-dashboard/ops", destination: "/admin/pricing?tab=ops&section=reminders", permanent: true },
+      { source: "/admin/pricing-dashboard/profit-alerts", destination: "/admin/pricing?tab=ops&section=alerts", permanent: true },
+      { source: "/admin/pricing-dashboard/remediation", destination: "/admin/pricing?tab=ops&section=reminders", permanent: true },
+      { source: "/admin/pricing-dashboard/snapshots", destination: "/admin/pricing?tab=governance&section=snapshots", permanent: true },
+      { source: "/admin/pricing-dashboard/vendor-costs", destination: "/admin/pricing?tab=governance&section=vendor", permanent: true },
+      { source: "/admin/pricing-dashboard/:slug", destination: "/admin/pricing?tab=quote&slug=:slug", permanent: true },
+
       // ── Legacy /order/ routes → current product pages ──
       { source: "/order/banners", destination: "/shop/banners-displays/vinyl-banners", permanent: true },
       { source: "/order/canvas", destination: "/shop/canvas-prints", permanent: true },
