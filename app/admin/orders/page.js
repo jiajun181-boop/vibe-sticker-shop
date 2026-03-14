@@ -209,14 +209,14 @@ function OrdersContent() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(err.error || `Bulk update failed (${res.status})`);
+        alert(err.error || t("admin.orders.bulkUpdateFailed").replace("{status}", res.status));
         return;
       }
       setSelectedOrders([]);
       await fetchOrders();
     } catch (err) {
       console.error('Bulk update failed:', err);
-      alert('Bulk update failed — check your connection and try again.');
+      alert(t("admin.orders.bulkUpdateNetworkError"));
     } finally {
       setBulkUpdating(false);
     }
@@ -236,14 +236,14 @@ function OrdersContent() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(err.error || `Bulk production update failed (${res.status})`);
+        alert(err.error || t("admin.orders.bulkProdFailed").replace("{status}", res.status));
         return;
       }
       setSelectedOrders([]);
       await fetchOrders();
     } catch (err) {
       console.error('Bulk production update failed:', err);
-      alert('Bulk production update failed — check your connection and try again.');
+      alert(t("admin.orders.bulkProdNetworkError"));
     } finally {
       setBulkUpdating(false);
     }
@@ -258,7 +258,7 @@ function OrdersContent() {
         body: JSON.stringify({ orderIds: selectedOrders })
       });
       if (!res.ok) {
-        alert(`Export failed (${res.status}) — try again or reduce selection.`);
+        alert(t("admin.orders.exportFailed").replace("{status}", res.status));
         return;
       }
       const blob = await res.blob();

@@ -13,7 +13,7 @@ export default function CustomerAnalyticsPage() {
 }
 
 function CustomerAnalyticsContent() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [data, setData] = useState(null);
   const [growth, setGrowth] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -104,7 +104,7 @@ function CustomerAnalyticsContent() {
                       style={{ height: `${Math.max(2, (d.revenue / maxRev) * 100)}px` }}
                     />
                     <span className="text-[8px] text-[#999] rotate-[-45deg] origin-top-left whitespace-nowrap">
-                      {i % Math.ceil(growth.dataPoints.length / 10) === 0 ? new Date(d.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" }) : ""}
+                      {i % Math.ceil(growth.dataPoints.length / 10) === 0 ? new Date(d.date).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", { month: "short", day: "numeric" }) : ""}
                     </span>
                   </div>
                 ));
@@ -148,8 +148,8 @@ function CustomerAnalyticsContent() {
                     <td className="py-2 pr-4 text-right font-medium">{c.orderCount}</td>
                     <td className="py-2 pr-4 text-right font-medium text-green-700">{formatCad(c.totalRevenue)}</td>
                     <td className="py-2 pr-4 text-right">{formatCad(c.avgOrderValue)}</td>
-                    <td className="py-2 pr-4 text-[#666]">{new Date(c.firstOrder).toLocaleDateString("en-CA")}</td>
-                    <td className="py-2 text-right text-[#666]">{new Date(c.lastOrder).toLocaleDateString("en-CA")}</td>
+                    <td className="py-2 pr-4 text-[#666]">{new Date(c.firstOrder).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA")}</td>
+                    <td className="py-2 text-right text-[#666]">{new Date(c.lastOrder).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA")}</td>
                   </tr>
                 ))}
               </tbody>

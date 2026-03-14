@@ -3,17 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { statusColor } from "@/lib/admin/status-labels";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-function formatDate(dateStr) {
+function formatDate(dateStr, dateLocale = "en-CA") {
   const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+  return d.toLocaleDateString(dateLocale, { month: "short", day: "numeric" });
 }
 
-function dayName(dateStr) {
+function dayName(dateStr, dateLocale = "en-CA") {
   const d = new Date(dateStr + "T00:00:00");
-  return DAY_NAMES[d.getDay()];
+  return d.toLocaleDateString(dateLocale, { weekday: "short" });
 }
 
 const PRIORITY_DOT = {
@@ -25,6 +24,8 @@ const PRIORITY_DOT = {
 /* Status badge colors — uses centralized statusColor() */
 
 export default function ProductionSchedulePage() {
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -39,7 +40,7 @@ export default function ProductionSchedulePage() {
   if (loading) {
     return (
       <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-        Loading schedule...
+        {t("admin.production.schedule.loading")}
       </div>
     );
   }
@@ -47,7 +48,7 @@ export default function ProductionSchedulePage() {
   if (!data) {
     return (
       <div className="flex h-48 items-center justify-center text-sm text-red-600">
-        Failed to load schedule
+        {t("admin.production.schedule.loadFailed")}
       </div>
     );
   }
@@ -59,19 +60,19 @@ export default function ProductionSchedulePage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-semibold text-black">Production Schedule</h1>
+        <h1 className="text-xl font-semibold text-black">{t("admin.production.schedule.title")}</h1>
         <div className="ml-auto flex items-center gap-2">
           <Link
             href="/admin/production"
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
           >
-            List View
+            {t("admin.production.schedule.listView")}
           </Link>
           <Link
             href="/admin/production/board"
             className="rounded-[3px] border border-[#d0d0d0] px-3 py-1.5 text-xs font-medium text-black hover:bg-[#fafafa]"
           >
-            Board View
+            {t("admin.production.schedule.boardView")}
           </Link>
         </div>
       </div>
@@ -80,30 +81,30 @@ export default function ProductionSchedulePage() {
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
         <div className="rounded-[3px] border border-gray-200 bg-gray-50 px-3 py-2 text-center">
           <p className="text-lg font-bold text-gray-700">{summary.totalActive}</p>
-          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500">Active Jobs</p>
+          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500">{t("admin.production.schedule.activeJobs")}</p>
         </div>
         <div className={`rounded-[3px] border px-3 py-2 text-center ${summary.overdueCount > 0 ? "border-red-200 bg-red-50" : "border-gray-200 bg-gray-50"}`}>
           <p className={`text-lg font-bold ${summary.overdueCount > 0 ? "text-red-700" : "text-gray-500"}`}>{summary.overdueCount}</p>
-          <p className="text-[10px] font-medium uppercase tracking-wide text-red-500">Overdue</p>
+          <p className="text-[10px] font-medium uppercase tracking-wide text-red-500">{t("admin.production.schedule.overdue")}</p>
         </div>
         <div className={`rounded-[3px] border px-3 py-2 text-center ${summary.rushCount > 0 ? "border-amber-200 bg-amber-50" : "border-gray-200 bg-gray-50"}`}>
           <p className={`text-lg font-bold ${summary.rushCount > 0 ? "text-amber-700" : "text-gray-500"}`}>{summary.rushCount}</p>
-          <p className="text-[10px] font-medium uppercase tracking-wide text-amber-500">Rush</p>
+          <p className="text-[10px] font-medium uppercase tracking-wide text-amber-500">{t("admin.production.schedule.rush")}</p>
         </div>
         <div className={`rounded-[3px] border px-3 py-2 text-center ${summary.missingArtwork > 0 ? "border-amber-200 bg-amber-50" : "border-gray-200 bg-gray-50"}`}>
           <p className={`text-lg font-bold ${summary.missingArtwork > 0 ? "text-amber-700" : "text-gray-500"}`}>{summary.missingArtwork}</p>
-          <p className="text-[10px] font-medium uppercase tracking-wide text-amber-500">No Artwork</p>
+          <p className="text-[10px] font-medium uppercase tracking-wide text-amber-500">{t("admin.production.schedule.noArtwork")}</p>
         </div>
         <div className="rounded-[3px] border border-gray-200 bg-gray-50 px-3 py-2 text-center">
           <p className="text-lg font-bold text-gray-500">{summary.unscheduledCount}</p>
-          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500">Unscheduled</p>
+          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500">{t("admin.production.schedule.unscheduled")}</p>
         </div>
       </div>
 
       {/* Daily load chart */}
       {dailyLoad.length > 0 && (
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium text-[#999] uppercase tracking-wide mb-3">Daily Workload (14 days)</p>
+          <p className="text-xs font-medium text-[#999] uppercase tracking-wide mb-3">{t("admin.production.schedule.dailyWorkload")}</p>
           <div className="flex items-end gap-1" style={{ height: 80 }}>
             {dailyLoad.map((day) => {
               const pct = maxDayCount > 0 ? (day.count / maxDayCount) * 100 : 0;
@@ -125,7 +126,7 @@ export default function ProductionSchedulePage() {
                     style={{ height: `${Math.max(pct, day.count > 0 ? 8 : 2)}%` }}
                   />
                   <span className={`text-[9px] ${isToday ? "font-bold text-black" : "text-[#999]"}`}>
-                    {dayName(day.date)}
+                    {dayName(day.date, dateLocale)}
                   </span>
                 </div>
               );
@@ -139,7 +140,7 @@ export default function ProductionSchedulePage() {
         <div className="rounded-[3px] border border-red-200 bg-red-50 shadow-sm">
           <div className="border-b border-red-200 px-4 py-2.5">
             <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
-              Overdue ({overdue.length})
+              {t("admin.production.schedule.overdueCount").replace("{count}", overdue.length)}
             </p>
           </div>
           <div className="divide-y divide-red-100">
@@ -154,11 +155,11 @@ export default function ProductionSchedulePage() {
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white shadow-sm">
         <div className="border-b border-[#e0e0e0] px-4 py-2.5 bg-[#fafafa]">
           <p className="text-xs font-semibold uppercase tracking-wide text-black">
-            Today ({today.length})
+            {t("admin.production.schedule.todayCount").replace("{count}", today.length)}
           </p>
         </div>
         {today.length === 0 ? (
-          <p className="px-4 py-6 text-center text-xs text-[#999]">No jobs due today</p>
+          <p className="px-4 py-6 text-center text-xs text-[#999]">{t("admin.production.schedule.noJobsToday")}</p>
         ) : (
           <div className="divide-y divide-[#e0e0e0]">
             {today.map((job) => (
@@ -173,7 +174,7 @@ export default function ProductionSchedulePage() {
         <div key={date} className="rounded-[3px] border border-[#e0e0e0] bg-white shadow-sm">
           <div className="border-b border-[#e0e0e0] px-4 py-2.5 bg-[#fafafa] flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
-              {dayName(date)} {formatDate(date)}
+              {dayName(date, dateLocale)} {formatDate(date, dateLocale)}
             </p>
             <span className="text-[10px] text-[#999]">{dayJobs.length} job{dayJobs.length !== 1 ? "s" : ""}</span>
           </div>
@@ -190,7 +191,7 @@ export default function ProductionSchedulePage() {
         <div className="rounded-[3px] border border-[#e0e0e0] bg-white shadow-sm">
           <div className="border-b border-[#e0e0e0] px-4 py-2.5 bg-amber-50">
             <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-              Unscheduled ({unscheduled.length})
+              {t("admin.production.schedule.unscheduledJobs").replace("{count}", unscheduled.length)}
             </p>
           </div>
           <div className="divide-y divide-[#e0e0e0]">

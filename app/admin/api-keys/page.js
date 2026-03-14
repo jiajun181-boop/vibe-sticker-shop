@@ -6,7 +6,8 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { buildSettingsCenterHref } from "@/lib/admin-centers";
 
 export default function AdminApiKeysPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -168,11 +169,11 @@ export default function AdminApiKeysPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-[11px] text-gray-500">
-                    {new Date(k.createdAt).toLocaleDateString("en-CA")}
+                    {new Date(k.createdAt).toLocaleDateString(dateLocale)}
                   </td>
                   <td className="px-4 py-3 text-[11px] text-gray-500">
                     {k.lastUsedAt
-                      ? new Date(k.lastUsedAt).toLocaleDateString("en-CA")
+                      ? new Date(k.lastUsedAt).toLocaleDateString(dateLocale)
                       : t("admin.apiKeys.never")}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -199,11 +200,11 @@ export default function AdminApiKeysPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-[11px] text-gray-400">
-                    {new Date(k.createdAt).toLocaleDateString("en-CA")}
+                    {new Date(k.createdAt).toLocaleDateString(dateLocale)}
                   </td>
                   <td className="px-4 py-3 text-[11px] text-gray-400">
                     {k.lastUsedAt
-                      ? new Date(k.lastUsedAt).toLocaleDateString("en-CA")
+                      ? new Date(k.lastUsedAt).toLocaleDateString(dateLocale)
                       : "—"}
                   </td>
                   <td className="px-4 py-3" />

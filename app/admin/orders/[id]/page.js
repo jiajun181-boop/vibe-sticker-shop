@@ -82,7 +82,8 @@ const AUTO_REFRESH_MS = 30_000;
 export default function OrderDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const timeAgo = (d) => sharedTimeAgo(d, t);
   const refreshTimer = useRef(null);
   const role = useAdminRole();
@@ -536,7 +537,7 @@ export default function OrderDetailPage() {
                               )}
                               {item.productionJob.dueAt && (
                                 <span className={`text-[9px] ${new Date(item.productionJob.dueAt) < new Date() ? "font-bold text-red-600" : "text-[#999]"}`}>
-                                  Due: {new Date(item.productionJob.dueAt).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+                                  Due: {new Date(item.productionJob.dueAt).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })}
                                 </span>
                               )}
                               {item.productionJob.assignedTo && (
@@ -1037,7 +1038,8 @@ export default function OrderDetailPage() {
 
 /* ========== Print Invoice Component ========== */
 function PrintInvoice({ order }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   return (
     <div className="p-8 text-sm text-black">
       {/* Invoice Header */}
@@ -1049,7 +1051,7 @@ function PrintInvoice({ order }) {
         <div className="text-right">
           <p className="font-semibold">Order #{order.id.slice(0, 8)}</p>
           <p className="text-[#999]">
-            {new Date(order.createdAt).toLocaleDateString("en-CA")}
+            {new Date(order.createdAt).toLocaleDateString(dateLocale)}
           </p>
         </div>
       </div>
@@ -1792,7 +1794,8 @@ const FAMILY_LABELS = {
 
 /* ========== Shipment / Fulfillment Summary ========== */
 function ShipmentSummarySection({ order }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const shipments = order.shipments || [];
   const fulfillment = getOrderFulfillment(shipments);
   const latestShipment = order.latestShipment || shipments[0] || fulfillment.latestShipment;
@@ -1867,7 +1870,7 @@ function ShipmentSummarySection({ order }) {
             )}
             {shipment.shippedAt && (
               <span className="text-[10px] text-[#999]">
-                {new Date(shipment.shippedAt).toLocaleDateString("en-CA")}
+                {new Date(shipment.shippedAt).toLocaleDateString(dateLocale)}
               </span>
             )}
           </div>
@@ -2638,7 +2641,7 @@ function OrderActions({ order, onUpdate }) {
         <button
           type="button"
           onClick={async () => {
-            if (!confirm("Create a new draft order with the same items?")) return;
+            if (!confirm(t("admin.orders.reorderConfirm"))) return;
             setActing(true);
             setActionMsg("");
             try {

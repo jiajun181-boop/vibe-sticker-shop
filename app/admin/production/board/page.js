@@ -83,7 +83,7 @@ const AUTO_REFRESH_MS = 30_000; // Auto-refresh every 30 seconds
 // ---------------------------------------------------------------------------
 
 export default function ProductionBoardPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   // Board data keyed by status
   const [columns, setColumns] = useState({});
   const [loading, setLoading] = useState(true);
@@ -169,7 +169,7 @@ export default function ProductionBoardPage() {
         await fetchBoard();
       } else {
         const data = await res.json().catch(() => ({}));
-        const msg = data.error || "Failed to update job status";
+        const msg = data.error || t("admin.production.updateJobFailed");
         alert(msg);
       }
     } catch (err) {
@@ -497,7 +497,7 @@ export default function ProductionBoardPage() {
                               <span className={`inline-block rounded-[2px] px-2 py-0.5 text-xs font-medium ${
                                 overdue ? "bg-red-100 text-red-700" : dueSoon ? "bg-amber-100 text-amber-700" : "bg-blue-50 text-blue-600"
                               }`}>
-                                Due: {due.toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+                                Due: {due.toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", { month: "short", day: "numeric" })}
                               </span>
                             );
                           })()}

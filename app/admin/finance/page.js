@@ -6,9 +6,9 @@ import { formatCad } from "@/lib/admin/format-cad";
 import { buildSettingsCenterHref } from "@/lib/admin-centers";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
-function formatDate(dateStr) {
+function formatDate(dateStr, locale) {
   if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleDateString("en-CA");
+  return new Date(dateStr).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA");
 }
 
 function todayStr() {
@@ -83,7 +83,7 @@ export default function FinancePage() {
           <h1 className="text-xl font-semibold text-black">{t("admin.finance.title")}</h1>
         </div>
         <p className="text-xs text-[#999]">
-          {new Date().toLocaleDateString("en-CA", {
+          {new Date().toLocaleDateString(dateLocale, {
             weekday: "long",
             month: "long",
             day: "numeric",
@@ -138,7 +138,8 @@ export default function FinancePage() {
 /* ══════════════════════════════════════════════ */
 
 function OverviewTab() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -304,7 +305,7 @@ function OverviewTab() {
                         {formatCad(d.amount)}
                       </p>
                       <p className="text-xs text-[#999]">
-                        {new Date(d.date).toLocaleDateString("en-CA", {
+                        {new Date(d.date).toLocaleDateString(dateLocale, {
                           month: "short",
                           day: "numeric",
                         })}
@@ -332,7 +333,7 @@ function OverviewTab() {
                     <div key={d.date} className="flex-1 text-center">
                       {i % showEveryN === 0 ? (
                         <span className="text-[10px] text-[#999]">
-                          {new Date(d.date).toLocaleDateString("en-CA", {
+                          {new Date(d.date).toLocaleDateString(dateLocale, {
                             month: "short",
                             day: "numeric",
                           })}
@@ -465,7 +466,7 @@ function OverviewTab() {
 /* ══════════════════════════════════════════════ */
 
 function ExpensesTab({ showMsg }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [expenses, setExpenses] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -740,7 +741,7 @@ function ExpensesTab({ showMsg }) {
                     return (
                       <tr key={exp.id} className="hover:bg-[#fafafa]">
                         <td className="px-4 py-3 text-xs text-[#666]">
-                          {formatDate(exp.date)}
+                          {formatDate(exp.date, locale)}
                         </td>
                         <td className="px-4 py-3">
                           <span
@@ -818,7 +819,7 @@ function ExpensesTab({ showMsg }) {
                             {cat.i18nKey ? t(cat.i18nKey) : cat.value}
                           </span>
                           <span className="text-xs text-[#999]">
-                            {formatDate(exp.date)}
+                            {formatDate(exp.date, locale)}
                           </span>
                         </div>
                       </div>
@@ -1039,7 +1040,7 @@ function ExpensesTab({ showMsg }) {
 /* ══════════════════════════════════════════════ */
 
 function InvoicesTab({ showMsg }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [invoices, setInvoices] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1346,10 +1347,10 @@ function InvoicesTab({ showMsg }) {
                         {TERMS_LABELS[inv.terms] || inv.terms}
                       </td>
                       <td className="px-4 py-3 text-xs text-[#666]">
-                        {formatDate(inv.dueAt)}
+                        {formatDate(inv.dueAt, locale)}
                       </td>
                       <td className="px-4 py-3 text-xs text-[#999]">
-                        {formatDate(inv.issuedAt)}
+                        {formatDate(inv.issuedAt, locale)}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2">
@@ -2160,7 +2161,7 @@ function SuppliersTab({ showMsg }) {
 /* ══════════════════════════════════════════════ */
 
 function ProfitabilityTab() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [data, setData] = useState([]);
   const [summary, setSummary] = useState(null);
   const [pagination, setPagination] = useState(null);
@@ -2354,7 +2355,7 @@ function ProfitabilityTab() {
                               {order.id.slice(0, 8)}...
                             </Link>
                             <p className="text-[10px] text-[#999]">
-                              {formatDate(order.paidAt)}
+                              {formatDate(order.paidAt, locale)}
                             </p>
                           </td>
                           <td className="max-w-[140px] truncate px-3 py-3 text-xs text-[#666]">
@@ -2418,7 +2419,7 @@ function ProfitabilityTab() {
                             {order.customerName || order.customerEmail}
                           </p>
                           <p className="text-[10px] text-[#999]">
-                            {formatDate(order.paidAt)}
+                            {formatDate(order.paidAt, locale)}
                           </p>
                         </div>
                         <div className="text-right">
@@ -2500,7 +2501,7 @@ function ProfitabilityTab() {
 /* ══════════════════════════════════════════════ */
 
 function ProductProfitTab() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("30d");

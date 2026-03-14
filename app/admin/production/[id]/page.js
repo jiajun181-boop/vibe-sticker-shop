@@ -44,9 +44,9 @@ const READINESS_COLORS = {
 };
 
 
-function formatDate(dateString) {
+function formatDate(dateString, locale) {
   if (!dateString) return null;
-  return new Date(dateString).toLocaleDateString("en-CA", {
+  return new Date(dateString).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -59,7 +59,7 @@ function formatDate(dateString) {
 
 export default function ProductionJobDetailPage() {
   const { id } = useParams();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const timeAgo = (d) => sharedTimeAgo(d, t);
 
   const [job, setJob] = useState(null);
@@ -308,7 +308,9 @@ export default function ProductionJobDetailPage() {
   async function handleQcFail() {
     if (!defectType && !defectDesc.trim()) return;
     const confirmed = confirm(
-      `Send job back to PRINTING for rework?\n\nDefect: ${defectType || "other"}\n${defectDesc.trim() || "(no description)"}\n\nThis will reset the job status.`
+      t("admin.production.qcFailConfirm")
+        .replace("{defect}", defectType || "other")
+        .replace("{desc}", defectDesc.trim() || t("admin.production.noDescription"))
     );
     if (!confirmed) return;
     setSubmittingQc(true);
@@ -1025,27 +1027,27 @@ export default function ProductionJobDetailPage() {
               <div>
                 <p className="text-gray-600">Created</p>
                 <p className="mt-0.5 text-sm text-gray-900">
-                  {formatDate(job.createdAt)}
+                  {formatDate(job.createdAt, locale)}
                 </p>
               </div>
               <div>
                 <p className="text-gray-600">Started</p>
                 <p className="mt-0.5 text-sm text-gray-900">
-                  {job.startedAt ? formatDate(job.startedAt) : "Not started"}
+                  {job.startedAt ? formatDate(job.startedAt, locale) : "Not started"}
                 </p>
               </div>
               <div>
                 <p className="text-gray-600">Completed</p>
                 <p className="mt-0.5 text-sm text-gray-900">
                   {job.completedAt
-                    ? formatDate(job.completedAt)
+                    ? formatDate(job.completedAt, locale)
                     : "In progress"}
                 </p>
               </div>
               <div>
                 <p className="text-gray-600">Due</p>
                 <p className="mt-0.5 text-sm text-gray-900">
-                  {job.dueAt ? formatDate(job.dueAt) : "No due date"}
+                  {job.dueAt ? formatDate(job.dueAt, locale) : "No due date"}
                 </p>
                 {job.dueAt && !job.completedAt && (() => {
                   const due = new Date(job.dueAt);

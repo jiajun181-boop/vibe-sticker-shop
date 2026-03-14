@@ -154,7 +154,7 @@ export default function FactoriesPage() {
   async function handleDelete(factory) {
     if (
       !confirm(
-        `Delete factory "${factory.name}"? This cannot be undone.`
+        t("admin.factories.deleteConfirm").replace("{name}", factory.name)
       )
     )
       return;

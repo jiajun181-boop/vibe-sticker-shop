@@ -12,7 +12,8 @@ function toDateInputValue(dateStr) {
 }
 
 export default function CouponDetailPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const router = useRouter();
   const params = useParams();
   const couponId = params.id;
@@ -390,7 +391,7 @@ export default function CouponDetailPage() {
                       {formatCad(order.totalAmount)}
                     </td>
                     <td className="px-4 py-2 text-xs text-[#999]">
-                      {new Date(order.createdAt).toLocaleDateString("en-CA")}
+                      {new Date(order.createdAt).toLocaleDateString(dateLocale)}
                     </td>
                     <td className="px-4 py-2">
                       <Link
@@ -426,13 +427,13 @@ export default function CouponDetailPage() {
           <div>
             <dt className="text-[#999]">{t("admin.couponDetail.created")}</dt>
             <dd className="mt-0.5 text-black">
-              {new Date(coupon.createdAt).toLocaleDateString("en-CA")}
+              {new Date(coupon.createdAt).toLocaleDateString(dateLocale)}
             </dd>
           </div>
           <div>
             <dt className="text-[#999]">{t("admin.couponDetail.updated")}</dt>
             <dd className="mt-0.5 text-black">
-              {new Date(coupon.updatedAt).toLocaleDateString("en-CA")}
+              {new Date(coupon.updatedAt).toLocaleDateString(dateLocale)}
             </dd>
           </div>
           <div>

@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function TemplatesPage() {
+  const { t } = useTranslation();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,7 +18,7 @@ export default function TemplatesPage() {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this template?")) return;
+    if (!confirm(t("account.templates.deleteConfirm"))) return;
     await fetch(`/api/account/templates/${id}`, { method: "DELETE" });
     setTemplates((prev) => prev.filter((t) => t.id !== id));
   };

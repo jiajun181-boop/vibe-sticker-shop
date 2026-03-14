@@ -30,8 +30,8 @@ function StarDisplay({ rating, size = 14 }) {
   );
 }
 
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString("en-CA", {
+function formatDate(dateStr, locale) {
+  return new Date(dateStr).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -56,7 +56,7 @@ export default function ReviewsPage() {
 function ReviewsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const [reviews, setReviews] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -234,7 +234,7 @@ function ReviewsContent() {
                   )}
                 </div>
                 <span className="text-xs text-[#999]">
-                  {formatDate(review.createdAt)}
+                  {formatDate(review.createdAt, locale)}
                 </span>
               </div>
 

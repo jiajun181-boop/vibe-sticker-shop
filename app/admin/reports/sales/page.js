@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { formatCad } from "@/lib/admin/format-cad";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 /* ─── Date helpers ─── */
 
@@ -73,7 +74,7 @@ const presets = [
 
 /* ─── SVG Line Chart ─── */
 
-function LineChart({ data, width = 800, height = 300 }) {
+function LineChart({ data, width = 800, height = 300, dateLocale = "en-CA" }) {
   if (!data || data.length === 0) return null;
   const maxValue = Math.max(...data.map((d) => d.amount), 1);
   const padding = { top: 20, right: 20, bottom: 40, left: 60 };
@@ -148,7 +149,7 @@ function LineChart({ data, width = 800, height = 300 }) {
         const showEvery = data.length > 14 ? Math.ceil(data.length / 7) : 1;
         if (i % showEvery !== 0 && i !== data.length - 1) return null;
         const x = padding.left + (i / Math.max(data.length - 1, 1)) * chartWidth;
-        const label = new Date(d.date + "T00:00:00").toLocaleDateString("en-CA", {
+        const label = new Date(d.date + "T00:00:00").toLocaleDateString(dateLocale, {
           month: "short",
           day: "numeric",
         });
@@ -323,6 +324,8 @@ function downloadCsv(data) {
 /* ─── Main Page Component ─── */
 
 export default function SalesReportPage() {
+  const { locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const defaultRange = getPresetRange("this_month");
   const [activePreset, setActivePreset] = useState("this_month");
   const [fromDate, setFromDate] = useState(defaultRange.from);
@@ -535,7 +538,7 @@ export default function SalesReportPage() {
               Revenue Trend
             </h2>
             {current.dailyRevenue && current.dailyRevenue.length > 0 ? (
-              <LineChart data={current.dailyRevenue} />
+              <LineChart data={current.dailyRevenue} dateLocale={dateLocale} />
             ) : (
               <div className="flex h-48 items-center justify-center text-sm text-[#999]">
                 No revenue data for this period

@@ -21,7 +21,8 @@ const STATUS_STYLES = {
 };
 
 export default function EquipmentPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -248,7 +249,7 @@ export default function EquipmentPage() {
               {/* Next maintenance due */}
               {eq.nextMaintenance && (
                 <div className="mt-2 rounded-md bg-yellow-50 px-3 py-1.5 text-xs text-yellow-700">
-                  Next maintenance due: {new Date(eq.nextMaintenance.nextDueAt).toLocaleDateString("en-CA")}
+                  Next maintenance due: {new Date(eq.nextMaintenance.nextDueAt).toLocaleDateString(dateLocale)}
                   {" — "}{eq.nextMaintenance.type}
                 </div>
               )}
@@ -329,7 +330,7 @@ export default function EquipmentPage() {
                         </div>
                         <div className="flex items-center gap-3 text-[#999]">
                           {m.costCents > 0 && <span>{formatCad(m.costCents)}</span>}
-                          <span>{new Date(m.performedAt).toLocaleDateString("en-CA")}</span>
+                          <span>{new Date(m.performedAt).toLocaleDateString(dateLocale)}</span>
                         </div>
                       </div>
                     ))}

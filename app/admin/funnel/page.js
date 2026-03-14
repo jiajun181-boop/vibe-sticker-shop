@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { formatCad } from "@/lib/admin/format-cad";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const PROD_STATUS_LABELS = {
   not_started: "Not Started",
@@ -26,6 +27,8 @@ const PROD_STATUS_COLORS = {
 };
 
 export default function FunnelPage() {
+  const { locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const [days, setDays] = useState(30);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -158,7 +161,7 @@ export default function FunnelPage() {
                   </div>
                   {/* Tooltip */}
                   <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-[#fff] text-[10px] rounded px-2 py-1 whitespace-nowrap z-10">
-                    {new Date(d.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}:
+                    {new Date(d.date).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })}:
                     {" "}{d.created} created, {d.paid} paid
                   </div>
                 </div>

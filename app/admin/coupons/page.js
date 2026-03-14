@@ -7,8 +7,8 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatCad } from "@/lib/admin/format-cad";
 import { ProductCenterBreadcrumb, ProductCenterViewStrip } from "@/components/admin/ProductCenterHeader";
 
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString("en-CA");
+function formatDate(dateStr, dateLocale = "en-CA") {
+  return new Date(dateStr).toLocaleDateString(dateLocale);
 }
 
 function formatValue(coupon) {
@@ -48,7 +48,8 @@ export default function CouponsPage() {
 function CouponsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
 
   const [coupons, setCoupons] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -355,8 +356,8 @@ function CouponsContent() {
                             : ` / ${t("admin.coupons.unlimited")}`}
                         </td>
                         <td className="px-4 py-3 text-xs text-[#999]">
-                          {formatDate(coupon.validFrom)} -{" "}
-                          {formatDate(coupon.validTo)}
+                          {formatDate(coupon.validFrom, dateLocale)} -{" "}
+                          {formatDate(coupon.validTo, dateLocale)}
                         </td>
                         <td className="px-4 py-3">
                           <span
@@ -429,8 +430,8 @@ function CouponsContent() {
                       </span>
                       <span>&middot;</span>
                       <span>
-                        {formatDate(coupon.validFrom)} -{" "}
-                        {formatDate(coupon.validTo)}
+                        {formatDate(coupon.validFrom, dateLocale)} -{" "}
+                        {formatDate(coupon.validTo, dateLocale)}
                       </span>
                     </div>
                   </Link>

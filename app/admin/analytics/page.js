@@ -228,6 +228,9 @@ function SummaryCards({ summary }) {
 /* ─── Revenue Bar Chart ─── */
 
 function RevenueChart({ timeline, period }) {
+  const { locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
+
   if (!timeline || timeline.length === 0) {
     return (
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
@@ -244,9 +247,9 @@ function RevenueChart({ timeline, period }) {
   function formatDateLabel(dateStr) {
     const date = new Date(dateStr);
     if (period === "12m") {
-      return date.toLocaleDateString("en-CA", { month: "short" });
+      return date.toLocaleDateString(dateLocale, { month: "short" });
     }
-    return date.toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+    return date.toLocaleDateString(dateLocale, { month: "short", day: "numeric" });
   }
 
   // For large timelines, show fewer labels to avoid crowding

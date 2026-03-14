@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { formatCad } from "@/lib/admin/format-cad";
 import { buildOrderCenterHref } from "@/lib/admin-centers";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   CARRIERS as SHIPPING_CARRIERS,
   SHIPMENT_STATUS,
@@ -19,7 +20,7 @@ import {
 const formatProductionState = (status) =>
   status ? String(status).replace(/_/g, " ") : "—";
 
-const formatDate = (d) => (d ? new Date(d).toLocaleDateString("en-CA") : "—");
+const formatDate = (d, locale) => (d ? new Date(d).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA") : "—");
 
 const formatWeight = (w) => (w != null ? `${w} kg` : "—");
 
@@ -114,6 +115,7 @@ function ShippingContent() {
 // ═════════════════════════════════════════════════
 
 function ShipmentsTab() {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -228,7 +230,7 @@ function ShipmentsTab() {
       );
       const failures = results.filter((r) => r.status === "rejected").length;
       if (failures > 0) {
-        alert(`${failures} update(s) failed.`);
+        alert(t("admin.orders.shippingBulkFailed").replace("{count}", failures));
       }
       setSelectedIds([]);
       await fetchShipments();
@@ -240,7 +242,7 @@ function ShipmentsTab() {
   }
 
   async function handleDelete(id) {
-    const confirmed = confirm("Delete this shipment? This cannot be undone.");
+    const confirmed = confirm(t("admin.orders.shippingDeleteConfirm"));
     if (!confirmed) return;
 
     setDeletingId(id);
@@ -252,7 +254,7 @@ function ShipmentsTab() {
         await fetchShipments();
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to delete");
+        alert(data.error || t("admin.orders.shippingDeleteFailed"));
       }
     } catch (err) {
       console.error("Delete failed:", err);
@@ -568,7 +570,7 @@ function ShipmentsTab() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-xs text-[#999]">
-                          {formatDate(s.shippedAt)}
+                          {formatDate(s.shippedAt, locale)}
                         </td>
                         <td className="px-4 py-3 text-xs text-[#666]">
                           {formatWeight(s.weight)}
@@ -703,7 +705,7 @@ function ShipmentsTab() {
                         </span>
                       )}
                       <span className="text-xs text-[#999]">
-                        {formatDate(s.shippedAt)}
+                        {formatDate(s.shippedAt, locale)}
                       </span>
                     </div>
                   </div>

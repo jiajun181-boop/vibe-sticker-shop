@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const HOLIDAYS = [
   // January
@@ -133,9 +134,9 @@ function getHolidayDate(h, year) {
   return null;
 }
 
-function formatDate(d) {
+function formatDate(d, dateLocale = "en-CA") {
   if (!d) return "Varies";
-  return d.toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+  return d.toLocaleDateString(dateLocale, { month: "short", day: "numeric" });
 }
 
 function daysBetween(a, b) {
@@ -143,6 +144,8 @@ function daysBetween(a, b) {
 }
 
 export default function MarketingCalendarPage() {
+  const { locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const now = new Date();
   const year = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
@@ -219,7 +222,7 @@ export default function MarketingCalendarPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{h.nameEn}</p>
-                  <p className="text-xs text-gray-500">{h.nameZh} &middot; {formatDate(h.date)}</p>
+                  <p className="text-xs text-gray-500">{h.nameZh} &middot; {formatDate(h.date, dateLocale)}</p>
                 </div>
               </div>
             ))}
@@ -292,7 +295,7 @@ export default function MarketingCalendarPage() {
                             )}
                           </div>
                           <p className="mt-0.5 text-xs text-gray-400">
-                            {formatDate(h.date)}
+                            {formatDate(h.date, dateLocale)}
                             {h.note ? ` — ${h.note}` : ""}
                           </p>
                         </div>
@@ -319,14 +322,14 @@ export default function MarketingCalendarPage() {
                             {/* Date */}
                             <div>
                               <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Holiday Date / 节日日期</p>
-                              <p className="mt-1 text-sm font-semibold text-gray-900">{formatDate(h.date)}</p>
+                              <p className="mt-1 text-sm font-semibold text-gray-900">{formatDate(h.date, dateLocale)}</p>
                               {h.note && <p className="text-xs text-gray-400">{h.note}</p>}
                             </div>
                             {/* Stock reminder */}
                             <div>
                               <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Stock By / 备货截止</p>
                               <p className="mt-1 text-sm font-semibold text-amber-700">
-                                {h.stockDate ? formatDate(h.stockDate) : "—"}
+                                {h.stockDate ? formatDate(h.stockDate, dateLocale) : "—"}
                               </p>
                               <p className="text-xs text-gray-400">{h.stockWeeks} weeks before / {h.stockWeeks}周前</p>
                             </div>
@@ -334,7 +337,7 @@ export default function MarketingCalendarPage() {
                             <div>
                               <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Start Ads / 开始广告</p>
                               <p className="mt-1 text-sm font-semibold text-blue-700">
-                                {h.adDate ? formatDate(h.adDate) : "—"}
+                                {h.adDate ? formatDate(h.adDate, dateLocale) : "—"}
                               </p>
                               <p className="text-xs text-gray-400">{h.adWeeks} weeks before / {h.adWeeks}周前</p>
                             </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { statusColor } from "@/lib/admin/status-labels";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 /* ─── Date helpers ─── */
 
@@ -118,7 +119,7 @@ function DonutChart({ data }) {
 
 /* ─── SVG Line Chart ─── */
 
-function LineChart({ data, label }) {
+function LineChart({ data, label, dateLocale = "en-CA" }) {
   if (!data || data.length === 0) {
     return (
       <div className="flex h-48 items-center justify-center text-sm text-gray-600">
@@ -207,7 +208,7 @@ function LineChart({ data, label }) {
           <circle cx={p.x} cy={p.y} r="4" fill="#3b82f6" stroke="white" strokeWidth="2" />
           {/* Hover target */}
           <title>
-            {new Date(p.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
+            {new Date(p.date).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })}
             {": "}
             {p.avgHours.toFixed(1)} hours
           </title>
@@ -225,7 +226,7 @@ function LineChart({ data, label }) {
             className="fill-gray-400"
             fontSize="10"
           >
-            {new Date(p.date).toLocaleDateString("en-CA", {
+            {new Date(p.date).toLocaleDateString(dateLocale, {
               month: "short",
               day: "numeric",
             })}
@@ -251,6 +252,8 @@ function LineChart({ data, label }) {
 /* ─── Main Page Component ─── */
 
 export default function ProductionReportPage() {
+  const { locale } = useTranslation();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-CA";
   const defaultRange = getPresetRange("this_month");
   const [activePreset, setActivePreset] = useState("this_month");
   const [fromDate, setFromDate] = useState(defaultRange.from);
@@ -618,6 +621,7 @@ export default function ProductionReportPage() {
             <LineChart
               data={data.avgTurnaroundTrend || []}
               label="Hours"
+              dateLocale={dateLocale}
             />
           </div>
 
