@@ -192,25 +192,25 @@ function OverviewTab() {
 
   const statCards = [
     {
-      label: "Revenue (this month)",
+      label: t("admin.finance.statRevenue"),
       value: formatCad(monthRev),
       colorClass: "text-green-600",
       borderColor: "border-l-green-500",
     },
     {
-      label: "Expenses (this month)",
+      label: t("admin.finance.statExpenses"),
       value: formatCad(monthExp),
       colorClass: "text-red-600",
       borderColor: "border-l-red-500",
     },
     {
-      label: "Net Profit (this month)",
+      label: t("admin.finance.statNetProfit"),
       value: formatCad(monthProfit),
       colorClass: monthProfit >= 0 ? "text-blue-600" : "text-red-600",
       borderColor: "border-l-blue-500",
     },
     {
-      label: "Avg Order Margin",
+      label: t("admin.finance.statAvgMargin"),
       value: `${avgOrderMargin}%`,
       colorClass: "text-amber-600",
       borderColor: "border-l-amber-500",
@@ -233,10 +233,10 @@ function OverviewTab() {
       <div className="flex justify-end">
         <div className="flex flex-wrap gap-1">
           {[
-            { key: "7d", label: "7 Days" },
-            { key: "30d", label: "30 Days" },
-            { key: "90d", label: "90 Days" },
-            { key: "12m", label: "12 Months" },
+            { key: "7d", label: t("admin.finance.period7d") },
+            { key: "30d", label: t("admin.finance.period30d") },
+            { key: "90d", label: t("admin.finance.period90d") },
+            { key: "12m", label: t("admin.finance.period12m") },
           ].map((p) => (
             <button
               key={p.key}
@@ -272,15 +272,15 @@ function OverviewTab() {
       {/* Revenue vs Expense trend chart */}
       <div className="rounded-[3px] border border-[#e0e0e0] bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-black">Revenue Trend</h2>
+          <h2 className="text-sm font-semibold text-black">{t("admin.finance.revenueTrend")}</h2>
           <p className="text-xs text-[#999]">
-            {trend.length} {period === "12m" ? "months" : "days"}
+            {trend.length} {period === "12m" ? t("admin.finance.months") : t("admin.finance.days")}
           </p>
         </div>
 
         {trend.length === 0 ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            No revenue data for this period
+            {t("admin.finance.noRevenueData")}
           </div>
         ) : (
           <>
@@ -691,17 +691,17 @@ function ExpensesTab({ showMsg }) {
       <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            Loading expenses...
+            {t("admin.finance.loadingExpenses")}
           </div>
         ) : expenses.length === 0 ? (
           <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-[#999]">
-            <p>No expenses found</p>
+            <p>{t("admin.finance.noExpenses")}</p>
             <button
               type="button"
               onClick={openCreate}
               className="text-xs text-black underline hover:no-underline"
             >
-              Add your first expense
+              {t("admin.finance.addFirstExpense")}
             </button>
           </div>
         ) : (
@@ -1253,7 +1253,7 @@ function InvoicesTab({ showMsg }) {
             onClick={openCreate}
             className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
           >
-            Create Invoice
+            {t("admin.finance.createInvoice")}
           </button>
         </div>
       </div>
@@ -1262,17 +1262,17 @@ function InvoicesTab({ showMsg }) {
       <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            Loading invoices...
+            {t("admin.finance.loadingInvoices")}
           </div>
         ) : invoices.length === 0 ? (
           <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-[#999]">
-            <p>No invoices found</p>
+            <p>{t("admin.finance.noInvoices")}</p>
             <button
               type="button"
               onClick={openCreate}
               className="text-xs text-black underline hover:no-underline"
             >
-              Create your first invoice
+              {t("admin.finance.createFirstInvoice")}
             </button>
           </div>
         ) : (
@@ -1499,7 +1499,7 @@ function InvoicesTab({ showMsg }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[3px] bg-white p-8 shadow-xl">
             <h2 className="mb-6 text-lg font-semibold text-black">
-              {editingInvoice ? "Edit Invoice" : "Create Invoice"}
+              {editingInvoice ? t("admin.finance.editInvoice") : t("admin.finance.createInvoice")}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -1840,7 +1840,7 @@ function SuppliersTab({ showMsg }) {
           onClick={openCreate}
           className="rounded-[3px] bg-black px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-[#222]"
         >
-          Add Supplier
+          {t("admin.finance.addSupplier")}
         </button>
       </div>
 
@@ -1848,17 +1848,17 @@ function SuppliersTab({ showMsg }) {
       <div className="overflow-hidden rounded-[3px] border border-[#e0e0e0] bg-white">
         {loading ? (
           <div className="flex h-48 items-center justify-center text-sm text-[#999]">
-            Loading suppliers...
+            {t("admin.finance.loadingSuppliers")}
           </div>
         ) : suppliers.length === 0 ? (
           <div className="flex h-48 flex-col items-center justify-center gap-2 text-sm text-[#999]">
-            <p>No suppliers yet</p>
+            <p>{t("admin.finance.noSuppliers")}</p>
             <button
               type="button"
               onClick={openCreate}
               className="text-xs text-black underline hover:no-underline"
             >
-              Add your first supplier
+              {t("admin.finance.addFirstSupplier")}
             </button>
           </div>
         ) : (
@@ -2031,7 +2031,7 @@ function SuppliersTab({ showMsg }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[3px] bg-white p-8 shadow-xl">
             <h2 className="mb-6 text-lg font-semibold text-black">
-              {editingSupplier ? "Edit Supplier" : "Add Supplier"}
+              {editingSupplier ? t("admin.finance.editSupplier") : t("admin.finance.addSupplier")}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -2132,10 +2132,10 @@ function SuppliersTab({ showMsg }) {
                   className="flex-1 rounded-[3px] bg-black py-2.5 text-sm font-semibold text-[#fff] hover:bg-[#222] disabled:opacity-50"
                 >
                   {saving
-                    ? "Saving..."
+                    ? t("admin.finance.saving")
                     : editingSupplier
-                      ? "Update Supplier"
-                      : "Add Supplier"}
+                      ? t("admin.finance.updateSupplier")
+                      : t("admin.finance.addSupplier")}
                 </button>
                 <button
                   type="button"

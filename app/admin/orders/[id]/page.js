@@ -304,7 +304,7 @@ export default function OrderDetailPage() {
           onClick={() => { setLoading(true); fetchOrder(); fetchTimeline(); }}
           className="rounded-[3px] bg-black px-4 py-2 text-xs font-medium text-[#fff] hover:bg-[#222]"
         >
-          Retry
+          {t("admin.orderDetail.retry")}
         </button>
         <Link href="/admin/orders" className="text-xs text-[#999] hover:text-black">
           {t("admin.orderDetail.backToOrders")}
@@ -1236,14 +1236,14 @@ function ContextualActionTray({ order, orderId, sendingReminder, copiedLink, onS
             onClick={onSendReminder}
             className="rounded-[3px] bg-black px-3 py-1.5 text-xs font-medium text-[#fff] hover:bg-[#222] disabled:opacity-50"
           >
-            {sendingReminder ? "Sending..." : "Send Reminder"}
+            {sendingReminder ? t("admin.orderDetail.sending") : t("admin.orderDetail.sendReminder")}
           </button>
           <button
             type="button"
             onClick={onCopyLink}
             className="text-[10px] font-medium text-[#999] hover:text-black"
           >
-            {copiedLink ? "Copied!" : "Copy upload link"}
+            {copiedLink ? t("admin.orderDetail.copied") : t("admin.orderDetail.copyUploadLink")}
           </button>
           <a
             href={uploadUrl}
