@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin-auth";
 
 export async function GET(request: NextRequest) {
-  const auth = await requirePermission(request, "analytics", "view");
+  const auth = await requirePermission(request, "finance", "view");
   if (!auth.authenticated) return auth.response;
 
   try {

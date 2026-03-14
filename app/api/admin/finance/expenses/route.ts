@@ -9,7 +9,7 @@ const VALID_CATEGORIES = [
 ];
 
 export async function GET(request: NextRequest) {
-  const auth = await requirePermission(request, "analytics", "view");
+  const auth = await requirePermission(request, "finance", "view");
   if (!auth.authenticated) return auth.response;
 
   try {
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requirePermission(request, "analytics", "admin");
+  const auth = await requirePermission(request, "finance", "edit");
   if (!auth.authenticated) return auth.response;
 
   try {

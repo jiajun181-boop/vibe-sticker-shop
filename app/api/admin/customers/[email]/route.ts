@@ -17,7 +17,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ email: string }> }
 ) {
-  const auth = await requirePermission(request, "settings", "view");
+  const auth = await requirePermission(request, "customers", "view");
   if (!auth.authenticated) return auth.response;
 
   const { email: rawEmail } = await params;
@@ -201,7 +201,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ email: string }> }
 ) {
-  const auth = await requirePermission(request, "settings", "edit");
+  const auth = await requirePermission(request, "customers", "edit");
   if (!auth.authenticated) return auth.response;
 
   const { email: rawEmail } = await params;

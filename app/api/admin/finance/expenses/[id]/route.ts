@@ -12,7 +12,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requirePermission(request, "analytics", "view");
+  const auth = await requirePermission(request, "finance", "view");
   if (!auth.authenticated) return auth.response;
 
   try {
@@ -41,7 +41,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requirePermission(request, "analytics", "admin");
+  const auth = await requirePermission(request, "finance", "edit");
   if (!auth.authenticated) return auth.response;
 
   try {
@@ -126,7 +126,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requirePermission(request, "analytics", "admin");
+  const auth = await requirePermission(request, "finance", "edit");
   if (!auth.authenticated) return auth.response;
 
   try {

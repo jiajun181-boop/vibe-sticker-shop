@@ -16,7 +16,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requirePermission(request, "quotes", "view");
+  const auth = await requirePermission(request, "pricing", "view");
   if (!auth.authenticated) return auth.response;
 
   try {

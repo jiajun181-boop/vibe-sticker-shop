@@ -47,7 +47,7 @@ interface BulkQuoteBody {
  * single-product quote requests.
  */
 export async function POST(request: NextRequest) {
-  const auth = await requirePermission(request, "quotes", "edit");
+  const auth = await requirePermission(request, "pricing", "edit");
   if (!auth.authenticated) return auth.response;
 
   try {

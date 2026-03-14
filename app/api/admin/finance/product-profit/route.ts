@@ -9,7 +9,7 @@ import { requirePermission } from "@/lib/admin-auth";
  * Query params: from, to, limit (default 30)
  */
 export async function GET(request: NextRequest) {
-  const auth = await requirePermission(request, "analytics", "view");
+  const auth = await requirePermission(request, "finance", "view");
   if (!auth.authenticated) return auth.response;
 
   try {

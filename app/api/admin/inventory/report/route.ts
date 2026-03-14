@@ -61,7 +61,7 @@ interface ReorderSuggestion {
 // ─── GET /api/admin/inventory/report ──────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const auth = await requirePermission(request, "settings", "view");
+  const auth = await requirePermission(request, "inventory", "view");
   if (!auth.authenticated) return auth.response;
 
   try {

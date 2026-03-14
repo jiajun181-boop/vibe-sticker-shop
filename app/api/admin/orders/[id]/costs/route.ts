@@ -7,7 +7,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requirePermission(request, "analytics", "admin");
+  const auth = await requirePermission(request, "finance", "edit");
   if (!auth.authenticated) return auth.response;
 
   try {
