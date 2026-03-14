@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function TemplateDetailPage() {
+  const { t, locale } = useTranslation();
   const { id } = useParams();
   const router = useRouter();
   const [template, setTemplate] = useState(null);
@@ -57,7 +59,7 @@ export default function TemplateDetailPage() {
   if (!template) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-600">Template not found.</p>
+        <p className="text-gray-600">{t("account.templates.notFound")}</p>
       </div>
     );
   }
@@ -65,7 +67,7 @@ export default function TemplateDetailPage() {
   return (
     <div>
       <button onClick={() => router.push("/account/templates")} className="mb-4 text-sm text-gray-500 hover:text-gray-900">
-        &larr; Back to Templates
+        &larr; {t("account.templates.backToList")}
       </button>
 
       {editing ? (
@@ -79,16 +81,16 @@ export default function TemplateDetailPage() {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description (optional)"
+            placeholder={t("account.templates.descPlaceholder")}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             rows={2}
           />
           <div className="flex gap-2">
             <button onClick={handleSave} className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-[#fff]">
-              Save
+              {t("account.templates.save")}
             </button>
             <button onClick={() => setEditing(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600">
-              Cancel
+              {t("account.templates.cancel")}
             </button>
           </div>
         </div>
@@ -100,10 +102,10 @@ export default function TemplateDetailPage() {
           </div>
           <div className="flex gap-2">
             <button onClick={handleReorder} className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-gray-800">
-              Reorder
+              {t("account.templates.reorder")}
             </button>
             <button onClick={() => setEditing(true)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-              Edit
+              {t("account.templates.edit")}
             </button>
           </div>
         </div>
@@ -111,21 +113,21 @@ export default function TemplateDetailPage() {
 
       <div className="rounded-xl border border-gray-200 bg-white">
         <div className="border-b border-gray-100 px-5 py-3">
-          <h2 className="text-sm font-semibold uppercase text-gray-500">Items ({template.items?.length || 0})</h2>
+          <h2 className="text-sm font-semibold uppercase text-gray-500">{t("account.templates.items")} ({template.items?.length || 0})</h2>
         </div>
         {(template.items || []).map((item, idx) => (
           <div key={item.id} className={`flex items-center justify-between px-5 py-3 ${idx > 0 ? "border-t border-gray-100" : ""}`}>
             <div>
               <p className="font-medium">{item.productName}</p>
-              <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+              <p className="text-sm text-gray-500">{t("account.templates.qty")}: {item.quantity}</p>
             </div>
           </div>
         ))}
       </div>
 
       <p className="mt-4 text-xs text-gray-400">
-        Used {template.useCount || 0} times
-        {template.lastUsedAt && ` · Last used ${new Date(template.lastUsedAt).toLocaleDateString()}`}
+        {t("account.templates.usedTimes").replace("{count}", template.useCount || 0)}
+        {template.lastUsedAt && ` · ${t("account.templates.lastUsed")} ${new Date(template.lastUsedAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA")}`}
       </p>
     </div>
   );

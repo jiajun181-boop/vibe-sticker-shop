@@ -569,7 +569,7 @@ function ExpensesTab({ showMsg }) {
   async function handleDelete(expense) {
     if (
       !window.confirm(
-        `Delete expense "${expense.description}" (${formatCad(expense.amountCents)})?`
+        t("admin.finance.deleteExpenseConfirm").replace("{desc}", expense.description).replace("{amount}", formatCad(expense.amountCents))
       )
     )
       return;
@@ -1142,7 +1142,7 @@ function InvoicesTab({ showMsg }) {
   async function handleDelete(invoice) {
     if (
       !window.confirm(
-        `Delete invoice ${invoice.invoiceNumber}? This cannot be undone.`
+        t("admin.finance.deleteInvoiceConfirm").replace("{number}", invoice.invoiceNumber)
       )
     )
       return;
@@ -1779,7 +1779,7 @@ function SuppliersTab({ showMsg }) {
   async function handleDelete(supplier) {
     if (
       !window.confirm(
-        `Delete supplier "${supplier.name}"? This cannot be undone.`
+        t("admin.finance.deleteSupplierConfirm").replace("{name}", supplier.name)
       )
     )
       return;

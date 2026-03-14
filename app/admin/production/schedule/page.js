@@ -176,7 +176,7 @@ export default function ProductionSchedulePage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               {dayName(date, dateLocale)} {formatDate(date, dateLocale)}
             </p>
-            <span className="text-[10px] text-[#999]">{dayJobs.length} job{dayJobs.length !== 1 ? "s" : ""}</span>
+            <span className="text-[10px] text-[#999]">{t("admin.production.schedule.jobCount").replace("{count}", dayJobs.length)}</span>
           </div>
           <div className="divide-y divide-[#e0e0e0]">
             {dayJobs.map((job) => (

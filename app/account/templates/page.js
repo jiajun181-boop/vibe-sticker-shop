@@ -43,13 +43,13 @@ export default function TemplatesPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Order Templates</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t("account.templates.title")}</h1>
 
       {templates.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-          <p className="mb-2 text-gray-600">No templates yet.</p>
+          <p className="mb-2 text-gray-600">{t("account.templates.empty")}</p>
           <p className="text-sm text-gray-500">
-            Save frequently ordered items as templates for quick reordering.
+            {t("account.templates.emptyHint")}
           </p>
         </div>
       ) : (
@@ -66,8 +66,8 @@ export default function TemplatesPage() {
                     <p className="mt-1 text-sm text-gray-500">{template.description}</p>
                   )}
                   <p className="mt-1 text-xs text-gray-400">
-                    {template.items?.length || 0} items
-                    {template.useCount > 0 && ` · Used ${template.useCount}×`}
+                    {t("account.templates.itemCount").replace("{count}", template.items?.length || 0)}
+                    {template.useCount > 0 && ` · ${t("account.templates.usedCount").replace("{count}", template.useCount)}`}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -75,19 +75,19 @@ export default function TemplatesPage() {
                     onClick={() => handleReorder(template.id)}
                     className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-[#fff] hover:bg-gray-800"
                   >
-                    Reorder
+                    {t("account.templates.reorder")}
                   </button>
                   <Link
                     href={`/account/templates/${template.id}`}
                     className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
                   >
-                    View
+                    {t("account.templates.view")}
                   </Link>
                   <button
                     onClick={() => handleDelete(template.id)}
                     className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
                   >
-                    Delete
+                    {t("account.templates.delete")}
                   </button>
                 </div>
               </div>

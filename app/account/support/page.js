@@ -48,7 +48,7 @@ export default function SupportPage() {
       setSubject("");
       setMessage("");
     } catch {
-      setError("Failed to create ticket. Please try again.");
+      setError(t("support.createFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -57,13 +57,13 @@ export default function SupportPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-[var(--color-gray-900)]">Support</h1>
+        <h1 className="text-lg font-semibold text-[var(--color-gray-900)]">{t("support.title")}</h1>
         <button
           type="button"
           onClick={() => setShowNew(!showNew)}
           className="rounded-lg bg-[var(--color-gray-900)] px-4 py-2 text-sm font-semibold text-[#fff] hover:bg-black transition-colors"
         >
-          {showNew ? "Cancel" : "New Ticket"}
+          {showNew ? t("support.cancel") : t("support.newTicket")}
         </button>
       </div>
 
@@ -71,22 +71,22 @@ export default function SupportPage() {
         <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-[var(--color-gray-200)] p-4">
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div>
-            <label className="mb-1 block text-xs font-medium text-[var(--color-gray-500)]">Subject</label>
+            <label className="mb-1 block text-xs font-medium text-[var(--color-gray-500)]">{t("support.subject")}</label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="Brief description of your issue"
+              placeholder={t("support.subjectPlaceholder")}
               className="w-full rounded-lg border border-[var(--color-gray-200)] px-3 py-2 text-sm text-[var(--color-gray-900)] placeholder:text-[var(--color-gray-400)] focus:border-[var(--color-gray-400)] focus:outline-none"
               required
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-[var(--color-gray-500)]">Message</label>
+            <label className="mb-1 block text-xs font-medium text-[var(--color-gray-500)]">{t("support.message")}</label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Describe your issue in detail..."
+              placeholder={t("support.messagePlaceholder")}
               rows={4}
               className="w-full rounded-lg border border-[var(--color-gray-200)] px-3 py-2 text-sm text-[var(--color-gray-900)] placeholder:text-[var(--color-gray-400)] focus:border-[var(--color-gray-400)] focus:outline-none"
               required
@@ -97,7 +97,7 @@ export default function SupportPage() {
             disabled={submitting}
             className="rounded-lg bg-[var(--color-gray-900)] px-6 py-2.5 text-sm font-semibold text-[#fff] hover:bg-black disabled:opacity-50 transition-colors"
           >
-            {submitting ? "Submitting..." : "Submit Ticket"}
+            {submitting ? t("support.submitting") : t("support.submitTicket")}
           </button>
         </form>
       )}
@@ -110,7 +110,7 @@ export default function SupportPage() {
         </div>
       ) : tickets.length === 0 ? (
         <div className="rounded-xl border border-[var(--color-gray-200)] p-8 text-center">
-          <p className="text-sm text-[var(--color-gray-500)]">No support tickets yet.</p>
+          <p className="text-sm text-[var(--color-gray-500)]">{t("support.noTickets")}</p>
         </div>
       ) : (
         <div className="divide-y divide-[var(--color-gray-100)] rounded-xl border border-[var(--color-gray-200)]">
@@ -128,7 +128,7 @@ export default function SupportPage() {
                     month: "short",
                     day: "numeric",
                   })}
-                  {ticket._count?.messages > 1 && ` \u00B7 ${ticket._count.messages} messages`}
+                  {ticket._count?.messages > 1 && ` \u00B7 ${t("support.messageCount").replace("{count}", ticket._count.messages)}`}
                 </p>
               </div>
               <span
@@ -136,7 +136,7 @@ export default function SupportPage() {
                   STATUS_COLORS[ticket.status] || "bg-[var(--color-gray-100)] text-[var(--color-gray-500)]"
                 }`}
               >
-                {ticket.status.replace(/_/g, " ")}
+                {t(`support.status.${ticket.status}`) || ticket.status.replace(/_/g, " ")}
               </span>
             </Link>
           ))}

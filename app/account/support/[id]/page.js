@@ -29,7 +29,7 @@ export default function TicketDetailPage() {
         return r.json();
       })
       .then((data) => setTicket(data.ticket))
-      .catch(() => setError("Ticket not found"))
+      .catch(() => setError(t("support.ticketNotFound")))
       .finally(() => setLoading(false));
   };
 
@@ -52,7 +52,7 @@ export default function TicketDetailPage() {
       setReply("");
       fetchTicket();
     } catch {
-      setError("Failed to send reply.");
+      setError(t("support.replyFailed"));
     } finally {
       setSending(false);
     }
@@ -73,7 +73,7 @@ export default function TicketDetailPage() {
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
         <p className="text-sm text-red-600">{error}</p>
         <Link href="/account/support" className="mt-3 inline-block text-sm font-semibold hover:underline">
-          ← Back to Support
+          ← {t("support.backToList")}
         </Link>
       </div>
     );
@@ -86,7 +86,7 @@ export default function TicketDetailPage() {
       {/* Header */}
       <div>
         <Link href="/account/support" className="text-xs text-[var(--color-gray-500)] hover:text-[var(--color-gray-900)]">
-          ← Support
+          ← {t("support.title")}
         </Link>
         <div className="mt-2 flex items-start justify-between">
           <div>
@@ -105,7 +105,7 @@ export default function TicketDetailPage() {
               STATUS_COLORS[ticket?.status] || "bg-[var(--color-gray-100)] text-[var(--color-gray-500)]"
             }`}
           >
-            {ticket?.status?.replace(/_/g, " ")}
+            {t(`support.status.${ticket?.status}`) || ticket?.status?.replace(/_/g, " ")}
           </span>
         </div>
       </div>
@@ -125,7 +125,7 @@ export default function TicketDetailPage() {
             >
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-semibold text-[var(--color-gray-700)]">
-                  {msg.authorName || (isAdmin ? "Support" : "You")}
+                  {msg.authorName || (isAdmin ? t("support.supportTeam") : t("support.you"))}
                 </span>
                 <span className="text-[10px] text-[var(--color-gray-400)]">
                   {new Date(msg.createdAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-CA", {
@@ -149,7 +149,7 @@ export default function TicketDetailPage() {
           <textarea
             value={reply}
             onChange={(e) => setReply(e.target.value)}
-            placeholder="Write your reply..."
+            placeholder={t("support.replyPlaceholder")}
             rows={3}
             className="w-full rounded-lg border border-[var(--color-gray-200)] px-3 py-2 text-sm text-[var(--color-gray-900)] placeholder:text-[var(--color-gray-400)] focus:border-[var(--color-gray-400)] focus:outline-none"
             required
@@ -159,12 +159,12 @@ export default function TicketDetailPage() {
             disabled={sending || !reply.trim()}
             className="rounded-lg bg-[var(--color-gray-900)] px-6 py-2.5 text-sm font-semibold text-[#fff] hover:bg-black disabled:opacity-50 transition-colors"
           >
-            {sending ? "Sending..." : "Send Reply"}
+            {sending ? t("support.sending") : t("support.sendReply")}
           </button>
         </form>
       ) : (
         <div className="rounded-xl border border-[var(--color-gray-200)] bg-[var(--color-gray-50)] p-4 text-center">
-          <p className="text-sm text-[var(--color-gray-500)]">This ticket has been {ticket?.status?.replace(/_/g, " ")}.</p>
+          <p className="text-sm text-[var(--color-gray-500)]">{t("support.ticketClosed").replace("{status}", t(`support.status.${ticket?.status}`) || ticket?.status?.replace(/_/g, " "))}</p>
         </div>
       )}
     </div>

@@ -70,7 +70,7 @@ export default function InvoicesPage() {
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${STATUS_STYLES[inv.status] || STATUS_STYLES.draft}`}
                 >
-                  {inv.status}
+                  {t(`invoices.status.${inv.status}`) || inv.status}
                 </span>
               </div>
               <div className="mt-3 flex flex-wrap gap-4 text-xs text-[var(--color-gray-500)]">

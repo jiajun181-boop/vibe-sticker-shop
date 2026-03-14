@@ -600,14 +600,14 @@ function ProductionContent() {
                             href={`/admin/production/${job.id}`}
                             className="text-[10px] font-medium text-black hover:underline"
                           >
-                            Job #{job.id.slice(0, 8)}
+                            {t("admin.production.jobLabel")} #{job.id.slice(0, 8)}
                           </Link>
                           {job.orderId && (
                             <Link
                               href={`/admin/orders/${job.orderId}`}
                               className="text-[10px] text-blue-600 hover:underline"
                             >
-                              Order #{job.orderId.slice(0, 8)}
+                              {t("admin.production.orderLabel")} #{job.orderId.slice(0, 8)}
                             </Link>
                           )}
                           {job.family && (
@@ -764,7 +764,7 @@ function ProductionContent() {
                               href={`/admin/orders/${job.orderId}`}
                               className="text-blue-600 hover:underline"
                             >
-                              Order
+                              {t("admin.production.orderLabel")}
                             </Link>
                           </>
                         )}
